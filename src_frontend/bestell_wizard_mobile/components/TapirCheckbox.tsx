@@ -7,6 +7,7 @@ interface NextButtonProps {
   controlId: string;
   label?: string;
   disabled?: boolean;
+  showError?: boolean;
 }
 
 const TapirCheckbox: React.FC<NextButtonProps> = ({
@@ -15,12 +16,13 @@ const TapirCheckbox: React.FC<NextButtonProps> = ({
   controlId,
   label,
   disabled,
+  showError,
 }) => {
   return (
     <div className={"d-flex flex-row gap-2"}>
       <input
         type={"checkbox"}
-        className={"inp-cbx"}
+        className={"inp-cbx" + (showError ? " invalid" : "")}
         style={{ display: "none" }}
         id={controlId}
         checked={checked}
@@ -30,7 +32,10 @@ const TapirCheckbox: React.FC<NextButtonProps> = ({
         disabled={disabled}
       />
       <label
-        className={"cbx d-flex flex-row align-items-center"}
+        className={
+          "cbx d-flex flex-row align-items-center" +
+          (showError ? " text-danger" : "")
+        }
         htmlFor={controlId}
       >
         <span style={{ flexShrink: 0 }}>

@@ -18,6 +18,7 @@ interface Step6BCoopSharesProps {
   studentStatusEnabled: boolean;
   setStudentStatusEnabled: (status: boolean) => void;
   settings: BestellWizardSettings;
+  active: boolean;
 }
 
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
@@ -30,25 +31,40 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   settings,
   statuteAccepted,
   setStatuteAccepted,
+  active,
 }) => {
   const [statuteRead, setStatuteRead] = useState(false);
   const [commitmentChecked, setCommitmentChecked] = useState(false);
   const [internalNumberOfShares, setInternalNumberOfShares] = useState("");
+  const [showValidation, setShowValidation] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setTimeout(() => setShowValidation(false), 200);
+    }
+  }, [active]);
 
   useEffect(() => {
     setStatuteAccepted(statuteRead && commitmentChecked);
   }, [statuteRead, commitmentChecked]);
 
-  function isGoNextButtonDisabled() {
-    if (studentStatusEnabled) {
-      return false;
+  function validate() {
+    setShowValidation(true);
+    if (canGoToNextStep()) {
+      goToNextStep();
     }
+  }
 
-    if (!statuteAccepted) {
+  function canGoToNextStep() {
+    if (studentStatusEnabled) {
       return true;
     }
 
-    return selectedNumberOfCoopShares < minimumNumberOfShares;
+    if (!statuteAccepted || !commitmentChecked) {
+      return false;
+    }
+
+    return selectedNumberOfCoopShares >= minimumNumberOfShares;
   }
 
   useEffect(() => {
@@ -97,16 +113,20 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
               ).toString(),
             );
           }}
-          disabled={selectedNumberOfCoopShares <= minimumNumberOfShares}
+          disabled={
+            studentStatusEnabled ||
+            selectedNumberOfCoopShares <= minimumNumberOfShares
+          }
           size={"sm"}
         />
         <Form.Group style={{ maxWidth: "35px" }}>
           <Form.Control
             min={minimumNumberOfShares}
             step={1}
-            value={internalNumberOfShares}
+            value={studentStatusEnabled ? 0 : internalNumberOfShares}
             onChange={(event) => setInternalNumberOfShares(event.target.value)}
             size={"sm"}
+            disabled={studentStatusEnabled}
           />
         </Form.Group>
         <TapirButton
@@ -118,6 +138,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             );
           }}
           size={"sm"}
+          disabled={studentStatusEnabled}
         />
         <span>
           {" × "}
@@ -126,7 +147,9 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
         <span>
           <strong>
             {formatCurrency(
-              selectedNumberOfCoopShares * settings.priceOfAShare,
+              studentStatusEnabled
+                ? 0
+                : selectedNumberOfCoopShares * settings.priceOfAShare,
             )}
           </strong>
         </span>
@@ -164,6 +187,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           onChange={setStatuteRead}
           label={settings.strings.step6cCheckboxStatute}
           disabled={studentStatusEnabled}
+          showError={showValidation && !studentStatusEnabled && !statuteRead}
         />
         <TapirCheckbox
           controlId={"commitment"}
@@ -171,12 +195,12 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           onChange={(checked) => setCommitmentChecked(checked)}
           label={settings.strings.step6cCheckboxCommitment}
           disabled={studentStatusEnabled}
+          showError={
+            showValidation && !studentStatusEnabled && !commitmentChecked
+          }
         />
       </div>
-      <NextStepButton
-        onClick={goToNextStep}
-        disabled={isGoNextButtonDisabled()}
-      />
+      <NextStepButton onClick={validate} />
     </>
   );
 };

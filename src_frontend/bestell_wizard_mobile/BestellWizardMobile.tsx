@@ -373,6 +373,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setStudentStatusEnabled={setStudentStatusEnabled}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
+            active={currentStep === step}
           />
         );
       case "8_personal_data":
