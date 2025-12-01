@@ -4,17 +4,22 @@ import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 
 interface Step14ConfirmationProps {
   settings: BestellWizardSettings;
+  memberMail: string;
 }
 
 const Step14Confirmation: React.FC<Step14ConfirmationProps> = ({
   settings,
+  memberMail,
 }) => {
   return (
     <>
       <p
         className={"text-center"}
         dangerouslySetInnerHTML={getHtmlDescription(
-          settings.strings.step14Text,
+          settings.strings.step14Text.replace(
+            "{{mitglieder_mail}}",
+            memberMail,
+          ),
         )}
       />
     </>

@@ -447,7 +447,12 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           <Step13Feedback goToNextStep={goToNextStep} settings={settings} />
         );
       case "14_confirmation":
-        return <Step14Confirmation settings={settings} />;
+        return (
+          <Step14Confirmation
+            settings={settings}
+            memberMail={personalData.email}
+          />
+        );
       case "loading":
         return (
           <div
