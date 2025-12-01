@@ -11,6 +11,7 @@ import { useApi } from "../../hooks/useApi.ts";
 import { BestellWizardApi } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import "./Step8PersonalData.css";
 
 interface Step8PersonalDataProps {
   goToNextStep: () => void;
@@ -154,8 +155,12 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   }
 
   return (
-    <>
-      <div className={"d-flex flex-column gap-2"}>
+    <div className={"d-flex flex-column gap-2 align-items-center"}>
+      <div
+        id={"personal_data_flex"}
+        className={"d-flex gap-2 flex-wrap align-items-center"}
+        style={{ maxWidth: showValidation ? "580px" : "540px" }}
+      >
         {FIELDS.map((field) => (
           <PersonalDataFormControl
             personalData={personalData}
@@ -175,16 +180,16 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
             }
           />
         ))}
-        <TapirCheckbox
-          onChange={setIsOver18}
-          checked={isOver18}
-          label={"Ich bin über 18 Jahre alt"}
-          controlId={"over18"}
-          showError={showValidation && !isOver18}
-        />
       </div>
+      <TapirCheckbox
+        onChange={setIsOver18}
+        checked={isOver18}
+        label={"Ich bin über 18 Jahre alt"}
+        controlId={"over18"}
+        showError={showValidation && !isOver18}
+      />
       <NextStepButton onClick={validate} />
-    </>
+    </div>
   );
 };
 

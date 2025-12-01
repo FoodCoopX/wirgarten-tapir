@@ -1,0 +1,11 @@
+@media (max-width: 600px) {
+  #personal_data_flex {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 601px) {
+  #personal_data_flex {
+    flex-direction: row;
+  }
+}
