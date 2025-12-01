@@ -9,6 +9,7 @@ import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeast
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
+import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
 
 interface Step9BankingDataProps {
   goToNextStep: () => void;
@@ -21,6 +22,7 @@ interface Step9BankingDataProps {
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   solidarityContribution: number;
+  active: boolean;
 }
 
 const Step9BankingData: React.FC<Step9BankingDataProps> = ({
@@ -34,9 +36,17 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   settings,
   shoppingCart,
   solidarityContribution,
+  active,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
   const [paymentRhythmModalOpen, setPaymentRhythmModalOpen] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setTimeout(() => setShowValidation(false), 200);
+    }
+  }, [active]);
 
   useEffect(() => {
     if (accountOwnerSetManually) {
@@ -52,6 +62,23 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
     personalData.accountOwner = newAccountOwner;
     setPersonalData(Object.assign({}, personalData));
   }, [personalData]);
+
+  function validate() {
+    setShowValidation(true);
+    if (personalData.accountOwner.length === 0) {
+      return;
+    }
+
+    if (!isIbanValid(personalData.iban)) {
+      return;
+    }
+
+    if (!contractAccepted || !sepaAllowed) {
+      return;
+    }
+
+    goToNextStep();
+  }
 
   function getPlaceholder(key: keyof PersonalData) {
     switch (key) {
@@ -76,6 +103,8 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           field={"accountOwner"}
           placeholder={getPlaceholder("accountOwner")}
           type={"text"}
+          showValidation={showValidation}
+          isValid={personalData.accountOwner.length > 0}
         />
         <PersonalDataFormControl
           personalData={personalData}
@@ -83,6 +112,13 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           field={"iban"}
           placeholder={getPlaceholder("iban")}
           type={"text"}
+          showValidation={showValidation}
+          isValid={isIbanValid(personalData.iban)}
+          extraText={
+            showValidation && !isIbanValid(personalData.iban)
+              ? "Ungültiges IBAN"
+              : ""
+          }
         />
         {(isAtLeastOneProductOrdered(shoppingCart) ||
           solidarityContribution > 0) &&
@@ -121,19 +157,18 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
             checked={sepaAllowed}
             label={settings.labelCheckboxSepaMandat}
             controlId={"sepa"}
+            showError={showValidation && !sepaAllowed}
           />
           <TapirCheckbox
             onChange={setContractAccepted}
             checked={contractAccepted}
             label={settings.labelCheckboxContractPolicy}
             controlId={"contract"}
+            showError={showValidation && !contractAccepted}
           />
         </div>
       </div>
-      <NextStepButton
-        onClick={goToNextStep}
-        disabled={!sepaAllowed || !contractAccepted}
-      />
+      <NextStepButton onClick={validate} />
       <Modal
         show={paymentRhythmModalOpen}
         onHide={() => setPaymentRhythmModalOpen(false)}

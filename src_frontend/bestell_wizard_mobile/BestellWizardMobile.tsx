@@ -409,6 +409,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             settings={settings}
             shoppingCart={shoppingCart}
             solidarityContribution={solidarityContribution}
+            active={currentStep === step}
           />
         );
       case "10_summary":
