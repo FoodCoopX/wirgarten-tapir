@@ -101,6 +101,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [selectedDistributionChannels, setSelectedDistributionChannels] =
     useState<Set<string>>(new Set<string>());
   const [solidarityContribution, setSolidarityContribution] = useState(0);
+  const [emailAddressAlreadyInUse, setEmailAddressAlreadyInUse] =
+    useState(false);
+  const [emailAddressAlreadyInUseLoading, setEmailAddressAlreadyInUseLoading] =
+    useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -382,6 +386,14 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             goToNextStep={goToNextStep}
             personalData={personalData}
             setPersonalData={setPersonalData}
+            active={currentStep === step}
+            emailAddressAlreadyInUse={emailAddressAlreadyInUse}
+            setEmailAddressAlreadyInUse={setEmailAddressAlreadyInUse}
+            emailAddressAlreadyInUseLoading={emailAddressAlreadyInUseLoading}
+            setEmailAddressAlreadyInUseLoading={
+              setEmailAddressAlreadyInUseLoading
+            }
+            setToastDatas={setToastDatas}
           />
         );
       case "9_banking_data":
