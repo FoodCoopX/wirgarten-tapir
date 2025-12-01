@@ -12,6 +12,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { HEADER_HEIGHT } from "../utils/DIMENSIONS.ts";
 import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
+import "./header.css";
 
 interface BestellWizardMobileHeaderProps {
   settings: BestellWizardSettings;
@@ -43,7 +44,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
           width: "100%",
           height: "100%",
         }}
-        className={"d-flex justify-content-center align-items-center"}
+        className={"d-flex bw-header align-items-center"}
       >
         {settings.logoUrl && (
           <img src={settings.logoUrl} alt={"Logo"} style={{ height: "70%" }} />
@@ -53,7 +54,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
             variant={BUTTON_VARIANT}
             style={{
               position: "absolute",
-              right: 0,
+              right: "0.5rem",
               top: HEADER_HEIGHT / 2 + "dvh",
               transform: "translate(0, -50%)",
             }}
