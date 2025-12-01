@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { Accordion } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
@@ -25,6 +25,13 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
   goToNextStep,
 }) => {
   const scrollDiv = useRef<HTMLDivElement>(null);
+  const [showValidation, setShowValidation] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setTimeout(() => setShowValidation(false), 200);
+    }
+  }, [active]);
 
   useEffect(() => {
     if (!active || !scrollDiv.current) {
@@ -33,6 +40,14 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
 
     scrollDiv.current.scrollTop = 0;
   }, [active]);
+
+  function validate() {
+    setShowValidation(true);
+
+    if (cancellationPolicyRead && privacyPolicyRead) {
+      goToNextStep();
+    }
+  }
 
   return (
     <>
@@ -46,6 +61,7 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
               label={
                 "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
               }
+              showError={showValidation && !cancellationPolicyRead}
             />
           </Accordion.Header>
           <Accordion.Body>
@@ -67,6 +83,7 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
               label={
                 "Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."
               }
+              showError={showValidation && !privacyPolicyRead}
             />
           </Accordion.Header>
           <Accordion.Body>
@@ -80,10 +97,7 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
         </Accordion.Item>
       </Accordion>
 
-      <NextStepButton
-        onClick={goToNextStep}
-        disabled={!cancellationPolicyRead || !privacyPolicyRead}
-      />
+      <NextStepButton onClick={validate} />
     </>
   );
 };
