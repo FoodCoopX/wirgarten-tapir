@@ -71,17 +71,6 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
   }
 
   function isProgressBarStepClickable(step: Step) {
-    console.log(
-      "CHECK " +
-        step +
-        " " +
-        steps.indexOf(step) +
-        " " +
-        currentStep +
-        " " +
-        steps.indexOf(currentStep),
-    );
-
     return steps.indexOf(step) < steps.indexOf(currentStep);
   }
 
