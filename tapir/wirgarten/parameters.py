@@ -1458,12 +1458,13 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=ParameterKeys.BESTELLWIZARD_STEP14_TEXT,
             label="Seite 14: Abschluss - Text",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Du erhältst im Anschluss zwei Emails an <strong>{{mitglieder_mail}}</strong>. Schau bitte auch in dein SPAM-Posteingang. Sofern du innerhalb von 24 Stunden keine Mails erhalten hast, dann wende dich an unser Support unter "
-            + settings.DEFAULT_FROM_EMAIL,
+            initial_value="Du erhältst im Anschluss zwei Emails an <strong>{{mitglieder_mail}}</strong>. Schau bitte auch in dein SPAM-Posteingang. Sofern du innerhalb von 24 Stunden keine Mails erhalten hast, dann wende dich an unser Support unter {{kontakt_mail}}",
             description="HTML erlaubt",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(vars_hint=["mitglieder_mail"], textarea=True),
+            meta=ParameterMeta(
+                vars_hint=["mitglieder_mail", "kontakt_mail"], textarea=True
+            ),
         )
         bestellwizard_parameter_order -= 1
 

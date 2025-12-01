@@ -10,6 +10,7 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { replaceTokens } from "../utils/replaceTokens.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import "./Step3ProductTypesChoice.css";
 
 interface Step3ProductTypeChoiceProps {
   settings: BestellWizardSettings;
@@ -94,7 +95,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       )}
 
       <div>
-        <div className={"d-flex flex-row gap-2"}>
+        <div id={"product_types_choice"} className={"d-flex gap-2"}>
           {settings.productTypes.map((productType) => (
             <div key={productType.id}>
               <input
@@ -133,7 +134,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
         </div>
 
         <hr />
-        <div className={"d-flex flex-row justify-content-center"}>
+        <div className={"d-flex justify-content-center"}>
           <input
             type="checkbox"
             className="btn-check"
