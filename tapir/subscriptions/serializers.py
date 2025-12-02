@@ -147,6 +147,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "accordions",
             "title_bestellwizard_product_choice",
             "icon_link",
+            "background_image_in_bestellwizard",
         ]
 
     products = SerializerMethodField()

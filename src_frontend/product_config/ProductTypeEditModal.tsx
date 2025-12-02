@@ -69,6 +69,8 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
     titleBestellWizardProductChoices,
     setTitleBestellWizardProductChoices,
   ] = useState("");
+  const [backgroundImageInBestellWizard, setBackgroundImageInBestellWizard] =
+    useState("");
 
   useEffect(() => {
     if (!show) return;
@@ -117,6 +119,9 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
         setAccordions(result.extendedProductType.accordionsInBestellWizard);
         setTitleBestellWizardProductChoices(
           result.extendedProductType.titleBestellwizardProductChoice,
+        );
+        setBackgroundImageInBestellWizard(
+          result.extendedProductType.backgroundImageInBestellwizard,
         );
       })
       .catch((error) =>
@@ -167,6 +172,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
             forceWaitingList: forceWaitingList,
             accordionsInBestellWizard: accordions,
             titleBestellwizardProductChoice: titleBestellWizardProductChoices,
+            backgroundImageInBestellwizard: backgroundImageInBestellWizard,
           },
         },
       })
@@ -236,6 +242,8 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
           setTitleBestellWizardProductChoices={
             setTitleBestellWizardProductChoices
           }
+          backgroundImageInBestellWizard={backgroundImageInBestellWizard}
+          setBackgroundImageInBestellWizard={setBackgroundImageInBestellWizard}
         />
       </Modal.Body>
     );

@@ -41,6 +41,7 @@ class ExtendedProductTypeApiView(APIView):
         "is_association_membership",
         "force_waiting_list",
         "title_bestellwizard_product_choice",
+        "background_image_in_bestellwizard",
     ]
 
     def __init__(self):

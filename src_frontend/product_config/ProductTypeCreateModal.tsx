@@ -73,6 +73,8 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
     titleBestellWizardProductChoices,
     setTitleBestellWizardProductChoices,
   ] = useState("");
+  const [backgroundImageInBestellWizard, setBackgroundImageInBestellWizard] =
+    useState("");
 
   useEffect(() => {
     if (!getPeriodIdFromUrl() || !show) return;
@@ -166,6 +168,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
             forceWaitingList: forceWaitingList,
             accordionsInBestellWizard: accordions,
             titleBestellwizardProductChoice: titleBestellWizardProductChoices,
+            backgroundImageInBestellwizard: backgroundImageInBestellWizard,
           },
         },
       })
@@ -286,6 +289,8 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setTitleBestellWizardProductChoices={
             setTitleBestellWizardProductChoices
           }
+          backgroundImageInBestellWizard={backgroundImageInBestellWizard}
+          setBackgroundImageInBestellWizard={setBackgroundImageInBestellWizard}
         />
       </Modal.Body>
     );

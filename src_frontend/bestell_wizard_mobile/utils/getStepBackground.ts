@@ -1,5 +1,6 @@
 import { Step } from "../types/Step.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { getProductTypeFromStep } from "./getProductTypeFromStep.ts";
 
 export function getStepBackground(
   step: Step,
@@ -35,6 +36,11 @@ export function getStepBackground(
       return settings.images.step13BackgroundImage;
     case "14_confirmation":
       return settings.images.step14BackgroundImage;
+  }
+
+  const [productType, _] = getProductTypeFromStep(step, settings);
+  if (productType) {
+    return productType.backgroundImageInBestellwizard;
   }
 
   return undefined;

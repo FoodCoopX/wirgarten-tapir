@@ -6319,7 +6319,6 @@ components:
           type: integer
         icon_link:
           type: string
-          format: uri
         contract_link:
           type: string
           format: uri
@@ -6352,8 +6351,11 @@ components:
             $ref: '#/components/schemas/ProductTypeAccordionInBestellWizard'
         title_bestellwizard_product_choice:
           type: string
+        background_image_in_bestellwizard:
+          type: string
       required:
       - accordions_in_bestell_wizard
+      - background_image_in_bestellwizard
       - capacity
       - delivery_cycle
       - force_waiting_list
@@ -6400,7 +6402,6 @@ components:
           type: integer
         icon_link:
           type: string
-          format: uri
         contract_link:
           type: string
           format: uri
@@ -6433,8 +6434,11 @@ components:
             $ref: '#/components/schemas/ProductTypeAccordionInBestellWizardRequest'
         title_bestellwizard_product_choice:
           type: string
+        background_image_in_bestellwizard:
+          type: string
       required:
       - accordions_in_bestell_wizard
+      - background_image_in_bestellwizard
       - capacity
       - delivery_cycle
       - force_waiting_list
@@ -8089,6 +8093,9 @@ components:
         title_bestellwizard_product_choice:
           type: string
           maxLength: 512
+        background_image_in_bestellwizard:
+          type: string
+          maxLength: 512
       required:
       - name
     ProductTypeAccordionInBestellWizard:
@@ -8294,6 +8301,9 @@ components:
           type: string
           nullable: true
           title: Link zum Icon
+          maxLength: 512
+        background_image_in_bestellwizard:
+          type: string
           maxLength: 512
       required:
       - accordions

@@ -223,6 +223,7 @@ class ProductType(TapirModel):
     )
     force_waiting_list = models.BooleanField(default=False)
     title_bestellwizard_product_choice = models.CharField(max_length=512, default="")
+    background_image_in_bestellwizard = models.CharField(max_length=512, default="")
 
     def base_price(self, reference_date=None):
         if reference_date is None:
