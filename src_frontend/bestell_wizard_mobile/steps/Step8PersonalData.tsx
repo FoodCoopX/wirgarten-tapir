@@ -159,7 +159,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
       <div
         id={"personal_data_flex"}
         className={"d-flex gap-2 flex-wrap align-items-center"}
-        style={{ maxWidth: "580px" }}
+        style={{ maxWidth: "540px" }}
       >
         {FIELDS.map((field) => (
           <PersonalDataFormControl
