@@ -646,7 +646,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=0,
         )
 
-
         parameter_definition(
             key=ParameterKeys.TRIAL_PERIOD_ENABLED,
             label="Probezeit einschalten",
