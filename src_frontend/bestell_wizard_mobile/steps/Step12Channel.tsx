@@ -44,7 +44,12 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
           />
         ))}
       </div>
-      <NextStepButton onClick={goToNextStep} />
+      <NextStepButton
+        onClick={goToNextStep}
+        text={
+          settings.feedbackStepEnabled ? undefined : "Bestellung bestätigen"
+        }
+      />
     </>
   );
 };
