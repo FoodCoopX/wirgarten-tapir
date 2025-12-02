@@ -54,6 +54,7 @@ import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData
 import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import { shouldProductTypeBeRemovedFromWaitingList } from "./utils/shouldProductTypeBeRemovedFromWaitingList.ts";
 import { buildSteps } from "./utils/buildSteps.ts";
+import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -125,6 +126,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
   const [productTypesInWaitingList, setProductTypesInWaitingList] = useState<
     Set<PublicProductType>
   >(new Set<PublicProductType>());
+  const [becomeMemberNow, setBecomeMemberNow] = useState<boolean | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -179,12 +181,26 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
 
   useEffect(() => {
     if (!settingsLoaded) return;
-    const newSteps = buildSteps(settings, selectedProductTypes, shoppingCart);
+    const newSteps = buildSteps(
+      settings,
+      selectedProductTypes,
+      shoppingCart,
+      becomeMemberNow,
+      productTypesInWaitingList,
+    );
+
     setSteps(newSteps);
     if (!newSteps.includes(currentStep)) {
       setCurrentStep(newSteps[0]);
     }
-  }, [settings, selectedProductTypes, shoppingCart, studentStatusEnabled]);
+  }, [
+    settings,
+    selectedProductTypes,
+    shoppingCart,
+    studentStatusEnabled,
+    becomeMemberNow,
+    productTypesInWaitingList,
+  ]);
 
   useEffect(() => {
     const newPhases: Phase[] = [];
@@ -396,6 +412,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
             active={currentStep === step}
+          />
+        );
+      case "6c_coop_member_now":
+        return (
+          <Step6CCoopMemberNow
+            setCurrentStep={setCurrentStep}
+            setBecomeMemberNow={setBecomeMemberNow}
           />
         );
       case "8_personal_data":

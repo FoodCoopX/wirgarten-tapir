@@ -3,11 +3,14 @@ import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/uti
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 
 export function buildSteps(
   settings: BestellWizardSettings,
   selectedProductTypes: PublicProductType[],
   shoppingCart: ShoppingCart,
+  becomeMemberNow: boolean | null,
+  productTypesInWaitingList: Set<PublicProductType>,
 ) {
   const newSteps: Step[] = [];
   newSteps.push(
@@ -53,7 +56,16 @@ export function buildSteps(
 
   if (settings.showCoopContent) {
     newSteps.push("6a_coop_intro");
-    newSteps.push("6b_coop_shares");
+
+    if (
+      shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
+    ) {
+      newSteps.push("6c_coop_member_now");
+    }
+
+    if (becomeMemberNow !== false) {
+      newSteps.push("6b_coop_shares");
+    }
   }
 
   newSteps.push("8_personal_data");

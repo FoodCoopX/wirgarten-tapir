@@ -8,6 +8,7 @@ export type Step =
   | "5b_pickup_location_choice"
   | "6a_coop_intro"
   | "6b_coop_shares"
+  | "6c_coop_member_now"
   | "8_personal_data"
   | "9_banking_data"
   | "10_summary"

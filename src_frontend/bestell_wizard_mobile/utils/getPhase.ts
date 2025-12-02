@@ -17,6 +17,7 @@ export function getPhase(step: Step): Phase {
       return "pickup_location";
     case "6a_coop_intro":
     case "6b_coop_shares":
+    case "6c_coop_member_now":
       return "coop";
     case "8_personal_data":
     case "9_banking_data":

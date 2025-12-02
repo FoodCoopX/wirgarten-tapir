@@ -1257,6 +1257,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6C_TITLE,
+            label="Seite 6C: Sofort oder später Mitglied werden - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Möchtest du sofort Mitglied werden?",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP8_TITLE,
             label="Seite 8: Persönliche Daten - Titel",
             datatype=TapirParameterDatatype.STRING,

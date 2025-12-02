@@ -3,6 +3,10 @@
     justify-content: left;
     padding-left: 0.5rem;
   }
+
+  #bw-header.bw-logo-centered {
+    justify-content: center;
+  }
 }
 
 @media (min-width: 501px) {

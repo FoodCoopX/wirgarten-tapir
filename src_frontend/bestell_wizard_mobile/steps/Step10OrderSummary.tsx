@@ -245,7 +245,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                     {Object.entries(shoppingCart)
                       .filter(([_, quantity]) => quantity > 0)
                       .map(([productId, quantity]) => (
-                        <li>
+                        <li key={productId}>
                           {
                             getProductByIdGlobal(
                               productId,

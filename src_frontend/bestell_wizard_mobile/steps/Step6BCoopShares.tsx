@@ -7,6 +7,7 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
+import "../utils/flexColOnSmallScreen.css";
 
 interface Step6BCoopSharesProps {
   goToNextStep: () => void;
@@ -45,12 +46,16 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   }, [active]);
 
   useEffect(() => {
-    setStatuteAccepted(statuteRead && commitmentChecked);
+    if (statuteAccepted !== (statuteRead && commitmentChecked)) {
+      setStatuteAccepted(statuteRead && commitmentChecked);
+    }
   }, [statuteRead, commitmentChecked]);
 
   useEffect(() => {
-    setStatuteRead(statuteAccepted);
-    setCommitmentChecked(statuteAccepted);
+    if (statuteAccepted) {
+      setStatuteRead(statuteAccepted);
+      setCommitmentChecked(statuteAccepted);
+    }
   }, [statuteAccepted]);
 
   function validate() {
