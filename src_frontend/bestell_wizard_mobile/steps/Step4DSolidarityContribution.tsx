@@ -3,18 +3,34 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import NextStepButton from "../components/NextStepButton.tsx";
 import { Alert, Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { PublicProductType } from "../../api-client";
 
 interface Step4DSolidarityContributionProps {
   goToNextStep: () => void;
   settings: BestellWizardSettings;
+  solidarityContribution: number;
   setSolidarityContribution: (c: number) => void;
+  active: boolean;
+  shoppingCart: ShoppingCart;
+  productTypesInWaitingList: Set<PublicProductType>;
 }
 
 const Step4DSolidarityContribution: React.FC<
   Step4DSolidarityContributionProps
-> = ({ goToNextStep, settings, setSolidarityContribution }) => {
+> = ({
+  goToNextStep,
+  settings,
+  setSolidarityContribution,
+  active,
+  solidarityContribution,
+  shoppingCart,
+  productTypesInWaitingList,
+}) => {
   const [selectedValue, setSelectedValue] = useState<number | "custom">(0);
   const [customValue, setCustomValue] = useState("");
+  const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
     if (selectedValue !== "custom") {
@@ -27,6 +43,30 @@ const Step4DSolidarityContribution: React.FC<
     }
     setSolidarityContribution(customContribution);
   }, [selectedValue, customValue]);
+
+  useEffect(() => {
+    if (!active) {
+      setTimeout(() => setShowValidation(false), 200);
+    }
+  }, [active]);
+
+  function validate() {
+    setShowValidation(true);
+
+    if (
+      showMinimumWarning() ||
+      getMonthlyPayment(
+        solidarityContribution,
+        shoppingCart,
+        settings,
+        productTypesInWaitingList,
+      ) < 0
+    ) {
+      return;
+    }
+
+    goToNextStep();
+  }
 
   function getValues(): (number | "custom")[] {
     return settings.solidarityContributionChoices.map((choiceAsString) =>
@@ -86,6 +126,26 @@ const Step4DSolidarityContribution: React.FC<
         <Form.Select
           value={selectedValue}
           onChange={(event) => onSelect(event.target.value)}
+          isValid={
+            showValidation &&
+            !showMinimumWarning() &&
+            getMonthlyPayment(
+              solidarityContribution,
+              shoppingCart,
+              settings,
+              productTypesInWaitingList,
+            ) > 0
+          }
+          isInvalid={
+            showValidation &&
+            (showMinimumWarning() ||
+              getMonthlyPayment(
+                solidarityContribution,
+                shoppingCart,
+                settings,
+                productTypesInWaitingList,
+              ) < 0)
+          }
         >
           {getValues().map((value) => (
             <option key={value} value={value}>
@@ -115,6 +175,26 @@ const Step4DSolidarityContribution: React.FC<
               value={customValue}
               onChange={(event) => setCustomValue(event.target.value)}
               style={{ maxWidth: "300px" }}
+              isValid={
+                showValidation &&
+                !showMinimumWarning() &&
+                getMonthlyPayment(
+                  solidarityContribution,
+                  shoppingCart,
+                  settings,
+                  productTypesInWaitingList,
+                ) > 0
+              }
+              isInvalid={
+                showValidation &&
+                (showMinimumWarning() ||
+                  getMonthlyPayment(
+                    solidarityContribution,
+                    shoppingCart,
+                    settings,
+                    productTypesInWaitingList,
+                  ) < 0)
+              }
             />
             {showMinimumWarning() && (
               <Alert variant={"danger"}>
@@ -125,7 +205,7 @@ const Step4DSolidarityContribution: React.FC<
           </Form.Group>
         )}
       </div>
-      <NextStepButton onClick={goToNextStep} disabled={showMinimumWarning()} />
+      <NextStepButton onClick={validate} />
     </div>
   );
 };

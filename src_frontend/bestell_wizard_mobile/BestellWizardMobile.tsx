@@ -338,6 +338,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             settings={settings}
             goToNextStep={goToNextStep}
             setSolidarityContribution={setSolidarityContribution}
+            solidarityContribution={solidarityContribution}
+            active={currentStep === step}
+            shoppingCart={shoppingCart}
+            productTypesInWaitingList={productTypesInWaitingList}
           />
         );
       case "5a_pickup_location_intro":
