@@ -3,7 +3,6 @@ from decimal import Decimal
 from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
-from django.conf import settings
 from django.db import transaction
 from django.db.models import (
     Subquery,
@@ -51,11 +50,13 @@ from tapir.wirgarten.service.subscriptions import (
 from tapir.wirgarten.service.tasks import schedule_task_unique
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
+from tapir.wirgarten.templatetags.wirgarten import format_currency
 from tapir.wirgarten.utils import (
     format_date,
     format_subscription_list_html,
     get_now,
     get_today,
+    format_subscription_list_html_with_price,
 )
 
 
@@ -404,6 +405,14 @@ def send_contract_change_confirmation(
         member=member, date_from=get_today(cache=cache), date_to=end_date, cache=cache
     )
 
+    total_monthly_payment = sum(
+        [
+            subscription.total_price(reference_date=contract_start_date, cache=cache)
+            for subscription in subs
+        ],
+        0,
+    )
+
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
             key=Events.MEMBERAREA_CHANGE_CONTRACT,
@@ -415,6 +424,10 @@ def send_contract_change_confirmation(
                     get_next_delivery_date(contract_start_date, cache=cache)
                 ),
                 "contract_list": format_subscription_list_html(subs),
+                "contract_list_with_price": format_subscription_list_html_with_price(
+                    subs, cache=cache
+                ),
+                "total_monthly_payment": format_currency(total_monthly_payment) + "€",
             },
         ),
     )
@@ -447,6 +460,14 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
         member=member, date_from=get_today(cache=cache), date_to=end_date, cache=cache
     )
 
+    total_monthly_payment = sum(
+        [
+            subscription.total_price(reference_date=contract_start_date, cache=cache)
+            for subscription in subs
+        ],
+        0,
+    )
+
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
             key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
@@ -456,6 +477,10 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
                 "contract_end_date": format_date(subs[0].end_date),
                 "first_pickup_date": format_date(future_deliveries[0]["delivery_date"]),
                 "contract_list": format_subscription_list_html(subs),
+                "contract_list_with_price": format_subscription_list_html_with_price(
+                    subs, cache=cache
+                ),
+                "total_monthly_payment": format_currency(total_monthly_payment) + "€",
             },
         ),
     )

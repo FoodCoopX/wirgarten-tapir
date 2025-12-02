@@ -24,7 +24,7 @@ from tapir.wirgarten.service.products import (
     get_next_growing_period,
 )
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
-from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
+from tapir.wirgarten.utils import get_today
 
 
 # Absenden Bestellwizzard Mitgliedschaft + Ernteanteile
@@ -230,6 +230,8 @@ def _register_triggers():
         key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
         tokens={
             "Vertragsliste": "contract_list",
+            "Vertragsliste mit Preis": "contract_list_with_price",
+            "Gesamt-Monatspreis": "total_monthly_payment",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
@@ -244,6 +246,8 @@ def _register_triggers():
         key=Events.MEMBERAREA_CHANGE_CONTRACT,
         tokens={
             "Vertragsliste": "contract_list",
+            "Vertragsliste mit Preis": "contract_list_with_price",
+            "Gesamt-Monatspreis": "total_monthly_payment",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",

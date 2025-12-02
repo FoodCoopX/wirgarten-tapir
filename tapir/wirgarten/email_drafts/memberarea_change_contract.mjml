@@ -5,10 +5,12 @@
                 Emails mit dem Trigger "Vertragsänderungen im Mitgliederbereich" werden an Mitglieder geschickt wenn sie deren Vertrag mit Basis-Produkt ändern.
                 Verträge ohne Basis-Produkt sind nicht betroffen.
                 Folgende Token stehen zu verfügung:
-                {{Vertragsänderungen im Mitgliederbereich.Vertragsliste}}
-                {{Vertragsänderungen im Mitgliederbereich.Vertragsstart}}
-                {{Vertragsänderungen im Mitgliederbereich.Vertragsende}}
-                {{Vertragsänderungen im Mitgliederbereich.Erste Abholung am}}
+                <div>{{Vertragsänderungen im Mitgliederbereich.Vertragsliste}}</div>
+                <div>{{Vertragsänderungen im Mitgliederbereich.Vertragsliste mit Preis}}</div>
+                <div>{{Vertragsänderungen im Mitgliederbereich.Gesamt-Monatspreis}}</div>
+                <div>{{Vertragsänderungen im Mitgliederbereich.Vertragsstart}}</div>
+                <div>{{Vertragsänderungen im Mitgliederbereich.Vertragsende}}</div>
+                <div>{{Vertragsänderungen im Mitgliederbereich.Erste Abholung am}}</div>
             </mj-text>
         </mj-column>
     </mj-section>

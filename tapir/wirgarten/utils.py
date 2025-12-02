@@ -119,6 +119,14 @@ def format_subscription_list_html(subs):
     return f"{'<br/>'.join(map(lambda x: x.long_str(), subs))}"
 
 
+def format_subscription_list_html_with_price(subscriptions, cache: dict):
+    def get_subscription_string(subscription):
+        price = format_currency(subscription.total_price(cache=cache))
+        return f"{subscription.long_str()} = {price}€"
+
+    return f"{'<br/>'.join(map(get_subscription_string, subscriptions))}"
+
+
 def legal_status_is_cooperative(cache):
     return (
         get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)

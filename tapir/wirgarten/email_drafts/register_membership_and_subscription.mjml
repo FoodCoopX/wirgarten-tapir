@@ -5,6 +5,8 @@
                 Emails mit dem Trigger "BestellWizard: Mitgliedschaft + Ernteanteile" werden an Mitglieder geschickt wenn sie ein neuen Vertrag abschließen oder explizit verlängern.
                 Folgende Token steht zu verfügung:
                 {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}}
+                {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste mit Preis}}
+                {{BestellWizard: Mitgliedschaft + Ernteanteile.Gesamt-Monatspreis}}
                 {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}}
                 {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}}
                 {{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}}
