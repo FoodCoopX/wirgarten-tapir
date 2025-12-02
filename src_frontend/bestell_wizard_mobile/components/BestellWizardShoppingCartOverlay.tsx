@@ -6,7 +6,6 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 import { PublicPickupLocation } from "../../api-client";
-import { Step } from "../types/Step.ts";
 
 interface BestellWizardShoppingCartOverlayProps {
   settings: BestellWizardSettings;
@@ -15,8 +14,6 @@ interface BestellWizardShoppingCartOverlayProps {
   onHide: () => void;
   showPickupLocations: boolean;
   selectedPickupLocations: PublicPickupLocation[];
-  steps: Step[];
-  setCurrentStep: (step: Step) => void;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -28,16 +25,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
   onHide,
   showPickupLocations,
   selectedPickupLocations,
-  steps,
-  setCurrentStep,
 }) => {
-  function getStepName(step: string) {
-    for (const productType of settings.productTypes) {
-      step = step.replace(productType.id!, productType.name);
-    }
-    return step;
-  }
-
   return (
     <>
       <div
@@ -131,18 +119,6 @@ const BestellWizardShoppingCartOverlay: React.FC<
               )}
             </li>
           )}
-          <li>
-            <span>Debug go to step</span>
-            <small>
-              <ul>
-                {steps.map((step) => (
-                  <li key={step} onClick={() => setCurrentStep(step)}>
-                    {getStepName(step)}
-                  </li>
-                ))}
-              </ul>
-            </small>
-          </li>
         </ul>
       </div>
     </>

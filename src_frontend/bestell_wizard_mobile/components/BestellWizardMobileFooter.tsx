@@ -5,7 +5,7 @@ import { Step } from "../types/Step.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getPhase } from "../utils/getPhase.ts";
-import { Badge, ProgressBar } from "react-bootstrap";
+import { Badge, Dropdown, DropdownButton, ProgressBar } from "react-bootstrap";
 import { Phase } from "../types/Phase.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { FOOTER_HEIGHT } from "../utils/DIMENSIONS.ts";
@@ -76,6 +76,13 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
     return steps.indexOf(step) < steps.indexOf(currentStep);
   }
 
+  function getStepName(step: string) {
+    for (const productType of settings.productTypes) {
+      step = step.replace(productType.id!, productType.name);
+    }
+    return step;
+  }
+
   return (
     <div
       style={{
@@ -107,13 +114,33 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
               onClick={goToPreviousStep}
               text={"Zurück"}
             />
-            <TapirButton
+            <DropdownButton
+              title={
+                <span>
+                  <span className={"material-icons"}>construction</span>Test
+                </span>
+              }
               size={"sm"}
-              icon={"construction"}
               variant={BUTTON_VARIANT}
-              onClick={setTestData}
-              text={"Test-Daten"}
-            />
+              drop={"up"}
+            >
+              {steps
+                .slice()
+                .reverse()
+                .map((step) => (
+                  <Dropdown.Item
+                    key={step}
+                    onClick={() => setCurrentStep(step)}
+                    style={{ lineHeight: "1rem" }}
+                  >
+                    <small>{getStepName(step)}</small>
+                  </Dropdown.Item>
+                ))}
+              <Dropdown.Divider />
+              <Dropdown.Item onClick={setTestData}>
+                Test daten setzen
+              </Dropdown.Item>
+            </DropdownButton>
           </div>
         )}
         <small

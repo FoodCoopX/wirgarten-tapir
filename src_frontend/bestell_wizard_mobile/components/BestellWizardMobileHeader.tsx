@@ -6,7 +6,6 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import BestellWizardShoppingCartOverlay from "./BestellWizardShoppingCartOverlay.tsx";
 import { Phase } from "../types/Phase.ts";
 import { PublicPickupLocation } from "../../api-client";
-import { Step } from "../types/Step.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { HEADER_HEIGHT } from "../utils/DIMENSIONS.ts";
@@ -20,8 +19,6 @@ interface BestellWizardMobileHeaderProps {
   shoppingCart: ShoppingCart;
   phases: Phase[];
   selectedPickupLocations: PublicPickupLocation[];
-  steps: Step[];
-  setCurrentStep: (step: Step) => void;
   solidarityContribution: number;
 }
 
@@ -31,8 +28,6 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   shoppingCart,
   phases,
   selectedPickupLocations,
-  steps,
-  setCurrentStep,
   solidarityContribution,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
@@ -82,8 +77,6 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         onHide={() => setShowOverlay(false)}
         showPickupLocations={phases.includes("pickup_location")}
         selectedPickupLocations={selectedPickupLocations}
-        steps={steps}
-        setCurrentStep={setCurrentStep}
       />
     </>
   );
