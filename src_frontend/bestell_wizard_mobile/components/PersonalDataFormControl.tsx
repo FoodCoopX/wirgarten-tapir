@@ -1,4 +1,4 @@
-import React from "react";
+import React, { CSSProperties } from "react";
 import { FloatingLabel, Form } from "react-bootstrap";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 
@@ -11,6 +11,7 @@ interface PersonalDataFormControlProps {
   showValidation: boolean;
   isValid: boolean;
   extraText?: string;
+  style?: CSSProperties;
 }
 
 const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
@@ -22,10 +23,11 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
   showValidation,
   isValid,
   extraText,
+  style,
 }) => {
   return (
     <>
-      <FloatingLabel label={placeholder} controlId={field}>
+      <FloatingLabel label={placeholder} controlId={field} style={style}>
         <Form.Control
           placeholder={placeholder}
           value={personalData[field]}

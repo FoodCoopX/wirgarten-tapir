@@ -159,7 +159,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
       <div
         id={"personal_data_flex"}
         className={"d-flex gap-2 flex-wrap align-items-center"}
-        style={{ maxWidth: showValidation ? "580px" : "540px" }}
+        style={{ maxWidth: "580px" }}
       >
         {FIELDS.map((field) => (
           <PersonalDataFormControl
@@ -178,6 +178,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
                 ? "Diese Email-Adresse ist schon vergeben"
                 : ""
             }
+            style={{ width: "264px" }}
           />
         ))}
       </div>

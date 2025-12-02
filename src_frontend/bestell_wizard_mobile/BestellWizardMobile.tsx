@@ -229,12 +229,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
 
     updateMinimumNumberOfShares(
       shoppingCart,
-      new Set(),
+      productTypesInWaitingList,
       setMinimumNumberOfShares,
       setSelectedNumberOfCoopShares,
-    );
-    console.warn(
-      "useEffect updateMinimumNumberOfShares is missing the products in waiting list",
     );
   }, [shoppingCart]);
 
