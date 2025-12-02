@@ -101,6 +101,18 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
     }
   }
 
+  function getMarkerIcon(pickupLocation: PublicPickupLocation) {
+    if (selectedPickupLocations.includes(pickupLocation)) {
+      return "marker-icon-green.png";
+    }
+
+    if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
+      return "marker-icon-red.png";
+    }
+
+    return "marker-icon.png";
+  }
+
   return (
     <>
       <MapContainer
@@ -124,11 +136,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
               parseFloat(pickupLocation.coordsLat),
             ]}
             icon={L.icon({
-              iconUrl:
-                "/static/subscriptions/" +
-                (pickupLocationsWithCapacityFull.has(pickupLocation)
-                  ? "marker-icon-red.png"
-                  : "marker-icon.png"),
+              iconUrl: "/static/subscriptions/" + getMarkerIcon(pickupLocation),
               shadowUrl: "/static/subscriptions/marker-shadow.png",
               iconAnchor: [13, 35],
               popupAnchor: [0, -33],
