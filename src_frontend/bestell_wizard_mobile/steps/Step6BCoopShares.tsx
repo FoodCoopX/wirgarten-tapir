@@ -48,6 +48,11 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
     setStatuteAccepted(statuteRead && commitmentChecked);
   }, [statuteRead, commitmentChecked]);
 
+  useEffect(() => {
+    setStatuteRead(statuteAccepted);
+    setCommitmentChecked(statuteAccepted);
+  }, [statuteAccepted]);
+
   function validate() {
     setShowValidation(true);
     if (canGoToNextStep()) {
@@ -60,7 +65,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
       return true;
     }
 
-    if (!statuteAccepted || !commitmentChecked) {
+    if (!statuteRead || !commitmentChecked) {
       return false;
     }
 

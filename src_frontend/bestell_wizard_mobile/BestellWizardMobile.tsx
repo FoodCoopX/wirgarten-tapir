@@ -50,6 +50,7 @@ import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { CONTENT_HEIGHT, HEADER_HEIGHT } from "./utils/DIMENSIONS.ts";
 import Step4DSolidarityContribution from "./steps/Step4DSolidarityContribution.tsx";
+import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -287,6 +288,29 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
     setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
   }
+
+  function setTestData() {
+    setPersonalData(getTestPersonalData());
+    setSelectedProductTypes(settings.productTypes);
+    const newShoppingCart: ShoppingCart = {};
+    for (const productType of settings.productTypes) {
+      for (const product of productType.products) {
+        newShoppingCart[product.id!] = 1;
+      }
+    }
+    setShoppingCart(newShoppingCart);
+    setSelectedPickupLocations([settings.pickupLocations[0]]);
+    setSelectedNumberOfCoopShares(7);
+    setSepaAllowed(true);
+    setContractAccepted(true);
+    setStatuteAccepted(true);
+    setCancellationPolicyRead(true);
+    setPrivacyPolicyRead(true);
+  }
+
+  useEffect(() => {
+    console.log(statuteAccepted);
+  }, [statuteAccepted]);
 
   function getStepComponent(step: Step) {
     switch (step) {
@@ -591,6 +615,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
           settings={settings}
+          setTestData={setTestData}
         />
       )}
       <TapirToastContainer

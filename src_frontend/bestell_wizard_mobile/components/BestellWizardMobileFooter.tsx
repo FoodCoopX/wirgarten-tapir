@@ -16,6 +16,7 @@ interface BestellWizardMobileFooterProps {
   currentStep: Step;
   setCurrentStep: (step: Step) => void;
   settings: BestellWizardSettings;
+  setTestData: () => void;
 }
 
 const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
@@ -23,6 +24,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
   currentStep,
   setCurrentStep,
   settings,
+  setTestData,
 }) => {
   function goToPreviousStep() {
     const currentIndex = steps.indexOf(currentStep);
@@ -104,6 +106,13 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
               variant={BUTTON_VARIANT}
               onClick={goToPreviousStep}
               text={"Zurück"}
+            />
+            <TapirButton
+              size={"sm"}
+              icon={"construction"}
+              variant={BUTTON_VARIANT}
+              onClick={setTestData}
+              text={"Test-Daten"}
             />
           </div>
         )}
