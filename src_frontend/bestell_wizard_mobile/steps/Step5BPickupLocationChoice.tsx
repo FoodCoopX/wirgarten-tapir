@@ -74,7 +74,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
 
   return (
     <>
-      <ButtonGroup style={{ width: "90%" }}>
+      <ButtonGroup style={{ width: "100%" }}>
         {tabs.map((tab) => (
           <ToggleButton
             key={tab}
@@ -87,6 +87,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             onChange={(event) =>
               setCurrentTab(event.target.value as PickupLocationTab)
             }
+            style={{ width: "100%" }}
           >
             {tab === "wishes" ? "Wünsche" : tab === "map" ? "Karte" : "Liste"}
           </ToggleButton>
