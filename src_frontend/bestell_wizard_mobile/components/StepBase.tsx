@@ -63,23 +63,25 @@ const StepBase: React.FC<StepBaseProps> = ({
         width: "auto",
         overflowWrap: "anywhere",
       }}
-      className={"d-flex flex-column gap-2 mx-4 test1 " + backgroundImageUrl}
+      className={"d-flex flex-column gap-2 mx-4 test1"}
     >
       {backgroundImageUrl && (
         <div
           style={{
             position: "absolute",
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
+            width: "100dvw",
+            height: "100dvh",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
             backgroundImage: "url(" + backgroundImageUrl + ")",
             backgroundPosition: "center",
             backgroundSize: "cover",
             maskImage:
-              "linear-gradient(0deg,rgba(255, 255, 255, 0) 0%,rgba(255, 255, 255, 1) 5%, rgba(255, 255, 255, 1) 95%, rgba(255, 255, 255, 0) 100%)",
+              "linear-gradient(0deg,rgba(255, 255, 255, 0) 0%,rgba(255, 255, 255, 1) 25%, rgba(255, 255, 255, 1) 75%, rgba(255, 255, 255, 0) 100%)",
             zIndex: -1,
             opacity: 0.2,
+            pointerEvents: "none",
           }}
         />
       )}
