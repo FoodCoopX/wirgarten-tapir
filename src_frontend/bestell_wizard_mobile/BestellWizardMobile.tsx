@@ -245,6 +245,12 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
   }, [shoppingCart]);
 
   useEffect(() => {
+    for (const pickupLocation of selectedPickupLocations) {
+      if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
+        return;
+      }
+    }
+
     setProductTypesInWaitingList(
       new Set(
         [...productTypesInWaitingList].filter(
@@ -258,7 +264,12 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
         ),
       ),
     );
-  }, [productTypeIdsOverCapacity, productIdsOverCapacity]);
+  }, [
+    productTypeIdsOverCapacity,
+    productIdsOverCapacity,
+    pickupLocationsWithCapacityFull,
+    selectedPickupLocations,
+  ]);
 
   function goToNextStep() {
     const currentIndex = steps.indexOf(currentStep);
@@ -354,6 +365,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
               firstDeliveryDatesByPickupLocationAndProductType
             }
             active={currentStep === step}
+            productTypesInWaitingList={productTypesInWaitingList}
+            shoppingCart={shoppingCart}
+            setProductTypesInWaitingList={setProductTypesInWaitingList}
           />
         );
       case "6a_coop_intro":

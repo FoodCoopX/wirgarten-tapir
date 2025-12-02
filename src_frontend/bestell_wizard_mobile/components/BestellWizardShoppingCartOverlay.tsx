@@ -164,7 +164,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
               ) : (
                 <ol>
                   {selectedPickupLocations.map((pickupLocation) => (
-                    <li>{pickupLocation.name}</li>
+                    <li key={pickupLocation.id}>{pickupLocation.name}</li>
                   ))}
                 </ol>
               )}

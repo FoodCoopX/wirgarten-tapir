@@ -26,7 +26,9 @@ const PickupLocationWaitingListModal: React.FC<
       </Modal.Body>
       <Modal.Footer>
         <div
-          className={"d-flex flex-row justify-content-between gap-2"}
+          className={
+            "d-flex justify-content-between gap-2 flex-col-on-small-screen"
+          }
           style={{ width: "100%" }}
         >
           <TapirButton
@@ -34,12 +36,14 @@ const PickupLocationWaitingListModal: React.FC<
             variant={"outline-secondary"}
             onClick={onHide}
             icon={"undo"}
+            size={"sm"}
           />
           <TapirButton
             text={"Weiter mit Warteliste-Eintrag"}
             variant={"primary"}
             onClick={confirmEnableWaitingListMode}
             icon={"pending_actions"}
+            size={"sm"}
           />
         </div>
       </Modal.Footer>
