@@ -117,7 +117,13 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
             <DropdownButton
               title={
                 <span>
-                  <span className={"material-icons"}>construction</span>Test
+                  <span
+                    style={{ fontSize: "16px" }}
+                    className={"material-icons"}
+                  >
+                    construction
+                  </span>
+                  Test
                 </span>
               }
               size={"sm"}
