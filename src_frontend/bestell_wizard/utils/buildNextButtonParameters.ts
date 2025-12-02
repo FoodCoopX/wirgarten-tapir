@@ -10,7 +10,7 @@ export function buildNextButtonParametersForProductType(
   shoppingCart: ShoppingCart,
   checkingCapacities: boolean,
   currentStep: string,
-  productsTypesInWaitingList: Set<PublicProductType>,
+  productTypesInWaitingList: Set<PublicProductType>,
   productTypeIdsOverCapacity: string[],
   productIdsOverCapacity: string[],
 ): NextButtonParameters {
@@ -48,7 +48,7 @@ export function buildNextButtonParametersForProductType(
     }
 
     if (
-      productsTypesInWaitingList.has(productType) ||
+      productTypesInWaitingList.has(productType) ||
       productTypeIdsOverCapacity.includes(productType.id!) ||
       hasProductOverCapacity
     ) {

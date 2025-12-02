@@ -92,7 +92,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
   // user input
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
-  const [productsTypesInWaitingList, setProductsTypesInWaitingList] = useState<
+  const [productTypesInWaitingList, setProductTypesInWaitingList] = useState<
     Set<PublicProductType>
   >(new Set<PublicProductType>());
   const [selectedPickupLocations, setSelectedPickupLocations] = useState<
@@ -242,7 +242,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     updateMinimumNumberOfShares(
       shoppingCart,
-      productsTypesInWaitingList,
+      productTypesInWaitingList,
       setMinimumNumberOfShares,
       setSelectedNumberOfCoopShares,
     );
@@ -290,7 +290,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     if (settings.forceWaitingList) {
       setShowGeneralWaitingListModal(true);
-      setProductsTypesInWaitingList(new Set(settings.productTypes));
+      setProductTypesInWaitingList(new Set(settings.productTypes));
     }
   }, [settings]);
 
@@ -330,9 +330,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, [waitingListEntryDetails]);
 
   useEffect(() => {
-    setProductsTypesInWaitingList(
+    setProductTypesInWaitingList(
       new Set(
-        [...productsTypesInWaitingList].filter(
+        [...productTypesInWaitingList].filter(
           (productType) =>
             !shouldProductTypeBeRemovedFromWaitingList(productType),
         ),
@@ -393,7 +393,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       return false;
     }
 
-    if (productsTypesInWaitingList.has(productType)) {
+    if (productTypesInWaitingList.has(productType)) {
       return false;
     }
 
@@ -427,7 +427,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         buildFilteredShoppingCart(
           shoppingCart,
           false,
-          productsTypesInWaitingList,
+          productTypesInWaitingList,
         ),
         settings.productTypes,
       )
@@ -495,7 +495,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListEntryDetails={waitingListEntryDetails}
             waitingListModeEnabled={areAllOrderedProductsInWaitingList(
               shoppingCart,
-              productsTypesInWaitingList,
+              productTypesInWaitingList,
             )}
           />
         );
@@ -515,7 +515,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             settings={settings}
             becomeMemberNow={becomeMemberNow}
             shoppingCart={shoppingCart}
-            productsTypesInWaitingList={productsTypesInWaitingList}
+            productTypesInWaitingList={productTypesInWaitingList}
             setBecomeMemberNow={setBecomeMemberNow}
           />
         );
@@ -531,7 +531,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListModeEnabled={isWaitingListModeEnabled(
               settings,
               shoppingCart,
-              productsTypesInWaitingList,
+              productTypesInWaitingList,
               becomeMemberNow,
             )}
             waitingListLinkConfirmationModeEnabled={
@@ -557,7 +557,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         return (
           <BestellWizardSummary
             shoppingCart={shoppingCart}
-            productsTypesInWaitingList={productsTypesInWaitingList}
+            productTypesInWaitingList={productTypesInWaitingList}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             selectedPickupLocations={selectedPickupLocations}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
@@ -565,7 +565,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListModeEnabled={isWaitingListModeEnabled(
               settings,
               shoppingCart,
-              productsTypesInWaitingList,
+              productTypesInWaitingList,
               becomeMemberNow,
             )}
             cancellationPolicyRead={cancellationPolicyRead}
@@ -664,12 +664,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           shoppingCartOrder: buildFilteredShoppingCart(
             shoppingCart,
             false,
-            productsTypesInWaitingList,
+            productTypesInWaitingList,
           ),
           shoppingCartWaitingList: buildFilteredShoppingCart(
             shoppingCart,
             true,
-            productsTypesInWaitingList,
+            productTypesInWaitingList,
           ),
           studentStatusEnabled: studentStatusEnabled,
           paymentRhythm: personalData.paymentRhythm,
@@ -700,7 +700,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         isWaitingListModeEnabled(
           settings,
           shoppingCart,
-          productsTypesInWaitingList,
+          productTypesInWaitingList,
           becomeMemberNow,
         ),
         cancellationPolicyRead,
@@ -725,7 +725,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           isWaitingListModeEnabled(
             settings,
             shoppingCart,
-            productsTypesInWaitingList,
+            productTypesInWaitingList,
             becomeMemberNow,
           ),
         );
@@ -738,7 +738,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           isWaitingListModeEnabled(
             settings,
             shoppingCart,
-            productsTypesInWaitingList,
+            productTypesInWaitingList,
             becomeMemberNow,
           ),
           studentStatusEnabled,
@@ -752,7 +752,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           isWaitingListModeEnabled(
             settings,
             shoppingCart,
-            productsTypesInWaitingList,
+            productTypesInWaitingList,
             becomeMemberNow,
           ),
           emailAddressAlreadyInUse,
@@ -764,7 +764,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           shoppingCart,
           checkingCapacities,
           currentStep,
-          productsTypesInWaitingList,
+          productTypesInWaitingList,
           productTypeIdsOverCapacity,
           productIdsOverCapacity,
         );
@@ -803,8 +803,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
   function confirmEnableProductWaitingListMode() {
     const productType = getCurrentProductType();
-    productsTypesInWaitingList.add(productType);
-    setProductsTypesInWaitingList(new Set(productsTypesInWaitingList));
+    productTypesInWaitingList.add(productType);
+    setProductTypesInWaitingList(new Set(productTypesInWaitingList));
 
     setProductWaitingListModalOpen(false);
     goToNextStep();
@@ -818,8 +818,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     for (const productType of settings.productTypes) {
       if (productType.noDelivery) continue;
 
-      productsTypesInWaitingList.add(productType);
-      setProductsTypesInWaitingList(new Set(productsTypesInWaitingList));
+      productTypesInWaitingList.add(productType);
+      setProductTypesInWaitingList(new Set(productTypesInWaitingList));
     }
 
     setPickupLocationWaitingListModalOpen(false);
@@ -830,7 +830,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     for (const productType of settings.productTypes) {
       if (productType.noDelivery) continue;
-      productsTypesInWaitingList.add(productType);
+      productTypesInWaitingList.add(productType);
     }
   }
 
@@ -908,7 +908,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
                       buildFilteredShoppingCart(
                         shoppingCart,
                         false,
-                        productsTypesInWaitingList,
+                        productTypesInWaitingList,
                       ),
                     ) && (
                       <Col>
@@ -927,7 +927,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
                               buildFilteredShoppingCart(
                                 shoppingCart,
                                 false,
-                                productsTypesInWaitingList,
+                                productTypesInWaitingList,
                               ),
                               settings,
                             )}
@@ -939,7 +939,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
                       buildFilteredShoppingCart(
                         shoppingCart,
                         true,
-                        productsTypesInWaitingList,
+                        productTypesInWaitingList,
                       ),
                     ) && (
                       <Col>
@@ -958,7 +958,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
                               buildFilteredShoppingCart(
                                 shoppingCart,
                                 true,
-                                productsTypesInWaitingList,
+                                productTypesInWaitingList,
                               ),
                               settings,
                             )}

@@ -6,14 +6,14 @@ import { areAllOrderedProductsInWaitingList } from "./areAllOrderedProductsInWai
 export function isWaitingListModeEnabled(
   settings: BestellWizardSettings,
   shoppingCartOrder: ShoppingCart,
-  productsTypesInWaitingList: Set<PublicProductType>,
+  productTypesInWaitingList: Set<PublicProductType>,
   becomeMemberNow: boolean | null,
 ) {
   return (
     settings.forceWaitingList ||
     (areAllOrderedProductsInWaitingList(
       shoppingCartOrder,
-      productsTypesInWaitingList,
+      productTypesInWaitingList,
     ) &&
       becomeMemberNow === false)
   );

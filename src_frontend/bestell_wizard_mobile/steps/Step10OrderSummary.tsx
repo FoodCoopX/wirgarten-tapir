@@ -19,6 +19,7 @@ import {
 } from "../utils/getProductByIdGlobal.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
+import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -35,6 +36,7 @@ interface Step10OrderSummaryProps {
   selectedPickupLocations: PublicPickupLocation[];
   solidarityContribution: number;
   personalData: PersonalData;
+  productTypesInWaitingList: Set<PublicProductType>;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -49,25 +51,14 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   selectedPickupLocations,
   solidarityContribution,
   personalData,
+  productTypesInWaitingList,
 }) => {
-  function getTotalPriceForProductType(productType: PublicProductType) {
-    let sum = 0;
-    for (const [productId, quantity] of Object.entries(shoppingCart)) {
-      const product = getProductById(productType, productId);
-      if (!product) {
-        continue;
-      }
-      sum += product.price * quantity;
-    }
-    return sum;
-  }
-
   function getProductTypeTitle(productType: PublicProductType) {
     if (isProductTypeOrdered(productType, shoppingCart)) {
       return (
         productType.name +
         " " +
-        formatCurrency(getTotalPriceForProductType(productType)) +
+        formatCurrency(getTotalPriceForProductType(productType, shoppingCart)) +
         " / Monat"
       );
     }
@@ -91,7 +82,12 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     return (
       "Zahlungen: " +
       formatCurrency(
-        getMonthlyPayment(solidarityContribution, shoppingCart, settings),
+        getMonthlyPayment(
+          solidarityContribution,
+          shoppingCart,
+          settings,
+          productTypesInWaitingList,
+        ),
       ) +
       " / Monat"
     );

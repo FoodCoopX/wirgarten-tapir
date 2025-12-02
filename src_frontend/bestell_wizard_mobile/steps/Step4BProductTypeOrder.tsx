@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PublicProductType } from "../../api-client";
 import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
-import { Button, Carousel, Form } from "react-bootstrap";
+import { Alert, Button, Carousel, Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
@@ -13,6 +13,9 @@ import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { CarouselRef } from "react-bootstrap/Carousel";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
+import { shouldShowWarningCurrentOrderIsOverCapacity } from "../utils/shouldShowWarningCurrentOrderIsOverCapacity.ts";
+import ProductWaitingListModal from "../../bestell_wizard/components/ProductWaitingListModal.tsx";
+import { shouldOpenProductWaitingListModal } from "../utils/shouldOpenProductWaitingListModal.ts";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
@@ -21,6 +24,12 @@ interface Step4BProductTypeOrderProps {
   shoppingCart: ShoppingCart;
   setShoppingCart: (cart: ShoppingCart) => void;
   active: boolean;
+  checkingCapacities: boolean;
+  waitingListLinkConfirmationModeEnabled: boolean;
+  productIdsOverCapacity: string[];
+  productTypeIdsOverCapacity: string[];
+  productTypesInWaitingList: Set<PublicProductType>;
+  setProductTypesInWaitingList: (set: Set<PublicProductType>) => void;
 }
 
 const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
@@ -30,9 +39,16 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   shoppingCart,
   setShoppingCart,
   active,
+  checkingCapacities,
+  waitingListLinkConfirmationModeEnabled,
+  productIdsOverCapacity,
+  productTypeIdsOverCapacity,
+  productTypesInWaitingList,
+  setProductTypesInWaitingList,
 }) => {
   const carouselRef = useRef<CarouselRef>(null);
   const [showValidation, setShowValidation] = useState(false);
+  const [waitingListModalOpen, setWaitingListModalOpen] = useState(false);
 
   useEffect(() => {
     if (!active) {
@@ -48,6 +64,21 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     ) {
       return;
     }
+
+    if (
+      shouldOpenProductWaitingListModal(
+        settings,
+        shoppingCart,
+        productTypesInWaitingList,
+        productTypeIdsOverCapacity,
+        productIdsOverCapacity,
+        productType,
+      )
+    ) {
+      setWaitingListModalOpen(true);
+      return;
+    }
+
     goToNextStep();
   }
 
@@ -62,6 +93,14 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       ),
     );
     return "Weiter mit " + formatShoppingCart(filteredShoppingCart, settings);
+  }
+
+  function confirmEnableProductWaitingListMode() {
+    productTypesInWaitingList.add(productType);
+    setProductTypesInWaitingList(new Set(productTypesInWaitingList));
+
+    setWaitingListModalOpen(false);
+    goToNextStep();
   }
 
   function buildImageAtIndex(index: number, isBeforeButton: boolean) {
@@ -188,7 +227,10 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                         );
                         setShoppingCart(Object.assign({}, shoppingCart));
                       }}
-                      disabled={shoppingCart[product.id!] === 0}
+                      disabled={
+                        shoppingCart[product.id!] === 0 ||
+                        waitingListLinkConfirmationModeEnabled
+                      }
                     />
                     <span
                       className={
@@ -210,12 +252,13 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                           shoppingCart[product.id!] + 1;
                         setShoppingCart(Object.assign({}, shoppingCart));
                       }}
+                      disabled={waitingListLinkConfirmationModeEnabled}
                     />
                   </>
                 )}
               </div>
               <div>
-                <Form.Text className={"text-center"} as={"p"}>
+                <Form.Text className={"text-center mb-0"} as={"p"}>
                   Basisbeitrag: {formatCurrency(product.price)} pro Monat inkl.
                   MwSt.
                   {product.descriptionInBestellwizard && (
@@ -255,7 +298,32 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
             Dieses Produkt muss bestellt werden.
           </Form.Control.Feedback>
         )}
-      <NextStepButton onClick={validate} text={getNextButtonText()} />
+      {shouldShowWarningCurrentOrderIsOverCapacity(
+        productType,
+        settings,
+        productTypeIdsOverCapacity,
+        productIdsOverCapacity,
+        shoppingCart,
+      ) && (
+        <Alert variant={"warning"}>
+          <small>
+            Derzeit ist deine gewünschte {productType?.name}-Größe nicht
+            verfügbar. Du kannst eine andere Größe wählen, oder dich auf die
+            Warteliste setzen lassen.
+          </small>
+        </Alert>
+      )}
+      <NextStepButton
+        onClick={validate}
+        text={getNextButtonText()}
+        loading={checkingCapacities}
+      />
+      <ProductWaitingListModal
+        show={waitingListModalOpen}
+        onHide={() => setWaitingListModalOpen(false)}
+        confirmEnableWaitingListMode={confirmEnableProductWaitingListMode}
+        productType={productType}
+      />
     </>
   );
 };

@@ -5,7 +5,12 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
-import { PublicPickupLocation } from "../../api-client";
+import { PublicPickupLocation, type PublicProductType } from "../../api-client";
+import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { Step } from "../types/Step.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface BestellWizardShoppingCartOverlayProps {
   settings: BestellWizardSettings;
@@ -14,6 +19,10 @@ interface BestellWizardShoppingCartOverlayProps {
   onHide: () => void;
   showPickupLocations: boolean;
   selectedPickupLocations: PublicPickupLocation[];
+  productTypesInWaitingList: Set<PublicProductType>;
+  steps: Step[];
+  currentStep: Step;
+  setCurrentStep: (step: Step) => void;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -25,7 +34,17 @@ const BestellWizardShoppingCartOverlay: React.FC<
   onHide,
   showPickupLocations,
   selectedPickupLocations,
+  productTypesInWaitingList,
+  steps,
+  currentStep,
+  setCurrentStep,
 }) => {
+  function canEditProductTypeOrder(productType: PublicProductType) {
+    return (
+      steps.indexOf(productType.id! + "_intro") < steps.indexOf(currentStep)
+    );
+  }
+
   return (
     <>
       <div
@@ -72,8 +91,18 @@ const BestellWizardShoppingCartOverlay: React.FC<
         </div>
         <ul style={{ marginTop: "7vh" }}>
           {settings.productTypes.map((productType) => (
-            <li key={productType.id}>
-              <span>{productType.name}</span>
+            <li
+              key={productType.id}
+              className={
+                productTypesInWaitingList.has(productType)
+                  ? "text-secondary"
+                  : ""
+              }
+            >
+              <span>
+                {productType.name}
+                {productTypesInWaitingList.has(productType) && " (Warteliste)"}
+              </span>
               <ul>
                 {isProductTypeOrdered(productType, shoppingCart) ? (
                   <>
@@ -96,9 +125,31 @@ const BestellWizardShoppingCartOverlay: React.FC<
                           {quantity}
                         </li>
                       ))}
+                    <li>
+                      {formatCurrency(
+                        getTotalPriceForProductType(productType, shoppingCart),
+                      )}{" "}
+                      pro Monat
+                      {productTypesInWaitingList.has(productType) &&
+                        " (erst nach einen Platz frei wird)"}
+                    </li>
                   </>
                 ) : (
                   <li>Nicht bestellt</li>
+                )}
+                {canEditProductTypeOrder(productType) && (
+                  <li>
+                    <TapirButton
+                      variant={BUTTON_VARIANT}
+                      size={"sm"}
+                      text={"Bestellung anpassen"}
+                      icon={"edit"}
+                      onClick={() => {
+                        setCurrentStep(productType.id! + "_order");
+                        onHide();
+                      }}
+                    />
+                  </li>
                 )}
               </ul>
             </li>

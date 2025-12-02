@@ -1,9 +1,9 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { Button, Spinner } from "react-bootstrap";
 
 interface TapirButtonProps {
   variant: string;
-  text?: string;
+  text?: ReactNode;
   icon?: string;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
@@ -20,7 +20,7 @@ interface TapirButtonProps {
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
   function textContent() {
-    return props.loading ? "Loading..." : props.text;
+    return props.loading ? "Laden..." : props.text;
   }
 
   function fontSize() {

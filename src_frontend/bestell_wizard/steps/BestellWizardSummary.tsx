@@ -3,7 +3,11 @@ import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { Col, Form, Row, Table } from "react-bootstrap";
-import { PublicPickupLocation, PublicProductType, WaitingListEntryDetails } from "../../api-client";
+import {
+  PublicPickupLocation,
+  PublicProductType,
+  WaitingListEntryDetails,
+} from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
@@ -16,7 +20,7 @@ import { doesProductBelongsToProductType } from "../utils/doesProductBelongToPro
 
 interface BestellWizardSummaryProps {
   shoppingCart: ShoppingCart;
-  productsTypesInWaitingList: Set<PublicProductType>;
+  productTypesInWaitingList: Set<PublicProductType>;
   selectedNumberOfCoopShares: number;
   selectedPickupLocations: PublicPickupLocation[];
   firstDeliveryDatesByProductType: { [key: string]: Date };
@@ -34,7 +38,7 @@ interface BestellWizardSummaryProps {
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   shoppingCart,
-  productsTypesInWaitingList,
+  productTypesInWaitingList,
   selectedNumberOfCoopShares,
   selectedPickupLocations,
   firstDeliveryDatesByProductType,
@@ -65,7 +69,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
       return <span>Dieses Produkt ist nicht bestellt worden</span>;
     }
 
-    if (productsTypesInWaitingList.has(productType)) {
+    if (productTypesInWaitingList.has(productType)) {
       return (
         <span>
           Du wirst auf die Warteliste eingetragen für:{" "}

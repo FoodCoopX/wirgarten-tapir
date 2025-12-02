@@ -8,6 +8,7 @@ interface NextButtonProps {
   disabled?: boolean;
   text?: string;
   showError?: boolean;
+  loading?: boolean;
 }
 
 const NextStepButton: React.FC<NextButtonProps> = ({
@@ -15,6 +16,7 @@ const NextStepButton: React.FC<NextButtonProps> = ({
   text,
   disabled,
   showError,
+  loading,
 }) => {
   return (
     <div
@@ -28,6 +30,7 @@ const NextStepButton: React.FC<NextButtonProps> = ({
         icon={"keyboard_arrow_down"}
         disabled={disabled ?? false}
         className={"nextStepButton"}
+        loading={loading}
       />
     </div>
   );

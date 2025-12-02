@@ -21,7 +21,7 @@ interface BestellWizardCoopSharesProps {
   becomeMemberNow: boolean | null;
   setBecomeMemberNow: (becomeMemberNow: boolean) => void;
   shoppingCart: ShoppingCart;
-  productsTypesInWaitingList: Set<PublicProductType>;
+  productTypesInWaitingList: Set<PublicProductType>;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
@@ -37,7 +37,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   becomeMemberNow,
   setBecomeMemberNow,
   shoppingCart,
-  productsTypesInWaitingList,
+  productTypesInWaitingList,
 }) => {
   useEffect(() => {
     if (!studentStatusEnabled) {
@@ -59,7 +59,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
 
     return areAllOrderedProductsInWaitingList(
       shoppingCart,
-      productsTypesInWaitingList,
+      productTypesInWaitingList,
     );
   }
 

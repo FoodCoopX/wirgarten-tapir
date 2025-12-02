@@ -5,7 +5,7 @@ import { isProductInWaitingList } from "./isProductInWaitingList.ts";
 export function buildFilteredShoppingCart(
   shoppingCart: ShoppingCart,
   inWaitingList: boolean,
-  productsTypesInWaitingList: Set<PublicProductType>,
+  productTypesInWaitingList: Set<PublicProductType>,
 ) {
   const filteredCart: ShoppingCart = {};
   for (const [productId, quantity] of Object.entries(shoppingCart)) {
@@ -13,7 +13,7 @@ export function buildFilteredShoppingCart(
 
     if (
       inWaitingList ===
-      isProductInWaitingList(productId, productsTypesInWaitingList)
+      isProductInWaitingList(productId, productTypesInWaitingList)
     ) {
       filteredCart[productId] = quantity;
     }

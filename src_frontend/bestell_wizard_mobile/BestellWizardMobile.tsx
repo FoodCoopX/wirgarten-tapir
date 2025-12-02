@@ -6,6 +6,7 @@ import {
   CoopApi,
   PublicPickupLocation,
   type PublicProductType,
+  WaitingListEntryDetails,
 } from "../api-client";
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -25,7 +26,6 @@ import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 import BestellWizardMobileHeader from "./components/BestellWizardMobileHeader.tsx";
-import { isAtLeastOneOrderedProductWithDelivery } from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
 import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
 import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
@@ -51,12 +51,19 @@ import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { CONTENT_HEIGHT, HEADER_HEIGHT } from "./utils/DIMENSIONS.ts";
 import Step4DSolidarityContribution from "./steps/Step4DSolidarityContribution.tsx";
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
+import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
+import { shouldProductTypeBeRemovedFromWaitingList } from "./utils/shouldProductTypeBeRemovedFromWaitingList.ts";
+import { buildSteps } from "./utils/buildSteps.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
+  waitingListEntryDetails?: WaitingListEntryDetails;
 }
 
-const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
+const BestellWizardMobile: React.FC<BestellWizardProps> = ({
+  csrfToken,
+  waitingListEntryDetails,
+}) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
   const coopApi = useApi(CoopApi, csrfToken);
 
@@ -106,6 +113,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     useState(false);
   const [emailAddressAlreadyInUseLoading, setEmailAddressAlreadyInUseLoading] =
     useState(false);
+  const [checkingCapacities, setCheckingCapacities] = useState(false);
+  const [checkingCapacitiesController, setCheckingCapacitiesController] =
+    useState<AbortController>();
+  const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
+    string[]
+  >([]);
+  const [productTypeIdsOverCapacity, setProductTypeIdsOverCapacity] = useState<
+    string[]
+  >([]);
+  const [productTypesInWaitingList, setProductTypesInWaitingList] = useState<
+    Set<PublicProductType>
+  >(new Set<PublicProductType>());
 
   useEffect(() => {
     Promise.all([
@@ -160,7 +179,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
   useEffect(() => {
     if (!settingsLoaded) return;
-    const newSteps = buildSteps();
+    const newSteps = buildSteps(settings, selectedProductTypes, shoppingCart);
     setSteps(newSteps);
     if (!newSteps.includes(currentStep)) {
       setCurrentStep(newSteps[0]);
@@ -196,6 +215,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [settings, shoppingCart]);
 
   useEffect(() => {
+    if (waitingListEntryDetails === undefined) {
+      updateProductsAndProductTypesOverCapacity(
+        shoppingCart,
+        setProductIdsOverCapacity,
+        setProductTypeIdsOverCapacity,
+        setCheckingCapacities,
+        setToastDatas,
+        checkingCapacitiesController,
+        setCheckingCapacitiesController,
+      );
+    }
+
     updateMinimumNumberOfShares(
       shoppingCart,
       new Set(),
@@ -216,69 +247,21 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     );
   }, [shoppingCart]);
 
-  function buildSteps() {
-    const newSteps: Step[] = [];
-    newSteps.push(
-      settings.forceWaitingList ? "1b_welcome_waiting_list" : "1a_welcome",
+  useEffect(() => {
+    setProductTypesInWaitingList(
+      new Set(
+        [...productTypesInWaitingList].filter(
+          (productType) =>
+            !shouldProductTypeBeRemovedFromWaitingList(
+              productType,
+              settings,
+              productTypeIdsOverCapacity,
+              productIdsOverCapacity,
+            ),
+        ),
+      ),
     );
-    newSteps.push("2_first_name");
-    if (settings.introEnabled) {
-      newSteps.push("3_product_type_choice");
-    }
-
-    for (const productType of selectedProductTypes) {
-      if (!productType.noDelivery) {
-        newSteps.push(productType.id! + "_intro");
-        newSteps.push(productType.id! + "_order");
-      }
-    }
-
-    const atLeastOneProductWithoutDelivery =
-      selectedProductTypes.filter((productType) => productType.noDelivery)
-        .length > 0;
-    if (!atLeastOneProductWithoutDelivery) {
-      newSteps.push("4d_solidarity_contribution");
-    }
-
-    if (
-      settings.pickupLocations.length > 0 &&
-      isAtLeastOneOrderedProductWithDelivery(
-        shoppingCart,
-        settings.productTypes,
-      )
-    ) {
-      newSteps.push("5a_pickup_location_intro");
-      newSteps.push("5b_pickup_location_choice");
-    }
-
-    for (const productType of selectedProductTypes) {
-      if (productType.noDelivery) {
-        newSteps.push(productType.id! + "_intro");
-        newSteps.push(productType.id! + "_order");
-      }
-    }
-
-    if (atLeastOneProductWithoutDelivery) {
-      newSteps.push("4d_solidarity_contribution");
-    }
-
-    if (settings.showCoopContent) {
-      newSteps.push("6a_coop_intro");
-      newSteps.push("6b_coop_shares");
-    }
-
-    newSteps.push("8_personal_data");
-    newSteps.push("9_banking_data");
-    newSteps.push("10_summary");
-    newSteps.push("11_legal");
-    newSteps.push("12_channel");
-    if (settings.feedbackStepEnabled) {
-      newSteps.push("13_feedback");
-    }
-    newSteps.push("14_confirmation");
-
-    return newSteps;
-  }
+  }, [productTypeIdsOverCapacity, productIdsOverCapacity]);
 
   function goToNextStep() {
     const currentIndex = steps.indexOf(currentStep);
@@ -308,10 +291,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     setPrivacyPolicyRead(true);
   }
 
-  useEffect(() => {
-    console.log(statuteAccepted);
-  }, [statuteAccepted]);
-
   function getStepComponent(step: Step) {
     switch (step) {
       case "1a_welcome":
@@ -329,7 +308,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             personalData={personalData}
             setPersonalData={setPersonalData}
             settings={settings}
-            active={currentStep === "2_first_name"}
+            active={currentStep === step}
           />
         );
       case "3_product_type_choice":
@@ -458,6 +437,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             selectedPickupLocations={selectedPickupLocations}
             solidarityContribution={solidarityContribution}
             personalData={personalData}
+            productTypesInWaitingList={productTypesInWaitingList}
           />
         );
       case "11_legal":
@@ -527,6 +507,14 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                 shoppingCart={shoppingCart}
                 setShoppingCart={setShoppingCart}
                 active={step === currentStep}
+                checkingCapacities={checkingCapacities}
+                productTypeIdsOverCapacity={productTypeIdsOverCapacity}
+                productIdsOverCapacity={productIdsOverCapacity}
+                waitingListLinkConfirmationModeEnabled={
+                  waitingListEntryDetails !== undefined
+                }
+                productTypesInWaitingList={productTypesInWaitingList}
+                setProductTypesInWaitingList={setProductTypesInWaitingList}
               />
             );
         }
@@ -572,6 +560,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           phases={phases}
           selectedPickupLocations={selectedPickupLocations}
           solidarityContribution={solidarityContribution}
+          atLeastOneProductTypeInWaitingList={
+            productTypesInWaitingList.size > 0
+          }
+          productTypesInWaitingList={productTypesInWaitingList}
+          steps={steps}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
         />
       </div>
       <div

@@ -6,7 +6,7 @@ import { buildFilteredShoppingCart } from "./buildFilteredShoppingCart.ts";
 
 export function updateMinimumNumberOfShares(
   shoppingCartOrder: ShoppingCart,
-  productsTypesInWaitingList: Set<PublicProductType>,
+  productTypesInWaitingList: Set<PublicProductType>,
   setMinimumNumberOfShares: (num: number) => void,
   setSelectedNumberOfCoopShares: (num: number) => void,
 ) {
@@ -15,7 +15,7 @@ export function updateMinimumNumberOfShares(
   const combinedCart = buildFilteredShoppingCart(
     shoppingCartOrder,
     false,
-    productsTypesInWaitingList,
+    productTypesInWaitingList,
   );
 
   coopApi

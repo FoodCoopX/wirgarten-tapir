@@ -3,9 +3,9 @@ import { doesProductBelongsToProductType } from "./doesProductBelongToProductTyp
 
 export function isProductInWaitingList(
   productId: string,
-  productsTypesInWaitingList: Set<PublicProductType>,
+  productTypesInWaitingList: Set<PublicProductType>,
 ): boolean {
-  for (const productType of productsTypesInWaitingList) {
+  for (const productType of productTypesInWaitingList) {
     if (doesProductBelongsToProductType(productId, productType)) {
       return true;
     }

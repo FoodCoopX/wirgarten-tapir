@@ -5,7 +5,7 @@ import { isAtLeastOneProductOrdered } from "./isAtLeastOneProductOrdered.ts";
 
 export function areAllOrderedProductsInWaitingList(
   shoppingCart: ShoppingCart,
-  productsTypesInWaitingList: Set<PublicProductType>,
+  productTypesInWaitingList: Set<PublicProductType>,
 ) {
   if (!isAtLeastOneProductOrdered(shoppingCart)) {
     return false;
@@ -14,7 +14,7 @@ export function areAllOrderedProductsInWaitingList(
   for (const [productId, quantity] of Object.entries(shoppingCart)) {
     if (quantity === 0) continue;
 
-    if (!isProductInWaitingList(productId, productsTypesInWaitingList))
+    if (!isProductInWaitingList(productId, productTypesInWaitingList))
       return false;
   }
   return true;
