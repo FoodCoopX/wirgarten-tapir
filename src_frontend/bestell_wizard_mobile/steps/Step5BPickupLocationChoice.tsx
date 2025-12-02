@@ -36,7 +36,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   firstDeliveryDatesByPickupLocationAndProductType,
   active,
 }) => {
-  const tabs: PickupLocationTab[] = ["wishes", "list", "map"];
+  const tabs: PickupLocationTab[] = ["wishes", "map", "list"];
   const [showValidation, setShowValidation] = useState(false);
   const [currentTab, setCurrentTab] = useState<PickupLocationTab>("map");
   const carouselRef = useRef<CarouselRef>(null);
@@ -115,22 +115,6 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             </p>
           </div>
         </Carousel.Item>
-        <Carousel.Item>
-          <Step5BPickupLocationList
-            pickupLocations={settings.pickupLocations}
-            selectedPickupLocations={selectedPickupLocations}
-            setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
-            pickupLocationsWithCapacityCheckLoading={
-              pickupLocationsWithCapacityCheckLoading
-            }
-            waitingListLinkConfirmationModeEnabled={false}
-            tabIsActive={currentTab === "list" && stepIsActive}
-            firstDeliveryDatesByPickupLocationAndProductType={
-              firstDeliveryDatesByPickupLocationAndProductType
-            }
-          />
-        </Carousel.Item>
         <Carousel.Item style={{ position: "absolute", inset: 0 }}>
           <div style={{ position: "absolute", inset: 0 }}>
             <Step5BPickupLocationMap
@@ -146,6 +130,22 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               }
             />
           </div>
+        </Carousel.Item>
+        <Carousel.Item>
+          <Step5BPickupLocationList
+            pickupLocations={settings.pickupLocations}
+            selectedPickupLocations={selectedPickupLocations}
+            setSelectedPickupLocations={setSelectedPickupLocations}
+            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+            pickupLocationsWithCapacityCheckLoading={
+              pickupLocationsWithCapacityCheckLoading
+            }
+            waitingListLinkConfirmationModeEnabled={false}
+            tabIsActive={currentTab === "list" && stepIsActive}
+            firstDeliveryDatesByPickupLocationAndProductType={
+              firstDeliveryDatesByPickupLocationAndProductType
+            }
+          />
         </Carousel.Item>
       </Carousel>
       <NextStepButton
