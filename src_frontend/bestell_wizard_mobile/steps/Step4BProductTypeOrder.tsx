@@ -92,6 +92,14 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         doesProductBelongsToProductType(productId, productType),
       ),
     );
+
+    if (productTypeIdsOverCapacity.includes(productType.id!)) {
+      return (
+        "Weiter mit Warteliste: " +
+        formatShoppingCart(filteredShoppingCart, settings)
+      );
+    }
+
     return "Weiter mit " + formatShoppingCart(filteredShoppingCart, settings);
   }
 
