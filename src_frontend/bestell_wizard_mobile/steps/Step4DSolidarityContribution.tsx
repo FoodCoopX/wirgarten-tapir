@@ -37,7 +37,7 @@ const Step4DSolidarityContribution: React.FC<
       setSolidarityContribution(selectedValue);
       return;
     }
-    const customContribution = parseFloat(customValue);
+    const customContribution = parseFloat(customValue.replace("\u00A0€", ""));
     if (isNaN(customContribution)) {
       return;
     }
@@ -168,12 +168,17 @@ const Step4DSolidarityContribution: React.FC<
               </Form.Text>
             )}
             <Form.Control
+              id={"custom_solidarity_contribution"}
               placeholder={"Personalisierter Beitrag"}
-              type={"number"}
-              step={0.01}
-              min={settings.solidarityContributionMinimum ?? undefined}
               value={customValue}
-              onChange={(event) => setCustomValue(event.target.value)}
+              onChange={(event) =>
+                setCustomValue(
+                  event.target.value
+                    .replace("\u00A0", "")
+                    .replace("€", "")
+                    .trim() + "\u00A0€",
+                )
+              }
               style={{ maxWidth: "300px" }}
               isValid={
                 showValidation &&
