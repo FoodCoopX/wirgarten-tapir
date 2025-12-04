@@ -132,6 +132,12 @@ class ParameterKeys:
     BESTELLWIZARD_STEP3_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step3.background_image"
     )
+    BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER = (
+        f"{PREFIX}.bestellwizard.step4b.waiting_list_modal.header"
+    )
+    BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_TEXT = (
+        f"{PREFIX}.bestellwizard.step4b.waiting_list_modal.text"
+    )
     BESTELLWIZARD_STEP4D_TITLE = f"{PREFIX}.bestellwizard.step4d.title"
     BESTELLWIZARD_STEP4D_TEXT = f"{PREFIX}.bestellwizard.step4d.text"
     BESTELLWIZARD_STEP4D_BACKGROUND_IMAGE = (

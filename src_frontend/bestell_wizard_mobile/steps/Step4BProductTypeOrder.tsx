@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PublicProduct, PublicProductType } from "../../api-client";
 import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
-import { Button, Carousel, Form } from "react-bootstrap";
+import { Button, Carousel, Form, Modal } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
@@ -49,6 +49,8 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   const carouselRef = useRef<CarouselRef>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [waitingListModalOpen, setWaitingListModalOpen] = useState(false);
+  const [waitingListInfoModalOpen, setWaitingListInfoModalOpen] =
+    useState(false);
 
   useEffect(() => {
     if (!active) {
@@ -278,14 +280,29 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     </>
                   )}
                   <br />
-                  <span
-                    className={"text-danger"}
-                    style={{
-                      opacity: showCapacityWarning(product) ? 1 : 0,
-                    }}
+                  <div
+                    className={
+                      "d-flex flex-row gap-2 justify-content-center align-items-center"
+                    }
+                    style={
+                      showCapacityWarning(product)
+                        ? {}
+                        : {
+                            opacity: 0,
+                            pointerEvents: "none",
+                          }
+                    }
                   >
-                    (nur Warteliste-Eintrag möglich)
-                  </span>
+                    <span className={"text-danger"}>
+                      (nur Warteliste-Eintrag möglich)
+                    </span>
+                    <TapirButton
+                      icon={"help"}
+                      size={"sm"}
+                      variant={BUTTON_VARIANT}
+                      onClick={() => setWaitingListInfoModalOpen(true)}
+                    />
+                  </div>
                 </Form.Text>
               </div>
             </Carousel.Item>
@@ -313,6 +330,30 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         confirmEnableWaitingListMode={confirmEnableProductWaitingListMode}
         productType={productType}
       />
+      <Modal
+        show={waitingListInfoModalOpen}
+        onHide={() => setWaitingListInfoModalOpen(false)}
+        centered={true}
+      >
+        <Modal.Header>
+          {settings.strings.step4bWaitingListModalTitle}
+        </Modal.Header>
+        <Modal.Body>
+          <p
+            dangerouslySetInnerHTML={{
+              __html: settings.strings.step4bWaitingListModalText,
+            }}
+          ></p>
+        </Modal.Body>
+        <Modal.Footer>
+          <TapirButton
+            text={"Schließen"}
+            variant={BUTTON_VARIANT}
+            onClick={() => setWaitingListInfoModalOpen(false)}
+            icon={"close"}
+          />
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

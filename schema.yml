@@ -4825,6 +4825,10 @@ components:
           type: string
         step3_text:
           type: string
+        step4b_waiting_list_modal_title:
+          type: string
+        step4b_waiting_list_modal_text:
+          type: string
         step4d_title:
           type: string
         step4d_text:
@@ -4889,6 +4893,8 @@ components:
       - step2_title
       - step3_text
       - step3_title
+      - step4b_waiting_list_modal_text
+      - step4b_waiting_list_modal_title
       - step4d_text
       - step4d_title
       - step5a_text

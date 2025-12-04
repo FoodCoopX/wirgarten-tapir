@@ -1093,6 +1093,28 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER,
+            label="Seite 4B: Produkt-Typ Bestellung - Popup zu Warteliste - Title",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Warteliste",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_TEXT,
+            label="Seite 4B: Produkt-Typ Bestellung - Popup zu Warteliste - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Diese standard Text zu Warteliste soll in der Konfig unter 'Seite 4B: Produkt-Typ Bestellung - Popup zu Warteliste - Text' angepasst werden",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,
             label="Seite 4D: Solidarbeitrag - Title",
             datatype=TapirParameterDatatype.STRING,

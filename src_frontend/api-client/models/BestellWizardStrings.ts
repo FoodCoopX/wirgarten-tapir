@@ -72,6 +72,18 @@ export interface BestellWizardStrings {
      * @type {string}
      * @memberof BestellWizardStrings
      */
+    step4bWaitingListModalTitle: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    step4bWaitingListModalText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
     step4dTitle: string;
     /**
      * 
@@ -219,6 +231,8 @@ export function instanceOfBestellWizardStrings(value: object): value is BestellW
     if (!('step2Text' in value) || value['step2Text'] === undefined) return false;
     if (!('step3Title' in value) || value['step3Title'] === undefined) return false;
     if (!('step3Text' in value) || value['step3Text'] === undefined) return false;
+    if (!('step4bWaitingListModalTitle' in value) || value['step4bWaitingListModalTitle'] === undefined) return false;
+    if (!('step4bWaitingListModalText' in value) || value['step4bWaitingListModalText'] === undefined) return false;
     if (!('step4dTitle' in value) || value['step4dTitle'] === undefined) return false;
     if (!('step4dText' in value) || value['step4dText'] === undefined) return false;
     if (!('step5aTitle' in value) || value['step5aTitle'] === undefined) return false;
@@ -263,6 +277,8 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step2Text': json['step2_text'],
         'step3Title': json['step3_title'],
         'step3Text': json['step3_text'],
+        'step4bWaitingListModalTitle': json['step4b_waiting_list_modal_title'],
+        'step4bWaitingListModalText': json['step4b_waiting_list_modal_text'],
         'step4dTitle': json['step4d_title'],
         'step4dText': json['step4d_text'],
         'step5aTitle': json['step5a_title'],
@@ -308,6 +324,8 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step2_text': value['step2Text'],
         'step3_title': value['step3Title'],
         'step3_text': value['step3Text'],
+        'step4b_waiting_list_modal_title': value['step4bWaitingListModalTitle'],
+        'step4b_waiting_list_modal_text': value['step4bWaitingListModalText'],
         'step4d_title': value['step4dTitle'],
         'step4d_text': value['step4dText'],
         'step5a_title': value['step5aTitle'],
