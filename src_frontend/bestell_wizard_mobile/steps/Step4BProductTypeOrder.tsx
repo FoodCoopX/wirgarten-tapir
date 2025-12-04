@@ -253,7 +253,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     </>
                   )}
                   <br />
-                  <div
+                  <span
                     className={
                       "d-flex flex-row gap-2 justify-content-center align-items-center"
                     }
@@ -275,7 +275,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                       variant={BUTTON_VARIANT}
                       onClick={() => setWaitingListInfoModalOpen(true)}
                     />
-                  </div>
+                  </span>
                 </Form.Text>
               </div>
             </Carousel.Item>

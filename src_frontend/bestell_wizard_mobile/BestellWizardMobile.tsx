@@ -57,6 +57,7 @@ import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
 import { isProductTypeOrdered } from "../bestell_wizard/utils/isProductTypeOrdered.ts";
 import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
 import { PickupLocationTab } from "./types/PickupLocationTab.ts";
+import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -164,6 +165,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
         ),
       );
   }, []);
+
+  useEffect(() => {
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      if (isAtLeastOneProductOrdered(shoppingCart)) {
+        event.preventDefault();
+      }
+    }
+
+    addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [shoppingCart]);
 
   useEffect(() => {
     const element = document.getElementById(currentStep);
