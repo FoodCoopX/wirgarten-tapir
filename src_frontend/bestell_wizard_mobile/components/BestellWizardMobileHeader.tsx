@@ -84,7 +84,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
                   {atLeastOneProductTypeInWaitingList && (
                     <>
                       <br />
-                      <small>Exkl. Warteliste</small>
+                      <small>ohne Warteliste</small>
                     </>
                   )}
                 </span>
