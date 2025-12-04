@@ -13,6 +13,10 @@ import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/uti
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import {
+  ALL_PICKUP_LOCATION_TABS,
+  PickupLocationTab,
+} from "../types/PickupLocationTab.ts";
 
 interface Step5BPickupLocationChoiceProps {
   settings: BestellWizardSettings;
@@ -29,9 +33,9 @@ interface Step5BPickupLocationChoiceProps {
   productTypesInWaitingList: Set<PublicProductType>;
   setProductTypesInWaitingList: (set: Set<PublicProductType>) => void;
   shoppingCart: ShoppingCart;
+  currentTab: PickupLocationTab;
+  setCurrentTab: (tab: PickupLocationTab) => void;
 }
-
-type PickupLocationTab = "wishes" | "list" | "map";
 
 const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   settings,
@@ -46,10 +50,10 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   productTypesInWaitingList,
   setProductTypesInWaitingList,
   shoppingCart,
+  currentTab,
+  setCurrentTab,
 }) => {
-  const tabs: PickupLocationTab[] = ["map", "list", "wishes"];
   const [showValidation, setShowValidation] = useState(false);
-  const [currentTab, setCurrentTab] = useState<PickupLocationTab>("map");
   const carouselRef = useRef<CarouselRef>(null);
   const [mapRef, setMapRef] = useState<MapRef>(null);
   const [waitingListModalOpen, setWaitingListModalOpen] = useState(false);
@@ -120,30 +124,28 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   return (
     <>
       <ButtonGroup style={{ width: "100%" }}>
-        {tabs
-          .filter(
-            (tab) => tab !== "wishes" || productTypesInWaitingList.size > 0,
-          )
-          .map((tab) => (
-            <ToggleButton
-              key={tab}
-              id={tab}
-              value={tab}
-              type={"radio"}
-              variant={BUTTON_VARIANT}
-              name={"tabs"}
-              checked={currentTab === tab}
-              onChange={(event) =>
-                setCurrentTab(event.target.value as PickupLocationTab)
-              }
-              style={{ width: "100%" }}
-            >
-              {tab === "wishes" ? "Wünsche" : tab === "map" ? "Karte" : "Liste"}
-            </ToggleButton>
-          ))}
+        {ALL_PICKUP_LOCATION_TABS.filter(
+          (tab) => tab !== "wishes" || productTypesInWaitingList.size > 0,
+        ).map((tab) => (
+          <ToggleButton
+            key={tab}
+            id={tab}
+            value={tab}
+            type={"radio"}
+            variant={BUTTON_VARIANT}
+            name={"tabs"}
+            checked={currentTab === tab}
+            onChange={(event) =>
+              setCurrentTab(event.target.value as PickupLocationTab)
+            }
+            style={{ width: "100%" }}
+          >
+            {tab === "wishes" ? "Wünsche" : tab === "map" ? "Karte" : "Liste"}
+          </ToggleButton>
+        ))}
       </ButtonGroup>
       <Carousel
-        activeIndex={tabs.indexOf(currentTab)}
+        activeIndex={ALL_PICKUP_LOCATION_TABS.indexOf(currentTab)}
         indicators={false}
         controls={false}
         interval={null}

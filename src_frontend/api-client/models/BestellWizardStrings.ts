@@ -108,6 +108,18 @@ export interface BestellWizardStrings {
      * @type {string}
      * @memberof BestellWizardStrings
      */
+    step5cTitle: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    step5cText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
     step6aTitle: string;
     /**
      * 
@@ -237,6 +249,8 @@ export function instanceOfBestellWizardStrings(value: object): value is BestellW
     if (!('step4dText' in value) || value['step4dText'] === undefined) return false;
     if (!('step5aTitle' in value) || value['step5aTitle'] === undefined) return false;
     if (!('step5aText' in value) || value['step5aText'] === undefined) return false;
+    if (!('step5cTitle' in value) || value['step5cTitle'] === undefined) return false;
+    if (!('step5cText' in value) || value['step5cText'] === undefined) return false;
     if (!('step6aTitle' in value) || value['step6aTitle'] === undefined) return false;
     if (!('step6aText' in value) || value['step6aText'] === undefined) return false;
     if (!('step6bTitle' in value) || value['step6bTitle'] === undefined) return false;
@@ -283,6 +297,8 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step4dText': json['step4d_text'],
         'step5aTitle': json['step5a_title'],
         'step5aText': json['step5a_text'],
+        'step5cTitle': json['step5c_title'],
+        'step5cText': json['step5c_text'],
         'step6aTitle': json['step6a_title'],
         'step6aText': json['step6a_text'],
         'step6bTitle': json['step6b_title'],
@@ -330,6 +346,8 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step4d_text': value['step4dText'],
         'step5a_title': value['step5aTitle'],
         'step5a_text': value['step5aText'],
+        'step5c_title': value['step5cTitle'],
+        'step5c_text': value['step5cText'],
         'step6a_title': value['step6aTitle'],
         'step6a_text': value['step6aText'],
         'step6b_title': value['step6bTitle'],

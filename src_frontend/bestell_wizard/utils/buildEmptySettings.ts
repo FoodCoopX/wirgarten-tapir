@@ -43,6 +43,8 @@ export function buildEmptySettings(): BestellWizardSettings {
       step4dText: "",
       step5aTitle: "",
       step5aText: "",
+      step5cTitle: "",
+      step5cText: "",
       step6aTitle: "",
       step6aText: "",
       step6bTitle: "",

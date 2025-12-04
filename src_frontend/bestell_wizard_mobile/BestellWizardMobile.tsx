@@ -55,6 +55,8 @@ import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/uti
 import { buildSteps } from "./utils/buildSteps.ts";
 import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
 import { isProductTypeOrdered } from "../bestell_wizard/utils/isProductTypeOrdered.ts";
+import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
+import { PickupLocationTab } from "./types/PickupLocationTab.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -127,6 +129,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
     Set<PublicProductType>
   >(new Set<PublicProductType>());
   const [becomeMemberNow, setBecomeMemberNow] = useState<boolean | null>(null);
+  const [currentPickupLocationTab, setCurrentPickupLocationTab] =
+    useState<PickupLocationTab>("map");
 
   useEffect(() => {
     Promise.all([
@@ -187,6 +191,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       shoppingCart,
       becomeMemberNow,
       productTypesInWaitingList,
+      selectedPickupLocations,
+      pickupLocationsWithCapacityFull,
     );
 
     setSteps(newSteps);
@@ -200,6 +206,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
     studentStatusEnabled,
     becomeMemberNow,
     productTypesInWaitingList,
+    selectedPickupLocations,
+    pickupLocationsWithCapacityFull,
   ]);
 
   useEffect(() => {
@@ -389,6 +397,17 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
             setProductTypesInWaitingList={setProductTypesInWaitingList}
+            currentTab={currentPickupLocationTab}
+            setCurrentTab={setCurrentPickupLocationTab}
+          />
+        );
+      case "5c_pickup_location_confirm_waiting_list":
+        return (
+          <Step5CPickupLocationConfirmWaitingList
+            settings={settings}
+            setCurrentStep={setCurrentStep}
+            goToNextStep={goToNextStep}
+            setCurrentTab={setCurrentPickupLocationTab}
           />
         );
       case "6a_coop_intro":

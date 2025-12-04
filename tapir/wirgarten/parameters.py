@@ -1186,6 +1186,29 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP5C_TITLE,
+            label="Seite 5C: Bestätigung der Verteilstation - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Verteilstation-Wünsche",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP5C_TEXT,
+            label="Seite 5C: Bestätigung der Verteilstation - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du hast gerade nur einen Verteilstation-Wunsch eingetragen. Diese Station ist gerade ausgelastet. Um deine Chancen schneller einzusteigen zu erhöhen, kannst du weitere Wünsche eintragen.",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
             label="Seite 6A: Genossenschaft Einführung - Titel",
             datatype=TapirParameterDatatype.STRING,

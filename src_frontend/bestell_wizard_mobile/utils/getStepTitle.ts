@@ -20,6 +20,8 @@ export function getStepTitle(
       return settings.strings.step5aTitle;
     case "5b_pickup_location_choice":
       return "An welcher Verteilstation möchtest du abholen?";
+    case "5c_pickup_location_confirm_waiting_list":
+      return settings.strings.step5cTitle;
     case "6a_coop_intro":
       return settings.strings.step6aTitle;
     case "6b_coop_shares":

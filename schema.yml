@@ -4837,6 +4837,10 @@ components:
           type: string
         step5a_text:
           type: string
+        step5c_title:
+          type: string
+        step5c_text:
+          type: string
         step6a_title:
           type: string
         step6a_text:
@@ -4899,6 +4903,8 @@ components:
       - step4d_title
       - step5a_text
       - step5a_title
+      - step5c_text
+      - step5c_title
       - step6a_text
       - step6a_title
       - step6b_text

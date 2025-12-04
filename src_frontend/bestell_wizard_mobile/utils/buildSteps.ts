@@ -1,7 +1,7 @@
 import { Step } from "../types/Step.ts";
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { PublicProductType } from "../../api-client";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 
@@ -11,6 +11,8 @@ export function buildSteps(
   shoppingCart: ShoppingCart,
   becomeMemberNow: boolean | null,
   productTypesInWaitingList: Set<PublicProductType>,
+  selectedPickupLocation: PublicPickupLocation[],
+  pickupLocationsWithCapacityFull: Set<PublicPickupLocation>,
 ) {
   const newSteps: Step[] = [];
   newSteps.push(
@@ -41,6 +43,13 @@ export function buildSteps(
   ) {
     newSteps.push("5a_pickup_location_intro");
     newSteps.push("5b_pickup_location_choice");
+
+    if (
+      selectedPickupLocation.length === 1 &&
+      pickupLocationsWithCapacityFull.has(selectedPickupLocation[0])
+    ) {
+      newSteps.push("5c_pickup_location_confirm_waiting_list");
+    }
   }
 
   for (const productType of selectedProductTypes) {
