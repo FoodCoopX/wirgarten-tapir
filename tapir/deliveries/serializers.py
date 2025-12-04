@@ -76,6 +76,12 @@ class GrowingPeriodSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class PublicGrowingPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GrowingPeriod
+        fields = ["start_date", "end_date"]
+
+
 class JokerWithCancellationLimitSerializer(serializers.Serializer):
     joker = JokerSerializer()
     cancellation_limit = serializers.DateField()
@@ -122,3 +128,4 @@ class GrowingPeriodWithDeliveryDayAdjustmentsSerializer(serializers.Serializer):
         validators=[JokerManagementService.validate_joker_restrictions]
     )
     jokers_enabled = serializers.BooleanField(read_only=True)
+    is_available_in_bestell_wizard = serializers.BooleanField()

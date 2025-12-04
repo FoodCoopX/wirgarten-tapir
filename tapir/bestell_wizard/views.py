@@ -40,6 +40,9 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 from tapir.subscriptions.services.global_capacity_checker import (
     GlobalCapacityChecker,
 )
+from tapir.subscriptions.services.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
+)
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
@@ -427,6 +430,9 @@ class BestellWizardBaseDataApiView(APIView):
             ),
             "feedback_step_enabled": get_parameter_value(
                 key=ParameterKeys.BESTELLWIZARD_STEP13_ENABLED, cache=self.cache
+            ),
+            "growing_period_choices": GrowingPeriodChoiceProvider.get_available_growing_periods(
+                reference_date=get_today(cache=self.cache)
             ),
             "strings": self.build_strings_object(cache=self.cache),
             "images": self.build_images_object(cache=self.cache),

@@ -75,6 +75,12 @@ export interface GrowingPeriodWithDeliveryDayAdjustments {
      * @memberof GrowingPeriodWithDeliveryDayAdjustments
      */
     readonly jokersEnabled: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof GrowingPeriodWithDeliveryDayAdjustments
+     */
+    isAvailableInBestellWizard: boolean;
 }
 
 /**
@@ -89,6 +95,7 @@ export function instanceOfGrowingPeriodWithDeliveryDayAdjustments(value: object)
     if (!('maxJokersPerMember' in value) || value['maxJokersPerMember'] === undefined) return false;
     if (!('jokerRestrictions' in value) || value['jokerRestrictions'] === undefined) return false;
     if (!('jokersEnabled' in value) || value['jokersEnabled'] === undefined) return false;
+    if (!('isAvailableInBestellWizard' in value) || value['isAvailableInBestellWizard'] === undefined) return false;
     return true;
 }
 
@@ -110,6 +117,7 @@ export function GrowingPeriodWithDeliveryDayAdjustmentsFromJSONTyped(json: any, 
         'maxJokersPerMember': json['max_jokers_per_member'],
         'jokerRestrictions': json['joker_restrictions'],
         'jokersEnabled': json['jokers_enabled'],
+        'isAvailableInBestellWizard': json['is_available_in_bestell_wizard'],
     };
 }
 
@@ -131,6 +139,7 @@ export function GrowingPeriodWithDeliveryDayAdjustmentsFromJSONTyped(json: any, 
         'adjustments': ((value['adjustments'] as Array<any>).map(DeliveryDayAdjustmentToJSON)),
         'max_jokers_per_member': value['maxJokersPerMember'],
         'joker_restrictions': value['jokerRestrictions'],
+        'is_available_in_bestell_wizard': value['isAvailableInBestellWizard'],
     };
 }
 

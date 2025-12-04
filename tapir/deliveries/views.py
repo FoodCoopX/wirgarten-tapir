@@ -274,6 +274,7 @@ class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
                     "jokers_enabled": get_parameter_value(
                         ParameterKeys.JOKERS_ENABLED, cache=self.cache
                     ),
+                    "is_available_in_bestell_wizard": growing_period.is_available_in_bestell_wizard,
                 }
             ).data,
             status=status.HTTP_200_OK,
@@ -312,6 +313,9 @@ class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
             growing_period.joker_restrictions = request_serializer.validated_data[
                 "joker_restrictions"
             ]
+            growing_period.is_available_in_bestell_wizard = (
+                request_serializer.validated_data["is_available_in_bestell_wizard"]
+            )
             growing_period.save()
 
             DeliveryDayAdjustment.objects.filter(growing_period=growing_period).delete()

@@ -80,6 +80,9 @@ class ParameterKeys:
     SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT = (
         f"{PREFIX}.subscriptions.four_week_cycle_start_point"
     )
+    ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE = (
+        f"{PREFIX}.subscriptions.days_before_growing_period_choice"
+    )
 
     TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"

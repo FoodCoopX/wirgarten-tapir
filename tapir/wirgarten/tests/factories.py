@@ -145,7 +145,10 @@ class GrowingPeriodFactory(factory.django.DjangoModelFactory[GrowingPeriod]):
         model = GrowingPeriod
 
     start_date = TODAY + relativedelta(day=1)
-    end_date = start_date + relativedelta(years=1, days=-1)
+    end_date = factory.LazyAttribute(
+        lambda growing_period: growing_period.start_date
+        + relativedelta(years=1, days=-1)
+    )
 
 
 class ProductCapacityFactory(factory.django.DjangoModelFactory[ProductCapacity]):

@@ -136,6 +136,7 @@ models/ProductTypeAccordionInBestellWizard.ts
 models/ProductTypeAccordionInBestellWizardRequest.ts
 models/ProductTypesAndConfig.ts
 models/PublicConfirmWaitingListEntryRequestRequest.ts
+models/PublicGrowingPeriod.ts
 models/PublicPickupLocation.ts
 models/PublicProduct.ts
 models/PublicProductType.ts

@@ -41,6 +41,13 @@ import {
     SolidarityContributionUnitEnumToJSON,
     SolidarityContributionUnitEnumToJSONTyped,
 } from './SolidarityContributionUnitEnum';
+import type { PublicGrowingPeriod } from './PublicGrowingPeriod';
+import {
+    PublicGrowingPeriodFromJSON,
+    PublicGrowingPeriodFromJSONTyped,
+    PublicGrowingPeriodToJSON,
+    PublicGrowingPeriodToJSONTyped,
+} from './PublicGrowingPeriod';
 import type { BestellWizardImages } from './BestellWizardImages';
 import {
     BestellWizardImagesFromJSON,
@@ -219,6 +226,12 @@ export interface BestellWizardBaseDataResponse {
     feedbackStepEnabled: boolean;
     /**
      * 
+     * @type {Array<PublicGrowingPeriod>}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    growingPeriodChoices: Array<PublicGrowingPeriod>;
+    /**
+     * 
      * @type {BestellWizardStrings}
      * @memberof BestellWizardBaseDataResponse
      */
@@ -264,6 +277,7 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('solidarityContributionChoices' in value) || value['solidarityContributionChoices'] === undefined) return false;
     if (!('solidarityContributionMinimum' in value) || value['solidarityContributionMinimum'] === undefined) return false;
     if (!('feedbackStepEnabled' in value) || value['feedbackStepEnabled'] === undefined) return false;
+    if (!('growingPeriodChoices' in value) || value['growingPeriodChoices'] === undefined) return false;
     if (!('strings' in value) || value['strings'] === undefined) return false;
     if (!('images' in value) || value['images'] === undefined) return false;
     return true;
@@ -306,6 +320,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'solidarityContributionChoices': json['solidarity_contribution_choices'],
         'solidarityContributionMinimum': json['solidarity_contribution_minimum'],
         'feedbackStepEnabled': json['feedback_step_enabled'],
+        'growingPeriodChoices': ((json['growing_period_choices'] as Array<any>).map(PublicGrowingPeriodFromJSON)),
         'strings': BestellWizardStringsFromJSON(json['strings']),
         'images': BestellWizardImagesFromJSON(json['images']),
     };
@@ -349,6 +364,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'solidarity_contribution_choices': value['solidarityContributionChoices'],
         'solidarity_contribution_minimum': value['solidarityContributionMinimum'],
         'feedback_step_enabled': value['feedbackStepEnabled'],
+        'growing_period_choices': ((value['growingPeriodChoices'] as Array<any>).map(PublicGrowingPeriodToJSON)),
         'strings': BestellWizardStringsToJSON(value['strings']),
         'images': BestellWizardImagesToJSON(value['images']),
     };

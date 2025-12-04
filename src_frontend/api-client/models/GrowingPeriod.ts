@@ -55,6 +55,12 @@ export interface GrowingPeriod {
      * @memberof GrowingPeriod
      */
     jokerRestrictions?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof GrowingPeriod
+     */
+    isAvailableInBestellWizard?: boolean;
 }
 
 /**
@@ -82,6 +88,7 @@ export function GrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator: boole
         'weeksWithoutDelivery': json['weeks_without_delivery'] == null ? undefined : json['weeks_without_delivery'],
         'maxJokersPerMember': json['max_jokers_per_member'] == null ? undefined : json['max_jokers_per_member'],
         'jokerRestrictions': json['joker_restrictions'] == null ? undefined : json['joker_restrictions'],
+        'isAvailableInBestellWizard': json['is_available_in_bestell_wizard'] == null ? undefined : json['is_available_in_bestell_wizard'],
     };
 }
 
@@ -102,6 +109,7 @@ export function GrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator: boole
         'weeks_without_delivery': value['weeksWithoutDelivery'],
         'max_jokers_per_member': value['maxJokersPerMember'],
         'joker_restrictions': value['jokerRestrictions'],
+        'is_available_in_bestell_wizard': value['isAvailableInBestellWizard'],
     };
 }
 

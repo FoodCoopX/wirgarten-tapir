@@ -4617,6 +4617,10 @@ components:
           nullable: true
         feedback_step_enabled:
           type: boolean
+        growing_period_choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicGrowingPeriod'
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
         images:
@@ -4629,6 +4633,7 @@ components:
       - distribution_channels
       - feedback_step_enabled
       - force_waiting_list
+      - growing_period_choices
       - images
       - intro_enabled
       - intro_step_text
@@ -6518,6 +6523,8 @@ components:
         joker_restrictions:
           type: string
           maxLength: 1024
+        is_available_in_bestell_wizard:
+          type: boolean
       required:
       - end_date
       - start_date
@@ -6548,6 +6555,8 @@ components:
           type: string
           minLength: 1
           maxLength: 1024
+        is_available_in_bestell_wizard:
+          type: boolean
       required:
       - end_date
       - start_date
@@ -6577,12 +6586,15 @@ components:
         jokers_enabled:
           type: boolean
           readOnly: true
+        is_available_in_bestell_wizard:
+          type: boolean
       required:
       - adjustments
       - growing_period_end_date
       - growing_period_id
       - growing_period_start_date
       - growing_period_weeks_without_delivery
+      - is_available_in_bestell_wizard
       - joker_restrictions
       - jokers_enabled
       - max_jokers_per_member
@@ -6712,6 +6724,11 @@ components:
           nullable: true
           title: Telefonnummer
           maxLength: 128
+        phone_number_landline:
+          type: string
+          nullable: true
+          title: Phone number (landline)
+          maxLength: 128
         birthdate:
           type: string
           format: date
@@ -6734,6 +6751,11 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        form_of_address:
+          type: string
+          nullable: true
+          title: Liebe/Lieber
+          maxLength: 20
         preferred_language:
           $ref: '#/components/schemas/PreferredLanguageEnum'
         account_owner:
@@ -7353,6 +7375,8 @@ components:
           type: string
           minLength: 1
           maxLength: 1024
+        is_available_in_bestell_wizard:
+          type: boolean
     PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest:
       type: object
       properties:
@@ -7378,6 +7402,8 @@ components:
         joker_restrictions:
           type: string
           minLength: 1
+        is_available_in_bestell_wizard:
+          type: boolean
     PatchedPdfExportModelRequest:
       type: object
       properties:
@@ -8201,6 +8227,18 @@ components:
       - number_of_coop_shares
       - payment_rhythm
       - sepa_allowed
+    PublicGrowingPeriod:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - start_date
     PublicPickupLocation:
       type: object
       properties:
