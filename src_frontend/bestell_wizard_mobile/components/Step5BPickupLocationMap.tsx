@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PublicPickupLocation } from "../../api-client";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
@@ -10,6 +10,9 @@ import "leaflet/dist/leaflet.css";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -22,6 +25,8 @@ interface Step5BPickupLocationMapProps {
   firstDeliveryDatesByPickupLocationAndProductType: {
     [key: string]: { [key: string]: Date };
   };
+  shoppingCart: ShoppingCart;
+  productTypesInWaitingList: Set<PublicProductType>;
 }
 
 const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
@@ -33,6 +38,8 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   setMapRef,
   pickupLocationsWithCapacityFull,
   firstDeliveryDatesByPickupLocationAndProductType,
+  shoppingCart,
+  productTypesInWaitingList,
 }) => {
   const [firstRender, setFirstRender] = useState(true);
 
@@ -166,10 +173,18 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
                   <span className={"text-danger"}>Ausgelastet</span>
                 ) : (
                   <span className={"text-success"}>
-                    {getFirstDelivery(
-                      pickupLocation.id!,
-                      firstDeliveryDatesByPickupLocationAndProductType,
-                    )}
+                    {isAtLeastOneProductOrdered(
+                      buildFilteredShoppingCart(
+                        shoppingCart,
+                        false,
+                        productTypesInWaitingList,
+                      ),
+                    )
+                      ? getFirstDelivery(
+                          pickupLocation.id!,
+                          firstDeliveryDatesByPickupLocationAndProductType,
+                        )
+                      : "Kapazität frei"}
                   </span>
                 )}
                 <div>

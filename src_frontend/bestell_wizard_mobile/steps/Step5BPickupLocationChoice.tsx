@@ -167,6 +167,8 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               firstDeliveryDatesByPickupLocationAndProductType={
                 firstDeliveryDatesByPickupLocationAndProductType
               }
+              productTypesInWaitingList={productTypesInWaitingList}
+              shoppingCart={shoppingCart}
             />
           </div>
         </Carousel.Item>
