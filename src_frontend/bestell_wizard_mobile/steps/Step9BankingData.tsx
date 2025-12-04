@@ -116,7 +116,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           isValid={isIbanValid(personalData.iban)}
           extraText={
             showValidation && !isIbanValid(personalData.iban)
-              ? "Ungültiges IBAN"
+              ? "Ungültige IBAN"
               : ""
           }
         />
