@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import { PublicPickupLocation } from "../../api-client";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
@@ -10,7 +10,6 @@ import "leaflet/dist/leaflet.css";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -23,8 +22,6 @@ interface Step5BPickupLocationMapProps {
   firstDeliveryDatesByPickupLocationAndProductType: {
     [key: string]: { [key: string]: Date };
   };
-  productTypesInWaitingList: Set<PublicProductType>;
-  shoppingCart: ShoppingCart;
 }
 
 const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
@@ -36,8 +33,6 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   setMapRef,
   pickupLocationsWithCapacityFull,
   firstDeliveryDatesByPickupLocationAndProductType,
-  productTypesInWaitingList,
-  shoppingCart,
 }) => {
   const [firstRender, setFirstRender] = useState(true);
 
