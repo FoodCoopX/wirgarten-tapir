@@ -52,9 +52,9 @@ import { CONTENT_HEIGHT, HEADER_HEIGHT } from "./utils/DIMENSIONS.ts";
 import Step4DSolidarityContribution from "./steps/Step4DSolidarityContribution.tsx";
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
-import { shouldProductTypeBeRemovedFromWaitingList } from "./utils/shouldProductTypeBeRemovedFromWaitingList.ts";
 import { buildSteps } from "./utils/buildSteps.ts";
 import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
+import { isProductTypeOrdered } from "../bestell_wizard/utils/isProductTypeOrdered.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -261,30 +261,31 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
   }, [shoppingCart]);
 
   useEffect(() => {
-    for (const pickupLocation of selectedPickupLocations) {
-      if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
-        return;
+    const newSet = new Set<PublicProductType>();
+
+    const pickupLocationForcesWaitingList =
+      selectedPickupLocations.length > 0 &&
+      pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]);
+    for (const productType of settings.productTypes) {
+      if (!isProductTypeOrdered(productType, shoppingCart)) {
+        continue;
+      }
+      if (productTypeIdsOverCapacity.includes(productType.id!)) {
+        newSet.add(productType);
+      }
+
+      if (pickupLocationForcesWaitingList && !productType.noDelivery) {
+        newSet.add(productType);
       }
     }
 
-    setProductTypesInWaitingList(
-      new Set(
-        [...productTypesInWaitingList].filter(
-          (productType) =>
-            !shouldProductTypeBeRemovedFromWaitingList(
-              productType,
-              settings,
-              productTypeIdsOverCapacity,
-              productIdsOverCapacity,
-            ),
-        ),
-      ),
-    );
+    setProductTypesInWaitingList(newSet);
   }, [
     productTypeIdsOverCapacity,
     productIdsOverCapacity,
     pickupLocationsWithCapacityFull,
     selectedPickupLocations,
+    shoppingCart,
   ]);
 
   function goToNextStep() {
@@ -552,7 +553,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
                   waitingListEntryDetails !== undefined
                 }
                 productTypesInWaitingList={productTypesInWaitingList}
-                setProductTypesInWaitingList={setProductTypesInWaitingList}
               />
             );
         }

@@ -14,8 +14,6 @@ import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { CarouselRef } from "react-bootstrap/Carousel";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { shouldShowWarningCurrentOrderIsOverCapacity } from "../utils/shouldShowWarningCurrentOrderIsOverCapacity.ts";
-import ProductWaitingListModal from "../../bestell_wizard/components/ProductWaitingListModal.tsx";
-import { shouldOpenProductWaitingListModal } from "../utils/shouldOpenProductWaitingListModal.ts";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
@@ -29,7 +27,6 @@ interface Step4BProductTypeOrderProps {
   productIdsOverCapacity: string[];
   productTypeIdsOverCapacity: string[];
   productTypesInWaitingList: Set<PublicProductType>;
-  setProductTypesInWaitingList: (set: Set<PublicProductType>) => void;
 }
 
 const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
@@ -44,11 +41,9 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   productIdsOverCapacity,
   productTypeIdsOverCapacity,
   productTypesInWaitingList,
-  setProductTypesInWaitingList,
 }) => {
   const carouselRef = useRef<CarouselRef>(null);
   const [showValidation, setShowValidation] = useState(false);
-  const [waitingListModalOpen, setWaitingListModalOpen] = useState(false);
   const [waitingListInfoModalOpen, setWaitingListInfoModalOpen] =
     useState(false);
 
@@ -67,20 +62,6 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       return;
     }
 
-    if (
-      shouldOpenProductWaitingListModal(
-        settings,
-        shoppingCart,
-        productTypesInWaitingList,
-        productTypeIdsOverCapacity,
-        productIdsOverCapacity,
-        productType,
-      )
-    ) {
-      setWaitingListModalOpen(true);
-      return;
-    }
-
     goToNextStep();
   }
 
@@ -95,7 +76,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       ),
     );
 
-    if (productTypeIdsOverCapacity.includes(productType.id!)) {
+    if (productTypesInWaitingList.has(productType)) {
       return (
         "Weiter mit Warteliste: " +
         formatShoppingCart(filteredShoppingCart, settings)
@@ -103,14 +84,6 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     }
 
     return "Weiter mit " + formatShoppingCart(filteredShoppingCart, settings);
-  }
-
-  function confirmEnableProductWaitingListMode() {
-    productTypesInWaitingList.add(productType);
-    setProductTypesInWaitingList(new Set(productTypesInWaitingList));
-
-    setWaitingListModalOpen(false);
-    goToNextStep();
   }
 
   function showCapacityWarning(product: PublicProduct) {
@@ -323,12 +296,6 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         onClick={validate}
         text={getNextButtonText()}
         loading={checkingCapacities}
-      />
-      <ProductWaitingListModal
-        show={waitingListModalOpen}
-        onHide={() => setWaitingListModalOpen(false)}
-        confirmEnableWaitingListMode={confirmEnableProductWaitingListMode}
-        productType={productType}
       />
       <Modal
         show={waitingListInfoModalOpen}
