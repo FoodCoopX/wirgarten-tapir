@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
-import { PublicProductType } from "../../api-client";
+import { PublicProduct, PublicProductType } from "../../api-client";
 import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
-import { Alert, Button, Carousel, Form } from "react-bootstrap";
+import { Button, Carousel, Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
@@ -103,6 +103,18 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     goToNextStep();
   }
 
+  function showCapacityWarning(product: PublicProduct) {
+    return (
+      shouldShowWarningCurrentOrderIsOverCapacity(
+        productType,
+        settings,
+        productTypeIdsOverCapacity,
+        productIdsOverCapacity,
+        shoppingCart,
+      ) || shouldShowWarningProductNotAvailable(product, productType, settings)
+    );
+  }
+
   function buildImageAtIndex(index: number, isBeforeButton: boolean) {
     if (index < 0 || index >= productType.products.length) return;
 
@@ -136,13 +148,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                 style={{
                   maxWidth: "8dvh",
                   objectFit: "contain",
-                  filter: shouldShowWarningProductNotAvailable(
-                    product,
-                    productType,
-                    settings,
-                  )
-                    ? "grayscale(1)"
-                    : "",
+                  filter: showCapacityWarning(product) ? "grayscale(1)" : "",
                 }}
                 alt={"Photo von " + productType.name + " " + product.name}
               />
@@ -183,11 +189,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     style={{
                       maxHeight: "30dvh",
                       objectFit: "contain",
-                      filter: shouldShowWarningProductNotAvailable(
-                        product,
-                        productType,
-                        settings,
-                      )
+                      filter: showCapacityWarning(product)
                         ? "grayscale(1)"
                         : "",
                     }}
@@ -271,13 +273,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                   <span
                     className={"text-danger"}
                     style={{
-                      opacity: shouldShowWarningProductNotAvailable(
-                        product,
-                        productType,
-                        settings,
-                      )
-                        ? 1
-                        : 0,
+                      opacity: showCapacityWarning(product) ? 1 : 0,
                     }}
                   >
                     (nur Warteliste-Eintrag möglich)
@@ -298,21 +294,6 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
             Dieses Produkt muss bestellt werden.
           </Form.Control.Feedback>
         )}
-      {shouldShowWarningCurrentOrderIsOverCapacity(
-        productType,
-        settings,
-        productTypeIdsOverCapacity,
-        productIdsOverCapacity,
-        shoppingCart,
-      ) && (
-        <Alert variant={"warning"}>
-          <small>
-            Derzeit ist deine gewünschte {productType?.name}-Größe nicht
-            verfügbar. Du kannst eine andere Größe wählen, oder dich auf die
-            Warteliste setzen lassen.
-          </small>
-        </Alert>
-      )}
       <NextStepButton
         onClick={validate}
         text={getNextButtonText()}
