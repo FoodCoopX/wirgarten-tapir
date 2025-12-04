@@ -2,7 +2,6 @@ from dateutil.relativedelta import relativedelta
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.config import SOLIDARITY_UNIT_PERCENT
 from tapir.subscriptions.services.base_product_type_service import (
@@ -32,6 +31,11 @@ class SummaryForm(forms.Form):
 
         start_date = initial["general"]["start_date"]
         end_date = initial["general"]["end_date"]
+
+        growing_period = initial["base_product"]["growing_period"]
+        if growing_period.start_date > start_date:
+            start_date = growing_period.start_date
+            end_date = growing_period.end_date
 
         # prepare data for the summary template
         self.harvest_shares = dict()
