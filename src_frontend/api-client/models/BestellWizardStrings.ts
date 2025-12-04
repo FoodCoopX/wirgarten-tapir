@@ -168,6 +168,12 @@ export interface BestellWizardStrings {
      * @type {string}
      * @memberof BestellWizardStrings
      */
+    step6cText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
     step8Title: string;
     /**
      * 
@@ -259,6 +265,7 @@ export function instanceOfBestellWizardStrings(value: object): value is BestellW
     if (!('step6cTextStatute' in value) || value['step6cTextStatute'] === undefined) return false;
     if (!('step6cCheckboxCommitment' in value) || value['step6cCheckboxCommitment'] === undefined) return false;
     if (!('step6cTitle' in value) || value['step6cTitle'] === undefined) return false;
+    if (!('step6cText' in value) || value['step6cText'] === undefined) return false;
     if (!('step8Title' in value) || value['step8Title'] === undefined) return false;
     if (!('step9Title' in value) || value['step9Title'] === undefined) return false;
     if (!('step9PaymentRhythmModalText' in value) || value['step9PaymentRhythmModalText'] === undefined) return false;
@@ -307,6 +314,7 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step6cTextStatute': json['step6c_text_statute'],
         'step6cCheckboxCommitment': json['step6c_checkbox_commitment'],
         'step6cTitle': json['step6c_title'],
+        'step6cText': json['step6c_text'],
         'step8Title': json['step8_title'],
         'step9Title': json['step9_title'],
         'step9PaymentRhythmModalText': json['step9_payment_rhythm_modal_text'],
@@ -356,6 +364,7 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step6c_text_statute': value['step6cTextStatute'],
         'step6c_checkbox_commitment': value['step6cCheckboxCommitment'],
         'step6c_title': value['step6cTitle'],
+        'step6c_text': value['step6cText'],
         'step8_title': value['step8Title'],
         'step9_title': value['step9Title'],
         'step9_payment_rhythm_modal_text': value['step9PaymentRhythmModalText'],

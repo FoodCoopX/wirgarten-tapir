@@ -4857,6 +4857,8 @@ components:
           type: string
         step6c_title:
           type: string
+        step6c_text:
+          type: string
         step8_title:
           type: string
         step9_title:
@@ -4911,6 +4913,7 @@ components:
       - step6b_title
       - step6c_checkbox_commitment
       - step6c_checkbox_statute
+      - step6c_text
       - step6c_text_statute
       - step6c_title
       - step8_title

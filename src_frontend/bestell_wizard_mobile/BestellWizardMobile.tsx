@@ -437,6 +437,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       case "6c_coop_member_now":
         return (
           <Step6CCoopMemberNow
+            settings={settings}
             setCurrentStep={setCurrentStep}
             setBecomeMemberNow={setBecomeMemberNow}
           />
