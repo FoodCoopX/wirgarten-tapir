@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PublicPickupLocation } from "../../api-client";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
@@ -10,6 +10,7 @@ import "leaflet/dist/leaflet.css";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -22,6 +23,8 @@ interface Step5BPickupLocationMapProps {
   firstDeliveryDatesByPickupLocationAndProductType: {
     [key: string]: { [key: string]: Date };
   };
+  productTypesInWaitingList: Set<PublicProductType>;
+  shoppingCart: ShoppingCart;
 }
 
 const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
@@ -33,6 +36,8 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   setMapRef,
   pickupLocationsWithCapacityFull,
   firstDeliveryDatesByPickupLocationAndProductType,
+  productTypesInWaitingList,
+  shoppingCart,
 }) => {
   const [firstRender, setFirstRender] = useState(true);
 
@@ -113,6 +118,18 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
     return "marker-icon.png";
   }
 
+  function getPopupButtonText(pickupLocation: PublicPickupLocation) {
+    if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
+      return selectedPickupLocations.includes(pickupLocation)
+        ? "Als Wunsch eingetragen"
+        : "Als Wunsch eintragen";
+    }
+
+    return selectedPickupLocations.includes(pickupLocation)
+      ? "Ausgewählt"
+      : "Auswählen";
+  }
+
   return (
     <>
       <MapContainer
@@ -171,11 +188,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
                 <div>{formatOpeningTimes(pickupLocation)}</div>
                 <TapirButton
                   size={"sm"}
-                  text={
-                    selectedPickupLocations.includes(pickupLocation)
-                      ? "Ausgewählt"
-                      : "Auswählen"
-                  }
+                  text={getPopupButtonText(pickupLocation)}
                   icon={
                     selectedPickupLocations.includes(pickupLocation)
                       ? "select_check_box"
