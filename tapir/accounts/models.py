@@ -1,7 +1,6 @@
 import logging
 from functools import partial
 
-from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
 from django.contrib.auth import user_logged_out
 from django.contrib.auth.models import AbstractUser
@@ -185,12 +184,18 @@ class TapirUser(KeycloakUser):
     last_name = models.CharField(_("Last Name"), max_length=150, blank=False)
     email = models.CharField(_("Email"), max_length=150, blank=True)
     phone_number = PhoneNumberField(_("Phone number"), blank=True, null=True)
+    phone_number_landline = PhoneNumberField(
+        _("Phone number (landline)"), blank=True, null=True
+    )
     birthdate = models.DateField(_("Birthdate"), blank=True, null=True)
     street = models.CharField(_("Street and house number"), max_length=150, blank=True)
     street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
     postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
     city = models.CharField(_("City"), max_length=50, blank=True)
     country = CountryField(_("Country"), blank=True, default="DE")
+    form_of_address = models.CharField(
+        _("Liebe/Lieber"), max_length=20, blank=True, null=True
+    )
 
     preferred_language = models.CharField(
         _("Preferred Language"),
