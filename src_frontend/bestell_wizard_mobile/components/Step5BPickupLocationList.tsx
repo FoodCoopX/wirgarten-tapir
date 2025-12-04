@@ -1,9 +1,12 @@
 import React, { useEffect } from "react";
-import { PublicPickupLocation } from "../../api-client";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { ListGroup, ListGroupItem, Spinner } from "react-bootstrap";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
 import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 
 interface Step5BPickupLocationListProps {
   pickupLocations: PublicPickupLocation[];
@@ -16,6 +19,8 @@ interface Step5BPickupLocationListProps {
   firstDeliveryDatesByPickupLocationAndProductType: {
     [key: string]: { [key: string]: Date };
   };
+  productTypesInWaitingList: Set<PublicProductType>;
+  shoppingCart: ShoppingCart;
 }
 
 const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
@@ -27,6 +32,8 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   waitingListLinkConfirmationModeEnabled,
   tabIsActive,
   firstDeliveryDatesByPickupLocationAndProductType,
+  shoppingCart,
+  productTypesInWaitingList,
 }) => {
   function getClassForPickupLocationListItem(
     pickupLocation: PublicPickupLocation,
@@ -51,17 +58,31 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
       return <span className={"text-danger"}>Ausgelastet</span>;
     }
 
-    let dateAsString = getFirstDelivery(
-      pickupLocation.id!,
-      firstDeliveryDatesByPickupLocationAndProductType,
-    );
+    let freeCapacityText;
+    if (
+      isAtLeastOneProductOrdered(
+        buildFilteredShoppingCart(
+          shoppingCart,
+          false,
+          productTypesInWaitingList,
+        ),
+      )
+    ) {
+      freeCapacityText = getFirstDelivery(
+        pickupLocation.id!,
+        firstDeliveryDatesByPickupLocationAndProductType,
+      );
+    } else {
+      freeCapacityText = "Kapazität frei";
+    }
+
     return (
       <span
         className={
           selectedPickupLocations.includes(pickupLocation) ? "" : "text-success"
         }
       >
-        {dateAsString}
+        {freeCapacityText}
       </span>
     );
   }
