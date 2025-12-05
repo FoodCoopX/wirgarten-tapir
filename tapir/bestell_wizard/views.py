@@ -432,7 +432,7 @@ class BestellWizardBaseDataApiView(APIView):
                 key=ParameterKeys.BESTELLWIZARD_STEP13_ENABLED, cache=self.cache
             ),
             "growing_period_choices": GrowingPeriodChoiceProvider.get_available_growing_periods(
-                reference_date=get_today(cache=self.cache)
+                reference_date=get_today(cache=self.cache), cache=self.cache
             ),
             "strings": self.build_strings_object(cache=self.cache),
             "images": self.build_images_object(cache=self.cache),
