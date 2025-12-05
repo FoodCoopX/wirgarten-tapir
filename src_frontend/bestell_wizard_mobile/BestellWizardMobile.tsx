@@ -58,6 +58,7 @@ import { isProductTypeOrdered } from "../bestell_wizard/utils/isProductTypeOrder
 import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
 import { PickupLocationTab } from "./types/PickupLocationTab.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { isProductOrdered } from "./utils/isProductOrdered.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -282,25 +283,36 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
   }, [shoppingCart]);
 
   useEffect(() => {
-    const newSet = new Set<PublicProductType>();
+    const newProductsInWaitingList = new Set<PublicProductType>();
 
     const pickupLocationForcesWaitingList =
       selectedPickupLocations.length > 0 &&
       pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]);
+
     for (const productType of settings.productTypes) {
       if (!isProductTypeOrdered(productType, shoppingCart)) {
         continue;
       }
+
       if (productTypeIdsOverCapacity.includes(productType.id!)) {
-        newSet.add(productType);
+        newProductsInWaitingList.add(productType);
       }
 
       if (pickupLocationForcesWaitingList && !productType.noDelivery) {
-        newSet.add(productType);
+        newProductsInWaitingList.add(productType);
+      }
+
+      for (const product of productType.products) {
+        if (
+          isProductOrdered(product, shoppingCart) &&
+          productIdsOverCapacity.includes(product.id!)
+        ) {
+          newProductsInWaitingList.add(productType);
+        }
       }
     }
 
-    setProductTypesInWaitingList(newSet);
+    setProductTypesInWaitingList(newProductsInWaitingList);
   }, [
     productTypeIdsOverCapacity,
     productIdsOverCapacity,
