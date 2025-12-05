@@ -26,8 +26,8 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
   style,
 }) => {
   return (
-    <>
-      <FloatingLabel label={placeholder} controlId={field} style={style}>
+    <div style={style} className={"d-flex flex-column"}>
+      <FloatingLabel label={placeholder} controlId={field}>
         <Form.Control
           placeholder={placeholder}
           value={personalData[field]}
@@ -46,7 +46,7 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
           {extraText}
         </Form.Text>
       )}
-    </>
+    </div>
   );
 };
 
