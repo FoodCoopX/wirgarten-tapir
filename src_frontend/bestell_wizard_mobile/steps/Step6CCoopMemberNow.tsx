@@ -22,24 +22,26 @@ const Step6CCoopMemberNow: React.FC<Step6CCoopMemberNowProps> = ({
         dangerouslySetInnerHTML={{ __html: settings.strings.step6cText }}
         className={"text-center"}
       />
-      <TapirButton
-        text={"Später Mitglied werden"}
-        variant={BUTTON_VARIANT}
-        onClick={() => {
-          setBecomeMemberNow(false);
-          setTimeout(() => setCurrentStep("8_personal_data"), 1);
-        }}
-        icon={"pending_actions"}
-      />
-      <TapirButton
-        text={"Sofort Mitglied werden"}
-        variant={BUTTON_VARIANT}
-        onClick={() => {
-          setBecomeMemberNow(true);
-          setTimeout(() => setCurrentStep("6b_coop_shares"), 50);
-        }}
-        icon={"id_card"}
-      />
+      <div className={"d-flex flex-row gap-2"}>
+        <TapirButton
+          text={"Nein"}
+          variant={BUTTON_VARIANT}
+          onClick={() => {
+            setBecomeMemberNow(false);
+            setTimeout(() => setCurrentStep("8_personal_data"), 1);
+          }}
+          icon={"pending_actions"}
+        />
+        <TapirButton
+          text={"Ja"}
+          variant={BUTTON_VARIANT}
+          onClick={() => {
+            setBecomeMemberNow(true);
+            setTimeout(() => setCurrentStep("6b_coop_shares"), 50);
+          }}
+          icon={"id_card"}
+        />
+      </div>
     </>
   );
 };
