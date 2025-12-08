@@ -6,6 +6,7 @@ import { BestellWizardBaseDataResponse } from "../../api-client";
 export function buildSettings(
   baseData: BestellWizardBaseDataResponse,
 ): BestellWizardSettings {
+  baseData.growingPeriodChoices;
   return {
     theme: baseData.theme as TapirTheme,
     pickupLocations: baseData.pickupLocations,
@@ -34,6 +35,7 @@ export function buildSettings(
     solidarityContributionChoices: baseData.solidarityContributionChoices,
     solidarityContributionMinimum: baseData.solidarityContributionMinimum,
     feedbackStepEnabled: baseData.feedbackStepEnabled,
+    growingPeriodChoices: baseData.growingPeriodChoices,
     strings: baseData.strings,
     images: baseData.images,
   };

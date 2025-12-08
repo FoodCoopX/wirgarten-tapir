@@ -2,6 +2,7 @@ import { TapirTheme } from "../../types/TapirTheme.ts";
 import {
   BestellWizardImages,
   BestellWizardStrings,
+  PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
 } from "../../api-client";
@@ -32,6 +33,7 @@ export type BestellWizardSettings = {
   solidarityContributionChoices: string[];
   solidarityContributionMinimum: number | null;
   feedbackStepEnabled: boolean;
+  growingPeriodChoices: PublicGrowingPeriod[];
   strings: BestellWizardStrings;
   images: BestellWizardImages;
 };

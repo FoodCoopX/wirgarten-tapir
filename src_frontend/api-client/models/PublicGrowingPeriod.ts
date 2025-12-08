@@ -21,6 +21,12 @@ import { mapValues } from '../runtime';
 export interface PublicGrowingPeriod {
     /**
      * 
+     * @type {string}
+     * @memberof PublicGrowingPeriod
+     */
+    id?: string;
+    /**
+     * 
      * @type {Date}
      * @memberof PublicGrowingPeriod
      */
@@ -31,6 +37,12 @@ export interface PublicGrowingPeriod {
      * @memberof PublicGrowingPeriod
      */
     endDate: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof PublicGrowingPeriod
+     */
+    readonly contractStartDate: Date;
 }
 
 /**
@@ -39,6 +51,7 @@ export interface PublicGrowingPeriod {
 export function instanceOfPublicGrowingPeriod(value: object): value is PublicGrowingPeriod {
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
     if (!('endDate' in value) || value['endDate'] === undefined) return false;
+    if (!('contractStartDate' in value) || value['contractStartDate'] === undefined) return false;
     return true;
 }
 
@@ -52,8 +65,10 @@ export function PublicGrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator:
     }
     return {
         
+        'id': json['id'] == null ? undefined : json['id'],
         'startDate': (new Date(json['start_date'])),
         'endDate': (new Date(json['end_date'])),
+        'contractStartDate': (new Date(json['contract_start_date'])),
     };
 }
 
@@ -61,13 +76,14 @@ export function PublicGrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator:
       return PublicGrowingPeriodToJSONTyped(json, false);
   }
 
-  export function PublicGrowingPeriodToJSONTyped(value?: PublicGrowingPeriod | null, ignoreDiscriminator: boolean = false): any {
+  export function PublicGrowingPeriodToJSONTyped(value?: Omit<PublicGrowingPeriod, 'contract_start_date'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
+        'id': value['id'],
         'start_date': ((value['startDate']).toISOString().substring(0,10)),
         'end_date': ((value['endDate']).toISOString().substring(0,10)),
     };

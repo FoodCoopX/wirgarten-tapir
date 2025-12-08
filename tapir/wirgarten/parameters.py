@@ -1091,6 +1091,29 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP3B_TITLE,
+            label="Seite 3B: Vertragsperiode-Auswahl - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{vorname}, wann soll dein Vertrag starten?",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP3B_TEXT,
+            label="Seite 3B: Vertragsperiode-Auswahl - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Standardtext zu Vertragsperiode-Auswahl, kann in der Konfig angepasst werden unten 'Seite 3B: Vertragsperiode-Auswahl - Text'",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER,
             label="Seite 4B: Produkt-Typ Bestellung - Popup zu Warteliste - Title",
             datatype=TapirParameterDatatype.STRING,

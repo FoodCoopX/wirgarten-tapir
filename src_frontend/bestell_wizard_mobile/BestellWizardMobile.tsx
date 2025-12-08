@@ -4,6 +4,7 @@ import { useApi } from "../hooks/useApi.ts";
 import {
   BestellWizardApi,
   CoopApi,
+  PublicGrowingPeriod,
   PublicPickupLocation,
   type PublicProductType,
   WaitingListEntryDetails,
@@ -60,6 +61,7 @@ import { PickupLocationTab } from "./types/PickupLocationTab.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isProductOrdered } from "./utils/isProductOrdered.ts";
 import Step14BConfirmationWaitingList from "./steps/Step14BConfirmationWaitingList.tsx";
+import Step3BGrowingPeriodChoice from "./steps/Step3BGrowingPeriodChoice.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -134,6 +136,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
   const [becomeMemberNow, setBecomeMemberNow] = useState<boolean | null>(null);
   const [currentPickupLocationTab, setCurrentPickupLocationTab] =
     useState<PickupLocationTab>("map");
+  const [selectedGrowingPeriod, setSelectedGrowingPeriod] =
+    useState<PublicGrowingPeriod>();
 
   useEffect(() => {
     Promise.all([
@@ -158,6 +162,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
         setPersonalData(Object.assign({}, personalData));
 
         setContractStartDate(new Date(contractStartDateAsString));
+
+        if (newSettings.growingPeriodChoices.length > 0) {
+          setSelectedGrowingPeriod(newSettings.growingPeriodChoices[0]);
+        }
       })
       .catch((error) =>
         handleRequestError(
@@ -386,6 +394,15 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             investingMembership={investingMembership}
             setInvestingMembership={setInvestingMembership}
             setShoppingCart={setShoppingCart}
+          />
+        );
+      case "3b_growing_period_choice":
+        return (
+          <Step3BGrowingPeriodChoice
+            goToNextStep={goToNextStep}
+            settings={settings}
+            selectedGrowingPeriod={selectedGrowingPeriod}
+            setSelectedGrowingPeriod={setSelectedGrowingPeriod}
           />
         );
       case "5a_pickup_location_intro":

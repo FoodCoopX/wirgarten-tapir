@@ -27,6 +27,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     solidarityContributionChoices: [],
     solidarityContributionMinimum: 0,
     feedbackStepEnabled: false,
+    growingPeriodChoices: [],
     strings: {
       step1aTitle: "",
       step1aText: "",
@@ -36,6 +37,8 @@ export function buildEmptySettings(): BestellWizardSettings {
       step2Text: "",
       step3Title: "",
       step3Text: "",
+      step3bTitle: "",
+      step3bText: "",
       step4bWaitingListModalTitle: "",
       step4bWaitingListModalText: "",
       step4dTitle: "",

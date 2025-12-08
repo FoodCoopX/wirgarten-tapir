@@ -4827,6 +4827,10 @@ components:
           type: string
         step3_text:
           type: string
+        step3b_title:
+          type: string
+        step3b_text:
+          type: string
         step4b_waiting_list_modal_title:
           type: string
         step4b_waiting_list_modal_text:
@@ -4907,6 +4911,8 @@ components:
       - step2_title
       - step3_text
       - step3_title
+      - step3b_text
+      - step3b_title
       - step4b_waiting_list_modal_text
       - step4b_waiting_list_modal_title
       - step4d_text
@@ -8233,13 +8239,21 @@ components:
     PublicGrowingPeriod:
       type: object
       properties:
+        id:
+          type: string
+          maxLength: 10
         start_date:
           type: string
           format: date
         end_date:
           type: string
           format: date
+        contract_start_date:
+          type: string
+          format: date
+          readOnly: true
       required:
+      - contract_start_date
       - end_date
       - start_date
     PublicPickupLocation:

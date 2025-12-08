@@ -3,6 +3,7 @@ export type Step =
   | "1b_welcome_waiting_list"
   | "2_first_name"
   | "3_product_type_choice"
+  | "3b_growing_period_choice"
   | "5a_pickup_location_intro"
   | "5b_pickup_location_choice"
   | "5c_pickup_location_confirm_waiting_list"

@@ -14,6 +14,8 @@ export function getStepTitle(
       return settings.strings.step2Title;
     case "3_product_type_choice":
       return settings.strings.step3Title;
+    case "3b_growing_period_choice":
+      return settings.strings.step3bTitle;
     case "5a_pickup_location_intro":
       return settings.strings.step5aTitle;
     case "5b_pickup_location_choice":

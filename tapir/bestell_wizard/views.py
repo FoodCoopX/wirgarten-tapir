@@ -446,6 +446,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step2_text": ParameterKeys.BESTELLWIZARD_STEP2_TEXT,
             "step3_title": ParameterKeys.BESTELLWIZARD_STEP3_TITLE,
             "step3_text": ParameterKeys.BESTELLWIZARD_STEP3_TEXT,
+            "step3b_title": ParameterKeys.BESTELLWIZARD_STEP3B_TITLE,
+            "step3b_text": ParameterKeys.BESTELLWIZARD_STEP3B_TEXT,
             "step4b_waiting_list_modal_title": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER,
             "step4b_waiting_list_modal_text": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_TEXT,
             "step4d_title": ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,

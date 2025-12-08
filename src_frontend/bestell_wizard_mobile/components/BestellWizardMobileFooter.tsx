@@ -86,6 +86,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "2: Erste Name";
       case "3_product_type_choice":
         return "3: Produkt-Type Auswahl";
+      case "3b_growing_period_choice":
+        return "3B: Vertragsperiode-Auswahl";
       case "5a_pickup_location_intro":
         return "5A: Verteilstation (Intro)";
       case "5b_pickup_location_choice":

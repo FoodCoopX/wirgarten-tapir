@@ -1,12 +1,17 @@
 import { Step } from "../types/Step.ts";
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import {
+  PublicGrowingPeriod,
+  PublicPickupLocation,
+  PublicProductType,
+} from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
+import dayjs from "dayjs";
 
 export function buildSteps(
   settings: BestellWizardSettings,
@@ -23,8 +28,13 @@ export function buildSteps(
     settings.forceWaitingList ? "1b_welcome_waiting_list" : "1a_welcome",
   );
   newSteps.push("2_first_name");
+
   if (settings.introEnabled) {
     newSteps.push("3_product_type_choice");
+  }
+
+  if (shouldIncludeStepGrowingPeriodChoice(settings.growingPeriodChoices)) {
+    newSteps.push("3b_growing_period_choice");
   }
 
   for (const productType of selectedProductTypes) {
@@ -100,4 +110,17 @@ export function buildSteps(
   }
 
   return newSteps;
+}
+
+function shouldIncludeStepGrowingPeriodChoice(choices: PublicGrowingPeriod[]) {
+  if (choices.length > 1) {
+    return true;
+  }
+
+  if (choices.length === 1) {
+    const period = choices[0];
+    return dayjs().add(31, "days").isBefore(dayjs(period.startDate));
+  }
+
+  return false;
 }

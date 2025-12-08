@@ -1,7 +1,12 @@
+import datetime
+
 from rest_framework import serializers
 
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.wirgarten.models import (
     Subscription,
     PickupLocation,
@@ -11,6 +16,7 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
 )
 from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
+from tapir.wirgarten.utils import get_today
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
@@ -79,7 +85,28 @@ class GrowingPeriodSerializer(serializers.ModelSerializer):
 class PublicGrowingPeriodSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrowingPeriod
-        fields = ["start_date", "end_date"]
+        fields = ["id", "start_date", "end_date", "contract_start_date"]
+
+    contract_start_date = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_contract_start_date(growing_period: GrowingPeriod) -> datetime.date:
+        cache = {}
+
+        today = get_today(cache=cache)
+        if growing_period.start_date <= today:
+            reference_date = today
+        else:
+            reference_date = growing_period.start_date
+
+        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=reference_date, apply_buffer_time=True, cache=cache
+        )
+
+        if contract_start_date < growing_period.start_date:
+            contract_start_date = growing_period.start_date
+
+        return contract_start_date
 
 
 class JokerWithCancellationLimitSerializer(serializers.Serializer):
