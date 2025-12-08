@@ -49,7 +49,7 @@ import BestellWizardMobileFooter from "./components/BestellWizardMobileFooter.ts
 import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { CONTENT_HEIGHT, HEADER_HEIGHT } from "./utils/DIMENSIONS.ts";
-import Step4DSolidarityContribution from "./steps/Step4DSolidarityContribution.tsx";
+import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import { buildSteps } from "./utils/buildSteps.ts";
@@ -382,18 +382,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             setShoppingCart={setShoppingCart}
           />
         );
-      case "4d_solidarity_contribution":
-        return (
-          <Step4DSolidarityContribution
-            settings={settings}
-            goToNextStep={goToNextStep}
-            setSolidarityContribution={setSolidarityContribution}
-            solidarityContribution={solidarityContribution}
-            active={currentStep === step}
-            shoppingCart={shoppingCart}
-            productTypesInWaitingList={productTypesInWaitingList}
-          />
-        );
       case "5a_pickup_location_intro":
         return (
           <StepGenericIntro
@@ -465,6 +453,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             settings={settings}
             setCurrentStep={setCurrentStep}
             setBecomeMemberNow={setBecomeMemberNow}
+          />
+        );
+      case "7_solidarity_contribution":
+        return (
+          <Step7SolidarityContribution
+            settings={settings}
+            goToNextStep={goToNextStep}
+            setSolidarityContribution={setSolidarityContribution}
+            solidarityContribution={solidarityContribution}
+            active={currentStep === step}
+            shoppingCart={shoppingCart}
+            productTypesInWaitingList={productTypesInWaitingList}
           />
         );
       case "8_personal_data":

@@ -7,7 +7,7 @@ import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { PublicProductType } from "../../api-client";
 
-interface Step4DSolidarityContributionProps {
+interface Step7SolidarityContributionProps {
   goToNextStep: () => void;
   settings: BestellWizardSettings;
   solidarityContribution: number;
@@ -17,8 +17,8 @@ interface Step4DSolidarityContributionProps {
   productTypesInWaitingList: Set<PublicProductType>;
 }
 
-const Step4DSolidarityContribution: React.FC<
-  Step4DSolidarityContributionProps
+const Step7SolidarityContribution: React.FC<
+  Step7SolidarityContributionProps
 > = ({
   goToNextStep,
   settings,
@@ -215,4 +215,4 @@ const Step4DSolidarityContribution: React.FC<
   );
 };
 
-export default Step4DSolidarityContribution;
+export default Step7SolidarityContribution;

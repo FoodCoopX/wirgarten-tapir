@@ -30,13 +30,6 @@ export function buildSteps(
     }
   }
 
-  const atLeastOneProductWithoutDelivery =
-    selectedProductTypes.filter((productType) => productType.noDelivery)
-      .length > 0;
-  if (!atLeastOneProductWithoutDelivery) {
-    newSteps.push("4d_solidarity_contribution");
-  }
-
   if (
     settings.pickupLocations.length > 0 &&
     isAtLeastOneOrderedProductWithDelivery(shoppingCart, settings.productTypes)
@@ -59,10 +52,6 @@ export function buildSteps(
     }
   }
 
-  if (atLeastOneProductWithoutDelivery) {
-    newSteps.push("4d_solidarity_contribution");
-  }
-
   if (settings.showCoopContent) {
     newSteps.push("6a_coop_intro");
 
@@ -77,6 +66,7 @@ export function buildSteps(
     }
   }
 
+  newSteps.push("7_solidarity_contribution");
   newSteps.push("8_personal_data");
   newSteps.push("9_banking_data");
   newSteps.push("10_summary");
