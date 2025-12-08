@@ -1211,7 +1211,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=ParameterKeys.BESTELLWIZARD_STEP5C_TEXT,
             label="Seite 5C: Bestätigung der Verteilstation - Text",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Du hast gerade nur einen Verteilstation-Wunsch eingetragen. Diese Station ist gerade ausgelastet. Um deine Chancen schneller einzusteigen zu erhöhen, kannst du weitere Wünsche eintragen.",
+            initial_value="Deine ausgewählte Verteilstation ist gerade ausgelastet und du kommst auf die Warteliste. Willst du noch weitere Stationen als Wunsch hinterlegen, damit du schneller einsteigen kannst?",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
