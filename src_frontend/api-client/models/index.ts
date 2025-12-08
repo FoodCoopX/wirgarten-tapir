@@ -138,7 +138,6 @@ export * from './SaveExtendedProductTypeRequest';
 export * from './SegmentData';
 export * from './SegmentDataRequest';
 export * from './SendLinkSerializerRequest';
-export * from './SolidarityContributionUnitEnum';
 export * from './StaticSegment';
 export * from './StaticSegmentRecipient';
 export * from './StaticSegmentRecipientRequest';

@@ -4,7 +4,6 @@ import {
   BestellWizardStrings,
   PublicPickupLocation,
   PublicProductType,
-  SolidarityContributionUnitEnum,
 } from "../../api-client";
 
 export type BestellWizardSettings = {
@@ -30,7 +29,6 @@ export type BestellWizardSettings = {
   logoUrl: string;
   contactMailAddress: string;
   distributionChannels: string[];
-  solidarityContributionUnit: SolidarityContributionUnitEnum;
   solidarityContributionChoices: string[];
   solidarityContributionMinimum: number | null;
   feedbackStepEnabled: boolean;

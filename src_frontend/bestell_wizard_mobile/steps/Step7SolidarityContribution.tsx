@@ -73,12 +73,7 @@ const Step7SolidarityContribution: React.FC<
       case 0:
         return "Ich möchten den Richtpreis zahlen";
       default:
-        switch (settings.solidarityContributionUnit) {
-          case "absolute":
-            return formatCurrency(value);
-          case "percentage":
-            return value + "%";
-        }
+        return formatCurrency(value);
     }
   }
 
@@ -134,18 +129,10 @@ const Step7SolidarityContribution: React.FC<
         </Form.Select>
         {selectedValue === "custom" && (
           <Form.Group className={"d-flex flex-column gap-2 align-items-center"}>
-            {settings.solidarityContributionUnit === "percentage" && (
-              <Form.Text>
-                Bitte ein Prozentzahl eingeben. Beispiel: '5' eingeben um 5%
-                extra beizutragen.
-              </Form.Text>
-            )}
-            {settings.solidarityContributionUnit === "absolute" && (
-              <Form.Text>
-                Bitte ein Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
-                beizutragen, oder '-10' um 10€ weniger zu zahlen.
-              </Form.Text>
-            )}
+            <Form.Text>
+              Bitte ein Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
+              beizutragen, oder '-10' um 10€ weniger zu zahlen.
+            </Form.Text>
             <Form.Control
               id={"custom_solidarity_contribution"}
               placeholder={"Personalisierter Beitrag"}

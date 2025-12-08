@@ -77,12 +77,6 @@ export interface Subscription {
     cancellationTs?: Date | null;
     /**
      * 
-     * @type {number}
-     * @memberof Subscription
-     */
-    solidarityPricePercentage?: number | null;
-    /**
-     * 
      * @type {string}
      * @memberof Subscription
      */
@@ -185,7 +179,6 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'startDate': (new Date(json['start_date'])),
         'endDate': json['end_date'] == null ? undefined : (new Date(json['end_date'])),
         'cancellationTs': json['cancellation_ts'] == null ? undefined : (new Date(json['cancellation_ts'])),
-        'solidarityPricePercentage': json['solidarity_price_percentage'] == null ? undefined : json['solidarity_price_percentage'],
         'solidarityPriceAbsolute': json['solidarity_price_absolute'] == null ? undefined : json['solidarity_price_absolute'],
         'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
         'consentTs': json['consent_ts'] == null ? undefined : (new Date(json['consent_ts'])),
@@ -220,7 +213,6 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'start_date': ((value['startDate']).toISOString().substring(0,10)),
         'end_date': value['endDate'] == null ? undefined : ((value['endDate'] as any).toISOString().substring(0,10)),
         'cancellation_ts': value['cancellationTs'] == null ? undefined : ((value['cancellationTs'] as any).toISOString()),
-        'solidarity_price_percentage': value['solidarityPricePercentage'],
         'solidarity_price_absolute': value['solidarityPriceAbsolute'],
         'created_at': value['createdAt'] == null ? undefined : ((value['createdAt']).toISOString()),
         'consent_ts': value['consentTs'] == null ? undefined : ((value['consentTs'] as any).toISOString()),

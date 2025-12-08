@@ -149,7 +149,6 @@ models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
-models/SolidarityContributionUnitEnum.ts
 models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
 models/StaticSegmentRecipientRequest.ts

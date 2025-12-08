@@ -4605,8 +4605,6 @@ components:
           type: array
           items:
             type: string
-        solidarity_contribution_unit:
-          $ref: '#/components/schemas/SolidarityContributionUnitEnum'
         solidarity_contribution_choices:
           type: array
           items:
@@ -4651,7 +4649,6 @@ components:
       - show_coop_content
       - solidarity_contribution_choices
       - solidarity_contribution_minimum
-      - solidarity_contribution_unit
       - strings
       - student_status_allowed
       - theme
@@ -8583,14 +8580,6 @@ components:
       - remove_segments
       - static_segments
       - static_segments_subtractive
-    SolidarityContributionUnitEnum:
-      enum:
-      - percentage
-      - absolute
-      type: string
-      description: |-
-        * `percentage` - Prozent
-        * `absolute` - Absolut
     StaticSegment:
       type: object
       properties:
@@ -8779,10 +8768,6 @@ components:
         cancellation_ts:
           type: string
           format: date-time
-          nullable: true
-        solidarity_price_percentage:
-          type: number
-          format: double
           nullable: true
         solidarity_price_absolute:
           type: string

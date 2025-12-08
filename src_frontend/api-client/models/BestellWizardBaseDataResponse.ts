@@ -34,13 +34,6 @@ import {
     PublicPickupLocationToJSON,
     PublicPickupLocationToJSONTyped,
 } from './PublicPickupLocation';
-import type { SolidarityContributionUnitEnum } from './SolidarityContributionUnitEnum';
-import {
-    SolidarityContributionUnitEnumFromJSON,
-    SolidarityContributionUnitEnumFromJSONTyped,
-    SolidarityContributionUnitEnumToJSON,
-    SolidarityContributionUnitEnumToJSONTyped,
-} from './SolidarityContributionUnitEnum';
 import type { PublicGrowingPeriod } from './PublicGrowingPeriod';
 import {
     PublicGrowingPeriodFromJSON,
@@ -202,12 +195,6 @@ export interface BestellWizardBaseDataResponse {
     distributionChannels: Array<string>;
     /**
      * 
-     * @type {SolidarityContributionUnitEnum}
-     * @memberof BestellWizardBaseDataResponse
-     */
-    solidarityContributionUnit: SolidarityContributionUnitEnum;
-    /**
-     * 
      * @type {Array<string>}
      * @memberof BestellWizardBaseDataResponse
      */
@@ -244,8 +231,6 @@ export interface BestellWizardBaseDataResponse {
     images: BestellWizardImages;
 }
 
-
-
 /**
  * Check if a given object implements the BestellWizardBaseDataResponse interface.
  */
@@ -273,7 +258,6 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('logoUrl' in value) || value['logoUrl'] === undefined) return false;
     if (!('contactMailAddress' in value) || value['contactMailAddress'] === undefined) return false;
     if (!('distributionChannels' in value) || value['distributionChannels'] === undefined) return false;
-    if (!('solidarityContributionUnit' in value) || value['solidarityContributionUnit'] === undefined) return false;
     if (!('solidarityContributionChoices' in value) || value['solidarityContributionChoices'] === undefined) return false;
     if (!('solidarityContributionMinimum' in value) || value['solidarityContributionMinimum'] === undefined) return false;
     if (!('feedbackStepEnabled' in value) || value['feedbackStepEnabled'] === undefined) return false;
@@ -316,7 +300,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'logoUrl': json['logo_url'],
         'contactMailAddress': json['contact_mail_address'],
         'distributionChannels': json['distribution_channels'],
-        'solidarityContributionUnit': SolidarityContributionUnitEnumFromJSON(json['solidarity_contribution_unit']),
         'solidarityContributionChoices': json['solidarity_contribution_choices'],
         'solidarityContributionMinimum': json['solidarity_contribution_minimum'],
         'feedbackStepEnabled': json['feedback_step_enabled'],
@@ -360,7 +343,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'logo_url': value['logoUrl'],
         'contact_mail_address': value['contactMailAddress'],
         'distribution_channels': value['distributionChannels'],
-        'solidarity_contribution_unit': SolidarityContributionUnitEnumToJSON(value['solidarityContributionUnit']),
         'solidarity_contribution_choices': value['solidarityContributionChoices'],
         'solidarity_contribution_minimum': value['solidarityContributionMinimum'],
         'feedback_step_enabled': value['feedbackStepEnabled'],
