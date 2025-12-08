@@ -1557,6 +1557,32 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP14B_TITLE,
+            label="Seite 14B: Abschluss (Warteliste) - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du bist jetzt auf der Warteliste, {vorname}",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP14B_TEXT,
+            label="Seite 14B: Abschluss (Warteliste) - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du erhältst im Anschluss ein Email an <strong>{{mitglieder_mail}}</strong>. Schau bitte auch in dein SPAM-Posteingang. Sofern du innerhalb von 24 Stunden keine Mails erhalten hast, dann wende dich an unser Support unter {{kontakt_mail}}",
+            description="HTML erlaubt",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(
+                vars_hint=["mitglieder_mail", "kontakt_mail"], textarea=True
+            ),
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

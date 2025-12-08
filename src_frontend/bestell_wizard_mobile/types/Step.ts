@@ -17,5 +17,6 @@ export type Step =
   | "12_channel"
   | "13_feedback"
   | "14_confirmation"
+  | "14b_confirmation_waiting_list"
   | "loading"
   | string;

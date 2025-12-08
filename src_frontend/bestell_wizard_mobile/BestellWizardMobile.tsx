@@ -59,6 +59,7 @@ import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocation
 import { PickupLocationTab } from "./types/PickupLocationTab.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isProductOrdered } from "./utils/isProductOrdered.ts";
+import Step14BConfirmationWaitingList from "./steps/Step14BConfirmationWaitingList.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -562,6 +563,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       case "14_confirmation":
         return (
           <Step14Confirmation
+            settings={settings}
+            memberMail={personalData.email}
+          />
+        );
+      case "14b_confirmation_waiting_list":
+        return (
+          <Step14BConfirmationWaitingList
             settings={settings}
             memberMail={personalData.email}
           />

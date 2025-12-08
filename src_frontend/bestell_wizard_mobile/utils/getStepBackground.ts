@@ -35,6 +35,7 @@ export function getStepBackground(
     case "13_feedback":
       return settings.images.step13BackgroundImage;
     case "14_confirmation":
+    case "14b_confirmation_waiting_list":
       return settings.images.step14BackgroundImage;
   }
 

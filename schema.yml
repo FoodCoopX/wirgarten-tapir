@@ -4884,6 +4884,10 @@ components:
           type: string
         step14_text:
           type: string
+        step14b_title:
+          type: string
+        step14b_text:
+          type: string
         privacy_policy_url:
           type: string
           format: uri
@@ -4896,6 +4900,8 @@ components:
       - step13_title
       - step14_text
       - step14_title
+      - step14b_text
+      - step14b_title
       - step1a_text
       - step1a_title
       - step1b_text

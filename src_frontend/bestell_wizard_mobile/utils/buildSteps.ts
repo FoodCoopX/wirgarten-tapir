@@ -6,6 +6,7 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
 
 export function buildSteps(
   settings: BestellWizardSettings,
@@ -85,10 +86,18 @@ export function buildSteps(
   newSteps.push("10_summary");
   newSteps.push("11_legal");
   newSteps.push("12_channel");
+
   if (settings.feedbackStepEnabled) {
     newSteps.push("13_feedback");
   }
-  newSteps.push("14_confirmation");
+
+  if (
+    areAllOrderedProductsInWaitingList(shoppingCart, productTypesInWaitingList)
+  ) {
+    newSteps.push("14b_confirmation_waiting_list");
+  } else {
+    newSteps.push("14_confirmation");
+  }
 
   return newSteps;
 }

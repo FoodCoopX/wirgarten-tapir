@@ -42,6 +42,8 @@ export function getStepTitle(
       return settings.strings.step13Title;
     case "14_confirmation":
       return settings.strings.step14Title;
+    case "14b_confirmation_waiting_list":
+      return settings.strings.step14bTitle;
     case "loading":
       return "";
   }

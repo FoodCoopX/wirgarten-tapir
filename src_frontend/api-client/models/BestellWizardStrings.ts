@@ -234,6 +234,18 @@ export interface BestellWizardStrings {
      * @type {string}
      * @memberof BestellWizardStrings
      */
+    step14bTitle: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    step14bText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
     privacyPolicyUrl: string;
 }
 
@@ -276,6 +288,8 @@ export function instanceOfBestellWizardStrings(value: object): value is BestellW
     if (!('step13Text' in value) || value['step13Text'] === undefined) return false;
     if (!('step14Title' in value) || value['step14Title'] === undefined) return false;
     if (!('step14Text' in value) || value['step14Text'] === undefined) return false;
+    if (!('step14bTitle' in value) || value['step14bTitle'] === undefined) return false;
+    if (!('step14bText' in value) || value['step14bText'] === undefined) return false;
     if (!('privacyPolicyUrl' in value) || value['privacyPolicyUrl'] === undefined) return false;
     return true;
 }
@@ -325,6 +339,8 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step13Text': json['step13_text'],
         'step14Title': json['step14_title'],
         'step14Text': json['step14_text'],
+        'step14bTitle': json['step14b_title'],
+        'step14bText': json['step14b_text'],
         'privacyPolicyUrl': json['privacy_policy_url'],
     };
 }
@@ -375,6 +391,8 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step13_text': value['step13Text'],
         'step14_title': value['step14Title'],
         'step14_text': value['step14Text'],
+        'step14b_title': value['step14bTitle'],
+        'step14b_text': value['step14bText'],
         'privacy_policy_url': value['privacyPolicyUrl'],
     };
 }

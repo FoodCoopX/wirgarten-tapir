@@ -88,6 +88,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step13_text = serializers.CharField()
     step14_title = serializers.CharField()
     step14_text = serializers.CharField()
+    step14b_title = serializers.CharField()
+    step14b_text = serializers.CharField()
     privacy_policy_url = serializers.URLField()
 
 

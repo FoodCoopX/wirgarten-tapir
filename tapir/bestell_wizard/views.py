@@ -517,6 +517,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step13_text": ParameterKeys.BESTELLWIZARD_STEP13_TEXT,
             "step14_title": ParameterKeys.BESTELLWIZARD_STEP14_TITLE,
             "step14_text": ParameterKeys.BESTELLWIZARD_STEP14_TEXT,
+            "step14b_title": ParameterKeys.BESTELLWIZARD_STEP14B_TITLE,
+            "step14b_text": ParameterKeys.BESTELLWIZARD_STEP14B_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
         }
         return {

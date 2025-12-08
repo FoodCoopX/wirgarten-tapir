@@ -203,6 +203,8 @@ class ParameterKeys:
     BESTELLWIZARD_STEP14_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step14.background_image"
     )
+    BESTELLWIZARD_STEP14B_TITLE = f"{PREFIX}.bestellwizard.step14b.title"
+    BESTELLWIZARD_STEP14B_TEXT = f"{PREFIX}.bestellwizard.step14b.text"
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )

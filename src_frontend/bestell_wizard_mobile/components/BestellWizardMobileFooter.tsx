@@ -114,6 +114,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "13: Feedback";
       case "14_confirmation":
         return "14: Bestätigung";
+      case "14b_confirmation_waiting_list":
+        return "14: Bestätigung (Warteliste)";
     }
     for (const productType of settings.productTypes) {
       if (!step.includes(productType.id!)) {

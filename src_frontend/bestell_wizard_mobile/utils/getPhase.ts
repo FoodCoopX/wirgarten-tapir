@@ -28,6 +28,7 @@ export function getPhase(step: Step): Phase {
     case "13_feedback":
       return "feedback";
     case "14_confirmation":
+    case "14b_confirmation_waiting_list":
       return "confirmation";
 
     default:
