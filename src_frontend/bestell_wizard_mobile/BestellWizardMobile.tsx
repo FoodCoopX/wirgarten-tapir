@@ -322,6 +322,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
     shoppingCart,
   ]);
 
+  useEffect(() => {
+    setBecomeMemberNow(null);
+  }, [shoppingCart]);
+
   function goToNextStep() {
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex + 1 >= steps.length) {
@@ -524,6 +528,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             solidarityContribution={solidarityContribution}
             personalData={personalData}
             productTypesInWaitingList={productTypesInWaitingList}
+            becomeMemberNow={becomeMemberNow}
           />
         );
       case "11_legal":

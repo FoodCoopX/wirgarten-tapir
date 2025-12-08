@@ -18,7 +18,6 @@ import {
   getProductByIdGlobal,
 } from "../utils/getProductByIdGlobal.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
-import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 
 interface Step10OrderSummaryProps {
@@ -37,6 +36,7 @@ interface Step10OrderSummaryProps {
   solidarityContribution: number;
   personalData: PersonalData;
   productTypesInWaitingList: Set<PublicProductType>;
+  becomeMemberNow: boolean | null;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -52,6 +52,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   solidarityContribution,
   personalData,
   productTypesInWaitingList,
+  becomeMemberNow,
 }) => {
   function getProductTypeTitle(productType: PublicProductType) {
     if (isProductTypeOrdered(productType, shoppingCart)) {
@@ -75,21 +76,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       "Mitgliedschaft in der Genossenschaft (" +
       formatCurrency(numberOfCoopShares * settings.priceOfAShare) +
       ")"
-    );
-  }
-
-  function getPaymentsTitle() {
-    return (
-      "Zahlungen: " +
-      formatCurrency(
-        getMonthlyPayment(
-          solidarityContribution,
-          shoppingCart,
-          settings,
-          productTypesInWaitingList,
-        ),
-      ) +
-      " / Monat"
     );
   }
 
@@ -147,6 +133,16 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     return "Unbekannt";
   }
 
+  function getProductTypeByProductId(productId: string) {
+    for (const productType of settings.productTypes) {
+      for (const product of productType.products) {
+        if (product.id === productId) {
+          return productType;
+        }
+      }
+    }
+  }
+
   return (
     <>
       <div>
@@ -175,33 +171,39 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         .map(([productId, quantity]) =>
                           buildProductDetails(productId, quantity, productType),
                         )}
-                      <li>
-                        Vertragsstart: {formatDateNumeric(contractStartDate)}
-                      </li>
-                      {!productType.noDelivery && (
-                        <>
-                          <li>
-                            Erste Lieferung:{" "}
-                            {selectedPickupLocations.length > 0 &&
-                              getFirstDelivery(
-                                selectedPickupLocations[0].id!,
-                                productType.id!,
-                              )}
-                          </li>
-                          <li>
-                            Verteilstation:{" "}
-                            {selectedPickupLocations.length > 0 &&
-                              selectedPickupLocations[0].name +
-                                " (" +
-                                formatAddress(
-                                  selectedPickupLocations[0].street,
-                                  selectedPickupLocations[0].street2,
-                                  selectedPickupLocations[0].postcode,
-                                  selectedPickupLocations[0].city,
-                                ) +
-                                ")"}
-                          </li>
-                        </>
+                      {!productTypesInWaitingList.has(productType) && (
+                        <li>
+                          Vertragsstart: {formatDateNumeric(contractStartDate)}
+                        </li>
+                      )}
+                      {!productType.noDelivery &&
+                        !productTypesInWaitingList.has(productType) && (
+                          <>
+                            <li>
+                              Erste Lieferung:{" "}
+                              {selectedPickupLocations.length > 0 &&
+                                getFirstDelivery(
+                                  selectedPickupLocations[0].id!,
+                                  productType.id!,
+                                )}
+                            </li>
+                            <li>
+                              Verteilstation:{" "}
+                              {selectedPickupLocations.length > 0 &&
+                                selectedPickupLocations[0].name +
+                                  " (" +
+                                  formatAddress(
+                                    selectedPickupLocations[0].street,
+                                    selectedPickupLocations[0].street2,
+                                    selectedPickupLocations[0].postcode,
+                                    selectedPickupLocations[0].city,
+                                  ) +
+                                  ")"}
+                            </li>
+                          </>
+                        )}
+                      {productTypesInWaitingList.has(productType) && (
+                        <li>Warteliste</li>
                       )}
                     </ul>
                   )}
@@ -216,7 +218,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               </Accordion.Item>
             </Accordion>
           ))}
-          {settings.showCoopContent && (
+          {settings.showCoopContent && becomeMemberNow !== false && (
             <Accordion>
               <Accordion.Item eventKey={"coop_shares"} onClick={scrollIntoView}>
                 <Accordion.Header>{getCoopSharesTitle()}</Accordion.Header>
@@ -239,7 +241,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
             isAtLeastOneProductOrdered(shoppingCart)) && (
             <Accordion>
               <Accordion.Item eventKey={"payments"} onClick={scrollIntoView}>
-                <Accordion.Header>{getPaymentsTitle()}</Accordion.Header>
+                <Accordion.Header>Deine Zahlungen</Accordion.Header>
                 <AccordionBody>
                   <ul>
                     {Object.entries(shoppingCart)
@@ -258,7 +260,13 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                               productId,
                               settings.productTypes,
                             )?.price ?? 0) * quantity,
-                          )}
+                          )}{" "}
+                          / Monat
+                          {productTypesInWaitingList.has(
+                            getProductTypeByProductId(productId)!,
+                          )
+                            ? " (Start wenn Platz frei)"
+                            : ""}
                         </li>
                       ))}
                     {solidarityContribution !== 0 && (
