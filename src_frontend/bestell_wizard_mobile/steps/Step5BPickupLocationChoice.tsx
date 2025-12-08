@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { ButtonGroup, Carousel, Form, ToggleButton } from "react-bootstrap";
+import { ButtonGroup, Carousel, ToggleButton } from "react-bootstrap";
 import Step5BPickupLocationList from "../components/Step5BPickupLocationList.tsx";
 import { PublicPickupLocation, type PublicProductType } from "../../api-client";
 import Step5BPickupLocationMap from "../components/Step5BPickupLocationMap.tsx";
@@ -12,11 +12,11 @@ import PickupLocationWaitingListModal from "../../bestell_wizard/components/Pick
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import TapirButton from "../../components/TapirButton.tsx";
 import {
   ALL_PICKUP_LOCATION_TABS,
   PickupLocationTab,
 } from "../types/PickupLocationTab.ts";
+import Step5BPickupLocationWishes from "../components/Step5BPickupLocationWishes.tsx";
 
 interface Step5BPickupLocationChoiceProps {
   settings: BestellWizardSettings;
@@ -113,14 +113,6 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
     return pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]);
   }
 
-  function setPickupLocationAtIndex(
-    pickupLocation: PublicPickupLocation,
-    index: number,
-  ) {
-    selectedPickupLocations[index] = pickupLocation;
-    setSelectedPickupLocations([...selectedPickupLocations]);
-  }
-
   return (
     <>
       <ButtonGroup style={{ width: "100%" }}>
@@ -192,62 +184,14 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
         </Carousel.Item>
         {productTypesInWaitingList.size > 0 && (
           <Carousel.Item>
-            <div className={"d-flex flex-column gap-2 align-items-center"}>
-              {selectedPickupLocations.map((selectedPickupLocation, index) => (
-                <Form.Group key={index}>
-                  <Form.Label>{index + 1}. Wunsch</Form.Label>
-                  <div className="d-flex flex-row gap-2">
-                    <Form.Select
-                      style={{ maxWidth: "200px" }}
-                      onChange={(event) =>
-                        setPickupLocationAtIndex(
-                          settings.pickupLocations.find(
-                            (pickupLocation) =>
-                              pickupLocation.id === event.target.value,
-                          )!,
-                          index,
-                        )
-                      }
-                      value={selectedPickupLocation.id}
-                    >
-                      {settings.pickupLocations.map((pickupLocation) => (
-                        <option
-                          key={pickupLocation.id}
-                          value={pickupLocation.id}
-                        >
-                          {pickupLocation.name}
-                        </option>
-                      ))}
-                    </Form.Select>
-                    <TapirButton
-                      variant={"outline-danger"}
-                      size={"sm"}
-                      icon={"delete"}
-                      onClick={() =>
-                        setSelectedPickupLocations(
-                          selectedPickupLocations.filter(
-                            (_, index2) => index2 !== index,
-                          ),
-                        )
-                      }
-                    />
-                  </div>
-                </Form.Group>
-              ))}
-              {selectedPickupLocations.length < 3 && (
-                <TapirButton
-                  variant={BUTTON_VARIANT}
-                  text={"Weiterer Wunsch"}
-                  icon={"add_circle"}
-                  onClick={() =>
-                    setSelectedPickupLocations([
-                      ...selectedPickupLocations,
-                      settings.pickupLocations[0],
-                    ])
-                  }
-                />
-              )}
-            </div>
+            <Step5BPickupLocationWishes
+              settings={settings}
+              selectedPickupLocations={selectedPickupLocations}
+              setSelectedPickupLocations={setSelectedPickupLocations}
+              pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+              shoppingCart={shoppingCart}
+              productTypesInWaitingList={productTypesInWaitingList}
+            />
           </Carousel.Item>
         )}
       </Carousel>
