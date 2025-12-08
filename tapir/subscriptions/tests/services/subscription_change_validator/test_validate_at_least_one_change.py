@@ -30,12 +30,10 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         cls.subscription_1 = SubscriptionFactory.create(
             product__type=cls.product_type,
             member=cls.member,
-            solidarity_price_percentage=0.1,
         )
         cls.subscription_2 = SubscriptionFactory.create(
             product__type=cls.product_type,
             member=cls.member,
-            solidarity_price_percentage=0.1,
         )
         cls.product_not_subbed_to = ProductFactory.create(type=cls.product_type)
 
@@ -49,7 +47,6 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
             "solidarity_price_choice": 0.1,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price_percentage": 0.1,
             "solidarity_price_absolute": None,
         }
 
@@ -72,7 +69,6 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
             "solidarity_price_choice": 0.1,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price_percentage": 0.1,
             "solidarity_price_absolute": None,
         }
 
@@ -94,8 +90,7 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
             "solidarity_price_choice": 0.15,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price_percentage": 0.15,
-            "solidarity_price_absolute": None,
+            "solidarity_price_absolute": 15,
         }
 
         SubscriptionChangeValidator.validate_at_least_one_change(
@@ -116,7 +111,6 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
             "solidarity_price_choice": 0.1,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price_percentage": 0.1,
             "solidarity_price_absolute": None,
         }
 

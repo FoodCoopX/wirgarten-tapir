@@ -412,9 +412,6 @@ class BestellWizardBaseDataApiView(APIView):
                     cache=self.cache,
                 ).split(",")
             ],
-            "solidarity_contribution_unit": get_parameter_value(
-                key=ParameterKeys.SOLIDARITY_UNIT, cache=self.cache
-            ),
             "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
                 cache=self.cache
             ),

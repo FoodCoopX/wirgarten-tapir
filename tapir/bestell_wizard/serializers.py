@@ -4,7 +4,6 @@ from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
 )
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
-from tapir.subscriptions.config import SOLIDARITY_UNIT_OPTIONS
 from tapir.subscriptions.serializers import PublicProductTypeSerializer
 
 
@@ -137,9 +136,6 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     logo_url = serializers.URLField()
     contact_mail_address = serializers.EmailField()
     distribution_channels = serializers.ListField(child=serializers.CharField())
-    solidarity_contribution_unit = serializers.ChoiceField(
-        choices=SOLIDARITY_UNIT_OPTIONS
-    )
     solidarity_contribution_choices = serializers.ListField(
         child=serializers.CharField()
     )

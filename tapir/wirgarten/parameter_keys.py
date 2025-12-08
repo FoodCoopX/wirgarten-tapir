@@ -97,7 +97,6 @@ class ParameterKeys:
     ORGANISATION_THEME = "organisation.theme"
     ORGANISATION_QUESTIONAIRE_SOURCES = f"{PREFIX}.organisation.questionaire_sources"
 
-    SOLIDARITY_UNIT = f"{PREFIX}.solidarity.unit"
     SOLIDARITY_CHOICES = f"{PREFIX}.solidarity.choices"
     # the following two are still named "HARVEST_" for backward compatibility but now belong to the category SOLIDARITY
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"

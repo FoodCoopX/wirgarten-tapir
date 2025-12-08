@@ -85,7 +85,7 @@ class TestSubscriptionAnnotations(TapirIntegrationTest):
         self,
     ):
         subscription = SubscriptionFactory.create(
-            quantity=3, solidarity_price_percentage=0
+            quantity=3, solidarity_price_absolute=0
         )
         ProductPriceFactory.create(
             product=subscription.product,
@@ -105,7 +105,7 @@ class TestSubscriptionAnnotations(TapirIntegrationTest):
         self,
     ):
         subscription = SubscriptionFactory.create(
-            quantity=3, solidarity_price_percentage=0.1
+            quantity=3, solidarity_price_absolute=1
         )
         ProductPriceFactory.create(
             product=subscription.product,
@@ -119,7 +119,7 @@ class TestSubscriptionAnnotations(TapirIntegrationTest):
             ).first()
         )
 
-        self.assertEqual(33, subscription.monthly_payment)
+        self.assertEqual(31, subscription.monthly_payment)
 
     def test_annotateSubscriptionsQuerysetWithMonthlyPaymentIncludingSolidarity_hasAbsoluteSolidarity_annotatesCorrectPrice(
         self,

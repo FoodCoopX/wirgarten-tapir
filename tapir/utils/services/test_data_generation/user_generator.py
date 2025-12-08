@@ -280,17 +280,13 @@ class UserGenerator:
             product = random.choice(possible_products)
             already_subscribed_products_ids.add(product.id)
 
-            solidarity_price_percentage = random.choice(
+            solidarity_price_absolute = random.choice(
                 list(
                     SolidarityValidator.get_solidarity_dropdown_values(
                         cache=cache
                     ).keys()
                 )
             )
-            solidarity_price_absolute = None
-            if solidarity_price_percentage == "custom":
-                solidarity_price_percentage = 0
-                solidarity_price_absolute = random.randrange(-25, 25)
 
             quantity = random.choices([1, 2, 3], weights=[100, 1, 1], k=1)[0]
             if product.type.single_subscription_only:
@@ -299,9 +295,6 @@ class UserGenerator:
             if not create_subs_for_additional_products:
                 min_shares += quantity * product.min_coop_shares
 
-            if solidarity_price_percentage is not None:
-                solidarity_price_percentage /= 100
-
             subscription = Subscription.objects.create(
                 member=member,
                 product=product,
@@ -309,7 +302,6 @@ class UserGenerator:
                 quantity=quantity,
                 start_date=start_date,
                 end_date=end_date,
-                solidarity_price_percentage=solidarity_price_percentage,
                 solidarity_price_absolute=solidarity_price_absolute,
                 mandate_ref=mandate_ref,
                 admin_confirmed=cls.get_confirmation_datetime(start_date, cache=cache),
@@ -359,7 +351,6 @@ class UserGenerator:
                     quantity=quantity,
                     start_date=current_growing_period.start_date,
                     end_date=current_growing_period.end_date,
-                    solidarity_price_percentage=solidarity_price_percentage,
                     solidarity_price_absolute=solidarity_price_absolute,
                     mandate_ref=mandate_ref,
                     admin_confirmed=cls.get_confirmation_datetime(

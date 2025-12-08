@@ -74,7 +74,6 @@ class AutomaticSubscriptionRenewalService:
             quantity=subscription.quantity,
             start_date=next_growing_period.start_date,
             end_date=next_growing_period.end_date,
-            solidarity_price_percentage=subscription.solidarity_price_percentage,
             solidarity_price_absolute=subscription.solidarity_price_absolute,
             mandate_ref=subscription.mandate_ref,
             trial_disabled=trial_disabled,

@@ -15,13 +15,6 @@ def annotate_subscriptions_queryset_with_monthly_payment_including_solidarity(
     return queryset.annotate(
         monthly_payment=Case(
             When(
-                solidarity_price_absolute__isnull=True,
-                then=(
-                    F("monthly_price_without_solidarity")
-                    * (1 + F("solidarity_price_percentage"))
-                ),
-            ),
-            When(
                 solidarity_price_absolute__isnull=False,
                 then=(
                     F("monthly_price_without_solidarity")

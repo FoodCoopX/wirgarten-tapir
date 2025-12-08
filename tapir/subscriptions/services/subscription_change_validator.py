@@ -301,8 +301,6 @@ class SubscriptionChangeValidator:
             if (
                 subscription_to_same_product.solidarity_price_absolute
                 != solidarity_fields["solidarity_price_absolute"]
-                or subscription_to_same_product.solidarity_price_percentage
-                != float(solidarity_fields["solidarity_price_percentage"])
             ):
                 raise ValidationError(
                     "Der Solidarbeitrag darf nicht während ein Vertrag läuft geändert werden."
@@ -363,8 +361,6 @@ class SubscriptionChangeValidator:
             if (
                 subscription_to_same_product.solidarity_price_absolute
                 != solidarity_fields["solidarity_price_absolute"]
-                or subscription_to_same_product.solidarity_price_percentage
-                != solidarity_fields["solidarity_price_percentage"]
             ):
                 return
 

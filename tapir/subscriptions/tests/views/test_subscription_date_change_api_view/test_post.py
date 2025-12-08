@@ -188,7 +188,6 @@ class TestPost(TapirIntegrationTest):
         subscription = SubscriptionFactory.create(
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=12, day=31),
-            solidarity_price_percentage=0,
             member=member,
             quantity=1,
             period=growing_period,

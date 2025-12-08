@@ -78,7 +78,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_percentage=0.1,
+            solidarity_price_absolute=1,
             period=growing_period,
             quantity=1,
         )
@@ -157,7 +157,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_percentage=0,
+            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
         )
@@ -238,7 +238,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         mandate_ref = MandateReferenceFactory.create(member=member)
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_percentage=0,
+            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             mandate_ref=mandate_ref,
@@ -351,7 +351,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_percentage=0,
+            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             start_date=datetime.date(year=2020, month=9, day=1),
@@ -433,7 +433,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_percentage=0,
+            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
@@ -496,7 +496,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_percentage=0,
+            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
@@ -573,7 +573,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_percentage=0,
+            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
@@ -651,7 +651,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_percentage=0.1,
+            solidarity_price_absolute=1,
             period=growing_period,
             quantity=1,
         )

@@ -12,7 +12,6 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.subscriptions.config import SOLIDARITY_UNIT_PERCENT, SOLIDARITY_UNIT_ABSOLUTE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -233,13 +232,6 @@ class BaseProductForm(forms.Form):
             required=False,
             label=_("Solidarbeitrag² (personalisierter Beitrag)"),
         )
-        if (
-            get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
-            == SOLIDARITY_UNIT_PERCENT
-        ):
-            solidarity_price_custom_field.help_text = _(
-                "Bitte ein Prozentzahl eingeben. Beispiel: '5' eingeben um 5% extra beizutragen."
-            )
         self.fields["solidarity_price_custom"] = solidarity_price_custom_field
 
         if self.product_type.contract_link:
@@ -268,7 +260,6 @@ class BaseProductForm(forms.Form):
                 for sub in subs[self.product_type.name]:
                     sub_variants[sub.product.name] = {
                         "quantity": sub.quantity,
-                        "solidarity_price_percentage": sub.solidarity_price_percentage,
                         "solidarity_price_absolute": (
                             float(sub.solidarity_price_absolute)
                             if sub.solidarity_price_absolute
@@ -280,14 +271,7 @@ class BaseProductForm(forms.Form):
                     subs[self.product_type.name], cache=self.cache
                 )
                 if len(sub_variants) > 0:
-                    solidarity_key = "solidarity_price_percentage"
-                    if (
-                        get_parameter_value(
-                            ParameterKeys.SOLIDARITY_UNIT, cache=self.cache
-                        )
-                        == SOLIDARITY_UNIT_ABSOLUTE
-                    ):
-                        solidarity_key = "solidarity_price_absolute"
+                    solidarity_key = "solidarity_price_absolute"
                     solidarity_value = list(sub_variants.values())[0][solidarity_key]
                     dropdown_choices = (
                         SolidarityValidator.get_solidarity_dropdown_values(
@@ -374,9 +358,6 @@ class BaseProductForm(forms.Form):
                 )
             )
         self.harvest_shares = ";".join(harvest_share_strings)
-        self.solidarity_unit = get_parameter_value(
-            ParameterKeys.SOLIDARITY_UNIT, cache=self.cache
-        )
 
     @transaction.atomic
     def save(
@@ -465,16 +446,7 @@ class BaseProductForm(forms.Form):
         if value == "custom":
             value = self.cleaned_data["solidarity_price_custom"]
 
-        if (
-            get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
-            == SOLIDARITY_UNIT_PERCENT
-        ):
-            return {
-                "solidarity_price_percentage": float(value) / 100,
-                "solidarity_price_absolute": None,
-            }
         return {
-            "solidarity_price_percentage": None,
             "solidarity_price_absolute": float(value),
         }
 
@@ -557,7 +529,6 @@ class BaseProductForm(forms.Form):
             SolidarityValidator.validate_solidarity_price(
                 form=self,
                 start_date=self.start_date,
-                field_prefix=BASE_PRODUCT_FIELD_PREFIX,
                 cache=self.cache,
             )
             SubscriptionChangeValidator.validate_total_capacity(
@@ -1117,7 +1088,6 @@ class EditSubscriptionPriceForm(forms.Form):
     def save(self):
         if self.cleaned_data["new_price"]:
             self.subscription.price_override = self.cleaned_data["new_price"]
-            self.subscription.solidarity_price_percentage = 0.0
             self.subscription.solidarity_price_absolute = None
         else:
             self.subscription.price_override = None

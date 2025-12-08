@@ -2,7 +2,6 @@ from unittest.mock import patch, Mock
 
 from django.test import SimpleTestCase
 
-from tapir.subscriptions.config import SOLIDARITY_UNIT_PERCENT
 from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -13,7 +12,6 @@ class TestGetSolidarityDropdownValuesAsSortedTuple(SimpleTestCase):
         self, mock_get_parameter_value: Mock
     ):
         parameter_values = {
-            ParameterKeys.SOLIDARITY_UNIT: SOLIDARITY_UNIT_PERCENT,
             ParameterKeys.SOLIDARITY_CHOICES: "5,-7,2",
         }
         mock_get_parameter_value.side_effect = lambda key, cache: parameter_values[key]
@@ -26,10 +24,10 @@ class TestGetSolidarityDropdownValuesAsSortedTuple(SimpleTestCase):
         self.assertEqual(
             [
                 (0.0, "Ich möchte den Richtpreis zahlen"),
-                (5.0, "+5%"),
-                (2.0, "+2%"),
-                (-7.0, "-7%"),
-                ("custom", "Ich möchte einen anderen Betrag zahlen  ⟶"),
+                (5.0, "+5€"),
+                (2.0, "+2€"),
+                (-7.0, "-7€"),
+                ("custom", "Ich möchte einen anderen Betrag zahlen"),
             ],
             result,
         )

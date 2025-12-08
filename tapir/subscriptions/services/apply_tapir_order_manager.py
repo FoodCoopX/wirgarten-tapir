@@ -103,7 +103,6 @@ class ApplyTapirOrderManager:
                     start_date=contract_start_date,
                     end_date=contract_end_date,
                     cancellation_ts=None,
-                    solidarity_price_percentage=None,
                     solidarity_price_absolute=None,
                     mandate_ref=get_or_create_mandate_ref(member=member, cache=cache),
                     consent_ts=now,

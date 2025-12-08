@@ -39,7 +39,6 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         original_subscription.member = member
         original_subscription.product = product
         original_subscription.quantity = 3
-        original_subscription.solidarity_price_percentage = 1.2
         original_subscription.solidarity_price_absolute = Decimal("3.6")
         mandate_ref = MandateReferenceFactory.build(ref="test_ref")
         original_subscription.mandate_ref = mandate_ref
@@ -80,7 +79,6 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         self.assertEqual(3, future_subscription.quantity)
         self.assertEqual(start_date, future_subscription.start_date)
         self.assertEqual(end_date, future_subscription.end_date)
-        self.assertEqual(1.2, future_subscription.solidarity_price_percentage)
         self.assertEqual(Decimal("3.6"), future_subscription.solidarity_price_absolute)
         self.assertEqual(mandate_ref, future_subscription.mandate_ref)
         self.assertEqual(trial_disabled, future_subscription.trial_disabled)

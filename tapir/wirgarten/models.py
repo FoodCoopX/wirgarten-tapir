@@ -771,16 +771,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
                 {"solidarity_price_absolute": "Solidarity price must be positive."}
             )
 
-        if (
-            self.solidarity_price_absolute is not None
-            and self.solidarity_price_percentage != 0.0
-        ):
-            raise ValidationError(
-                {
-                    "solidarity_price": "Solidarity price percentage must be 0 if absolute solidarity price is set."
-                }
-            )
-
     def __str__(self):
         return (
             f"{self.quantity} × {self.product.name} {self.product.type.name}; "
@@ -790,8 +780,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     def long_str(self):
         if self.solidarity_price_absolute is not None:
             soliprice = f"\n\t(Solidaraufschlag: {self.solidarity_price_absolute} €)"
-        elif self.solidarity_price_percentage is not None:
-            soliprice = f"\n\t(Solidaraufschlag: {float(self.solidarity_price_percentage) * 100.0} %)"
         else:
             soliprice = ""
 

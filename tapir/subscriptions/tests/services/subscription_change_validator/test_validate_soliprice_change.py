@@ -54,13 +54,12 @@ class TestValidateSolipriceChange(TapirIntegrationTest):
     def test_validateSolipriceChange_soliChangedOnOneProduct_errorRaised(self):
         form = Mock()
         cache = {}
-        subscription = SubscriptionFactory.create(solidarity_price_percentage=0.05)
+        subscription = SubscriptionFactory.create(solidarity_price_absolute=5)
         form.cleaned_data = {
             subscription.product.name: subscription.quantity,
             "solidarity_price_choice": 0.1,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price_percentage": 0.1,
             "solidarity_price_absolute": None,
         }
 
@@ -96,15 +95,14 @@ class TestValidateSolipriceChange(TapirIntegrationTest):
             ),
         )
         subscription = SubscriptionFactory.create(
-            solidarity_price_percentage=0.05, period=next_growing_period
+            period=next_growing_period, solidarity_price_absolute=3
         )
         form.cleaned_data = {
             subscription.product.name: subscription.quantity,
             "solidarity_price_choice": 0.1,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price_percentage": 0.1,
-            "solidarity_price_absolute": None,
+            "solidarity_price_absolute": 5,
         }
 
         SubscriptionChangeValidator.validate_soliprice_change(

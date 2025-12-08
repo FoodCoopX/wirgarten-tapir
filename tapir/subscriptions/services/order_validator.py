@@ -54,7 +54,6 @@ class OrderValidator:
 
         if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
             ordered_solidarity_factor=0,  # TODO
-            order=order,
             start_date=contract_start_date,
             cache=cache,
         ):

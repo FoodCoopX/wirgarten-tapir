@@ -27,8 +27,6 @@ from tapir.core.config import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
-    SOLIDARITY_UNIT_PERCENT,
-    SOLIDARITY_UNIT_OPTIONS,
     SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
     SOLIDARITY_MODE_OPTIONS,
     NOTICE_PERIOD_UNIT_MONTHS,
@@ -823,16 +821,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions_solidarity(self):
         from tapir.subscriptions.services.solidarity_validator import (
             SolidarityValidator,
-        )
-
-        self.parameter_definition(
-            key=ParameterKeys.SOLIDARITY_UNIT,
-            label="Einheit des Solidarbeitrag",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=SOLIDARITY_UNIT_PERCENT,
-            description="Bestimmt ob Mitglieder deren Solidarbeitrag als Prozent oder absolute Wert (€) eingeben.",
-            category=ParameterCategory.SOLIDARITY,
-            meta=ParameterMeta(options=SOLIDARITY_UNIT_OPTIONS),
         )
 
         self.parameter_definition(
