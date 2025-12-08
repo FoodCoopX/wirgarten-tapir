@@ -8,15 +8,14 @@ import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { CarouselRef } from "react-bootstrap/Carousel";
 import { MapRef } from "react-leaflet/MapContainer";
-import PickupLocationWaitingListModal from "../../bestell_wizard/components/PickupLocationWaitingListModal.tsx";
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import {
   ALL_PICKUP_LOCATION_TABS,
   PickupLocationTab,
 } from "../types/PickupLocationTab.ts";
 import Step5BPickupLocationWishes from "../components/Step5BPickupLocationWishes.tsx";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 
 interface Step5BPickupLocationChoiceProps {
   settings: BestellWizardSettings;
@@ -56,7 +55,6 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   const [showValidation, setShowValidation] = useState(false);
   const carouselRef = useRef<CarouselRef>(null);
   const [mapRef, setMapRef] = useState<MapRef>(null);
-  const [waitingListModalOpen, setWaitingListModalOpen] = useState(false);
 
   useEffect(() => {
     if (!active) {
@@ -68,11 +66,6 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
     setShowValidation(true);
 
     if (selectedPickupLocations.length === 0) {
-      return;
-    }
-
-    if (shouldOpenWaitingListModal()) {
-      setWaitingListModalOpen(true);
       return;
     }
 
@@ -96,28 +89,18 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
     return () => resizeObserver.disconnect();
   }, [carouselRef, mapRef]);
 
-  function shouldOpenWaitingListModal() {
-    if (
-      !isAtLeastOneOrderedProductWithDelivery(
-        buildFilteredShoppingCart(
-          shoppingCart,
-          false,
-          productTypesInWaitingList,
-        ),
-        settings.productTypes,
-      )
-    ) {
-      return false;
-    }
-
-    return pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]);
+  function showTabWishes() {
+    return !isAtLeastOneOrderedProductWithDelivery(
+      buildFilteredShoppingCart(shoppingCart, false, productTypesInWaitingList),
+      settings.productTypes,
+    );
   }
 
   return (
     <>
       <ButtonGroup style={{ width: "100%" }}>
         {ALL_PICKUP_LOCATION_TABS.filter(
-          (tab) => tab !== "wishes" || productTypesInWaitingList.size > 0,
+          (tab) => tab !== "wishes" || showTabWishes(),
         ).map((tab) => (
           <ToggleButton
             key={tab}
@@ -182,7 +165,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             shoppingCart={shoppingCart}
           />
         </Carousel.Item>
-        {productTypesInWaitingList.size > 0 && (
+        {showTabWishes() && (
           <Carousel.Item>
             <Step5BPickupLocationWishes
               settings={settings}
@@ -203,21 +186,6 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             : undefined
         }
         showError={showValidation && selectedPickupLocations.length === 0}
-      />
-      <PickupLocationWaitingListModal
-        show={waitingListModalOpen}
-        onHide={() => setWaitingListModalOpen(false)}
-        confirmEnableWaitingListMode={() => {
-          setWaitingListModalOpen(false);
-          setProductTypesInWaitingList(
-            new Set(
-              settings.productTypes.filter(
-                (productType) => !productType.noDelivery,
-              ),
-            ),
-          );
-          setCurrentTab("wishes");
-        }}
       />
     </>
   );
