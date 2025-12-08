@@ -237,7 +237,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               {selectedPickupLocations.length < 3 && (
                 <TapirButton
                   variant={BUTTON_VARIANT}
-                  text={"Weitere Wunsch hinzufügen"}
+                  text={"Weiterer Wunsch"}
                   icon={"add_circle"}
                   onClick={() =>
                     setSelectedPickupLocations([
