@@ -4,6 +4,8 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 
 export function buildSteps(
   settings: BestellWizardSettings,
@@ -13,6 +15,7 @@ export function buildSteps(
   productTypesInWaitingList: Set<PublicProductType>,
   selectedPickupLocation: PublicPickupLocation[],
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>,
+  solidarityContribution: number,
 ) {
   const newSteps: Step[] = [];
   newSteps.push(
@@ -68,7 +71,17 @@ export function buildSteps(
 
   newSteps.push("7_solidarity_contribution");
   newSteps.push("8_personal_data");
-  newSteps.push("9_banking_data");
+
+  if (
+    isAtLeastOneProductOrdered(
+      buildFilteredShoppingCart(shoppingCart, false, productTypesInWaitingList),
+    ) ||
+    becomeMemberNow !== false ||
+    solidarityContribution > 0
+  ) {
+    newSteps.push("9_banking_data");
+  }
+
   newSteps.push("10_summary");
   newSteps.push("11_legal");
   newSteps.push("12_channel");

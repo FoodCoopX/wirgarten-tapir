@@ -10,6 +10,8 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { PublicProductType } from "../../api-client";
 
 interface Step9BankingDataProps {
   goToNextStep: () => void;
@@ -23,6 +25,7 @@ interface Step9BankingDataProps {
   shoppingCart: ShoppingCart;
   solidarityContribution: number;
   active: boolean;
+  productTypesInWaitingList: Set<PublicProductType>;
 }
 
 const Step9BankingData: React.FC<Step9BankingDataProps> = ({
@@ -37,6 +40,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   shoppingCart,
   solidarityContribution,
   active,
+  productTypesInWaitingList,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
   const [paymentRhythmModalOpen, setPaymentRhythmModalOpen] = useState(false);
@@ -120,7 +124,13 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
               : ""
           }
         />
-        {(isAtLeastOneProductOrdered(shoppingCart) ||
+        {(isAtLeastOneProductOrdered(
+          buildFilteredShoppingCart(
+            shoppingCart,
+            false,
+            productTypesInWaitingList,
+          ),
+        ) ||
           solidarityContribution > 0) &&
           Object.entries(settings.paymentRhythmChoices).length > 1 && (
             <div className={"d-flex flex-row gap-2"}>

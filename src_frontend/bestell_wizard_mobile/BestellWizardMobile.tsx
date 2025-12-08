@@ -207,6 +207,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       productTypesInWaitingList,
       selectedPickupLocations,
       pickupLocationsWithCapacityFull,
+      solidarityContribution,
     );
 
     setSteps(newSteps);
@@ -497,6 +498,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             shoppingCart={shoppingCart}
             solidarityContribution={solidarityContribution}
             active={currentStep === step}
+            productTypesInWaitingList={productTypesInWaitingList}
           />
         );
       case "10_summary":
