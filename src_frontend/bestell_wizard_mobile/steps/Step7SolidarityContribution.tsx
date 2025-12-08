@@ -53,15 +53,7 @@ const Step7SolidarityContribution: React.FC<
   function validate() {
     setShowValidation(true);
 
-    if (
-      showMinimumWarning() ||
-      getMonthlyPayment(
-        solidarityContribution,
-        shoppingCart,
-        settings,
-        productTypesInWaitingList,
-      ) < 0
-    ) {
+    if (!isValueValid(solidarityContribution)) {
       return;
     }
 
@@ -98,20 +90,23 @@ const Step7SolidarityContribution: React.FC<
     }
   }
 
-  function showMinimumWarning() {
-    if (selectedValue !== "custom") {
-      return false;
-    }
-
-    if (isNaN(parseFloat(customValue))) {
+  function isValueValid(value: number) {
+    if (
+      getMonthlyPayment(
+        value,
+        shoppingCart,
+        settings,
+        productTypesInWaitingList,
+      ) < 0
+    ) {
       return false;
     }
 
     if (settings.solidarityContributionMinimum === null) {
-      return false;
+      return true;
     }
 
-    return parseFloat(customValue) < settings.solidarityContributionMinimum;
+    return value >= settings.solidarityContributionMinimum;
   }
 
   return (
@@ -126,32 +121,16 @@ const Step7SolidarityContribution: React.FC<
         <Form.Select
           value={selectedValue}
           onChange={(event) => onSelect(event.target.value)}
-          isValid={
-            showValidation &&
-            !showMinimumWarning() &&
-            getMonthlyPayment(
-              solidarityContribution,
-              shoppingCart,
-              settings,
-              productTypesInWaitingList,
-            ) > 0
-          }
-          isInvalid={
-            showValidation &&
-            (showMinimumWarning() ||
-              getMonthlyPayment(
-                solidarityContribution,
-                shoppingCart,
-                settings,
-                productTypesInWaitingList,
-              ) < 0)
-          }
+          isValid={showValidation && isValueValid(solidarityContribution)}
+          isInvalid={showValidation && !isValueValid(solidarityContribution)}
         >
-          {getValues().map((value) => (
-            <option key={value} value={value}>
-              {getDisplay(value)}
-            </option>
-          ))}
+          {getValues()
+            .filter((value) => value === "custom" || isValueValid(value))
+            .map((value) => (
+              <option key={value} value={value}>
+                {getDisplay(value)}
+              </option>
+            ))}
         </Form.Select>
         {selectedValue === "custom" && (
           <Form.Group className={"d-flex flex-column gap-2 align-items-center"}>
@@ -180,33 +159,18 @@ const Step7SolidarityContribution: React.FC<
                 )
               }
               style={{ maxWidth: "300px" }}
-              isValid={
-                showValidation &&
-                !showMinimumWarning() &&
-                getMonthlyPayment(
-                  solidarityContribution,
-                  shoppingCart,
-                  settings,
-                  productTypesInWaitingList,
-                ) > 0
-              }
+              isValid={showValidation && isValueValid(solidarityContribution)}
               isInvalid={
-                showValidation &&
-                (showMinimumWarning() ||
-                  getMonthlyPayment(
-                    solidarityContribution,
-                    shoppingCart,
-                    settings,
-                    productTypesInWaitingList,
-                  ) < 0)
+                showValidation && !isValueValid(solidarityContribution)
               }
             />
-            {showMinimumWarning() && (
-              <Alert variant={"danger"}>
-                Der Solidartopf reicht gerade nur für{" "}
-                {formatCurrency(settings.solidarityContributionMinimum ?? 0)}
-              </Alert>
-            )}
+            {!isValueValid(solidarityContribution) &&
+              (settings.solidarityContributionMinimum ?? 0) < 0 && (
+                <Alert variant={"danger"}>
+                  Der Solidartopf reicht gerade nur für{" "}
+                  {formatCurrency(settings.solidarityContributionMinimum ?? 0)}
+                </Alert>
+              )}
           </Form.Group>
         )}
       </div>
