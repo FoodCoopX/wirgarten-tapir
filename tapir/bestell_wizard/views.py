@@ -1,4 +1,3 @@
-from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -27,7 +26,6 @@ from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -380,8 +378,8 @@ class BestellWizardBaseDataApiView(APIView):
                 ParameterKeys.TRIAL_PERIOD_DURATION, cache=self.cache
             ),
             "payment_rhythm_choices": {
-                rhythm: self.build_payment_rhythm_display_name(
-                    rhythm=rhythm, cache=self.cache
+                rhythm: MemberPaymentRhythmService.get_rhythm_display_name(
+                    rhythm=rhythm
                 )
                 for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
                     cache=self.cache
@@ -439,45 +437,6 @@ class BestellWizardBaseDataApiView(APIView):
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
-
-    @classmethod
-    def build_payment_rhythm_display_name(
-        cls, rhythm: MemberPaymentRhythm.Rhythm, cache: dict
-    ):
-        base_name = MemberPaymentRhythmService.get_rhythm_display_name(rhythm=rhythm)
-        if rhythm == MemberPaymentRhythm.Rhythm.MONTHLY:
-            return base_name
-        growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=get_today(cache=cache), cache=cache
-        )
-        relevant_months = []
-        for index in range(12):
-            month = growing_period.start_date + relativedelta(months=index)
-            month_index = (
-                MemberPaymentRhythmService.get_month_index_relative_to_growing_period(
-                    reference_date=month, cache=cache
-                )
-            )
-            if (
-                month_index
-                in MemberPaymentRhythmService.get_month_index_where_payments_should_be_created(
-                    rhythm=rhythm
-                )
-            ):
-                relevant_months.append(month)
-
-        le_join = ", ".join(
-            [
-                month.replace(
-                    day=get_parameter_value(
-                        key=ParameterKeys.PAYMENT_DUE_DAY, cache=cache
-                    )
-                ).strftime("%-d.%-m")
-                for month in relevant_months
-            ]
-        )
-
-        return f"{base_name} ({le_join})"
 
     @classmethod
     def build_strings_object(cls, cache: dict):
