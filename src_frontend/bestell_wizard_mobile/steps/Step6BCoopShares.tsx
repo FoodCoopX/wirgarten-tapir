@@ -73,7 +73,12 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
     if (!statuteRead || !commitmentChecked) {
       return false;
     }
-
+    console.log(
+      "SELECTED: " +
+        selectedNumberOfCoopShares +
+        " MIN:" +
+        minimumNumberOfShares,
+    );
     return selectedNumberOfCoopShares >= minimumNumberOfShares;
   }
 
@@ -91,9 +96,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
     if (isNaN(newNumberOfShares)) {
       return;
     }
-    if (newNumberOfShares < minimumNumberOfShares) {
-      return;
-    }
+
     if (newNumberOfShares !== selectedNumberOfCoopShares) {
       setSelectedNumberOfCoopShares(newNumberOfShares);
     }
@@ -129,7 +132,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           }
           size={"sm"}
         />
-        <Form.Group style={{ maxWidth: "35px" }}>
+        <Form.Group style={{ maxWidth: showValidation ? "60px" : "35px" }}>
           <Form.Control
             min={minimumNumberOfShares}
             step={1}
@@ -137,6 +140,14 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             onChange={(event) => setInternalNumberOfShares(event.target.value)}
             size={"sm"}
             disabled={studentStatusEnabled}
+            isValid={
+              showValidation &&
+              selectedNumberOfCoopShares >= minimumNumberOfShares
+            }
+            isInvalid={
+              showValidation &&
+              selectedNumberOfCoopShares < minimumNumberOfShares
+            }
           />
         </Form.Group>
         <TapirButton
