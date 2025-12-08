@@ -536,6 +536,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             privacyPolicyRead={privacyPolicyRead}
             setPrivacyPolicyRead={setPrivacyPolicyRead}
             active={step === currentStep}
+            productTypesInWaitingList={productTypesInWaitingList}
+            shoppingCart={shoppingCart}
+            solidarityContribution={solidarityContribution}
           />
         );
       case "12_channel":

@@ -4,6 +4,10 @@ import { Accordion } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { PublicProductType } from "../../api-client";
 
 interface Step11LegalProps {
   settings: BestellWizardSettings;
@@ -13,6 +17,9 @@ interface Step11LegalProps {
   setPrivacyPolicyRead: (read: boolean) => void;
   active: boolean;
   goToNextStep: () => void;
+  shoppingCart: ShoppingCart;
+  productTypesInWaitingList: Set<PublicProductType>;
+  solidarityContribution: number;
 }
 
 const Step11Legal: React.FC<Step11LegalProps> = ({
@@ -23,6 +30,9 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
   setPrivacyPolicyRead,
   active,
   goToNextStep,
+  shoppingCart,
+  productTypesInWaitingList,
+  solidarityContribution,
 }) => {
   const scrollDiv = useRef<HTMLDivElement>(null);
   const [showValidation, setShowValidation] = useState(false);
@@ -51,28 +61,37 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
 
   return (
     <>
-      <Accordion style={{ width: "100%" }}>
-        <Accordion.Item eventKey={"cancellation"} onClick={scrollIntoView}>
-          <Accordion.Header>
-            <TapirCheckbox
-              controlId={"legal_cancellation"}
-              checked={cancellationPolicyRead}
-              onChange={setCancellationPolicyRead}
-              label={
-                "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
-              }
-              showError={showValidation && !cancellationPolicyRead}
-            />
-          </Accordion.Header>
-          <Accordion.Body>
-            <span
-              dangerouslySetInnerHTML={{
-                __html: settings.revocationRightsExplanation,
-              }}
-            />
-          </Accordion.Body>
-        </Accordion.Item>
-      </Accordion>
+      {isAtLeastOneProductOrdered(
+        buildFilteredShoppingCart(
+          shoppingCart,
+          false,
+          productTypesInWaitingList,
+        ),
+      ) ||
+        (solidarityContribution > 0 && (
+          <Accordion style={{ width: "100%" }}>
+            <Accordion.Item eventKey={"cancellation"} onClick={scrollIntoView}>
+              <Accordion.Header>
+                <TapirCheckbox
+                  controlId={"legal_cancellation"}
+                  checked={cancellationPolicyRead}
+                  onChange={setCancellationPolicyRead}
+                  label={
+                    "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
+                  }
+                  showError={showValidation && !cancellationPolicyRead}
+                />
+              </Accordion.Header>
+              <Accordion.Body>
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: settings.revocationRightsExplanation,
+                  }}
+                />
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+        ))}
       <Accordion style={{ width: "100%" }}>
         <Accordion.Item eventKey={"privacy"} onClick={scrollIntoView}>
           <Accordion.Header>
