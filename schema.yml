@@ -118,6 +118,27 @@ paths:
                 type: string
                 format: date
           description: ''
+  /bestell_wizard/api/product_prices:
+    get:
+      operationId: bestell_wizard_api_product_prices_retrieve
+      parameters:
+      - in: query
+        name: growing_period_id
+        schema:
+          type: string
+      tags:
+      - bestell_wizard
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProductPricesResponse'
+          description: ''
   /bestell_wizard/bestell_wizard_confirm_order:
     post:
       operationId: bestell_wizard_bestell_wizard_confirm_order_create
@@ -8324,6 +8345,16 @@ components:
       required:
       - name
       - price
+    PublicProductPricesResponse:
+      type: object
+      properties:
+        prices_by_product_id:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+      required:
+      - prices_by_product_id
     PublicProductType:
       type: object
       properties:

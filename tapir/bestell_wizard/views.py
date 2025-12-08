@@ -16,6 +16,7 @@ from tapir.bestell_wizard.serializers import (
     BestellWizardBaseDataResponseSerializer,
     BestellWizardDeliveryDatesForOrderResponseSerializer,
     BestellWizardDeliveryDatesForOrderRequestSerializer,
+    PublicProductPricesResponseSerializer,
 )
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
@@ -25,6 +26,7 @@ from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
 )
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
+from tapir.deliveries.serializers import PublicGrowingPeriodSerializer
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -63,6 +65,8 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
     Member,
     PickupLocation,
+    GrowingPeriod,
+    Product,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -704,3 +708,33 @@ class PublicBestellWizardIsEmailAddressValidApiView(APIView):
             return Response(False)
 
         return Response(True)
+
+
+class PublicProductPricesApiView(APIView):
+    permission_classes = []
+
+    @extend_schema(
+        responses={200: PublicProductPricesResponseSerializer},
+        parameters=[OpenApiParameter("growing_period_id", type=str)],
+    )
+    def get(self, request):
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=request.query_params.get("growing_period_id")
+        )
+        contract_start_date = PublicGrowingPeriodSerializer.get_contract_start_date(
+            growing_period
+        )
+
+        cache = {}
+        prices_by_product_id = {
+            product.id: get_product_price(
+                product=product, reference_date=contract_start_date, cache=cache
+            ).price
+            for product in Product.objects.all()
+        }
+
+        return Response(
+            PublicProductPricesResponseSerializer(
+                {"prices_by_product_id": prices_by_product_id}
+            ).data
+        )

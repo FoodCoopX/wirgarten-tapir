@@ -139,6 +139,7 @@ models/PublicConfirmWaitingListEntryRequestRequest.ts
 models/PublicGrowingPeriod.ts
 models/PublicPickupLocation.ts
 models/PublicProduct.ts
+models/PublicProductPricesResponse.ts
 models/PublicProductType.ts
 models/PublicSubscription.ts
 models/PublicWaitingListEntryExistingMemberCreateRequest.ts

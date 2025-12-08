@@ -62,6 +62,7 @@ import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOne
 import { isProductOrdered } from "./utils/isProductOrdered.ts";
 import Step14BConfirmationWaitingList from "./steps/Step14BConfirmationWaitingList.tsx";
 import Step3BGrowingPeriodChoice from "./steps/Step3BGrowingPeriodChoice.tsx";
+import { updateProductPrices } from "../utils/updateProductPrices.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -138,6 +139,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
     useState<PickupLocationTab>("map");
   const [selectedGrowingPeriod, setSelectedGrowingPeriod] =
     useState<PublicGrowingPeriod>();
+  const [productPricesController, setProductPricesController] =
+    useState<AbortController>();
 
   useEffect(() => {
     Promise.all([
@@ -175,6 +178,17 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
         ),
       );
   }, []);
+
+  useEffect(() => {
+    updateProductPrices(
+      selectedGrowingPeriod,
+      productPricesController,
+      setProductPricesController,
+      settings,
+      setSettings,
+      setToastDatas,
+    );
+  }, [selectedGrowingPeriod]);
 
   useEffect(() => {
     function handleBeforeUnload(event: BeforeUnloadEvent) {

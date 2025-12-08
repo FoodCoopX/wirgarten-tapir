@@ -157,3 +157,7 @@ class BestellWizardDeliveryDatesForOrderResponseSerializer(serializers.Serialize
     delivery_date_by_pickup_location_id_and_product_type_id = serializers.DictField(
         child=serializers.DictField(child=serializers.DateField())
     )
+
+
+class PublicProductPricesResponseSerializer(serializers.Serializer):
+    prices_by_product_id = serializers.DictField(child=serializers.FloatField())

@@ -22,6 +22,7 @@ import type {
   BestellWizardDeliveryDatesForOrderRequestRequest,
   BestellWizardDeliveryDatesForOrderResponse,
   OrderConfirmationResponse,
+  PublicProductPricesResponse,
 } from '../models/index';
 import {
     BestellWizardBaseDataResponseFromJSON,
@@ -38,6 +39,8 @@ import {
     BestellWizardDeliveryDatesForOrderResponseToJSON,
     OrderConfirmationResponseFromJSON,
     OrderConfirmationResponseToJSON,
+    PublicProductPricesResponseFromJSON,
+    PublicProductPricesResponseToJSON,
 } from '../models/index';
 
 export interface BestellWizardApiBestellWizardCapacityCheckCreateRequest {
@@ -54,6 +57,10 @@ export interface BestellWizardApiIsEmailAddressValidRetrieveRequest {
 
 export interface BestellWizardApiNextContractStartDateRetrieveRequest {
     waitingListEntryId?: string;
+}
+
+export interface BestellWizardApiProductPricesRetrieveRequest {
+    growingPeriodId?: string;
 }
 
 export interface BestellWizardBestellWizardConfirmOrderCreateRequest {
@@ -253,6 +260,41 @@ export class BestellWizardApi extends runtime.BaseAPI {
      */
     async bestellWizardApiNextContractStartDateRetrieve(requestParameters: BestellWizardApiNextContractStartDateRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Date> {
         const response = await this.bestellWizardApiNextContractStartDateRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async bestellWizardApiProductPricesRetrieveRaw(requestParameters: BestellWizardApiProductPricesRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PublicProductPricesResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['growingPeriodId'] != null) {
+            queryParameters['growing_period_id'] = requestParameters['growingPeriodId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bestell_wizard/api/product_prices`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PublicProductPricesResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async bestellWizardApiProductPricesRetrieve(requestParameters: BestellWizardApiProductPricesRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PublicProductPricesResponse> {
+        const response = await this.bestellWizardApiProductPricesRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
