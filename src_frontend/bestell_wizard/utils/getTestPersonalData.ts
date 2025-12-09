@@ -4,7 +4,8 @@ export function getTestPersonalData(): PersonalData {
   return {
     firstName: "Max",
     lastName: "Mustermann",
-    email: "max.mustermann@example.com",
+    email:
+      "max.mustermann" + Math.floor(Math.random() * 100000) + "@example.com",
     phoneNumber: "017626274538",
     street: "Musterstrasse 1",
     street2: "",
