@@ -53,10 +53,12 @@ def migrate_solidarity_percentage_to_absolute(apps, schema):
             cache=cache,
         ).price
         subscription_price_without_solidarity = subscription.quantity * price
-        subscription.solidarity_price_absolute += Decimal(
+        old_absolute = subscription.solidarity_price_absolute or Decimal(0)
+        new_absolute = old_absolute + Decimal(
             float(subscription_price_without_solidarity)
             * subscription.solidarity_price_percentage
         )
+        subscription.solidarity_price_absolute = new_absolute
         subscription.solidarity_price_percentage = 0
 
     Subscription.objects.bulk_update(
