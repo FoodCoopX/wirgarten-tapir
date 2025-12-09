@@ -37,7 +37,17 @@ const MemberProfileWaitingListCard: React.FC<
   }, [memberId]);
 
   function buildContent() {
-    if (loading) return <Spinner />;
+    if (loading)
+      return (
+        <Card>
+          <Card.Header>
+            <h5 className={"mb-0"}>Warteliste-Eintrag</h5>
+          </Card.Header>
+          <Card.Body>
+            <Spinner />
+          </Card.Body>
+        </Card>
+      );
 
     if (waitingListEntry === undefined) return null;
 

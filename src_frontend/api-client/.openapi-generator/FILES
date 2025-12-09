@@ -6,6 +6,7 @@ apis/GenericExportsApi.ts
 apis/PaymentsApi.ts
 apis/PickupLocationsApi.ts
 apis/ProductsApi.ts
+apis/SolidarityContributionApi.ts
 apis/SubscriptionsApi.ts
 apis/TapirmailApi.ts
 apis/WaitingListApi.ts
@@ -150,6 +151,7 @@ models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
+models/SolidarityContribution.ts
 models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
 models/StaticSegmentRecipientRequest.ts

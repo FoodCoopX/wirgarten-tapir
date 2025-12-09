@@ -7,6 +7,7 @@ import MemberProfileWaitingListCard from "./waiting_list/MemberProfileWaitingLis
 import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
 import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
 import CoopSharesCard from "./coop_shares/CoopSharesCard.tsx";
+import MemberProfileSolidarityContributionCard from "./solidarity_contribution/MemberProfileSolidarityContributionCard.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -60,6 +61,22 @@ if (domNodeWaitingListCard) {
   );
 } else {
   console.error("Failed to render waiting list card from React");
+}
+
+const domNodeSolidarityCard = document.getElementById(
+  "member_profile_solidarity_contribution",
+);
+if (domNodeSolidarityCard) {
+  const root = createRoot(domNodeSolidarityCard);
+
+  root.render(
+    <MemberProfileSolidarityContributionCard
+      memberId={domNodeSolidarityCard.dataset.memberId!}
+      adminEmail={domNodeSolidarityCard.dataset.adminEmail!}
+    />,
+  );
+} else {
+  console.error("Failed to render solidarity card from React");
 }
 
 const domNodeFuturePaymentsCard = document.getElementById(

@@ -8,6 +8,7 @@ export * from './GenericExportsApi';
 export * from './PaymentsApi';
 export * from './PickupLocationsApi';
 export * from './ProductsApi';
+export * from './SolidarityContributionApi';
 export * from './SubscriptionsApi';
 export * from './TapirmailApi';
 export * from './WaitingListApi';

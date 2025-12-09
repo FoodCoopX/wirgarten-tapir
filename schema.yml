@@ -1465,6 +1465,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProductTypesAndConfig'
           description: ''
+  /solidarity_contribution/api/member_solidarity_contributions:
+    get:
+      operationId: solidarity_contribution_api_member_solidarity_contributions_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - solidarity_contribution
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SolidarityContribution'
+          description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
@@ -8653,6 +8676,29 @@ components:
       - remove_segments
       - static_segments
       - static_segments_subtractive
+    SolidarityContribution:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        member:
+          type: string
+      required:
+      - amount
+      - end_date
+      - member
+      - start_date
     StaticSegment:
       type: object
       properties:

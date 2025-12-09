@@ -30,8 +30,6 @@ tapir_mail_path = (
 
 urlpatterns = [
     path("", wirgarten_redirect_view, name="index"),
-    path("core/", include("tapir.core.urls")),
-    path("coop/", include("tapir.coop.urls")),
     path("accounts/", include("tapir.accounts.urls")),
     path(
         "accounts/login/",
@@ -39,8 +37,20 @@ urlpatterns = [
         name="account_login",
     ),
     path("accounts/", include("allauth.urls")),
-    path("log/", include("tapir.log.urls")),
+    path("bestell_wizard/", include("tapir.bestell_wizard.urls")),
     path("config/", include("tapir.configuration.urls")),
+    path("coop/", include("tapir.coop.urls")),
+    path("core/", include("tapir.core.urls")),
+    path("deliveries/", include("tapir.deliveries.urls")),
+    path("generic_exports/", include("tapir.generic_exports.urls")),
+    path("log/", include("tapir.log.urls")),
+    path("payments/", include("tapir.payments.urls")),
+    path("pickup_locations/", include("tapir.pickup_locations.urls")),
+    path("products/", include("tapir.products.urls")),
+    path("solidarity_contribution/", include("tapir.solidarity_contribution.urls")),
+    path("subscriptions/", include("tapir.subscriptions.urls")),
+    path("utils/", include("tapir.utils.urls")),
+    path("waiting_list/", include("tapir.waiting_list.urls")),
     path("tapir/", include("tapir.wirgarten.urls")),
     path(
         "mailing/",
@@ -49,15 +59,6 @@ urlpatterns = [
         kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
     ),
     path(tapir_mail_path, include("tapir_mail.urls")),
-    path("deliveries/", include("tapir.deliveries.urls")),
-    path("generic_exports/", include("tapir.generic_exports.urls")),
-    path("subscriptions/", include("tapir.subscriptions.urls")),
-    path("pickup_locations/", include("tapir.pickup_locations.urls")),
-    path("utils/", include("tapir.utils.urls")),
-    path("waiting_list/", include("tapir.waiting_list.urls")),
-    path("products/", include("tapir.products.urls")),
-    path("payments/", include("tapir.payments.urls")),
-    path("bestell_wizard/", include("tapir.bestell_wizard.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:

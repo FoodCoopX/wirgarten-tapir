@@ -32,9 +32,7 @@
                     </div>
                 {% endif %}
                 <div id="member-contracts">
-                    {% if show_coop_shares %}
-                        <div id="coop_shares_card" data-member-id="{{ object.id }}"></div>
-                    {% endif %}
+                    {% if show_coop_shares %}<div id="coop_shares_card" data-member-id="{{ object.id }}"></div>{% endif %}
                     <div id="contract-tiles"
                          data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
                          data-member-id="{{ object.pk }}">
@@ -108,9 +106,32 @@
                     <div id="member_profile_waiting_list_entry"
                          data-member-id="{{ object.pk }}"
                          data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}">
-                        <span class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </span>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Warteliste-Eintrag</h5>
+                            </div>
+                            <div class="card-body">
+                                <span class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div id="member_profile_solidarity_contribution"
+                         data-member-id="{{ object.pk }}"
+                         data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Solidarbeitrag</h5>
+                            </div>
+                            <div class="card-body">
+                                <span class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
