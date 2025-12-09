@@ -149,11 +149,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
         productIds: [],
         quantities: [],
       }),
-      bestellWizardApi.bestellWizardApiNextContractStartDateRetrieve({
-        waitingListEntryId: undefined,
-      }),
     ])
-      .then(([baseData, minNumberOfShares, contractStartDateAsString]) => {
+      .then(([baseData, minNumberOfShares]) => {
         const newSettings = buildSettings(baseData);
         setSettings(newSettings);
         setSettingsLoaded(true);
@@ -163,8 +160,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
 
         personalData.paymentRhythm = baseData.defaultPaymentRhythm;
         setPersonalData(Object.assign({}, personalData));
-
-        setContractStartDate(new Date(contractStartDateAsString));
 
         if (newSettings.growingPeriodChoices.length > 0) {
           setSelectedGrowingPeriod(newSettings.growingPeriodChoices[0]);
@@ -180,6 +175,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
   }, []);
 
   useEffect(() => {
+    if (!selectedGrowingPeriod) {
+      return;
+    }
+
     updateProductPrices(
       selectedGrowingPeriod,
       productPricesController,
@@ -188,6 +187,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       setSettings,
       setToastDatas,
     );
+
+    setContractStartDate(selectedGrowingPeriod.contractStartDate);
   }, [selectedGrowingPeriod]);
 
   useEffect(() => {

@@ -8,7 +8,11 @@ from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory, CoopShareTransactionFactory
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    CoopShareTransactionFactory,
+    GrowingPeriodFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 from tapir.wirgarten.utils import get_today
 
@@ -33,6 +37,9 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         self.assertFalse(CoopShareTransaction.objects.exists())
 
     def test_post_normalMemberPurchaseSharesForThemselves_executePurchase(self):
+        GrowingPeriodFactory.create(
+            start_date=get_today() - datetime.timedelta(days=100)
+        )
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
@@ -46,6 +53,9 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         self.assertEqual(2, CoopShareTransaction.objects.get().quantity)
 
     def test_post_adminPurchaseSharesForAnotherMember_executePurchase(self):
+        GrowingPeriodFactory.create(
+            start_date=get_today() - datetime.timedelta(days=100)
+        )
         admin = MemberFactory.create(is_superuser=True)
         other_member = MemberFactory.create(is_superuser=False)
         self.client.force_login(admin)
@@ -60,6 +70,9 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         self.assertEqual(3, CoopShareTransaction.objects.get().quantity)
 
     def test_post_memberIsStudent_dontValidateMinimumNumberOfShares(self):
+        GrowingPeriodFactory.create(
+            start_date=get_today() - datetime.timedelta(days=100)
+        )
         member = MemberFactory.create(is_student=True)
         self.client.force_login(member)
         TapirParameter.objects.filter(key=ParameterKeys.COOP_MIN_SHARES).update(value=5)

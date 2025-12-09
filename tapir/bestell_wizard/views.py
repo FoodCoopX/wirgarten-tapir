@@ -657,7 +657,7 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         )
 
 
-class GetNextContractStartDateApiView(APIView):
+class GetContractStartDateForWaitingListEntryApiView(APIView):
     permission_classes = []
 
     def __init__(self, **kwargs):
@@ -667,27 +667,42 @@ class GetNextContractStartDateApiView(APIView):
     @extend_schema(
         responses={200: OpenApiTypes.DATE},
         parameters=[
-            OpenApiParameter("waiting_list_entry_id", type=str, required=False)
+            OpenApiParameter("waiting_list_entry_id", type=str),
         ],
     )
     def get(self, request):
-        reference_date = get_today(cache=self.cache)
-        waiting_list_entry_id = request.query_params.get("waiting_list_entry_id", None)
-        if waiting_list_entry_id is not None:
-            waiting_list_entry = get_object_or_404(
-                WaitingListEntry, id=waiting_list_entry_id
-            )
-            desired_start_date = waiting_list_entry.desired_start_date
-            if desired_start_date is not None:
-                reference_date = desired_start_date
-
-        return Response(
-            ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=reference_date,
-                apply_buffer_time=waiting_list_entry_id is None,
-                cache=self.cache,
-            )
+        waiting_list_entry_id = request.query_params.get("waiting_list_entry_id")
+        waiting_list_entry = get_object_or_404(
+            WaitingListEntry, id=waiting_list_entry_id
         )
+        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=waiting_list_entry.desired_start_date
+            or get_today(cache=self.cache),
+            apply_buffer_time=False,
+            cache=self.cache,
+        )
+
+        return Response(contract_start_date)
+
+
+class GetEarliestContractStartDateApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: OpenApiTypes.DATE},
+    )
+    def get(self, request):
+        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache),
+            apply_buffer_time=True,
+            cache=self.cache,
+        )
+
+        return Response(contract_start_date)
 
 
 class PublicBestellWizardIsEmailAddressValidApiView(APIView):

@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ImproperlyConfigured
-from pygments.lexers import q
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
@@ -249,7 +248,8 @@ class MonthPaymentBuilder:
                     cache=cache,
                 )
                 for subscription in subscriptions_active_within_period
-            ]
+            ],
+            Decimal(0),
         )
         return total_to_pay
 

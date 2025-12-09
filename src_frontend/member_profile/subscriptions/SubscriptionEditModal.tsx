@@ -128,9 +128,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       );
 
     bestellWizardApi
-      .bestellWizardApiNextContractStartDateRetrieve({
-        waitingListEntryId: undefined,
-      })
+      .bestellWizardApiEarliestContractStartDateRetrieve()
       .then((result) => setContractStartDate(new Date(result)))
       .catch((error) =>
         handleRequestError(

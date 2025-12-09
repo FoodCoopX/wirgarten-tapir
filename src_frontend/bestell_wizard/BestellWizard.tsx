@@ -313,10 +313,20 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, [waitingListEntryDetails, settings]);
 
   useEffect(() => {
-    bestellWizardApi
-      .bestellWizardApiNextContractStartDateRetrieve({
-        waitingListEntryId: waitingListEntryDetails?.id,
-      })
+    let promise;
+    if (waitingListEntryDetails) {
+      promise =
+        bestellWizardApi.bestellWizardApiContractStartDateWaitingListEntryRetrieve(
+          {
+            waitingListEntryId: waitingListEntryDetails?.id,
+          },
+        );
+    } else {
+      promise =
+        bestellWizardApi.bestellWizardApiEarliestContractStartDateRetrieve();
+    }
+
+    promise
       .then((result) => {
         setContractStartDate(new Date(result));
       })

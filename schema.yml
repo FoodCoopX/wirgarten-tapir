@@ -75,6 +75,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderResponse'
           description: ''
+  /bestell_wizard/api/contract_start_date_waiting_list_entry:
+    get:
+      operationId: bestell_wizard_api_contract_start_date_waiting_list_entry_retrieve
+      parameters:
+      - in: query
+        name: waiting_list_entry_id
+        schema:
+          type: string
+      tags:
+      - bestell_wizard
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: date
+          description: ''
+  /bestell_wizard/api/earliest_contract_start_date:
+    get:
+      operationId: bestell_wizard_api_earliest_contract_start_date_retrieve
+      tags:
+      - bestell_wizard
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: date
+          description: ''
   /bestell_wizard/api/is_email_address_valid:
     get:
       operationId: bestell_wizard_api_is_email_address_valid_retrieve
@@ -95,28 +134,6 @@ paths:
             application/json:
               schema:
                 type: boolean
-          description: ''
-  /bestell_wizard/api/next_contract_start_date:
-    get:
-      operationId: bestell_wizard_api_next_contract_start_date_retrieve
-      parameters:
-      - in: query
-        name: waiting_list_entry_id
-        schema:
-          type: string
-      tags:
-      - bestell_wizard
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: string
-                format: date
           description: ''
   /bestell_wizard/api/product_prices:
     get:

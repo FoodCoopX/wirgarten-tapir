@@ -16,7 +16,6 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
 )
 from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
-from tapir.wirgarten.utils import get_today
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
@@ -91,22 +90,11 @@ class PublicGrowingPeriodSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_contract_start_date(growing_period: GrowingPeriod) -> datetime.date:
-        cache = {}
-
-        today = get_today(cache=cache)
-        if growing_period.start_date <= today:
-            reference_date = today
-        else:
-            reference_date = growing_period.start_date
-
-        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=reference_date, apply_buffer_time=True, cache=cache
+        return (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period, cache={}
+            )
         )
-
-        if contract_start_date < growing_period.start_date:
-            contract_start_date = growing_period.start_date
-
-        return contract_start_date
 
 
 class JokerWithCancellationLimitSerializer(serializers.Serializer):

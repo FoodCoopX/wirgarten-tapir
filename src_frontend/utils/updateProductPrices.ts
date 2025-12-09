@@ -6,17 +6,13 @@ import { ToastData } from "../types/ToastData.ts";
 import React from "react";
 
 export function updateProductPrices(
-  selectedGrowingPeriod: PublicGrowingPeriod | undefined,
+  selectedGrowingPeriod: PublicGrowingPeriod,
   productPricesController: AbortController | undefined,
   setProductPricesController: (controller: AbortController) => void,
   settings: BestellWizardSettings,
   setSettings: (settings: BestellWizardSettings) => void,
   setToastDatas?: React.Dispatch<React.SetStateAction<ToastData[]>>,
 ) {
-  if (!selectedGrowingPeriod) {
-    return;
-  }
-
   if (productPricesController) {
     productPricesController.abort();
   }

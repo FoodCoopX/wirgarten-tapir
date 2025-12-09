@@ -40,9 +40,14 @@ urlpatterns = [
         name="is_email_address_valid",
     ),
     path(
-        "api/next_contract_start_date",
-        views.GetNextContractStartDateApiView.as_view(),
-        name="next_contract_start_date",
+        "api/earliest_contract_start_date",
+        views.GetEarliestContractStartDateApiView.as_view(),
+        name="earliest_contract_start_date",
+    ),
+    path(
+        "api/contract_start_date_waiting_list_entry",
+        views.GetContractStartDateForWaitingListEntryApiView.as_view(),
+        name="contract_start_date_waiting_list_entry",
     ),
     path(
         "api/product_prices",

@@ -6,6 +6,7 @@ from tapir.deliveries.services.date_limit_for_delivery_change_calculator import 
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
+from tapir.wirgarten.models import GrowingPeriod
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
@@ -15,9 +16,6 @@ class ContractStartDateCalculator:
     def get_next_contract_start_date(
         cls, reference_date: datetime.date, apply_buffer_time: bool, cache: dict
     ):
-        """
-        Gets the earliest possible start date for a contract
-        """
         current_date = get_monday(reference_date)
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=reference_date, cache=cache
@@ -48,3 +46,19 @@ class ContractStartDateCalculator:
                 )
             )
         return date_limit >= get_today(cache=cache)
+
+    @classmethod
+    def get_next_contract_start_date_in_growing_period(
+        cls, growing_period: GrowingPeriod, cache: dict
+    ):
+        today = get_today(cache=cache)
+        if growing_period.start_date <= today:
+            reference_date = today
+        else:
+            reference_date = growing_period.start_date
+
+        contract_start_date = cls.get_next_contract_start_date(
+            reference_date=reference_date, apply_buffer_time=True, cache=cache
+        )
+
+        return contract_start_date

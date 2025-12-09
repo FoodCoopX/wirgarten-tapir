@@ -51,12 +51,12 @@ export interface BestellWizardApiBestellWizardDeliveryDatesCreateRequest {
     bestellWizardDeliveryDatesForOrderRequestRequest: BestellWizardDeliveryDatesForOrderRequestRequest;
 }
 
-export interface BestellWizardApiIsEmailAddressValidRetrieveRequest {
-    email?: string;
+export interface BestellWizardApiContractStartDateWaitingListEntryRetrieveRequest {
+    waitingListEntryId?: string;
 }
 
-export interface BestellWizardApiNextContractStartDateRetrieveRequest {
-    waitingListEntryId?: string;
+export interface BestellWizardApiIsEmailAddressValidRetrieveRequest {
+    email?: string;
 }
 
 export interface BestellWizardApiProductPricesRetrieveRequest {
@@ -187,6 +187,80 @@ export class BestellWizardApi extends runtime.BaseAPI {
 
     /**
      */
+    async bestellWizardApiContractStartDateWaitingListEntryRetrieveRaw(requestParameters: BestellWizardApiContractStartDateWaitingListEntryRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Date>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['waitingListEntryId'] != null) {
+            queryParameters['waiting_list_entry_id'] = requestParameters['waitingListEntryId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bestell_wizard/api/contract_start_date_waiting_list_entry`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<Date>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async bestellWizardApiContractStartDateWaitingListEntryRetrieve(requestParameters: BestellWizardApiContractStartDateWaitingListEntryRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Date> {
+        const response = await this.bestellWizardApiContractStartDateWaitingListEntryRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async bestellWizardApiEarliestContractStartDateRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Date>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bestell_wizard/api/earliest_contract_start_date`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<Date>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async bestellWizardApiEarliestContractStartDateRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Date> {
+        const response = await this.bestellWizardApiEarliestContractStartDateRetrieveRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
     async bestellWizardApiIsEmailAddressValidRetrieveRaw(requestParameters: BestellWizardApiIsEmailAddressValidRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
         const queryParameters: any = {};
 
@@ -221,45 +295,6 @@ export class BestellWizardApi extends runtime.BaseAPI {
      */
     async bestellWizardApiIsEmailAddressValidRetrieve(requestParameters: BestellWizardApiIsEmailAddressValidRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
         const response = await this.bestellWizardApiIsEmailAddressValidRetrieveRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     */
-    async bestellWizardApiNextContractStartDateRetrieveRaw(requestParameters: BestellWizardApiNextContractStartDateRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Date>> {
-        const queryParameters: any = {};
-
-        if (requestParameters['waitingListEntryId'] != null) {
-            queryParameters['waiting_list_entry_id'] = requestParameters['waitingListEntryId'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.apiKey) {
-            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-        }
-
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
-        const response = await this.request({
-            path: `/bestell_wizard/api/next_contract_start_date`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<Date>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
-
-    /**
-     */
-    async bestellWizardApiNextContractStartDateRetrieve(requestParameters: BestellWizardApiNextContractStartDateRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Date> {
-        const response = await this.bestellWizardApiNextContractStartDateRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
