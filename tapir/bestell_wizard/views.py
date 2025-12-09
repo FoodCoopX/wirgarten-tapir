@@ -50,6 +50,7 @@ from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_g
 )
 from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
+from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
     WaitingListEntryConfirmationEmailSender,
@@ -69,6 +70,7 @@ from tapir.wirgarten.models import (
     Product,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
@@ -601,36 +603,30 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         )
         serializer.is_valid(raise_exception=True)
 
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
-        )
-        product_type_ids = {product.type_id for product in order.keys()}
-
-        reference_date = get_today(cache=self.cache)
         waiting_list_entry_id = serializer.validated_data.get(
             "waiting_list_entry_id", None
         )
+        waiting_list_entry = None
         if waiting_list_entry_id is not None:
             waiting_list_entry = get_object_or_404(
                 WaitingListEntry, id=waiting_list_entry_id
             )
-            desired_start_date = waiting_list_entry.desired_start_date
-            if desired_start_date is not None:
-                reference_date = desired_start_date
 
-            if len(product_type_ids) == 0 and waiting_list_entry.member is not None:
-                product_type_ids = (
-                    get_active_and_future_subscriptions(
-                        reference_date=reference_date, cache=self.cache
-                    )
-                    .filter(member=waiting_list_entry.member)
-                    .values_list("product__type_id", flat=True)
-                    .distinct()
-                )
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+        product_type_ids = self.get_relevant_product_type_ids(
+            order=order, waiting_list_entry=waiting_list_entry, cache=self.cache
+        )
 
-        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=reference_date,
-            apply_buffer_time=waiting_list_entry_id is None,
+        growing_period_id = serializer.validated_data.get("growing_period_id", None)
+        growing_period = None
+        if growing_period_id is not None:
+            growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
+
+        reference_date = self.get_reference_date(
+            waiting_list_entry=waiting_list_entry,
+            growing_period=growing_period,
             cache=self.cache,
         )
 
@@ -638,7 +634,7 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         for pickup_location_id in PickupLocation.objects.values_list("id", flat=True):
             response_data[pickup_location_id] = {
                 product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
-                    reference_date=contract_start_date,
+                    reference_date=reference_date,
                     pickup_location_id=pickup_location_id,
                     delivery_cycle=TapirCache.get_product_type_by_id(
                         cache=self.cache, product_type_id=product_type_id
@@ -654,6 +650,62 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
                     "delivery_date_by_pickup_location_id_and_product_type_id": response_data
                 }
             ).data
+        )
+
+    @classmethod
+    def get_reference_date(
+        cls,
+        waiting_list_entry: WaitingListEntry | None,
+        growing_period: GrowingPeriod | None,
+        cache: dict,
+    ):
+        if waiting_list_entry is not None:
+            if waiting_list_entry.desired_start_date:
+                return waiting_list_entry.desired_start_date
+
+            if waiting_list_entry.product_wishes.count() == 0:
+                return calculate_pickup_location_change_date(cache=cache)
+
+            else:
+                return ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=get_today(cache=cache),
+                    apply_buffer_time=False,
+                    cache=cache,
+                )
+
+        if growing_period is None:
+            return ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=cache),
+                apply_buffer_time=True,
+                cache=cache,
+            )
+        else:
+            return ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
+                cache=cache,
+            )
+
+    @classmethod
+    def get_relevant_product_type_ids(
+        cls, order: TapirOrder, waiting_list_entry: WaitingListEntry | None, cache: dict
+    ):
+        product_type_ids = {product.type_id for product in order.keys()}
+        if (
+            waiting_list_entry is None
+            or len(product_type_ids) > 0
+            or waiting_list_entry.member is None
+        ):
+            return product_type_ids
+
+        return (
+            get_active_and_future_subscriptions(
+                reference_date=waiting_list_entry.desired_start_date
+                or get_today(cache=cache),
+                cache=cache,
+            )
+            .filter(member=waiting_list_entry.member)
+            .values_list("product__type_id", flat=True)
+            .distinct()
         )
 
 

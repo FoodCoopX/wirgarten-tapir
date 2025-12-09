@@ -4776,6 +4776,9 @@ components:
         waiting_list_entry_id:
           type: string
           minLength: 1
+        growing_period_id:
+          type: string
+          minLength: 1
       required:
       - shopping_cart
     BestellWizardDeliveryDatesForOrderResponse:

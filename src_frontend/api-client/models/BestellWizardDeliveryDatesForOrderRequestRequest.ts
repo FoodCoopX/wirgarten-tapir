@@ -31,6 +31,12 @@ export interface BestellWizardDeliveryDatesForOrderRequestRequest {
      * @memberof BestellWizardDeliveryDatesForOrderRequestRequest
      */
     waitingListEntryId?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardDeliveryDatesForOrderRequestRequest
+     */
+    growingPeriodId?: string;
 }
 
 /**
@@ -53,6 +59,7 @@ export function BestellWizardDeliveryDatesForOrderRequestRequestFromJSONTyped(js
         
         'shoppingCart': json['shopping_cart'],
         'waitingListEntryId': json['waiting_list_entry_id'] == null ? undefined : json['waiting_list_entry_id'],
+        'growingPeriodId': json['growing_period_id'] == null ? undefined : json['growing_period_id'],
     };
 }
 
@@ -69,6 +76,7 @@ export function BestellWizardDeliveryDatesForOrderRequestRequestFromJSONTyped(js
         
         'shopping_cart': value['shoppingCart'],
         'waiting_list_entry_id': value['waitingListEntryId'],
+        'growing_period_id': value['growingPeriodId'],
     };
 }
 

@@ -1,4 +1,4 @@
-import { BestellWizardApi } from "../../api-client";
+import { BestellWizardApi, PublicGrowingPeriod } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
@@ -8,6 +8,7 @@ import React from "react";
 
 export function fetchFirstDeliveryDates(
   shoppingCart: ShoppingCart,
+  selectedGrowingPeriod: PublicGrowingPeriod,
   setFirstDeliveryDatesByPickupLocationIdAndProductTypeId: (map: {
     [key: string]: { [key: string]: Date };
   }) => void,
@@ -21,6 +22,7 @@ export function fetchFirstDeliveryDates(
       bestellWizardDeliveryDatesForOrderRequestRequest: {
         shoppingCart: shoppingCart,
         waitingListEntryId: waitingListEntryId,
+        growingPeriodId: selectedGrowingPeriod.id,
       },
     })
     .then((response) => {

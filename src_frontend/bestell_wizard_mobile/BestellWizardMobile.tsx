@@ -299,13 +299,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
   }, [shoppingCart]);
 
   useEffect(() => {
+    if (!selectedGrowingPeriod) {
+      return;
+    }
+
     fetchFirstDeliveryDates(
       shoppingCart,
+      selectedGrowingPeriod,
       setFirstDeliveryDatesByPickupLocationAndProductType,
       setToastDatas,
       undefined,
     );
-  }, [shoppingCart]);
+  }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
     const newProductsInWaitingList = new Set<PublicProductType>();
