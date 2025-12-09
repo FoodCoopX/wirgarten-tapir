@@ -5,6 +5,9 @@ from django.core.exceptions import ValidationError
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
+from tapir.solidarity_contribution.services.solidarity_validator_new import (
+    SolidarityValidatorNew,
+)
 from tapir.subscriptions.services.global_capacity_checker import (
     GlobalCapacityChecker,
 )
@@ -12,7 +15,6 @@ from tapir.subscriptions.services.product_capacity_checker import ProductCapacit
 from tapir.subscriptions.services.single_subscription_validator import (
     SingleSubscriptionValidator,
 )
-from tapir.subscriptions.services.solidarity_validator_new import SolidarityValidatorNew
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )

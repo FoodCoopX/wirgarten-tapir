@@ -8,6 +8,7 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
 )
@@ -18,6 +19,7 @@ from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.types import TapirOrder
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -85,6 +87,13 @@ class BestellWizardOrderFulfiller:
                 cache=cache,
                 actor=actor,
             )
+
+        cls.create_solidarity_contribution(
+            member=member,
+            contribution=validated_serializer_data["solidarity_contribution"],
+            contract_start_date=contract_start_date,
+            cache=cache,
+        )
 
         send_order_confirmation(
             member, subscriptions, cache=cache, from_waiting_list=False
@@ -163,3 +172,21 @@ class BestellWizardOrderFulfiller:
         )
 
         return subscriptions
+
+    @classmethod
+    def create_solidarity_contribution(
+        cls,
+        member: Member,
+        contribution: float,
+        contract_start_date: datetime.date,
+        cache: dict,
+    ):
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=contract_start_date, cache=cache
+        )
+        SolidarityContribution.objects.create(
+            member=member,
+            amount=contribution,
+            start_date=contract_start_date,
+            end_date=growing_period.end_date,
+        )

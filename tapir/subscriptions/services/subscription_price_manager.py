@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.types import TapirOrder
@@ -23,7 +23,7 @@ class SubscriptionPriceManager:
         return total
 
     @classmethod
-    def get_monthly_price_of_subscription_without_solidarity(
+    def get_monthly_price_of_subscription_with_solidarity(
         cls,
         subscription: Subscription,
         reference_date: datetime.date = None,
@@ -45,8 +45,12 @@ class SubscriptionPriceManager:
 
         return round(
             subscription_price_without_solidarity
-            + SolidarityValidator.get_solidarity_factor_of_subscription(
-                subscription=subscription, reference_date=reference_date, cache=cache
+            + float(
+                SolidarityValidator.get_solidarity_factor_of_subscription(
+                    subscription=subscription,
+                    reference_date=reference_date,
+                    cache=cache,
+                )
             ),
             2,
         )

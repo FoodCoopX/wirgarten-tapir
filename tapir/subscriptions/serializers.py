@@ -200,8 +200,10 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_monthly_price(subscription: Subscription) -> float:
-        return SubscriptionPriceManager.get_monthly_price_of_subscription_without_solidarity(
-            subscription=subscription, reference_date=None, cache={}
+        return (
+            SubscriptionPriceManager.get_monthly_price_of_subscription_with_solidarity(
+                subscription=subscription, reference_date=None, cache={}
+            )
         )
 
     @staticmethod

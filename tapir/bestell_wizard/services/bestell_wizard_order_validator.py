@@ -8,11 +8,13 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
+from tapir.solidarity_contribution.services.solidarity_validator_new import (
+    SolidarityValidatorNew,
+)
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
 )
-from tapir.subscriptions.services.solidarity_validator_new import SolidarityValidatorNew
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.wirgarten.models import PickupLocation
@@ -60,7 +62,9 @@ class BestellWizardOrderValidator:
         )
 
         if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
-            ordered_solidarity_factor=0,  # TODO
+            ordered_solidarity_factor=validated_serializer_data[
+                "solidarity_contribution"
+            ],
             start_date=contract_start_date,
             cache=cache,
         ):

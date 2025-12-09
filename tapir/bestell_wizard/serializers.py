@@ -38,6 +38,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     privacy_policy_read = serializers.BooleanField()
     cancellation_policy_read = serializers.BooleanField()
     growing_period_id = serializers.CharField()
+    solidarity_contribution = serializers.FloatField()
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):

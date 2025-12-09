@@ -146,16 +146,6 @@ class BestellWizardConfirmOrderApiView(APIView):
         if not validated_serializer_data["privacy_policy_read"]:
             raise ValidationError("Die Datenschutzklärung muss akzeptiert werden.")
 
-        growing_period_id = validated_serializer_data["growing_period_id"]
-        growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
-        if (
-            growing_period
-            not in GrowingPeriodChoiceProvider.get_available_growing_periods(
-                reference_date=get_today(cache=cache), cache=cache
-            )
-        ):
-            raise ValidationError("Ungültige Vertragsperiode " + growing_period_id)
-
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             validated_serializer_data["shopping_cart_order"], cache=cache
         )
@@ -165,7 +155,6 @@ class BestellWizardConfirmOrderApiView(APIView):
             member = cls.validate_and_fulfill_order(
                 request=request,
                 validated_serializer_data=validated_serializer_data,
-                growing_period=growing_period,
                 cache=cache,
             )
 
@@ -191,13 +180,27 @@ class BestellWizardConfirmOrderApiView(APIView):
                 )
 
     @classmethod
+    def get_and_validate_growing_period(cls, growing_period_id: str, cache: dict):
+        growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
+        if (
+            growing_period
+            not in GrowingPeriodChoiceProvider.get_available_growing_periods(
+                reference_date=get_today(cache=cache), cache=cache
+            )
+        ):
+            raise ValidationError("Ungültige Vertragsperiode " + growing_period_id)
+        return growing_period
+
+    @classmethod
     def validate_and_fulfill_order(
         cls,
         request,
         validated_serializer_data: dict,
-        growing_period: GrowingPeriod,
         cache: dict,
     ) -> Member:
+        growing_period_id = validated_serializer_data["growing_period_id"]
+        growing_period = cls.get_and_validate_growing_period(growing_period_id, cache)
+
         contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=growing_period,

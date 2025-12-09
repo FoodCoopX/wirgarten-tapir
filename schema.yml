@@ -4755,6 +4755,9 @@ components:
         growing_period_id:
           type: string
           minLength: 1
+        solidarity_contribution:
+          type: number
+          format: double
       required:
       - become_member_now
       - cancellation_policy_read
@@ -4768,6 +4771,7 @@ components:
       - sepa_allowed
       - shopping_cart_order
       - shopping_cart_waiting_list
+      - solidarity_contribution
       - statute_accepted
       - student_status_enabled
     BestellWizardDeliveryDatesForOrderRequestRequest:
