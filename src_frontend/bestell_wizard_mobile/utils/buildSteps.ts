@@ -102,7 +102,11 @@ export function buildSteps(
   }
 
   if (
-    areAllOrderedProductsInWaitingList(shoppingCart, productTypesInWaitingList)
+    areAllOrderedProductsInWaitingList(
+      shoppingCart,
+      productTypesInWaitingList,
+    ) &&
+    becomeMemberNow === false
   ) {
     newSteps.push("14b_confirmation_waiting_list");
   } else {

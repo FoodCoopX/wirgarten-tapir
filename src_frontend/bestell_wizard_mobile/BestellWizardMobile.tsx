@@ -469,7 +469,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       areAllOrderedProductsInWaitingList(
         shoppingCart,
         productTypesInWaitingList,
-      )
+      ) &&
+      becomeMemberNow === false
     ) {
       setCurrentStep("14b_confirmation_waiting_list");
     } else {
