@@ -8,7 +8,7 @@ import React from "react";
 
 export function fetchFirstDeliveryDates(
   shoppingCart: ShoppingCart,
-  selectedGrowingPeriod: PublicGrowingPeriod,
+  selectedGrowingPeriod: PublicGrowingPeriod | undefined,
   setFirstDeliveryDatesByPickupLocationIdAndProductTypeId: (map: {
     [key: string]: { [key: string]: Date };
   }) => void,
@@ -22,7 +22,7 @@ export function fetchFirstDeliveryDates(
       bestellWizardDeliveryDatesForOrderRequestRequest: {
         shoppingCart: shoppingCart,
         waitingListEntryId: waitingListEntryId,
-        growingPeriodId: selectedGrowingPeriod.id,
+        growingPeriodId: selectedGrowingPeriod?.id,
       },
     })
     .then((response) => {

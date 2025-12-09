@@ -12,6 +12,7 @@ from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
 class TestValidateAndFulfillOrder(SimpleTestCase):
@@ -26,11 +27,13 @@ class TestValidateAndFulfillOrder(SimpleTestCase):
         BestellWizardOrderValidator, "validate_order_and_user_data", autospec=True
     )
     @patch.object(
-        ContractStartDateCalculator, "get_next_contract_start_date", autospec=True
+        ContractStartDateCalculator,
+        "get_next_contract_start_date_in_growing_period",
+        autospec=True,
     )
     def test_validateAndFulfillOrder_default_validatesThenFulfills(
         self,
-        mock_get_next_contract_start_date: Mock,
+        mock_get_next_contract_start_date_in_growing_period: Mock,
         mock_validate_order_and_user_data: Mock,
         mock_create_member_and_fulfill_order: Mock,
         mock_get_today: Mock,
@@ -43,19 +46,26 @@ class TestValidateAndFulfillOrder(SimpleTestCase):
         cache = Mock()
 
         contract_start_date = Mock()
-        mock_get_next_contract_start_date.return_value = contract_start_date
+        mock_get_next_contract_start_date_in_growing_period.return_value = (
+            contract_start_date
+        )
 
         member = Mock()
         mock_create_member_and_fulfill_order.return_value = member
 
+        growing_period = GrowingPeriodFactory.build()
+
         result = BestellWizardConfirmOrderApiView.validate_and_fulfill_order(
-            request, validated_serializer_data, cache
+            request,
+            validated_serializer_data,
+            growing_period=growing_period,
+            cache=cache,
         )
 
         self.assertEqual(member, result)
 
-        mock_get_next_contract_start_date.assert_called_once_with(
-            reference_date=today, apply_buffer_time=True, cache=cache
+        mock_get_next_contract_start_date_in_growing_period.assert_called_once_with(
+            growing_period=growing_period, cache=cache
         )
         mock_validate_order_and_user_data.assert_called_once_with(
             validated_serializer_data=validated_serializer_data,

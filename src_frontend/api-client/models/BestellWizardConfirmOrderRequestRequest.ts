@@ -105,6 +105,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
     cancellationPolicyRead: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardConfirmOrderRequestRequest
+     */
+    growingPeriodId: string;
 }
 
 /**
@@ -124,6 +130,7 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object)
     if (!('becomeMemberNow' in value) || value['becomeMemberNow'] === undefined) return false;
     if (!('privacyPolicyRead' in value) || value['privacyPolicyRead'] === undefined) return false;
     if (!('cancellationPolicyRead' in value) || value['cancellationPolicyRead'] === undefined) return false;
+    if (!('growingPeriodId' in value) || value['growingPeriodId'] === undefined) return false;
     return true;
 }
 
@@ -150,6 +157,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'becomeMemberNow': json['become_member_now'],
         'privacyPolicyRead': json['privacy_policy_read'],
         'cancellationPolicyRead': json['cancellation_policy_read'],
+        'growingPeriodId': json['growing_period_id'],
     };
 }
 
@@ -177,6 +185,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'become_member_now': value['becomeMemberNow'],
         'privacy_policy_read': value['privacyPolicyRead'],
         'cancellation_policy_read': value['cancellationPolicyRead'],
+        'growing_period_id': value['growingPeriodId'],
     };
 }
 

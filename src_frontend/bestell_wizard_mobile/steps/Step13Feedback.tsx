@@ -7,11 +7,15 @@ import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 interface Step13FeedbackProps {
   settings: BestellWizardSettings;
   goToNextStep: () => void;
+  confirmOrder: () => void | undefined;
+  confirmOrderLoading: boolean;
 }
 
 const Step13Feedback: React.FC<Step13FeedbackProps> = ({
   settings,
   goToNextStep,
+  confirmOrder,
+  confirmOrderLoading,
 }) => {
   const [feedback, setFeedback] = useState("");
 
@@ -31,7 +35,11 @@ const Step13Feedback: React.FC<Step13FeedbackProps> = ({
           placeholder={"Dein Feedback"}
         />
       </Form.Group>
-      <NextStepButton onClick={goToNextStep} text={"Bestellung bestätigen"} />
+      <NextStepButton
+        onClick={confirmOrder ?? goToNextStep}
+        text={"Bestellung bestätigen"}
+        loading={confirmOrderLoading}
+      />
     </>
   );
 };

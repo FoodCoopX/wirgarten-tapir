@@ -8,6 +8,8 @@ interface Step12ChannelProps {
   goToNextStep: () => void;
   selectedDistributionChannels: Set<string>;
   setSelectedDistributionChannels: (set: Set<string>) => void;
+  confirmOrder: () => void | undefined;
+  confirmOrderLoading: boolean;
 }
 
 const Step12Channel: React.FC<Step12ChannelProps> = ({
@@ -15,6 +17,8 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
   goToNextStep,
   selectedDistributionChannels,
   setSelectedDistributionChannels,
+  confirmOrder,
+  confirmOrderLoading,
 }) => {
   function updateSelection(channel: string, selected: boolean) {
     if (selected) {
@@ -45,10 +49,11 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
         ))}
       </div>
       <NextStepButton
-        onClick={goToNextStep}
+        onClick={confirmOrder ?? goToNextStep}
         text={
           settings.feedbackStepEnabled ? undefined : "Bestellung bestätigen"
         }
+        loading={confirmOrderLoading}
       />
     </>
   );

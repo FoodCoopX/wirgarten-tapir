@@ -1,5 +1,7 @@
 import datetime
 
+from icecream import ic
+
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
@@ -69,6 +71,7 @@ class ApplyTapirOrderManager:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=contract_start_date, cache=cache
         )
+        ic(growing_period, contract_start_date)
 
         notice_period_duration = None
         if get_parameter_value(

@@ -10,6 +10,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -29,7 +30,9 @@ from tapir.wirgarten.models import (
     WaitingListPickupLocationWish,
     PickupLocation,
     MemberPickupLocation,
+    GrowingPeriod,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import (
@@ -65,14 +68,17 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         ProductPriceFactory.create(product=cls.product_2, size=1.6)
         cls.growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2027, month=1, day=1),
-            end_date=datetime.date(year=2027, month=12, day=31),
         )
-        ProductCapacityFactory.create(
-            product_type=cls.product_1.type, period=cls.growing_period, capacity=10
+        cls.growing_period_future = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2028, month=1, day=1),
         )
-        ProductCapacityFactory.create(
-            product_type=cls.product_2.type, period=cls.growing_period, capacity=10
-        )
+        for growing_period in [cls.growing_period, cls.growing_period_future]:
+            ProductCapacityFactory.create(
+                product_type=cls.product_1.type, period=growing_period, capacity=10
+            )
+            ProductCapacityFactory.create(
+                product_type=cls.product_2.type, period=growing_period, capacity=10
+            )
 
     def setUp(self) -> None:
         self.now = mock_timezone(self, datetime.datetime(year=2027, month=6, day=27))
@@ -102,7 +108,9 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "Order not confirmed because: " + (response_content["error"] or "no error"),
         )
 
-        self.assert_order_applied_correctly(mock_fire_action, is_student=False)
+        self.assert_order_applied_correctly(
+            mock_fire_action, is_student=False, growing_period=self.growing_period
+        )
         self.assertFalse(WaitingListEntry.objects.exists())
 
         mock_fire_action.assert_called_once()
@@ -267,7 +275,9 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             f"The order should have been confirmed, error: {response_content['error']}",
         )
 
-        member = self.assert_order_applied_correctly(mock_fire_action, is_student=False)
+        member = self.assert_order_applied_correctly(
+            mock_fire_action, is_student=False, growing_period=self.growing_period
+        )
         waiting_list_entry = self.assert_waiting_list_entry_is_correct(
             shopping_cart_waiting_list=data["shopping_cart_waiting_list"],
             pickup_location_wishes=[],
@@ -426,7 +436,41 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             f"Order not confirmed because, error: {response_content['error']}",
         )
 
-        self.assert_order_applied_correctly(mock_fire_action, is_student=True)
+        self.assert_order_applied_correctly(
+            mock_fire_action, is_student=True, growing_period=self.growing_period
+        )
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+        mock_fire_action.assert_called_once()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_futureGrowingPeriodPicked_contractGetsCreatedWithCorrectStartDate(
+        self, mock_fire_action: Mock
+    ):
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["growing_period_id"] = self.growing_period_future.id
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE
+        ).update(value=300)
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            "Order not confirmed because: " + (response_content["error"] or "no error"),
+        )
+
+        self.assert_order_applied_correctly(
+            mock_fire_action,
+            is_student=False,
+            growing_period=self.growing_period_future,
+        )
         self.assertFalse(WaitingListEntry.objects.exists())
 
         mock_fire_action.assert_called_once()
@@ -451,6 +495,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "become_member_now": False,
             "privacy_policy_read": True,
             "cancellation_policy_read": False,
+            "growing_period_id": cls.growing_period.id,
         }
 
     @classmethod
@@ -469,6 +514,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "become_member_now": None,
             "privacy_policy_read": True,
             "cancellation_policy_read": True,
+            "growing_period_id": cls.growing_period.id,
         }
 
     @classmethod
@@ -514,7 +560,9 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
                 value = datetime.date(year=1990, month=12, day=21)
             self.assertEqual(value, getattr(member, field))
 
-    def assert_order_applied_correctly(self, mock_fire_action: Mock, is_student: bool):
+    def assert_order_applied_correctly(
+        self, mock_fire_action: Mock, is_student: bool, growing_period: GrowingPeriod
+    ):
         self.assertEqual(1, Member.objects.count())
         member = Member.objects.get()
         self.assert_personal_data_is_valid_member(member)
@@ -523,15 +571,17 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
         subscription_1 = Subscription.objects.get(member=member, product=self.product_1)
         self.assertEqual(1, subscription_1.quantity)
-        self.assertEqual(self.growing_period, subscription_1.period)
+        self.assertEqual(growing_period, subscription_1.period)
         self.assertLess(self.now.date(), subscription_1.start_date)
-        self.assertEqual(self.growing_period.end_date, subscription_1.end_date)
+        self.assertGreater(subscription_1.start_date, growing_period.start_date)
+        self.assertEqual(growing_period.end_date, subscription_1.end_date)
 
         subscription_2 = Subscription.objects.get(member=member, product=self.product_2)
         self.assertEqual(2, subscription_2.quantity)
-        self.assertEqual(self.growing_period, subscription_2.period)
+        self.assertEqual(growing_period, subscription_2.period)
         self.assertLess(self.now.date(), subscription_2.start_date)
-        self.assertEqual(self.growing_period.end_date, subscription_2.end_date)
+        self.assertGreater(subscription_2.start_date, growing_period.start_date)
+        self.assertEqual(growing_period.end_date, subscription_2.end_date)
 
         if is_student:
             self.assertFalse(CoopShareTransaction.objects.exists())

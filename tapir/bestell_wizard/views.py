@@ -146,6 +146,16 @@ class BestellWizardConfirmOrderApiView(APIView):
         if not validated_serializer_data["privacy_policy_read"]:
             raise ValidationError("Die Datenschutzklärung muss akzeptiert werden.")
 
+        growing_period_id = validated_serializer_data["growing_period_id"]
+        growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
+        if (
+            growing_period
+            not in GrowingPeriodChoiceProvider.get_available_growing_periods(
+                reference_date=get_today(cache=cache), cache=cache
+            )
+        ):
+            raise ValidationError("Ungültige Vertragsperiode " + growing_period_id)
+
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             validated_serializer_data["shopping_cart_order"], cache=cache
         )
@@ -155,6 +165,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             member = cls.validate_and_fulfill_order(
                 request=request,
                 validated_serializer_data=validated_serializer_data,
+                growing_period=growing_period,
                 cache=cache,
             )
 
@@ -181,12 +192,17 @@ class BestellWizardConfirmOrderApiView(APIView):
 
     @classmethod
     def validate_and_fulfill_order(
-        cls, request, validated_serializer_data: dict, cache: dict
+        cls,
+        request,
+        validated_serializer_data: dict,
+        growing_period: GrowingPeriod,
+        cache: dict,
     ) -> Member:
-        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=cache),
-            apply_buffer_time=True,
-            cache=cache,
+        contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
+                cache=cache,
+            )
         )
 
         BestellWizardOrderValidator.validate_order_and_user_data(

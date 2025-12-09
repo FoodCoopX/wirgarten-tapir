@@ -4,6 +4,7 @@ import { useApi } from "../hooks/useApi.ts";
 import {
   BestellWizardApi,
   CoopApi,
+  OrderConfirmationResponse,
   PublicGrowingPeriod,
   PublicPickupLocation,
   type PublicProductType,
@@ -63,6 +64,10 @@ import { isProductOrdered } from "./utils/isProductOrdered.ts";
 import Step14BConfirmationWaitingList from "./steps/Step14BConfirmationWaitingList.tsx";
 import Step3BGrowingPeriodChoice from "./steps/Step3BGrowingPeriodChoice.tsx";
 import { updateProductPrices } from "../utils/updateProductPrices.ts";
+import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
+import { addToast } from "../utils/addToast.ts";
+import { v4 as uuidv4 } from "uuid";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -141,6 +146,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
     useState<PublicGrowingPeriod>();
   const [productPricesController, setProductPricesController] =
     useState<AbortController>();
+  const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -383,6 +389,94 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
     setPrivacyPolicyRead(true);
   }
 
+  function onConfirmOrder() {
+    setConfirmOrderLoading(true);
+
+    if (waitingListEntryDetails !== undefined) {
+      alert("Warteliste-Link-Bestellung noch nicht implementiert");
+      return;
+    }
+
+    bestellWizardApi
+      .bestellWizardBestellWizardConfirmOrderCreate({
+        bestellWizardConfirmOrderRequestRequest: {
+          personalData: {
+            accountOwner: personalData.accountOwner,
+            birthdate: new Date("01.01.1990"),
+            city: personalData.city,
+            country: personalData.country,
+            email: personalData.email,
+            iban: personalData.iban,
+            firstName: personalData.firstName,
+            lastName: personalData.firstName,
+            phoneNumber: personalData.phoneNumber,
+            postcode: personalData.postcode,
+            street: personalData.street,
+            street2: personalData.street2,
+          },
+          sepaAllowed: sepaAllowed,
+          contractAccepted: contractAccepted,
+          statuteAccepted: statuteAccepted,
+          numberOfCoopShares: selectedNumberOfCoopShares,
+          pickupLocationIds: selectedPickupLocations.map(
+            (locations) => locations.id!,
+          ),
+          shoppingCartOrder: buildFilteredShoppingCart(
+            shoppingCart,
+            false,
+            productTypesInWaitingList,
+          ),
+          shoppingCartWaitingList: buildFilteredShoppingCart(
+            shoppingCart,
+            true,
+            productTypesInWaitingList,
+          ),
+          studentStatusEnabled: studentStatusEnabled,
+          paymentRhythm: personalData.paymentRhythm,
+          becomeMemberNow:
+            !settings.forceWaitingList && becomeMemberNow !== false,
+          privacyPolicyRead: privacyPolicyRead,
+          cancellationPolicyRead: cancellationPolicyRead,
+          growingPeriodId: selectedGrowingPeriod!.id!,
+        },
+      })
+      .then(handleOrderResponse)
+      .catch(async (error) => {
+        await handleRequestError(
+          error,
+          "Fehler bei der Bestätigung der Bestellung",
+          setToastDatas,
+        );
+      })
+      .finally(() => setConfirmOrderLoading(false));
+  }
+
+  function handleOrderResponse(response: OrderConfirmationResponse) {
+    if (!response.orderConfirmed) {
+      addToast(
+        {
+          title: "Fehler beim Bestellen",
+          message: response.error ?? undefined,
+          variant: "danger",
+          id: uuidv4(),
+        },
+        setToastDatas,
+      );
+      return;
+    }
+
+    if (
+      areAllOrderedProductsInWaitingList(
+        shoppingCart,
+        productTypesInWaitingList,
+      )
+    ) {
+      setCurrentStep("14b_confirmation_waiting_list");
+    } else {
+      setCurrentStep("14_confirmation");
+    }
+  }
+
   function getStepComponent(step: Step) {
     switch (step) {
       case "1a_welcome":
@@ -591,11 +685,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             settings={settings}
             selectedDistributionChannels={selectedDistributionChannels}
             setSelectedDistributionChannels={setSelectedDistributionChannels}
+            confirmOrder={onConfirmOrder}
+            confirmOrderLoading={confirmOrderLoading}
           />
         );
       case "13_feedback":
         return (
-          <Step13Feedback goToNextStep={goToNextStep} settings={settings} />
+          <Step13Feedback
+            goToNextStep={goToNextStep}
+            settings={settings}
+            confirmOrder={onConfirmOrder}
+            confirmOrderLoading={confirmOrderLoading}
+          />
         );
       case "14_confirmation":
         return (

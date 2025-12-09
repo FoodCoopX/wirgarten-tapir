@@ -4752,10 +4752,14 @@ components:
           type: boolean
         cancellation_policy_read:
           type: boolean
+        growing_period_id:
+          type: string
+          minLength: 1
       required:
       - become_member_now
       - cancellation_policy_read
       - contract_accepted
+      - growing_period_id
       - number_of_coop_shares
       - payment_rhythm
       - personal_data

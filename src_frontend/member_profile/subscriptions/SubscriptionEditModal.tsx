@@ -243,6 +243,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
     }
     fetchFirstDeliveryDates(
       shoppingCart,
+      undefined,
       (data) =>
         setFirstDeliveryDatesByProductType(
           data[selectedPickupLocations[0].id!],

@@ -276,6 +276,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     fetchFirstDeliveryDates(
       shoppingCart,
+      undefined,
       (data) =>
         setFirstDeliveryDatesByProductType(
           data[selectedPickupLocations[0].id!],
@@ -687,6 +688,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             !settings.forceWaitingList && becomeMemberNow !== false,
           privacyPolicyRead: privacyPolicyRead,
           cancellationPolicyRead: cancellationPolicyRead,
+          growingPeriodId: settings.growingPeriodChoices[0].id!,
         },
       })
       .then((response) => {

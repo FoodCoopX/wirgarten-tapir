@@ -59,39 +59,48 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
     }
   }
 
-  return (
-    <>
-      {isAtLeastOneProductOrdered(
+  function showCheckboxCancellationPolicy() {
+    if (
+      isAtLeastOneProductOrdered(
         buildFilteredShoppingCart(
           shoppingCart,
           false,
           productTypesInWaitingList,
         ),
-      ) ||
-        (solidarityContribution > 0 && (
-          <Accordion style={{ width: "100%" }}>
-            <Accordion.Item eventKey={"cancellation"} onClick={scrollIntoView}>
-              <Accordion.Header>
-                <TapirCheckbox
-                  controlId={"legal_cancellation"}
-                  checked={cancellationPolicyRead}
-                  onChange={setCancellationPolicyRead}
-                  label={
-                    "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
-                  }
-                  showError={showValidation && !cancellationPolicyRead}
-                />
-              </Accordion.Header>
-              <Accordion.Body>
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: settings.revocationRightsExplanation,
-                  }}
-                />
-              </Accordion.Body>
-            </Accordion.Item>
-          </Accordion>
-        ))}
+      )
+    ) {
+      return true;
+    }
+
+    return solidarityContribution > 0;
+  }
+
+  return (
+    <>
+      {showCheckboxCancellationPolicy() && (
+        <Accordion style={{ width: "100%" }}>
+          <Accordion.Item eventKey={"cancellation"} onClick={scrollIntoView}>
+            <Accordion.Header>
+              <TapirCheckbox
+                controlId={"legal_cancellation"}
+                checked={cancellationPolicyRead}
+                onChange={setCancellationPolicyRead}
+                label={
+                  "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
+                }
+                showError={showValidation && !cancellationPolicyRead}
+              />
+            </Accordion.Header>
+            <Accordion.Body>
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: settings.revocationRightsExplanation,
+                }}
+              />
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+      )}
       <Accordion style={{ width: "100%" }}>
         <Accordion.Item eventKey={"privacy"} onClick={scrollIntoView}>
           <Accordion.Header>
