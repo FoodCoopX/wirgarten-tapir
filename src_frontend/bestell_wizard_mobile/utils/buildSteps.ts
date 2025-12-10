@@ -8,8 +8,6 @@ import {
 } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
-import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
 import dayjs from "dayjs";
 
@@ -83,13 +81,7 @@ export function buildSteps(
   newSteps.push("7_solidarity_contribution");
   newSteps.push("8_personal_data");
 
-  if (
-    isAtLeastOneProductOrdered(
-      buildFilteredShoppingCart(shoppingCart, false, productTypesInWaitingList),
-    ) ||
-    becomeMemberNow !== false ||
-    solidarityContribution > 0
-  ) {
+  if (becomeMemberNow !== false) {
     newSteps.push("9_banking_data");
   }
 
