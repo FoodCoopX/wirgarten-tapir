@@ -26,6 +26,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     distributionChannels: [],
     solidarityContributionChoices: [],
     solidarityContributionMinimum: 0,
+    solidarityContributionDefault: 0,
     feedbackStepEnabled: false,
     growingPeriodChoices: [],
     strings: {

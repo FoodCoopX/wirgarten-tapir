@@ -689,6 +689,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           privacyPolicyRead: privacyPolicyRead,
           cancellationPolicyRead: cancellationPolicyRead,
           growingPeriodId: settings.growingPeriodChoices[0].id!,
+          solidarityContribution: 0,
         },
       })
       .then((response) => {
