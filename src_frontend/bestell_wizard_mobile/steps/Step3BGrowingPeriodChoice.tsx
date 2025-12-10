@@ -27,9 +27,9 @@ const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({
           dangerouslySetInnerHTML={{ __html: settings.strings.step3bText }}
         />
       )}
-      <div className={"d-flex flex-row gap-2"}>
+      <div className={"d-flex flex-row gap-3"}>
         {settings.growingPeriodChoices.map((growingPeriod) => (
-          <div key={growingPeriod.id}>
+          <div key={growingPeriod.id} className={"d-flex flex-column gap-2"}>
             <input
               type="checkbox"
               className="btn-check"
@@ -55,6 +55,10 @@ const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({
                 </span>
               </div>
             </label>
+            <small>
+              {formatDateNumeric(growingPeriod.startDate)} -{" "}
+              {formatDateNumeric(growingPeriod.endDate)}
+            </small>
           </div>
         ))}
       </div>
