@@ -19,6 +19,7 @@ import {
 } from "../utils/getProductByIdGlobal.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -275,11 +276,20 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       </li>
                     )}
                   </ul>
-                  <p>
-                    Zahlungsintervall:{" "}
-                    {getPaymentRhythmDisplay(personalData.paymentRhythm)}
-                  </p>
-                  {numberOfCoopShares > 0 &&
+                  {(isAtLeastOneProductOrdered(
+                    buildFilteredShoppingCart(
+                      shoppingCart,
+                      false,
+                      productTypesInWaitingList,
+                    ),
+                  ) ||
+                    solidarityContribution > 0) && (
+                    <p>
+                      Zahlungsintervall:{" "}
+                      {getPaymentRhythmDisplay(personalData.paymentRhythm)}
+                    </p>
+                  )}
+                  {becomeMemberNow !== false &&
                     !studentStatusEnabled &&
                     settings.showCoopContent && (
                       <p>
