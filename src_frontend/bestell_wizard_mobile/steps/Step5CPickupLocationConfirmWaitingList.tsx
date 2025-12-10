@@ -17,7 +17,10 @@ const Step5BPickupLocationConfirmWaitingList: React.FC<
 > = ({ settings, setCurrentStep, goToNextStep, setCurrentTab }) => {
   return (
     <>
-      <p dangerouslySetInnerHTML={{ __html: settings.strings.step5cText }} />
+      <p
+        className={"text-center"}
+        dangerouslySetInnerHTML={{ __html: settings.strings.step5cText }}
+      />
       <div className={"d-flex flex-row gap-2"}>
         <TapirButton
           variant={BUTTON_VARIANT}
