@@ -15,14 +15,15 @@ class MySocialAccountAdapter(DefaultSocialAccountAdapter):
         ).first()
         if tapir_user is None:
             return
-        if SocialAccount.objects.filter(user=tapir_user).exists():
-            return
 
         if tapir_user.keycloak_id is None:
             keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
             keycloak_id = keycloak_client.get_user_id(tapir_user.email)
             tapir_user.keycloak_id = keycloak_id
             tapir_user.save()
+
+        if SocialAccount.objects.filter(user=tapir_user).exists():
+            return
 
         sociallogin.connect(request, tapir_user)
 

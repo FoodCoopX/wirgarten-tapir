@@ -280,13 +280,11 @@ class UserGenerator:
             product = random.choice(possible_products)
             already_subscribed_products_ids.add(product.id)
 
-            solidarity_price_absolute = random.choice(
-                list(
-                    SolidarityValidator.get_solidarity_dropdown_values(
-                        cache=cache
-                    ).keys()
-                )
+            possible_values = list(
+                SolidarityValidator.get_solidarity_dropdown_values(cache=cache).keys()
             )
+            possible_values = [value for value in possible_values if value != "custom"]
+            solidarity_price_absolute = random.choice(possible_values)
 
             quantity = random.choices([1, 2, 3], weights=[100, 1, 1], k=1)[0]
             if product.type.single_subscription_only:
