@@ -17,6 +17,8 @@ interface Step7SolidarityContributionProps {
   productTypesInWaitingList: Set<PublicProductType>;
 }
 
+const SUFFIX = "\u00A0€";
+
 const Step7SolidarityContribution: React.FC<
   Step7SolidarityContributionProps
 > = ({
@@ -31,13 +33,28 @@ const Step7SolidarityContribution: React.FC<
   const [selectedValue, setSelectedValue] = useState<number | "custom">(0);
   const [customValue, setCustomValue] = useState("");
   const [showValidation, setShowValidation] = useState(false);
+  const [defaultValueSet, setDefaultValueSet] = useState(false);
+
+  useEffect(() => {
+    if (defaultValueSet) {
+      return;
+    }
+    setDefaultValueSet(true);
+
+    if (getValues().includes(settings.solidarityContributionDefault)) {
+      setSelectedValue(settings.solidarityContributionDefault);
+    } else {
+      setSelectedValue("custom");
+      setCustomValue(settings.solidarityContributionDefault + SUFFIX);
+    }
+  }, [settings]);
 
   useEffect(() => {
     if (selectedValue !== "custom") {
       setSolidarityContribution(selectedValue);
       return;
     }
-    const customContribution = parseFloat(customValue.replace("\u00A0€", ""));
+    const customContribution = parseFloat(customValue.replace(SUFFIX, ""));
     if (isNaN(customContribution)) {
       return;
     }
@@ -102,6 +119,29 @@ const Step7SolidarityContribution: React.FC<
     return value >= settings.solidarityContributionMinimum;
   }
 
+  function updateCustomValue(inputValue: string) {
+    const cleanedValue = inputValue
+      .replace("\u00A0", "")
+      .replace("€", "")
+      .trim();
+
+    const floatValue = parseFloat(cleanedValue);
+    if (isNaN(floatValue)) {
+      setCustomValue(cleanedValue);
+      return;
+    }
+
+    setCustomValue(formatCurrency(parseFloat(cleanedValue)));
+    const input = document.getElementById(
+      "custom_solidarity_contribution",
+    ) as HTMLInputElement;
+    const selectionStart = input.selectionStart;
+    setTimeout(() => {
+      input.selectionStart = selectionStart;
+      input.selectionEnd = selectionStart;
+    }, 10);
+  }
+
   return (
     <div className={"d-flex flex-column gap-2 align-items-center"}>
       {settings.strings.step4dText && (
@@ -135,14 +175,7 @@ const Step7SolidarityContribution: React.FC<
               id={"custom_solidarity_contribution"}
               placeholder={"Personalisierter Beitrag"}
               value={customValue}
-              onChange={(event) =>
-                setCustomValue(
-                  event.target.value
-                    .replace("\u00A0", "")
-                    .replace("€", "")
-                    .trim() + "\u00A0€",
-                )
-              }
+              onChange={(event) => updateCustomValue(event.target.value)}
               style={{ maxWidth: "300px" }}
               isValid={showValidation && isValueValid(solidarityContribution)}
               isInvalid={

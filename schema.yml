@@ -4674,6 +4674,9 @@ components:
           type: number
           format: double
           nullable: true
+        solidarity_contribution_default:
+          type: number
+          format: double
         feedback_step_enabled:
           type: boolean
         growing_period_choices:
@@ -4709,6 +4712,7 @@ components:
       - revocation_rights_explanation
       - show_coop_content
       - solidarity_contribution_choices
+      - solidarity_contribution_default
       - solidarity_contribution_minimum
       - strings
       - student_status_allowed

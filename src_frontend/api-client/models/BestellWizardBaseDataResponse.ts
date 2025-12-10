@@ -207,6 +207,12 @@ export interface BestellWizardBaseDataResponse {
     solidarityContributionMinimum: number | null;
     /**
      * 
+     * @type {number}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    solidarityContributionDefault: number;
+    /**
+     * 
      * @type {boolean}
      * @memberof BestellWizardBaseDataResponse
      */
@@ -260,6 +266,7 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('distributionChannels' in value) || value['distributionChannels'] === undefined) return false;
     if (!('solidarityContributionChoices' in value) || value['solidarityContributionChoices'] === undefined) return false;
     if (!('solidarityContributionMinimum' in value) || value['solidarityContributionMinimum'] === undefined) return false;
+    if (!('solidarityContributionDefault' in value) || value['solidarityContributionDefault'] === undefined) return false;
     if (!('feedbackStepEnabled' in value) || value['feedbackStepEnabled'] === undefined) return false;
     if (!('growingPeriodChoices' in value) || value['growingPeriodChoices'] === undefined) return false;
     if (!('strings' in value) || value['strings'] === undefined) return false;
@@ -302,6 +309,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'distributionChannels': json['distribution_channels'],
         'solidarityContributionChoices': json['solidarity_contribution_choices'],
         'solidarityContributionMinimum': json['solidarity_contribution_minimum'],
+        'solidarityContributionDefault': json['solidarity_contribution_default'],
         'feedbackStepEnabled': json['feedback_step_enabled'],
         'growingPeriodChoices': ((json['growing_period_choices'] as Array<any>).map(PublicGrowingPeriodFromJSON)),
         'strings': BestellWizardStringsFromJSON(json['strings']),
@@ -345,6 +353,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'distribution_channels': value['distributionChannels'],
         'solidarity_contribution_choices': value['solidarityContributionChoices'],
         'solidarity_contribution_minimum': value['solidarityContributionMinimum'],
+        'solidarity_contribution_default': value['solidarityContributionDefault'],
         'feedback_step_enabled': value['feedbackStepEnabled'],
         'growing_period_choices': ((value['growingPeriodChoices'] as Array<any>).map(PublicGrowingPeriodToJSON)),
         'strings': BestellWizardStringsToJSON(value['strings']),

@@ -170,6 +170,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
         if (newSettings.growingPeriodChoices.length > 0) {
           setSelectedGrowingPeriod(newSettings.growingPeriodChoices[0]);
         }
+
+        setSolidarityContribution(settings.solidarityContributionDefault);
       })
       .catch((error) =>
         handleRequestError(

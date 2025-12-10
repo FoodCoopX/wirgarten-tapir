@@ -32,6 +32,7 @@ export type BestellWizardSettings = {
   distributionChannels: string[];
   solidarityContributionChoices: string[];
   solidarityContributionMinimum: number | null;
+  solidarityContributionDefault: number;
   feedbackStepEnabled: boolean;
   growingPeriodChoices: PublicGrowingPeriod[];
   strings: BestellWizardStrings;

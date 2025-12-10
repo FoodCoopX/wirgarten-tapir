@@ -361,104 +361,81 @@ class BestellWizardBaseDataApiView(APIView):
             self.build_product_ids_that_are_already_at_capacity(self.cache)
         )
 
-        response_data = {
-            "price_of_a_share": get_parameter_value(
-                ParameterKeys.COOP_SHARE_PRICE, cache=self.cache
-            ),
-            "theme": get_parameter_value(
-                ParameterKeys.ORGANISATION_THEME, cache=self.cache
-            ),
-            "allow_investing_membership": get_parameter_value(
-                ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
-                cache=self.cache,
-            ),
-            "product_types": ProductType.objects.all(),
-            "pickup_locations": PickupLocation.objects.order_by("name"),
-            "force_waiting_list": get_parameter_value(
-                ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
-            ),
-            "intro_enabled": get_parameter_value(
-                ParameterKeys.BESTELLWIZARD_SHOW_INTRO, cache=self.cache
-            ),
-            "student_status_allowed": get_parameter_value(
-                ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
-                cache=self.cache,
-            ),
-            "show_coop_content": legal_status_is_cooperative(cache=self.cache),
-            "intro_step_text": get_parameter_value(
-                ParameterKeys.BESTELLWIZARD_INTRO_TEXT, cache=self.cache
-            ),
-            "label_checkbox_sepa_mandat": get_parameter_value(
-                ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT, cache=self.cache
-            ),
-            "label_checkbox_contract_policy": get_parameter_value(
-                ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
-                cache=self.cache,
-            ),
-            "revocation_rights_explanation": get_parameter_value(
-                ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
-                cache=self.cache,
-            ),
-            "trial_period_length_in_weeks": get_parameter_value(
-                ParameterKeys.TRIAL_PERIOD_DURATION, cache=self.cache
-            ),
-            "payment_rhythm_choices": {
-                rhythm: MemberPaymentRhythmService.get_rhythm_display_name(
-                    rhythm=rhythm
-                )
-                for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
-                    cache=self.cache
-                )
-            },
-            "default_payment_rhythm": get_parameter_value(
-                ParameterKeys.PAYMENT_DEFAULT_RHYTHM, cache=self.cache
-            ),
-            "product_type_ids_that_are_already_at_capacity": self.build_product_type_ids_that_are_already_at_capacity(
-                cache=self.cache,
-                product_ids_that_are_already_at_capacity=product_ids_that_are_already_at_capacity,
-            ),
-            "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
-            "coop_statute_link": get_parameter_value(
-                key=ParameterKeys.COOP_STATUTE_LINK, cache=self.cache
-            ),
-            "organization_name": get_parameter_value(
-                key=ParameterKeys.SITE_NAME, cache=self.cache
-            ),
-            "logo_url": static(
-                f"core/themes/{get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/images/Logo_white.webp"
-            ),
-            "contact_mail_address": get_parameter_value(
-                key=ParameterKeys.SITE_EMAIL, cache=self.cache
-            ),
-            "distribution_channels": [
-                channel.strip()
-                for channel in get_parameter_value(
-                    key=ParameterKeys.ORGANISATION_QUESTIONAIRE_SOURCES,
+        response_data = self.build_simple_response_fields(self.cache)
+
+        response_data.update(
+            {
+                "product_types": ProductType.objects.all(),
+                "pickup_locations": PickupLocation.objects.order_by("name"),
+                "show_coop_content": legal_status_is_cooperative(cache=self.cache),
+                "payment_rhythm_choices": {
+                    rhythm: MemberPaymentRhythmService.get_rhythm_display_name(
+                        rhythm=rhythm
+                    )
+                    for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
+                        cache=self.cache
+                    )
+                },
+                "product_type_ids_that_are_already_at_capacity": self.build_product_type_ids_that_are_already_at_capacity(
                     cache=self.cache,
-                ).split(",")
-            ],
-            "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
-                cache=self.cache
-            ),
-            "solidarity_contribution_minimum": SolidarityValidator.get_solidarity_contribution_minimum(
-                reference_date=ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=get_today(cache=self.cache),
-                    apply_buffer_time=True,
+                    product_ids_that_are_already_at_capacity=product_ids_that_are_already_at_capacity,
+                ),
+                "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
+                "logo_url": static(
+                    f"core/themes/{get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/images/Logo_white.webp"
+                ),
+                "distribution_channels": [
+                    channel.strip()
+                    for channel in get_parameter_value(
+                        key=ParameterKeys.ORGANISATION_QUESTIONAIRE_SOURCES,
+                        cache=self.cache,
+                    ).split(",")
+                ],
+                "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
+                    cache=self.cache
+                ),
+                "solidarity_contribution_minimum": SolidarityValidator.get_solidarity_contribution_minimum(
+                    reference_date=ContractStartDateCalculator.get_next_contract_start_date(
+                        reference_date=get_today(cache=self.cache),
+                        apply_buffer_time=True,
+                        cache=self.cache,
+                    ),
                     cache=self.cache,
                 ),
-                cache=self.cache,
-            ),
-            "feedback_step_enabled": get_parameter_value(
-                key=ParameterKeys.BESTELLWIZARD_STEP13_ENABLED, cache=self.cache
-            ),
-            "growing_period_choices": GrowingPeriodChoiceProvider.get_available_growing_periods(
-                reference_date=get_today(cache=self.cache), cache=self.cache
-            ),
-            "strings": self.build_strings_object(cache=self.cache),
-            "images": self.build_images_object(cache=self.cache),
-        }
+                "growing_period_choices": GrowingPeriodChoiceProvider.get_available_growing_periods(
+                    reference_date=get_today(cache=self.cache), cache=self.cache
+                ),
+                "strings": self.build_strings_object(cache=self.cache),
+                "images": self.build_images_object(cache=self.cache),
+            }
+        )
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
+
+    @classmethod
+    def build_simple_response_fields(cls, cache: dict):
+        serializer_key_to_parameter_key_map = {
+            "price_of_a_share": ParameterKeys.COOP_SHARE_PRICE,
+            "theme": ParameterKeys.ORGANISATION_THEME,
+            "allow_investing_membership": ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
+            "force_waiting_list": ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            "intro_enabled": ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
+            "student_status_allowed": ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            "intro_step_text": ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
+            "label_checkbox_sepa_mandat": ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
+            "label_checkbox_contract_policy": ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
+            "revocation_rights_explanation": ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
+            "trial_period_length_in_weeks": ParameterKeys.TRIAL_PERIOD_DURATION,
+            "default_payment_rhythm": ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
+            "coop_statute_link": ParameterKeys.COOP_STATUTE_LINK,
+            "organization_name": ParameterKeys.SITE_NAME,
+            "contact_mail_address": ParameterKeys.SITE_EMAIL,
+            "solidarity_contribution_default": ParameterKeys.SOLIDARITY_DEFAULT,
+            "feedback_step_enabled": ParameterKeys.BESTELLWIZARD_STEP13_ENABLED,
+        }
+        return cls.build_dictionary_from_config_parameters(
+            serializer_key_to_parameter_key_map, cache
+        )
 
     @classmethod
     def build_strings_object(cls, cache: dict):
@@ -504,14 +481,13 @@ class BestellWizardBaseDataApiView(APIView):
             "step14b_text": ParameterKeys.BESTELLWIZARD_STEP14B_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
         }
-        return {
-            string_id: get_parameter_value(key=parameter_key, cache=cache)
-            for string_id, parameter_key in string_id_to_parameter_key_map.items()
-        }
+        return cls.build_dictionary_from_config_parameters(
+            string_id_to_parameter_key_map, cache
+        )
 
     @classmethod
     def build_images_object(cls, cache: dict):
-        string_id_to_parameter_key_map = {
+        image_id_to_parameter_key_map = {
             "step1_background_image": ParameterKeys.BESTELLWIZARD_STEP1_BACKGROUND_IMAGE,
             "step2_background_image": ParameterKeys.BESTELLWIZARD_STEP2_BACKGROUND_IMAGE,
             "step3_background_image": ParameterKeys.BESTELLWIZARD_STEP3_BACKGROUND_IMAGE,
@@ -526,9 +502,17 @@ class BestellWizardBaseDataApiView(APIView):
             "step13_background_image": ParameterKeys.BESTELLWIZARD_STEP13_BACKGROUND_IMAGE,
             "step14_background_image": ParameterKeys.BESTELLWIZARD_STEP14_BACKGROUND_IMAGE,
         }
+        return cls.build_dictionary_from_config_parameters(
+            image_id_to_parameter_key_map, cache
+        )
+
+    @classmethod
+    def build_dictionary_from_config_parameters(
+        cls, serializer_key_to_parameter_key_map: dict, cache: dict
+    ):
         return {
-            string_id: get_parameter_value(key=parameter_key, cache=cache)
-            for string_id, parameter_key in string_id_to_parameter_key_map.items()
+            serializer_key: get_parameter_value(key=parameter_key, cache=cache)
+            for serializer_key, parameter_key in serializer_key_to_parameter_key_map.items()
         }
 
     @classmethod

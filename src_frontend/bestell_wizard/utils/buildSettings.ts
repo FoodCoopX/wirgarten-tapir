@@ -34,6 +34,7 @@ export function buildSettings(
     distributionChannels: baseData.distributionChannels,
     solidarityContributionChoices: baseData.solidarityContributionChoices,
     solidarityContributionMinimum: baseData.solidarityContributionMinimum,
+    solidarityContributionDefault: baseData.solidarityContributionDefault,
     feedbackStepEnabled: baseData.feedbackStepEnabled,
     growingPeriodChoices: baseData.growingPeriodChoices,
     strings: baseData.strings,

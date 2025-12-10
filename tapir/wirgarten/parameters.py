@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from django.conf import settings
 from django.core.validators import (
@@ -823,6 +824,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             SolidarityValidator,
         )
 
+        order_priority = 100
+
         self.parameter_definition(
             key=ParameterKeys.SOLIDARITY_CHOICES,
             label="Vordefinierte Solidarbeitrag-Werten",
@@ -836,7 +839,20 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(
                 validators=[SolidarityValidator.validate_solidarity_dropdown_values]
             ),
+            order_priority=order_priority,
         )
+        order_priority -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.SOLIDARITY_DEFAULT,
+            label="Vorausgewählter Beitrag im Bestell Wizard",
+            datatype=TapirParameterDatatype.DECIMAL,
+            initial_value=Decimal(0),
+            description="Welche Wert vorausgewählt ist im Bestell Wizard. Kann ein andere Wert sein als die vordefinierte. Kann vom Mitglied geändert werden.",
+            category=ParameterCategory.SOLIDARITY,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
 
         self.parameter_definition(
             key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
@@ -846,7 +862,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Aktiviert oder deaktiviert niedrigere Preise für Ernteanteile oder aktiviert die automatische Berechnung.",
             category=ParameterCategory.SOLIDARITY,
             meta=ParameterMeta(options=SOLIDARITY_MODE_OPTIONS),
+            order_priority=order_priority,
         )
+        order_priority -= 1
 
         self.parameter_definition(
             key=ParameterKeys.HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE,
@@ -856,7 +874,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "
             "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
             category=ParameterCategory.HARVEST,
+            order_priority=order_priority,
         )
+        order_priority -= 1
 
     def import_definitions_bestellwizard(self):
         bestellwizard_parameter_order = 100
@@ -1601,7 +1621,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         description: str,
         category: str,
         datatype: TapirParameterDatatype,
-        initial_value: str | int | float | bool | datetime.date,
+        initial_value: str | int | float | bool | datetime.date | Decimal,
         order_priority: int = -1,
         enabled: bool = True,
         debug: bool = False,

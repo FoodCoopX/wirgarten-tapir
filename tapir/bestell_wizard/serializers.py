@@ -144,6 +144,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
         child=serializers.CharField()
     )
     solidarity_contribution_minimum = serializers.FloatField(allow_null=True)
+    solidarity_contribution_default = serializers.FloatField()
     feedback_step_enabled = serializers.BooleanField()
     growing_period_choices = PublicGrowingPeriodSerializer(many=True)
     strings = BestellWizardStringsSerializer()
