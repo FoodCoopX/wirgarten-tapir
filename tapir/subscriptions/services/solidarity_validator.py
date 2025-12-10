@@ -66,7 +66,7 @@ class SolidarityValidator:
     @classmethod
     def get_value_display(cls, value):
         if value == 0:
-            return "Ich möchte den Richtpreis zahlen"
+            return "0€"
         if value == "custom":
             return "Ich möchte einen anderen Betrag zahlen"
 

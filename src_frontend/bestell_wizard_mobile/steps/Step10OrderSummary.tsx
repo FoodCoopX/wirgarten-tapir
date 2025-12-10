@@ -289,17 +289,16 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       {getPaymentRhythmDisplay(personalData.paymentRhythm)}
                     </p>
                   )}
-                  {becomeMemberNow !== false &&
-                    !studentStatusEnabled &&
-                    settings.showCoopContent && (
-                      <p>
-                        Einmalig:{" "}
-                        {formatCurrency(
-                          numberOfCoopShares * settings.priceOfAShare,
-                        )}{" "}
-                        (Genossenschaftsanteile)
-                      </p>
-                    )}
+                  {!studentStatusEnabled && settings.showCoopContent && (
+                    <p>
+                      Einmalig:{" "}
+                      {formatCurrency(
+                        numberOfCoopShares * settings.priceOfAShare,
+                      )}{" "}
+                      (Genossenschaftsanteile){" "}
+                      {becomeMemberNow === false && "(Start wenn Platz frei)"}
+                    </p>
+                  )}
                 </AccordionBody>
               </Accordion.Item>
             </Accordion>

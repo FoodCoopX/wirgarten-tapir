@@ -70,8 +70,6 @@ const Step7SolidarityContribution: React.FC<
     switch (value) {
       case "custom":
         return "Ich möchte einen anderen Betrag zahlen";
-      case 0:
-        return "Ich möchten den Richtpreis zahlen";
       default:
         return formatCurrency(value);
     }

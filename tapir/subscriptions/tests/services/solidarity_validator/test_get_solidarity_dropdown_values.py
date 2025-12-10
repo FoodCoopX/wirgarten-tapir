@@ -24,7 +24,7 @@ class TestGetSolidarityDropdownValues(SimpleTestCase):
         self.assertEqual(
             {
                 -7.5: "-7.5€",
-                0.0: "Ich möchte den Richtpreis zahlen",
+                0.0: "0€",
                 12.0: "+12€",
                 "custom": "Ich möchte einen anderen Betrag zahlen",
             },
