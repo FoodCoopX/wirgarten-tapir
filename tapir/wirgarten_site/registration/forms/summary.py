@@ -32,8 +32,8 @@ class SummaryForm(forms.Form):
         start_date = initial["general"]["start_date"]
         end_date = initial["general"]["end_date"]
 
-        growing_period = initial["base_product"]["growing_period"]
-        if growing_period.start_date > start_date:
+        growing_period = initial["base_product"].get("growing_period")
+        if growing_period and growing_period.start_date > start_date:
             start_date = growing_period.start_date
             end_date = growing_period.end_date
 
