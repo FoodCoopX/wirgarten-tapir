@@ -112,6 +112,10 @@ class BestellWizardOrderValidator:
                 contract_start_date=contract_start_date,
                 cache=cache,
             )
+            if pickup_location is None:
+                raise ValidationError(
+                    "Keine der ausgewählte Verteilstationen hat genug Kapazität"
+                )
 
         OrderValidator.validate_order_general(
             order=order,

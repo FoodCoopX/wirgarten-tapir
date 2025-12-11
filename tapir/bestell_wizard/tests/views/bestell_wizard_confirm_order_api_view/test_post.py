@@ -43,6 +43,7 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     ProductPriceFactory,
     ProductCapacityFactory,
+    PickupLocationCapabilityFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -485,6 +486,103 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(WaitingListEntry.objects.exists())
 
         mock_fire_action.assert_called_once()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_severalPickupLocationPickedIncludingAValidOne_memberAndContractAndWaitingListEntryCreated(
+        self, mock_fire_action: Mock
+    ):
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["pickup_location_ids"] = [
+            self.pickup_location_3.id,
+            self.pickup_location_1.id,
+            self.pickup_location_2.id,
+        ]
+
+        PickupLocationCapabilityFactory.create(
+            pickup_location=self.pickup_location_3,
+            max_capacity=0,
+            product_type=self.product_1.type,
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=self.pickup_location_2,
+            max_capacity=0,
+            product_type=self.product_1.type,
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=self.pickup_location_1,
+            max_capacity=100,
+            product_type=self.product_1.type,
+        )
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            "Order not confirmed because: " + (response_content["error"] or "no error"),
+        )
+
+        self.assert_order_applied_correctly(
+            mock_fire_action, is_student=False, growing_period=self.growing_period
+        )
+        self.assertEqual(1, WaitingListEntry.objects.count())
+
+        self.assert_waiting_list_entry_is_correct(
+            shopping_cart_waiting_list={},
+            pickup_location_wishes=[self.pickup_location_3, self.pickup_location_2],
+            mock_fire_action=mock_fire_action,
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_severalPickupLocationPickedWithNoneValid_nothingCreated(
+        self, mock_fire_action: Mock
+    ):
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["pickup_location_ids"] = [
+            self.pickup_location_3.id,
+            self.pickup_location_1.id,
+            self.pickup_location_2.id,
+        ]
+
+        PickupLocationCapabilityFactory.create(
+            pickup_location=self.pickup_location_3,
+            max_capacity=0.5,
+            product_type=self.product_1.type,
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=self.pickup_location_2,
+            max_capacity=0.5,
+            product_type=self.product_1.type,
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=self.pickup_location_1,
+            max_capacity=0.5,
+            product_type=self.product_1.type,
+        )
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(
+            response_content["order_confirmed"],
+        )
+        self.assertEqual(
+            "Keine der ausgewählte Verteilstationen hat genug Kapazität",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+        mock_fire_action.assert_not_called()
 
     @classmethod
     def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
