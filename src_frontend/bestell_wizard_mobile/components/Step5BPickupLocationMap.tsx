@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
@@ -18,6 +18,7 @@ interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
+  stepIsActive: boolean;
   tabIsActive: boolean;
   mapRef: MapRef;
   setMapRef: (mr: MapRef) => void;
@@ -33,6 +34,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
+  stepIsActive,
   tabIsActive,
   mapRef,
   setMapRef,
@@ -41,8 +43,6 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   shoppingCart,
   productTypesInWaitingList,
 }) => {
-  const [firstRender, setFirstRender] = useState(true);
-
   useEffect(() => {
     if (!mapRef) {
       return;
@@ -70,15 +70,20 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
     if (tabIsActive && mapRef) {
       setTimeout(() => {
         mapRef.invalidateSize(true);
-        setTimeout(() => {
-          if (firstRender) {
-            setMapBoundaries();
-            setFirstRender(false);
-          }
-        }, 10);
       }, 10);
     }
   }, [tabIsActive, mapRef]);
+
+  useEffect(() => {
+    if (stepIsActive && mapRef) {
+      setTimeout(() => {
+        mapRef.invalidateSize(true);
+        setTimeout(() => {
+          setMapBoundaries();
+        }, 10);
+      }, 10);
+    }
+  }, [stepIsActive, mapRef]);
 
   function setMapBoundaries() {
     if (!mapRef) {

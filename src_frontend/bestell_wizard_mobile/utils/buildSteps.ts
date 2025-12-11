@@ -19,7 +19,6 @@ export function buildSteps(
   productTypesInWaitingList: Set<PublicProductType>,
   selectedPickupLocation: PublicPickupLocation[],
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>,
-  solidarityContribution: number,
 ) {
   const newSteps: Step[] = [];
   newSteps.push(

@@ -239,7 +239,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       productTypesInWaitingList,
       selectedPickupLocations,
       pickupLocationsWithCapacityFull,
-      solidarityContribution,
     );
 
     setSteps(newSteps);

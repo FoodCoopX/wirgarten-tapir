@@ -135,6 +135,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               pickupLocations={settings.pickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
+              stepIsActive={active}
               tabIsActive={currentTab === "map" && stepIsActive}
               mapRef={mapRef}
               setMapRef={setMapRef}
