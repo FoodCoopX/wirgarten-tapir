@@ -92,7 +92,9 @@ class Command(BaseCommand):
             if not d:
                 return None
             tzinfo = tz or timezone.get_current_timezone()
-            return timezone.make_aware(datetime.datetime(d.year, d.month, d.day, hour, minute), tzinfo)
+            return timezone.make_aware(
+                datetime.datetime(d.year, d.month, d.day, hour, minute), tzinfo
+            )
 
         def _to_datetime(v):
             v = _normalize_cell(v)
@@ -119,7 +121,12 @@ class Command(BaseCommand):
             return
 
         # check if type and file params are present
-        if not options.get("file") or not options["file"][0] or not options.get("type") or not options["type"][0]:
+        if (
+            not options.get("file")
+            or not options["file"][0]
+            or not options.get("type")
+            or not options["type"][0]
+        ):
             self.stderr.write(
                 "If not --reset-all is used, parameters --type and --file must be present."
             )
@@ -171,7 +178,9 @@ class Command(BaseCommand):
                 except StopIteration:
                     self.stdout.write("CSV contains only a header row, no data rows.")
                     return
-                self.stdout.write(f"First row (as dict with cleaned headers): {first_row}")
+                self.stdout.write(
+                    f"First row (as dict with cleaned headers): {first_row}"
+                )
                 return
             created = 0
             skipped = 0
@@ -187,12 +196,16 @@ class Command(BaseCommand):
                     # identify pickup location ID
                     try:
                         if _normalize_cell(row.get("Abholort")) != "":
-                            picloc = PickupLocation.objects.get(name=_normalize_cell(row.get("Abholort")))
+                            picloc = PickupLocation.objects.get(
+                                name=_normalize_cell(row.get("Abholort"))
+                            )
                         else:
                             picloc = None
                     except ObjectDoesNotExist as e:
                         self.stderr.write(str(row))
-                        self.stderr.write("Pickup Location not found - record is skipped!")
+                        self.stderr.write(
+                            "Pickup Location not found - record is skipped!"
+                        )
                         continue
                     m = Member(
                         first_name=_normalize_cell(row.get("Vorname")),
@@ -200,7 +213,10 @@ class Command(BaseCommand):
                         # birthdate=row["Geburtstag/Gründungsdatum"],
                         street=" ".join(
                             s.rstrip()
-                            for s in [_normalize_cell(row.get("Straße")), _normalize_cell(row.get("Hausnr."))]
+                            for s in [
+                                _normalize_cell(row.get("Straße")),
+                                _normalize_cell(row.get("Hausnr.")),
+                            ]
                             if s and s.rstrip() != ""
                         ),
                         postcode=_normalize_cell(row.get("PLZ")),
@@ -252,7 +268,11 @@ class Command(BaseCommand):
                         continue
                     if _normalize_cell(row.get("Übertragungspartner")) != "":
                         try:
-                            transfer_member = Member.objects.get(member_no=_normalize_cell(row.get("Übertragungspartner")))
+                            transfer_member = Member.objects.get(
+                                member_no=_normalize_cell(
+                                    row.get("Übertragungspartner")
+                                )
+                            )
                         except ObjectDoesNotExist as e:
                             self.stderr.write(str(row))
                             self.stderr.write("Transfer Member not found!")
@@ -286,7 +306,9 @@ class Command(BaseCommand):
                                 CoopShareTransaction.objects.create(
                                     member_id=member.id,
                                     transaction_type=trans_type,
-                                    timestamp=_to_datetime_from_date(row.get("Datum"), hour=0, minute=0),
+                                    timestamp=_to_datetime_from_date(
+                                        row.get("Datum"), hour=0, minute=0
+                                    ),
                                     valid_at=valid_date,
                                     quantity=qu,
                                     share_price=50,
@@ -370,10 +392,14 @@ class Command(BaseCommand):
                     # identify MemberID, either via MemberNo or Email
                     try:
                         if _normalize_cell(row.get("Mitgliedernummer")) != "":
-                            m = Member.objects.get(member_no=_normalize_cell(row.get("Mitgliedernummer")))
+                            m = Member.objects.get(
+                                member_no=_normalize_cell(row.get("Mitgliedernummer"))
+                            )
                         else:
                             if _normalize_cell(row.get("Email")) != "":
-                                m = Member.objects.get(email=_normalize_cell(row.get("Email")))
+                                m = Member.objects.get(
+                                    email=_normalize_cell(row.get("Email"))
+                                )
                             else:
                                 self.stderr.write(str(row))
                                 self.stderr.write(
@@ -385,7 +411,9 @@ class Command(BaseCommand):
                         continue
                     except django.db.Error as e:
                         self.stderr.write(str(row))
-                        self.stderr.write(f"Database Error occured with MemberNo {e.__cause__}")
+                        self.stderr.write(
+                            f"Database Error occured with MemberNo {e.__cause__}"
+                        )
                         continue
                     except ValidationError as e:
                         self.stderr.write(str(row))
@@ -397,7 +425,9 @@ class Command(BaseCommand):
                     try:
                         if _normalize_cell(row.get("product")):
                             # print(row)
-                            prod = Product.objects.get(name=_normalize_cell(row.get("product")))
+                            prod = Product.objects.get(
+                                name=_normalize_cell(row.get("product"))
+                            )
                         else:
                             self.stderr.write(str(row))
                             self.stderr.write("No product defined in subscription.")
@@ -408,7 +438,9 @@ class Command(BaseCommand):
                         continue
                     # prepare cancellation value
                     if _normalize_cell(row.get("cancellation.ts")) != "":
-                        ts_cancel = _to_datetime(row.get("cancellation.ts")) or _to_datetime_from_date(row.get("cancellation.ts"))
+                        ts_cancel = _to_datetime(
+                            row.get("cancellation.ts")
+                        ) or _to_datetime_from_date(row.get("cancellation.ts"))
                     else:
                         ts_cancel = None
                     try:
@@ -425,8 +457,18 @@ class Command(BaseCommand):
                                     mandate_ref_id=mref.ref,
                                     period_id=period.id,
                                     product_id=prod.id,
-                                    consent_ts=_to_datetime(row.get("consent_vertragsgrundsätze")) or _to_datetime_from_date(row.get("consent_vertragsgrundsätze")),
-                                    withdrawal_consent_ts=_to_datetime(row.get("consent_widerruf")) or _to_datetime_from_date(row.get("consent_widerruf")),
+                                    consent_ts=_to_datetime(
+                                        row.get("consent_vertragsgrundsätze")
+                                    )
+                                    or _to_datetime_from_date(
+                                        row.get("consent_vertragsgrundsätze")
+                                    ),
+                                    withdrawal_consent_ts=_to_datetime(
+                                        row.get("consent_widerruf")
+                                    )
+                                    or _to_datetime_from_date(
+                                        row.get("consent_widerruf")
+                                    ),
                                 )
                             created += 1
                         # print("Subscription object successfully created.")
@@ -446,10 +488,15 @@ class Command(BaseCommand):
                         continue
                     except ValueError as e:
                         self.stderr.write(str(row))
-                        self.stderr.write(f"Value Error occured with create subscription: {e}")
+                        self.stderr.write(
+                            f"Value Error occured with create subscription: {e}"
+                        )
                         skipped += 1
                         continue
 
             # Summary
-            self.stdout.write(self.style.SUCCESS(
-                f"Done. Created: {created}, Updated: {updated}, Skipped: {skipped}"))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Done. Created: {created}, Updated: {updated}, Skipped: {skipped}"
+                )
+            )
