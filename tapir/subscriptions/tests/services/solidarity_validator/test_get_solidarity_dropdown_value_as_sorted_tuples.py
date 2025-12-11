@@ -23,7 +23,7 @@ class TestGetSolidarityDropdownValuesAsSortedTuple(SimpleTestCase):
 
         self.assertEqual(
             [
-                (0.0, "Ich möchte den Richtpreis zahlen"),
+                (0.0, "0€"),
                 (5.0, "+5€"),
                 (2.0, "+2€"),
                 (-7.0, "-7€"),

@@ -1,8 +1,15 @@
+from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
+    BestellWizardOrderValidator,
+)
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.subscriptions.types import TapirOrder
 from tapir.wirgarten.models import (
     WaitingListEntry,
     WaitingListProductWish,
     WaitingListPickupLocationWish,
+    Member,
 )
 from tapir.wirgarten.utils import get_now
 
@@ -31,15 +38,24 @@ class WaitingListEntryCreator:
         cls,
         order: TapirOrder,
         pickup_location_ids_in_priority_order: list[str],
-        member_id: str,
+        growing_period_id: str,
+        member: Member,
         cache: dict,
     ):
+        pickup_location_ids_in_priority_order = (
+            cls.get_pickup_location_ids_that_should_go_on_waiting_list(
+                pickup_location_ids=pickup_location_ids_in_priority_order,
+                member=member,
+                growing_period_id=growing_period_id,
+                cache=cache,
+            )
+        )
         return cls._create_entry(
             order=order,
             pickup_location_ids_in_priority_order=pickup_location_ids_in_priority_order,
             number_of_coop_shares=0,
             personal_data=None,
-            member_id=member_id,
+            member_id=member.id,
             cache=cache,
         )
 
@@ -120,3 +136,26 @@ class WaitingListEntryCreator:
         ]
         for field in fields:
             setattr(waiting_list_entry, field, validated_data[field])
+
+    @classmethod
+    def get_pickup_location_ids_that_should_go_on_waiting_list(
+        cls,
+        pickup_location_ids: list[str],
+        growing_period_id: str,
+        member: Member,
+        cache: dict,
+    ):
+        contract_start_date = BestellWizardOrderValidator.validated_growing_period_and_get_contract_start_date(
+            growing_period_id=growing_period_id,
+            cache=cache,
+        )
+        current_pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id(
+                member=member, reference_date=contract_start_date
+            )
+        )
+        return [
+            pickup_location_id
+            for pickup_location_id in pickup_location_ids
+            if pickup_location_id != current_pickup_location_id
+        ]

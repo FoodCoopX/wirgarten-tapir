@@ -858,6 +858,7 @@ class PublicConfirmWaitingListEntryView(APIView):
                     number_of_shares=serializer.validated_data["number_of_coop_shares"],
                     subscriptions=new_subscriptions,
                     cache=self.cache,
+                    actor=actor,
                 )
 
         return Response(

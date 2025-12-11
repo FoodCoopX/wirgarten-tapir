@@ -1,9 +1,8 @@
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock
 
 from django.test import SimpleTestCase
 
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
-from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
     WaitingListEntryConfirmationEmailSender,
@@ -23,7 +22,6 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
     @patch.object(
         WaitingListEntryCreator, "create_entry_existing_member", autospec=True
     )
-    @patch.object(OrderValidator, "does_order_need_a_pickup_location", autospec=True)
     @patch.object(
         WaitingListEntryValidator,
         "validate_creation_of_waiting_list_entry_for_an_existing_member",
@@ -38,7 +36,6 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
         self,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
         mock_validate_creation_of_waiting_list_entry_for_an_existing_member: Mock,
-        mock_does_order_need_a_pickup_location: Mock,
         mock_create_entry_existing_member: Mock,
         mock_send_confirmation_mail: Mock,
     ):
@@ -54,6 +51,7 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
             "shopping_cart_waiting_list": shopping_cart_waiting_list,
             "shopping_cart_order": shopping_cart_order,
             "pickup_location_ids": pickup_location_ids,
+            "growing_period_id": "growing_period_test_id",
         }
         entry = Mock()
 
@@ -64,9 +62,6 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
                 else fulfilled_order
             )
         )
-        mock_does_order_need_a_pickup_location.side_effect = (
-            lambda order, cache: order == waiting_list_order
-        )
         mock_create_entry_existing_member.return_value = entry
 
         BestellWizardConfirmOrderApiView.validate_and_create_waiting_list_entry_existing_member(
@@ -75,26 +70,17 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
             cache=cache,
         )
 
-        self.assertEqual(
-            2, mock_build_tapir_order_from_shopping_cart_serializer.call_count
-        )
-        mock_build_tapir_order_from_shopping_cart_serializer.assert_has_calls(
-            [
-                call(shopping_cart=shopping_cart_waiting_list, cache=cache),
-                call(shopping_cart=shopping_cart_order, cache=cache),
-            ]
+        mock_build_tapir_order_from_shopping_cart_serializer.assert_called_once_with(
+            shopping_cart=shopping_cart_waiting_list, cache=cache
         )
         mock_validate_creation_of_waiting_list_entry_for_an_existing_member.assert_called_once_with(
             member_id="test_id", order=waiting_list_order, cache=cache
         )
-        self.assertEqual(2, mock_does_order_need_a_pickup_location.call_count)
-        mock_does_order_need_a_pickup_location.assert_has_calls(
-            [call(fulfilled_order, cache=cache), call(waiting_list_order, cache=cache)]
-        )
         mock_create_entry_existing_member.assert_called_once_with(
             order=waiting_list_order,
             pickup_location_ids_in_priority_order=pickup_location_ids,
-            member_id="test_id",
+            member=member,
+            growing_period_id="growing_period_test_id",
             cache=cache,
         )
         mock_send_confirmation_mail.assert_called_once_with(
@@ -107,7 +93,6 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
     @patch.object(
         WaitingListEntryCreator, "create_entry_existing_member", autospec=True
     )
-    @patch.object(OrderValidator, "does_order_need_a_pickup_location", autospec=True)
     @patch.object(
         WaitingListEntryValidator,
         "validate_creation_of_waiting_list_entry_for_an_existing_member",
@@ -122,7 +107,6 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
         self,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
         mock_validate_creation_of_waiting_list_entry_for_an_existing_member: Mock,
-        mock_does_order_need_a_pickup_location: Mock,
         mock_create_entry_existing_member: Mock,
         mock_send_confirmation_mail: Mock,
     ):
@@ -138,6 +122,7 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
             "shopping_cart_waiting_list": shopping_cart_waiting_list,
             "shopping_cart_order": shopping_cart_order,
             "pickup_location_ids": pickup_location_ids,
+            "growing_period_id": "test_growing_period_id",
         }
         entry = Mock()
 
@@ -148,7 +133,6 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
                 else fulfilled_order
             )
         )
-        mock_does_order_need_a_pickup_location.return_value = True
         mock_create_entry_existing_member.return_value = entry
 
         BestellWizardConfirmOrderApiView.validate_and_create_waiting_list_entry_existing_member(
@@ -157,25 +141,17 @@ class TestValidateAndCreateWaitingListEntryExistingMember(SimpleTestCase):
             cache=cache,
         )
 
-        self.assertEqual(
-            2, mock_build_tapir_order_from_shopping_cart_serializer.call_count
-        )
-        mock_build_tapir_order_from_shopping_cart_serializer.assert_has_calls(
-            [
-                call(shopping_cart=shopping_cart_waiting_list, cache=cache),
-                call(shopping_cart=shopping_cart_order, cache=cache),
-            ]
+        mock_build_tapir_order_from_shopping_cart_serializer.assert_called_once_with(
+            shopping_cart=shopping_cart_waiting_list, cache=cache
         )
         mock_validate_creation_of_waiting_list_entry_for_an_existing_member.assert_called_once_with(
             member_id="test_id", order=waiting_list_order, cache=cache
         )
-        mock_does_order_need_a_pickup_location.assert_called_once_with(
-            fulfilled_order, cache=cache
-        )
         mock_create_entry_existing_member.assert_called_once_with(
             order=waiting_list_order,
-            pickup_location_ids_in_priority_order=[],
-            member_id="test_id",
+            pickup_location_ids_in_priority_order=pickup_location_ids,
+            member=member,
+            growing_period_id="test_growing_period_id",
             cache=cache,
         )
         mock_send_confirmation_mail.assert_called_once_with(

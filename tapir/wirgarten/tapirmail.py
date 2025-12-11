@@ -23,6 +23,7 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.utils.shortcuts import is_running_tests
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -87,7 +88,11 @@ def _register_segments():
             partial(get_queryset_for_pickup_location, pickup_location, cache),
         )
 
-    if get_parameter_value(key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+    # Avoid checking the parameter during tests otherwise we need to import parameters in all the integration tests
+    trial_period_enabled = not is_running_tests() and get_parameter_value(
+        key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+    )
+    if trial_period_enabled:
         register_segment(
             "Mitglieder im Probezeit", lambda: get_queryset_members_in_trial(cache)
         )

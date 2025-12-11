@@ -43,7 +43,6 @@ from tapir.subscriptions.services.global_capacity_checker import (
 from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
-from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
     ProductTypeLowestFreeCapacityAfterDateCalculator,
@@ -167,6 +166,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         if (
             len(order_waiting_list) > 0
             or validated_serializer_data["become_member_now"] is False
+            or len(validated_serializer_data["pickup_location_ids"]) > 1
         ):
             if member is None:
                 cls.validate_and_create_waiting_list_entry_potential_member(
@@ -180,32 +180,14 @@ class BestellWizardConfirmOrderApiView(APIView):
                 )
 
     @classmethod
-    def get_and_validate_growing_period(cls, growing_period_id: str, cache: dict):
-        growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
-        if (
-            growing_period
-            not in GrowingPeriodChoiceProvider.get_available_growing_periods(
-                reference_date=get_today(cache=cache), cache=cache
-            )
-        ):
-            raise ValidationError("Ungültige Vertragsperiode " + growing_period_id)
-        return growing_period
-
-    @classmethod
     def validate_and_fulfill_order(
         cls,
         request,
         validated_serializer_data: dict,
         cache: dict,
     ) -> Member:
-        growing_period_id = validated_serializer_data["growing_period_id"]
-        growing_period = cls.get_and_validate_growing_period(growing_period_id, cache)
-
-        contract_start_date = (
-            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period,
-                cache=cache,
-            )
+        contract_start_date = BestellWizardOrderValidator.validated_growing_period_and_get_contract_start_date(
+            validated_serializer_data["growing_period_id"], cache=cache
         )
 
         BestellWizardOrderValidator.validate_order_and_user_data(
@@ -257,7 +239,10 @@ class BestellWizardConfirmOrderApiView(APIView):
 
     @classmethod
     def validate_and_create_waiting_list_entry_existing_member(
-        cls, member: Member, validated_serializer_data: dict, cache: dict
+        cls,
+        member: Member,
+        validated_serializer_data: dict,
+        cache: dict,
     ):
         waiting_list_order = (
             TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
@@ -268,22 +253,14 @@ class BestellWizardConfirmOrderApiView(APIView):
         WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_an_existing_member(
             member_id=member.id, order=waiting_list_order, cache=cache
         )
-        fulfilled_order = (
-            TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-                validated_serializer_data["shopping_cart_order"], cache=cache
-            )
-        )
-        pickup_location_ids = []
-        if not OrderValidator.does_order_need_a_pickup_location(
-            fulfilled_order, cache=cache
-        ) and OrderValidator.does_order_need_a_pickup_location(
-            waiting_list_order, cache=cache
-        ):
-            pickup_location_ids = validated_serializer_data["pickup_location_ids"]
+
         entry = WaitingListEntryCreator.create_entry_existing_member(
             order=waiting_list_order,
-            pickup_location_ids_in_priority_order=pickup_location_ids,
-            member_id=member.id,
+            pickup_location_ids_in_priority_order=validated_serializer_data[
+                "pickup_location_ids"
+            ],
+            member=member,
+            growing_period_id=validated_serializer_data["growing_period_id"],
             cache=cache,
         )
         WaitingListEntryConfirmationEmailSender.send_confirmation_mail(

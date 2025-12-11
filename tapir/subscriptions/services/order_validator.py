@@ -5,9 +5,6 @@ from django.core.exceptions import ValidationError
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
-from tapir.solidarity_contribution.services.solidarity_validator_new import (
-    SolidarityValidatorNew,
-)
 from tapir.subscriptions.services.global_capacity_checker import (
     GlobalCapacityChecker,
 )
@@ -53,13 +50,6 @@ class OrderValidator:
             raise ValidationError(
                 "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
             )
-
-        if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
-            ordered_solidarity_factor=0,  # TODO
-            start_date=contract_start_date,
-            cache=cache,
-        ):
-            raise ValidationError("Solidarity factor not allowed")
 
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,

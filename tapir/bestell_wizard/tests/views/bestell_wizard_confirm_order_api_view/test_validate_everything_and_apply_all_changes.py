@@ -5,11 +5,7 @@ from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
-from tapir.subscriptions.services.growing_period_choice_provider import (
-    GrowingPeriodChoiceProvider,
-)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
-from tapir.wirgarten.models import GrowingPeriod
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
@@ -48,10 +44,6 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         for mock in mocks:
             mock.assert_not_called()
 
-    @patch("tapir.bestell_wizard.views.get_object_or_404", autospec=True)
-    @patch.object(
-        GrowingPeriodChoiceProvider, "get_available_growing_periods", autospec=True
-    )
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -76,8 +68,6 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
-        mock_get_available_growing_periods: Mock,
-        mock_get_object_or_404: Mock,
     ):
         shopping_cart_order = Mock()
         cache = Mock()
@@ -89,13 +79,12 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             "become_member_now": None,
             "shopping_cart_waiting_list": {},
             "growing_period_id": growing_period.id,
+            "pickup_location_ids": [],
         }
 
         mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
             lambda data, cache: ({Mock: 2} if data == shopping_cart_order else {})
         )
-        mock_get_available_growing_periods.return_value = [growing_period]
-        mock_get_object_or_404.return_value = growing_period
 
         BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
             validated_serializer_data=validated_serializer_data,
@@ -109,22 +98,11 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_fulfill_order.assert_called_once_with(
             request=request,
             validated_serializer_data=validated_serializer_data,
-            growing_period=growing_period,
             cache=cache,
         )
         mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
-        mock_get_available_growing_periods.assert_called_once_with(
-            reference_date=self.now.date(), cache=cache
-        )
-        mock_get_object_or_404.assert_called_once_with(
-            GrowingPeriod, id=growing_period.id
-        )
 
-    @patch("tapir.bestell_wizard.views.get_object_or_404", autospec=True)
-    @patch.object(
-        GrowingPeriodChoiceProvider, "get_available_growing_periods", autospec=True
-    )
     @patch.object(
         BestellWizardConfirmOrderApiView,
         "validate_and_create_waiting_list_entry_existing_member",
@@ -143,8 +121,6 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_fulfill_order: Mock,
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
-        mock_get_available_growing_periods: Mock,
-        mock_get_object_or_404: Mock,
     ):
         cache = Mock()
         request = Mock()
@@ -155,10 +131,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             "become_member_now": True,
             "shopping_cart_waiting_list": {},
             "growing_period_id": growing_period.id,
+            "pickup_location_ids": [],
         }
-
-        mock_get_available_growing_periods.return_value = [growing_period]
-        mock_get_object_or_404.return_value = growing_period
 
         BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
             validated_serializer_data=validated_serializer_data,
@@ -169,22 +143,11 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_fulfill_order.assert_called_once_with(
             request=request,
             validated_serializer_data=validated_serializer_data,
-            growing_period=growing_period,
             cache=cache,
         )
         mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
-        mock_get_available_growing_periods.assert_called_once_with(
-            reference_date=self.now.date(), cache=cache
-        )
-        mock_get_object_or_404.assert_called_once_with(
-            GrowingPeriod, id=growing_period.id
-        )
 
-    @patch("tapir.bestell_wizard.views.get_object_or_404", autospec=True)
-    @patch.object(
-        GrowingPeriodChoiceProvider, "get_available_growing_periods", autospec=True
-    )
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -209,8 +172,6 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
-        mock_get_available_growing_periods: Mock,
-        mock_get_object_or_404: Mock,
     ):
         shopping_cart_order = Mock()
         shopping_cart_waiting_list = Mock()
@@ -224,9 +185,6 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             "shopping_cart_waiting_list": shopping_cart_waiting_list,
             "growing_period_id": growing_period.id,
         }
-
-        mock_get_available_growing_periods.return_value = [growing_period]
-        mock_get_object_or_404.return_value = growing_period
 
         mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
             lambda data, cache: (
@@ -251,17 +209,7 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             validated_serializer_data=validated_serializer_data, cache=cache
         )
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
-        mock_get_available_growing_periods.assert_called_once_with(
-            reference_date=self.now.date(), cache=cache
-        )
-        mock_get_object_or_404.assert_called_once_with(
-            GrowingPeriod, id=growing_period.id
-        )
 
-    @patch("tapir.bestell_wizard.views.get_object_or_404", autospec=True)
-    @patch.object(
-        GrowingPeriodChoiceProvider, "get_available_growing_periods", autospec=True
-    )
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -286,14 +234,13 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
-        mock_get_available_growing_periods: Mock,
-        mock_get_object_or_404: Mock,
     ):
         shopping_cart_order = Mock()
         shopping_cart_waiting_list = Mock()
         cache = Mock()
         request = Mock()
         member = Mock()
+        pickup_location_ids = Mock()
         growing_period = GrowingPeriodFactory.build()
         validated_serializer_data = {
             "privacy_policy_read": True,
@@ -301,10 +248,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             "become_member_now": False,
             "shopping_cart_waiting_list": shopping_cart_waiting_list,
             "growing_period_id": growing_period.id,
+            "pickup_location_ids": pickup_location_ids,
         }
-
-        mock_get_available_growing_periods.return_value = [growing_period]
-        mock_get_object_or_404.return_value = growing_period
 
         mock_build_tapir_order_from_shopping_cart_serializer.return_value = {Mock: 2}
         mock_validate_and_fulfill_order.return_value = member
@@ -324,7 +269,6 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_fulfill_order.assert_called_once_with(
             request=request,
             validated_serializer_data=validated_serializer_data,
-            growing_period=growing_period,
             cache=cache,
         )
         mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
@@ -332,10 +276,4 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             member=member,
             validated_serializer_data=validated_serializer_data,
             cache=cache,
-        )
-        mock_get_available_growing_periods.assert_called_once_with(
-            reference_date=self.now.date(), cache=cache
-        )
-        mock_get_object_or_404.assert_called_once_with(
-            GrowingPeriod, id=growing_period.id
         )

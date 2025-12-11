@@ -7,6 +7,7 @@ from tapir.wirgarten.models import (
     PickupLocation,
     MemberPickupLocation,
 )
+from tapir.wirgarten.utils import get_today
 
 
 class PickupLocationHighestUsageAfterDateService:
@@ -46,6 +47,8 @@ class PickupLocationHighestUsageAfterDateService:
                 .last()
             )
             last_subscription = TapirCache.get_last_subscription(cache=cache)
+            if not last_pickup_location_change and not last_subscription:
+                return get_today(cache)
             if not last_pickup_location_change:
                 return last_subscription.end_date
             if not last_subscription:

@@ -1,5 +1,6 @@
 import datetime
 import json
+from decimal import Decimal
 from typing import Any
 from unittest.mock import patch, Mock
 
@@ -18,6 +19,7 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -288,6 +290,15 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual(0, waiting_list_entry.number_of_coop_shares)
         self.assertEqual(member.id, waiting_list_entry.member_id)
 
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        solidarity_contribution = SolidarityContribution.objects.get()
+        self.assertEqual(member.id, solidarity_contribution.member_id)
+        self.assertEqual(Decimal("12.70"), solidarity_contribution.amount)
+        self.assertEqual(
+            Subscription.objects.first().start_date, solidarity_contribution.start_date
+        )
+        self.assertEqual(self.growing_period.end_date, solidarity_contribution.end_date)
+
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_waitingListEntryAndBecomeMemberNow_createsEntryAndCreatesMember(
         self, mock_fire_action: Mock
@@ -496,6 +507,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "privacy_policy_read": True,
             "cancellation_policy_read": False,
             "growing_period_id": cls.growing_period.id,
+            "solidarity_contribution": 0,
         }
 
     @classmethod
@@ -515,6 +527,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "privacy_policy_read": True,
             "cancellation_policy_read": True,
             "growing_period_id": cls.growing_period.id,
+            "solidarity_contribution": 12.7,
         }
 
     @classmethod

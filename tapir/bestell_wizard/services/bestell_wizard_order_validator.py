@@ -8,8 +8,17 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
+)
 from tapir.solidarity_contribution.services.solidarity_validator_new import (
     SolidarityValidatorNew,
+)
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
+from tapir.subscriptions.services.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.required_product_types_validator import (
@@ -17,9 +26,10 @@ from tapir.subscriptions.services.required_product_types_validator import (
 )
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
-from tapir.wirgarten.models import PickupLocation
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import legal_status_is_cooperative
+from tapir.wirgarten.utils import legal_status_is_cooperative, get_today
 
 
 class BestellWizardOrderValidator:
@@ -83,7 +93,6 @@ class BestellWizardOrderValidator:
         order: TapirOrder,
         cache: dict,
     ):
-
         if len(order.keys()) > 0 and get_parameter_value(
             ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=cache
         ):
@@ -95,8 +104,13 @@ class BestellWizardOrderValidator:
                 raise ValidationError(
                     "Diese Bestellung braucht eine Verteilstation, bitte wählt eine aus."
                 )
-            pickup_location = get_object_or_404(
-                PickupLocation, id=pickup_location_ids[0]
+
+            pickup_location = cls.get_first_pickup_location_with_enough_capacity(
+                pickup_location_ids=pickup_location_ids,
+                order=order,
+                member=None,
+                contract_start_date=contract_start_date,
+                cache=cache,
             )
 
         OrderValidator.validate_order_general(
@@ -139,3 +153,56 @@ class BestellWizardOrderValidator:
                 raise ValidationError(
                     f"Genossenschaftsanteile bestellt: {nb_ordered_coop_shares}, minimum: {minimum_number_of_shares}."
                 )
+
+    @classmethod
+    def get_first_pickup_location_with_enough_capacity(
+        cls,
+        pickup_location_ids: list[str],
+        order: TapirOrder,
+        member: Member | None,
+        contract_start_date: datetime.date,
+        cache: dict,
+    ):
+        pickup_locations = [
+            TapirCache.get_pickup_location_by_id(
+                cache=cache, pickup_location_id=pickup_location_id
+            )
+            for pickup_location_id in pickup_location_ids
+        ]
+
+        for pickup_location in pickup_locations:
+            if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+                pickup_location=pickup_location,
+                order=order,
+                already_registered_member=member,
+                subscription_start=contract_start_date,
+                cache=cache,
+            ):
+                return pickup_location
+
+        return None
+
+    @classmethod
+    def validated_growing_period_and_get_contract_start_date(
+        cls, growing_period_id: str, cache: dict
+    ):
+        growing_period = cls.get_and_validate_growing_period(growing_period_id, cache)
+
+        return (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
+                cache=cache,
+            )
+        )
+
+    @classmethod
+    def get_and_validate_growing_period(cls, growing_period_id: str, cache: dict):
+        growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
+        if (
+            growing_period
+            not in GrowingPeriodChoiceProvider.get_available_growing_periods(
+                reference_date=get_today(cache=cache), cache=cache
+            )
+        ):
+            raise ValidationError("Ungültige Vertragsperiode " + growing_period_id)
+        return growing_period

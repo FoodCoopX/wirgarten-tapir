@@ -1,6 +1,9 @@
 import datetime
 
 from tapir.accounts.models import TapirUser
+from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
+    BestellWizardOrderValidator,
+)
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -43,6 +46,18 @@ class BestellWizardOrderFulfiller:
         request,
         cache: dict,
     ):
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            validated_serializer_data["shopping_cart_order"], cache=cache
+        )
+        pickup_location = None
+        if OrderValidator.does_order_need_a_pickup_location(order=order, cache=cache):
+            pickup_location = BestellWizardOrderValidator.get_first_pickup_location_with_enough_capacity(
+                pickup_location_ids=validated_serializer_data["pickup_location_ids"],
+                contract_start_date=contract_start_date,
+                member=None,
+                order=order,
+                cache=cache,
+            )
 
         is_student = validated_serializer_data["student_status_enabled"]
         member = cls.create_member(
@@ -59,9 +74,6 @@ class BestellWizardOrderFulfiller:
             actor=actor,
         )
 
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            validated_serializer_data["shopping_cart_order"], cache=cache
-        )
         subscriptions = cls.create_subscriptions(
             order=order,
             member=member,
@@ -72,7 +84,7 @@ class BestellWizardOrderFulfiller:
 
         if OrderValidator.does_order_need_a_pickup_location(order=order, cache=cache):
             MemberPickupLocationService.link_member_to_pickup_location(
-                validated_serializer_data["pickup_location_ids"][0],
+                pickup_location_id=pickup_location.id,
                 member=member,
                 valid_from=contract_start_date,
                 actor=actor,
