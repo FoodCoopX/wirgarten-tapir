@@ -95,6 +95,9 @@ def validate_iso_datetime(date_as_string: str):
 
 
 def validate_base_product_type_exists(base_product_type_id: str):
+    if base_product_type_id is None:
+        return
+
     if not ProductType.objects.exists():
         # This allows the creation of the parameter on fresh installs
         return
