@@ -22,11 +22,13 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_next_growing_period,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
 from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
@@ -84,7 +86,11 @@ def _register_segments():
             "Abholort: " + pickup_location.name,
             partial(get_queryset_for_pickup_location, pickup_location, cache),
         )
-        pass
+
+    if get_parameter_value(key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+        register_segment(
+            "Mitglieder im Probezeit", lambda: get_queryset_members_in_trial(cache)
+        )
 
 
 def get_queryset_for_pickup_location(pickup_location: PickupLocation, cache: dict):
@@ -97,6 +103,23 @@ def get_queryset_for_pickup_location(pickup_location: PickupLocation, cache: dic
             MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
         }
     )
+
+
+def get_queryset_members_in_trial(cache: dict):
+    today = get_today(cache)
+    subscriptions_in_trial = [
+        subscription
+        for subscription in get_active_and_future_subscriptions(
+            reference_date=today, cache=cache
+        )
+        if TrialPeriodManager.is_subscription_in_trial(
+            subscription, reference_date=today, cache=cache
+        )
+    ]
+    member_ids_in_trial = {
+        subscription.member_id for subscription in subscriptions_in_trial
+    }
+    return Member.objects.filter(id__in=member_ids_in_trial)
 
 
 def _register_filters():
