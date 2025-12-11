@@ -1,4 +1,5 @@
 from datetime import timedelta
+from functools import partial
 from typing import Callable
 
 from dateutil.relativedelta import relativedelta
@@ -18,6 +19,9 @@ from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -72,6 +76,26 @@ def _register_segments():
     register_segment(
         Segments.WITHOUT_ACTIVE_SUBSCRIPTION,
         lambda: Member.objects.without_active_subscription(),
+    )
+
+    cache = {}
+    for pickup_location in PickupLocation.objects.all():
+        register_segment(
+            "Abholort: " + pickup_location.name,
+            partial(get_queryset_for_pickup_location, pickup_location, cache),
+        )
+        pass
+
+
+def get_queryset_for_pickup_location(pickup_location: PickupLocation, cache: dict):
+    queryset = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
+        queryset=Member.objects.all(), reference_date=get_today(cache)
+    )
+
+    return queryset.filter(
+        **{
+            MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
+        }
     )
 
 
