@@ -56,11 +56,9 @@ import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData
 import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import { buildSteps } from "./utils/buildSteps.ts";
 import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
-import { isProductTypeOrdered } from "../bestell_wizard/utils/isProductTypeOrdered.ts";
 import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
 import { PickupLocationTab } from "./types/PickupLocationTab.ts";
 import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { isProductOrdered } from "./utils/isProductOrdered.ts";
 import Step14BConfirmationWaitingList from "./steps/Step14BConfirmationWaitingList.tsx";
 import Step3BGrowingPeriodChoice from "./steps/Step3BGrowingPeriodChoice.tsx";
 import { updateProductPrices } from "../utils/updateProductPrices.ts";
@@ -68,6 +66,7 @@ import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFiltered
 import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
 import { addToast } from "../utils/addToast.ts";
 import { v4 as uuidv4 } from "uuid";
+import { updateWaitingList } from "./utils/updateWaitingList.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -320,36 +319,15 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
   }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
-    const newProductsInWaitingList = new Set<PublicProductType>();
-
-    const pickupLocationForcesWaitingList =
-      selectedPickupLocations.length > 0 &&
-      pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]);
-
-    for (const productType of settings.productTypes) {
-      if (!isProductTypeOrdered(productType, shoppingCart)) {
-        continue;
-      }
-
-      if (productTypeIdsOverCapacity.includes(productType.id!)) {
-        newProductsInWaitingList.add(productType);
-      }
-
-      if (pickupLocationForcesWaitingList && !productType.noDelivery) {
-        newProductsInWaitingList.add(productType);
-      }
-
-      for (const product of productType.products) {
-        if (
-          isProductOrdered(product, shoppingCart) &&
-          productIdsOverCapacity.includes(product.id!)
-        ) {
-          newProductsInWaitingList.add(productType);
-        }
-      }
-    }
-
-    setProductTypesInWaitingList(newProductsInWaitingList);
+    updateWaitingList(
+      selectedPickupLocations,
+      pickupLocationsWithCapacityFull,
+      settings,
+      shoppingCart,
+      productTypeIdsOverCapacity,
+      productIdsOverCapacity,
+      setProductTypesInWaitingList,
+    );
   }, [
     productTypeIdsOverCapacity,
     productIdsOverCapacity,
@@ -549,9 +527,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             active={currentStep === step}
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
-            setProductTypesInWaitingList={setProductTypesInWaitingList}
             currentTab={currentPickupLocationTab}
             setCurrentTab={setCurrentPickupLocationTab}
+            productTypeIdsOverCapacity={productTypeIdsOverCapacity}
+            productIdsOverCapacity={productIdsOverCapacity}
           />
         );
       case "5c_pickup_location_confirm_waiting_list":

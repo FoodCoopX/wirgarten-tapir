@@ -8,14 +8,13 @@ import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { CarouselRef } from "react-bootstrap/Carousel";
 import { MapRef } from "react-leaflet/MapContainer";
-import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import {
   ALL_PICKUP_LOCATION_TABS,
   PickupLocationTab,
 } from "../types/PickupLocationTab.ts";
 import Step5BPickupLocationWishes from "../components/Step5BPickupLocationWishes.tsx";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
 
 interface Step5BPickupLocationChoiceProps {
   settings: BestellWizardSettings;
@@ -30,10 +29,11 @@ interface Step5BPickupLocationChoiceProps {
   };
   active: boolean;
   productTypesInWaitingList: Set<PublicProductType>;
-  setProductTypesInWaitingList: (set: Set<PublicProductType>) => void;
   shoppingCart: ShoppingCart;
   currentTab: PickupLocationTab;
   setCurrentTab: (tab: PickupLocationTab) => void;
+  productTypeIdsOverCapacity: string[];
+  productIdsOverCapacity: string[];
 }
 
 const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
@@ -47,10 +47,11 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   firstDeliveryDatesByPickupLocationAndProductType,
   active,
   productTypesInWaitingList,
-  setProductTypesInWaitingList,
   shoppingCart,
   currentTab,
   setCurrentTab,
+  productIdsOverCapacity,
+  productTypeIdsOverCapacity,
 }) => {
   const [showValidation, setShowValidation] = useState(false);
   const carouselRef = useRef<CarouselRef>(null);
@@ -90,10 +91,25 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   }, [carouselRef, mapRef]);
 
   function showTabWishes() {
-    return !isAtLeastOneOrderedProductWithDelivery(
-      buildFilteredShoppingCart(shoppingCart, false, productTypesInWaitingList),
-      settings.productTypes,
-    );
+    if (
+      !wouldTheOrderFitTheProductCapacities(
+        shoppingCart,
+        productTypeIdsOverCapacity,
+        productIdsOverCapacity,
+        settings,
+      )
+    ) {
+      return true;
+    }
+
+    switch (selectedPickupLocations.length) {
+      case 0:
+        return false;
+      case 1:
+        return pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]);
+      default:
+        return true;
+    }
   }
 
   return (
@@ -145,6 +161,9 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               }
               productTypesInWaitingList={productTypesInWaitingList}
               shoppingCart={shoppingCart}
+              settings={settings}
+              productTypeIdsOverCapacity={productTypeIdsOverCapacity}
+              productIdsOverCapacity={productIdsOverCapacity}
             />
           </div>
         </Carousel.Item>

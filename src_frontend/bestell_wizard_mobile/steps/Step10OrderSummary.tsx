@@ -20,6 +20,7 @@ import {
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
+import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -132,16 +133,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     }
 
     return "Unbekannt";
-  }
-
-  function getProductTypeByProductId(productId: string) {
-    for (const productType of settings.productTypes) {
-      for (const product of productType.products) {
-        if (product.id === productId) {
-          return productType;
-        }
-      }
-    }
   }
 
   return (
@@ -264,7 +255,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                           )}{" "}
                           / Monat
                           {productTypesInWaitingList.has(
-                            getProductTypeByProductId(productId)!,
+                            getProductTypeByProductId(productId, settings)!,
                           )
                             ? " (Start wenn Platz frei)"
                             : ""}

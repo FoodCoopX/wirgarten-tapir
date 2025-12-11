@@ -28,7 +28,7 @@ const Step5BPickupLocationConfirmWaitingList: React.FC<
           icon={"keyboard_arrow_up"}
           onClick={() => {
             setCurrentStep("5b_pickup_location_choice");
-            setCurrentTab("wishes");
+            setCurrentTab("map");
           }}
         />
         <TapirButton

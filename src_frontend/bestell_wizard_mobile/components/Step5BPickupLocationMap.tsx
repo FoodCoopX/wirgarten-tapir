@@ -13,6 +13,8 @@ import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -28,6 +30,9 @@ interface Step5BPickupLocationMapProps {
   };
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;
+  productTypeIdsOverCapacity: string[];
+  productIdsOverCapacity: string[];
+  settings: BestellWizardSettings;
 }
 
 const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
@@ -42,30 +47,10 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   firstDeliveryDatesByPickupLocationAndProductType,
   shoppingCart,
   productTypesInWaitingList,
+  productIdsOverCapacity,
+  productTypeIdsOverCapacity,
+  settings,
 }) => {
-  useEffect(() => {
-    if (!mapRef) {
-      return;
-    }
-
-    if (!tabIsActive) {
-      mapRef.closePopup();
-    }
-
-    if (selectedPickupLocations.length === 0) {
-      return;
-    }
-
-    mapRef.setView(
-      {
-        lat: parseFloat(selectedPickupLocations[0].coordsLon),
-        lng: parseFloat(selectedPickupLocations[0].coordsLat),
-      },
-      15,
-      { animate: true },
-    );
-  }, [selectedPickupLocations]);
-
   useEffect(() => {
     if (tabIsActive && mapRef) {
       setTimeout(() => {
@@ -84,6 +69,12 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
       }, 10);
     }
   }, [stepIsActive, mapRef]);
+
+  useEffect(() => {
+    if (mapRef) {
+      mapRef.closePopup();
+    }
+  }, [tabIsActive, stepIsActive, mapRef]);
 
   function setMapBoundaries() {
     if (!mapRef) {
@@ -108,9 +99,17 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
         setMapBoundaries();
         mapRef.closePopup();
       }
-    } else {
-      setSelectedPickupLocations([pickupLocation]);
+      return;
     }
+
+    let newSelection = [...selectedPickupLocations];
+    if (!pickupLocationsWithCapacityFull.has(pickupLocation)) {
+      newSelection = newSelection.filter((pl) =>
+        pickupLocationsWithCapacityFull.has(pl),
+      );
+    }
+    newSelection.push(pickupLocation);
+    setSelectedPickupLocations(newSelection);
   }
 
   function getMarkerIcon(pickupLocation: PublicPickupLocation) {
@@ -126,15 +125,38 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   }
 
   function getPopupButtonText(pickupLocation: PublicPickupLocation) {
+    if (
+      !wouldTheOrderFitTheProductCapacities(
+        shoppingCart,
+        productTypeIdsOverCapacity,
+        productIdsOverCapacity,
+        settings,
+      )
+    ) {
+      return selectedPickupLocations.includes(pickupLocation)
+        ? "Als Wunsch eingetragen"
+        : "Als Wunsch eintragen";
+    }
+
+    if (selectedPickupLocations.length === 0) {
+      return "Auswählen";
+    }
+
     if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
       return selectedPickupLocations.includes(pickupLocation)
         ? "Als Wunsch eingetragen"
         : "Als Wunsch eintragen";
     }
 
-    return selectedPickupLocations.includes(pickupLocation)
-      ? "Ausgewählt"
-      : "Auswählen";
+    if (selectedPickupLocations.includes(pickupLocation)) {
+      return "Ausgewählt";
+    }
+
+    if (pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])) {
+      return "Zum sofort einsteigen auswählen";
+    }
+
+    return "Auswählen";
   }
 
   return (
@@ -209,11 +231,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
                       ? "select_check_box"
                       : "check_box_outline_blank"
                   }
-                  variant={
-                    selectedPickupLocations.includes(pickupLocation)
-                      ? "outline-success"
-                      : BUTTON_VARIANT
-                  }
+                  variant={BUTTON_VARIANT}
                   onClick={() => updateSelection(pickupLocation)}
                 />
               </div>
