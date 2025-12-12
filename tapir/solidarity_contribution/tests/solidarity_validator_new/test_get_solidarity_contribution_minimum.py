@@ -3,21 +3,23 @@ from unittest.mock import patch, Mock
 
 from django.test import SimpleTestCase
 
+from tapir.solidarity_contribution.services.solidarity_validator_new import (
+    SolidarityValidatorNew,
+)
 from tapir.subscriptions.config import (
     SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED,
     SOLIDARITY_MODE_ONLY_POSITIVE,
     SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
 )
-from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class TestGetSolidarityContributionMinimum(SimpleTestCase):
     @patch(
-        "tapir.subscriptions.services.solidarity_validator.get_parameter_value",
+        "tapir.solidarity_contribution.services.solidarity_validator_new.get_parameter_value",
         autospec=True,
     )
-    @patch.object(SolidarityValidator, "get_solidarity_excess", autospec=True)
+    @patch.object(SolidarityValidatorNew, "get_solidarity_excess", autospec=True)
     def test_getSolidarityContributionMinimum_negativeAlwaysAllowed_returnsNone(
         self,
         mock_get_solidarity_excess: Mock,
@@ -26,7 +28,7 @@ class TestGetSolidarityContributionMinimum(SimpleTestCase):
         mock_get_parameter_value.return_value = SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED
         cache = Mock()
 
-        result = SolidarityValidator.get_solidarity_contribution_minimum(
+        result = SolidarityValidatorNew.get_solidarity_contribution_minimum(
             reference_date=Mock(), cache=cache
         )
 
@@ -37,10 +39,10 @@ class TestGetSolidarityContributionMinimum(SimpleTestCase):
         )
 
     @patch(
-        "tapir.subscriptions.services.solidarity_validator.get_parameter_value",
+        "tapir.solidarity_contribution.services.solidarity_validator_new.get_parameter_value",
         autospec=True,
     )
-    @patch.object(SolidarityValidator, "get_solidarity_excess", autospec=True)
+    @patch.object(SolidarityValidatorNew, "get_solidarity_excess", autospec=True)
     def test_getSolidarityContributionMinimum_onlyPositiveAllowed_returnsZero(
         self,
         mock_get_solidarity_excess: Mock,
@@ -49,7 +51,7 @@ class TestGetSolidarityContributionMinimum(SimpleTestCase):
         mock_get_parameter_value.return_value = SOLIDARITY_MODE_ONLY_POSITIVE
         cache = Mock()
 
-        result = SolidarityValidator.get_solidarity_contribution_minimum(
+        result = SolidarityValidatorNew.get_solidarity_contribution_minimum(
             reference_date=Mock(), cache=cache
         )
 
@@ -60,10 +62,10 @@ class TestGetSolidarityContributionMinimum(SimpleTestCase):
         )
 
     @patch(
-        "tapir.subscriptions.services.solidarity_validator.get_parameter_value",
+        "tapir.solidarity_contribution.services.solidarity_validator_new.get_parameter_value",
         autospec=True,
     )
-    @patch.object(SolidarityValidator, "get_solidarity_excess", autospec=True)
+    @patch.object(SolidarityValidatorNew, "get_solidarity_excess", autospec=True)
     def test_getSolidarityContributionMinimum_solidarityExcessIsNegative_returnsZero(
         self,
         mock_get_solidarity_excess: Mock,
@@ -76,7 +78,7 @@ class TestGetSolidarityContributionMinimum(SimpleTestCase):
         cache = Mock()
         reference_date = Mock()
 
-        result = SolidarityValidator.get_solidarity_contribution_minimum(
+        result = SolidarityValidatorNew.get_solidarity_contribution_minimum(
             reference_date=reference_date, cache=cache
         )
 
@@ -89,10 +91,10 @@ class TestGetSolidarityContributionMinimum(SimpleTestCase):
         )
 
     @patch(
-        "tapir.subscriptions.services.solidarity_validator.get_parameter_value",
+        "tapir.solidarity_contribution.services.solidarity_validator_new.get_parameter_value",
         autospec=True,
     )
-    @patch.object(SolidarityValidator, "get_solidarity_excess", autospec=True)
+    @patch.object(SolidarityValidatorNew, "get_solidarity_excess", autospec=True)
     def test_getSolidarityContributionMinimum_solidarityExcessIsPositive_returnsNegativeExcess(
         self,
         mock_get_solidarity_excess: Mock,
@@ -105,7 +107,7 @@ class TestGetSolidarityContributionMinimum(SimpleTestCase):
         cache = Mock()
         reference_date = Mock()
 
-        result = SolidarityValidator.get_solidarity_contribution_minimum(
+        result = SolidarityValidatorNew.get_solidarity_contribution_minimum(
             reference_date=reference_date, cache=cache
         )
 

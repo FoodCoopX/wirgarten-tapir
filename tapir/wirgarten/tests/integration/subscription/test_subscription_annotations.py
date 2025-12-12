@@ -7,7 +7,6 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.service.subscriptions import (
     annotate_subscriptions_queryset_with_product_price,
     annotate_subscriptions_queryset_with_monthly_payment_without_solidarity,
-    annotate_subscriptions_queryset_with_monthly_payment_including_solidarity,
 )
 from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
@@ -80,63 +79,3 @@ class TestSubscriptionAnnotations(TapirIntegrationTest):
         )
 
         self.assertEqual(30, subscription.monthly_price_without_solidarity)
-
-    def test_annotateSubscriptionsQuerysetWithMonthlyPaymentIncludingSolidarity_noSolidarity_annotatesCorrectPrice(
-        self,
-    ):
-        subscription = SubscriptionFactory.create(
-            quantity=3, solidarity_price_absolute=0
-        )
-        ProductPriceFactory.create(
-            product=subscription.product,
-            valid_from=self.REFERENCE_DATE - datetime.timedelta(days=10),
-            price=10,
-        )
-
-        subscription = (
-            annotate_subscriptions_queryset_with_monthly_payment_including_solidarity(
-                Subscription.objects.all(), self.REFERENCE_DATE
-            ).first()
-        )
-
-        self.assertEqual(30, subscription.monthly_payment)
-
-    def test_annotateSubscriptionsQuerysetWithMonthlyPaymentIncludingSolidarity_hasSolidarityFactor_annotatesCorrectPrice(
-        self,
-    ):
-        subscription = SubscriptionFactory.create(
-            quantity=3, solidarity_price_absolute=1
-        )
-        ProductPriceFactory.create(
-            product=subscription.product,
-            valid_from=self.REFERENCE_DATE - datetime.timedelta(days=10),
-            price=10,
-        )
-
-        subscription = (
-            annotate_subscriptions_queryset_with_monthly_payment_including_solidarity(
-                Subscription.objects.all(), self.REFERENCE_DATE
-            ).first()
-        )
-
-        self.assertEqual(31, subscription.monthly_payment)
-
-    def test_annotateSubscriptionsQuerysetWithMonthlyPaymentIncludingSolidarity_hasAbsoluteSolidarity_annotatesCorrectPrice(
-        self,
-    ):
-        subscription = SubscriptionFactory.create(
-            quantity=3, solidarity_price_absolute=15
-        )
-        ProductPriceFactory.create(
-            product=subscription.product,
-            valid_from=self.REFERENCE_DATE - datetime.timedelta(days=10),
-            price=10,
-        )
-
-        subscription = (
-            annotate_subscriptions_queryset_with_monthly_payment_including_solidarity(
-                Subscription.objects.all(), self.REFERENCE_DATE
-            ).first()
-        )
-
-        self.assertEqual(45, subscription.monthly_payment)

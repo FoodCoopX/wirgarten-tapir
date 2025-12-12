@@ -162,8 +162,6 @@ class SubscriptionListFilter(FilterSet):
             ("member__member_no", "⮝ Mitgliedsnummer"),
             ("-member__first_name", "⮟ Name"),
             ("member__first_name", "⮝ Name"),
-            ("-solidarity_price", "⮟ Solidarpreis"),
-            ("solidarity_price", "⮝ Solidarpreis"),
         ),
         required=False,
         empty_label="",
@@ -331,18 +329,12 @@ class ExportSubscriptionList(View):
                 "Vertragsende",
                 "Produkt",
                 "Variante",
-                "Solipreis",
                 "Abholort",
             ]
         )
 
         # Write data rows
         for sub in queryset:
-            soliprice_str = (
-                f"{sub.solidarity_price_absolute} €"
-                if sub.solidarity_price_absolute
-                else ""
-            )
             for _ in range(sub.quantity):
                 writer.writerow(
                     [
@@ -356,7 +348,6 @@ class ExportSubscriptionList(View):
                         format_date(sub.end_date),
                         sub.product.type.name,
                         sub.product.name,
-                        soliprice_str,
                         (
                             sub.member.pickup_location.name
                             if sub.member.pickup_location

@@ -668,9 +668,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     start_date = models.DateField(null=False)
     end_date = models.DateField(null=True)
     cancellation_ts = models.DateTimeField(null=True)
-    solidarity_price_absolute = models.DecimalField(
-        decimal_places=2, max_digits=12, null=True
-    )
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
@@ -707,20 +704,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             from tapir.wirgarten.service.products import get_product_price
 
             price = get_product_price(self.product, reference_date, cache=cache).price
-
-            subscription_price_without_solidarity = self.quantity * price
-
-            from tapir.subscriptions.services.solidarity_validator import (
-                SolidarityValidator,
-            )
-
-            self._total_price = round(
-                subscription_price_without_solidarity
-                + SolidarityValidator.get_solidarity_factor_of_subscription(
-                    subscription=self, reference_date=reference_date, cache=cache
-                ),
-                2,
-            )
+            self._total_price = self.quantity * price
 
         return self._total_price
 
@@ -762,14 +746,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         if self.end_date is not None and self.start_date >= self.end_date:
             raise ValidationError({"start_date": "Start date must be before end date."})
 
-        if (
-            self.solidarity_price_absolute is not None
-            and self.solidarity_price_absolute < 0
-        ):
-            raise ValidationError(
-                {"solidarity_price_absolute": "Solidarity price must be positive."}
-            )
-
     def __str__(self):
         return (
             f"{self.quantity} × {self.product.name} {self.product.type.name}; "
@@ -777,15 +753,9 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         )
 
     def long_str(self):
-        if self.solidarity_price_absolute is not None:
-            soliprice = f"\n\t(Solidaraufschlag: {self.solidarity_price_absolute} €)"
-        else:
-            soliprice = ""
-
         return (
             f"{self.quantity} × {self.product.name} {self.product.type.name}; "
             + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
-            + soliprice
         )
 
 

@@ -12,6 +12,9 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.solidarity_contribution.services.solidarity_validator_new import (
+    SolidarityValidatorNew,
+)
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -22,7 +25,6 @@ from tapir.subscriptions.services.notice_period_manager import NoticePeriodManag
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
     ProductTypeLowestFreeCapacityAfterDateCalculator,
 )
-from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
@@ -153,7 +155,7 @@ class BaseProductForm(forms.Form):
             self.free_capacity = []
             for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
-                solidarity_total = f"{SolidarityValidator.get_solidarity_excess(reference_date=start_date, cache=self.cache)}".replace(
+                solidarity_total = f"{SolidarityValidatorNew.get_solidarity_excess(reference_date=start_date, cache=self.cache)}".replace(
                     ",", "."
                 )
                 self.solidarity_total.append(solidarity_total)
@@ -191,7 +193,7 @@ class BaseProductForm(forms.Form):
             )
 
             self.solidarity_total = [
-                f"{SolidarityValidator.get_solidarity_excess(reference_date=max(self.growing_period.start_date, self.start_date), cache=self.cache)}".replace(
+                f"{SolidarityValidatorNew.get_solidarity_excess(reference_date=max(self.growing_period.start_date, self.start_date), cache=self.cache)}".replace(
                     ",", "."
                 )
             ]
@@ -217,22 +219,6 @@ class BaseProductForm(forms.Form):
                     ),
                 )
             )
-
-        solidarity_choices = (
-            SolidarityValidator.get_solidarity_dropdown_value_as_sorted_tuples(
-                cache=self.cache
-            )
-        )
-        self.fields["solidarity_price_choice"] = forms.ChoiceField(
-            required=False,
-            label=_("Solidarbeitrag²"),
-            choices=solidarity_choices,
-        )
-        solidarity_price_custom_field = forms.DecimalField(
-            required=False,
-            label=_("Solidarbeitrag² (personalisierter Beitrag)"),
-        )
-        self.fields["solidarity_price_custom"] = solidarity_price_custom_field
 
         if self.product_type.contract_link:
             self.fields["consent_harvest_shares"] = forms.BooleanField(
@@ -260,24 +246,12 @@ class BaseProductForm(forms.Form):
                 for sub in subs[self.product_type.name]:
                     sub_variants[sub.product.name] = {
                         "quantity": sub.quantity,
-                        "solidarity_price_absolute": (
-                            float(sub.solidarity_price_absolute)
-                            if sub.solidarity_price_absolute
-                            else None
-                        ),
                     }
 
                 self.current_used_capacity = get_total_price_for_subs(
                     subs[self.product_type.name], cache=self.cache
                 )
                 if len(sub_variants) > 0:
-                    solidarity_key = "solidarity_price_absolute"
-                    solidarity_value = list(sub_variants.values())[0][solidarity_key]
-                    dropdown_choices = (
-                        SolidarityValidator.get_solidarity_dropdown_values(
-                            cache=self.cache
-                        ).keys()
-                    )
                     for key, field in self.fields.items():
                         if (
                             key.startswith(BASE_PRODUCT_FIELD_PREFIX)
@@ -287,18 +261,6 @@ class BaseProductForm(forms.Form):
                             field.initial = sub_variants[
                                 key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
                             ]["quantity"]
-                        elif key == "solidarity_price_choice":
-                            field.initial = (
-                                solidarity_value
-                                if solidarity_value in dropdown_choices
-                                else "custom"
-                            )
-                        elif key == "solidarity_price_custom":
-                            field.initial = (
-                                solidarity_value
-                                if solidarity_value not in dropdown_choices
-                                else 0
-                            )
 
             subs[self.product_type.name] = (
                 [new_sub_dummy]
@@ -425,7 +387,6 @@ class BaseProductForm(forms.Form):
                     ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
                 ),
                 trial_end_date_override=existing_trial_end_date,
-                **self.build_solidarity_fields(),
                 notice_period_duration=notice_period_duration,
             )
 
@@ -440,15 +401,6 @@ class BaseProductForm(forms.Form):
         if new_pickup_location:
             change_date = self.cleaned_data.get("pickup_location_change_date")
             change_pickup_location(member_id, new_pickup_location, change_date)
-
-    def build_solidarity_fields(self):
-        value = self.cleaned_data["solidarity_price_choice"]
-        if value == "custom":
-            value = self.cleaned_data["solidarity_price_custom"]
-
-        return {
-            "solidarity_price_absolute": float(value),
-        }
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():
@@ -526,11 +478,6 @@ class BaseProductForm(forms.Form):
                     member=Member.objects.get(id=self.member_id),
                     cache=self.cache,
                 )
-            SolidarityValidator.validate_solidarity_price(
-                form=self,
-                start_date=self.start_date,
-                cache=self.cache,
-            )
             SubscriptionChangeValidator.validate_total_capacity(
                 form=self,
                 field_prefix=BASE_PRODUCT_FIELD_PREFIX,
@@ -561,15 +508,6 @@ class BaseProductForm(forms.Form):
             form=self,
             field_prefix=BASE_PRODUCT_FIELD_PREFIX,
             product_type=self.product_type,
-        )
-
-        SubscriptionChangeValidator.validate_soliprice_change(
-            form=self,
-            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
-            member_id=self.member_id,
-            subscription_start_date=self.start_date,
-            logged_in_user_is_admin=self.is_admin,
-            cache=self.cache,
         )
 
         if self.member_id:
@@ -1088,7 +1026,6 @@ class EditSubscriptionPriceForm(forms.Form):
     def save(self):
         if self.cleaned_data["new_price"]:
             self.subscription.price_override = self.cleaned_data["new_price"]
-            self.subscription.solidarity_price_absolute = None
         else:
             self.subscription.price_override = None
         self.subscription.save()

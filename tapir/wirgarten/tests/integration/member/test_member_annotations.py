@@ -41,20 +41,16 @@ class TestMemberAnnotations(TapirIntegrationTest):
     ):
         member = MemberFactory.create()
 
-        # subscription cost: 110
-        subscription_1 = SubscriptionFactory.create(
-            member=member, quantity=1, solidarity_price_absolute=10
-        )
+        # subscription cost: 100
+        subscription_1 = SubscriptionFactory.create(member=member, quantity=1)
         ProductPriceFactory.create(product=subscription_1.product, price=100)
 
         # subscription cost: 144
-        subscription_2 = SubscriptionFactory.create(
-            member=member, quantity=2, solidarity_price_absolute=0
-        )
+        subscription_2 = SubscriptionFactory.create(member=member, quantity=2)
         ProductPriceFactory.create(product=subscription_2.product, price=72)
 
         member = annotate_member_queryset_with_monthly_payment(
             Member.objects.all(), self.REFERENCE_DATE
         ).get()
 
-        self.assertEqual(254, member.monthly_payment)
+        self.assertEqual(244, member.monthly_payment)

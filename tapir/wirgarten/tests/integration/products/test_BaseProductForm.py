@@ -90,7 +90,6 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         nb_m_shares,
         nb_l_shares,
         growing_period=None,
-        solidarity_price_factor=0.0,
         member=None,
     ):
         if growing_period is None:
@@ -104,7 +103,6 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
                 "growing_period": growing_period.id,
                 "base_product_M": nb_m_shares,
                 "base_product_L": nb_l_shares,
-                "solidarity_price_choice": solidarity_price_factor,
             },
         )
 
@@ -188,49 +186,6 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(Subscription.objects.count(), 1)
 
-    def test_baseProductForm_notEnoughSolidarityAvailable_cantAddSubscriptionWithSolidarity(
-        self,
-    ):
-        self.create_test_data_and_login(capacity=500)
-        member = Member.objects.get()
-        current_growing_period = GrowingPeriod.objects.get()
-        SubscriptionFactory.create(
-            solidarity_price_absolute=5,
-            product=Product.objects.get(name="M"),
-            quantity=1,
-        )
-
-        response = self.send_add_subscription_request(
-            1, 0, current_growing_period, -15.0, member
-        )
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(
-            1,
-            Subscription.objects.count(),
-            "No subscription should have been created",
-        )
-
-    def test_baseProductForm_enoughSolidarityAvailable_canAddSubscriptionWithSolidarity(
-        self,
-    ):
-        self.create_test_data_and_login(capacity=500)
-        member = Member.objects.get()
-        current_growing_period = GrowingPeriod.objects.get()
-        SubscriptionFactory.create(
-            solidarity_price_absolute=25,
-            product=Product.objects.get(name="M"),
-            quantity=1,
-            period=current_growing_period,
-        )
-
-        response = self.send_add_subscription_request(
-            1, 0, current_growing_period, 10.0, member
-        )
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(2, Subscription.objects.count())
-
     def test_baseProductForm_notEnoughCapacityInPickupLocation_noSubscriptionsCreated(
         self,
     ):
@@ -260,7 +215,6 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
             period=GrowingPeriod.objects.get(),
             quantity=2,
             product=Product.objects.get(name="M"),
-            solidarity_price_absolute=0,
         )
 
         response = self.send_add_subscription_request(3, 0)
@@ -295,7 +249,6 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         self.assertEqual(2, subscription.quantity)
 
     @patch.object(SubscriptionChangeValidator, "validate_at_least_one_change")
-    @patch.object(SubscriptionChangeValidator, "validate_soliprice_change")
     @patch.object(SubscriptionChangeValidator, "validate_single_subscription")
     @patch.object(SubscriptionChangeValidator, "validate_must_be_subscribed_to")
     @patch.object(SubscriptionChangeValidator, "validate_cannot_reduce_size")

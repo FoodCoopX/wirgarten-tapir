@@ -58,7 +58,6 @@ class TestGetAmountToCredit(TapirIntegrationTest):
             quantity=1,
             product__type__name="test_product_type",
             mandate_ref=get_or_create_mandate_ref(member=member, cache={}),
-            solidarity_price_absolute=0,
         )
         ProductPriceFactory.create(
             product=subscription.product, price=10, valid_from=growing_period.start_date

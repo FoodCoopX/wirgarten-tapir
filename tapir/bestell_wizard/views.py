@@ -31,6 +31,9 @@ from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalcu
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.solidarity_contribution.services.solidarity_validator_new import (
+    SolidarityValidatorNew,
+)
 from tapir.subscriptions.serializers import (
     OrderConfirmationResponseSerializer,
 )
@@ -47,7 +50,6 @@ from tapir.subscriptions.services.product_capacity_checker import ProductCapacit
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
     ProductTypeLowestFreeCapacityAfterDateCalculator,
 )
-from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
@@ -368,10 +370,10 @@ class BestellWizardBaseDataApiView(APIView):
                         cache=self.cache,
                     ).split(",")
                 ],
-                "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
+                "solidarity_contribution_choices": SolidarityValidatorNew.get_solidarity_dropdown_values(
                     cache=self.cache
                 ),
-                "solidarity_contribution_minimum": SolidarityValidator.get_solidarity_contribution_minimum(
+                "solidarity_contribution_minimum": SolidarityValidatorNew.get_solidarity_contribution_minimum(
                     reference_date=ContractStartDateCalculator.get_next_contract_start_date(
                         reference_date=get_today(cache=self.cache),
                         apply_buffer_time=True,

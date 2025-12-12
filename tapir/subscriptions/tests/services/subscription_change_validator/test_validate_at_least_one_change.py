@@ -44,10 +44,6 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         form.cleaned_data = {
             self.subscription_1.product.name: self.subscription_1.quantity,
             self.subscription_2.product.name: self.subscription_2.quantity,
-            "solidarity_price_choice": 0.1,
-        }
-        form.build_solidarity_fields.return_value = {
-            "solidarity_price_absolute": None,
         }
 
         with self.assertRaises(ValidationError):
@@ -66,31 +62,6 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         form.cleaned_data = {
             self.subscription_1.product.name: self.subscription_1.quantity,
             self.subscription_2.product.name: self.subscription_2.quantity + 1,
-            "solidarity_price_choice": 0.1,
-        }
-        form.build_solidarity_fields.return_value = {
-            "solidarity_price_absolute": None,
-        }
-
-        SubscriptionChangeValidator.validate_at_least_one_change(
-            form=form,
-            field_prefix="",
-            member_id=self.member.id,
-            subscription_start_date=self.subscription_1.start_date,
-            cache=cache,
-        )
-
-    def test_validateAtLeastOneChange_oneSolidarityChange_noErrorRaised(self):
-        form = Mock()
-        cache = {}
-
-        form.cleaned_data = {
-            self.subscription_1.product.name: self.subscription_1.quantity,
-            self.subscription_2.product.name: self.subscription_2.quantity,
-            "solidarity_price_choice": 0.15,
-        }
-        form.build_solidarity_fields.return_value = {
-            "solidarity_price_absolute": 15,
         }
 
         SubscriptionChangeValidator.validate_at_least_one_change(
@@ -108,10 +79,6 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         form.cleaned_data = {
             self.subscription_1.product.name: self.subscription_1.quantity,
             self.product_not_subbed_to.name: 1,
-            "solidarity_price_choice": 0.1,
-        }
-        form.build_solidarity_fields.return_value = {
-            "solidarity_price_absolute": None,
         }
 
         SubscriptionChangeValidator.validate_at_least_one_change(

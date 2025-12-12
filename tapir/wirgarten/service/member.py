@@ -50,7 +50,7 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.service.subscriptions import (
-    annotate_subscriptions_queryset_with_monthly_payment_including_solidarity,
+    annotate_subscriptions_queryset_with_monthly_payment_without_solidarity,
 )
 from tapir.wirgarten.service.tasks import schedule_task_unique
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
@@ -423,7 +423,7 @@ def annotate_member_queryset_with_monthly_payment(
     )
 
     active_subscriptions_per_member = (
-        annotate_subscriptions_queryset_with_monthly_payment_including_solidarity(
+        annotate_subscriptions_queryset_with_monthly_payment_without_solidarity(
             active_subscriptions_per_member, reference_date
         ).distinct()
     )
@@ -432,7 +432,7 @@ def annotate_member_queryset_with_monthly_payment(
         monthly_payment=Coalesce(
             Subquery(
                 active_subscriptions_per_member.values("member_id")
-                .annotate(total=Sum("monthly_payment"))
+                .annotate(total=Sum("monthly_price_without_solidarity"))
                 .values("total"),
                 output_field=FloatField(),
             ),

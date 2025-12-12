@@ -1,4 +1,3 @@
-from decimal import Decimal
 from unittest.mock import patch, Mock
 
 from django.test import SimpleTestCase
@@ -39,7 +38,6 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         original_subscription.member = member
         original_subscription.product = product
         original_subscription.quantity = 3
-        original_subscription.solidarity_price_absolute = Decimal("3.6")
         mandate_ref = MandateReferenceFactory.build(ref="test_ref")
         original_subscription.mandate_ref = mandate_ref
         admin_confirmed = Mock()
@@ -79,7 +77,6 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         self.assertEqual(3, future_subscription.quantity)
         self.assertEqual(start_date, future_subscription.start_date)
         self.assertEqual(end_date, future_subscription.end_date)
-        self.assertEqual(Decimal("3.6"), future_subscription.solidarity_price_absolute)
         self.assertEqual(mandate_ref, future_subscription.mandate_ref)
         self.assertEqual(trial_disabled, future_subscription.trial_disabled)
         self.assertEqual(

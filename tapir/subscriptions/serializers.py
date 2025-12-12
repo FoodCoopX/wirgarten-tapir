@@ -190,13 +190,11 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
             "start_date",
             "end_date",
             "monthly_price",
-            "solidarity_display",
         ]
 
     monthly_price = serializers.SerializerMethodField()
     product_name = serializers.SerializerMethodField()
     product_type = serializers.SerializerMethodField()
-    solidarity_display = serializers.SerializerMethodField()
 
     @staticmethod
     def get_monthly_price(subscription: Subscription) -> float:
@@ -218,20 +216,6 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
     @extend_schema_field(PublicProductTypeSerializer)
     def get_product_type(subscription: Subscription):
         return PublicProductTypeSerializer(subscription.product.type).data
-
-    @staticmethod
-    def get_solidarity_display(subscription: Subscription) -> str | None:
-        prefix = ""
-
-        if (
-            subscription.solidarity_price_absolute is not None
-            and subscription.solidarity_price_absolute != 0
-        ):
-            if subscription.solidarity_price_absolute > 0:
-                prefix = "+"
-            return f"{prefix}{subscription.solidarity_price_absolute}€"
-
-        return None
 
 
 class UpdateSubscriptionsRequestSerializer(serializers.Serializer):

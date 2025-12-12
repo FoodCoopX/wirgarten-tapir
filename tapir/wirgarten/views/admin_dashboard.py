@@ -11,6 +11,9 @@ from django.views.decorators.http import require_GET
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.solidarity_contribution.services.solidarity_validator_new import (
+    SolidarityValidatorNew,
+)
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -20,7 +23,6 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
     ProductTypeLowestFreeCapacityAfterDateCalculator,
 )
-from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_first_of_next_month
@@ -173,7 +175,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
 
-        context["solidarity_overplus"] = SolidarityValidator.get_solidarity_excess(
+        context["solidarity_overplus"] = SolidarityValidatorNew.get_solidarity_excess(
             reference_date=get_today(cache=self.cache), cache=self.cache
         )
         context["status_seperate_coop_shares"] = get_parameter_value(

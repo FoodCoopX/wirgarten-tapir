@@ -820,8 +820,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
     def import_definitions_solidarity(self):
-        from tapir.subscriptions.services.solidarity_validator import (
-            SolidarityValidator,
+        from tapir.solidarity_contribution.services.solidarity_validator_new import (
+            SolidarityValidatorNew,
         )
 
         order_priority = 100
@@ -837,7 +837,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             "Je nach dem was im Feld 'Einheit des Solidarbeitrag' eingetragen ist sind die Werte Prozente (5%, 10%, ...) oder Euros (5€, 10€,...)",
             category=ParameterCategory.SOLIDARITY,
             meta=ParameterMeta(
-                validators=[SolidarityValidator.validate_solidarity_dropdown_values]
+                validators=[SolidarityValidatorNew.validate_solidarity_dropdown_values]
             ),
             order_priority=order_priority,
         )

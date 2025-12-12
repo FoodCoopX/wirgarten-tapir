@@ -61,9 +61,6 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                       <strong>{subscription.quantity}</strong>
                       {" × "}
                       {subscription.productName}{" "}
-                      {subscription.solidarityDisplay && (
-                        <>({subscription.solidarityDisplay})</>
-                      )}
                     </span>
                     <span>
                       {formatDateNumeric(subscription.startDate)}

@@ -78,7 +78,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_absolute=1,
             period=growing_period,
             quantity=1,
         )
@@ -108,7 +107,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             key=lambda extended_payment: extended_payment["payment"]["due_date"]
         )
         for index, extended_payment in enumerate(response_content):
-            self.assertEqual(11, extended_payment["payment"]["amount"])
+            self.assertEqual(10, extended_payment["payment"]["amount"])
             self.assertEqual(
                 datetime.date(year=2020, month=index + 1, day=15),
                 datetime.datetime.strptime(
@@ -157,7 +156,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
         )
@@ -238,7 +236,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         mandate_ref = MandateReferenceFactory.create(member=member)
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             mandate_ref=mandate_ref,
@@ -351,7 +348,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             start_date=datetime.date(year=2020, month=9, day=1),
@@ -433,7 +429,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
@@ -496,7 +491,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
@@ -573,7 +567,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_absolute=0,
             period=growing_period,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
@@ -651,7 +644,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         subscription = SubscriptionFactory.create(
             member=member,
-            solidarity_price_absolute=1,
             period=growing_period,
             quantity=1,
         )
@@ -681,7 +673,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             key=lambda extended_payment: extended_payment["payment"]["due_date"]
         )
         for index, extended_payment in enumerate(response_content):
-            self.assertEqual(11, extended_payment["payment"]["amount"])
+            self.assertEqual(10, extended_payment["payment"]["amount"])
             self.assertEqual(
                 datetime.date(
                     year=2020, month=index + 1 + 3, day=15
