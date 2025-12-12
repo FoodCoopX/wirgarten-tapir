@@ -20,6 +20,9 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.config import (
+    SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -49,6 +52,9 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
+    CONTRACT_START_DATE = datetime.date(year=2027, month=6, day=28)
+    CONTRACT_START_DATE_FUTURE = datetime.date(year=2028, month=1, day=3)
+
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
@@ -115,6 +121,11 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             mock_fire_action, is_student=False, growing_period=self.growing_period
         )
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assert_solidarity_contribution_created_correctly(
+            member_id=Member.objects.get().id,
+            amount_as_string="12.70",
+            growing_period=self.growing_period,
+        )
 
         mock_fire_action.assert_called_once()
 
@@ -131,6 +142,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertStatusCode(response, 400)
         self.assertFalse(Member.objects.exists())
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
 
     def test_post_orderValidationFails_returnOrderNotConfirmedAndDontCreateMember(self):
         ProductCapacity.objects.filter(product_type=self.product_2.type).update(
@@ -154,6 +166,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         self.assertFalse(Member.objects.exists())
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
 
     def test_post_memberDataValidationFails_returnOrderNotConfirmedAndDontCreateMember(
         self,
@@ -176,6 +189,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         self.assertFalse(Member.objects.exists())
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
 
     def test_post_waitingListValidationFails_returnsOrderNotConfirmedAndDontCreateWaitingListEntry(
         self,
@@ -198,6 +212,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         self.assertFalse(Member.objects.exists())
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_waitingListEntryIsValid_createsEntry(self, mock_fire_action: Mock):
@@ -229,6 +244,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual(2, waiting_list_entry.number_of_coop_shares)
         self.assertIsNone(waiting_list_entry.member_id)
         self.assert_personal_data_is_valid_waiting_list(waiting_list_entry)
+        self.assertFalse(SolidarityContribution.objects.exists())
 
         mock_fire_action.assert_called_once()
 
@@ -257,6 +273,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         self.assertFalse(Member.objects.exists())
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_createNewMemberWithOrderAndWaitingListEntry_memberAndWaitingListEntryCreated(
@@ -291,14 +308,11 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual(0, waiting_list_entry.number_of_coop_shares)
         self.assertEqual(member.id, waiting_list_entry.member_id)
 
-        self.assertEqual(1, SolidarityContribution.objects.count())
-        solidarity_contribution = SolidarityContribution.objects.get()
-        self.assertEqual(member.id, solidarity_contribution.member_id)
-        self.assertEqual(Decimal("12.70"), solidarity_contribution.amount)
-        self.assertEqual(
-            Subscription.objects.first().start_date, solidarity_contribution.start_date
+        self.assert_solidarity_contribution_created_correctly(
+            member_id=Member.objects.get().id,
+            amount_as_string="12.70",
+            growing_period=self.growing_period,
         )
-        self.assertEqual(self.growing_period.end_date, solidarity_contribution.end_date)
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_waitingListEntryAndBecomeMemberNow_createsEntryAndCreatesMember(
@@ -355,6 +369,11 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         self.assertEqual(0, waiting_list_entry.number_of_coop_shares)
         self.assertEqual(member.id, waiting_list_entry.member_id)
+        self.assert_solidarity_contribution_created_correctly(
+            member_id=member.id,
+            amount_as_string="12.70",
+            growing_period=self.growing_period,
+        )
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_investingMember_createsMember(self, mock_fire_action: Mock):
@@ -392,6 +411,11 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assert_mail_event_has_been_triggered(
             mock_fire_action, key=Events.REGISTER_MEMBERSHIP_ONLY
         )
+        self.assert_solidarity_contribution_created_correctly(
+            member_id=member.id,
+            amount_as_string="12.70",
+            growing_period=self.growing_period,
+        )
 
         self.assertFalse(WaitingListEntry.objects.exists())
 
@@ -427,6 +451,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual(7, waiting_list_entry.number_of_coop_shares)
         self.assertIsNone(waiting_list_entry.member_id)
         self.assert_personal_data_is_valid_waiting_list(waiting_list_entry)
+        self.assertFalse(SolidarityContribution.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_orderingAsStudent_noCoopShareCreated(self, mock_fire_action: Mock):
@@ -452,6 +477,11 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             mock_fire_action, is_student=True, growing_period=self.growing_period
         )
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assert_solidarity_contribution_created_correctly(
+            member_id=Member.objects.get().id,
+            amount_as_string="12.70",
+            growing_period=self.growing_period,
+        )
 
         mock_fire_action.assert_called_once()
 
@@ -484,6 +514,11 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             growing_period=self.growing_period_future,
         )
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assert_solidarity_contribution_created_correctly(
+            member_id=Member.objects.get().id,
+            amount_as_string="12.70",
+            growing_period=self.growing_period_future,
+        )
 
         mock_fire_action.assert_called_once()
 
@@ -537,6 +572,11 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             pickup_location_wishes=[self.pickup_location_3, self.pickup_location_2],
             mock_fire_action=mock_fire_action,
         )
+        self.assert_solidarity_contribution_created_correctly(
+            member_id=Member.objects.get().id,
+            amount_as_string="12.70",
+            growing_period=self.growing_period,
+        )
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_severalPickupLocationPickedWithNoneValid_nothingCreated(
@@ -582,7 +622,34 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         self.assertFalse(Member.objects.exists())
         self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
         mock_fire_action.assert_not_called()
+
+    def test_post_solidarityContributionIsTooLow_returnOrderNotConfirmedAndDontCreateMember(
+        self,
+    ):
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["solidarity_contribution"] = -1
+        TapirParameter.objects.filter(
+            key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED
+        ).update(value=SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE)
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertIn(
+            "Solidarbeitrag ungültig oder zu niedrig",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
 
     @classmethod
     def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
@@ -680,18 +747,21 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
         self.assertEqual(2, Subscription.objects.count())
 
+        if growing_period == self.growing_period:
+            contract_start_date = self.CONTRACT_START_DATE
+        else:
+            contract_start_date = self.CONTRACT_START_DATE_FUTURE
+
         subscription_1 = Subscription.objects.get(member=member, product=self.product_1)
         self.assertEqual(1, subscription_1.quantity)
         self.assertEqual(growing_period, subscription_1.period)
-        self.assertLess(self.now.date(), subscription_1.start_date)
-        self.assertGreater(subscription_1.start_date, growing_period.start_date)
+        self.assertEqual(contract_start_date, subscription_1.start_date)
         self.assertEqual(growing_period.end_date, subscription_1.end_date)
 
         subscription_2 = Subscription.objects.get(member=member, product=self.product_2)
         self.assertEqual(2, subscription_2.quantity)
         self.assertEqual(growing_period, subscription_2.period)
-        self.assertLess(self.now.date(), subscription_2.start_date)
-        self.assertGreater(subscription_2.start_date, growing_period.start_date)
+        self.assertEqual(contract_start_date, subscription_2.start_date)
         self.assertEqual(growing_period.end_date, subscription_2.end_date)
 
         if is_student:
@@ -776,3 +846,20 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.fail(
             f"Expected trigger ({key}) not found in {mock_fire_action.mock_calls}"
         )
+
+    def assert_solidarity_contribution_created_correctly(
+        self, member_id: str, amount_as_string: str, growing_period: GrowingPeriod
+    ):
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        solidarity_contribution = SolidarityContribution.objects.get()
+        self.assertEqual(member_id, solidarity_contribution.member_id)
+        self.assertEqual(Decimal(amount_as_string), solidarity_contribution.amount)
+        if growing_period == self.growing_period:
+            contract_start_date = self.CONTRACT_START_DATE
+        else:
+            contract_start_date = self.CONTRACT_START_DATE_FUTURE
+        self.assertEqual(
+            contract_start_date,
+            solidarity_contribution.start_date,
+        )
+        self.assertEqual(growing_period.end_date, solidarity_contribution.end_date)

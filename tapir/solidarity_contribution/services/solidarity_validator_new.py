@@ -32,7 +32,7 @@ class SolidarityValidatorNew:
                     reference_date=start_date, cache=cache
                 )
                 amount_of_used_solidarity_in_euros = -ordered_solidarity_factor
-                return amount_of_used_solidarity_in_euros > excess_solidarity
+                return amount_of_used_solidarity_in_euros < excess_solidarity
             case _:
                 raise ImproperlyConfigured(
                     f"Unknown solidarity mode: '{solidarity_mode}'"
