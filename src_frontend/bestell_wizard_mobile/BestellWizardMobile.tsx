@@ -280,8 +280,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       setPickupLocationsWithCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
+      selectedGrowingPeriod,
     );
-  }, [settings, shoppingCart]);
+  }, [settings, shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
     if (waitingListEntryDetails === undefined) {
@@ -293,6 +294,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
         setToastDatas,
         checkingCapacitiesController,
         setCheckingCapacitiesController,
+        selectedGrowingPeriod,
       );
     }
 
@@ -302,7 +304,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
       setMinimumNumberOfShares,
       setSelectedNumberOfCoopShares,
     );
-  }, [shoppingCart]);
+  }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
     if (!selectedGrowingPeriod) {

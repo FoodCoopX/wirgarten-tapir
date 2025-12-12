@@ -1,3 +1,5 @@
+import datetime
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -289,11 +291,13 @@ class BestellWizardCapacityCheckApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
         )
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=serializer.validated_data["growing_period_id"]
+        )
 
         subscription_start_date = (
-            ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=self.cache),
-                apply_buffer_time=True,
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
                 cache=self.cache,
             )
         )
@@ -336,8 +340,20 @@ class BestellWizardBaseDataApiView(APIView):
         responses={200: BestellWizardBaseDataResponseSerializer},
     )
     def get(self, request):
+        available_growing_periods = (
+            GrowingPeriodChoiceProvider.get_available_growing_periods(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
+        )
+        earliest_contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=available_growing_periods[0], cache=self.cache
+            )
+        )
         product_ids_that_are_already_at_capacity = (
-            self.build_product_ids_that_are_already_at_capacity(self.cache)
+            self.build_product_ids_that_are_already_at_capacity(
+                self.cache, contract_start_date=earliest_contract_start_date
+            )
         )
 
         response_data = self.build_simple_response_fields(self.cache)
@@ -358,6 +374,7 @@ class BestellWizardBaseDataApiView(APIView):
                 "product_type_ids_that_are_already_at_capacity": self.build_product_type_ids_that_are_already_at_capacity(
                     cache=self.cache,
                     product_ids_that_are_already_at_capacity=product_ids_that_are_already_at_capacity,
+                    contract_start_date=earliest_contract_start_date,
                 ),
                 "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
                 "logo_url": static(
@@ -374,16 +391,10 @@ class BestellWizardBaseDataApiView(APIView):
                     cache=self.cache
                 ),
                 "solidarity_contribution_minimum": SolidarityValidator.get_solidarity_contribution_minimum(
-                    reference_date=ContractStartDateCalculator.get_next_contract_start_date(
-                        reference_date=get_today(cache=self.cache),
-                        apply_buffer_time=True,
-                        cache=self.cache,
-                    ),
+                    reference_date=earliest_contract_start_date,
                     cache=self.cache,
                 ),
-                "growing_period_choices": GrowingPeriodChoiceProvider.get_available_growing_periods(
-                    reference_date=get_today(cache=self.cache), cache=self.cache
-                ),
+                "growing_period_choices": available_growing_periods,
                 "strings": self.build_strings_object(cache=self.cache),
                 "images": self.build_images_object(cache=self.cache),
             }
@@ -496,22 +507,17 @@ class BestellWizardBaseDataApiView(APIView):
 
     @classmethod
     def build_product_type_ids_that_are_already_at_capacity(
-        cls, cache: dict, product_ids_that_are_already_at_capacity: list[str]
+        cls,
+        cache: dict,
+        product_ids_that_are_already_at_capacity: list[str],
+        contract_start_date: datetime.date,
     ):
         ids = []
-
-        subscription_start_date = (
-            ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=cache),
-                apply_buffer_time=True,
-                cache=cache,
-            )
-        )
 
         for product_type in TapirCache.get_product_types_in_standard_order(cache=cache):
             lowest_free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
                 product_type=product_type,
-                reference_date=subscription_start_date,
+                reference_date=contract_start_date,
                 cache=cache,
             )
             products = TapirCache.get_products_with_product_type(
@@ -521,7 +527,7 @@ class BestellWizardBaseDataApiView(APIView):
                 [
                     get_product_price(
                         product=product,
-                        reference_date=subscription_start_date,
+                        reference_date=contract_start_date,
                         cache=cache,
                     ).size
                     for product in products
@@ -544,23 +550,17 @@ class BestellWizardBaseDataApiView(APIView):
         return ids
 
     @classmethod
-    def build_product_ids_that_are_already_at_capacity(cls, cache: dict) -> list[str]:
+    def build_product_ids_that_are_already_at_capacity(
+        cls, cache: dict, contract_start_date: datetime.date
+    ) -> list[str]:
         ids = []
-
-        subscription_start_date = (
-            ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=cache),
-                apply_buffer_time=True,
-                cache=cache,
-            )
-        )
 
         for product in TapirCache.get_all_products(cache=cache):
             if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
                 product=product,
                 ordered_quantity=1,
                 member_id=None,
-                subscription_start_date=subscription_start_date,
+                subscription_start_date=contract_start_date,
                 cache=cache,
             ):
                 ids.append(product.id)

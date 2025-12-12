@@ -44,6 +44,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
     # map of productId -> quantity ordered
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
+    growing_period_id = serializers.CharField()
 
 
 class BestellWizardCapacityCheckResponseSerializer(serializers.Serializer):

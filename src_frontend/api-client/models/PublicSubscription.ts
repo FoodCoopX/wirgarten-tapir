@@ -69,12 +69,6 @@ export interface PublicSubscription {
      * @memberof PublicSubscription
      */
     readonly monthlyPrice: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof PublicSubscription
-     */
-    readonly solidarityDisplay: string | null;
 }
 
 /**
@@ -87,7 +81,6 @@ export function instanceOfPublicSubscription(value: object): value is PublicSubs
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
     if (!('monthlyPrice' in value) || value['monthlyPrice'] === undefined) return false;
-    if (!('solidarityDisplay' in value) || value['solidarityDisplay'] === undefined) return false;
     return true;
 }
 
@@ -108,7 +101,6 @@ export function PublicSubscriptionFromJSONTyped(json: any, ignoreDiscriminator: 
         'startDate': (new Date(json['start_date'])),
         'endDate': json['end_date'] == null ? undefined : (new Date(json['end_date'])),
         'monthlyPrice': json['monthly_price'],
-        'solidarityDisplay': json['solidarity_display'],
     };
 }
 
@@ -116,7 +108,7 @@ export function PublicSubscriptionFromJSONTyped(json: any, ignoreDiscriminator: 
       return PublicSubscriptionToJSONTyped(json, false);
   }
 
-  export function PublicSubscriptionToJSONTyped(value?: Omit<PublicSubscription, 'product_name'|'product_id'|'product_type'|'monthly_price'|'solidarity_display'> | null, ignoreDiscriminator: boolean = false): any {
+  export function PublicSubscriptionToJSONTyped(value?: Omit<PublicSubscription, 'product_name'|'product_id'|'product_type'|'monthly_price'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

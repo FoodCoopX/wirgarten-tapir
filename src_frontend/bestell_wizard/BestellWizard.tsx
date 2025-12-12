@@ -237,6 +237,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setToastDatas,
         checkingCapacitiesController,
         setCheckingCapacitiesController,
+        undefined,
       );
     }
 
@@ -263,6 +264,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       setPickupLocationsWithCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
+      undefined,
     );
   }, [settings, shoppingCart]);
 

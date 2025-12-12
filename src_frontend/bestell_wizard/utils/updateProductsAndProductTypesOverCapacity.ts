@@ -1,6 +1,6 @@
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { useApi } from "../../hooks/useApi.ts";
-import { BestellWizardApi } from "../../api-client";
+import { BestellWizardApi, PublicGrowingPeriod } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import React from "react";
@@ -16,7 +16,12 @@ export function updateProductsAndProductTypesOverCapacity(
   setCheckingCapacitiesController: React.Dispatch<
     React.SetStateAction<AbortController | undefined>
   >,
+  growingPeriod: PublicGrowingPeriod | undefined,
 ) {
+  if (!growingPeriod) {
+    return;
+  }
+
   const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
 
   if (checkingCapacitiesController) {
@@ -32,6 +37,7 @@ export function updateProductsAndProductTypesOverCapacity(
       {
         bestellWizardCapacityCheckRequestRequest: {
           shoppingCart: shoppingCart,
+          growingPeriodId: growingPeriod.id!,
         },
       },
       { signal: localController.signal },

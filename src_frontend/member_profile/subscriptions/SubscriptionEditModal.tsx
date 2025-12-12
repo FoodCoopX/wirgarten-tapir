@@ -210,6 +210,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       setPickupLocationsWithCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
+      undefined,
     );
   }, [pickupLocations, show, needPickupLocation, shoppingCart]);
 

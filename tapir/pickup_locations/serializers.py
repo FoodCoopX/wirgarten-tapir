@@ -71,3 +71,4 @@ class PickupLocationCapacityCheckResponseSerializer(serializers.Serializer):
 class PickupLocationCapacityCheckRequestSerializer(serializers.Serializer):
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
     pickup_location_id = serializers.CharField()
+    growing_period_id = serializers.CharField(allow_null=True)

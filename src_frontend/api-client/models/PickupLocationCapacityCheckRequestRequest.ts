@@ -31,6 +31,12 @@ export interface PickupLocationCapacityCheckRequestRequest {
      * @memberof PickupLocationCapacityCheckRequestRequest
      */
     pickupLocationId: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PickupLocationCapacityCheckRequestRequest
+     */
+    growingPeriodId: string | null;
 }
 
 /**
@@ -39,6 +45,7 @@ export interface PickupLocationCapacityCheckRequestRequest {
 export function instanceOfPickupLocationCapacityCheckRequestRequest(value: object): value is PickupLocationCapacityCheckRequestRequest {
     if (!('shoppingCart' in value) || value['shoppingCart'] === undefined) return false;
     if (!('pickupLocationId' in value) || value['pickupLocationId'] === undefined) return false;
+    if (!('growingPeriodId' in value) || value['growingPeriodId'] === undefined) return false;
     return true;
 }
 
@@ -54,6 +61,7 @@ export function PickupLocationCapacityCheckRequestRequestFromJSONTyped(json: any
         
         'shoppingCart': json['shopping_cart'],
         'pickupLocationId': json['pickup_location_id'],
+        'growingPeriodId': json['growing_period_id'],
     };
 }
 
@@ -70,6 +78,7 @@ export function PickupLocationCapacityCheckRequestRequestFromJSONTyped(json: any
         
         'shopping_cart': value['shoppingCart'],
         'pickup_location_id': value['pickupLocationId'],
+        'growing_period_id': value['growingPeriodId'],
     };
 }
 

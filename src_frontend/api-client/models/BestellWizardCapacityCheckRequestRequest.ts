@@ -25,6 +25,12 @@ export interface BestellWizardCapacityCheckRequestRequest {
      * @memberof BestellWizardCapacityCheckRequestRequest
      */
     shoppingCart: { [key: string]: number; };
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardCapacityCheckRequestRequest
+     */
+    growingPeriodId: string;
 }
 
 /**
@@ -32,6 +38,7 @@ export interface BestellWizardCapacityCheckRequestRequest {
  */
 export function instanceOfBestellWizardCapacityCheckRequestRequest(value: object): value is BestellWizardCapacityCheckRequestRequest {
     if (!('shoppingCart' in value) || value['shoppingCart'] === undefined) return false;
+    if (!('growingPeriodId' in value) || value['growingPeriodId'] === undefined) return false;
     return true;
 }
 
@@ -46,6 +53,7 @@ export function BestellWizardCapacityCheckRequestRequestFromJSONTyped(json: any,
     return {
         
         'shoppingCart': json['shopping_cart'],
+        'growingPeriodId': json['growing_period_id'],
     };
 }
 
@@ -61,6 +69,7 @@ export function BestellWizardCapacityCheckRequestRequestFromJSONTyped(json: any,
     return {
         
         'shopping_cart': value['shoppingCart'],
+        'growing_period_id': value['growingPeriodId'],
     };
 }
 

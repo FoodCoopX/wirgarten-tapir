@@ -4725,7 +4725,11 @@ components:
           type: object
           additionalProperties:
             type: integer
+        growing_period_id:
+          type: string
+          minLength: 1
       required:
+      - growing_period_id
       - shopping_cart
     BestellWizardCapacityCheckResponse:
       type: object
@@ -8032,7 +8036,12 @@ components:
         pickup_location_id:
           type: string
           minLength: 1
+        growing_period_id:
+          type: string
+          nullable: true
+          minLength: 1
       required:
+      - growing_period_id
       - pickup_location_id
       - shopping_cart
     PickupLocationCapacityCheckResponse:
@@ -8497,17 +8506,12 @@ components:
           type: number
           format: double
           readOnly: true
-        solidarity_display:
-          type: string
-          nullable: true
-          readOnly: true
       required:
       - monthly_price
       - product_id
       - product_name
       - product_type
       - quantity
-      - solidarity_display
       - start_date
     PublicWaitingListEntryExistingMemberCreateRequest:
       type: object
@@ -8891,11 +8895,6 @@ components:
         cancellation_ts:
           type: string
           format: date-time
-          nullable: true
-        solidarity_price_absolute:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
           nullable: true
         created_at:
           type: string

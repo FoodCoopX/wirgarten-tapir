@@ -49,6 +49,7 @@ from tapir.wirgarten.models import (
     PickupLocationCapability,
     ProductType,
     Member,
+    GrowingPeriod,
 )
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
@@ -243,11 +244,24 @@ class PickupLocationCapacityCheckApiView(APIView):
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
         )
 
-        subscription_start = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=self.cache),
-            apply_buffer_time=True,
-            cache=self.cache,
-        )
+        growing_period_id = serializer.validated_data.get("growing_period_id", None)
+        if growing_period_id is None:
+            subscription_start = (
+                ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=get_today(cache=self.cache),
+                    apply_buffer_time=True,
+                    cache=self.cache,
+                )
+            )
+        else:
+            growing_period = get_object_or_404(
+                GrowingPeriod, id=serializer.validated_data["growing_period_id"]
+            )
+
+            subscription_start = ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
+                cache=self.cache,
+            )
 
         response_data = {
             "enough_capacity_for_order": PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
