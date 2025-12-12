@@ -11,8 +11,8 @@ from django.views.decorators.http import require_GET
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
-from tapir.solidarity_contribution.services.solidarity_validator_new import (
-    SolidarityValidatorNew,
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -175,7 +175,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
 
-        context["solidarity_overplus"] = SolidarityValidatorNew.get_solidarity_excess(
+        context["solidarity_overplus"] = SolidarityValidator.get_solidarity_excess(
             reference_date=get_today(cache=self.cache), cache=self.cache
         )
         context["status_seperate_coop_shares"] = get_parameter_value(

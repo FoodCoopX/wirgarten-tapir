@@ -2,8 +2,8 @@ import datetime
 from decimal import Decimal
 
 from tapir.solidarity_contribution.models import SolidarityContribution
-from tapir.solidarity_contribution.services.solidarity_validator_new import (
-    SolidarityValidatorNew,
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -35,7 +35,7 @@ class TestGetSolidarityExcess(TapirIntegrationTest):
             end_date=datetime.date(year=1996, month=12, day=31),
         )
 
-        result = SolidarityValidatorNew.get_solidarity_excess(
+        result = SolidarityValidator.get_solidarity_excess(
             reference_date=datetime.date(year=1996, month=6, day=11), cache={}
         )
 

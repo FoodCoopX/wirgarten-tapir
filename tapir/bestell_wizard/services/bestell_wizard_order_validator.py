@@ -11,8 +11,8 @@ from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
-from tapir.solidarity_contribution.services.solidarity_validator_new import (
-    SolidarityValidatorNew,
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
 )
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
@@ -71,7 +71,7 @@ class BestellWizardOrderValidator:
             cache=cache,
         )
 
-        if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
+        if not SolidarityValidator.is_the_ordered_solidarity_allowed(
             ordered_solidarity_factor=validated_serializer_data[
                 "solidarity_contribution"
             ],

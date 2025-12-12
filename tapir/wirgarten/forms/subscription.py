@@ -12,8 +12,8 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.solidarity_contribution.services.solidarity_validator_new import (
-    SolidarityValidatorNew,
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -155,7 +155,7 @@ class BaseProductForm(forms.Form):
             self.free_capacity = []
             for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
-                solidarity_total = f"{SolidarityValidatorNew.get_solidarity_excess(reference_date=start_date, cache=self.cache)}".replace(
+                solidarity_total = f"{SolidarityValidator.get_solidarity_excess(reference_date=start_date, cache=self.cache)}".replace(
                     ",", "."
                 )
                 self.solidarity_total.append(solidarity_total)
@@ -193,7 +193,7 @@ class BaseProductForm(forms.Form):
             )
 
             self.solidarity_total = [
-                f"{SolidarityValidatorNew.get_solidarity_excess(reference_date=max(self.growing_period.start_date, self.start_date), cache=self.cache)}".replace(
+                f"{SolidarityValidator.get_solidarity_excess(reference_date=max(self.growing_period.start_date, self.start_date), cache=self.cache)}".replace(
                     ",", "."
                 )
             ]

@@ -13,7 +13,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class SolidarityValidatorNew:
+class SolidarityValidator:
     @classmethod
     def is_the_ordered_solidarity_allowed(
         cls,
