@@ -72,9 +72,7 @@ class BestellWizardOrderValidator:
         )
 
         if not SolidarityValidator.is_the_ordered_solidarity_allowed(
-            ordered_solidarity_factor=validated_serializer_data[
-                "solidarity_contribution"
-            ],
+            amount=validated_serializer_data["solidarity_contribution"],
             start_date=contract_start_date,
             cache=cache,
         ):

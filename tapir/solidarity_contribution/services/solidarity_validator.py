@@ -17,15 +17,15 @@ class SolidarityValidator:
     @classmethod
     def is_the_ordered_solidarity_allowed(
         cls,
-        ordered_solidarity_factor: float,
+        amount: float,
         start_date: datetime.date,
         cache: dict,
     ) -> bool:
-        if ordered_solidarity_factor >= 0:
+        if amount >= 0:
             return True
 
         solidarity_mode = get_parameter_value(
-            ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
+            key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
         )
         match solidarity_mode:
             case config.SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED:
@@ -36,7 +36,7 @@ class SolidarityValidator:
                 excess_solidarity = cls.get_solidarity_excess(
                     reference_date=start_date, cache=cache
                 )
-                amount_of_used_solidarity_in_euros = -ordered_solidarity_factor
+                amount_of_used_solidarity_in_euros = -amount
                 return amount_of_used_solidarity_in_euros < excess_solidarity
             case _:
                 raise ImproperlyConfigured(
