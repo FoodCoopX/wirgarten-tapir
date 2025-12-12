@@ -14,9 +14,6 @@ from tapir.deliveries.serializers import (
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
-from tapir.subscriptions.services.subscription_price_manager import (
-    SubscriptionPriceManager,
-)
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     Member,
@@ -198,11 +195,7 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_monthly_price(subscription: Subscription) -> float:
-        return (
-            SubscriptionPriceManager.get_monthly_price_of_subscription_with_solidarity(
-                subscription=subscription, reference_date=None, cache={}
-            )
-        )
+        return float(subscription.total_price(reference_date=None, cache={}))
 
     @staticmethod
     def get_product_name(subscription: Subscription) -> str:
