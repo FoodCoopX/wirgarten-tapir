@@ -26,6 +26,7 @@ from tapir.deliveries.services.get_deliveries_service import GetDeliveriesServic
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
@@ -428,8 +429,8 @@ def annotate_member_queryset_with_monthly_payment(
         ).distinct()
     )
 
-    return queryset.annotate(
-        monthly_payment=Coalesce(
+    queryset = queryset.annotate(
+        subscriptions_payment=Coalesce(
             Subquery(
                 active_subscriptions_per_member.values("member_id")
                 .annotate(total=Sum("monthly_price_without_solidarity"))
@@ -439,4 +440,27 @@ def annotate_member_queryset_with_monthly_payment(
             0,
             output_field=FloatField(),
         )
+    )
+
+    active_solidarity_contribution_per_member = SolidarityContribution.objects.filter(
+        member_id=OuterRef("id"),
+        start_date__lte=reference_date,
+        end_date__gte=reference_date,
+    )
+
+    queryset = queryset.annotate(
+        solidarity_payment=Coalesce(
+            Subquery(
+                active_solidarity_contribution_per_member.values("member_id")
+                .annotate(total=Sum("amount"))
+                .values("total"),
+                output_field=FloatField(),
+            ),
+            0,
+            output_field=FloatField(),
+        )
+    )
+
+    return queryset.annotate(
+        monthly_payment=F("subscriptions_payment") + F("solidarity_payment")
     )
