@@ -1,7 +1,6 @@
 import datetime
 import os
 
-import celery.schedules
 import environ
 
 from tapir.settings.base import BASE_DIR
@@ -36,34 +35,6 @@ DATABASES = {
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://redis:6379")
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://redis:6379")
 CELERY_BEAT_SCHEDULE = {
-    "execute_scheduled_tasks": {
-        "task": "tapir.wirgarten.tasks.execute_scheduled_tasks",
-        "schedule": celery.schedules.crontab(
-            minute=[5],
-        ),  # every hour
-    },
-    "export_supplier_list_csv": {
-        "task": "tapir.wirgarten.tasks.export_supplier_list_csv",
-        "schedule": celery.schedules.crontab(
-            minute=0,
-            hour=3,
-        ),
-    },
-    "export_pick_list_csv": {
-        "task": "tapir.wirgarten.tasks.export_pick_list_csv",
-        "schedule": celery.schedules.crontab(
-            minute=0,
-            hour=4,
-        ),
-    },
-    "export_payments_per_product_type": {
-        "task": "tapir.wirgarten.tasks.export_payment_parts_csv",
-        "schedule": celery.schedules.crontab(day_of_month="1", minute="0", hour="3"),
-    },
-    "generate_member_numbers": {
-        "task": "tapir.wirgarten.tasks.generate_member_numbers",
-        "schedule": celery.schedules.crontab(minute="0", hour="3"),
-    },
     "resolve_segment_and_create_email_dispatches_task": {
         "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
         "schedule": datetime.timedelta(minutes=1),
@@ -71,18 +42,6 @@ CELERY_BEAT_SCHEDULE = {
     "send_email_dispatch_batch_task": {
         "task": "tapir_mail.tasks.send_email_dispatch_batch_task",
         "schedule": datetime.timedelta(minutes=1),
-    },
-    "check_email_bounces": {
-        "task": "tapir_mail.tasks.check_email_bounces",
-        "schedule": datetime.timedelta(minutes=1),
-    },
-    "do_automated_exports": {
-        "task": "tapir.generic_exports.tasks.do_automated_exports",
-        "schedule": datetime.timedelta(minutes=1),
-    },
-    "automatic_subscription_renewal": {
-        "task": "tapir.subscriptions.tasks.automatic_subscription_renewal",
-        "schedule": celery.schedules.crontab(hour="2", minute="0"),
     },
 }
 
