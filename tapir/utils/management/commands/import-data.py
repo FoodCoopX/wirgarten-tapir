@@ -1,4 +1,5 @@
 import csv
+import datetime
 
 import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -15,6 +16,7 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
 )
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
+from tapir.wirgarten.service.products import get_current_growing_period
 
 
 class Command(BaseCommand):
@@ -50,7 +52,7 @@ class Command(BaseCommand):
             )
         filepath = options["file"][0]
         type = options["type"][0]
-        delete_all = options["delete-all"]
+        delete_all = options["delete_all"]
 
         with open(filepath, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f, delimiter=";")
@@ -308,16 +310,21 @@ class Command(BaseCommand):
                     else:
                         ts_cancel = None
                     try:
-                        s = Subscription.objects.create(
+                        start_date = datetime.datetime.strptime(
+                            row["Vertragsbeginn"], "%Y-%m-%d"
+                        ).date()
+                        Subscription.objects.create(
                             member_id=m.id,
                             quantity=float(row["Quantity"]),
-                            start_date=row["Vertragsbeginn"],
+                            start_date=start_date,
                             end_date=row["Vertragsende"],
                             cancellation_ts=ts_cancel,
                             solidarity_price_percentage=row["Solidarpreis in Prozent"],
                             solidarity_price_absolute=row["Solidarpreis in EUR"],
                             mandate_ref_id=mref.ref,
-                            period_id=period.id,
+                            period_id=get_current_growing_period(
+                                reference_date=start_date
+                            ).id,
                             product_id=prod.id,
                             consent_ts=row["consent_vertragsgrundsätze"]
                             + " 12:00+0200",
