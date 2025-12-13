@@ -1,5 +1,4 @@
 import csv
-import datetime
 
 import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -26,7 +25,7 @@ class Command(BaseCommand):
             "--type", nargs=1, choices=["members", "shares", "subscriptions"]
         )
         parser.add_argument("--file", nargs=1)
-        parser.add_argument("bla", action="store_true")
+        parser.add_argument("--delete-all", action="store_true")
         parser.add_argument("--reset-all", action="store_true")
         parser.add_argument(
             "--growing-period-start",
@@ -51,7 +50,7 @@ class Command(BaseCommand):
             )
         filepath = options["file"][0]
         type = options["type"][0]
-        delete_all = options["delete_all"]
+        delete_all = options["delete-all"]
 
         with open(filepath, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f, delimiter=";")
