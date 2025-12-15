@@ -9,3 +9,6 @@ class SolidarityContribution(TapirModel):
     amount = models.DecimalField(decimal_places=2, max_digits=12)
     start_date = models.DateField()
     end_date = models.DateField()
+
+    def __str__(self):
+        return f"{self.member} - {self.amount} - {self.start_date} - {self.end_date}"

@@ -1,7 +1,10 @@
-from django.core.exceptions import ValidationError
+import decimal
+from decimal import Decimal
+
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -66,11 +69,16 @@ class UpdateMemberSolidarityContributionApiView(APIView):
     )
     def post(self, request):
         member_id = request.data.get("member_id")
+        check_permission_or_self(member_id, request)
+
         member = get_object_or_404(Member, id=member_id)
 
-        cache = {}
-        amount = request.data.get("amount")
+        try:
+            amount = Decimal(request.data.get("amount"))
+        except decimal.InvalidOperation:
+            raise ValidationError("Ungültige Zahl " + request.data.get("amount"))
 
+        cache = {}
         change_date = ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=get_today(cache=cache),
             apply_buffer_time=False,

@@ -1,8 +1,6 @@
 import datetime
 from decimal import Decimal
 
-from icecream import ic
-
 from tapir.accounts.models import TapirUser
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.services.tapir_cache import TapirCache
@@ -32,19 +30,21 @@ class MemberSolidarityContributionService:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=change_date, cache=cache
         )
-        SolidarityContribution.objects.create(
-            member_id=member_id,
-            amount=amount,
-            start_date=change_date,
-            end_date=growing_period.end_date,
-        )
+
+        if amount != 0:
+            SolidarityContribution.objects.create(
+                member_id=member_id,
+                amount=amount,
+                start_date=change_date,
+                end_date=growing_period.end_date,
+            )
 
     @classmethod
     def is_user_allowed_to_change_contribution(
         cls,
         logged_in_user: TapirUser,
         target_member_id: str,
-        new_amount: float,
+        new_amount: Decimal,
         change_date: datetime.date,
         cache: dict,
     ):
@@ -56,5 +56,5 @@ class MemberSolidarityContributionService:
                 member_id=target_member_id, reference_date=change_date, cache=cache
             )
         )
-        ic(Decimal(new_amount), current_contribution)
-        return Decimal(new_amount) > current_contribution
+
+        return new_amount > current_contribution
