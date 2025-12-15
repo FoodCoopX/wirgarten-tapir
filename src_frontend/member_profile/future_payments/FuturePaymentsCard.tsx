@@ -85,6 +85,10 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   }
 
   function getSumOfNextPayments() {
+    const dueDate = getEarliestDueDateAsString();
+    if (!(dueDate in transactionsByDueDate)) {
+      return 0;
+    }
     const nextPayments = transactionsByDueDate[getEarliestDueDateAsString()];
     return nextPayments.reduce(
       (sum, extendedPayment) => sum + getAmountIfPayment(extendedPayment),
@@ -100,6 +104,9 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   }
 
   function getMandateRefForNextPayments() {
+    if (extendedPayments.length === 0) {
+      return "Keine Mandatsreferenz";
+    }
     return extendedPayments[0].payment.mandateRef;
   }
 
@@ -129,11 +136,13 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
               <div className={"contract-tile-number"}>
                 <strong>{formatCurrency(getSumOfNextPayments())}</strong>
               </div>
-              <small>
-                am {formatDateText(new Date(getEarliestDueDateAsString()))}
-                <br />
-                {getMandateRefForNextPayments()}
-              </small>
+              {extendedPayments.length > 0 && (
+                <small>
+                  am {formatDateText(new Date(getEarliestDueDateAsString()))}
+                  <br />
+                  {getMandateRefForNextPayments()}
+                </small>
+              )}
             </>
           )}
         </Card.Body>
