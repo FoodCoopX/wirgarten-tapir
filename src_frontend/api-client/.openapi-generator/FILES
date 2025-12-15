@@ -82,6 +82,7 @@ models/MemberJokerInformation.ts
 models/MemberPaymentRhythm.ts
 models/MemberPaymentRhythmData.ts
 models/MemberProfileCapacityCheckRequestRequest.ts
+models/MemberSolidarityContributionsResponse.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/Mpl.ts
@@ -151,6 +152,7 @@ models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
+models/SoliSerializerRequest.ts
 models/SolidarityContribution.ts
 models/StaticSegment.ts
 models/StaticSegmentRecipient.ts

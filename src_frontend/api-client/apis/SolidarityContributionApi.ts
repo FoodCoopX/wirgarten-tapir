@@ -15,15 +15,25 @@
 
 import * as runtime from '../runtime';
 import type {
+  MemberSolidarityContributionsResponse,
+  SoliSerializerRequest,
   SolidarityContribution,
 } from '../models/index';
 import {
+    MemberSolidarityContributionsResponseFromJSON,
+    MemberSolidarityContributionsResponseToJSON,
+    SoliSerializerRequestFromJSON,
+    SoliSerializerRequestToJSON,
     SolidarityContributionFromJSON,
     SolidarityContributionToJSON,
 } from '../models/index';
 
-export interface SolidarityContributionApiMemberSolidarityContributionsListRequest {
+export interface SolidarityContributionApiMemberSolidarityContributionsRetrieveRequest {
     memberId?: string;
+}
+
+export interface SolidarityContributionApiUpdateMemberContributionCreateRequest {
+    soliSerializerRequest: SoliSerializerRequest;
 }
 
 /**
@@ -33,7 +43,7 @@ export class SolidarityContributionApi extends runtime.BaseAPI {
 
     /**
      */
-    async solidarityContributionApiMemberSolidarityContributionsListRaw(requestParameters: SolidarityContributionApiMemberSolidarityContributionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SolidarityContribution>>> {
+    async solidarityContributionApiMemberSolidarityContributionsRetrieveRaw(requestParameters: SolidarityContributionApiMemberSolidarityContributionsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MemberSolidarityContributionsResponse>> {
         const queryParameters: any = {};
 
         if (requestParameters['memberId'] != null) {
@@ -56,13 +66,54 @@ export class SolidarityContributionApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
+        return new runtime.JSONApiResponse(response, (jsonValue) => MemberSolidarityContributionsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async solidarityContributionApiMemberSolidarityContributionsRetrieve(requestParameters: SolidarityContributionApiMemberSolidarityContributionsRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MemberSolidarityContributionsResponse> {
+        const response = await this.solidarityContributionApiMemberSolidarityContributionsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async solidarityContributionApiUpdateMemberContributionCreateRaw(requestParameters: SolidarityContributionApiUpdateMemberContributionCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<SolidarityContribution>>> {
+        if (requestParameters['soliSerializerRequest'] == null) {
+            throw new runtime.RequiredError(
+                'soliSerializerRequest',
+                'Required parameter "soliSerializerRequest" was null or undefined when calling solidarityContributionApiUpdateMemberContributionCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/solidarity_contribution/api/update_member_contribution`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SoliSerializerRequestToJSON(requestParameters['soliSerializerRequest']),
+        }, initOverrides);
+
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SolidarityContributionFromJSON));
     }
 
     /**
      */
-    async solidarityContributionApiMemberSolidarityContributionsList(requestParameters: SolidarityContributionApiMemberSolidarityContributionsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<SolidarityContribution>> {
-        const response = await this.solidarityContributionApiMemberSolidarityContributionsListRaw(requestParameters, initOverrides);
+    async solidarityContributionApiUpdateMemberContributionCreate(requestParameters: SolidarityContributionApiUpdateMemberContributionCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<SolidarityContribution>> {
+        const response = await this.solidarityContributionApiUpdateMemberContributionCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

@@ -1467,7 +1467,7 @@ paths:
           description: ''
   /solidarity_contribution/api/member_solidarity_contributions:
     get:
-      operationId: solidarity_contribution_api_member_solidarity_contributions_list
+      operationId: solidarity_contribution_api_member_solidarity_contributions_retrieve
       parameters:
       - in: query
         name: member_id
@@ -1475,6 +1475,34 @@ paths:
           type: string
       tags:
       - solidarity_contribution
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberSolidarityContributionsResponse'
+          description: ''
+  /solidarity_contribution/api/update_member_contribution:
+    post:
+      operationId: solidarity_contribution_api_update_member_contribution_create
+      tags:
+      - solidarity_contribution
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/soli_serializerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/soli_serializerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/soli_serializerRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -7055,6 +7083,22 @@ components:
       required:
       - member_id
       - shopping_cart
+    MemberSolidarityContributionsResponse:
+      type: object
+      properties:
+        contributions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolidarityContribution'
+        change_valid_from:
+          type: string
+          format: date
+        user_can_set_lower_value:
+          type: boolean
+      required:
+      - change_valid_from
+      - contributions
+      - user_can_set_lower_value
     MinimumNumberOfSharesResponse:
       type: object
       properties:
@@ -9579,6 +9623,18 @@ components:
           minLength: 1
       required:
       - entry_id
+    soli_serializerRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+        member_id:
+          type: string
+          minLength: 1
+      required:
+      - amount
+      - member_id
     subscription_date_changeRequest:
       type: object
       properties:

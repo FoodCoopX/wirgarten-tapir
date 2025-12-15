@@ -497,3 +497,35 @@ class TapirCache:
             key=reference_date,
             compute_function=compute,
         )
+
+    @classmethod
+    def get_member_solidarity_contribution_at_date(
+        cls, member_id: str, reference_date: datetime.date, cache: dict
+    ) -> Decimal:
+        solidarity_contributions_by_member_id = get_from_cache_or_compute(
+            cache=cache,
+            key="solidarity_contributions_by_member_id",
+            compute_function=lambda: {},
+        )
+
+        contributions_for_this_member = get_from_cache_or_compute(
+            cache=solidarity_contributions_by_member_id,
+            key=member_id,
+            compute_function=lambda: {},
+        )
+
+        def compute() -> Decimal:
+            return sum(
+                SolidarityContribution.objects.filter(
+                    member_id=member_id,
+                    start_date__lte=reference_date,
+                    end_date__gte=reference_date,
+                ).values_list("amount", flat=True),
+                start=Decimal(0),
+            )
+
+        return get_from_cache_or_compute(
+            cache=contributions_for_this_member,
+            key=reference_date,
+            compute_function=compute,
+        )
