@@ -30,7 +30,12 @@ export function buildSteps(
     newSteps.push("3_product_type_choice");
   }
 
-  if (shouldIncludeStepGrowingPeriodChoice(settings.growingPeriodChoices)) {
+  if (
+    shouldIncludeStepGrowingPeriodChoice(
+      selectedProductTypes,
+      settings.growingPeriodChoices,
+    )
+  ) {
     newSteps.push("3b_growing_period_choice");
   }
 
@@ -107,7 +112,14 @@ export function buildSteps(
   return newSteps;
 }
 
-function shouldIncludeStepGrowingPeriodChoice(choices: PublicGrowingPeriod[]) {
+function shouldIncludeStepGrowingPeriodChoice(
+  selectedProductTypes: PublicProductType[],
+  choices: PublicGrowingPeriod[],
+) {
+  if (selectedProductTypes.length === 0) {
+    return false;
+  }
+
   if (choices.length > 1) {
     return true;
   }
