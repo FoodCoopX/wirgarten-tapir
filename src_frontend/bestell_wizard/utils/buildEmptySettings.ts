@@ -86,5 +86,6 @@ export function buildEmptySettings(): BestellWizardSettings {
       step13BackgroundImage: "",
       step14BackgroundImage: "",
     },
+    debug: false,
   };
 }

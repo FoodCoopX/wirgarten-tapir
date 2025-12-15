@@ -150,6 +150,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     growing_period_choices = PublicGrowingPeriodSerializer(many=True)
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
+    debug = serializers.BooleanField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

@@ -165,39 +165,41 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
               onClick={goToPreviousStep}
               text={"Zurück"}
             />
-            <DropdownButton
-              title={
-                <span>
-                  <span
-                    style={{ fontSize: "16px" }}
-                    className={"material-icons"}
-                  >
-                    construction
+            {settings.debug && (
+              <DropdownButton
+                title={
+                  <span>
+                    <span
+                      style={{ fontSize: "16px" }}
+                      className={"material-icons"}
+                    >
+                      construction
+                    </span>
+                    Test
                   </span>
-                  Test
-                </span>
-              }
-              size={"sm"}
-              variant={BUTTON_VARIANT}
-              drop={"up"}
-            >
-              {steps
-                .slice()
-                .reverse()
-                .map((step) => (
-                  <Dropdown.Item
-                    key={step}
-                    onClick={() => setCurrentStep(step)}
-                    style={{ lineHeight: "1rem" }}
-                  >
-                    <small>{getStepName(step)}</small>
-                  </Dropdown.Item>
-                ))}
-              <Dropdown.Divider />
-              <Dropdown.Item onClick={setTestData}>
-                Test daten setzen
-              </Dropdown.Item>
-            </DropdownButton>
+                }
+                size={"sm"}
+                variant={BUTTON_VARIANT}
+                drop={"up"}
+              >
+                {steps
+                  .slice()
+                  .reverse()
+                  .map((step) => (
+                    <Dropdown.Item
+                      key={step}
+                      onClick={() => setCurrentStep(step)}
+                      style={{ lineHeight: "1rem" }}
+                    >
+                      <small>{getStepName(step)}</small>
+                    </Dropdown.Item>
+                  ))}
+                <Dropdown.Divider />
+                <Dropdown.Item onClick={setTestData}>
+                  Test daten setzen
+                </Dropdown.Item>
+              </DropdownButton>
+            )}
           </div>
         )}
         <small

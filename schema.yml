@@ -4715,10 +4715,13 @@ components:
           $ref: '#/components/schemas/BestellWizardStrings'
         images:
           $ref: '#/components/schemas/BestellWizardImages'
+        debug:
+          type: boolean
       required:
       - allow_investing_membership
       - contact_mail_address
       - coop_statute_link
+      - debug
       - default_payment_rhythm
       - distribution_channels
       - feedback_step_enabled

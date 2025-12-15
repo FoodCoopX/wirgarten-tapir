@@ -37,4 +37,5 @@ export type BestellWizardSettings = {
   growingPeriodChoices: PublicGrowingPeriod[];
   strings: BestellWizardStrings;
   images: BestellWizardImages;
+  debug: boolean;
 };

@@ -235,6 +235,12 @@ export interface BestellWizardBaseDataResponse {
      * @memberof BestellWizardBaseDataResponse
      */
     images: BestellWizardImages;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    debug: boolean;
 }
 
 /**
@@ -271,6 +277,7 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('growingPeriodChoices' in value) || value['growingPeriodChoices'] === undefined) return false;
     if (!('strings' in value) || value['strings'] === undefined) return false;
     if (!('images' in value) || value['images'] === undefined) return false;
+    if (!('debug' in value) || value['debug'] === undefined) return false;
     return true;
 }
 
@@ -314,6 +321,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'growingPeriodChoices': ((json['growing_period_choices'] as Array<any>).map(PublicGrowingPeriodFromJSON)),
         'strings': BestellWizardStringsFromJSON(json['strings']),
         'images': BestellWizardImagesFromJSON(json['images']),
+        'debug': json['debug'],
     };
 }
 
@@ -358,6 +366,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'growing_period_choices': ((value['growingPeriodChoices'] as Array<any>).map(PublicGrowingPeriodToJSON)),
         'strings': BestellWizardStringsToJSON(value['strings']),
         'images': BestellWizardImagesToJSON(value['images']),
+        'debug': value['debug'],
     };
 }
 

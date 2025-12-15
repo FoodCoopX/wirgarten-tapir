@@ -39,5 +39,6 @@ export function buildSettings(
     growingPeriodChoices: baseData.growingPeriodChoices,
     strings: baseData.strings,
     images: baseData.images,
+    debug: baseData.debug,
   };
 }

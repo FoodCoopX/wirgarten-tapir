@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -397,6 +398,7 @@ class BestellWizardBaseDataApiView(APIView):
                 "growing_period_choices": available_growing_periods,
                 "strings": self.build_strings_object(cache=self.cache),
                 "images": self.build_images_object(cache=self.cache),
+                "debug": settings.DEBUG,
             }
         )
 
