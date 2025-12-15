@@ -645,6 +645,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             personalData={personalData}
             productTypesInWaitingList={productTypesInWaitingList}
             becomeMemberNow={becomeMemberNow}
+            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
           />
         );
       case "11_legal":

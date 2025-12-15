@@ -6,8 +6,6 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { Form } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 
 interface Step5BPickupLocationWishesProps {
@@ -44,21 +42,6 @@ const Step5BPickupLocationWishes: React.FC<Step5BPickupLocationWishesProps> = ({
       );
     }
 
-    if (
-      selectedPickupLocations.length > 0 &&
-      pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]) &&
-      isAtLeastOneProductOrdered(
-        buildFilteredShoppingCart(
-          shoppingCart,
-          false,
-          productTypesInWaitingList,
-        ),
-      )
-    ) {
-      options = options.filter((pickupLocation) =>
-        pickupLocationsWithCapacityFull.has(pickupLocation),
-      );
-    }
     return options;
   }
 

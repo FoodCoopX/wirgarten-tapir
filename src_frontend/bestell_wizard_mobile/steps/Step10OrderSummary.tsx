@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
@@ -39,6 +39,7 @@ interface Step10OrderSummaryProps {
   personalData: PersonalData;
   productTypesInWaitingList: Set<PublicProductType>;
   becomeMemberNow: boolean | null;
+  pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -55,7 +56,15 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   personalData,
   productTypesInWaitingList,
   becomeMemberNow,
+  pickupLocationsWithCapacityFull,
 }) => {
+  const [activePickupLocation, setActivePickupLocation] =
+    useState<PublicPickupLocation>();
+
+  useEffect(() => {
+    setActivePickupLocation(getFirstPickupLocationWithCapacity());
+  }, [selectedPickupLocations]);
+
   function getProductTypeTitle(productType: PublicProductType) {
     if (isProductTypeOrdered(productType, shoppingCart)) {
       return (
@@ -100,7 +109,21 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     );
   }
 
-  function getFirstDelivery(pickupLocationId: string, productTypeId: string) {
+  function getFirstPickupLocationWithCapacity() {
+    for (const pickupLocation of selectedPickupLocations) {
+      if (!pickupLocationsWithCapacityFull.has(pickupLocation)) {
+        return pickupLocation;
+      }
+    }
+  }
+
+  function getFirstDelivery(productTypeId: string) {
+    const pickupLocation = getFirstPickupLocationWithCapacity();
+    if (!pickupLocation) {
+      return "";
+    }
+    const pickupLocationId = pickupLocation.id!;
+
     if (
       !(pickupLocationId in firstDeliveryDatesByPickupLocationAndProductType)
     ) {
@@ -174,25 +197,42 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                             <li>
                               Erste Lieferung:{" "}
                               {selectedPickupLocations.length > 0 &&
-                                getFirstDelivery(
-                                  selectedPickupLocations[0].id!,
-                                  productType.id!,
-                                )}
+                                getFirstDelivery(productType.id!)}
                             </li>
                             <li>
-                              Verteilstation:{" "}
-                              {selectedPickupLocations.length > 0 &&
-                                selectedPickupLocations[0].name +
+                              Aktive Verteilstation:{" "}
+                              {activePickupLocation &&
+                                activePickupLocation.name +
                                   " (" +
                                   formatAddress(
-                                    selectedPickupLocations[0].street,
-                                    selectedPickupLocations[0].street2,
-                                    selectedPickupLocations[0].postcode,
-                                    selectedPickupLocations[0].city,
+                                    activePickupLocation.street,
+                                    activePickupLocation.street2,
+                                    activePickupLocation.postcode,
+                                    activePickupLocation.city,
                                   ) +
                                   ")"}
                             </li>
                           </>
+                        )}
+                      {!productType.noDelivery &&
+                        selectedPickupLocations.length > 0 && (
+                          <li>
+                            <div>
+                              Weitere Verteilstation-Wünsche auf Warteliste:
+                            </div>
+                            <ul>
+                              {selectedPickupLocations
+                                .filter(
+                                  (pickupLocation) =>
+                                    pickupLocation !== activePickupLocation,
+                                )
+                                .map((pickupLocation) => (
+                                  <li key={pickupLocation.id}>
+                                    {pickupLocation.name}
+                                  </li>
+                                ))}
+                            </ul>
+                          </li>
                         )}
                       {productTypesInWaitingList.has(productType) && (
                         <li>Warteliste</li>
