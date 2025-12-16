@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { join, resolve } from "path";
+import { join, resolve } from "node:path";
 import react from "@vitejs/plugin-react-swc";
 
 export default defineConfig(() => {
@@ -61,6 +61,7 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/subscription_list/subscription_list_entry.tsx",
           ),
+          credit_list: join(INPUT_DIR, "/credit_list/credit_list_entry.tsx"),
         },
       },
     },
