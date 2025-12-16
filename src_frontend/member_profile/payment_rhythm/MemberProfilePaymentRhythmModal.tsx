@@ -87,7 +87,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
       })
       .then(() => {
         onHide();
-        window.location.reload();
+        globalThis.location.reload();
       })
       .catch((error) =>
         handleRequestError(

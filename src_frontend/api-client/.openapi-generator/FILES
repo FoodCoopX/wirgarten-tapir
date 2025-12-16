@@ -55,6 +55,7 @@ models/EmailDispatchRequest.ts
 models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
+models/ExistingMemberPurchasesExtraSharesSerializerRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
 models/ExtendedMemberCredit.ts
@@ -64,6 +65,7 @@ models/ExtendedProductType.ts
 models/ExtendedProductTypeAndConfig.ts
 models/ExtendedProductTypeRequest.ts
 models/FuturePaymentsResponse.ts
+models/GetCoopShareTransactionsResponse.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts

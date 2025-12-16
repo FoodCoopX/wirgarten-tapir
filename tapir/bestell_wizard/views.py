@@ -28,6 +28,9 @@ from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_needs_banking_data_checker import (
+    MemberNeedsBankingDataChecker,
+)
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.serializers import PublicGrowingPeriodSerializer
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
@@ -82,6 +85,7 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
+    check_permission_or_self,
 )
 
 
@@ -95,9 +99,15 @@ class BestellWizardMobileView(TemplateView):
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         cache = {}
+        self.add_body_style_context(context_data, cache)
+        return context_data
+
+    @classmethod
+    def add_body_style_context(cls, context_data: dict, cache: dict):
         context_data["body_style"] = (
             f"background-color: {get_parameter_value(key=ParameterKeys.BESTELLWIZARD_BACKGROUND_COLOR, cache=cache)}"
         )
+
         background_image_url = get_parameter_value(
             key=ParameterKeys.BESTELLWIZARD_BACKGROUND_IMAGE, cache=cache
         )
@@ -105,7 +115,29 @@ class BestellWizardMobileView(TemplateView):
             context_data["body_style"] = (
                 f"background-image: url({background_image_url}); background-repeat: repeat"
             )
+
         context_data["cache"] = cache
+
+
+class BestellWizardCoopSharesView(TemplateView):
+    template_name = "bestell_wizard/bestell_wizard_coop_shares.html"
+
+    def get(self, request, *args, **kwargs):
+        check_permission_or_self(pk=kwargs["member_id"], request=request)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        cache = {}
+        BestellWizardMobileView.add_body_style_context(context_data, cache)
+        context_data["member_id"] = kwargs["member_id"]
+        member = get_object_or_404(Member, id=kwargs["member_id"])
+        context_data["first_name"] = member.first_name
+        context_data["last_name"] = member.last_name
+        context_data["needs_banking_data"] = (
+            MemberNeedsBankingDataChecker.does_member_need_banking_data(member)
+        )
+        context_data["member_url"] = member.get_absolute_url()
         return context_data
 
 
@@ -540,10 +572,8 @@ class BestellWizardBaseDataApiView(APIView):
                 continue
 
             no_product_with_free_capacity = all(
-                [
-                    product.id in product_ids_that_are_already_at_capacity
-                    for product in products
-                ]
+                product.id in product_ids_that_are_already_at_capacity
+                for product in products
             )
 
             if no_product_with_free_capacity:

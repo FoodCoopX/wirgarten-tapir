@@ -187,19 +187,20 @@ paths:
   /coop/api/existing_member_purchases_shares:
     post:
       operationId: coop_api_existing_member_purchases_shares_create
-      parameters:
-      - in: query
-        name: member_id
-        schema:
-          type: string
-        required: true
-      - in: query
-        name: number_of_shares_to_add
-        schema:
-          type: integer
-        required: true
       tags:
       - coop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/existing_member_purchases_extra_shares_serializerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/existing_member_purchases_extra_shares_serializerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/existing_member_purchases_extra_shares_serializerRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -213,7 +214,7 @@ paths:
           description: ''
   /coop/api/get_coop_share_transactions:
     get:
-      operationId: coop_api_get_coop_share_transactions_list
+      operationId: coop_api_get_coop_share_transactions_retrieve
       parameters:
       - in: query
         name: member_id
@@ -231,9 +232,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CoopShareTransaction'
+                $ref: '#/components/schemas/GetCoopShareTransactionsResponse'
           description: ''
   /coop/api/minimum_number_of_shares:
     get:
@@ -6608,6 +6607,19 @@ components:
       required:
       - credits
       - payments
+    GetCoopShareTransactionsResponse:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoopShareTransaction'
+        url_of_bestell_wizard:
+          type: string
+          format: uri
+      required:
+      - transactions
+      - url_of_bestell_wizard
     GroupedEmailDispatch:
       type: object
       properties:
@@ -9597,6 +9609,27 @@ components:
           minLength: 1
       required:
       - entry_id
+    existing_member_purchases_extra_shares_serializerRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        number_of_shares_to_add:
+          type: integer
+        iban:
+          type: string
+          nullable: true
+          minLength: 1
+        account_owner:
+          type: string
+          nullable: true
+          minLength: 1
+      required:
+      - account_owner
+      - iban
+      - member_id
+      - number_of_shares_to_add
     mpl:
       type: object
       properties:

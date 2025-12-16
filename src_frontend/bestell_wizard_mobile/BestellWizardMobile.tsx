@@ -15,7 +15,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
 import { ToastData } from "../types/ToastData.ts";
-import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
 import Step1AWelcome from "./steps/Step1AWelcome.tsx";
 import Step2FirstName from "./steps/Step2FirstName.tsx";
@@ -27,7 +26,6 @@ import "../../tapir/core/static/core/css/base.css";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import BestellWizardMobileHeader from "./components/BestellWizardMobileHeader.tsx";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
 import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
 import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
@@ -42,15 +40,10 @@ import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliv
 import Step11Legal from "./steps/Step11Legal.tsx";
 import { Step } from "./types/Step.ts";
 import Step12Channel from "./steps/Step12Channel.tsx";
-import StepBase from "./components/StepBase.tsx";
-import { getStepTitle } from "./utils/getStepTitle.ts";
 import Step13Feedback from "./steps/Step13Feedback.tsx";
 import Step14Confirmation from "./steps/Step14Confirmation.tsx";
-import { getStepBackground } from "./utils/getStepBackground.ts";
-import BestellWizardMobileFooter from "./components/BestellWizardMobileFooter.tsx";
 import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
-import { CONTENT_HEIGHT, HEADER_HEIGHT } from "./utils/DIMENSIONS.ts";
 import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
 import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
 import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
@@ -67,6 +60,7 @@ import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areA
 import { addToast } from "../utils/addToast.ts";
 import { v4 as uuidv4 } from "uuid";
 import { updateWaitingList } from "./utils/updateWaitingList.ts";
+import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -164,7 +158,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
         setMinimumNumberOfShares(minNumberOfShares.minimumNumberOfShares);
 
         personalData.paymentRhythm = baseData.defaultPaymentRhythm;
-        setPersonalData(Object.assign({}, personalData));
+        setPersonalData({ ...personalData });
 
         if (newSettings.growingPeriodChoices.length > 0) {
           setSelectedGrowingPeriod(newSettings.growingPeriodChoices[0]);
@@ -566,6 +560,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
             active={currentStep === step}
+            isOrderStep={false}
+            orderLoading={false}
           />
         );
       case "6c_coop_member_now":
@@ -619,6 +615,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             solidarityContribution={solidarityContribution}
             active={currentStep === step}
             productTypesInWaitingList={productTypesInWaitingList}
+            isOrderStep={false}
+            orderLoading={false}
           />
         );
       case "10_summary":
@@ -670,8 +668,12 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             settings={settings}
             selectedDistributionChannels={selectedDistributionChannels}
             setSelectedDistributionChannels={setSelectedDistributionChannels}
-            confirmOrder={onConfirmOrder}
-            confirmOrderLoading={confirmOrderLoading}
+            confirmOrder={
+              settings.feedbackStepEnabled ? undefined : onConfirmOrder
+            }
+            confirmOrderLoading={
+              settings.feedbackStepEnabled ? false : confirmOrderLoading
+            }
           />
         );
       case "13_feedback":
@@ -706,7 +708,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             <Spinner />
           </div>
         );
-      default:
+      default: {
         // If the step is not one of the predefined ones, then it's a product type step
         const [productType, subStep] = getProductTypeFromStep(step, settings);
         if (productType === undefined) {
@@ -742,104 +744,29 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
               />
             );
         }
+      }
     }
-  }
-
-  function getTopPosition(step: Step) {
-    if (step === currentStep) {
-      return HEADER_HEIGHT + "dvh";
-    }
-
-    if (steps.indexOf(step) < steps.indexOf(currentStep)) {
-      return -CONTENT_HEIGHT + "dvh";
-    }
-
-    return "100dvh";
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: "50%",
-        width: "100%",
-        maxWidth: "1000px",
-        height: "100dvh",
-        transform: "translate(-50%, 0)",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div
-        style={{
-          height: HEADER_HEIGHT + "dvh",
-          width: "100%",
-        }}
-      >
-        <BestellWizardMobileHeader
-          settings={settings}
-          showShoppingCart={steps.findIndex((step) => step === currentStep) > 2}
-          shoppingCart={shoppingCart}
-          phases={phases}
-          selectedPickupLocations={selectedPickupLocations}
-          solidarityContribution={solidarityContribution}
-          atLeastOneProductTypeInWaitingList={
-            productTypesInWaitingList.size > 0
-          }
-          productTypesInWaitingList={productTypesInWaitingList}
-          steps={steps}
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
-        />
-      </div>
-      <div
-        style={{
-          height: CONTENT_HEIGHT + "dvh",
-          width: "100%",
-        }}
-        id={"scroll_container"}
-      >
-        {steps.map((step) => {
-          return (
-            <div
-              key={step}
-              id={step}
-              style={{
-                height: CONTENT_HEIGHT + "dvh",
-                transition: "all 0.3s ease-in-out",
-                opacity: currentStep === step ? 1 : 0,
-                position: "fixed",
-                top: getTopPosition(step),
-                width: "100%",
-                pointerEvents: currentStep === step ? "auto" : "none",
-              }}
-            >
-              <StepBase
-                title={getStepTitle(step, settings)}
-                firstName={personalData.firstName}
-                active={step === currentStep}
-                content={getStepComponent(step)}
-                backgroundImageUrl={getStepBackground(step, settings)}
-              />
-            </div>
-          );
-        })}
-      </div>
-      {currentStep !== "loading" && (
-        <BestellWizardMobileFooter
-          steps={steps}
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
-          settings={settings}
-          setTestData={setTestData}
-        />
-      )}
-      <TapirToastContainer
-        toastDatas={toastDatas}
-        setToastDatas={setToastDatas}
-      />
-    </div>
+    <BestellWizardMobileBase
+      settings={settings}
+      steps={steps}
+      currentStep={currentStep}
+      setCurrentStep={setCurrentStep}
+      shoppingCart={shoppingCart}
+      phases={phases}
+      selectedPickupLocations={selectedPickupLocations}
+      solidarityContribution={solidarityContribution}
+      productTypesInWaitingList={productTypesInWaitingList}
+      personalData={personalData}
+      getStepComponent={getStepComponent}
+      setTestData={setTestData}
+      toastDatas={toastDatas}
+      setToastDatas={setToastDatas}
+      showProgress={true}
+      hideFooterButtonsOnLastStep={true}
+    />
   );
 };
 

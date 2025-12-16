@@ -8,7 +8,7 @@ interface Step12ChannelProps {
   goToNextStep: () => void;
   selectedDistributionChannels: Set<string>;
   setSelectedDistributionChannels: (set: Set<string>) => void;
-  confirmOrder: () => void | undefined;
+  confirmOrder: (() => void) | undefined;
   confirmOrderLoading: boolean;
 }
 
@@ -50,9 +50,7 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
       </div>
       <NextStepButton
         onClick={confirmOrder ?? goToNextStep}
-        text={
-          settings.feedbackStepEnabled ? undefined : "Bestellung bestätigen"
-        }
+        isOrderStep={!settings.feedbackStepEnabled}
         loading={confirmOrderLoading}
       />
     </>

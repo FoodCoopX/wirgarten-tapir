@@ -48,7 +48,7 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         value={personalData.firstName}
         onChange={(event) => {
           personalData.firstName = event.target.value;
-          setPersonalData(Object.assign({}, personalData));
+          setPersonalData({ ...personalData });
         }}
         id={"first_name_input"}
         onKeyUp={(event) => {

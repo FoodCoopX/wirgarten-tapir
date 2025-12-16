@@ -15,13 +15,16 @@
 
 import * as runtime from '../runtime';
 import type {
-  CoopShareTransaction,
+  ExistingMemberPurchasesExtraSharesSerializerRequest,
+  GetCoopShareTransactionsResponse,
   Member,
   MinimumNumberOfSharesResponse,
 } from '../models/index';
 import {
-    CoopShareTransactionFromJSON,
-    CoopShareTransactionToJSON,
+    ExistingMemberPurchasesExtraSharesSerializerRequestFromJSON,
+    ExistingMemberPurchasesExtraSharesSerializerRequestToJSON,
+    GetCoopShareTransactionsResponseFromJSON,
+    GetCoopShareTransactionsResponseToJSON,
     MemberFromJSON,
     MemberToJSON,
     MinimumNumberOfSharesResponseFromJSON,
@@ -29,11 +32,10 @@ import {
 } from '../models/index';
 
 export interface CoopApiExistingMemberPurchasesSharesCreateRequest {
-    memberId: string;
-    numberOfSharesToAdd: number;
+    existingMemberPurchasesExtraSharesSerializerRequest: ExistingMemberPurchasesExtraSharesSerializerRequest;
 }
 
-export interface CoopApiGetCoopShareTransactionsListRequest {
+export interface CoopApiGetCoopShareTransactionsRetrieveRequest {
     memberId: string;
 }
 
@@ -54,31 +56,18 @@ export class CoopApi extends runtime.BaseAPI {
     /**
      */
     async coopApiExistingMemberPurchasesSharesCreateRaw(requestParameters: CoopApiExistingMemberPurchasesSharesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
-        if (requestParameters['memberId'] == null) {
+        if (requestParameters['existingMemberPurchasesExtraSharesSerializerRequest'] == null) {
             throw new runtime.RequiredError(
-                'memberId',
-                'Required parameter "memberId" was null or undefined when calling coopApiExistingMemberPurchasesSharesCreate().'
-            );
-        }
-
-        if (requestParameters['numberOfSharesToAdd'] == null) {
-            throw new runtime.RequiredError(
-                'numberOfSharesToAdd',
-                'Required parameter "numberOfSharesToAdd" was null or undefined when calling coopApiExistingMemberPurchasesSharesCreate().'
+                'existingMemberPurchasesExtraSharesSerializerRequest',
+                'Required parameter "existingMemberPurchasesExtraSharesSerializerRequest" was null or undefined when calling coopApiExistingMemberPurchasesSharesCreate().'
             );
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['memberId'] != null) {
-            queryParameters['member_id'] = requestParameters['memberId'];
-        }
-
-        if (requestParameters['numberOfSharesToAdd'] != null) {
-            queryParameters['number_of_shares_to_add'] = requestParameters['numberOfSharesToAdd'];
-        }
-
         const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
@@ -92,6 +81,7 @@ export class CoopApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: ExistingMemberPurchasesExtraSharesSerializerRequestToJSON(requestParameters['existingMemberPurchasesExtraSharesSerializerRequest']),
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
@@ -110,11 +100,11 @@ export class CoopApi extends runtime.BaseAPI {
 
     /**
      */
-    async coopApiGetCoopShareTransactionsListRaw(requestParameters: CoopApiGetCoopShareTransactionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CoopShareTransaction>>> {
+    async coopApiGetCoopShareTransactionsRetrieveRaw(requestParameters: CoopApiGetCoopShareTransactionsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetCoopShareTransactionsResponse>> {
         if (requestParameters['memberId'] == null) {
             throw new runtime.RequiredError(
                 'memberId',
-                'Required parameter "memberId" was null or undefined when calling coopApiGetCoopShareTransactionsList().'
+                'Required parameter "memberId" was null or undefined when calling coopApiGetCoopShareTransactionsRetrieve().'
             );
         }
 
@@ -140,13 +130,13 @@ export class CoopApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(CoopShareTransactionFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetCoopShareTransactionsResponseFromJSON(jsonValue));
     }
 
     /**
      */
-    async coopApiGetCoopShareTransactionsList(requestParameters: CoopApiGetCoopShareTransactionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<CoopShareTransaction>> {
-        const response = await this.coopApiGetCoopShareTransactionsListRaw(requestParameters, initOverrides);
+    async coopApiGetCoopShareTransactionsRetrieve(requestParameters: CoopApiGetCoopShareTransactionsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetCoopShareTransactionsResponse> {
+        const response = await this.coopApiGetCoopShareTransactionsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

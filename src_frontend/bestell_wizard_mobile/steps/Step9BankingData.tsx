@@ -25,6 +25,19 @@ interface Step9BankingDataProps {
   solidarityContribution: number;
   active: boolean;
   productTypesInWaitingList: Set<PublicProductType>;
+  isOrderStep: boolean;
+  orderLoading: boolean;
+}
+
+function getPlaceholder(key: keyof PersonalData) {
+  switch (key) {
+    case "accountOwner":
+      return "Kontoinhaber";
+    case "iban":
+      return "IBAN";
+    default:
+      return key;
+  }
 }
 
 const Step9BankingData: React.FC<Step9BankingDataProps> = ({
@@ -40,6 +53,8 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   solidarityContribution,
   active,
   productTypesInWaitingList,
+  isOrderStep,
+  orderLoading,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
   const [paymentRhythmModalOpen, setPaymentRhythmModalOpen] = useState(false);
@@ -63,7 +78,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
     }
 
     personalData.accountOwner = newAccountOwner;
-    setPersonalData(Object.assign({}, personalData));
+    setPersonalData({ ...personalData });
   }, [personalData]);
 
   function validate() {
@@ -81,17 +96,6 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
     }
 
     goToNextStep();
-  }
-
-  function getPlaceholder(key: keyof PersonalData) {
-    switch (key) {
-      case "accountOwner":
-        return "Kontoinhaber";
-      case "iban":
-        return "IBAN";
-      default:
-        return key;
-    }
   }
 
   return (
@@ -138,7 +142,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
                   value={personalData.paymentRhythm}
                   onChange={(event) => {
                     personalData.paymentRhythm = event.target.value;
-                    setPersonalData(Object.assign({}, personalData));
+                    setPersonalData({ ...personalData });
                   }}
                 >
                   {Object.entries(settings.paymentRhythmChoices).map(
@@ -174,7 +178,11 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           />
         </div>
       </div>
-      <NextStepButton onClick={validate} />
+      <NextStepButton
+        onClick={validate}
+        loading={orderLoading}
+        isOrderStep={isOrderStep}
+      />
       <Modal
         show={paymentRhythmModalOpen}
         onHide={() => setPaymentRhythmModalOpen(false)}

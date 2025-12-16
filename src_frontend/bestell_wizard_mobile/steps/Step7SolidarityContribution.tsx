@@ -54,8 +54,10 @@ const Step7SolidarityContribution: React.FC<
       setSolidarityContribution(selectedValue);
       return;
     }
-    const customContribution = parseFloat(customValue.replace(SUFFIX, ""));
-    if (isNaN(customContribution)) {
+    const customContribution = Number.parseFloat(
+      customValue.replace(SUFFIX, ""),
+    );
+    if (Number.isNaN(customContribution)) {
       return;
     }
     setSolidarityContribution(customContribution);
@@ -79,24 +81,24 @@ const Step7SolidarityContribution: React.FC<
 
   function getValues(): (number | "custom")[] {
     return settings.solidarityContributionChoices.map((choiceAsString) =>
-      choiceAsString === "custom" ? "custom" : parseFloat(choiceAsString),
+      choiceAsString === "custom"
+        ? "custom"
+        : Number.parseFloat(choiceAsString),
     );
   }
 
   function getDisplay(value: number | "custom") {
-    switch (value) {
-      case "custom":
-        return "Ich möchte einen anderen Betrag zahlen";
-      default:
-        return formatCurrency(value);
+    if (value === "custom") {
+      return "Ich möchte einen anderen Betrag zahlen";
     }
+    return formatCurrency(value);
   }
 
   function onSelect(selected: string) {
     if (selected === "custom") {
       setSelectedValue(selected);
     } else {
-      setSelectedValue(parseFloat(selected));
+      setSelectedValue(Number.parseFloat(selected));
     }
   }
 
@@ -125,13 +127,13 @@ const Step7SolidarityContribution: React.FC<
       .replace("€", "")
       .trim();
 
-    const floatValue = parseFloat(cleanedValue);
-    if (isNaN(floatValue)) {
+    const floatValue = Number.parseFloat(cleanedValue);
+    if (Number.isNaN(floatValue)) {
       setCustomValue(cleanedValue);
       return;
     }
 
-    setCustomValue(formatCurrency(parseFloat(cleanedValue)));
+    setCustomValue(formatCurrency(Number.parseFloat(cleanedValue)));
     const input = document.getElementById(
       "custom_solidarity_contribution",
     ) as HTMLInputElement;

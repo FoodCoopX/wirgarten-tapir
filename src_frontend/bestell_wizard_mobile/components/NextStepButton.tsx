@@ -9,6 +9,7 @@ interface NextButtonProps {
   text?: string;
   showError?: boolean;
   loading?: boolean;
+  isOrderStep?: boolean;
 }
 
 const NextStepButton: React.FC<NextButtonProps> = ({
@@ -17,7 +18,18 @@ const NextStepButton: React.FC<NextButtonProps> = ({
   disabled,
   showError,
   loading,
+  isOrderStep,
 }) => {
+  function getButtonText() {
+    if (text) {
+      return text;
+    }
+    if (isOrderStep) {
+      return "Bestellung bestätigen";
+    }
+    return "Weiter";
+  }
+
   return (
     <div
       style={{ height: NEXT_BUTTON_HEIGHT + "dvh" }}
@@ -25,7 +37,7 @@ const NextStepButton: React.FC<NextButtonProps> = ({
     >
       <TapirButton
         variant={showError ? "outline-danger" : BUTTON_VARIANT}
-        text={text ?? "Weiter"}
+        text={getButtonText()}
         onClick={onClick}
         icon={"keyboard_arrow_down"}
         disabled={disabled ?? false}

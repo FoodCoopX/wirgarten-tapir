@@ -12,16 +12,14 @@ const Step14Confirmation: React.FC<Step14ConfirmationProps> = ({
   memberMail,
 }) => {
   return (
-    <>
-      <p
-        className={"text-center"}
-        dangerouslySetInnerHTML={getHtmlDescription(
-          settings.strings.step14Text
-            .replace("{{mitglieder_mail}}", memberMail)
-            .replace("{{kontakt_mail}}", settings.contactMailAddress),
-        )}
-      />
-    </>
+    <p
+      className={"text-center"}
+      dangerouslySetInnerHTML={getHtmlDescription(
+        settings.strings.step14Text
+          .replace("{{mitglieder_mail}}", memberMail)
+          .replace("{{kontakt_mail}}", settings.contactMailAddress),
+      )}
+    />
   );
 };
 

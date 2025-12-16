@@ -37,7 +37,7 @@ const Step13Feedback: React.FC<Step13FeedbackProps> = ({
       </Form.Group>
       <NextStepButton
         onClick={confirmOrder ?? goToNextStep}
-        text={"Bestellung bestätigen"}
+        isOrderStep={true}
         loading={confirmOrderLoading}
       />
     </>

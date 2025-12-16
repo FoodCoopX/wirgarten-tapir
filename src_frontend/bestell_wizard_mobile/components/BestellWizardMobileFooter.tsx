@@ -17,6 +17,8 @@ interface BestellWizardMobileFooterProps {
   setCurrentStep: (step: Step) => void;
   settings: BestellWizardSettings;
   setTestData: () => void;
+  showProgress: boolean;
+  hideButtonsOnLastStep: boolean;
 }
 
 const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
@@ -25,6 +27,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
   setCurrentStep,
   settings,
   setTestData,
+  showProgress,
+  hideButtonsOnLastStep,
 }) => {
   function goToPreviousStep() {
     const currentIndex = steps.indexOf(currentStep);
@@ -145,7 +149,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         style={{ width: "auto", height: "100%", paddingBottom: "0.5rem" }}
         className={"d-flex flex-column justify-content-end gap-2 mx-2"}
       >
-        {currentStep !== steps[steps.length - 1] && (
+        {(!hideButtonsOnLastStep || currentStep !== steps.at(-1)) && (
           <div
             className={
               "d-flex flex-row gap-2 align-items-center justify-content-center"
@@ -175,7 +179,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                     >
                       construction
                     </span>
-                    Test
+                    <span>Test</span>
                   </span>
                 }
                 size={"sm"}
@@ -202,57 +206,60 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
             )}
           </div>
         )}
-        <small
-          className={
-            "d-flex flex-row flex-wrap gap-1 justify-content-center align-items-center"
-          }
-          style={{ width: "100%" }}
-          id={"footer_widescreen"}
-        >
-          {steps.map((step, index) =>
-            isStepFirstInPhase(step, index) ? (
-              <Badge
-                bg={
-                  steps.indexOf(currentStep) < index ? "secondary" : "primary"
-                }
-                key={step}
-                onClick={() =>
-                  isProgressBarStepClickable(step) && setCurrentStep(step)
-                }
-                style={{
-                  cursor: isProgressBarStepClickable(step)
-                    ? "pointer"
-                    : "default",
-                }}
-              >
-                {getPhaseName(getPhase(step))}
-              </Badge>
-            ) : (
-              <span
-                key={step}
-                style={{
-                  height: "7px",
-                  width: "7px",
-                  backgroundColor:
-                    steps.indexOf(currentStep) < index
-                      ? "var(--bs-secondary)"
-                      : "var(--bs-primary)",
-                  borderRadius: "50%",
-                  cursor: isProgressBarStepClickable(step)
-                    ? "pointer"
-                    : "default",
-                }}
-                onClick={() =>
-                  isProgressBarStepClickable(step) && setCurrentStep(step)
-                }
-              />
-            ),
-          )}
-        </small>
-        <ProgressBar
-          id={"footer_narrowscreen"}
-          now={((steps.indexOf(currentStep) + 1) / steps.length) * 100}
-        />
+        {showProgress && (
+          <>
+            <small
+              className={
+                "d-flex flex-row flex-wrap gap-1 justify-content-center align-items-center"
+              }
+              style={{ width: "100%" }}
+              id={"footer_widescreen"}
+            >
+              {steps.map((step, index) =>
+                isStepFirstInPhase(step, index) ? (
+                  <Badge
+                    bg={
+                      steps.indexOf(currentStep) < index
+                        ? "secondary"
+                        : "primary"
+                    }
+                    key={step}
+                    onClick={() =>
+                      isProgressBarStepClickable(step) && setCurrentStep(step)
+                    }
+                    style={{
+                      cursor: isProgressBarStepClickable(step)
+                        ? "pointer"
+                        : "default",
+                    }}
+                  >
+                    {getPhaseName(getPhase(step))}
+                  </Badge>
+                ) : (
+                  <span
+                    key={step}
+                    style={{
+                      height: "7px",
+                      width: "7px",
+                      backgroundColor:
+                        steps.indexOf(currentStep) < index
+                          ? "var(--bs-secondary)"
+                          : "var(--bs-primary)",
+                      borderRadius: "50%",
+                      cursor: isProgressBarStepClickable(step)
+                        ? "pointer"
+                        : "default",
+                    }}
+                  />
+                ),
+              )}
+            </small>
+            <ProgressBar
+              id={"footer_narrowscreen"}
+              now={((steps.indexOf(currentStep) + 1) / steps.length) * 100}
+            />
+          </>
+        )}
       </div>
     </div>
   );

@@ -20,6 +20,8 @@ interface Step6BCoopSharesProps {
   setStudentStatusEnabled: (status: boolean) => void;
   settings: BestellWizardSettings;
   active: boolean;
+  isOrderStep: boolean;
+  orderLoading: boolean;
 }
 
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
@@ -33,6 +35,8 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   statuteAccepted,
   setStatuteAccepted,
   active,
+  isOrderStep,
+  orderLoading,
 }) => {
   const [statuteRead, setStatuteRead] = useState(false);
   const [commitmentChecked, setCommitmentChecked] = useState(false);
@@ -73,27 +77,22 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
     if (!statuteRead || !commitmentChecked) {
       return false;
     }
-    console.log(
-      "SELECTED: " +
-        selectedNumberOfCoopShares +
-        " MIN:" +
-        minimumNumberOfShares,
-    );
+
     return selectedNumberOfCoopShares >= minimumNumberOfShares;
   }
 
   useEffect(() => {
     if (
-      isNaN(parseInt(internalNumberOfShares)) ||
-      parseInt(internalNumberOfShares) < minimumNumberOfShares
+      Number.isNaN(Number.parseInt(internalNumberOfShares)) ||
+      Number.parseInt(internalNumberOfShares) < minimumNumberOfShares
     ) {
       setInternalNumberOfShares(minimumNumberOfShares.toString());
     }
   }, [minimumNumberOfShares]);
 
   useEffect(() => {
-    const newNumberOfShares = parseInt(internalNumberOfShares);
-    if (isNaN(newNumberOfShares)) {
+    const newNumberOfShares = Number.parseInt(internalNumberOfShares);
+    if (Number.isNaN(newNumberOfShares)) {
       return;
     }
 
@@ -221,7 +220,11 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           }
         />
       </div>
-      <NextStepButton onClick={validate} />
+      <NextStepButton
+        onClick={validate}
+        loading={orderLoading}
+        isOrderStep={isOrderStep}
+      />
     </>
   );
 };

@@ -83,8 +83,8 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
 
     const bounds = L.latLngBounds(
       pickupLocations.map((pickupLocation) => [
-        parseFloat(pickupLocation.coordsLon),
-        parseFloat(pickupLocation.coordsLat),
+        Number.parseFloat(pickupLocation.coordsLon),
+        Number.parseFloat(pickupLocation.coordsLat),
       ]),
     );
     mapRef.fitBounds(bounds);
@@ -160,86 +160,84 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   }
 
   return (
-    <>
-      <MapContainer
-        center={[
-          parseFloat(pickupLocations[0].coordsLon),
-          parseFloat(pickupLocations[0].coordsLat),
-        ]}
-        zoom={13}
-        scrollWheelZoom={true}
-        ref={setMapRef}
-        style={{ position: "absolute", top: 0, bottom: 0, right: 0, left: 0 }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {pickupLocations.map((pickupLocation) => (
-          <Marker
-            position={[
-              parseFloat(pickupLocation.coordsLon),
-              parseFloat(pickupLocation.coordsLat),
-            ]}
-            icon={L.icon({
-              iconUrl: "/static/subscriptions/" + getMarkerIcon(pickupLocation),
-              shadowUrl: "/static/subscriptions/marker-shadow.png",
-              iconAnchor: [13, 35],
-              popupAnchor: [0, -33],
-            })}
-            key={pickupLocation.id}
-          >
-            <Popup>
-              <div
-                className={
-                  "d-flex flex-column gap-2 align-items-center text-center"
-                }
-              >
-                <strong>{pickupLocation.name}</strong>
-                {pickupLocationsWithCapacityFull.has(pickupLocation) ? (
-                  <span className={"text-danger"}>Ausgelastet</span>
-                ) : (
-                  <span className={"text-success"}>
-                    {isAtLeastOneProductOrdered(
-                      buildFilteredShoppingCart(
-                        shoppingCart,
-                        false,
-                        productTypesInWaitingList,
-                      ),
-                    )
-                      ? getFirstDelivery(
-                          pickupLocation.id!,
-                          firstDeliveryDatesByPickupLocationAndProductType,
-                        )
-                      : "Kapazität frei"}
-                  </span>
+    <MapContainer
+      center={[
+        Number.parseFloat(pickupLocations[0].coordsLon),
+        Number.parseFloat(pickupLocations[0].coordsLat),
+      ]}
+      zoom={13}
+      scrollWheelZoom={true}
+      ref={setMapRef}
+      style={{ position: "absolute", top: 0, bottom: 0, right: 0, left: 0 }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {pickupLocations.map((pickupLocation) => (
+        <Marker
+          position={[
+            Number.parseFloat(pickupLocation.coordsLon),
+            Number.parseFloat(pickupLocation.coordsLat),
+          ]}
+          icon={L.icon({
+            iconUrl: "/static/subscriptions/" + getMarkerIcon(pickupLocation),
+            shadowUrl: "/static/subscriptions/marker-shadow.png",
+            iconAnchor: [13, 35],
+            popupAnchor: [0, -33],
+          })}
+          key={pickupLocation.id}
+        >
+          <Popup>
+            <div
+              className={
+                "d-flex flex-column gap-2 align-items-center text-center"
+              }
+            >
+              <strong>{pickupLocation.name}</strong>
+              {pickupLocationsWithCapacityFull.has(pickupLocation) ? (
+                <span className={"text-danger"}>Ausgelastet</span>
+              ) : (
+                <span className={"text-success"}>
+                  {isAtLeastOneProductOrdered(
+                    buildFilteredShoppingCart(
+                      shoppingCart,
+                      false,
+                      productTypesInWaitingList,
+                    ),
+                  )
+                    ? getFirstDelivery(
+                        pickupLocation.id!,
+                        firstDeliveryDatesByPickupLocationAndProductType,
+                      )
+                    : "Kapazität frei"}
+                </span>
+              )}
+              <div>
+                {formatAddress(
+                  pickupLocation.street,
+                  pickupLocation.street2,
+                  pickupLocation.postcode,
+                  pickupLocation.city,
                 )}
-                <div>
-                  {formatAddress(
-                    pickupLocation.street,
-                    pickupLocation.street2,
-                    pickupLocation.postcode,
-                    pickupLocation.city,
-                  )}
-                </div>
-                <div>{formatOpeningTimes(pickupLocation)}</div>
-                <TapirButton
-                  size={"sm"}
-                  text={getPopupButtonText(pickupLocation)}
-                  icon={
-                    selectedPickupLocations.includes(pickupLocation)
-                      ? "select_check_box"
-                      : "check_box_outline_blank"
-                  }
-                  variant={BUTTON_VARIANT}
-                  onClick={() => updateSelection(pickupLocation)}
-                />
               </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-    </>
+              <div>{formatOpeningTimes(pickupLocation)}</div>
+              <TapirButton
+                size={"sm"}
+                text={getPopupButtonText(pickupLocation)}
+                icon={
+                  selectedPickupLocations.includes(pickupLocation)
+                    ? "select_check_box"
+                    : "check_box_outline_blank"
+                }
+                variant={BUTTON_VARIANT}
+                onClick={() => updateSelection(pickupLocation)}
+              />
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
   );
 };
 

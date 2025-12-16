@@ -23,7 +23,6 @@
     <link rel="stylesheet"
           href="{% static 'core/bootstrap/5.3.8/css/bootstrap.min.css' %}">
 </head>
-{% get_parameter_value_tag "wirgarten.bestellwizard.background_color" cache as background_color %}
 <body style="{{ body_style }}; width: 100dvw; height: 100dvh;">
 {% csrf_token %}
 <div id="bestell_wizard_mobile" style="width: 100dvw; height: 100dvh"></div>

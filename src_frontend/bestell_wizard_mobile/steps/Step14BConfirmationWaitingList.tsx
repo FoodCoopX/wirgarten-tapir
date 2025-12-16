@@ -11,16 +11,14 @@ const Step14BConfirmationWaitingList: React.FC<
   Step14BConfirmationWaitingListProps
 > = ({ settings, memberMail }) => {
   return (
-    <>
-      <p
-        className={"text-center"}
-        dangerouslySetInnerHTML={getHtmlDescription(
-          settings.strings.step14bText
-            .replace("{{mitglieder_mail}}", memberMail)
-            .replace("{{kontakt_mail}}", settings.contactMailAddress),
-        )}
-      />
-    </>
+    <p
+      className={"text-center"}
+      dangerouslySetInnerHTML={getHtmlDescription(
+        settings.strings.step14bText
+          .replace("{{mitglieder_mail}}", memberMail)
+          .replace("{{kontakt_mail}}", settings.contactMailAddress),
+      )}
+    />
   );
 };
 

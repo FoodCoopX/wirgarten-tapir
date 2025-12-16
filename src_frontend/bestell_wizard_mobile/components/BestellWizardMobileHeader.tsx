@@ -36,7 +36,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   selectedPickupLocations,
   solidarityContribution,
   atLeastOneProductTypeInWaitingList,
-  productTypesInWaitingList: productTypesInWaitingList,
+  productTypesInWaitingList,
   steps,
   setCurrentStep,
   currentStep,
@@ -60,37 +60,35 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
           <img src={settings.logoUrl} alt={"Logo"} style={{ height: "70%" }} />
         )}
         {showShoppingCart ? (
-          <>
-            <TapirButton
-              variant={BUTTON_VARIANT}
-              style={{
-                position: "absolute",
-                right: "0.5rem",
-                top: HEADER_HEIGHT / 2 + "dvh",
-                transform: "translate(0, -50%)",
-              }}
-              onClick={() => setShowOverlay(true)}
-              icon={"shopping_cart"}
-              text={
-                <span>
-                  {formatCurrency(
-                    getMonthlyPayment(
-                      solidarityContribution,
-                      shoppingCart,
-                      settings,
-                      productTypesInWaitingList,
-                    ),
-                  ) + " / Monat"}
-                  {atLeastOneProductTypeInWaitingList && (
-                    <>
-                      <br />
-                      <small>ohne Warteliste</small>
-                    </>
-                  )}
-                </span>
-              }
-            />
-          </>
+          <TapirButton
+            variant={BUTTON_VARIANT}
+            style={{
+              position: "absolute",
+              right: "0.5rem",
+              top: HEADER_HEIGHT / 2 + "dvh",
+              transform: "translate(0, -50%)",
+            }}
+            onClick={() => setShowOverlay(true)}
+            icon={"shopping_cart"}
+            text={
+              <span>
+                {formatCurrency(
+                  getMonthlyPayment(
+                    solidarityContribution,
+                    shoppingCart,
+                    settings,
+                    productTypesInWaitingList,
+                  ),
+                ) + " / Monat"}
+                {atLeastOneProductTypeInWaitingList && (
+                  <>
+                    <br />
+                    <small>ohne Warteliste</small>
+                  </>
+                )}
+              </span>
+            }
+          />
         ) : (
           <div />
         )}

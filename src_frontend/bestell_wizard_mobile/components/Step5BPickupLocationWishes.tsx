@@ -47,10 +47,10 @@ const Step5BPickupLocationWishes: React.FC<Step5BPickupLocationWishesProps> = ({
 
   function getWishLabel(index: number) {
     let label = index + 1 + ". Wunsch";
-    if (!pickupLocationsWithCapacityFull.has(selectedPickupLocations[index])) {
-      label += " (Beim Einstieg)";
-    } else {
+    if (pickupLocationsWithCapacityFull.has(selectedPickupLocations[index])) {
       label += " (Warteliste-Eintrag)";
+    } else {
+      label += " (Beim Einstieg)";
     }
 
     return label;
@@ -59,7 +59,7 @@ const Step5BPickupLocationWishes: React.FC<Step5BPickupLocationWishesProps> = ({
   return (
     <div className={"d-flex flex-column gap-2 align-items-center"}>
       {selectedPickupLocations.map((selectedPickupLocation, index) => (
-        <Form.Group key={index}>
+        <Form.Group key={selectedPickupLocation.id + "_" + index}>
           <Form.Label>{getWishLabel(index)}</Form.Label>
           <div className="d-flex flex-row gap-2">
             <Form.Select

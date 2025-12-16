@@ -1,13 +1,21 @@
-from django.core.exceptions import BadRequest, ValidationError
+from django.core.exceptions import BadRequest
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status, viewsets, permissions
+from django.urls import reverse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from rest_framework import status, viewsets, permissions, serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tapir.coop.serializers import MinimumNumberOfSharesResponseSerializer
+from tapir.coop.serializers import (
+    MinimumNumberOfSharesResponseSerializer,
+    GetCoopShareTransactionsResponseSerializer,
+)
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
+from tapir.coop.services.member_needs_banking_data_checker import (
+    MemberNeedsBankingDataChecker,
+)
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
@@ -16,7 +24,6 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
 )
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.subscriptions.serializers import (
-    CoopShareTransactionSerializer,
     MemberSerializer,
 )
 from tapir.subscriptions.services.contract_start_date_calculator import (
@@ -24,7 +31,7 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, CoopShareTransaction
-from tapir.wirgarten.utils import check_permission_or_self, get_today
+from tapir.wirgarten.utils import check_permission_or_self, get_today, get_now
 
 
 class MinimumNumberOfSharesApiView(APIView):
@@ -74,19 +81,22 @@ class ExistingMemberPurchasesSharesApiView(APIView):
 
     @extend_schema(
         responses={200: str},
-        parameters=[
-            OpenApiParameter(name="member_id", type=str, required=True),
-            OpenApiParameter(name="number_of_shares_to_add", type=int, required=True),
-        ],
+        request=inline_serializer(
+            name="existing_member_purchases_extra_shares_serializer",
+            fields={
+                "member_id": serializers.CharField(),
+                "number_of_shares_to_add": serializers.IntegerField(),
+                "iban": serializers.CharField(allow_null=True),
+                "account_owner": serializers.CharField(allow_null=True),
+            },
+        ),
     )
     def post(self, request):
-        member_id = request.query_params.get("member_id")
+        member_id = request.data.get("member_id")
         member = get_object_or_404(Member, id=member_id)
         check_permission_or_self(pk=member_id, request=request)
 
-        number_of_shares_to_add = int(
-            request.query_params.get("number_of_shares_to_add")
-        )
+        number_of_shares_to_add = int(request.data.get("number_of_shares_to_add"))
         if number_of_shares_to_add <= 0:
             raise ValidationError("Number of coop shares must be positive")
 
@@ -102,6 +112,14 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
             )
 
+        needs_banking_data = (
+            MemberNeedsBankingDataChecker.does_member_need_banking_data(member)
+        )
+        iban = request.data.get("iban", None)
+        account_owner = request.data.get("account_owner", None)
+        if needs_banking_data and (iban is None or account_owner is None):
+            raise ValidationError("Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)")
+
         with transaction.atomic():
             CoopSharePurchaseHandler.buy_cooperative_shares(
                 quantity=number_of_shares_to_add,
@@ -114,8 +132,13 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 cache=self.cache,
                 actor=request.user,
             )
+            if needs_banking_data:
+                member.iban = iban
+                member.account_owner = account_owner
+                member.sepa_consent = get_now(cache=self.cache)
+                member.save()
 
-        return Response("OK")
+        return Response(member.get_absolute_url())
 
     @classmethod
     def validate_number_of_shares(
@@ -158,7 +181,7 @@ class GetCoopShareTransactionsApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        responses={200: CoopShareTransactionSerializer(many=True)},
+        responses={200: GetCoopShareTransactionsResponseSerializer()},
         parameters=[
             OpenApiParameter(name="member_id", type=str, required=True),
         ],
@@ -168,12 +191,16 @@ class GetCoopShareTransactionsApiView(APIView):
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
-        return Response(
-            CoopShareTransactionSerializer(
-                CoopShareTransaction.objects.filter(member=member).order_by("valid_at"),
-                many=True,
-            ).data
-        )
+        data = {
+            "transactions": CoopShareTransaction.objects.filter(member=member).order_by(
+                "valid_at"
+            ),
+            "url_of_bestell_wizard": reverse(
+                "bestell_wizard:bestell_wizard_coop_shares", args=[member_id]
+            ),
+        }
+
+        return Response(GetCoopShareTransactionsResponseSerializer(data).data)
 
 
 class MemberViewSet(viewsets.ReadOnlyModelViewSet):

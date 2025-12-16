@@ -35,12 +35,13 @@ const BestellWizardProgressIndicator: React.FC<
         return "Zusammenfassung";
       case "end":
         return "Debug";
-      default:
+      default: {
         const productType = productTypes.find(
           (productType) => productType.id === step,
         );
         if (productType === undefined) return step;
         return productType.name;
+      }
     }
   }
 

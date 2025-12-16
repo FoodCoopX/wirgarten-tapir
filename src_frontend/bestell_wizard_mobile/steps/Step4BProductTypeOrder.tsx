@@ -196,7 +196,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     checked={shoppingCart[product.id!] > 0}
                     onChange={(checked) => {
                       shoppingCart[product.id!] = checked ? 1 : 0;
-                      setShoppingCart(Object.assign({}, shoppingCart));
+                      setShoppingCart({ ...shoppingCart });
                     }}
                   />
                 ) : (
@@ -210,7 +210,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                           0,
                           shoppingCart[product.id!] - 1,
                         );
-                        setShoppingCart(Object.assign({}, shoppingCart));
+                        setShoppingCart({ ...shoppingCart });
                       }}
                       disabled={
                         shoppingCart[product.id!] === 0 ||
@@ -235,7 +235,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                       onClick={() => {
                         shoppingCart[product.id!] =
                           shoppingCart[product.id!] + 1;
-                        setShoppingCart(Object.assign({}, shoppingCart));
+                        setShoppingCart({ ...shoppingCart });
                       }}
                       disabled={waitingListLinkConfirmationModeEnabled}
                     />

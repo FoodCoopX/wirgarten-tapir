@@ -33,7 +33,6 @@ interface Step10OrderSummaryProps {
     [key: string]: { [key: string]: Date };
   };
   goToProductTypeStep: (pt: PublicProductType) => void;
-  active: boolean;
   selectedPickupLocations: PublicPickupLocation[];
   solidarityContribution: number;
   personalData: PersonalData;

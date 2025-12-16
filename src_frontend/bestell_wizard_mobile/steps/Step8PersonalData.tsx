@@ -38,6 +38,17 @@ const FIELDS: (keyof PersonalData)[] = [
   "phoneNumber",
 ];
 
+function getType(key: keyof PersonalData) {
+  switch (key) {
+    case "phoneNumber":
+      return "tel";
+    case "email":
+      return "email";
+    default:
+      return "text";
+  }
+}
+
 const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   goToNextStep,
   personalData,
@@ -80,7 +91,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         setEmailAddressAlreadyInUse(!valid);
       })
       .catch(async (error) => {
-        if (error.cause && error.cause.name === "AbortError") return;
+        if (error.cause?.name === "AbortError") return;
         await handleRequestError(
           error,
           "Fehler beim Prüfen der Mail-Gültigkeit",
@@ -123,17 +134,6 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         return "Telefon-Nr";
       default:
         return key;
-    }
-  }
-
-  function getType(key: keyof PersonalData) {
-    switch (key) {
-      case "phoneNumber":
-        return "tel";
-      case "email":
-        return "email";
-      default:
-        return "text";
     }
   }
 
