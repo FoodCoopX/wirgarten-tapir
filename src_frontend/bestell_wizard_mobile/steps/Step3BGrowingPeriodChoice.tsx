@@ -13,6 +13,13 @@ interface Step3BGrowingPeriodChoiceProps {
   setSelectedGrowingPeriod: (p: PublicGrowingPeriod) => void;
 }
 
+function getPeriodName(period: PublicGrowingPeriod) {
+  if (period.startDate > new Date()) {
+    return "Ab dem " + formatDateNumeric(period.startDate);
+  }
+  return "Ab sofort";
+}
+
 const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({
   settings,
   goToNextStep,
@@ -50,14 +57,11 @@ const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({
                   style={{ pointerEvents: "none" }}
                   type={"radio"}
                 />
-                <span>
-                  {formatDateNumeric(growingPeriod.contractStartDate)}
-                </span>
+                <span>{getPeriodName(growingPeriod)}</span>
               </div>
             </label>
-            <small>
-              {formatDateNumeric(growingPeriod.startDate)} -{" "}
-              {formatDateNumeric(growingPeriod.endDate)}
+            <small className={"text-center"}>
+              Vertragsstart {formatDateNumeric(growingPeriod.contractStartDate)}
             </small>
           </div>
         ))}

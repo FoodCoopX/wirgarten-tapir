@@ -49,6 +49,8 @@ OPTIONS_WEEKDAYS = [
     (6, _("Sonntag")),
 ]
 
+HTML_ALLOWED_TEXT = "HTML erlaubt"
+
 
 class ParameterCategory:
     SITE = "Standort"
@@ -320,7 +322,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Kistengrößen",
             datatype=TapirParameterDatatype.STRING,
             initial_value="kleine Kiste;normale Kiste;",
-            description=f"Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleine Kiste;normale Kiste;'",
+            description="Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleine Kiste;normale Kiste;'",
             category=ParameterCategory.PICKING,
             order_priority=2,
             meta=ParameterMeta(
@@ -758,7 +760,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 datatype=TapirParameterDatatype.STRING,
                 initial_value="2025-04-01 09:30",
                 description="Format: YYYY-MM-DD HH:MM.<br />"
-                f'Wird nur eingesetzt wenn der Parameter "Datum festlegen" gleich Oben zu "Manuell" gesetzt ist.',
+                'Wird nur eingesetzt wenn der Parameter "Datum festlegen" gleich Oben zu "Manuell" gesetzt ist.',
                 category=ParameterCategory.TEST,
                 order_priority=1,
                 debug=True,
@@ -935,7 +937,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Text zum Checkbox zum SEPA-Mandat bei der Persönliche-Daten-Seite",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ich ermächtige den Betrieb die monatlichen Beträge für weitere Verträge mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen.",
-            description="Kann HTML sein",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
@@ -947,7 +949,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Text zum Checkbox zu Vertragsgrundsätze",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese.",
-            description="Kann HTML sein",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
@@ -959,7 +961,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Erklärungstext unter dem Checkbox zur Widerrufsbelehrung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du kannst deine Verträge innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an der Verwaltung.",
-            description="Kann HTML sein",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
@@ -1126,7 +1128,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=ParameterKeys.BESTELLWIZARD_STEP3B_TEXT,
             label="Seite 3B: Vertragsperiode-Auswahl - Text",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Standardtext zu Vertragsperiode-Auswahl, kann in der Konfig angepasst werden unten 'Seite 3B: Vertragsperiode-Auswahl - Text'",
+            initial_value="Du kannst auswählen, ob dein Vertrag zur neuen oder bereits jetzt zur aktuellen Vertragsperiode starten soll. Es wird dir für beide Auswahloptionen jeweils das Startdatum deines Vertrages angezeigt (jeweils Mo. der ersten Lieferwoche).",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
@@ -1359,7 +1361,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 6C: Sofort oder später Mitglied werden - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Die wirst auf die Warteliste für deine Bestellung eingetragen. Du kannst dich aber entscheiden sofort Mitglied der Genossenschaft zu werden.",
-            description="HTML erlaubt",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -1568,7 +1570,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 14: Abschluss - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du erhältst im Anschluss zwei Emails an <strong>{{mitglieder_mail}}</strong>. Schau bitte auch in dein SPAM-Posteingang. Sofern du innerhalb von 24 Stunden keine Mails erhalten hast, dann wende dich an unser Support unter {{kontakt_mail}}",
-            description="HTML erlaubt",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(
@@ -1605,7 +1607,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 14B: Abschluss (Warteliste) - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du erhältst im Anschluss ein Email an <strong>{{mitglieder_mail}}</strong>. Schau bitte auch in dein SPAM-Posteingang. Sofern du innerhalb von 24 Stunden keine Mails erhalten hast, dann wende dich an unser Support unter {{kontakt_mail}}",
-            description="HTML erlaubt",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(
