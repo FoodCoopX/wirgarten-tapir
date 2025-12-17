@@ -383,7 +383,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             email: personalData.email,
             iban: personalData.iban,
             firstName: personalData.firstName,
-            lastName: personalData.firstName,
+            lastName: personalData.lastName,
             phoneNumber: personalData.phoneNumber,
             postcode: personalData.postcode,
             street: personalData.street,
