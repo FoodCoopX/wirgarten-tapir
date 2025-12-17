@@ -27,6 +27,7 @@ interface Step9BankingDataProps {
   productTypesInWaitingList: Set<PublicProductType>;
   isOrderStep: boolean;
   orderLoading: boolean;
+  nextButtonText?: string;
 }
 
 function getPlaceholder(key: keyof PersonalData) {
@@ -55,6 +56,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   productTypesInWaitingList,
   isOrderStep,
   orderLoading,
+  nextButtonText,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
   const [paymentRhythmModalOpen, setPaymentRhythmModalOpen] = useState(false);
@@ -182,6 +184,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
         onClick={validate}
         loading={orderLoading}
         isOrderStep={isOrderStep}
+        text={nextButtonText}
       />
       <Modal
         show={paymentRhythmModalOpen}

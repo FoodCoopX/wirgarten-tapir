@@ -22,6 +22,7 @@ interface Step6BCoopSharesProps {
   active: boolean;
   isOrderStep: boolean;
   orderLoading: boolean;
+  nextButtonText?: string;
 }
 
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
@@ -37,6 +38,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   active,
   isOrderStep,
   orderLoading,
+  nextButtonText,
 }) => {
   const [statuteRead, setStatuteRead] = useState(false);
   const [commitmentChecked, setCommitmentChecked] = useState(false);
@@ -224,6 +226,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
         onClick={validate}
         loading={orderLoading}
         isOrderStep={isOrderStep}
+        text={nextButtonText}
       />
     </>
   );

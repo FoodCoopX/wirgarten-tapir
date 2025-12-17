@@ -122,6 +122,10 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
       );
   }
 
+  function getConfirmButtonText() {
+    return "Jetzt " + selectedNumberOfCoopShares + " Anteile zeichnen";
+  }
+
   function getStepComponent(step: Step) {
     switch (step) {
       case "6a_coop_intro":
@@ -148,6 +152,9 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             active={currentStep === step}
             isOrderStep={step === steps.at(-1)}
             orderLoading={orderLoading}
+            nextButtonText={
+              step === steps.at(-1) ? getConfirmButtonText() : undefined
+            }
           />
         );
       case "9_banking_data":
@@ -167,6 +174,9 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             productTypesInWaitingList={new Set()}
             isOrderStep={step === steps.at(-1)}
             orderLoading={orderLoading}
+            nextButtonText={
+              step === steps.at(-1) ? getConfirmButtonText() : undefined
+            }
           />
         );
       case "loading":
