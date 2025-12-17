@@ -49,7 +49,7 @@ class ContractStartDateCalculator:
 
     @classmethod
     def get_next_contract_start_date_in_growing_period(
-        cls, growing_period: GrowingPeriod, cache: dict
+        cls, growing_period: GrowingPeriod, apply_buffer_time: bool, cache: dict
     ):
         today = get_today(cache=cache)
         if growing_period.start_date <= today:
@@ -58,7 +58,9 @@ class ContractStartDateCalculator:
             reference_date = growing_period.start_date
 
         contract_start_date = cls.get_next_contract_start_date(
-            reference_date=reference_date, apply_buffer_time=True, cache=cache
+            reference_date=reference_date,
+            apply_buffer_time=apply_buffer_time,
+            cache=cache,
         )
 
         return contract_start_date

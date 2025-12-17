@@ -92,7 +92,7 @@ class PublicGrowingPeriodSerializer(serializers.ModelSerializer):
     def get_contract_start_date(growing_period: GrowingPeriod) -> datetime.date:
         return (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period, cache={}
+                growing_period=growing_period, apply_buffer_time=True, cache={}
             )
         )
 

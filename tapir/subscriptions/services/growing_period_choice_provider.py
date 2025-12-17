@@ -28,10 +28,10 @@ class GrowingPeriodChoiceProvider:
 
         if len(growing_periods) == 2:
             contract_start_current_period = ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_periods[0], cache=cache
+                growing_period=growing_periods[0], apply_buffer_time=True, cache=cache
             )
             contract_start_next_period = ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_periods[1], cache=cache
+                growing_period=growing_periods[1], apply_buffer_time=True, cache=cache
             )
             if contract_start_next_period == contract_start_current_period:
                 growing_periods = [growing_periods[1]]

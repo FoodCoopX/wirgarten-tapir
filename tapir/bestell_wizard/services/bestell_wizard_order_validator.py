@@ -193,6 +193,7 @@ class BestellWizardOrderValidator:
         return (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=growing_period,
+                apply_buffer_time=True,
                 cache=cache,
             )
         )

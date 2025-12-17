@@ -260,6 +260,7 @@ class PickupLocationCapacityCheckApiView(APIView):
 
             subscription_start = ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=growing_period,
+                apply_buffer_time=True,
                 cache=self.cache,
             )
 

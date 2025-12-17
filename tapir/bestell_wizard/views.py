@@ -331,6 +331,7 @@ class BestellWizardCapacityCheckApiView(APIView):
         subscription_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=growing_period,
+                apply_buffer_time=True,
                 cache=self.cache,
             )
         )
@@ -380,7 +381,9 @@ class BestellWizardBaseDataApiView(APIView):
         )
         earliest_contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=available_growing_periods[0], cache=self.cache
+                growing_period=available_growing_periods[0],
+                apply_buffer_time=True,
+                cache=self.cache,
             )
         )
         product_ids_that_are_already_at_capacity = (
@@ -696,6 +699,7 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         else:
             return ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=growing_period,
+                apply_buffer_time=True,
                 cache=cache,
             )
 

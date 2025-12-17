@@ -25,7 +25,7 @@ class TestGetNextContractStartDateInGrowingPeriod(SimpleTestCase):
 
         result = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period, cache=cache
+                growing_period=growing_period, apply_buffer_time=True, cache=cache
             )
         )
 
@@ -48,13 +48,13 @@ class TestGetNextContractStartDateInGrowingPeriod(SimpleTestCase):
 
         result = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period, cache=cache
+                growing_period=growing_period, apply_buffer_time=False, cache=cache
             )
         )
 
         self.assertEqual(start_date, result)
         mock_get_next_contract_start_date.assert_called_once_with(
             reference_date=growing_period.start_date,
-            apply_buffer_time=True,
+            apply_buffer_time=False,
             cache=cache,
         )

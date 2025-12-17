@@ -21,6 +21,9 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.subscriptions.services.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -37,15 +40,17 @@ class MemberSolidarityContributionsApiView(APIView):
     def get(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
-
         cache = {}
+        growing_period = GrowingPeriodChoiceProvider.get_available_growing_periods(
+            reference_date=get_today(cache=cache), cache=cache
+        )[0]
         data = {
             "contributions": SolidarityContribution.objects.filter(
                 member_id=member_id
             ).order_by("start_date"),
-            "change_valid_from": ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=cache),
-                apply_buffer_time=False,
+            "change_valid_from": ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
+                apply_buffer_time=True,
                 cache=cache,
             ),
             "user_can_set_lower_value": request.user.has_perm(Permission.Coop.MANAGE),
