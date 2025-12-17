@@ -15,6 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
+  CabLoggedInUserChangeTargetsPaymentRhythmResponse,
   ExtendedMemberCredit,
   FuturePaymentsResponse,
   MemberCreditCreateRequest,
@@ -22,6 +23,8 @@ import type {
   PaymentRhythmSerializerRequest,
 } from '../models/index';
 import {
+    CabLoggedInUserChangeTargetsPaymentRhythmResponseFromJSON,
+    CabLoggedInUserChangeTargetsPaymentRhythmResponseToJSON,
     ExtendedMemberCreditFromJSON,
     ExtendedMemberCreditToJSON,
     FuturePaymentsResponseFromJSON,
@@ -33,6 +36,10 @@ import {
     PaymentRhythmSerializerRequestFromJSON,
     PaymentRhythmSerializerRequestToJSON,
 } from '../models/index';
+
+export interface PaymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveRequest {
+    memberId?: string;
+}
 
 export interface PaymentsApiCreditListFilteredListRequest {
     monthFilter?: number;
@@ -59,6 +66,41 @@ export interface PaymentsApiSetMemberPaymentRhythmCreateRequest {
  * 
  */
 export class PaymentsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async paymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveRaw(requestParameters: PaymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CabLoggedInUserChangeTargetsPaymentRhythmResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['memberId'] != null) {
+            queryParameters['member_id'] = requestParameters['memberId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/payments/api/can_logged_in_user_change_targets_payment_rhythm`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CabLoggedInUserChangeTargetsPaymentRhythmResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async paymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieve(requestParameters: PaymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CabLoggedInUserChangeTargetsPaymentRhythmResponse> {
+        const response = await this.paymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

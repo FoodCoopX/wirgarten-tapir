@@ -30,4 +30,9 @@ urlpatterns = [
         views.MemberCreditCreateApiView.as_view(),
         name="member_credit_create",
     ),
+    path(
+        "api/can_logged_in_user_change_targets_payment_rhythm",
+        views.CabLoggedInUserChangeTargetsPaymentRhythm.as_view(),
+        name="can_logged_in_user_change_targets_payment_rhythm",
+    ),
 ]

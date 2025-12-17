@@ -22,11 +22,11 @@ import type {
   ExtendedProduct,
   MemberDataToConfirm,
   MemberProfileCapacityCheckRequestRequest,
+  MemberSubscriptionData,
   OrderConfirmationResponse,
   PatchedExtendedProductRequest,
   Product,
   PublicProductType,
-  PublicSubscription,
   Subscription,
   SubscriptionDateChangeRequest,
   UpdateSubscriptionsRequestRequest,
@@ -46,6 +46,8 @@ import {
     MemberDataToConfirmToJSON,
     MemberProfileCapacityCheckRequestRequestFromJSON,
     MemberProfileCapacityCheckRequestRequestToJSON,
+    MemberSubscriptionDataFromJSON,
+    MemberSubscriptionDataToJSON,
     OrderConfirmationResponseFromJSON,
     OrderConfirmationResponseToJSON,
     PatchedExtendedProductRequestFromJSON,
@@ -54,8 +56,6 @@ import {
     ProductToJSON,
     PublicProductTypeFromJSON,
     PublicProductTypeToJSON,
-    PublicSubscriptionFromJSON,
-    PublicSubscriptionToJSON,
     SubscriptionFromJSON,
     SubscriptionToJSON,
     SubscriptionDateChangeRequestFromJSON,
@@ -87,7 +87,7 @@ export interface SubscriptionsApiMemberProfileCapacityCheckCreateRequest {
     memberProfileCapacityCheckRequestRequest: MemberProfileCapacityCheckRequestRequest;
 }
 
-export interface SubscriptionsApiMemberSubscriptionsListRequest {
+export interface SubscriptionsApiMemberSubscriptionDataRetrieveRequest {
     memberId?: string;
 }
 
@@ -393,7 +393,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     /**
      */
-    async subscriptionsApiMemberSubscriptionsListRaw(requestParameters: SubscriptionsApiMemberSubscriptionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PublicSubscription>>> {
+    async subscriptionsApiMemberSubscriptionDataRetrieveRaw(requestParameters: SubscriptionsApiMemberSubscriptionDataRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MemberSubscriptionData>> {
         const queryParameters: any = {};
 
         if (requestParameters['memberId'] != null) {
@@ -410,19 +410,19 @@ export class SubscriptionsApi extends runtime.BaseAPI {
             headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
         }
         const response = await this.request({
-            path: `/subscriptions/api/member_subscriptions`,
+            path: `/subscriptions/api/member_subscription_data`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PublicSubscriptionFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => MemberSubscriptionDataFromJSON(jsonValue));
     }
 
     /**
      */
-    async subscriptionsApiMemberSubscriptionsList(requestParameters: SubscriptionsApiMemberSubscriptionsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PublicSubscription>> {
-        const response = await this.subscriptionsApiMemberSubscriptionsListRaw(requestParameters, initOverrides);
+    async subscriptionsApiMemberSubscriptionDataRetrieve(requestParameters: SubscriptionsApiMemberSubscriptionDataRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MemberSubscriptionData> {
+        const response = await this.subscriptionsApiMemberSubscriptionDataRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

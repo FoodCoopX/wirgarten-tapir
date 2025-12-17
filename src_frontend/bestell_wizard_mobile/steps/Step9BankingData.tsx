@@ -28,6 +28,7 @@ interface Step9BankingDataProps {
   isOrderStep: boolean;
   orderLoading: boolean;
   nextButtonText?: string;
+  canChangePaymentRhythm: boolean;
 }
 
 function getPlaceholder(key: keyof PersonalData) {
@@ -57,6 +58,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   isOrderStep,
   orderLoading,
   nextButtonText,
+  canChangePaymentRhythm,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
   const [paymentRhythmModalOpen, setPaymentRhythmModalOpen] = useState(false);
@@ -146,6 +148,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
                     personalData.paymentRhythm = event.target.value;
                     setPersonalData({ ...personalData });
                   }}
+                  disabled={!canChangePaymentRhythm}
                 >
                   {Object.entries(settings.paymentRhythmChoices).map(
                     ([rhythm, displayName]) => (

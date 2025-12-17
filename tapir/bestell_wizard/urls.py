@@ -35,6 +35,11 @@ urlpatterns = [
         name="bestell_wizard_coop_shares",
     ),
     path(
+        "bestell_wizard_product_type/<str:member_id>/<str:product_type_id>",
+        views.BestellWizardProductTypeView.as_view(),
+        name="bestell_wizard_product_type",
+    ),
+    path(
         "bestell_wizard_confirm_order",
         views.BestellWizardConfirmOrderApiView.as_view(),
         name="bestell_wizard_confirm_order",

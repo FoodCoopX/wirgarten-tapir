@@ -31,6 +31,12 @@ export interface OrderConfirmationResponse {
      * @memberof OrderConfirmationResponse
      */
     error: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrderConfirmationResponse
+     */
+    redirectUrl?: string;
 }
 
 /**
@@ -54,6 +60,7 @@ export function OrderConfirmationResponseFromJSONTyped(json: any, ignoreDiscrimi
         
         'orderConfirmed': json['order_confirmed'],
         'error': json['error'],
+        'redirectUrl': json['redirect_url'] == null ? undefined : json['redirect_url'],
     };
 }
 
@@ -70,6 +77,7 @@ export function OrderConfirmationResponseFromJSONTyped(json: any, ignoreDiscrimi
         
         'order_confirmed': value['orderConfirmed'],
         'error': value['error'],
+        'redirect_url': value['redirectUrl'],
     };
 }
 

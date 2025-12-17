@@ -82,8 +82,8 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       );
 
     subscriptionsApi
-      .subscriptionsApiMemberSubscriptionsList({ memberId: memberId })
-      .then(setSubscriptions)
+      .subscriptionsApiMemberSubscriptionDataRetrieve({ memberId: memberId })
+      .then((response) => setSubscriptions(response.subscriptions))
       .catch((error) =>
         handleRequestError(
           error,

@@ -177,6 +177,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             nextButtonText={
               step === steps.at(-1) ? getConfirmButtonText() : undefined
             }
+            canChangePaymentRhythm={false}
           />
         );
       case "loading":

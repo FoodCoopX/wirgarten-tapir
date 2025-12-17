@@ -52,6 +52,7 @@ export interface PickupLocationsApiChangeMemberPickupLocationCreateRequest {
 }
 
 export interface PickupLocationsApiGetMemberPickupLocationRetrieveRequest {
+    growingPeriodId?: string;
     memberId?: string;
 }
 
@@ -127,6 +128,10 @@ export class PickupLocationsApi extends runtime.BaseAPI {
      */
     async pickupLocationsApiGetMemberPickupLocationRetrieveRaw(requestParameters: PickupLocationsApiGetMemberPickupLocationRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Mpl>> {
         const queryParameters: any = {};
+
+        if (requestParameters['growingPeriodId'] != null) {
+            queryParameters['growing_period_id'] = requestParameters['growingPeriodId'];
+        }
 
         if (requestParameters['memberId'] != null) {
             queryParameters['member_id'] = requestParameters['memberId'];

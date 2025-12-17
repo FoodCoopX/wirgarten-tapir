@@ -21,6 +21,7 @@ import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
 import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts";
+import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -61,7 +62,12 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     useState<PublicPickupLocation>();
 
   useEffect(() => {
-    setActivePickupLocation(getFirstPickupLocationWithCapacity());
+    setActivePickupLocation(
+      getFirstPickupLocationWithCapacity(
+        selectedPickupLocations,
+        pickupLocationsWithCapacityFull,
+      ),
+    );
   }, [selectedPickupLocations]);
 
   function getProductTypeTitle(productType: PublicProductType) {
@@ -108,16 +114,11 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     );
   }
 
-  function getFirstPickupLocationWithCapacity() {
-    for (const pickupLocation of selectedPickupLocations) {
-      if (!pickupLocationsWithCapacityFull.has(pickupLocation)) {
-        return pickupLocation;
-      }
-    }
-  }
-
   function getFirstDelivery(productTypeId: string) {
-    const pickupLocation = getFirstPickupLocationWithCapacity();
+    const pickupLocation = getFirstPickupLocationWithCapacity(
+      selectedPickupLocations,
+      pickupLocationsWithCapacityFull,
+    );
     if (!pickupLocation) {
       return "";
     }

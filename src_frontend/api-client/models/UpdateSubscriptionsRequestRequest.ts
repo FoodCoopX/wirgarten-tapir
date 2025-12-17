@@ -49,6 +49,30 @@ export interface UpdateSubscriptionsRequestRequest {
      * @memberof UpdateSubscriptionsRequestRequest
      */
     pickupLocationId?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateSubscriptionsRequestRequest
+     */
+    growingPeriodId: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateSubscriptionsRequestRequest
+     */
+    accountOwner?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateSubscriptionsRequestRequest
+     */
+    iban?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateSubscriptionsRequestRequest
+     */
+    paymentRhythm?: string;
 }
 
 /**
@@ -59,6 +83,7 @@ export function instanceOfUpdateSubscriptionsRequestRequest(value: object): valu
     if (!('productTypeId' in value) || value['productTypeId'] === undefined) return false;
     if (!('shoppingCart' in value) || value['shoppingCart'] === undefined) return false;
     if (!('sepaAllowed' in value) || value['sepaAllowed'] === undefined) return false;
+    if (!('growingPeriodId' in value) || value['growingPeriodId'] === undefined) return false;
     return true;
 }
 
@@ -77,6 +102,10 @@ export function UpdateSubscriptionsRequestRequestFromJSONTyped(json: any, ignore
         'shoppingCart': json['shopping_cart'],
         'sepaAllowed': json['sepa_allowed'],
         'pickupLocationId': json['pickup_location_id'] == null ? undefined : json['pickup_location_id'],
+        'growingPeriodId': json['growing_period_id'],
+        'accountOwner': json['account_owner'] == null ? undefined : json['account_owner'],
+        'iban': json['iban'] == null ? undefined : json['iban'],
+        'paymentRhythm': json['payment_rhythm'] == null ? undefined : json['payment_rhythm'],
     };
 }
 
@@ -96,6 +125,10 @@ export function UpdateSubscriptionsRequestRequestFromJSONTyped(json: any, ignore
         'shopping_cart': value['shoppingCart'],
         'sepa_allowed': value['sepaAllowed'],
         'pickup_location_id': value['pickupLocationId'],
+        'growing_period_id': value['growingPeriodId'],
+        'account_owner': value['accountOwner'],
+        'iban': value['iban'],
+        'payment_rhythm': value['paymentRhythm'],
     };
 }
 

@@ -141,6 +141,30 @@ class BestellWizardCoopSharesView(TemplateView):
         return context_data
 
 
+class BestellWizardProductTypeView(TemplateView):
+    template_name = "bestell_wizard/bestell_wizard_product_type.html"
+
+    def get(self, request, *args, **kwargs):
+        check_permission_or_self(pk=kwargs["member_id"], request=request)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        cache = {}
+        BestellWizardMobileView.add_body_style_context(context_data, cache)
+        context_data["member_id"] = kwargs["member_id"]
+        context_data["product_type_id"] = kwargs["product_type_id"]
+
+        member = get_object_or_404(Member, id=kwargs["member_id"])
+        context_data["first_name"] = member.first_name
+        context_data["last_name"] = member.last_name
+        context_data["needs_banking_data"] = (
+            MemberNeedsBankingDataChecker.does_member_need_banking_data(member)
+        )
+        context_data["member_url"] = member.get_absolute_url()
+        return context_data
+
+
 class BestellWizardConfirmOrderApiView(APIView):
     permission_classes = []
 

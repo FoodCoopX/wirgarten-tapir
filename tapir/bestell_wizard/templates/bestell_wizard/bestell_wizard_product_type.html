@@ -20,20 +20,20 @@
         {% javascript_environment_variables %}
         {% vite_hmr_client %}
         {% vite_react_refresh %}
-        {% vite_asset 'member_profile/coop_shares/bestell_wizard_coop_shares.tsx' %}
+        {% vite_asset 'member_profile/subscriptions/bestell_wizard_product_type.tsx' %}
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet"
               href="{% static 'core/bootstrap/5.3.8/css/bootstrap.min.css' %}">
     </head>
     <body style="{{ body_style }}; width: 100dvw; height: 100dvh;">
         {% csrf_token %}
-        <div id="bestell_wizard_coop_shares"
+        <div id="bestell_wizard_product_type"
              style="width: 100dvw;
                     height: 100dvh"
              data-member-id="{{ member_id }}"
              data-first-name="{{ first_name }}"
              data-last-name="{{ last_name }}"
-             data-needs-banking-data="{{ needs_banking_data }}" >
-        </div>
+             data-needs-banking-data="{{ needs_banking_data }}"
+             data-product-type-id="{{ product_type_id }}"></div>
     </body>
 </html>

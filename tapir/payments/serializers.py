@@ -62,3 +62,10 @@ class MemberCreditCreateSerializer(serializers.Serializer):
     amount = serializers.FloatField()
     purpose = serializers.CharField()
     comment = serializers.CharField()
+
+
+class CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(
+    serializers.Serializer
+):
+    can_change = serializers.BooleanField()
+    current_rhythm = serializers.CharField()

@@ -32,7 +32,7 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
-from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
+from tapir.wirgarten.utils import get_today
 
 
 class Segments:
@@ -234,7 +234,6 @@ def _register_tokens():
             "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
         },
     )
-    pass
 
 
 def _register_triggers():
@@ -247,7 +246,7 @@ def _register_triggers():
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
-        required=lambda: legal_status_is_cooperative(cache={}),
+        required=True,
     )
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY

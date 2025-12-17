@@ -285,7 +285,10 @@ class GetMemberPickupLocationApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        parameters=[OpenApiParameter(name="member_id", type=str)],
+        parameters=[
+            OpenApiParameter(name="member_id", type=str),
+            OpenApiParameter(name="growing_period_id", type=str, required=False),
+        ],
         responses={
             200: inline_serializer(
                 name="mpl",
@@ -299,13 +302,23 @@ class GetMemberPickupLocationApiView(APIView):
     def get(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
-
         member = get_object_or_404(Member, id=member_id)
-        reference_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=self.cache),
-            apply_buffer_time=False,
-            cache=self.cache,
-        )
+
+        growing_period_id = request.query_params.get("growing_period_id", None)
+        if growing_period_id:
+            growing_period = get_object_or_404(GrowingPeriod, id=growing_period_id)
+            reference_date = ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
+                apply_buffer_time=False,
+                cache=self.cache,
+            )
+        else:
+            reference_date = ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=self.cache),
+                apply_buffer_time=False,
+                cache=self.cache,
+            )
+
         pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
             member=member, reference_date=reference_date
         )

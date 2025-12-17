@@ -25,33 +25,23 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
   const api = useApi(SubscriptionsApi, csrfToken);
   const [subscriptions, setSubscriptions] = useState<PublicSubscription[]>([]);
   const [productTypes, setProductTypes] = useState<PublicProductType[]>([]);
-  const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
-  const [productTypesLoading, setProductTypesLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
+  const [bestellWizardUrlTemplate, setBestellWizardUrlTemplate] = useState("");
 
   useEffect(() => {
-    setProductTypesLoading(true);
-    api
-      .subscriptionsPublicProductTypesList()
-      .then((productTypes) => setProductTypes(sortProductTypes(productTypes)))
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der Produkte",
-          setToastDatas,
-        ),
-      )
-      .finally(() => setProductTypesLoading(false));
-
     loadSubscriptions();
   }, []);
 
   function loadSubscriptions() {
-    setSubscriptionsLoading(true);
+    setLoading(true);
     api
-      .subscriptionsApiMemberSubscriptionsList({ memberId: memberId })
-      .then((subscriptions) => {
-        setSubscriptions(subscriptions);
+      .subscriptionsApiMemberSubscriptionDataRetrieve({ memberId: memberId })
+      .then((response) => {
+        setProductTypes(sortProductTypes(response.productTypes));
+        setSubscriptions(response.subscriptions);
+        setBestellWizardUrlTemplate(response.bestellWizardUrlTemplate);
+        console.log(response.bestellWizardUrlTemplate);
       })
       .catch((error) =>
         handleRequestError(
@@ -60,12 +50,12 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
           setToastDatas,
         ),
       )
-      .finally(() => setSubscriptionsLoading(false));
+      .finally(() => setLoading(false));
   }
 
   return (
     <>
-      {subscriptionsLoading || productTypesLoading ? (
+      {loading ? (
         <Spinner />
       ) : (
         productTypes.map((productType) => (
@@ -78,6 +68,10 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
             memberId={memberId}
             reloadSubscriptions={loadSubscriptions}
             setToastDatas={setToastDatas}
+            bestellWizardUrl={bestellWizardUrlTemplate.replace(
+              "product_type_id",
+              productType.id!,
+            )}
           />
         ))
       )}

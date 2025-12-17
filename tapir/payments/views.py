@@ -19,6 +19,7 @@ from tapir.payments.serializers import (
     FuturePaymentsResponseSerializer,
     ExtendedMemberCreditSerializer,
     MemberCreditCreateSerializer,
+    CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer,
 )
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -313,3 +314,41 @@ class MemberCreditCreateApiView(APIView):
         ).save()
 
         return Response("OK")
+
+
+class CabLoggedInUserChangeTargetsPaymentRhythm(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer},
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        member = get_object_or_404(Member, id=member_id)
+        check_permission_or_self(member_id, request)
+
+        if request.user.has_perm(Permission.Coop.MANAGE):
+            can_change = True
+
+        else:
+            can_change = (
+                TapirCache.get_member_payment_rhythm_object(
+                    member=member,
+                    reference_date=get_today(cache=self.cache),
+                    cache=self.cache,
+                )
+                is None
+            )
+
+        current_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+            member=member, reference_date=get_today(cache=self.cache), cache=self.cache
+        )
+
+        data = {"can_change": can_change, "current_rhythm": current_rhythm}
+
+        return Response(
+            CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(data).data
+        )

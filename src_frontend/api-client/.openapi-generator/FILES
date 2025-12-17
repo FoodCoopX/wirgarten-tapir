@@ -26,6 +26,7 @@ models/BounceTypeEnum.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
+models/CabLoggedInUserChangeTargetsPaymentRhythmResponse.ts
 models/CancelSubscriptionsRequestRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
@@ -85,6 +86,7 @@ models/MemberPaymentRhythm.ts
 models/MemberPaymentRhythmData.ts
 models/MemberProfileCapacityCheckRequestRequest.ts
 models/MemberSolidarityContributionsResponse.ts
+models/MemberSubscriptionData.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/Mpl.ts

@@ -21,6 +21,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<CoopShareTransaction[]>([]);
   const [bestellWizardUrl, setBestellWizardUrl] = useState("");
+  const [bestellWizardLoading, setBestellWizardLoading] = useState(false);
 
   useEffect(() => {
     loadShareData();
@@ -125,13 +126,16 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
             variant={"outline-primary"}
             icon={"add"}
             onClick={() => {
-              canBuyMoreShares()
-                ? location.assign(bestellWizardUrl)
-                : alert(
-                    "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist.",
-                  );
+              if (!canBuyMoreShares()) {
+                alert(
+                  "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist.",
+                );
+                return;
+              }
+              location.assign(bestellWizardUrl);
+              setBestellWizardLoading(true);
             }}
-            loading={loading}
+            loading={loading || bestellWizardLoading}
           />
         </div>
       </Card.Footer>

@@ -1,15 +1,11 @@
 import { Step } from "../types/Step.ts";
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import {
-  PublicGrowingPeriod,
-  PublicPickupLocation,
-  PublicProductType,
-} from "../../api-client";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
-import dayjs from "dayjs";
+import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
 
 export function buildSteps(
   settings: BestellWizardSettings,
@@ -23,8 +19,8 @@ export function buildSteps(
   const newSteps: Step[] = [];
   newSteps.push(
     settings.forceWaitingList ? "1b_welcome_waiting_list" : "1a_welcome",
+    "2_first_name",
   );
-  newSteps.push("2_first_name");
 
   if (settings.introEnabled) {
     newSteps.push("3_product_type_choice");
@@ -41,8 +37,7 @@ export function buildSteps(
 
   for (const productType of selectedProductTypes) {
     if (!productType.noDelivery) {
-      newSteps.push(productType.id! + "_intro");
-      newSteps.push(productType.id! + "_order");
+      newSteps.push(productType.id! + "_intro", productType.id! + "_order");
     }
   }
 
@@ -50,8 +45,7 @@ export function buildSteps(
     settings.pickupLocations.length > 0 &&
     isAtLeastOneOrderedProductWithDelivery(shoppingCart, settings.productTypes)
   ) {
-    newSteps.push("5a_pickup_location_intro");
-    newSteps.push("5b_pickup_location_choice");
+    newSteps.push("5a_pickup_location_intro", "5b_pickup_location_choice");
 
     if (
       selectedPickupLocation.length === 1 &&
@@ -63,8 +57,7 @@ export function buildSteps(
 
   for (const productType of selectedProductTypes) {
     if (productType.noDelivery) {
-      newSteps.push(productType.id! + "_intro");
-      newSteps.push(productType.id! + "_order");
+      newSteps.push(productType.id! + "_intro", productType.id! + "_order");
     }
   }
 
@@ -82,16 +75,13 @@ export function buildSteps(
     }
   }
 
-  newSteps.push("7_solidarity_contribution");
-  newSteps.push("8_personal_data");
+  newSteps.push("7_solidarity_contribution", "8_personal_data");
 
   if (becomeMemberNow !== false) {
     newSteps.push("9_banking_data");
   }
 
-  newSteps.push("10_summary");
-  newSteps.push("11_legal");
-  newSteps.push("12_channel");
+  newSteps.push("10_summary", "11_legal", "12_channel");
 
   if (settings.feedbackStepEnabled) {
     newSteps.push("13_feedback");
@@ -110,24 +100,4 @@ export function buildSteps(
   }
 
   return newSteps;
-}
-
-function shouldIncludeStepGrowingPeriodChoice(
-  selectedProductTypes: PublicProductType[],
-  choices: PublicGrowingPeriod[],
-) {
-  if (selectedProductTypes.length === 0) {
-    return false;
-  }
-
-  if (choices.length > 1) {
-    return true;
-  }
-
-  if (choices.length === 1) {
-    const period = choices[0];
-    return dayjs().add(31, "days").isBefore(dayjs(period.startDate));
-  }
-
-  return false;
 }

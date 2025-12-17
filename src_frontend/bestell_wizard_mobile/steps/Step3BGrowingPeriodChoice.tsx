@@ -14,10 +14,11 @@ interface Step3BGrowingPeriodChoiceProps {
 }
 
 function getPeriodName(period: PublicGrowingPeriod) {
-  if (period.startDate > new Date()) {
-    return "Ab dem " + formatDateNumeric(period.startDate);
-  }
-  return "Ab sofort";
+  return (
+    formatDateNumeric(period.startDate) +
+    " - " +
+    formatDateNumeric(period.endDate)
+  );
 }
 
 const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({

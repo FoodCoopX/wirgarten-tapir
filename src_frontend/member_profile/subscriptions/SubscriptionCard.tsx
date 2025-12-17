@@ -5,7 +5,6 @@ import { PublicProductType, PublicSubscription } from "../../api-client";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import TapirButton from "../../components/TapirButton.tsx";
-import SubscriptionEditModal from "./SubscriptionEditModal.tsx";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 import { ToastData } from "../../types/ToastData.ts";
 
@@ -15,6 +14,7 @@ interface SubscriptionCardProps {
   memberId: string;
   reloadSubscriptions: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  bestellWizardUrl: string;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
@@ -23,97 +23,92 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   memberId,
   reloadSubscriptions,
   setToastDatas,
+  bestellWizardUrl,
 }) => {
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   return (
-    <>
-      <Card>
-        <Card.Body>
-          <div className={"contract-tile-number"}>
+    <Card>
+      <Card.Body>
+        <div className={"contract-tile-number"}>
+          <strong>
+            {subscriptions.reduce(
+              (sum, subscription) =>
+                isSubscriptionActive(subscription)
+                  ? sum + subscription.quantity
+                  : sum,
+              0,
+            )}
+          </strong>
+          {" ×"}
+        </div>
+        <strong>{productType.name}</strong>
+        {subscriptions.length > 0 && (
+          <>
+            <hr />
+            <small className={"d-flex flex-column"}>
+              {subscriptions.map((subscription) => (
+                <span
+                  className={
+                    "d-flex flex-column " +
+                    (isSubscriptionActive(subscription)
+                      ? ""
+                      : "fw-light text-secondary")
+                  }
+                  key={subscription.productId}
+                >
+                  <span>
+                    <strong>{subscription.quantity}</strong>
+                    {" × "}
+                    {subscription.productName}{" "}
+                  </span>
+                  <span>
+                    {formatDateNumeric(subscription.startDate)}
+                    {subscription.endDate && (
+                      <>
+                        {" - "}
+                        {formatDateNumeric(subscription.endDate)}
+                      </>
+                    )}
+                  </span>
+                </span>
+              ))}
+            </small>
+          </>
+        )}
+      </Card.Body>
+      <Card.Footer>
+        <div
+          className={
+            "d-flex flex-row justify-content-between align-items-center"
+          }
+        >
+          <span>
             <strong>
-              {subscriptions.reduce(
-                (sum, subscription) =>
-                  isSubscriptionActive(subscription)
-                    ? sum + subscription.quantity
-                    : sum,
-                0,
+              {formatCurrency(
+                subscriptions.reduce(
+                  (sum, subscription) =>
+                    isSubscriptionActive(subscription)
+                      ? sum + subscription.monthlyPrice
+                      : sum,
+                  0,
+                ),
               )}
             </strong>
-            {" ×"}
-          </div>
-          <strong>{productType.name}</strong>
-          {subscriptions.length > 0 && (
-            <>
-              <hr />
-              <small className={"d-flex flex-column"}>
-                {subscriptions.map((subscription) => (
-                  <span
-                    className={
-                      "d-flex flex-column " +
-                      (isSubscriptionActive(subscription)
-                        ? ""
-                        : "fw-light text-secondary")
-                    }
-                    key={subscription.productId}
-                  >
-                    <span>
-                      <strong>{subscription.quantity}</strong>
-                      {" × "}
-                      {subscription.productName}{" "}
-                    </span>
-                    <span>
-                      {formatDateNumeric(subscription.startDate)}
-                      {subscription.endDate && (
-                        <>
-                          {" - "}
-                          {formatDateNumeric(subscription.endDate)}
-                        </>
-                      )}
-                    </span>
-                  </span>
-                ))}
-              </small>
-            </>
-          )}
-        </Card.Body>
-        <Card.Footer>
-          <div
-            className={
-              "d-flex flex-row justify-content-between align-items-center"
-            }
-          >
-            <span>
-              <strong>
-                {formatCurrency(
-                  subscriptions.reduce(
-                    (sum, subscription) =>
-                      isSubscriptionActive(subscription)
-                        ? sum + subscription.monthlyPrice
-                        : sum,
-                    0,
-                  ),
-                )}
-              </strong>
-              <small> / Monat</small>
-            </span>
-            <TapirButton
-              variant={"outline-primary"}
-              icon={subscriptions.length == 0 ? "add" : "contract_edit"}
-              onClick={() => setShowEditModal(true)}
-            />
-          </div>
-        </Card.Footer>
-      </Card>
-      <SubscriptionEditModal
-        show={showEditModal}
-        onHide={() => setShowEditModal(false)}
-        productType={productType}
-        memberId={memberId}
-        reloadSubscriptions={reloadSubscriptions}
-        setToastDatas={setToastDatas}
-      />
-    </>
+            <small> / Monat</small>
+          </span>
+          <TapirButton
+            variant={"outline-primary"}
+            icon={subscriptions.length == 0 ? "add" : "contract_edit"}
+            onClick={() => {
+              location.assign(bestellWizardUrl);
+              setLoading(true);
+            }}
+            loading={loading}
+          />
+        </div>
+      </Card.Footer>
+    </Card>
   );
 };
 

@@ -62,12 +62,12 @@ import { v4 as uuidv4 } from "uuid";
 import { updateWaitingList } from "./utils/updateWaitingList.ts";
 import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
 
-interface BestellWizardProps {
+interface BestellWizardMobileProps {
   csrfToken: string;
   waitingListEntryDetails?: WaitingListEntryDetails;
 }
 
-const BestellWizardMobile: React.FC<BestellWizardProps> = ({
+const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   csrfToken,
   waitingListEntryDetails,
 }) => {
@@ -527,6 +527,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             setCurrentTab={setCurrentPickupLocationTab}
             productTypeIdsOverCapacity={productTypeIdsOverCapacity}
             productIdsOverCapacity={productIdsOverCapacity}
+            isOrderStep={false}
+            orderLoading={false}
           />
         );
       case "5c_pickup_location_confirm_waiting_list":
@@ -617,6 +619,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
             productTypesInWaitingList={productTypesInWaitingList}
             isOrderStep={false}
             orderLoading={false}
+            canChangePaymentRhythm={true}
           />
         );
       case "10_summary":
@@ -740,6 +743,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
                   waitingListEntryDetails !== undefined
                 }
                 productTypesInWaitingList={productTypesInWaitingList}
+                isOrderStep={false}
+                orderLoading={false}
               />
             );
         }

@@ -34,6 +34,20 @@ interface Step5BPickupLocationChoiceProps {
   setCurrentTab: (tab: PickupLocationTab) => void;
   productTypeIdsOverCapacity: string[];
   productIdsOverCapacity: string[];
+  isOrderStep: boolean;
+  orderLoading: boolean;
+  nextButtonTextOverride?: string;
+}
+
+function getTabName(tab: PickupLocationTab) {
+  switch (tab) {
+    case "wishes":
+      return "Wünsche";
+    case "list":
+      return "Liste";
+    case "map":
+      return "Karte";
+  }
 }
 
 const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
@@ -52,6 +66,9 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   setCurrentTab,
   productIdsOverCapacity,
   productTypeIdsOverCapacity,
+  isOrderStep,
+  nextButtonTextOverride,
+  orderLoading,
 }) => {
   const [showValidation, setShowValidation] = useState(false);
   const carouselRef = useRef<CarouselRef>(null);
@@ -112,6 +129,18 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
     }
   }
 
+  function getNextButtonText() {
+    if (showValidation && selectedPickupLocations.length === 0) {
+      return "Noch kein Verteilstation ausgewählt";
+    }
+
+    if (nextButtonTextOverride) {
+      return nextButtonTextOverride;
+    }
+
+    return undefined;
+  }
+
   return (
     <>
       <ButtonGroup style={{ width: "100%" }}>
@@ -131,7 +160,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             }
             style={{ width: "100%" }}
           >
-            {tab === "wishes" ? "Wünsche" : tab === "map" ? "Karte" : "Liste"}
+            {getTabName(tab)}
           </ToggleButton>
         ))}
       </ButtonGroup>
@@ -200,12 +229,10 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
       </Carousel>
       <NextStepButton
         onClick={validate}
-        text={
-          showValidation && selectedPickupLocations.length === 0
-            ? "Noch kein Verteilstation ausgewählt"
-            : undefined
-        }
+        text={getNextButtonText()}
         showError={showValidation && selectedPickupLocations.length === 0}
+        loading={orderLoading}
+        isOrderStep={isOrderStep}
       />
     </>
   );

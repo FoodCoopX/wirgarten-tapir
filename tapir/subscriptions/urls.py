@@ -34,9 +34,9 @@ urlpatterns = [
         name="member_data_to_confirm",
     ),
     path(
-        "api/member_subscriptions",
-        member_profile.GetMemberSubscriptionsApiView.as_view(),
-        name="member_subscriptions",
+        "api/member_subscription_data",
+        member_profile.GetMemberSubscriptionDataApiView.as_view(),
+        name="member_subscription_data",
     ),
     path(
         "api/update_subscription",

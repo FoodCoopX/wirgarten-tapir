@@ -4,7 +4,9 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from localflavor.generic.validators import IBANValidator
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -13,7 +15,13 @@ from tapir.bestell_wizard.serializers import (
     BestellWizardCapacityCheckResponseSerializer,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_needs_banking_data_checker import (
+    MemberNeedsBankingDataChecker,
+)
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -21,10 +29,10 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
     PickupLocationCapacityGeneralChecker,
 )
 from tapir.subscriptions.serializers import (
-    PublicSubscriptionSerializer,
     UpdateSubscriptionsRequestSerializer,
     OrderConfirmationResponseSerializer,
     MemberProfileCapacityCheckRequestSerializer,
+    MemberSubscriptionDataSerializer,
 )
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
@@ -42,7 +50,7 @@ from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import Member, PickupLocation, ProductType
+from tapir.wirgarten.models import Member, PickupLocation, ProductType, GrowingPeriod
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
@@ -50,21 +58,33 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import check_permission_or_self, get_today
 
 
-class GetMemberSubscriptionsApiView(APIView):
+class GetMemberSubscriptionDataApiView(APIView):
     @extend_schema(
         parameters=[OpenApiParameter(name="member_id", type=str)],
-        responses={200: PublicSubscriptionSerializer(many=True)},
+        responses={200: MemberSubscriptionDataSerializer},
     )
     def get(self, request):
         member_id = request.query_params.get("member_id")
         get_object_or_404(Member, id=member_id)
         check_permission_or_self(member_id, request)
+
         subscriptions = (
             get_active_and_future_subscriptions()
             .filter(member_id=member_id)
             .select_related("product", "product__type")
         )
-        return Response(PublicSubscriptionSerializer(subscriptions, many=True).data)
+        bestell_wizard_url_template = reverse(
+            "bestell_wizard:bestell_wizard_product_type",
+            args=[member_id, "product_type_id"],
+        )
+
+        data = {
+            "subscriptions": subscriptions,
+            "product_types": ProductType.objects.all(),
+            "bestell_wizard_url_template": bestell_wizard_url_template,
+        }
+
+        return Response(MemberSubscriptionDataSerializer(data).data)
 
 
 class UpdateSubscriptionsApiView(APIView):
@@ -84,10 +104,16 @@ class UpdateSubscriptionsApiView(APIView):
         check_permission_or_self(member_id, request)
         member = get_object_or_404(Member, id=member_id)
 
-        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=self.cache),
-            apply_buffer_time=True,
-            cache=self.cache,
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=serializer.validated_data["growing_period_id"]
+        )
+
+        contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period,
+                apply_buffer_time=True,
+                cache=self.cache,
+            )
         )
         try:
             logged_in_user_is_admin = request.user.has_perm(Permission.Accounts.MANAGE)
@@ -119,6 +145,7 @@ class UpdateSubscriptionsApiView(APIView):
         data = {
             "order_confirmed": True,
             "error": None,
+            "redirect_url": member.get_absolute_url(),
         }
         return Response(OrderConfirmationResponseSerializer(data).data)
 
@@ -183,6 +210,42 @@ class UpdateSubscriptionsApiView(APIView):
             member=member,
             contract_start_date=contract_start_date,
         )
+
+        self.validate_banking_data(member=member, validated_data=validated_data)
+
+    def validate_banking_data(
+        self,
+        member: Member,
+        validated_data: dict,
+    ):
+        if MemberNeedsBankingDataChecker.does_member_need_banking_data(member):
+            IBANValidator()(validated_data.get("iban", "").strip())
+
+            if validated_data.get("account_owner", "").strip() == "":
+                raise ValidationError("Das Feld 'Kontoinhaber*in' muss ausgefüllt sein")
+
+        need_payment_rhythm = (
+            TapirCache.get_member_payment_rhythm_object(
+                member=member,
+                reference_date=get_today(cache=self.cache),
+                cache=self.cache,
+            )
+            is None
+        )
+
+        payment_rhythm = validated_data.get("payment_rhythm", None)
+        if need_payment_rhythm and payment_rhythm is None:
+            raise ValidationError("Das Zahlungsintervall fehlt")
+
+        if payment_rhythm is None:
+            return
+
+        if not MemberPaymentRhythmService.is_payment_rhythm_allowed(
+            validated_data["payment_rhythm"], cache=self.cache
+        ):
+            raise ValidationError(
+                f"Diese Zahlungsintervall {validated_data["payment_rhythm"]} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
+            )
 
     def validate_pickup_location(
         self,
@@ -309,12 +372,60 @@ class UpdateSubscriptionsApiView(APIView):
             from_waiting_list=False,
         )
 
+        self.change_payment_rhythm_if_necessary(
+            validated_data=validated_data, member=member, actor=actor
+        )
+
         MemberCreditCreator.create_member_credit_if_necessary(
             member=member,
             actor=actor,
             product_type=product_type,
             reference_date=contract_start_date,
             comment="Produkt-Anteil vom Admin durch dem Mitgliederbereich reduziert",
+            cache=self.cache,
+        )
+
+        iban = validated_data.get("iban", "")
+        if iban.strip() != "":
+            member.iban = iban
+
+        account_owner = validated_data.get("account_owner", "")
+        if account_owner.strip() != "":
+            member.account_owner = account_owner
+
+        member.save()
+
+    def change_payment_rhythm_if_necessary(
+        self, validated_data: dict, member: Member, actor: TapirUser
+    ):
+        payment_rhythm = validated_data.get("payment_rhythm", None)
+        if payment_rhythm is None:
+            return
+
+        rhythm_valid_from = (
+            MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(
+                member=member,
+                reference_date=get_today(cache=self.cache),
+                cache=self.cache,
+            )
+        )
+        if (
+            MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=member, reference_date=rhythm_valid_from, cache=self.cache
+            )
+            == payment_rhythm
+        ):
+            return
+
+        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
+            member=member,
+            actor=actor,
+            rhythm=validated_data["payment_rhythm"],
+            valid_from=MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(
+                member=member,
+                reference_date=get_today(cache=self.cache),
+                cache=self.cache,
+            ),
             cache=self.cache,
         )
 

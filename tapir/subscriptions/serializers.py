@@ -174,6 +174,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
 class OrderConfirmationResponseSerializer(serializers.Serializer):
     order_confirmed = serializers.BooleanField()
     error = serializers.CharField(allow_null=True)
+    redirect_url = serializers.CharField(required=False)
 
 
 class PublicSubscriptionSerializer(serializers.ModelSerializer):
@@ -217,6 +218,10 @@ class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
     sepa_allowed = serializers.BooleanField()
     pickup_location_id = serializers.CharField(required=False)
+    growing_period_id = serializers.CharField()
+    account_owner = serializers.CharField(allow_blank=True)
+    iban = serializers.CharField(allow_blank=True)
+    payment_rhythm = serializers.CharField(required=False)
 
 
 class MemberProfileCapacityCheckRequestSerializer(serializers.Serializer):
@@ -232,3 +237,9 @@ class CancelSubscriptionsRequestSerializer(serializers.Serializer):
         child=serializers.CharField(), required=False
     )
     custom_cancellation_reason = serializers.CharField(required=False)
+
+
+class MemberSubscriptionDataSerializer(serializers.Serializer):
+    product_types = PublicProductTypeSerializer(many=True)
+    subscriptions = PublicSubscriptionSerializer(many=True)
+    bestell_wizard_url_template = serializers.URLField()

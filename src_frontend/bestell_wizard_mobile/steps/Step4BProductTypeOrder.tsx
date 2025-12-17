@@ -27,6 +27,9 @@ interface Step4BProductTypeOrderProps {
   productIdsOverCapacity: string[];
   productTypeIdsOverCapacity: string[];
   productTypesInWaitingList: Set<PublicProductType>;
+  isOrderStep: boolean;
+  nextButtonTextOverride?: string;
+  orderLoading: boolean;
 }
 
 const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
@@ -41,6 +44,9 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   productIdsOverCapacity,
   productTypeIdsOverCapacity,
   productTypesInWaitingList,
+  isOrderStep,
+  nextButtonTextOverride,
+  orderLoading,
 }) => {
   const carouselRef = useRef<CarouselRef>(null);
   const [showValidation, setShowValidation] = useState(false);
@@ -66,6 +72,10 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   }
 
   function getNextButtonText() {
+    if (nextButtonTextOverride) {
+      return nextButtonTextOverride;
+    }
+
     if (!isProductTypeOrdered(productType, shoppingCart)) {
       return "Weiter ohne " + productType.name;
     }
@@ -295,7 +305,8 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       <NextStepButton
         onClick={validate}
         text={getNextButtonText()}
-        loading={checkingCapacities}
+        loading={checkingCapacities || orderLoading}
+        isOrderStep={isOrderStep}
       />
       <Modal
         show={waitingListInfoModalOpen}
