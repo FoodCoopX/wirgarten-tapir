@@ -18,7 +18,11 @@ class MemberSolidarityContributionService:
 
     @classmethod
     def assign_contribution_to_member(
-        cls, member_id: str, change_date: datetime.date, amount: float, cache: dict
+        cls,
+        member_id: str,
+        change_date: datetime.date,
+        amount: float | Decimal,
+        cache: dict,
     ):
         member_contributions = SolidarityContribution.objects.filter(
             member_id=member_id
