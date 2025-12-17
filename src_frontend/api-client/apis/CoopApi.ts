@@ -31,6 +31,10 @@ import {
     MinimumNumberOfSharesResponseToJSON,
 } from '../models/index';
 
+export interface CoopApiDeleteMemberDestroyRequest {
+    memberId?: string;
+}
+
 export interface CoopApiExistingMemberPurchasesSharesCreateRequest {
     existingMemberPurchasesExtraSharesSerializerRequest: ExistingMemberPurchasesExtraSharesSerializerRequest;
 }
@@ -52,6 +56,45 @@ export interface CoopMembersRetrieveRequest {
  * 
  */
 export class CoopApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async coopApiDeleteMemberDestroyRaw(requestParameters: CoopApiDeleteMemberDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['memberId'] != null) {
+            queryParameters['member_id'] = requestParameters['memberId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/coop/api/delete_member`,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async coopApiDeleteMemberDestroy(requestParameters: CoopApiDeleteMemberDestroyRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.coopApiDeleteMemberDestroyRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

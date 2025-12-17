@@ -184,6 +184,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /coop/api/delete_member:
+    delete:
+      operationId: coop_api_delete_member_destroy
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - coop
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /coop/api/existing_member_purchases_shares:
     post:
       operationId: coop_api_existing_member_purchases_shares_create
@@ -9263,15 +9284,15 @@ components:
           minLength: 1
         account_owner:
           type: string
-          minLength: 1
         iban:
           type: string
-          minLength: 1
         payment_rhythm:
           type: string
           minLength: 1
       required:
+      - account_owner
       - growing_period_id
+      - iban
       - member_id
       - product_type_id
       - sepa_allowed

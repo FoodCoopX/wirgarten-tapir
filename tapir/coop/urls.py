@@ -20,6 +20,11 @@ urlpatterns = [
         views.GetCoopShareTransactionsApiView.as_view(),
         name="get_coop_share_transactions",
     ),
+    path(
+        "api/delete_member",
+        views.DeleteMemberApiView.as_view(),
+        name="delete_member",
+    ),
 ]
 
 router = DefaultRouter()

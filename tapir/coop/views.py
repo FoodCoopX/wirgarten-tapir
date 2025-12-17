@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.accounts.models import EmailChangeRequest
 from tapir.coop.serializers import (
     MinimumNumberOfSharesResponseSerializer,
     GetCoopShareTransactionsResponseSerializer,
@@ -22,7 +23,9 @@ from tapir.coop.services.membership_cancellation_manager import (
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
+from tapir.deliveries.models import Joker
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.log.models import LogEntry
 from tapir.subscriptions.serializers import (
     MemberSerializer,
 )
@@ -30,7 +33,19 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Member, CoopShareTransaction
+from tapir.wirgarten.models import (
+    Member,
+    CoopShareTransaction,
+    TransferCoopSharesLogEntry,
+    Payment,
+    MemberPickupLocation,
+    Subscription,
+    Deliveries,
+    WaitingListEntry,
+    QuestionaireTrafficSourceResponse,
+    QuestionaireCancellationReasonResponse,
+    MandateReference,
+)
 from tapir.wirgarten.utils import check_permission_or_self, get_today, get_now
 
 
@@ -207,3 +222,39 @@ class MemberViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     queryset = Member.objects.all()
     serializer_class = MemberSerializer
+
+
+class DeleteMemberApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+    )
+    def delete(self, request):
+        member_id = request.query_params.get("member_id")
+        member = get_object_or_404(Member, id=member_id)
+
+        with transaction.atomic():
+            EmailChangeRequest.objects.filter(user=member).delete()
+            LogEntry.objects.filter(actor=member).delete()
+            LogEntry.objects.filter(user=member).delete()
+            TransferCoopSharesLogEntry.objects.filter(target_member=member).delete()
+            Payment.objects.filter(mandate_ref__member=member).delete()
+            models = [
+                Joker,
+                MemberPickupLocation,
+                Subscription,
+                CoopShareTransaction,
+                Deliveries,
+                WaitingListEntry,
+                QuestionaireTrafficSourceResponse,
+                QuestionaireCancellationReasonResponse,
+                MandateReference,
+            ]
+            for model in models:
+                model.objects.filter(member=member).delete()
+
+            member.delete()
+
+        return Response("deleted")

@@ -55,8 +55,10 @@
             {% endif %}
             {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
             <div style="width: 1em"></div>
-            <span id="subscription_cancellation_button"></span>
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
+            <div class="d-flex gap-2">
+                <span id="subscription_cancellation_button"></span>
+                <span id="member_delete_button"></span>
+            </div>
         {% endif %}
     </span>
 {% endblock %}

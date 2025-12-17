@@ -60,13 +60,13 @@ export interface UpdateSubscriptionsRequestRequest {
      * @type {string}
      * @memberof UpdateSubscriptionsRequestRequest
      */
-    accountOwner?: string;
+    accountOwner: string;
     /**
      * 
      * @type {string}
      * @memberof UpdateSubscriptionsRequestRequest
      */
-    iban?: string;
+    iban: string;
     /**
      * 
      * @type {string}
@@ -84,6 +84,8 @@ export function instanceOfUpdateSubscriptionsRequestRequest(value: object): valu
     if (!('shoppingCart' in value) || value['shoppingCart'] === undefined) return false;
     if (!('sepaAllowed' in value) || value['sepaAllowed'] === undefined) return false;
     if (!('growingPeriodId' in value) || value['growingPeriodId'] === undefined) return false;
+    if (!('accountOwner' in value) || value['accountOwner'] === undefined) return false;
+    if (!('iban' in value) || value['iban'] === undefined) return false;
     return true;
 }
 
@@ -103,8 +105,8 @@ export function UpdateSubscriptionsRequestRequestFromJSONTyped(json: any, ignore
         'sepaAllowed': json['sepa_allowed'],
         'pickupLocationId': json['pickup_location_id'] == null ? undefined : json['pickup_location_id'],
         'growingPeriodId': json['growing_period_id'],
-        'accountOwner': json['account_owner'] == null ? undefined : json['account_owner'],
-        'iban': json['iban'] == null ? undefined : json['iban'],
+        'accountOwner': json['account_owner'],
+        'iban': json['iban'],
         'paymentRhythm': json['payment_rhythm'] == null ? undefined : json['payment_rhythm'],
     };
 }
