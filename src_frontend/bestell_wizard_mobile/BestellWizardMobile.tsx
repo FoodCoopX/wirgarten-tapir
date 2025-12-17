@@ -637,7 +637,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({
               }
               setCurrentStep(productType.id + "_order");
             }}
-            active={currentStep === step}
             selectedPickupLocations={selectedPickupLocations}
             solidarityContribution={solidarityContribution}
             personalData={personalData}
