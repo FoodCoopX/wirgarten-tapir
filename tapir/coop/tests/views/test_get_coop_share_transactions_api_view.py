@@ -33,8 +33,9 @@ class TestGetCoopShareTransactionsApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
 
         response_content = response.json()
-        self.assertEqual(1, len(response_content))
-        self.assertEqual(transaction.id, response_content[0]["id"])
+        transactions = response_content["transactions"]
+        self.assertEqual(1, len(transactions))
+        self.assertEqual(transaction.id, transactions[0]["id"])
 
     def test_get_adminGetsTransactionsOfAnotherMember_returns200(self):
         transaction = CoopShareTransactionFactory.create()
@@ -48,5 +49,6 @@ class TestGetCoopShareTransactionsApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
 
         response_content = response.json()
-        self.assertEqual(1, len(response_content))
-        self.assertEqual(transaction.id, response_content[0]["id"])
+        transactions = response_content["transactions"]
+        self.assertEqual(1, len(transactions))
+        self.assertEqual(transaction.id, transactions[0]["id"])

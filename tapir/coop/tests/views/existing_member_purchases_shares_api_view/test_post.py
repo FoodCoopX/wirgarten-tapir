@@ -1,8 +1,9 @@
 import datetime
 
-from django.core.exceptions import ValidationError
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.models import CoopShareTransaction
@@ -25,13 +26,18 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
     def test_post_normalMemberPurchaseSharesForAnotherMember_returns403AndDontPurchaseAnything(
         self,
     ):
-        purchasing_member = MemberFactory.create(is_superuser=False)
+        purchasing_member = MemberFactory.create(
+            is_superuser=False,
+            iban="test_iban",
+            account_owner="test_owner",
+            sepa_consent=timezone.now(),
+        )
         other_member = MemberFactory.create()
         self.client.force_login(purchasing_member)
 
         url = reverse("coop:existing_member_purchases_shares")
-        url = f"{url}?member_id={other_member.id}&number_of_shares_to_add=2"
-        response = self.client.post(url)
+        data = {"member_id": other_member.id, "number_of_shares_to_add": 2}
+        response = self.client.post(url, data)
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
         self.assertFalse(CoopShareTransaction.objects.exists())
@@ -40,12 +46,17 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         GrowingPeriodFactory.create(
             start_date=get_today() - datetime.timedelta(days=100)
         )
-        member = MemberFactory.create(is_superuser=False)
+        member = MemberFactory.create(
+            is_superuser=False,
+            iban="test_iban",
+            account_owner="test_owner",
+            sepa_consent=timezone.now(),
+        )
         self.client.force_login(member)
 
         url = reverse("coop:existing_member_purchases_shares")
-        url = f"{url}?member_id={member.id}&number_of_shares_to_add=2"
-        response = self.client.post(url)
+        data = {"member_id": member.id, "number_of_shares_to_add": 2}
+        response = self.client.post(url, data)
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
@@ -57,12 +68,18 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
             start_date=get_today() - datetime.timedelta(days=100)
         )
         admin = MemberFactory.create(is_superuser=True)
-        other_member = MemberFactory.create(is_superuser=False)
+        other_member = MemberFactory.create(
+            is_superuser=False,
+            iban="test_iban",
+            account_owner="test_owner",
+            sepa_consent=timezone.now(),
+        )
         self.client.force_login(admin)
 
-        url = reverse("coop:existing_member_purchases_shares")
-        url = f"{url}?member_id={other_member.id}&number_of_shares_to_add=3"
-        response = self.client.post(url)
+        data = {"member_id": other_member.id, "number_of_shares_to_add": 3}
+        response = self.client.post(
+            reverse("coop:existing_member_purchases_shares"), data
+        )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
@@ -73,13 +90,18 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         GrowingPeriodFactory.create(
             start_date=get_today() - datetime.timedelta(days=100)
         )
-        member = MemberFactory.create(is_student=True)
+        member = MemberFactory.create(
+            is_student=True,
+            iban="iban",
+            account_owner="owner",
+            sepa_consent=timezone.now(),
+        )
         self.client.force_login(member)
         TapirParameter.objects.filter(key=ParameterKeys.COOP_MIN_SHARES).update(value=5)
 
         url = reverse("coop:existing_member_purchases_shares")
-        url = f"{url}?member_id={member.id}&number_of_shares_to_add=1"
-        response = self.client.post(url)
+        data = {"member_id": member.id, "number_of_shares_to_add": 1}
+        response = self.client.post(url, data)
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
@@ -87,25 +109,34 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         self.assertEqual(1, CoopShareTransaction.objects.get().quantity)
 
     def test_post_memberIsNotStudent_validateMinimumNumberOfShares(self):
-        member = MemberFactory.create(is_student=False)
+        member = MemberFactory.create(
+            is_student=False,
+            iban="iban",
+            account_owner="owner",
+            sepa_consent=timezone.now(),
+        )
         self.client.force_login(member)
         TapirParameter.objects.filter(key=ParameterKeys.COOP_MIN_SHARES).update(value=5)
 
         url = reverse("coop:existing_member_purchases_shares")
-        url = f"{url}?member_id={member.id}&number_of_shares_to_add=1"
+        data = {"member_id": member.id, "number_of_shares_to_add": 1}
+        response = self.client.post(url, data)
 
-        with self.assertRaises(ValidationError) as context_manager:
-            self.client.post(url)
+        self.assertStatusCode(response, HTTP_400_BAD_REQUEST)
 
         self.assertEqual(
-            "The minimum final number of shares is 5, this member currently has 0, adding 1 is not enough.",
-            context_manager.exception.message,
+            [
+                "The minimum final number of shares is 5, this member currently has 0, adding 1 is not enough."
+            ],
+            response.json(),
         )
 
         self.assertFalse(CoopShareTransaction.objects.exists())
 
     def test_post_userIsNotAMemberYet_cannotBuyShares(self):
-        member = MemberFactory.create()
+        member = MemberFactory.create(
+            iban="iban", account_owner="owner", sepa_consent=timezone.now()
+        )
         self.client.force_login(member)
         self.assertFalse(CoopShareTransaction.objects.exists())
         CoopShareTransactionFactory.create(
@@ -113,13 +144,13 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         )
 
         url = reverse("coop:existing_member_purchases_shares")
-        url = f"{url}?member_id={member.id}&number_of_shares_to_add=10"
-
-        with self.assertRaises(ValidationError) as context_manager:
-            self.client.post(url)
+        data = {"member_id": member.id, "number_of_shares_to_add": 10}
+        response = self.client.post(url, data)
 
         self.assertEqual(
-            "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist.",
-            context_manager.exception.message,
+            [
+                "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
+            ],
+            response.json(),
         )
         self.assertEqual(1, CoopShareTransaction.objects.count())
