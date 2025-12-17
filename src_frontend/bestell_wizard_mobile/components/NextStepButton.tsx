@@ -30,16 +30,28 @@ const NextStepButton: React.FC<NextButtonProps> = ({
     return "Weiter";
   }
 
+  function getVariant() {
+    if (showError) {
+      return "outline-danger";
+    }
+
+    if (isOrderStep) {
+      return "dark";
+    }
+
+    return BUTTON_VARIANT;
+  }
+
   return (
     <div
       style={{ height: NEXT_BUTTON_HEIGHT + "dvh" }}
       className={"d-flex flex-column align-items-center justify-content-center"}
     >
       <TapirButton
-        variant={showError ? "outline-danger" : BUTTON_VARIANT}
+        variant={getVariant()}
         text={getButtonText()}
         onClick={onClick}
-        icon={"keyboard_arrow_down"}
+        icon={isOrderStep ? "done_all" : "keyboard_arrow_down"}
         disabled={disabled ?? false}
         className={"nextStepButton"}
         loading={loading}
