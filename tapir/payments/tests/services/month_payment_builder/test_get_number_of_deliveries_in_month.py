@@ -44,7 +44,11 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         )
 
         def mock_get_next_delivery_date(
-            reference_date, pickup_location_id, delivery_cycle, cache
+            reference_date,
+            pickup_location_id,
+            delivery_cycle,
+            check_for_weeks_without_delivery,
+            cache,
         ):
             if reference_date < first_of_month:
                 return first_of_month
@@ -89,6 +93,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
                     reference_date=reference_date,
                     pickup_location_id="pl_id_1",
                     delivery_cycle=delivery_cycle,
+                    check_for_weeks_without_delivery=False,
                     cache=cache,
                 )
                 for reference_date in [
@@ -105,6 +110,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
                     reference_date=reference_date,
                     pickup_location_id="pl_id_2",
                     delivery_cycle=delivery_cycle,
+                    check_for_weeks_without_delivery=False,
                     cache=cache,
                 )
                 for reference_date in [
@@ -140,7 +146,11 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         mock_get_member_pickup_location_id_from_cache.return_value = "pl_id"
 
         def mock_get_next_delivery_date(
-            reference_date, pickup_location_id, delivery_cycle, cache
+            reference_date,
+            pickup_location_id,
+            delivery_cycle,
+            check_for_weeks_without_delivery,
+            cache,
         ):
             if reference_date < first_of_month:
                 return first_of_month
@@ -184,7 +194,11 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         mock_get_member_pickup_location_id_from_cache.return_value = "pl_id"
 
         def mock_get_next_delivery_date(
-            reference_date, pickup_location_id, delivery_cycle, cache
+            reference_date,
+            pickup_location_id,
+            delivery_cycle,
+            check_for_weeks_without_delivery,
+            cache,
         ):
             if reference_date < first_of_month:
                 return first_of_month
@@ -228,7 +242,11 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         mock_get_member_pickup_location_id_from_cache.return_value = "pl_id"
 
         def mock_get_next_delivery_date(
-            reference_date, pickup_location_id, delivery_cycle, cache
+            reference_date,
+            pickup_location_id,
+            delivery_cycle,
+            check_for_weeks_without_delivery,
+            cache,
         ):
             if reference_date < first_of_month:
                 return first_of_month
