@@ -43,7 +43,7 @@ const TapirCheckbox: React.FC<NextButtonProps> = ({
             <polyline points={"1.5 6 4.5 9 10.5 1"} />
           </svg>
         </span>
-        {label && <span>{label}</span>}
+        {label && <span dangerouslySetInnerHTML={{ __html: label }} />}
       </label>
     </div>
   );
