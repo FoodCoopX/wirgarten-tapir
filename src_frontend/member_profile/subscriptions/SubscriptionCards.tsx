@@ -41,7 +41,6 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
         setProductTypes(sortProductTypes(response.productTypes));
         setSubscriptions(response.subscriptions);
         setBestellWizardUrlTemplate(response.bestellWizardUrlTemplate);
-        console.log(response.bestellWizardUrlTemplate);
       })
       .catch((error) =>
         handleRequestError(

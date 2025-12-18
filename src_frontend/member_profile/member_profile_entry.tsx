@@ -121,6 +121,4 @@ if (domNodeCoopSharesCard) {
       csrfToken={getCsrfToken()}
     />,
   );
-} else {
-  console.error("Failed to render coop shares from React");
 }
