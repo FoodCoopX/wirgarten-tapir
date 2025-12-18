@@ -418,11 +418,20 @@ class BestellWizardBaseDataApiView(APIView):
 
         response_data = self.build_simple_response_fields(self.cache)
 
+        trial_period_length_in_weeks = 0
+        if get_parameter_value(
+            key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+        ):
+            trial_period_length_in_weeks = get_parameter_value(
+                key=ParameterKeys.TRIAL_PERIOD_DURATION, cache=self.cache
+            )
+
         response_data.update(
             {
                 "product_types": ProductType.objects.all(),
                 "pickup_locations": PickupLocation.objects.order_by("name"),
                 "show_coop_content": legal_status_is_cooperative(cache=self.cache),
+                "trial_period_length_in_weeks": trial_period_length_in_weeks,
                 "payment_rhythm_choices": {
                     rhythm: MemberPaymentRhythmService.get_rhythm_display_name(
                         rhythm=rhythm
@@ -476,7 +485,6 @@ class BestellWizardBaseDataApiView(APIView):
             "label_checkbox_sepa_mandat": ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             "label_checkbox_contract_policy": ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
             "revocation_rights_explanation": ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
-            "trial_period_length_in_weeks": ParameterKeys.TRIAL_PERIOD_DURATION,
             "default_payment_rhythm": ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
             "coop_statute_link": ParameterKeys.COOP_STATUTE_LINK,
             "organization_name": ParameterKeys.SITE_NAME,

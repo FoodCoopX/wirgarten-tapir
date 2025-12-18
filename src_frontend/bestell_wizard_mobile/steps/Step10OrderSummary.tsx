@@ -22,6 +22,7 @@ import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductTyp
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
 import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
+import dayjs from "dayjs";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -158,6 +159,19 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     return "Unbekannt";
   }
 
+  function getLocationsNotActive() {
+    return selectedPickupLocations.filter(
+      (pickupLocation) => pickupLocation !== activePickupLocation,
+    );
+  }
+
+  function getEndOfTrialPeriod() {
+    return dayjs(contractStartDate)
+      .add(settings.trialPeriodLengthInWeeks, "week")
+      .subtract(1, "day")
+      .toDate();
+  }
+
   return (
     <>
       <div>
@@ -215,28 +229,30 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                           </>
                         )}
                       {!productType.noDelivery &&
-                        selectedPickupLocations.length > 0 && (
+                        getLocationsNotActive().length > 0 && (
                           <li>
                             <div>
                               Weitere Verteilstation-Wünsche auf Warteliste:
                             </div>
                             <ul>
-                              {selectedPickupLocations
-                                .filter(
-                                  (pickupLocation) =>
-                                    pickupLocation !== activePickupLocation,
-                                )
-                                .map((pickupLocation) => (
-                                  <li key={pickupLocation.id}>
-                                    {pickupLocation.name}
-                                  </li>
-                                ))}
+                              {getLocationsNotActive().map((pickupLocation) => (
+                                <li key={pickupLocation.id}>
+                                  {pickupLocation.name}
+                                </li>
+                              ))}
                             </ul>
                           </li>
                         )}
                       {productTypesInWaitingList.has(productType) && (
                         <li>Warteliste</li>
                       )}
+                      {!productTypesInWaitingList.has(productType) &&
+                        settings.trialPeriodLengthInWeeks > 0 && (
+                          <li>
+                            Probezeit bis{" "}
+                            {formatDateNumeric(getEndOfTrialPeriod())}
+                          </li>
+                        )}
                     </ul>
                   )}
                   <TapirButton
