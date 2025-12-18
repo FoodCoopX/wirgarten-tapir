@@ -680,6 +680,7 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
                     delivery_cycle=TapirCache.get_product_type_by_id(
                         cache=self.cache, product_type_id=product_type_id
                     ).delivery_cycle,
+                    check_for_weeks_without_delivery=True,
                     cache=self.cache,
                 )
                 for product_type_id in product_type_ids

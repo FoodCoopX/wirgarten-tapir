@@ -366,6 +366,7 @@ def send_order_confirmation(
                 member, subscription.start_date
             ),
             delivery_cycle=subscription.product.type.delivery_cycle,
+            check_for_weeks_without_delivery=True,
             cache=cache,
         )
         first_pickup_date = min(first_pickup_date, next_delivery_date)

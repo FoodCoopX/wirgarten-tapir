@@ -435,6 +435,7 @@ class MonthPaymentBuilder:
                     cache=cache,
                 ),
                 delivery_cycle=subscription.product.type.delivery_cycle,
+                check_for_weeks_without_delivery=False,
                 cache=cache,
             )
             if (
