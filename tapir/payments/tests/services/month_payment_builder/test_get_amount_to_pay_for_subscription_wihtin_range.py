@@ -3,7 +3,9 @@ from unittest.mock import patch, Mock
 
 from django.test import SimpleTestCase
 
-from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_subscriptions import (
+    MonthPaymentBuilderSubscriptions,
+)
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
@@ -11,16 +13,18 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 
 class TestGetAmountToPayForSubscriptionWithinRange(SimpleTestCase):
     @patch.object(
-        DeliveryPriceCalculator, "get_price_of_single_delivery_without_solidarity"
+        DeliveryPriceCalculator, "get_price_of_single_delivery_for_subscription"
     )
-    @patch.object(MonthPaymentBuilder, "get_number_of_months_and_deliveries_to_pay")
+    @patch.object(
+        MonthPaymentBuilderSubscriptions, "get_number_of_months_and_deliveries_to_pay"
+    )
     def test_getAmountToPayForSubscriptionWithinRange_default_returnsCorrectPrice(
         self,
         mock_get_number_of_months_and_deliveries_to_pay: Mock,
-        mock_get_price_of_single_delivery_without_solidarity: Mock,
+        mock_get_price_of_single_delivery_for_subscription: Mock,
     ):
         mock_get_number_of_months_and_deliveries_to_pay.return_value = 3, 4
-        mock_get_price_of_single_delivery_without_solidarity.return_value = Decimal(
+        mock_get_price_of_single_delivery_for_subscription.return_value = Decimal(
             "2.15"
         )
 
@@ -32,7 +36,7 @@ class TestGetAmountToPayForSubscriptionWithinRange(SimpleTestCase):
         range_end = Mock()
         cache = Mock()
 
-        result = MonthPaymentBuilder.get_amount_to_pay_for_subscription_within_range(
+        result = MonthPaymentBuilderSubscriptions.get_amount_to_pay_for_subscription_within_range(
             subscription=subscription,
             range_start=range_start,
             range_end=range_end,
@@ -52,6 +56,6 @@ class TestGetAmountToPayForSubscriptionWithinRange(SimpleTestCase):
         subscription.total_price.assert_called_once_with(
             reference_date=range_start, cache=cache
         )
-        mock_get_price_of_single_delivery_without_solidarity.assert_called_once_with(
+        mock_get_price_of_single_delivery_for_subscription.assert_called_once_with(
             subscription=subscription, at_date=range_start, cache=cache
         )

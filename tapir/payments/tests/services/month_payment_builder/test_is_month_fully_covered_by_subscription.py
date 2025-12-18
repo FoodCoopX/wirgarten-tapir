@@ -2,7 +2,9 @@ import datetime
 
 from django.test import SimpleTestCase
 
-from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_subscriptions import (
+    MonthPaymentBuilderSubscriptions,
+)
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
@@ -16,9 +18,11 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        result = MonthPaymentBuilder.is_month_fully_covered_by_subscription(
-            subscription=subscription,
-            first_of_month=datetime.date(year=2027, month=7, day=1),
+        result = (
+            MonthPaymentBuilderSubscriptions.is_month_fully_covered_by_subscription(
+                subscription=subscription,
+                first_of_month=datetime.date(year=2027, month=7, day=1),
+            )
         )
 
         self.assertFalse(result)
@@ -32,9 +36,11 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        result = MonthPaymentBuilder.is_month_fully_covered_by_subscription(
-            subscription=subscription,
-            first_of_month=datetime.date(year=2028, month=1, day=1),
+        result = (
+            MonthPaymentBuilderSubscriptions.is_month_fully_covered_by_subscription(
+                subscription=subscription,
+                first_of_month=datetime.date(year=2028, month=1, day=1),
+            )
         )
 
         self.assertFalse(result)
@@ -48,9 +54,11 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        result = MonthPaymentBuilder.is_month_fully_covered_by_subscription(
-            subscription=subscription,
-            first_of_month=datetime.date(year=2027, month=8, day=1),
+        result = (
+            MonthPaymentBuilderSubscriptions.is_month_fully_covered_by_subscription(
+                subscription=subscription,
+                first_of_month=datetime.date(year=2027, month=8, day=1),
+            )
         )
 
         self.assertTrue(result)
@@ -64,9 +72,11 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        result = MonthPaymentBuilder.is_month_fully_covered_by_subscription(
-            subscription=subscription,
-            first_of_month=datetime.date(year=2027, month=8, day=1),
+        result = (
+            MonthPaymentBuilderSubscriptions.is_month_fully_covered_by_subscription(
+                subscription=subscription,
+                first_of_month=datetime.date(year=2027, month=8, day=1),
+            )
         )
 
         self.assertFalse(result)
@@ -80,9 +90,11 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        result = MonthPaymentBuilder.is_month_fully_covered_by_subscription(
-            subscription=subscription,
-            first_of_month=datetime.date(year=2027, month=12, day=1),
+        result = (
+            MonthPaymentBuilderSubscriptions.is_month_fully_covered_by_subscription(
+                subscription=subscription,
+                first_of_month=datetime.date(year=2027, month=12, day=1),
+            )
         )
 
         self.assertTrue(result)
@@ -96,9 +108,11 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
             end_date=datetime.date(year=2027, month=12, day=15),
         )
 
-        result = MonthPaymentBuilder.is_month_fully_covered_by_subscription(
-            subscription=subscription,
-            first_of_month=datetime.date(year=2027, month=12, day=31),
+        result = (
+            MonthPaymentBuilderSubscriptions.is_month_fully_covered_by_subscription(
+                subscription=subscription,
+                first_of_month=datetime.date(year=2027, month=12, day=31),
+            )
         )
 
         self.assertFalse(result)
@@ -112,9 +126,11 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
             end_date=datetime.date(year=2027, month=12, day=31),
         )
 
-        result = MonthPaymentBuilder.is_month_fully_covered_by_subscription(
-            subscription=subscription,
-            first_of_month=datetime.date(year=2027, month=10, day=1),
+        result = (
+            MonthPaymentBuilderSubscriptions.is_month_fully_covered_by_subscription(
+                subscription=subscription,
+                first_of_month=datetime.date(year=2027, month=10, day=1),
+            )
         )
 
         self.assertTrue(result)

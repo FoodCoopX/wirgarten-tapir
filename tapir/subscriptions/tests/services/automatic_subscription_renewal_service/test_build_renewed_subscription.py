@@ -16,9 +16,7 @@ from tapir.wirgarten.tests.factories import (
 
 
 class TestBuildRenewedSubscription(SimpleTestCase):
-    @patch.object(
-        AutomaticSubscriptionRenewalService, "get_renewed_subscription_trial_data"
-    )
+    @patch.object(AutomaticSubscriptionRenewalService, "get_renewed_trial_data")
     @patch.object(NoticePeriodManager, "get_notice_period_duration")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
@@ -27,7 +25,7 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         self,
         mock_get_next_growing_period: Mock,
         mock_get_notice_period_duration: Mock,
-        mock_get_renewed_subscription_trial_data: Mock,
+        mock_get_renewed_trial_data: Mock,
     ):
         product_type = ProductTypeFactory.build()
         product = ProductFactory.build()
@@ -54,7 +52,7 @@ class TestBuildRenewedSubscription(SimpleTestCase):
 
         trial_disabled = Mock()
         trial_end_date_override = Mock()
-        mock_get_renewed_subscription_trial_data.return_value = (
+        mock_get_renewed_trial_data.return_value = (
             trial_disabled,
             trial_end_date_override,
         )
@@ -84,4 +82,3 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         )
         self.assertEqual(4, future_subscription.notice_period_duration)
         self.assertEqual(admin_confirmed, future_subscription.admin_confirmed)
-        return

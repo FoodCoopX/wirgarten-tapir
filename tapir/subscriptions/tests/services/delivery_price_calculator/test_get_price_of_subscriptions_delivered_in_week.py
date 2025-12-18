@@ -15,7 +15,7 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(
-        DeliveryPriceCalculator, "get_price_of_single_delivery_without_solidarity"
+        DeliveryPriceCalculator, "get_price_of_single_delivery_for_subscription"
     )
     @patch.object(
         DeliveryPriceCalculator, "get_subscriptions_that_get_delivered_in_week"
@@ -23,13 +23,13 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
     def test_getPriceOfSubscriptionsDeliveredInWeek_default_returnsSumOfPriceTimesQuantity(
         self,
         mock_get_subscriptions_that_get_delivered_in_week: Mock,
-        mock_get_price_of_single_delivery_without_solidarity: Mock,
+        mock_get_price_of_single_delivery_for_subscription: Mock,
     ):
         subscriptions = [Mock(), Mock()]
         subscriptions[0].quantity = 2
         subscriptions[1].quantity = 4
         mock_get_subscriptions_that_get_delivered_in_week.return_value = subscriptions
-        mock_get_price_of_single_delivery_without_solidarity.side_effect = [15, 26]
+        mock_get_price_of_single_delivery_for_subscription.side_effect = [15, 26]
         member = Mock()
         reference_date = Mock()
         cache = {}
@@ -47,9 +47,9 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
             member, reference_date, cache=cache
         )
         self.assertEqual(
-            2, mock_get_price_of_single_delivery_without_solidarity.call_count
+            2, mock_get_price_of_single_delivery_for_subscription.call_count
         )
-        mock_get_price_of_single_delivery_without_solidarity.assert_has_calls(
+        mock_get_price_of_single_delivery_for_subscription.assert_has_calls(
             [
                 call(subscription, reference_date, cache=cache)
                 for subscription in subscriptions
@@ -58,7 +58,7 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         )
 
     @patch.object(
-        DeliveryPriceCalculator, "get_price_of_single_delivery_without_solidarity"
+        DeliveryPriceCalculator, "get_price_of_single_delivery_for_subscription"
     )
     @patch.object(
         DeliveryPriceCalculator, "get_subscriptions_that_get_delivered_in_week"
@@ -66,7 +66,7 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
     def test_getPriceOfSubscriptionsDeliveredInWeek_onlySubscriptionsAffectedByJokers_returnsSumOnlyForSubscriptionsAffectedByJokers(
         self,
         mock_get_subscriptions_that_get_delivered_in_week: Mock,
-        mock_get_price_of_single_delivery_without_solidarity: Mock,
+        mock_get_price_of_single_delivery_for_subscription: Mock,
     ):
         SubscriptionFactory.create(
             product__type__is_affected_by_jokers=False, quantity=2
@@ -78,7 +78,7 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         mock_get_subscriptions_that_get_delivered_in_week.return_value = (
             Subscription.objects.all()
         )
-        mock_get_price_of_single_delivery_without_solidarity.return_value = 26
+        mock_get_price_of_single_delivery_for_subscription.return_value = 26
         member = Mock()
         reference_date = Mock()
         cache = {}
@@ -95,6 +95,6 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         mock_get_subscriptions_that_get_delivered_in_week.assert_called_once_with(
             member, reference_date, cache=cache
         )
-        mock_get_price_of_single_delivery_without_solidarity.assert_called_once_with(
+        mock_get_price_of_single_delivery_for_subscription.assert_called_once_with(
             subscription_2, reference_date, cache=cache
         )

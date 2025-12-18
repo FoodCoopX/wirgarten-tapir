@@ -3,13 +3,16 @@ from unittest.mock import patch, Mock, call
 
 from django.test import SimpleTestCase
 
-from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_subscriptions import (
+    MonthPaymentBuilderSubscriptions,
+)
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
 class TestGetTotalToPay(SimpleTestCase):
     @patch.object(
-        MonthPaymentBuilder, "get_amount_to_pay_for_subscription_within_range"
+        MonthPaymentBuilderSubscriptions,
+        "get_amount_to_pay_for_subscription_within_range",
     )
     def test_getTotalToPay_default_considersOnlySubscriptionsThatOverlapWithTheGivenRange(
         self, mock_get_amount_to_pay_for_subscription_within_range: Mock
@@ -41,10 +44,10 @@ class TestGetTotalToPay(SimpleTestCase):
         ]
         cache = Mock()
 
-        result = MonthPaymentBuilder.get_total_to_pay(
+        result = MonthPaymentBuilderSubscriptions.get_total_to_pay(
             range_start=range_start,
             range_end=range_end,
-            subscriptions=[subscription_1, subscription_2, subscription_3],
+            contracts=[subscription_1, subscription_2, subscription_3],
             cache=cache,
         )
 

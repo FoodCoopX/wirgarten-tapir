@@ -7,7 +7,10 @@ from tapir.payments.models import MemberCredit, MemberCreditCreatedLogEntry
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_subscriptions import (
+    MonthPaymentBuilderSubscriptions,
+)
+from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.models import Member, ProductType
@@ -96,11 +99,11 @@ class MemberCreditCreator:
 
         mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
 
-        already_paid = MonthPaymentBuilder.get_already_paid_amount(
+        already_paid = MonthPaymentBuilderUtils.get_already_paid_amount(
             range_start=first_day_of_rhythm_period,
             range_end=last_day_of_rhythm_period,
             mandate_ref=mandate_ref,
-            product_type_name=product_type.name,
+            payment_type=product_type.name,
             cache=cache,
             generated_payments=set(),
         )
@@ -113,10 +116,10 @@ class MemberCreditCreator:
             for subscription in subscriptions
             if subscription.member_id == member.id
         ]
-        total_to_pay = MonthPaymentBuilder.get_total_to_pay(
+        total_to_pay = MonthPaymentBuilderSubscriptions.get_total_to_pay(
             range_start=first_day_of_rhythm_period,
             range_end=last_day_of_rhythm_period,
-            subscriptions=subscriptions,
+            contracts=subscriptions,
             cache=cache,
         )
 

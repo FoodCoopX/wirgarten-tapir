@@ -1,6 +1,8 @@
 from django.test import SimpleTestCase
 
-from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_subscriptions import (
+    MonthPaymentBuilderSubscriptions,
+)
 from tapir.wirgarten.tests.factories import (
     ProductTypeFactory,
     MemberFactory,
@@ -27,7 +29,7 @@ class TestGroupSubscriptionsByMemberAndProductType(SimpleTestCase):
             member=member_2, product__type=product_type_1, mandate_ref__ref="test_ref_2"
         )
 
-        result = MonthPaymentBuilder.group_subscriptions_by_member_and_product_type(
+        result = MonthPaymentBuilderSubscriptions.group_subscriptions_by_member_and_product_type(
             subscriptions=[
                 subscription_m1_pt1_a,
                 subscription_m1_pt1_b,

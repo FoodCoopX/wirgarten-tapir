@@ -4,7 +4,9 @@ from unittest.mock import patch, Mock, call
 from django.test import SimpleTestCase
 
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_subscriptions import (
+    MonthPaymentBuilderSubscriptions,
+)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -58,7 +60,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
             mock_get_next_delivery_date
         )
 
-        result = MonthPaymentBuilder.get_number_of_deliveries_in_month(
+        result = MonthPaymentBuilderSubscriptions.get_number_of_deliveries_in_month(
             subscription=subscription, first_of_month=first_of_month, cache=cache
         )
 
@@ -160,7 +162,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
             mock_get_next_delivery_date
         )
 
-        result = MonthPaymentBuilder.get_number_of_deliveries_in_month(
+        result = MonthPaymentBuilderSubscriptions.get_number_of_deliveries_in_month(
             subscription=subscription, first_of_month=first_of_month, cache=cache
         )
 
@@ -208,7 +210,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
             mock_get_next_delivery_date
         )
 
-        result = MonthPaymentBuilder.get_number_of_deliveries_in_month(
+        result = MonthPaymentBuilderSubscriptions.get_number_of_deliveries_in_month(
             subscription=subscription, first_of_month=first_of_month, cache=cache
         )
 
@@ -256,7 +258,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
             mock_get_next_delivery_date
         )
 
-        result = MonthPaymentBuilder.get_number_of_deliveries_in_month(
+        result = MonthPaymentBuilderSubscriptions.get_number_of_deliveries_in_month(
             subscription=subscription, first_of_month=first_of_month, cache=cache
         )
 
