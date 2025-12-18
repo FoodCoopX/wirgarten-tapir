@@ -116,10 +116,9 @@ class BestellWizardOrderFulfiller:
     @classmethod
     def create_member(cls, personal_data, is_student: bool, cache: dict):
         now = get_now(cache=cache)
-        contracts_signed = {
-            contract: now
-            for contract in ["sepa_consent", "withdrawal_consent", "privacy_consent"]
-        }
+        contracts_signed = dict.fromkeys(
+            ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
+        )
 
         return Member.objects.create(
             **personal_data, **contracts_signed, is_student=is_student
@@ -139,13 +138,13 @@ class BestellWizardOrderFulfiller:
         if len(subscriptions) > 0:
             for subscription in subscriptions:
                 end_of_trial_period = TrialPeriodManager.get_end_of_trial_period(
-                    subscription=subscription, cache=cache
+                    obj=subscription, cache=cache
                 )
                 if end_of_trial_period is not None:
                     shares_valid_at = min(
                         shares_valid_at,
                         TrialPeriodManager.get_end_of_trial_period(
-                            subscription=subscription, cache=cache
+                            obj=subscription, cache=cache
                         ),
                     )
                     at_least_one_trial_period_found = True

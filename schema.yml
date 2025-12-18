@@ -6448,9 +6448,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CoopShareTransaction'
+        solidarity_contributions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolidarityContribution'
       required:
       - coop_share_transactions
       - payment
+      - solidarity_contributions
       - subscriptions
     ExtendedProduct:
       type: object
@@ -8833,6 +8838,12 @@ components:
         end_date:
           type: string
           format: date
+        trial_disabled:
+          type: boolean
+        trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
         member:
           type: string
       required:

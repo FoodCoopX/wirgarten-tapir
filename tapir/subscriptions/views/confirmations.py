@@ -245,8 +245,8 @@ class MemberDataToConfirmApiView(APIView):
         if growing_period.end_date > subscription.end_date:
             cancellation_type = "Unterjährige Kündigung"
             show_warning = True
-        if TrialPeriodManager.is_subscription_in_trial(
-            subscription=subscription,
+        if TrialPeriodManager.is_contract_in_trial(
+            contract=subscription,
             reference_date=subscription.cancellation_ts.date(),
             cache=cache,
         ):

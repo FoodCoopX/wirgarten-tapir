@@ -25,7 +25,7 @@ class TestIsSubscriptionInTrial(SimpleTestCase):
         mock_get_parameter_value.return_value = True
         cache = {}
 
-        result = TrialPeriodManager.is_subscription_in_trial(subscription, cache=cache)
+        result = TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
@@ -46,7 +46,7 @@ class TestIsSubscriptionInTrial(SimpleTestCase):
         mock_get_parameter_value.return_value = True
         cache = {}
 
-        result = TrialPeriodManager.is_subscription_in_trial(subscription, cache=cache)
+        result = TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
 
         self.assertTrue(result)
         mock_get_parameter_value.assert_called_once_with(
@@ -67,7 +67,7 @@ class TestIsSubscriptionInTrial(SimpleTestCase):
         mock_get_parameter_value.return_value = True
         cache = {}
 
-        result = TrialPeriodManager.is_subscription_in_trial(subscription, cache=cache)
+        result = TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
 
         self.assertTrue(result)
         mock_get_parameter_value.assert_called_once_with(
@@ -88,7 +88,7 @@ class TestIsSubscriptionInTrial(SimpleTestCase):
         mock_get_parameter_value.return_value = False
         cache = {}
 
-        result = TrialPeriodManager.is_subscription_in_trial(subscription, cache=cache)
+        result = TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(

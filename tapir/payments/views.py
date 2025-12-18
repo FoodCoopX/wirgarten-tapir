@@ -25,6 +25,12 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_solidarity_contributions import (
+    MonthPaymentBuilderSolidarityContributions,
+)
+from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
+    AutomaticSolidarityContributionRenewalService,
+)
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
@@ -109,24 +115,45 @@ class GetFutureMemberPaymentsApiView(APIView):
             for subscription in TapirCache.get_all_subscriptions(cache=self.cache)
             if subscription.member_id == member_id
         ]
+        existing_contributions = [
+            contribution
+            for contribution in TapirCache.get_all_solidarity_contributions(
+                cache=self.cache
+            )
+            if contribution.member_id == member_id
+        ]
         for payment in member_payments:
             subscriptions = []
             coop_share_transactions = []
-            if payment.type == "Genossenschaftsanteile":
-                coop_share_transactions = CoopShareTransaction.objects.filter(
-                    payment=payment
-                )
-            else:
-                subscriptions = self.get_relevant_subscriptions(
-                    existing_subscriptions=existing_subscriptions,
-                    member_id=member_id,
-                    payment=payment,
-                )
+            solidarity_contributions = []
+            match payment.type:
+                case "Genossenschaftsanteile":
+                    coop_share_transactions = CoopShareTransaction.objects.filter(
+                        payment=payment
+                    )
+                case (
+                    MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
+                ):
+                    solidarity_contributions = (
+                        self.get_relevant_solidarity_contributions(
+                            existing_contributions=existing_contributions,
+                            member_id=member_id,
+                            payment=payment,
+                        )
+                    )
+                case _:
+                    subscriptions = self.get_relevant_subscriptions(
+                        existing_subscriptions=existing_subscriptions,
+                        member_id=member_id,
+                        payment=payment,
+                    )
+
             extended_payments.append(
                 {
                     "payment": payment,
                     "subscriptions": subscriptions,
                     "coop_share_transactions": coop_share_transactions,
+                    "solidarity_contributions": solidarity_contributions,
                 }
             )
         return extended_payments
@@ -154,6 +181,30 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
         ]
         return subscriptions
+
+    def get_relevant_solidarity_contributions(
+        self, existing_contributions, member_id, payment
+    ):
+        planned_renewed_contributions = [
+            AutomaticSolidarityContributionRenewalService.build_renewed_contribution(
+                contribution=contribution, cache=self.cache
+            )
+            for contribution in AutomaticSolidarityContributionRenewalService.get_contributions_that_will_be_renewed(
+                reference_date=payment.due_date, cache=self.cache
+            )
+            if contribution.member_id == member_id
+        ]
+        contributions = [
+            contribution
+            for contribution in existing_contributions + planned_renewed_contributions
+            if DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=contribution.start_date,
+                range_1_end=contribution.end_date,
+                range_2_start=payment.subscription_payment_range_start,
+                range_2_end=payment.subscription_payment_range_end,
+            )
+        ]
+        return contributions
 
 
 class GetMemberPaymentRhythmDataApiView(APIView):

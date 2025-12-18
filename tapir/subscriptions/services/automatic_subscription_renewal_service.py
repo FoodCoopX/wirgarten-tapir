@@ -2,6 +2,7 @@ import datetime
 from typing import Dict, Callable
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
@@ -63,8 +64,8 @@ class AutomaticSubscriptionRenewalService:
     def build_renewed_subscription(cls, subscription: Subscription, cache: Dict):
         next_growing_period = get_next_growing_period(cache=cache)
 
-        trial_disabled, trial_end_date_override = (
-            cls.get_renewed_subscription_trial_data(subscription, cache=cache)
+        trial_disabled, trial_end_date_override = cls.get_renewed_trial_data(
+            subscription, cache=cache
         )
 
         subscription = Subscription(
@@ -86,8 +87,8 @@ class AutomaticSubscriptionRenewalService:
         return subscription
 
     @classmethod
-    def get_renewed_subscription_trial_data(
-        cls, old_subscription: Subscription, cache: Dict
+    def get_renewed_trial_data(
+        cls, old_obj: Subscription | SolidarityContribution, cache: Dict
     ):
         # returns (trial_disabled, trial_end_date_override)
 
@@ -95,9 +96,9 @@ class AutomaticSubscriptionRenewalService:
             return True, None
 
         trial_end_date = TrialPeriodManager.get_end_of_trial_period(
-            old_subscription, cache=cache
+            old_obj, cache=cache
         )
-        if trial_end_date is not None and trial_end_date > old_subscription.end_date:
+        if trial_end_date is not None and trial_end_date > old_obj.end_date:
             return False, trial_end_date
 
         return True, None

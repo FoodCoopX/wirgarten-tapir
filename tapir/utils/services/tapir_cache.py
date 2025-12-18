@@ -39,10 +39,20 @@ class TapirCache:
             cache,
             key,
             lambda: set(
-                Subscription.objects.order_by("id").select_related(
+                Subscription.objects.select_related(
                     "member", "product", "product__type", "mandate_ref"
                 )
             ),
+        )
+
+    @classmethod
+    def get_all_solidarity_contributions(
+        cls, cache: Dict
+    ) -> Set[SolidarityContribution]:
+        return get_from_cache_or_compute(
+            cache,
+            "all_solidarity_contributions",
+            lambda: set(SolidarityContribution.objects.select_related("member")),
         )
 
     @classmethod
@@ -68,6 +78,23 @@ class TapirCache:
 
         subscriptions_by_date = get_from_cache_or_compute(cache, key, lambda: {})
         return get_from_cache_or_compute(subscriptions_by_date, reference_date, compute)
+
+    @classmethod
+    def get_solidarity_contributions_active_at_date(
+        cls, reference_date: datetime.date, cache: Dict
+    ) -> set[SolidarityContribution]:
+        def compute():
+            all_contributions = cls.get_all_solidarity_contributions(cache)
+            return {
+                contribution
+                for contribution in all_contributions
+                if contribution.start_date <= reference_date <= contribution.end_date
+            }
+
+        contributions_by_date = get_from_cache_or_compute(
+            cache, "solidarity_contributions_by_date", lambda: {}
+        )
+        return get_from_cache_or_compute(contributions_by_date, reference_date, compute)
 
     @classmethod
     def get_active_and_future_subscriptions_by_member_id(
@@ -415,8 +442,8 @@ class TapirCache:
         return rhythm_at_date
 
     @classmethod
-    def get_payments_by_mandate_ref_and_product_type(
-        cls, cache: dict, product_type_name: str, mandate_ref: MandateReference
+    def get_payments_by_mandate_ref_and_type(
+        cls, cache: dict, payment_type: str, mandate_ref: MandateReference
     ) -> set[Payment]:
         def compute():
             payments = Payment.objects.select_related("mandate_ref")
@@ -431,12 +458,12 @@ class TapirCache:
 
         payments_by_mandate_ref_and_product_type = get_from_cache_or_compute(
             cache=cache,
-            key="payments_by_mandate_ref_and_product_type",
+            key="payments_by_mandate_ref_and_type",
             compute_function=compute,
         )
 
         return payments_by_mandate_ref_and_product_type.get(mandate_ref, {}).get(
-            product_type_name, set()
+            payment_type, set()
         )
 
     @classmethod

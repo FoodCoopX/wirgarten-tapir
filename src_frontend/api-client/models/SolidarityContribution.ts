@@ -45,6 +45,18 @@ export interface SolidarityContribution {
     endDate: Date;
     /**
      * 
+     * @type {boolean}
+     * @memberof SolidarityContribution
+     */
+    trialDisabled?: boolean;
+    /**
+     * 
+     * @type {Date}
+     * @memberof SolidarityContribution
+     */
+    trialEndDateOverride?: Date | null;
+    /**
+     * 
      * @type {string}
      * @memberof SolidarityContribution
      */
@@ -76,6 +88,8 @@ export function SolidarityContributionFromJSONTyped(json: any, ignoreDiscriminat
         'amount': json['amount'],
         'startDate': (new Date(json['start_date'])),
         'endDate': (new Date(json['end_date'])),
+        'trialDisabled': json['trial_disabled'] == null ? undefined : json['trial_disabled'],
+        'trialEndDateOverride': json['trial_end_date_override'] == null ? undefined : (new Date(json['trial_end_date_override'])),
         'member': json['member'],
     };
 }
@@ -95,6 +109,8 @@ export function SolidarityContributionFromJSONTyped(json: any, ignoreDiscriminat
         'amount': value['amount'],
         'start_date': ((value['startDate']).toISOString().substring(0,10)),
         'end_date': ((value['endDate']).toISOString().substring(0,10)),
+        'trial_disabled': value['trialDisabled'],
+        'trial_end_date_override': value['trialEndDateOverride'] == null ? undefined : ((value['trialEndDateOverride'] as any).toISOString().substring(0,10)),
         'member': value['member'],
     };
 }

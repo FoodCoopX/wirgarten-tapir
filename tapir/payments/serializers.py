@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from tapir.deliveries.serializers import SubscriptionSerializer
 from tapir.payments.models import MemberPaymentRhythm, MemberCredit
+from tapir.solidarity_contribution.serializers import SolidarityContributionSerializer
 from tapir.subscriptions.serializers import (
     CoopShareTransactionSerializer,
     MemberSerializer,
@@ -21,6 +22,7 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     payment = PaymentSerializer()
     subscriptions = SubscriptionSerializer(many=True)
     coop_share_transactions = CoopShareTransactionSerializer(many=True)
+    solidarity_contributions = SolidarityContributionSerializer(many=True)
 
 
 class MemberCreditSerializer(serializers.ModelSerializer):

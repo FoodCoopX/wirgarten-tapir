@@ -117,7 +117,7 @@ def get_queryset_members_in_trial(cache: dict):
         for subscription in get_active_and_future_subscriptions(
             reference_date=today, cache=cache
         )
-        if TrialPeriodManager.is_subscription_in_trial(
+        if TrialPeriodManager.is_contract_in_trial(
             subscription, reference_date=today, cache=cache
         )
     ]

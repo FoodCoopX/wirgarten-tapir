@@ -317,3 +317,9 @@ main {
   src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Bold.ttf")
     format("ttf");
 }
+
+@font-face {
+  font-family: "BaiJamjuree";
+  src: url("/static/core/themes/ernteunion_ost/fonts/BaiJamjuree-Regular.ttf")
+    format("ttf");
+}

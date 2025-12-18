@@ -22,6 +22,70 @@ interface FuturePaymentsModalProps {
   loading: boolean;
 }
 
+function getBadgeBackground(payment: Payment) {
+  if (payment.dueDate > new Date()) {
+    return "info";
+  }
+
+  switch (payment.status) {
+    case "DUE":
+      return "danger";
+    case "PAID":
+      return "success";
+    default:
+      return "info";
+  }
+}
+
+function getBadgeText(payment: Payment) {
+  if (payment.dueDate > new Date()) {
+    return "UPCOMING";
+  }
+
+  return payment.status;
+}
+
+function getStartDate(extendedPayment: ExtendedPayment) {
+  const paymentRangeStart =
+    extendedPayment.payment.subscriptionPaymentRangeStart;
+
+  const subscriptionStartDates = extendedPayment.subscriptions.map(
+    (subscription) => subscription.startDate,
+  );
+
+  const contributionsStartDates = extendedPayment.solidarityContributions.map(
+    (contribution) => contribution.startDate,
+  );
+
+  const minDate = getMinimumDate([
+    paymentRangeStart!,
+    ...subscriptionStartDates,
+    ...contributionsStartDates,
+  ]);
+
+  return getMaximumDate([minDate, paymentRangeStart!]);
+}
+
+function getEndDate(extendedPayment: ExtendedPayment) {
+  const paymentRangeEnd = extendedPayment.payment.subscriptionPaymentRangeEnd;
+
+  const subscriptionEndDates = extendedPayment.subscriptions.map(
+    (subscription) => subscription.endDate ?? new Date("9999-12-31"),
+  );
+
+  const contributionEndDates = extendedPayment.solidarityContributions.map(
+    (contribution) => contribution.endDate,
+  );
+
+  const maxDate = getMaximumDate([
+    paymentRangeEnd!,
+    ...subscriptionEndDates,
+    ...contributionEndDates,
+  ]);
+
+  return getMinimumDate([maxDate, paymentRangeEnd!]);
+}
+
 const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   onHide,
   show,
@@ -29,56 +93,6 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   loading,
 }) => {
   dayjs.extend(RelativeTime);
-
-  function getBadgeBackground(payment: Payment) {
-    if (payment.dueDate > new Date()) {
-      return "info";
-    }
-
-    switch (payment.status) {
-      case "DUE":
-        return "danger";
-      case "PAID":
-        return "success";
-      default:
-        return "info";
-    }
-  }
-
-  function getBadgeText(payment: Payment) {
-    if (payment.dueDate > new Date()) {
-      return "UPCOMING";
-    }
-
-    return payment.status;
-  }
-
-  function getStartDate(extendedPayment: ExtendedPayment) {
-    const paymentRangeStart =
-      extendedPayment.payment.subscriptionPaymentRangeStart;
-    const subscriptionStartDates = extendedPayment.subscriptions.map(
-      (subscription) => subscription.startDate,
-    );
-    const earliestSubscriptionStart = getMinimumDate(subscriptionStartDates);
-    if (earliestSubscriptionStart < paymentRangeStart!) {
-      return paymentRangeStart;
-    }
-
-    return earliestSubscriptionStart;
-  }
-
-  function getEndDate(extendedPayment: ExtendedPayment) {
-    const paymentRangeEnd = extendedPayment.payment.subscriptionPaymentRangeEnd;
-    const subscriptionEndDates = extendedPayment.subscriptions.map(
-      (subscription) => subscription.endDate ?? new Date("9999-12-31"),
-    );
-    const latestSubscriptionEnd = getMaximumDate(subscriptionEndDates);
-    if (latestSubscriptionEnd > paymentRangeEnd!) {
-      return paymentRangeEnd;
-    }
-
-    return latestSubscriptionEnd;
-  }
 
   function buildExtendedPayment(extendedPayment: ExtendedPayment) {
     return (
@@ -97,19 +111,23 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
               {formatSubscription(subscription)}
             </span>
           ))}
-          {extendedPayment.subscriptions.length > 0 && (
-            <span>
-              {formatDateNumeric(getStartDate(extendedPayment))}
-              {" -> "}
-              {formatDateNumeric(getEndDate(extendedPayment))}
-            </span>
-          )}
           {extendedPayment.coopShareTransactions.map((transaction) => (
             <span key={transaction.id}>
               {transaction.quantity}
               {" × Genossenschaftsanteile"}
             </span>
           ))}
+          {extendedPayment.solidarityContributions.length > 0 && (
+            <span>Solidarbeitrag</span>
+          )}
+          {(extendedPayment.subscriptions.length > 0 ||
+            extendedPayment.solidarityContributions.length > 0) && (
+            <span>
+              {formatDateNumeric(getStartDate(extendedPayment))}
+              {" -> "}
+              {formatDateNumeric(getEndDate(extendedPayment))}
+            </span>
+          )}
           <Badge bg={getBadgeBackground(extendedPayment.payment)}>
             {getBadgeText(extendedPayment.payment)}
           </Badge>

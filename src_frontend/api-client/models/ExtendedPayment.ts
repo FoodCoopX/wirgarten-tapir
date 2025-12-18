@@ -34,6 +34,13 @@ import {
     SubscriptionToJSON,
     SubscriptionToJSONTyped,
 } from './Subscription';
+import type { SolidarityContribution } from './SolidarityContribution';
+import {
+    SolidarityContributionFromJSON,
+    SolidarityContributionFromJSONTyped,
+    SolidarityContributionToJSON,
+    SolidarityContributionToJSONTyped,
+} from './SolidarityContribution';
 
 /**
  * 
@@ -59,6 +66,12 @@ export interface ExtendedPayment {
      * @memberof ExtendedPayment
      */
     coopShareTransactions: Array<CoopShareTransaction>;
+    /**
+     * 
+     * @type {Array<SolidarityContribution>}
+     * @memberof ExtendedPayment
+     */
+    solidarityContributions: Array<SolidarityContribution>;
 }
 
 /**
@@ -68,6 +81,7 @@ export function instanceOfExtendedPayment(value: object): value is ExtendedPayme
     if (!('payment' in value) || value['payment'] === undefined) return false;
     if (!('subscriptions' in value) || value['subscriptions'] === undefined) return false;
     if (!('coopShareTransactions' in value) || value['coopShareTransactions'] === undefined) return false;
+    if (!('solidarityContributions' in value) || value['solidarityContributions'] === undefined) return false;
     return true;
 }
 
@@ -84,6 +98,7 @@ export function ExtendedPaymentFromJSONTyped(json: any, ignoreDiscriminator: boo
         'payment': PaymentFromJSON(json['payment']),
         'subscriptions': ((json['subscriptions'] as Array<any>).map(SubscriptionFromJSON)),
         'coopShareTransactions': ((json['coop_share_transactions'] as Array<any>).map(CoopShareTransactionFromJSON)),
+        'solidarityContributions': ((json['solidarity_contributions'] as Array<any>).map(SolidarityContributionFromJSON)),
     };
 }
 
@@ -101,6 +116,7 @@ export function ExtendedPaymentFromJSONTyped(json: any, ignoreDiscriminator: boo
         'payment': PaymentToJSON(value['payment']),
         'subscriptions': ((value['subscriptions'] as Array<any>).map(SubscriptionToJSON)),
         'coop_share_transactions': ((value['coopShareTransactions'] as Array<any>).map(CoopShareTransactionToJSON)),
+        'solidarity_contributions': ((value['solidarityContributions'] as Array<any>).map(SolidarityContributionToJSON)),
     };
 }
 

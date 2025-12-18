@@ -9,6 +9,8 @@ class SolidarityContribution(TapirModel):
     amount = models.DecimalField(decimal_places=2, max_digits=12)
     start_date = models.DateField()
     end_date = models.DateField()
+    trial_disabled = models.BooleanField(default=False)
+    trial_end_date_override = models.DateField(null=True)
 
     def __str__(self):
         return f"{self.member} - {self.amount} - {self.start_date} - {self.end_date}"

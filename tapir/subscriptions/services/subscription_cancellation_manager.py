@@ -28,7 +28,7 @@ class SubscriptionCancellationManager:
             if subscription.cancellation_ts is None
         ]
         earliest_subscription = subscriptions_for_this_product[0]
-        if TrialPeriodManager.is_subscription_in_trial(earliest_subscription):
+        if TrialPeriodManager.is_contract_in_trial(earliest_subscription):
             return TrialPeriodManager.get_earliest_trial_cancellation_date(
                 earliest_subscription, cache=cache
             )
@@ -51,7 +51,7 @@ class SubscriptionCancellationManager:
             member=member, product=product, cancellation_ts__isnull=True
         ):
             if (
-                not TrialPeriodManager.is_subscription_in_trial(subscription)
+                not TrialPeriodManager.is_contract_in_trial(subscription)
                 and not auto_renew_enabled
             ):
                 raise ImproperlyConfigured(

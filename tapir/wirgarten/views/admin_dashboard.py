@@ -258,12 +258,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             {x.reason: x for x in qs.filter(custom=True).order_by("-timestamp")}.keys()
         )
 
-        context["cancellation_reason_labels"] = list(
-            map(lambda x: x["reason"], responses)
-        ) + ["Sonstige"]
-        context["cancellation_reason_data"] = list(
-            map(lambda x: x["count"] / total * 100, responses)
-        ) + [len(custom_responses) / total * 100]
+        context["cancellation_reason_labels"] = [
+            response["reason"] for response in responses
+        ] + ["Sonstige"]
+
+        context["cancellation_reason_data"] = [
+            response["count"] / total * 100 for response in responses
+        ] + [len(custom_responses) / total * 100]
 
         context["cancellations_other_reasons"] = custom_responses
 
@@ -287,7 +288,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             ).filter(cancellation_ts__isnull=False)
             subscriptions_cancelled_while_in_trial = list(
                 filter(
-                    lambda subscription: TrialPeriodManager.is_subscription_in_trial(
+                    lambda subscription: TrialPeriodManager.is_contract_in_trial(
                         subscription,
                         reference_date=subscription.cancellation_ts.date(),
                         cache=self.cache,

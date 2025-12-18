@@ -28,7 +28,7 @@ class TestGetRenewedSubscriptionTrialDate(SimpleTestCase):
         cache = {}
 
         trial_disabled, trial_end_date_override = (
-            AutomaticSubscriptionRenewalService.get_renewed_subscription_trial_data(
+            AutomaticSubscriptionRenewalService.get_renewed_trial_data(
                 subscription, cache=cache
             )
         )
@@ -56,7 +56,7 @@ class TestGetRenewedSubscriptionTrialDate(SimpleTestCase):
         cache = {}
 
         trial_disabled, trial_end_date_override = (
-            AutomaticSubscriptionRenewalService.get_renewed_subscription_trial_data(
+            AutomaticSubscriptionRenewalService.get_renewed_trial_data(
                 subscription, cache=cache
             )
         )
@@ -78,7 +78,7 @@ class TestGetRenewedSubscriptionTrialDate(SimpleTestCase):
         cache = {}
 
         trial_disabled, trial_end_date_override = (
-            AutomaticSubscriptionRenewalService.get_renewed_subscription_trial_data(
+            AutomaticSubscriptionRenewalService.get_renewed_trial_data(
                 subscription, cache=cache
             )
         )
