@@ -8,6 +8,11 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
+    AutomaticSolidarityContributionRenewalService,
+)
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -23,7 +28,7 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_next_growing_period,
 )
-from tapir.wirgarten.utils import format_date, get_now, member_detail_url
+from tapir.wirgarten.utils import format_date, get_now, member_detail_url, get_today
 
 
 @require_http_methods(["GET"])
@@ -80,9 +85,33 @@ def renew_contract_same_conditions(request, **kwargs):
         admin_confirmed=get_now(cache=cache),
     ).save()
 
+    renew_solidarity_contribution_if_necessary(member_id=member_id, cache=cache)
+
     send_order_confirmation(member, new_subs, cache=cache, from_waiting_list=False)
 
     return HttpResponseRedirect(member_detail_url(member_id))
+
+
+def renew_solidarity_contribution_if_necessary(member_id: str, cache: dict):
+    current_growing_period = TapirCache.get_growing_period_at_date(
+        reference_date=get_today(cache), cache=cache
+    )
+    current_contribution = SolidarityContribution.objects.filter(
+        member_id=member_id,
+        start_date__lte=current_growing_period.end_date,
+        end_date__gte=current_growing_period.end_date,
+    ).first()
+    future_contribution = SolidarityContribution.objects.filter(
+        member_id=member_id,
+        start_date__gt=current_growing_period.end_date,
+    ).first()
+    if current_contribution is not None and future_contribution is None:
+        renewed_contribution = (
+            AutomaticSolidarityContributionRenewalService.build_renewed_contribution(
+                contribution=current_contribution, cache=cache
+            )
+        )
+        renewed_contribution.save()
 
 
 @require_http_methods(["GET"])
