@@ -379,7 +379,7 @@ class UpdateSubscriptionsApiView(APIView):
         MemberCreditCreator.create_member_credit_if_necessary(
             member=member,
             actor=actor,
-            product_type=product_type,
+            product_type_id_or_soli=product_type.id,
             reference_date=contract_start_date,
             comment="Produkt-Anteil vom Admin durch dem Mitgliederbereich reduziert",
             cache=self.cache,

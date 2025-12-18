@@ -187,7 +187,7 @@ class SubscriptionDateChangeApiView(APIView):
 
             MemberCreditCreator.create_member_credit_if_necessary(
                 member=subscription.member,
-                product_type=subscription.product.type,
+                product_type_id_or_soli=subscription.product.type_id,
                 reference_date=get_today(cache=self.cache),
                 comment="Vertragsdaten vom Admin durch der Vertragsliste angepasst.",
                 cache=self.cache,

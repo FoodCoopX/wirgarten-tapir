@@ -66,8 +66,7 @@
 
                 {% for transaction in object_list %}
                 {% for payment in transaction.payments %}
-                <tr href="{% url 'wirgarten:member_payments' payment.mandate_ref.member.pk %}"
-                    class="tr-href transaction-payment-row transaction-payments-{{ transaction.id }}">
+                <tr class="tr-href transaction-payment-row transaction-payments-{{ transaction.id }}">
                     <td class="align-middle">{{ payment.due_date }}</td>
                     <td class="align-middle">{{ payment.mandate_ref.ref }}</td>
                     <td class="align-middle">{{ payment.mandate_ref.member }}</td>

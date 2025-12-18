@@ -7,13 +7,16 @@ from tapir.payments.models import MemberCredit, MemberCreditCreatedLogEntry
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.payments.services.month_payment_builder_solidarity_contributions import (
+    MonthPaymentBuilderSolidarityContributions,
+)
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_last_day_of_month
-from tapir.wirgarten.models import Member, ProductType
+from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
@@ -23,7 +26,7 @@ class MemberCreditCreator:
     def create_member_credit_if_necessary(
         cls,
         member: Member,
-        product_type: ProductType,
+        product_type_id_or_soli: str,
         reference_date: datetime.date,
         comment: str,
         cache: dict,
@@ -31,7 +34,7 @@ class MemberCreditCreator:
     ):
         amount_to_credit = cls.get_amount_to_credit(
             member=member,
-            product_type=product_type,
+            product_type_id_or_soli=product_type_id_or_soli,
             reference_date=reference_date,
             cache=cache,
         )
@@ -71,7 +74,7 @@ class MemberCreditCreator:
     def get_amount_to_credit(
         cls,
         member: Member,
-        product_type: ProductType,
+        product_type_id_or_soli: str,
         reference_date: datetime.date,
         cache: dict,
     ):
@@ -99,29 +102,93 @@ class MemberCreditCreator:
 
         mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
 
+        if (
+            product_type_id_or_soli
+            == MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
+        ):
+            payment_type = (
+                MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
+            )
+        else:
+            payment_type = TapirCache.get_product_type_by_id(
+                cache=cache, product_type_id=product_type_id_or_soli
+            ).name
+
         already_paid = MonthPaymentBuilderUtils.get_already_paid_amount(
             range_start=first_day_of_rhythm_period,
             range_end=last_day_of_rhythm_period,
             mandate_ref=mandate_ref,
-            payment_type=product_type.name,
+            payment_type=payment_type,
             cache=cache,
             generated_payments=set(),
         )
 
+        if (
+            product_type_id_or_soli
+            == MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
+        ):
+            total_to_pay = cls.get_total_to_pay_solidarity_contributions(
+                cache=cache,
+                member_id=member.id,
+                first_day_of_rhythm_period=first_day_of_rhythm_period,
+                last_day_of_rhythm_period=last_day_of_rhythm_period,
+            )
+        else:
+            total_to_pay = cls.get_total_to_pay_subscriptions(
+                product_type_id=product_type_id_or_soli,
+                cache=cache,
+                member_id=member.id,
+                first_day_of_rhythm_period=first_day_of_rhythm_period,
+                last_day_of_rhythm_period=last_day_of_rhythm_period,
+            )
+
+        amount_to_credit = already_paid - total_to_pay
+        return max(amount_to_credit, Decimal(0))
+
+    @classmethod
+    def get_total_to_pay_solidarity_contributions(
+        cls,
+        cache: dict,
+        member_id: str,
+        first_day_of_rhythm_period: datetime.date,
+        last_day_of_rhythm_period: datetime.date,
+    ):
+        contributions = TapirCache.get_all_solidarity_contributions(cache=cache)
+        contributions = [
+            contribution
+            for contribution in contributions
+            if contribution.member_id == member_id
+        ]
+        return MonthPaymentBuilderSolidarityContributions.get_total_to_pay(
+            range_start=first_day_of_rhythm_period,
+            range_end=last_day_of_rhythm_period,
+            contracts=contributions,
+            cache=cache,
+        )
+
+    @classmethod
+    def get_total_to_pay_subscriptions(
+        cls,
+        product_type_id: str,
+        cache: dict,
+        member_id: str,
+        first_day_of_rhythm_period: datetime.date,
+        last_day_of_rhythm_period: datetime.date,
+    ):
+        product_type = TapirCache.get_product_type_by_id(
+            cache=cache, product_type_id=product_type_id
+        )
         subscriptions = TapirCache.get_subscriptions_by_product_type(cache=cache).get(
             product_type, set()
         )
         subscriptions = [
             subscription
             for subscription in subscriptions
-            if subscription.member_id == member.id
+            if subscription.member_id == member_id
         ]
-        total_to_pay = MonthPaymentBuilderSubscriptions.get_total_to_pay(
+        return MonthPaymentBuilderSubscriptions.get_total_to_pay(
             range_start=first_day_of_rhythm_period,
             range_end=last_day_of_rhythm_period,
             contracts=subscriptions,
             cache=cache,
         )
-
-        amount_to_credit = already_paid - total_to_pay
-        return max(amount_to_credit, Decimal(0))

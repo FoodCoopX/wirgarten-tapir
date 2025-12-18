@@ -810,7 +810,7 @@ class Payment(TapirModel):
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )
-    type = models.CharField(max_length=32, null=True)
+    type = models.CharField(max_length=64, null=True)
     subscription_payment_range_start = models.DateField(null=True)
     subscription_payment_range_end = models.DateField(null=True)
 

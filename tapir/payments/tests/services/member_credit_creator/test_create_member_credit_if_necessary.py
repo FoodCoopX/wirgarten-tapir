@@ -21,7 +21,7 @@ class TestCreateMemberCreditIfNecessary(SimpleTestCase):
 
         MemberCreditCreator.create_member_credit_if_necessary(
             member=member,
-            product_type=product_type,
+            product_type_id_or_soli=product_type.id,
             reference_date=reference_date,
             comment=comment,
             cache=cache,
@@ -30,7 +30,7 @@ class TestCreateMemberCreditIfNecessary(SimpleTestCase):
 
         mock_get_amount_to_credit.assert_called_once_with(
             member=member,
-            product_type=product_type,
+            product_type_id_or_soli=product_type.id,
             reference_date=reference_date,
             cache=cache,
         )
@@ -51,7 +51,7 @@ class TestCreateMemberCreditIfNecessary(SimpleTestCase):
 
         MemberCreditCreator.create_member_credit_if_necessary(
             member=member,
-            product_type=product_type,
+            product_type_id_or_soli=product_type.id,
             reference_date=reference_date,
             comment=comment,
             cache=cache,
@@ -60,7 +60,7 @@ class TestCreateMemberCreditIfNecessary(SimpleTestCase):
 
         mock_get_amount_to_credit.assert_called_once_with(
             member=member,
-            product_type=product_type,
+            product_type_id_or_soli=product_type.id,
             reference_date=reference_date,
             cache=cache,
         )

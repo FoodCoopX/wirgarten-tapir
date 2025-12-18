@@ -67,7 +67,7 @@ class TestGetAmountToCredit(TapirIntegrationTest):
             member=member,
             cache={},
             reference_date=datetime.date(year=2027, month=2, day=15),
-            product_type=subscription.product.type,
+            product_type_id_or_soli=subscription.product.type.id,
         )
 
         self.assertEqual(

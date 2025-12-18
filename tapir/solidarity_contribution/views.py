@@ -10,6 +10,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.member_credit_creator import MemberCreditCreator
+from tapir.payments.services.month_payment_builder_solidarity_contributions import (
+    MonthPaymentBuilderSolidarityContributions,
+)
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.solidarity_contribution.serializers import (
     SolidarityContributionSerializer,
@@ -109,6 +113,15 @@ class UpdateMemberSolidarityContributionApiView(APIView):
 
         MemberSolidarityContributionService.assign_contribution_to_member(
             member_id=member.id, change_date=change_date, cache=cache, amount=amount
+        )
+
+        MemberCreditCreator.create_member_credit_if_necessary(
+            member=member,
+            actor=request.user,
+            product_type_id_or_soli=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
+            reference_date=change_date,
+            comment="Solidarbeitrag vom Admin durch dem Mitgliederbereich reduziert",
+            cache=cache,
         )
 
         contributions = SolidarityContribution.objects.filter(
