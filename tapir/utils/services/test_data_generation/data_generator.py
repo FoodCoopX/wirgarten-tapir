@@ -33,6 +33,7 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     PickupLocation,
     MemberPickupLocation,
+    QuestionaireCancellationReasonResponse,
 )
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
@@ -55,6 +56,7 @@ class DataGenerator:
             LogEntry,
             CoopShareTransaction,
             QuestionaireTrafficSourceResponse,
+            QuestionaireCancellationReasonResponse,
             Payment,
             MandateReference,
             EmailChangeRequest,

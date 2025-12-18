@@ -148,6 +148,8 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
         setPersonalData({
           ...personalData,
           paymentRhythm: canChangePaymentRhythmResponse.currentRhythm,
+          firstName: firstName,
+          lastName: lastName,
         });
       })
       .catch((error) =>
