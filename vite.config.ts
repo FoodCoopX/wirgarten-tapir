@@ -57,6 +57,10 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/member_profile/coop_shares/bestell_wizard_coop_shares.tsx",
           ),
+          bestell_wizard_product_type: join(
+            INPUT_DIR,
+            "/member_profile/subscriptions/bestell_wizard_product_type.tsx",
+          ),
           waiting_list_confirm: join(
             INPUT_DIR,
             "/waiting_list/waiting_list_confirm_entry.tsx",
