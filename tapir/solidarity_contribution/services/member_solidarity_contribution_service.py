@@ -33,17 +33,19 @@ class MemberSolidarityContributionService:
             end_date=change_date - datetime.timedelta(days=1),
             cancellation_ts=get_now(cache=cache),
         )
+
+        if amount == 0:
+            return
+
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=change_date, cache=cache
         )
-
-        if amount != 0:
-            SolidarityContribution.objects.create(
-                member_id=member_id,
-                amount=amount,
-                start_date=change_date,
-                end_date=growing_period.end_date,
-            )
+        SolidarityContribution.objects.create(
+            member_id=member_id,
+            amount=amount,
+            start_date=change_date,
+            end_date=growing_period.end_date,
+        )
 
     @classmethod
     def is_user_allowed_to_change_contribution(
