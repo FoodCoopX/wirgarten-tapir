@@ -5,6 +5,7 @@ from tapir.accounts.models import TapirUser
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.utils import get_now
 
 
 class MemberSolidarityContributionService:
@@ -29,7 +30,8 @@ class MemberSolidarityContributionService:
         )
         member_contributions.filter(start_date__gte=change_date).delete()
         member_contributions.filter(end_date__gte=change_date).update(
-            end_date=change_date - datetime.timedelta(days=1)
+            end_date=change_date - datetime.timedelta(days=1),
+            cancellation_ts=get_now(cache=cache),
         )
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=change_date, cache=cache

@@ -38,7 +38,7 @@ class MemberCreditCreator:
             reference_date=reference_date,
             cache=cache,
         )
-        if amount_to_credit == 0:
+        if amount_to_credit is None or amount_to_credit == 0:
             return
 
         cls.create_credit_and_log_entry(

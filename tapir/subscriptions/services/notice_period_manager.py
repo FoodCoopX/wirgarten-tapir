@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions import config as subscription_config
 from tapir.subscriptions.models import NoticePeriod
 from tapir.utils.services.tapir_cache import TapirCache
@@ -60,7 +61,9 @@ class NoticePeriodManager:
         )
 
     @classmethod
-    def get_max_cancellation_date(cls, subscription: Subscription, cache: dict):
+    def get_max_cancellation_date_subscription(
+        cls, subscription: Subscription, cache: dict
+    ):
         notice_period_duration = subscription.notice_period_duration
         if notice_period_duration is None:
             notice_period_duration = cls.get_notice_period_duration(
@@ -69,18 +72,42 @@ class NoticePeriodManager:
                 cache=cache,
             )
 
+        return cls.get_max_cancellation_date_general(
+            end_date=subscription.end_date,
+            notice_period_duration=notice_period_duration,
+            cache=cache,
+        )
+
+    @classmethod
+    def get_max_cancellation_date_solidarity_contribution(
+        cls, contribution: SolidarityContribution, cache: dict
+    ):
+        notice_period_duration = get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+        )
+
+        return cls.get_max_cancellation_date_general(
+            end_date=contribution.end_date,
+            notice_period_duration=notice_period_duration,
+            cache=cache,
+        )
+
+    @classmethod
+    def get_max_cancellation_date_general(
+        cls, end_date: datetime.date, notice_period_duration: int, cache: dict
+    ):
         match get_parameter_value(
             ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
         ):
             case subscription_config.NOTICE_PERIOD_UNIT_MONTHS:
                 return cls.get_max_cancellation_date_unit_months(
-                    subscription=subscription,
+                    end_date=end_date,
                     notice_period_duration=notice_period_duration,
                     cache=cache,
                 )
             case subscription_config.NOTICE_PERIOD_UNIT_WEEKS:
                 return cls.get_max_cancellation_date_unit_weeks(
-                    subscription=subscription,
+                    end_date=end_date,
                     notice_period_duration=notice_period_duration,
                     cache=cache,
                 )
@@ -91,39 +118,37 @@ class NoticePeriodManager:
 
     @classmethod
     def get_max_cancellation_date_unit_weeks(
-        cls, subscription: Subscription, notice_period_duration: int, cache: dict
+        cls, end_date: datetime.date | None, notice_period_duration: int, cache: dict
     ):
-        if subscription.end_date is None:
+        if end_date is None:
             return get_today(cache=cache) + datetime.timedelta(
                 days=notice_period_duration * 7
             )
 
-        return subscription.end_date - datetime.timedelta(
-            days=notice_period_duration * 7
-        )
+        return end_date - datetime.timedelta(days=notice_period_duration * 7)
 
     @classmethod
     def get_max_cancellation_date_unit_months(
-        cls, subscription: Subscription, notice_period_duration: int, cache: dict
+        cls, end_date: datetime.date | None, notice_period_duration: int, cache: dict
     ):
-        if subscription.end_date is None:
+        if end_date is None:
             return get_today(cache=cache) + relativedelta(months=notice_period_duration)
 
-        max_date = subscription.end_date
+        max_date = end_date
         for _ in range(notice_period_duration):
             max_date = max_date.replace(day=1) - datetime.timedelta(days=1)
 
         _, nb_days_in_month_subscription_end_date = calendar.monthrange(
-            subscription.end_date.year, subscription.end_date.month
+            end_date.year, end_date.month
         )
         subscription_ends_on_last_day_of_month = (
-            nb_days_in_month_subscription_end_date == subscription.end_date.day
+            nb_days_in_month_subscription_end_date == end_date.day
         )
         if subscription_ends_on_last_day_of_month:
             return max_date
 
         _, nb_days_in_month = calendar.monthrange(max_date.year, max_date.month)
-        target_day = subscription.end_date.day
+        target_day = end_date.day
         if target_day > nb_days_in_month:
             target_day = nb_days_in_month
 

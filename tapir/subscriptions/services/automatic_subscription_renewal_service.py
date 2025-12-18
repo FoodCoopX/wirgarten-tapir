@@ -52,8 +52,10 @@ class AutomaticSubscriptionRenewalService:
         ).exists():
             return False
 
-        max_cancellation_date = NoticePeriodManager.get_max_cancellation_date(
-            subscription, cache=cache
+        max_cancellation_date = (
+            NoticePeriodManager.get_max_cancellation_date_subscription(
+                subscription, cache=cache
+            )
         )
         if max_cancellation_date >= get_today():
             return False

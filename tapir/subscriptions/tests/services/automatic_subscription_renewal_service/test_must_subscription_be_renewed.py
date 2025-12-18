@@ -115,7 +115,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
 
-    @patch.object(NoticePeriodManager, "get_max_cancellation_date")
+    @patch.object(NoticePeriodManager, "get_max_cancellation_date_subscription")
     @patch.object(Subscription, "objects")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
@@ -128,7 +128,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         mock_get_parameter_value: Mock,
         mock_get_next_growing_period: Mock,
         mock_subscription_objects: Mock,
-        mock_get_max_cancellation_date: Mock,
+        mock_get_max_cancellation_date_subscription: Mock,
     ):
         mock_get_parameter_value.return_value = True
         subscription = Mock()
@@ -140,7 +140,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         next_growing_period = Mock()
         mock_get_next_growing_period.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = False
-        mock_get_max_cancellation_date.return_value = datetime.date(
+        mock_get_max_cancellation_date_subscription.return_value = datetime.date(
             year=2025, month=3, day=2
         )
         mock_timezone(self, datetime.datetime(year=2025, month=3, day=1))
@@ -159,11 +159,11 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
             member=member, period=next_growing_period, product=product
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
-        mock_get_max_cancellation_date.assert_called_once_with(
+        mock_get_max_cancellation_date_subscription.assert_called_once_with(
             subscription, cache=cache
         )
 
-    @patch.object(NoticePeriodManager, "get_max_cancellation_date")
+    @patch.object(NoticePeriodManager, "get_max_cancellation_date_subscription")
     @patch.object(Subscription, "objects")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
@@ -176,7 +176,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         mock_get_parameter_value: Mock,
         mock_get_next_growing_period: Mock,
         mock_subscription_objects: Mock,
-        mock_get_max_cancellation_date: Mock,
+        mock_get_max_cancellation_date_subscription: Mock,
     ):
         mock_get_parameter_value.return_value = True
         subscription = Mock()
@@ -188,7 +188,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         next_growing_period = Mock()
         mock_get_next_growing_period.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = False
-        mock_get_max_cancellation_date.return_value = datetime.date(
+        mock_get_max_cancellation_date_subscription.return_value = datetime.date(
             year=2025, month=3, day=2
         )
         mock_timezone(self, datetime.datetime(year=2025, month=3, day=2))
@@ -207,11 +207,11 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
             member=member, period=next_growing_period, product=product
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
-        mock_get_max_cancellation_date.assert_called_once_with(
+        mock_get_max_cancellation_date_subscription.assert_called_once_with(
             subscription, cache=cache
         )
 
-    @patch.object(NoticePeriodManager, "get_max_cancellation_date")
+    @patch.object(NoticePeriodManager, "get_max_cancellation_date_subscription")
     @patch.object(Subscription, "objects")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
@@ -224,7 +224,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         mock_get_parameter_value: Mock,
         mock_get_next_growing_period: Mock,
         mock_subscription_objects: Mock,
-        mock_get_max_cancellation_date: Mock,
+        mock_get_max_cancellation_date_subscription: Mock,
     ):
         mock_get_parameter_value.return_value = True
         subscription = Mock()
@@ -236,7 +236,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         next_growing_period = Mock()
         mock_get_next_growing_period.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = False
-        mock_get_max_cancellation_date.return_value = datetime.date(
+        mock_get_max_cancellation_date_subscription.return_value = datetime.date(
             year=2025, month=3, day=2
         )
         mock_timezone(self, datetime.datetime(year=2025, month=3, day=3))
@@ -255,6 +255,6 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
             member=member, period=next_growing_period, product=product
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
-        mock_get_max_cancellation_date.assert_called_once_with(
+        mock_get_max_cancellation_date_subscription.assert_called_once_with(
             subscription, cache=cache
         )
