@@ -538,6 +538,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       setToastDatas={setToastDatas}
       showProgress={steps.length > 2}
       hideFooterButtonsOnLastStep={false}
+      selectedNumberOfCoopShares={0}
     />
   );
 };

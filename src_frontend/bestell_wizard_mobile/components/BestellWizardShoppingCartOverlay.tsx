@@ -23,6 +23,7 @@ interface BestellWizardShoppingCartOverlayProps {
   steps: Step[];
   currentStep: Step;
   setCurrentStep: (step: Step) => void;
+  selectedNumberOfCoopShares: number;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -38,6 +39,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
   steps,
   currentStep,
   setCurrentStep,
+  selectedNumberOfCoopShares,
 }) => {
   function canEditProductTypeOrder(productType: PublicProductType) {
     return (
@@ -167,6 +169,15 @@ const BestellWizardShoppingCartOverlay: React.FC<
                     <li key={pickupLocation.id}>{pickupLocation.name}</li>
                   ))}
                 </ol>
+              )}
+            </li>
+          )}
+          {settings.showCoopContent && selectedNumberOfCoopShares > 0 && (
+            <li>
+              Genossenschaftsanteile: {selectedNumberOfCoopShares} x{" "}
+              {formatCurrency(settings.priceOfAShare)} ={" "}
+              {formatCurrency(
+                selectedNumberOfCoopShares * settings.priceOfAShare,
               )}
             </li>
           )}

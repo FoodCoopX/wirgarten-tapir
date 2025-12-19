@@ -770,6 +770,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       setToastDatas={setToastDatas}
       showProgress={true}
       hideFooterButtonsOnLastStep={true}
+      selectedNumberOfCoopShares={selectedNumberOfCoopShares}
     />
   );
 };

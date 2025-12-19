@@ -26,6 +26,7 @@ interface BestellWizardMobileHeaderProps {
   steps: Step[];
   currentStep: Step;
   setCurrentStep: (step: Step) => void;
+  selectedNumberOfCoopShares: number;
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
@@ -40,6 +41,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   steps,
   setCurrentStep,
   currentStep,
+  selectedNumberOfCoopShares,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -104,6 +106,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         steps={steps}
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
+        selectedNumberOfCoopShares={selectedNumberOfCoopShares}
       />
     </>
   );

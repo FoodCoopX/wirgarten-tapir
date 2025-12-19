@@ -219,6 +219,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
       setToastDatas={setToastDatas}
       showProgress={false}
       hideFooterButtonsOnLastStep={false}
+      selectedNumberOfCoopShares={selectedNumberOfCoopShares}
     />
   );
 };

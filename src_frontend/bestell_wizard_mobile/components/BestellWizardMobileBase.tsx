@@ -35,6 +35,7 @@ interface BestellWizardMobileBaseProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   showProgress: boolean;
   hideFooterButtonsOnLastStep: boolean;
+  selectedNumberOfCoopShares: number;
 }
 
 const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
@@ -54,6 +55,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
   setToastDatas,
   showProgress,
   hideFooterButtonsOnLastStep,
+  selectedNumberOfCoopShares,
 }) => {
   return (
     <div
@@ -89,6 +91,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
           steps={steps}
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
+          selectedNumberOfCoopShares={selectedNumberOfCoopShares}
         />
       </div>
       <div
