@@ -38,7 +38,7 @@ class MemberCreditCreator:
             reference_date=reference_date,
             cache=cache,
         )
-        if amount_to_credit is None or amount_to_credit == 0:
+        if amount_to_credit == 0:
             return
 
         cls.create_credit_and_log_entry(
@@ -98,7 +98,7 @@ class MemberCreditCreator:
         )
         first_day_of_rhythm_period = max(payment_start_date, first_day_of_rhythm_period)
         if first_day_of_rhythm_period > last_day_of_rhythm_period:
-            return None
+            return 0
 
         mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
 

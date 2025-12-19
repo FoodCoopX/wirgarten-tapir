@@ -7,6 +7,13 @@ from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.payments.services.month_payment_builder_solidarity_contributions import (
+    MonthPaymentBuilderSolidarityContributions,
+)
+from tapir.payments.services.month_payment_builder_subscriptions import (
+    MonthPaymentBuilderSubscriptions,
+)
+from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
@@ -28,7 +35,7 @@ class TestGetAmountToCredit(TapirIntegrationTest):
             value=datetime.date(year=2026, month=1, day=1)
         )
 
-    def test_getAmountToCredit_default_returnsCorrectValue(self):
+    def test_getAmountToCredit_parameterProductId_returnsCorrectValue(self):
         now = mock_timezone(self, datetime.datetime(year=2027, month=8, day=19))
         member = MemberFactory.create()
         growing_period = GrowingPeriodFactory.create(
@@ -68,6 +75,45 @@ class TestGetAmountToCredit(TapirIntegrationTest):
             cache={},
             reference_date=datetime.date(year=2027, month=2, day=15),
             product_type_id_or_soli=subscription.product.type.id,
+        )
+
+        self.assertEqual(
+            Decimal(12.8).quantize(Decimal("0.01")), result.quantize(Decimal("0.01"))
+        )
+
+    def test_getAmountToCredit_parameterSoli_returnsCorrectValue(self):
+        now = mock_timezone(self, datetime.datetime(year=2027, month=8, day=19))
+        member = MemberFactory.create()
+        growing_period = GrowingPeriodFactory.create(
+            start_date=now.date().replace(month=1, day=1),
+            end_date=now.date().replace(month=12, day=31),
+        )
+        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
+            member=member,
+            actor=member,
+            rhythm=MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
+            valid_from=datetime.date.today(),
+            cache={},
+        )
+
+        PaymentFactory.create(
+            due_date=datetime.date(year=2027, month=2, day=15),
+            mandate_ref=get_or_create_mandate_ref(member=member, cache={}),
+            amount=72.8,
+            type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
+            subscription_payment_range_start=datetime.date(year=2027, month=1, day=1),
+            subscription_payment_range_end=datetime.date(year=2027, month=6, day=30),
+        )  # should give MonthPaymentBuilder.get_already_paid_amount = 72.8
+
+        SolidarityContributionFactory.create(
+            member=member, start_date=growing_period.start_date, amount=10
+        )
+
+        result = MemberCreditCreator.get_amount_to_credit(
+            member=member,
+            cache={},
+            reference_date=datetime.date(year=2027, month=2, day=15),
+            product_type_id_or_soli=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
         )
 
         self.assertEqual(

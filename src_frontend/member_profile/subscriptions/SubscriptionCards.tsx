@@ -64,9 +64,6 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
               (subscription) => subscription.productType.id === productType.id,
             )}
             productType={productType}
-            memberId={memberId}
-            reloadSubscriptions={loadSubscriptions}
-            setToastDatas={setToastDatas}
             bestellWizardUrl={bestellWizardUrlTemplate.replace(
               "product_type_id",
               productType.id!,

@@ -6,23 +6,16 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
-import { ToastData } from "../../types/ToastData.ts";
 
 interface SubscriptionCardProps {
   subscriptions: PublicSubscription[];
   productType: PublicProductType;
-  memberId: string;
-  reloadSubscriptions: () => void;
-  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   bestellWizardUrl: string;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   subscriptions,
   productType,
-  memberId,
-  reloadSubscriptions,
-  setToastDatas,
   bestellWizardUrl,
 }) => {
   const [loading, setLoading] = useState(false);

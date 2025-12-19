@@ -36,7 +36,7 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
         self.assertFalse(SolidarityContribution.objects.exists())
 
-    def test_post_normalMemberSendsNegativeValueWithoutPreviousContribution_returns403(
+    def test_post_normalMemberSendsNegativeValueWithoutPreviousContribution_returns400(
         self,
     ):
         member = MemberFactory.create(is_superuser=False)
