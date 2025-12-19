@@ -24,6 +24,7 @@ interface BestellWizardShoppingCartOverlayProps {
   currentStep: Step;
   setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
+  solidarityContribution: number;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -40,6 +41,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
   currentStep,
   setCurrentStep,
   selectedNumberOfCoopShares,
+  solidarityContribution,
 }) => {
   function canEditProductTypeOrder(productType: PublicProductType) {
     return (
@@ -170,6 +172,11 @@ const BestellWizardShoppingCartOverlay: React.FC<
                   ))}
                 </ol>
               )}
+            </li>
+          )}
+          {solidarityContribution !== 0 && (
+            <li>
+              Solidarbeitrag: {formatCurrency(solidarityContribution)} pro Monat
             </li>
           )}
           {settings.showCoopContent && selectedNumberOfCoopShares > 0 && (

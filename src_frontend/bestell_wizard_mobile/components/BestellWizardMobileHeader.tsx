@@ -107,6 +107,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
         selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+        solidarityContribution={solidarityContribution}
       />
     </>
   );
