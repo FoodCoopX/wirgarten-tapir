@@ -40,6 +40,7 @@ import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDe
 import { PickupLocationTab } from "../../bestell_wizard_mobile/types/PickupLocationTab.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { getFirstPickupLocationWithCapacity } from "../../bestell_wizard_mobile/utils/getFirstPickupLocationWithCapacity.ts";
+import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
 interface BestellWizardProductTypeProps {
   csrfToken: string;
@@ -98,6 +99,10 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     useState<PickupLocationTab>("map");
   const [mustAddPickupLocation, setMustAddPickupLocation] = useState(false);
   const [canChangePaymentRhythm, setCanChangePaymentRhythm] = useState(false);
+  const [
+    memberAlreadyHasASubscriptionForThisProductType,
+    setMemberAlreadyHasASubscriptionForThisProductType,
+  ] = useState(false);
 
   const [contractAccepted, setContractAccepted] = useState(false);
   const [sepaAllowed, setSepaAllowed] = useState(false);
@@ -123,8 +128,11 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       paymentsApi.paymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieve({
         memberId: memberId,
       }),
+      subscriptionsApi.subscriptionsApiMemberSubscriptionDataRetrieve({
+        memberId: memberId,
+      }),
     ])
-      .then(([baseData, canChangePaymentRhythmResponse]) => {
+      .then(([baseData, canChangePaymentRhythmResponse, subscriptionData]) => {
         const newSettings = buildSettings(baseData);
         for (const productType of newSettings.productTypes) {
           productType.mustBeSubscribedTo = true;
@@ -151,6 +159,16 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
           firstName: firstName,
           lastName: lastName,
         });
+
+        for (const subscription of subscriptionData.subscriptions) {
+          if (
+            subscription.productType.id === productTypeId &&
+            isSubscriptionActive(subscription)
+          ) {
+            setMemberAlreadyHasASubscriptionForThisProductType(true);
+            break;
+          }
+        }
       })
       .catch((error) =>
         handleRequestError(
@@ -196,6 +214,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
 
     const newSteps = [];
     if (
+      !memberAlreadyHasASubscriptionForThisProductType &&
       shouldIncludeStepGrowingPeriodChoice(
         [productType],
         settings.growingPeriodChoices,
