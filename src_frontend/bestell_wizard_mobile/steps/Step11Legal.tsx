@@ -54,9 +54,15 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
   function validate() {
     setShowValidation(true);
 
-    if (cancellationPolicyRead && privacyPolicyRead) {
-      goToNextStep();
+    if (showCheckboxCancellationPolicy() && !cancellationPolicyRead) {
+      return;
     }
+
+    if (!privacyPolicyRead) {
+      return;
+    }
+
+    goToNextStep();
   }
 
   function showCheckboxCancellationPolicy() {
