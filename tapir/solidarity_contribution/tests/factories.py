@@ -12,7 +12,7 @@ class SolidarityContributionFactory(
         model = SolidarityContribution
 
     member = factory.SubFactory(MemberFactory)
-    amount = factory.Faker("pyfloat", min_value=-20, max_value=20)
+    amount = factory.Faker("pydecimal", min_value=-20, max_value=20)
     end_date = factory.LazyAttribute(
         lambda contribution: contribution.start_date + relativedelta(years=1, days=-1)
     )

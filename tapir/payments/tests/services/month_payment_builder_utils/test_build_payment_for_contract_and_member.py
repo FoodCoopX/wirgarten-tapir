@@ -21,7 +21,7 @@ from tapir.wirgarten.tests.factories import (
 )
 
 
-class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
+class TestBuildPaymentForContractAndMember(SimpleTestCase):
     @patch("tapir.payments.services.month_payment_builder_utils.get_parameter_value")
     @patch.object(MonthPaymentBuilderUtils, "get_payment_range_start")
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
@@ -32,7 +32,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
-    def test_buildPaymentForSubscriptionsForMemberAndProductType_totalToPayIsMoreThanAlreadyPaid_returnsPaymentWithDifference(
+    def test_buildPaymentForContractAndMember_totalToPayIsMoreThanAlreadyPaid_returnsPaymentWithDifference(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
@@ -141,7 +141,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
-    def test_buildPaymentForSubscriptionsForMemberAndProductType_totalToPayIsEqualToAlreadyPaid_returnsNone(
+    def test_buildPaymentForContractAndMember_totalToPayIsEqualToAlreadyPaid_returnsNone(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
@@ -225,7 +225,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
-    def test_buildPaymentForSubscriptionsForMemberAndProductType_totalToPayIsLessThanAlreadyPaid_returnsNone(
+    def test_buildPaymentForContractAndMember_totalToPayIsLessThanAlreadyPaid_returnsNone(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
@@ -310,7 +310,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
-    def test_buildPaymentForSubscriptionsForMemberAndProductType_subscriptionIsInTrial_returnsPaymentWithDueDateNextMonth(
+    def test_buildPaymentForContractAndMember_subscriptionIsInTrial_returnsPaymentWithDueDateNextMonth(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
@@ -337,7 +337,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         )
         mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
 
-        first_of_month = Mock()
+        first_of_month = datetime.date(year=2026, month=6, day=10)
         product_type = ProductTypeFactory.build(name="pt_test_name")
         subscriptions = SubscriptionFactory.build_batch(
             size=3, product__type=product_type, member=member, mandate_ref=mandate_ref
@@ -354,7 +354,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             rhythm=rhythm,
             cache=cache,
             generated_payments=generated_payments,
-            in_trial=False,
+            in_trial=True,
             total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
         )
 
@@ -396,7 +396,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             cache=cache,
         )
         mock_get_payment_due_date_on_month.assert_called_once_with(
-            reference_date=first_of_month, cache=cache
+            reference_date=datetime.date(year=2026, month=7, day=1), cache=cache
         )
         mock_get_payment_range_start.assert_called_once_with(
             cache=cache,
@@ -419,7 +419,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
-    def test_buildPaymentForSubscriptionsForMemberAndProductType_rangeEndIsBeforePaymentsStart_returnsNone(
+    def test_buildPaymentForContractAndMember_rangeEndIsBeforePaymentsStart_returnsNone(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
@@ -482,7 +482,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
-    def test_buildPaymentForSubscriptionsForMemberAndProductType_paymentStartIsInsideTheRange_returnsPartialPayment(
+    def test_buildPaymentForContractAndMember_paymentStartIsInsideTheRange_returnsPartialPayment(
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,

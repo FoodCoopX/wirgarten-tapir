@@ -165,7 +165,8 @@ class MonthPaymentBuilderSolidarityContributions:
             range_2_end=contribution.end_date,
         )
         ratio = nb_days_overlap / nb_days_in_month
-        return contribution.amount * Decimal(ratio)
+
+        return (contribution.amount * Decimal(ratio)).quantize(Decimal("0.01"))
 
     @classmethod
     def group_contributions_by_member(

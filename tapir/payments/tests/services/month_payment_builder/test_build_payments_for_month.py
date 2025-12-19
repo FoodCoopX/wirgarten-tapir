@@ -29,18 +29,31 @@ class TestBuildPaymentForMonth(SimpleTestCase):
         payment_4 = Mock()
         payment_5 = Mock()
         payment_6 = Mock()
+        payment_7 = Mock()
+        payment_8 = Mock()
+        payment_9 = Mock()
         cache = Mock()
         generated_payments = {payment_6}
 
-        trial_payments = [payment_1, payment_3]
-        not_trial_payments = [payment_2, payment_4, payment_5]
+        subscriptions_trial_payments = [payment_1, payment_3]
+        subscriptions_not_trial_payments = [payment_2, payment_4, payment_5]
         mock_build_payments_for_subscriptions.side_effect = (
             lambda current_month, cache, generated_payments, in_trial: (
-                trial_payments if in_trial else not_trial_payments
+                subscriptions_trial_payments
+                if in_trial
+                else subscriptions_not_trial_payments
             )
         )
 
-        mock_build_payments_for_solidarity_contributions.return_value = []
+        contribution_trial_payments = [payment_7, payment_8]
+        contribution_not_trial_payments = [payment_9]
+        mock_build_payments_for_solidarity_contributions.side_effect = (
+            lambda current_month, cache, generated_payments, in_trial: (
+                contribution_trial_payments
+                if in_trial
+                else contribution_not_trial_payments
+            )
+        )
 
         result = MonthPaymentBuilder.build_payments_for_month(
             reference_date=datetime.date(year=2022, month=5, day=12),
@@ -49,7 +62,17 @@ class TestBuildPaymentForMonth(SimpleTestCase):
         )
 
         self.assertEqual(
-            {payment_1, payment_2, payment_3, payment_4, payment_5}, set(result)
+            {
+                payment_1,
+                payment_2,
+                payment_3,
+                payment_4,
+                payment_5,
+                payment_7,
+                payment_8,
+                payment_9,
+            },
+            set(result),
         )
         self.assertEqual(2, mock_build_payments_for_subscriptions.call_count)
         mock_build_payments_for_subscriptions.assert_has_calls(
@@ -64,6 +87,24 @@ class TestBuildPaymentForMonth(SimpleTestCase):
                     current_month=datetime.date(year=2022, month=5, day=1),
                     cache=cache,
                     generated_payments={payment_6, payment_1, payment_3},
+                    in_trial=False,
+                ),
+            ]
+        )
+
+        self.assertEqual(2, mock_build_payments_for_solidarity_contributions.call_count)
+        mock_build_payments_for_solidarity_contributions.assert_has_calls(
+            [
+                call(
+                    current_month=datetime.date(year=2022, month=5, day=1),
+                    cache=cache,
+                    generated_payments=generated_payments,
+                    in_trial=True,
+                ),
+                call(
+                    current_month=datetime.date(year=2022, month=5, day=1),
+                    cache=cache,
+                    generated_payments={payment_6, payment_7, payment_8},
                     in_trial=False,
                 ),
             ]
