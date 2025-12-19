@@ -1229,6 +1229,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP5B_TITLE,
+            label="Seite 5B: Abholort Auswahl - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="An welcher Verteilstation möchtest du abholen?",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP5C_TITLE,
             label="Seite 5C: Bestätigung der Verteilstation - Titel",
             datatype=TapirParameterDatatype.STRING,

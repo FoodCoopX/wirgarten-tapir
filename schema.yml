@@ -4997,6 +4997,8 @@ components:
           type: string
         step5a_text:
           type: string
+        step5b_title:
+          type: string
         step5c_title:
           type: string
         step5c_text:
@@ -5073,6 +5075,7 @@ components:
       - step4d_title
       - step5a_text
       - step5a_title
+      - step5b_title
       - step5c_text
       - step5c_title
       - step6a_text
@@ -7873,7 +7876,7 @@ components:
         type:
           type: string
           nullable: true
-          maxLength: 32
+          maxLength: 64
         subscription_payment_range_start:
           type: string
           format: date
@@ -8841,6 +8844,10 @@ components:
         trial_disabled:
           type: boolean
         trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
+        cancellation_ts:
           type: string
           format: date
           nullable: true

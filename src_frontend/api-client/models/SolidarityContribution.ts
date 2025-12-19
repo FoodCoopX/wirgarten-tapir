@@ -57,6 +57,12 @@ export interface SolidarityContribution {
     trialEndDateOverride?: Date | null;
     /**
      * 
+     * @type {Date}
+     * @memberof SolidarityContribution
+     */
+    cancellationTs?: Date | null;
+    /**
+     * 
      * @type {string}
      * @memberof SolidarityContribution
      */
@@ -90,6 +96,7 @@ export function SolidarityContributionFromJSONTyped(json: any, ignoreDiscriminat
         'endDate': (new Date(json['end_date'])),
         'trialDisabled': json['trial_disabled'] == null ? undefined : json['trial_disabled'],
         'trialEndDateOverride': json['trial_end_date_override'] == null ? undefined : (new Date(json['trial_end_date_override'])),
+        'cancellationTs': json['cancellation_ts'] == null ? undefined : (new Date(json['cancellation_ts'])),
         'member': json['member'],
     };
 }
@@ -111,6 +118,7 @@ export function SolidarityContributionFromJSONTyped(json: any, ignoreDiscriminat
         'end_date': ((value['endDate']).toISOString().substring(0,10)),
         'trial_disabled': value['trialDisabled'],
         'trial_end_date_override': value['trialEndDateOverride'] == null ? undefined : ((value['trialEndDateOverride'] as any).toISOString().substring(0,10)),
+        'cancellation_ts': value['cancellationTs'] == null ? undefined : ((value['cancellationTs'] as any).toISOString().substring(0,10)),
         'member': value['member'],
     };
 }

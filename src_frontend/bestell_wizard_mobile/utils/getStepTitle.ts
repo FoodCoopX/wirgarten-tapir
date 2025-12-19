@@ -19,7 +19,7 @@ export function getStepTitle(
     case "5a_pickup_location_intro":
       return settings.strings.step5aTitle;
     case "5b_pickup_location_choice":
-      return "An welcher Verteilstation möchtest du abholen?";
+      return settings.strings.step5bTitle;
     case "5c_pickup_location_confirm_waiting_list":
       return settings.strings.step5cTitle;
     case "6a_coop_intro":
@@ -61,10 +61,8 @@ export function getStepTitle(
   }
 
   const subStep = step.slice(separatorIndex + 1);
-  switch (subStep) {
-    case "intro":
-      return "Unser " + productType.name;
-    default:
-      return productType.titleBestellwizardProductChoice;
+  if (subStep === "intro") {
+    return "Unser " + productType.name;
   }
+  return productType.titleBestellwizardProductChoice;
 }
