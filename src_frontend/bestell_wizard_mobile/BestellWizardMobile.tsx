@@ -377,7 +377,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         bestellWizardConfirmOrderRequestRequest: {
           personalData: {
             accountOwner: personalData.accountOwner,
-            birthdate: new Date("01.01.1990"),
             city: personalData.city,
             country: personalData.country,
             email: personalData.email,

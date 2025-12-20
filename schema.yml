@@ -8028,16 +8028,12 @@ components:
         country:
           type: string
           minLength: 1
-        birthdate:
-          type: string
-          format: date
         account_owner:
           type: string
         iban:
           type: string
       required:
       - account_owner
-      - birthdate
       - city
       - country
       - email

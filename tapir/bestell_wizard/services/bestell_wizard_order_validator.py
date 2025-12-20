@@ -43,7 +43,6 @@ class BestellWizardOrderValidator:
         PersonalDataValidator.validate_personal_data_new_member(
             email=validated_serializer_data["personal_data"]["email"],
             phone_number=validated_serializer_data["personal_data"]["phone_number"],
-            birthdate=validated_serializer_data["personal_data"]["birthdate"],
             iban=validated_serializer_data["personal_data"]["iban"],
             account_owner=validated_serializer_data["personal_data"]["account_owner"],
             cache=cache,

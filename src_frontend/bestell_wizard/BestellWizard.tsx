@@ -183,7 +183,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setSettings(newSettings);
 
         personalData.paymentRhythm = baseData.defaultPaymentRhythm;
-        setPersonalData(Object.assign({}, personalData));
+        setPersonalData({ ...personalData });
 
         if (pickupLocations.length === 1) {
           setSelectedPickupLocations([pickupLocations[0]]);
@@ -593,7 +593,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         );
       case "end":
         return <BestellWizardEnd response={confirmOrderResponse!} />;
-      default:
+      default: {
         const productType = settings.productTypes.find(
           (productType) => productType.id === currentStep,
         );
@@ -613,6 +613,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             productTypeIdsOverCapacity={productTypeIdsOverCapacity}
           />
         );
+      }
     }
   }
 
@@ -655,7 +656,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         bestellWizardConfirmOrderRequestRequest: {
           personalData: {
             accountOwner: personalData.accountOwner,
-            birthdate: new Date("01.01.1990"),
             city: personalData.city,
             country: personalData.country,
             email: personalData.email,
@@ -785,13 +785,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         );
     }
 
-    if (params.text === undefined) {
-      params.text = "Weiter";
-    }
-
-    if (params.icon === undefined) {
-      params.icon = "chevron_right";
-    }
+    params.text ??= "Weiter";
+    params.icon ??= "chevron_right";
     return (
       <BestellWizardNextButton params={params} onNextClicked={onNextClicked} />
     );

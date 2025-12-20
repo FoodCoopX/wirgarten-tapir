@@ -75,12 +75,6 @@ export interface PersonalDataRequest {
     country: string;
     /**
      * 
-     * @type {Date}
-     * @memberof PersonalDataRequest
-     */
-    birthdate: Date;
-    /**
-     * 
      * @type {string}
      * @memberof PersonalDataRequest
      */
@@ -106,7 +100,6 @@ export function instanceOfPersonalDataRequest(value: object): value is PersonalD
     if (!('postcode' in value) || value['postcode'] === undefined) return false;
     if (!('city' in value) || value['city'] === undefined) return false;
     if (!('country' in value) || value['country'] === undefined) return false;
-    if (!('birthdate' in value) || value['birthdate'] === undefined) return false;
     if (!('accountOwner' in value) || value['accountOwner'] === undefined) return false;
     if (!('iban' in value) || value['iban'] === undefined) return false;
     return true;
@@ -131,7 +124,6 @@ export function PersonalDataRequestFromJSONTyped(json: any, ignoreDiscriminator:
         'postcode': json['postcode'],
         'city': json['city'],
         'country': json['country'],
-        'birthdate': (new Date(json['birthdate'])),
         'accountOwner': json['account_owner'],
         'iban': json['iban'],
     };
@@ -157,7 +149,6 @@ export function PersonalDataRequestFromJSONTyped(json: any, ignoreDiscriminator:
         'postcode': value['postcode'],
         'city': value['city'],
         'country': value['country'],
-        'birthdate': ((value['birthdate']).toISOString().substring(0,10)),
         'account_owner': value['accountOwner'],
         'iban': value['iban'],
     };

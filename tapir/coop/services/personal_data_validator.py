@@ -1,7 +1,4 @@
-import datetime
-
 import phonenumbers
-from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from localflavor.generic.validators import IBANValidator
@@ -11,7 +8,6 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.wirgarten.models import Member, WaitingListEntry
-from tapir.wirgarten.utils import get_today
 
 
 class PersonalDataValidator:
@@ -20,7 +16,6 @@ class PersonalDataValidator:
         cls,
         email: str,
         phone_number: str,
-        birthdate: datetime.date,
         iban: str,
         account_owner: str,
         cache: dict,
@@ -34,8 +29,6 @@ class PersonalDataValidator:
             email, cache=cache, check_waiting_list=check_waiting_list
         )
         cls.validate_phone_number_is_valid(phone_number)
-
-        cls.validate_birthdate(birthdate, cache=cache)
 
         IBANValidator()(iban)
 
@@ -84,14 +77,3 @@ class PersonalDataValidator:
             raise ValidationError(
                 "Diese E-Mail-Adresse ist schon ein anderes Warteliste-Eintrag zugewiesen."
             )
-
-    @classmethod
-    def validate_birthdate(cls, birthdate: datetime.date, cache: dict):
-        today = get_today(cache=cache)
-        age = relativedelta(today, birthdate).years
-        if age < 18:
-            raise ValidationError(
-                "Ungültiges geburtsdatum, Mitglied muss volljährig sein"
-            )
-        if age > 150:
-            raise ValidationError("Ungültiges geburtsdatum")

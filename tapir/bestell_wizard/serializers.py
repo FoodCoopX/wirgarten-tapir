@@ -17,7 +17,6 @@ class PersonalDataSerializer(serializers.Serializer):
     postcode = serializers.CharField()
     city = serializers.CharField()
     country = serializers.CharField()
-    birthdate = serializers.DateField()
     account_owner = serializers.CharField(allow_blank=True)
     iban = serializers.CharField(allow_blank=True)
 
