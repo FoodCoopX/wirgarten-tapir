@@ -12,8 +12,10 @@ import { BestellWizardApi } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import "./Step8PersonalData.css";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 
 interface Step8PersonalDataProps {
+  settings: BestellWizardSettings;
   goToNextStep: () => void;
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
@@ -50,6 +52,7 @@ function getType(key: keyof PersonalData) {
 }
 
 const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
+  settings,
   goToNextStep,
   personalData,
   setPersonalData,
@@ -156,6 +159,16 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
 
   return (
     <div className={"d-flex flex-column gap-2 align-items-center"}>
+      {settings.strings.step8Text && (
+        <div
+          dangerouslySetInnerHTML={{
+            __html: settings.strings.step8Text.replace(
+              "{vorname}",
+              personalData.firstName,
+            ),
+          }}
+        />
+      )}
       <div
         id={"personal_data_flex"}
         className={"d-flex gap-2 flex-wrap align-items-start"}

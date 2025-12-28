@@ -5023,6 +5023,8 @@ components:
           type: string
         step8_title:
           type: string
+        step8_text:
+          type: string
         step9_title:
           type: string
         step9_payment_rhythm_modal_text:
@@ -5087,6 +5089,7 @@ components:
       - step6c_text
       - step6c_text_statute
       - step6c_title
+      - step8_text
       - step8_title
       - step9_payment_rhythm_modal_text
       - step9_title

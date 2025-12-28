@@ -1393,6 +1393,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP8_TEXT,
+            label="Seite 8: Persönliche Daten - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Deine Daten brauchen wir aus gründe XYZ.",
+            description=f"{HTML_ALLOWED_TEXT}. Optional.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP8_BACKGROUND_IMAGE,
             label="Seite 8: Persönliche Daten - Hintergrundbild",
             datatype=TapirParameterDatatype.STRING,

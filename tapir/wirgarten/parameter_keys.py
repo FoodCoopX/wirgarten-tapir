@@ -173,6 +173,7 @@ class ParameterKeys:
         f"{PREFIX}.bestellwizard.step6c.checkbox_commitment"
     )
     BESTELLWIZARD_STEP8_TITLE = f"{PREFIX}.bestellwizard.step8.title"
+    BESTELLWIZARD_STEP8_TEXT = f"{PREFIX}.bestellwizard.step8.text"
     BESTELLWIZARD_STEP8_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step8.background_image"
     )

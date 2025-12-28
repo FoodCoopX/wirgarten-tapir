@@ -198,6 +198,12 @@ export interface BestellWizardStrings {
      * @type {string}
      * @memberof BestellWizardStrings
      */
+    step8Text: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
     step9Title: string;
     /**
      * 
@@ -300,6 +306,7 @@ export function instanceOfBestellWizardStrings(value: object): value is BestellW
     if (!('step6cTitle' in value) || value['step6cTitle'] === undefined) return false;
     if (!('step6cText' in value) || value['step6cText'] === undefined) return false;
     if (!('step8Title' in value) || value['step8Title'] === undefined) return false;
+    if (!('step8Text' in value) || value['step8Text'] === undefined) return false;
     if (!('step9Title' in value) || value['step9Title'] === undefined) return false;
     if (!('step9PaymentRhythmModalText' in value) || value['step9PaymentRhythmModalText'] === undefined) return false;
     if (!('step10Title' in value) || value['step10Title'] === undefined) return false;
@@ -354,6 +361,7 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step6cTitle': json['step6c_title'],
         'step6cText': json['step6c_text'],
         'step8Title': json['step8_title'],
+        'step8Text': json['step8_text'],
         'step9Title': json['step9_title'],
         'step9PaymentRhythmModalText': json['step9_payment_rhythm_modal_text'],
         'step10Title': json['step10_title'],
@@ -409,6 +417,7 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step6c_title': value['step6cTitle'],
         'step6c_text': value['step6cText'],
         'step8_title': value['step8Title'],
+        'step8_text': value['step8Text'],
         'step9_title': value['step9Title'],
         'step9_payment_rhythm_modal_text': value['step9PaymentRhythmModalText'],
         'step10_title': value['step10Title'],

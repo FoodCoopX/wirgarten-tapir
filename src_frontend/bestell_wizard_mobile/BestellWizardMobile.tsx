@@ -588,6 +588,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       case "8_personal_data":
         return (
           <Step8PersonalData
+            settings={settings}
             goToNextStep={goToNextStep}
             personalData={personalData}
             setPersonalData={setPersonalData}
