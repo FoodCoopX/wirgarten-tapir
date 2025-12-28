@@ -420,6 +420,77 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(WaitingListEntry.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_investingMemberWithSolidarityContribution_cancellationPolicyIsRequired(
+        self, mock_fire_action: Mock
+    ):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_order"] = {}
+        data["become_member_now"] = True
+        data["pickup_location_ids"] = []
+        data["cancellation_policy_read"] = False
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertIn(
+            "Die Widerrufsbelehrung muss akzeptiert sein",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
+        mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_investingMemberWithoutSolidarityContribution_cancellationPolicyNotRequired(
+        self, mock_fire_action: Mock
+    ):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_order"] = {}
+        data["become_member_now"] = True
+        data["pickup_location_ids"] = []
+        data["cancellation_policy_read"] = False
+        data["solidarity_contribution"] = 0
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should have been confirmed, error: {response_content["error"]}",
+        )
+
+        self.assertEqual(1, Member.objects.count())
+        member = Member.objects.get()
+        self.assert_personal_data_is_valid_member(member)
+
+        self.assertEqual(1, CoopShareTransaction.objects.count())
+        coop_share_transaction = CoopShareTransaction.objects.get()
+        self.assertEqual(member, coop_share_transaction.member)
+        self.assertEqual(2, coop_share_transaction.quantity)
+
+        self.assertFalse(Subscription.objects.exists())
+        self.assertFalse(MemberPickupLocation.objects.exists())
+
+        mock_fire_action.assert_called_once()
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action, key=Events.REGISTER_MEMBERSHIP_ONLY
+        )
+        self.assertFalse(SolidarityContribution.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_investingMemberOnWaitingList_createsWaitingListEntry(
         self, mock_fire_action: Mock
     ):
@@ -707,7 +778,6 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "postcode": "16321",
             "city": "Berlin",
             "country": "DE",
-            "birthdate": datetime.date.today().isoformat(),
             "account_owner": "",
             "iban": "",
         }
@@ -717,7 +787,6 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         data = cls.build_valid_personal_data_waiting_list()
         data.update(
             {
-                "birthdate": "1990-12-21",
                 "account_owner": "John S. Doe",
                 "iban": "NL37RABO2067756052",
             }
@@ -728,14 +797,12 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self, waiting_list_entry: WaitingListEntry
     ):
         for field, value in self.build_valid_personal_data_waiting_list().items():
-            if field in ["birthdate", "account_owner", "iban"]:
+            if field in ["account_owner", "iban"]:
                 continue
             self.assertEqual(value, getattr(waiting_list_entry, field))
 
     def assert_personal_data_is_valid_member(self, member: Member):
         for field, value in self.build_valid_personal_data_order().items():
-            if field == "birthdate":
-                value = datetime.date(year=1990, month=12, day=21)
             self.assertEqual(value, getattr(member, field))
 
     def assert_order_applied_correctly(

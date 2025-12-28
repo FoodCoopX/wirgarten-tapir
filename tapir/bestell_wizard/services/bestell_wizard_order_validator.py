@@ -56,12 +56,20 @@ class BestellWizardOrderValidator:
         if not validated_serializer_data["contract_accepted"]:
             raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
-        if not validated_serializer_data["cancellation_policy_read"]:
-            raise ValidationError("Die Widerrufsbelehrung muss akzeptiert sein")
-
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_serializer_data["shopping_cart_order"], cache=cache
         )
+
+        if (
+            cls.is_cancellation_policy_required(
+                order=order,
+                solidarity_contribution=validated_serializer_data[
+                    "solidarity_contribution"
+                ],
+            )
+            and not validated_serializer_data["cancellation_policy_read"]
+        ):
+            raise ValidationError("Die Widerrufsbelehrung muss akzeptiert sein")
 
         cls.validate_order(
             pickup_location_ids=validated_serializer_data["pickup_location_ids"],
@@ -81,6 +89,12 @@ class BestellWizardOrderValidator:
             cls.validate_coop_content(
                 validated_data=validated_serializer_data, order=order, cache=cache
             )
+
+    @classmethod
+    def is_cancellation_policy_required(
+        cls, order: TapirOrder, solidarity_contribution: float
+    ):
+        return sum(order.values(), start=0) > 0 or solidarity_contribution > 0
 
     @classmethod
     def validate_order(

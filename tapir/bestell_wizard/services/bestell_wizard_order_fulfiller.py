@@ -192,6 +192,9 @@ class BestellWizardOrderFulfiller:
         contract_start_date: datetime.date,
         cache: dict,
     ):
+        if contribution == 0:
+            return
+
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=contract_start_date, cache=cache
         )
