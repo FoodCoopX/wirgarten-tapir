@@ -207,7 +207,10 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           controlId={"statuteRead"}
           checked={statuteRead && !studentStatusEnabled}
           onChange={setStatuteRead}
-          label={settings.strings.step6cCheckboxStatute}
+          label={settings.strings.step6cCheckboxStatute.replace(
+            "{betriebsname}",
+            settings.organizationName,
+          )}
           disabled={studentStatusEnabled}
           showError={showValidation && !studentStatusEnabled && !statuteRead}
         />

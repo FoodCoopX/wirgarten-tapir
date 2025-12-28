@@ -1327,10 +1327,11 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,
             label="Seite 6B: Genossenschaft - Rechtliches - Checkbox-Label Satzung gelesen",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Ich habe die Satzung der (Betriebsname) und die Kündigungsfrist von (2) Jahren zum Jahresende zur Kenntnis genommen.",
+            initial_value="Ich habe die Satzung der {betriebsname} und die Kündigungsfrist von (2) Jahren zum Jahresende zur Kenntnis genommen.",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["betriebsname"]),
         )
         bestellwizard_parameter_order -= 1
 
