@@ -20,7 +20,7 @@ class ContractStartDateCalculator:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=reference_date, cache=cache
         )
-        if current_date < growing_period.start_date:
+        if growing_period is not None and current_date < growing_period.start_date:
             current_date += datetime.timedelta(weeks=1)
 
         while not cls.can_contract_start_in_week(
