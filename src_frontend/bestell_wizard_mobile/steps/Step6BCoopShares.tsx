@@ -103,6 +103,18 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
     }
   }, [internalNumberOfShares]);
 
+  function buildLabelStatute() {
+    let label = settings.strings.step6cCheckboxStatute;
+    label = label.replace("{betriebsname}", settings.organizationName);
+    label =
+      label +
+      " <a href='" +
+      settings.coopStatuteLink +
+      "' target='blank'>Satzung</a>";
+
+    return label;
+  }
+
   return (
     <>
       <div>
@@ -207,10 +219,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           controlId={"statuteRead"}
           checked={statuteRead && !studentStatusEnabled}
           onChange={setStatuteRead}
-          label={settings.strings.step6cCheckboxStatute.replace(
-            "{betriebsname}",
-            settings.organizationName,
-          )}
+          label={buildLabelStatute()}
           disabled={studentStatusEnabled}
           showError={showValidation && !studentStatusEnabled && !statuteRead}
         />
