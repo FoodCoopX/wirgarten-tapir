@@ -194,7 +194,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
   useEffect(() => {
     function handleBeforeUnload(event: BeforeUnloadEvent) {
-      if (isAtLeastOneProductOrdered(shoppingCart)) {
+      if (
+        isAtLeastOneProductOrdered(shoppingCart) &&
+        currentStep !== steps.at(-1)
+      ) {
         event.preventDefault();
       }
     }
