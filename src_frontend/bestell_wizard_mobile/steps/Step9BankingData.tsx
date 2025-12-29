@@ -95,11 +95,19 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
       return;
     }
 
-    if (!contractAccepted || !sepaAllowed) {
+    if (mustShowCheckboxContractAccepted() && !contractAccepted) {
+      return;
+    }
+
+    if (!sepaAllowed) {
       return;
     }
 
     goToNextStep();
+  }
+
+  function mustShowCheckboxContractAccepted() {
+    return settings.labelCheckboxContractPolicy.trim() !== "";
   }
 
   return (
@@ -174,13 +182,15 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
             controlId={"sepa"}
             showError={showValidation && !sepaAllowed}
           />
-          <TapirCheckbox
-            onChange={setContractAccepted}
-            checked={contractAccepted}
-            label={settings.labelCheckboxContractPolicy}
-            controlId={"contract"}
-            showError={showValidation && !contractAccepted}
-          />
+          {mustShowCheckboxContractAccepted() && (
+            <TapirCheckbox
+              onChange={setContractAccepted}
+              checked={contractAccepted}
+              label={settings.labelCheckboxContractPolicy}
+              controlId={"contract"}
+              showError={showValidation && !contractAccepted}
+            />
+          )}
         </div>
       </div>
       <NextStepButton
