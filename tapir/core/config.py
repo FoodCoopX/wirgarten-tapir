@@ -32,6 +32,7 @@ THEME_L2G = "l2g"
 THEME_MM = "mm"
 THEME_HUMUSWERKSTATT = "huw"
 THEME_ERNTEUNIONOST = "ernteunion_ost"
+THEME_KATRINGER_GRUENZEUG = "katringer"
 
 THEME_OPTIONS = [
     (THEME_BIOTOP, "Biotop Oberland"),
@@ -40,4 +41,5 @@ THEME_OPTIONS = [
     (THEME_MM, "Möllers Morgen"),
     (THEME_HUMUSWERKSTATT, "Humuswerkstatt"),
     (THEME_ERNTEUNIONOST, "Ernte Union Ost"),
+    (THEME_KATRINGER_GRUENZEUG, "Katringer Grünzeug"),
 ]
