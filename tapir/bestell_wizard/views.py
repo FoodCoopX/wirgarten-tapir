@@ -185,12 +185,17 @@ class BestellWizardConfirmOrderApiView(APIView):
             "error": None,
         }
         try:
+            member = None
             with transaction.atomic():
-                self.validate_everything_and_apply_all_changes(
+                member = self.validate_everything_and_apply_all_changes(
                     validated_serializer_data=serializer.validated_data,
                     request=request,
                     cache=self.cache,
                 )
+            if member is not None:
+                # The member creation does calls to KeycloakUserManager that are only applied after the transaction ends.
+                # In order to persist the changes that the KeycloakUserManager applies, we need to save manually one more time.
+                member.save()
         except ValidationError as error:
             data = {
                 "order_confirmed": False,
@@ -239,6 +244,8 @@ class BestellWizardConfirmOrderApiView(APIView):
                     validated_serializer_data=validated_serializer_data,
                     cache=cache,
                 )
+
+        return member
 
     @classmethod
     def validate_and_fulfill_order(
