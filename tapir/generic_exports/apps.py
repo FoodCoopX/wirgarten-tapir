@@ -13,8 +13,13 @@ class GenericExportsConfig(AppConfig):
         from tapir.generic_exports.services.member_segment_provider import (
             MemberSegmentProvider,
         )
+        from tapir.generic_exports.services.payment_segment_provider import (
+            PaymentSegmentProvider,
+        )
 
         for segment in MemberSegmentProvider.get_member_segments():
+            ExportSegmentManager.register_segment(segment)
+        for segment in PaymentSegmentProvider.get_payment_segments():
             ExportSegmentManager.register_segment(segment)
 
         from tapir.pickup_locations.services.pickup_location_segment_provider import (
