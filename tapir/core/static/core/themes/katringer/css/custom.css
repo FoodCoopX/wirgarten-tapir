@@ -233,9 +233,9 @@ main {
   font-family: "Montserrat";
   font-style: italic;
   font-display: swap;
-  src: url("static/core/themes/katringer/fonts/Montserrat-Italic-VariableFont_wght.ttf")
+  src: url("/static/core/themes/katringer/fonts/Montserrat-Italic-VariableFont_wght.ttf")
     format("ttf");
-  src: url("static/core/themes/katringer/fonts/Montserrat-Italic-VariableFont_wght.woff2")
+  src: url("/static/core/themes/katringer/fonts/Montserrat-Italic-VariableFont_wght.woff2")
     format("woff2");
 }
 
@@ -243,8 +243,8 @@ main {
   font-family: "Montserrat";
   font-style: normal;
   font-display: swap;
-  src: url("static/core/themes/katringer/fonts/Montserrat-VariableFont_wght.ttf")
+  src: url("/static/core/themes/katringer/fonts/Montserrat-VariableFont_wght.ttf")
     format("ttf");
-  src: url("static/core/themes/katringer/fonts/Montserrat-VariableFont_wght.woff2")
+  src: url("/static/core/themes/katringer/fonts/Montserrat-VariableFont_wght.woff2")
     format("woff2");
 }
