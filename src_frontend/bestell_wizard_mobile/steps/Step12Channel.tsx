@@ -31,11 +31,7 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
 
   return (
     <>
-      <p className={"text-center"}>
-        Mehrfachauswahl möglich
-        <br />
-        Ist gerade nur als Platzhalder da, der Auswahl wird nicht gespeichert
-      </p>
+      <p className={"text-center"}>Mehrfachauswahl möglich</p>
 
       <div className={"d-flex flex-column gap-2"}>
         {Object.entries(settings.distributionChannels).map(
