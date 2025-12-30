@@ -630,7 +630,11 @@ class SubscriptionRenewalForm(Form):
 
         member = Member.objects.get(id=member_id)
         send_product_order_confirmation(
-            member, self.subs, cache=self.cache, from_waiting_list=False
+            member,
+            self.subs,
+            cache=self.cache,
+            from_waiting_list=False,
+            coop_share_transaction=None,
         )
 
 

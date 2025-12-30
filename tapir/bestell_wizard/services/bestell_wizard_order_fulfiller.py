@@ -1,7 +1,5 @@
 import datetime
 
-from icecream import ic
-
 from tapir.accounts.models import TapirUser
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
@@ -109,9 +107,8 @@ class BestellWizardOrderFulfiller:
 
         solidarity_contribution_start_date = contract_start_date
         if len(subscriptions) == 0 and coop_share_transaction is not None:
-            ic("PROUT")
             solidarity_contribution_start_date = coop_share_transaction.valid_at
-        ic(contract_start_date, solidarity_contribution_start_date)
+
         cls.create_solidarity_contribution(
             member=member,
             contribution=validated_serializer_data["solidarity_contribution"],
@@ -130,7 +127,11 @@ class BestellWizardOrderFulfiller:
             )
         else:
             send_product_order_confirmation(
-                member, subscriptions, cache=cache, from_waiting_list=False
+                member,
+                subscriptions,
+                cache=cache,
+                from_waiting_list=False,
+                coop_share_transaction=coop_share_transaction,
             )
 
         return member

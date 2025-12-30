@@ -809,7 +809,11 @@ class AdditionalProductForm(forms.Form):
         if send_mail:
             member = Member.objects.get(id=member_id)
             send_product_order_confirmation(
-                member, self.subscriptions, cache=self.cache, from_waiting_list=False
+                member,
+                self.subscriptions,
+                cache=self.cache,
+                from_waiting_list=False,
+                coop_share_transaction=None,
             )
 
     def has_shares_selected(self):

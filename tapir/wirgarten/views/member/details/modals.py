@@ -284,6 +284,7 @@ def get_add_subscription_form(request, **kwargs):
                     ),
                     cache=cache,
                     from_waiting_list=False,
+                    coop_share_transaction=None,
                 )
         else:
             form.save(member_id=member_id)

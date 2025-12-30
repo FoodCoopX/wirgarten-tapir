@@ -187,4 +187,5 @@ class ApplyTapirOrderManager:
                 subs=new_subscriptions,
                 cache=cache,
                 from_waiting_list=from_waiting_list,
+                coop_share_transaction=None,
             )

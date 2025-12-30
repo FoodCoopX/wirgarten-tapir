@@ -34,6 +34,13 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
 from tapir.wirgarten.utils import get_today
 
+TOKENS_COOP_ENTRY = {
+    "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
+    "Wert Genossenschaftsanteil": "price_of_a_coop_share",
+    "Gesamtwert der gezeichneten Genossenschaftsanteile": "total_cost",
+    "Beitrittsdatum in der Genossenschaft": "membership_start_date",
+}
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -245,18 +252,14 @@ def _register_triggers():
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
-        },
+        }
+        | TOKENS_COOP_ENTRY,
         required=True,
     )
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft",
         Events.REGISTER_MEMBERSHIP_ONLY,
-        tokens={
-            "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
-            "Wert Genossenschaftsanteil": "price_of_a_coop_share",
-            "Gesamtwert der gezeichneten Genossenschaftsanteile": "total_cost",
-            "Beitrittsdatum": "membership_start_date",
-        },
+        tokens=TOKENS_COOP_ENTRY,
     )
     register_transactional_trigger(
         name="Vertragsänderungen im Mitgliederbereich",
@@ -369,7 +372,8 @@ def _register_triggers():
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
-        },
+        }
+        | TOKENS_COOP_ENTRY,
         required=True,
     )
 

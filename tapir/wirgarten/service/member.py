@@ -21,6 +21,7 @@ from tapir_mail.triggers.transactional_trigger import (
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_text_service import MembershipTextService
+from tapir.coop.services.token_builder_coop_entry import TokenBuilderCoopEntry
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.pickup_locations.services.member_pickup_location_service import (
@@ -60,7 +61,6 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
-    format_currency,
 )
 
 
@@ -347,20 +347,19 @@ def send_investing_membership_confirmation(
         TransactionalTriggerData(
             key=Events.REGISTER_MEMBERSHIP_ONLY,
             recipient_id_in_base_queryset=member_id,
-            token_data={
-                "number_of_coop_shares": coop_share_transaction.quantity,
-                "price_of_a_coop_share": format_currency(
-                    coop_share_transaction.share_price
-                ),
-                "total_cost": format_currency(coop_share_transaction.total_price),
-                "membership_start_date": format_date(coop_share_transaction.valid_at),
-            },
+            token_data=TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
+                coop_share_transaction
+            ),
         ),
     )
 
 
 def send_product_order_confirmation(
-    member: Member, subs: List[Subscription], cache: dict, from_waiting_list: bool
+    member: Member,
+    subs: List[Subscription],
+    cache: dict,
+    from_waiting_list: bool,
+    coop_share_transaction: CoopShareTransaction | None,
 ):
     min_contract_start_date = min([subscription.start_date for subscription in subs])
     min_contract_end_date = min([subscription.end_date for subscription in subs])
@@ -399,7 +398,10 @@ def send_product_order_confirmation(
                     else "Keine Lieferung"
                 ),
                 "contract_list": format_subscription_list_html(list(subs)),
-            },
+            }
+            | TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
+                coop_share_transaction
+            ),
         ),
     )
 

@@ -475,6 +475,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                     get_active_and_future_subscriptions().filter(member=member),
                     cache=self.cache,
                     from_waiting_list=False,
+                    coop_share_transaction=None,
                 )
         except Exception as e:
             member.delete()

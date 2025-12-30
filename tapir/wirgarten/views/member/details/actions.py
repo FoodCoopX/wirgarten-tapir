@@ -88,7 +88,11 @@ def renew_contract_same_conditions(request, **kwargs):
     renew_solidarity_contribution_if_necessary(member_id=member_id, cache=cache)
 
     send_product_order_confirmation(
-        member, new_subs, cache=cache, from_waiting_list=False
+        member,
+        new_subs,
+        cache=cache,
+        from_waiting_list=False,
+        coop_share_transaction=None,
     )
 
     return HttpResponseRedirect(member_detail_url(member_id))
