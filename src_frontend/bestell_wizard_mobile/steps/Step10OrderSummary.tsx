@@ -319,7 +319,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       ))}
                     {solidarityContribution !== 0 && (
                       <li>
-                        Solidarbeitrag: {formatCurrency(solidarityContribution)}
+                        Solidarbeitrag: {formatCurrency(solidarityContribution)}{" "}
+                        / Monat
                       </li>
                     )}
                   </ul>
