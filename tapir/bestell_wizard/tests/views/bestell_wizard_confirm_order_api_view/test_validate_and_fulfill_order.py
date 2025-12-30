@@ -20,7 +20,9 @@ class TestValidateAndFulfillOrder(SimpleTestCase):
         BestellWizardOrderFulfiller, "create_member_and_fulfill_order", autospec=True
     )
     @patch.object(
-        BestellWizardOrderValidator, "validate_order_and_user_data", autospec=True
+        BestellWizardOrderValidator,
+        "validate_order_and_user_data_and_distribution_channels",
+        autospec=True,
     )
     @patch.object(
         BestellWizardOrderValidator,
@@ -30,7 +32,7 @@ class TestValidateAndFulfillOrder(SimpleTestCase):
     def test_validateAndFulfillOrder_default_validatesThenFulfills(
         self,
         mock_validated_growing_period_and_get_contract_start_date: Mock,
-        mock_validate_order_and_user_data: Mock,
+        mock_validate_order_and_user_data_and_distribution_channels: Mock,
         mock_create_member_and_fulfill_order: Mock,
         mock_get_today: Mock,
     ):
@@ -60,7 +62,7 @@ class TestValidateAndFulfillOrder(SimpleTestCase):
         mock_validated_growing_period_and_get_contract_start_date.assert_called_once_with(
             "test_id", cache=cache
         )
-        mock_validate_order_and_user_data.assert_called_once_with(
+        mock_validate_order_and_user_data_and_distribution_channels.assert_called_once_with(
             validated_serializer_data=validated_serializer_data,
             contract_start_date=contract_start_date,
             cache=cache,
