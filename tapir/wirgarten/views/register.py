@@ -43,7 +43,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     create_mandate_ref,
-    send_order_confirmation,
+    send_product_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
@@ -470,7 +470,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                             member_id=member.id,
                         )
 
-                send_order_confirmation(
+                send_product_order_confirmation(
                     member,
                     get_active_and_future_subscriptions().filter(member=member),
                     cache=self.cache,

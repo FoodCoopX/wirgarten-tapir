@@ -52,7 +52,7 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.member import (
     change_pickup_location,
     get_or_create_mandate_ref,
-    send_order_confirmation,
+    send_product_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
@@ -808,7 +808,7 @@ class AdditionalProductForm(forms.Form):
 
         if send_mail:
             member = Member.objects.get(id=member_id)
-            send_order_confirmation(
+            send_product_order_confirmation(
                 member, self.subscriptions, cache=self.cache, from_waiting_list=False
             )
 

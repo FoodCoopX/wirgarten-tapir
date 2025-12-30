@@ -60,6 +60,7 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
+    format_currency,
 )
 
 
@@ -339,18 +340,28 @@ def send_contract_change_confirmation(
     )
 
 
-def send_order_confirmation(
-    member: Member, subs: List[Subscription], cache: Dict, from_waiting_list: bool
+def send_investing_membership_confirmation(
+    member_id: str, coop_share_transaction: CoopShareTransaction
 ):
-    if len(subs) == 0:
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.REGISTER_MEMBERSHIP_ONLY,
-                recipient_id_in_base_queryset=member.id,
-            ),
-        )
-        return
+    TransactionalTrigger.fire_action(
+        TransactionalTriggerData(
+            key=Events.REGISTER_MEMBERSHIP_ONLY,
+            recipient_id_in_base_queryset=member_id,
+            token_data={
+                "number_of_coop_shares": coop_share_transaction.quantity,
+                "price_of_a_coop_share": format_currency(
+                    coop_share_transaction.share_price
+                ),
+                "total_cost": format_currency(coop_share_transaction.total_price),
+                "membership_start_date": format_date(coop_share_transaction.valid_at),
+            },
+        ),
+    )
 
+
+def send_product_order_confirmation(
+    member: Member, subs: List[Subscription], cache: dict, from_waiting_list: bool
+):
     min_contract_start_date = min([subscription.start_date for subscription in subs])
     min_contract_end_date = min([subscription.end_date for subscription in subs])
 

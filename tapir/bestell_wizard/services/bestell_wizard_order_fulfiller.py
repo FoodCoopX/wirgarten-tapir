@@ -28,7 +28,8 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.service.member import (
-    send_order_confirmation,
+    send_product_order_confirmation,
+    send_investing_membership_confirmation,
 )
 from tapir.wirgarten.utils import (
     get_today,
@@ -91,8 +92,9 @@ class BestellWizardOrderFulfiller:
                 cache=cache,
             )
 
+        coop_share_transaction = None
         if legal_status_is_cooperative(cache=cache) and not is_student:
-            cls.create_coop_shares(
+            coop_share_transaction = cls.create_coop_shares(
                 number_of_shares=validated_serializer_data["number_of_coop_shares"],
                 member=member,
                 subscriptions=subscriptions,
@@ -107,9 +109,14 @@ class BestellWizardOrderFulfiller:
             cache=cache,
         )
 
-        send_order_confirmation(
-            member, subscriptions, cache=cache, from_waiting_list=False
-        )
+        if coop_share_transaction is not None and len(subscriptions) == 0:
+            send_investing_membership_confirmation(
+                member_id=member.id, coop_share_transaction=coop_share_transaction
+            )
+        else:
+            send_product_order_confirmation(
+                member, subscriptions, cache=cache, from_waiting_list=False
+            )
 
         return member
 
@@ -154,7 +161,7 @@ class BestellWizardOrderFulfiller:
                 reference_date=get_today(cache), apply_buffer_time=True, cache=cache
             )
 
-        CoopSharePurchaseHandler.buy_cooperative_shares(
+        return CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=number_of_shares,
             member=member,
             shares_valid_at=shares_valid_at,

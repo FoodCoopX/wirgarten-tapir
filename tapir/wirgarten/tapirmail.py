@@ -249,7 +249,14 @@ def _register_triggers():
         required=True,
     )
     TransactionalTrigger.register_action(
-        "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY
+        "BestellWizard: Nur Geno-Mitgliedschaft",
+        Events.REGISTER_MEMBERSHIP_ONLY,
+        tokens={
+            "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
+            "Wert Genossenschaftsanteil": "price_of_a_coop_share",
+            "Gesamtwert der gezeichneten Genossenschaftsanteile": "total_cost",
+            "Beitrittsdatum": "membership_start_date",
+        },
     )
     register_transactional_trigger(
         name="Vertragsänderungen im Mitgliederbereich",

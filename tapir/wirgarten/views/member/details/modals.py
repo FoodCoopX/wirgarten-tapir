@@ -37,7 +37,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.service.member import (
     create_wait_list_entry,
     send_contract_change_confirmation,
-    send_order_confirmation,
+    send_product_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_next_growing_period,
@@ -277,7 +277,7 @@ def get_add_subscription_form(request, **kwargs):
                 )
             else:
                 form.save(member_id=member_id)
-                send_order_confirmation(
+                send_product_order_confirmation(
                     member,
                     get_active_and_future_subscriptions(cache=cache).filter(
                         member=member

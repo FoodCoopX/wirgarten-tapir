@@ -18,7 +18,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
     send_contract_change_confirmation,
-    send_order_confirmation,
+    send_product_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
@@ -182,7 +182,7 @@ class ApplyTapirOrderManager:
                 member=member, subs=new_subscriptions, cache=cache
             )
         else:
-            send_order_confirmation(
+            send_product_order_confirmation(
                 member=member,
                 subs=new_subscriptions,
                 cache=cache,

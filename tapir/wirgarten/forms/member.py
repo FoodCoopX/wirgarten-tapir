@@ -47,7 +47,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     send_cancellation_confirmation_email,
-    send_order_confirmation,
+    send_product_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
@@ -627,7 +627,7 @@ class SubscriptionRenewalForm(Form):
         ).filter(member_id=member_id, cancellation_ts__isnull=True)
 
         member = Member.objects.get(id=member_id)
-        send_order_confirmation(
+        send_product_order_confirmation(
             member, self.subs, cache=self.cache, from_waiting_list=False
         )
 

@@ -128,6 +128,10 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
 
         mock_fire_action.assert_called_once()
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action=mock_fire_action,
+            key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        )
 
     def test_post_requestDataIsInvalid_returns400(self):
         data = self.build_valid_post_data_for_an_order_without_waiting_list()

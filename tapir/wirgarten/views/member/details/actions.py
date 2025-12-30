@@ -21,7 +21,7 @@ from tapir.wirgarten.models import (
     Subscription,
     SubscriptionChangeLogEntry,
 )
-from tapir.wirgarten.service.member import send_order_confirmation
+from tapir.wirgarten.service.member import send_product_order_confirmation
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_available_product_types,
@@ -87,7 +87,9 @@ def renew_contract_same_conditions(request, **kwargs):
 
     renew_solidarity_contribution_if_necessary(member_id=member_id, cache=cache)
 
-    send_order_confirmation(member, new_subs, cache=cache, from_waiting_list=False)
+    send_product_order_confirmation(
+        member, new_subs, cache=cache, from_waiting_list=False
+    )
 
     return HttpResponseRedirect(member_detail_url(member_id))
 
