@@ -11,6 +11,9 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.bestell_wizard.services.questionnaire_source_service import (
+    QuestionnaireSourceService,
+)
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -36,6 +39,8 @@ from tapir.wirgarten.models import (
     PickupLocation,
     MemberPickupLocation,
     GrowingPeriod,
+    QuestionaireTrafficSourceOption,
+    QuestionaireTrafficSourceResponse,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -88,6 +93,8 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             ProductCapacityFactory.create(
                 product_type=cls.product_2.type, period=growing_period, capacity=10
             )
+        # Making sure the source objects are created in the DB
+        QuestionnaireSourceService.get_questionnaire_source_choices(cache={})
 
     def setUp(self) -> None:
         self.now = mock_timezone(self, datetime.datetime(year=2027, month=6, day=27))
@@ -748,6 +755,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "cancellation_policy_read": False,
             "growing_period_id": cls.growing_period.id,
             "solidarity_contribution": 0,
+            "distribution_channels": [],
         }
 
     @classmethod
@@ -768,6 +776,11 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "cancellation_policy_read": True,
             "growing_period_id": cls.growing_period.id,
             "solidarity_contribution": 12.7,
+            "distribution_channels": list(
+                QuestionaireTrafficSourceOption.objects.filter(
+                    name__in=["Zeitung", "Suchmaschine"]
+                ).values_list("id", flat=True)
+            ),
         }
 
     @classmethod
@@ -861,6 +874,13 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
         self.assert_mail_event_has_been_triggered(
             mock_fire_action, key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
+        )
+
+        self.assertEqual(1, QuestionaireTrafficSourceResponse.objects.count())
+        response = QuestionaireTrafficSourceResponse.objects.get()
+        self.assertEqual(
+            {"Zeitung", "Suchmaschine"},
+            set(response.sources.values_list("name", flat=True)),
         )
 
         return member

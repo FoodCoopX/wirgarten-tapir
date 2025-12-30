@@ -29,7 +29,7 @@ export type BestellWizardSettings = {
   organizationName: string;
   logoUrl: string;
   contactMailAddress: string;
-  distributionChannels: string[];
+  distributionChannels: { [key: string]: string };
   solidarityContributionChoices: string[];
   solidarityContributionMinimum: number | null;
   solidarityContributionDefault: number;

@@ -38,15 +38,17 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
       </p>
 
       <div className={"d-flex flex-column gap-2"}>
-        {settings.distributionChannels.map((channel) => (
-          <TapirCheckbox
-            key={channel}
-            checked={selectedDistributionChannels.has(channel)}
-            onChange={(checked) => updateSelection(channel, checked)}
-            controlId={"distribution_channels_" + channel}
-            label={channel}
-          />
-        ))}
+        {Object.entries(settings.distributionChannels).map(
+          ([channelId, channelName]) => (
+            <TapirCheckbox
+              key={channelId}
+              checked={selectedDistributionChannels.has(channelId)}
+              onChange={(checked) => updateSelection(channelId, checked)}
+              controlId={"distribution_channels_" + channelId}
+              label={channelName}
+            />
+          ),
+        )}
       </div>
       <NextStepButton
         onClick={confirmOrder ?? goToNextStep}

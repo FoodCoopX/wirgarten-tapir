@@ -27,6 +27,9 @@ from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
+from tapir.bestell_wizard.services.questionnaire_source_service import (
+    QuestionnaireSourceService,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
@@ -258,7 +261,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             validated_serializer_data["growing_period_id"], cache=cache
         )
 
-        BestellWizardOrderValidator.validate_order_and_user_data(
+        BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
             validated_serializer_data=validated_serializer_data,
             contract_start_date=contract_start_date,
             cache=cache,
@@ -456,13 +459,9 @@ class BestellWizardBaseDataApiView(APIView):
                 "logo_url": static(
                     f"core/themes/{get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/images/Logo_white.webp"
                 ),
-                "distribution_channels": [
-                    channel.strip()
-                    for channel in get_parameter_value(
-                        key=ParameterKeys.ORGANISATION_QUESTIONAIRE_SOURCES,
-                        cache=self.cache,
-                    ).split(",")
-                ],
+                "distribution_channels": QuestionnaireSourceService.get_questionnaire_source_choices(
+                    cache=self.cache
+                ),
                 "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
                     cache=self.cache
                 ),

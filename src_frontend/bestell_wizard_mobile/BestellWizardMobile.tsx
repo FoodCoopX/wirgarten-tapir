@@ -416,6 +416,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           cancellationPolicyRead: cancellationPolicyRead,
           growingPeriodId: selectedGrowingPeriod!.id!,
           solidarityContribution: solidarityContribution,
+          distributionChannels: [...selectedDistributionChannels],
         },
       })
       .then(handleOrderResponse)

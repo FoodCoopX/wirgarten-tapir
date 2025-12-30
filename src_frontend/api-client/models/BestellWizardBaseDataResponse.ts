@@ -189,10 +189,10 @@ export interface BestellWizardBaseDataResponse {
     contactMailAddress: string;
     /**
      * 
-     * @type {Array<string>}
+     * @type {{ [key: string]: string; }}
      * @memberof BestellWizardBaseDataResponse
      */
-    distributionChannels: Array<string>;
+    distributionChannels: { [key: string]: string; };
     /**
      * 
      * @type {Array<string>}

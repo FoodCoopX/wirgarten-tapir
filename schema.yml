@@ -4734,8 +4734,8 @@ components:
           type: string
           format: email
         distribution_channels:
-          type: array
-          items:
+          type: object
+          additionalProperties:
             type: string
         solidarity_contribution_choices:
           type: array
@@ -4863,10 +4863,16 @@ components:
         solidarity_contribution:
           type: number
           format: double
+        distribution_channels:
+          type: array
+          items:
+            type: string
+            minLength: 1
       required:
       - become_member_now
       - cancellation_policy_read
       - contract_accepted
+      - distribution_channels
       - growing_period_id
       - number_of_coop_shares
       - payment_rhythm

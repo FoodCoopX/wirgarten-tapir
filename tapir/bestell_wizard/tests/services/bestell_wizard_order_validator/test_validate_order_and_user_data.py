@@ -33,7 +33,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         cache = Mock()
 
         with self.assertRaises(ValidationError) as error:
-            BestellWizardOrderValidator.validate_order_and_user_data(
+            BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
                 validated_serializer_data=data, contract_start_date=Mock(), cache=cache
             )
 
@@ -73,7 +73,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_is_contract_required.return_value = True
 
         with self.assertRaises(ValidationError) as error:
-            BestellWizardOrderValidator.validate_order_and_user_data(
+            BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
                 validated_serializer_data=data, contract_start_date=Mock(), cache=cache
             )
 
@@ -92,6 +92,9 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         )
         mock_is_contract_required.assert_called_once_with(cache=cache)
 
+    @patch.object(
+        BestellWizardOrderValidator, "validate_distribution_channels", autospec=True
+    )
     @patch(
         "tapir.bestell_wizard.services.bestell_wizard_order_validator.legal_status_is_cooperative",
         autospec=True,
@@ -107,9 +110,11 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_is_contract_required: Mock,
         mock_validate_order: Mock,
         mock_legal_status_is_cooperative: Mock,
+        mock_validate_distribution_channels: Mock,
     ):
         pickup_location_ids = Mock()
         contract_start_date = Mock()
+        distribution_channels = Mock()
         data = {
             "personal_data": {
                 "email": "test_mail",
@@ -123,12 +128,13 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             "shopping_cart_order": {},
             "solidarity_contribution": 0,
             "pickup_location_ids": pickup_location_ids,
+            "distribution_channels": distribution_channels,
         }
         cache = Mock()
         mock_is_contract_required.return_value = False
         mock_legal_status_is_cooperative.return_value = False
 
-        BestellWizardOrderValidator.validate_order_and_user_data(
+        BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
             validated_serializer_data=data,
             contract_start_date=contract_start_date,
             cache=cache,
@@ -151,6 +157,9 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             cache=cache,
         )
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
+        mock_validate_distribution_channels.assert_called_once_with(
+            distribution_channels, cache=cache
+        )
 
     @patch.object(
         TapirOrderBuilder,
@@ -193,7 +202,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_build_tapir_order_from_shopping_cart_serializer.return_value = order
 
         with self.assertRaises(ValidationError) as error:
-            BestellWizardOrderValidator.validate_order_and_user_data(
+            BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
                 validated_serializer_data=data,
                 contract_start_date=contract_start_date,
                 cache=cache,
@@ -220,6 +229,9 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             order=order, solidarity_contribution=12
         )
 
+    @patch.object(
+        BestellWizardOrderValidator, "validate_distribution_channels", autospec=True
+    )
     @patch(
         "tapir.bestell_wizard.services.bestell_wizard_order_validator.legal_status_is_cooperative",
         autospec=True,
@@ -245,11 +257,13 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
         mock_validate_order: Mock,
         mock_legal_status_is_cooperative: Mock,
+        mock_validate_distribution_channels: Mock,
     ):
         pickup_location_ids = Mock()
         contract_start_date = Mock()
         shopping_cart = Mock()
         order = Mock()
+        distribution_channels = Mock()
         data = {
             "personal_data": {
                 "email": "test_mail",
@@ -263,6 +277,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             "cancellation_policy_read": False,
             "solidarity_contribution": 12,
             "pickup_location_ids": pickup_location_ids,
+            "distribution_channels": distribution_channels,
         }
         cache = Mock()
         mock_is_contract_required.return_value = False
@@ -270,7 +285,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_build_tapir_order_from_shopping_cart_serializer.return_value = order
         mock_legal_status_is_cooperative.return_value = False
 
-        BestellWizardOrderValidator.validate_order_and_user_data(
+        BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
             validated_serializer_data=data,
             contract_start_date=contract_start_date,
             cache=cache,
@@ -299,6 +314,9 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             cache=cache,
         )
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
+        mock_validate_distribution_channels.assert_called_once_with(
+            distribution_channels, cache=cache
+        )
 
     @patch.object(
         SolidarityValidator, "is_the_ordered_solidarity_allowed", autospec=True
@@ -349,7 +367,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_is_the_ordered_solidarity_allowed.return_value = False
 
         with self.assertRaises(ValidationError) as error:
-            BestellWizardOrderValidator.validate_order_and_user_data(
+            BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
                 validated_serializer_data=data,
                 contract_start_date=contract_start_date,
                 cache=cache,
@@ -385,6 +403,9 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             amount=12, start_date=contract_start_date, cache=cache
         )
 
+    @patch.object(
+        BestellWizardOrderValidator, "validate_distribution_channels", autospec=True
+    )
     @patch.object(BestellWizardOrderValidator, "validate_coop_content", autospec=True)
     @patch(
         "tapir.bestell_wizard.services.bestell_wizard_order_validator.legal_status_is_cooperative",
@@ -416,11 +437,13 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_is_the_ordered_solidarity_allowed: Mock,
         mock_legal_status_is_cooperative: Mock,
         mock_validate_coop_content: Mock,
+        mock_validate_distribution_channels: Mock,
     ):
         pickup_location_ids = Mock()
         contract_start_date = Mock()
         shopping_cart = Mock()
         order = Mock()
+        distribution_channels = Mock()
         data = {
             "personal_data": {
                 "email": "test_mail",
@@ -433,6 +456,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             "shopping_cart_order": shopping_cart,
             "solidarity_contribution": 12,
             "pickup_location_ids": pickup_location_ids,
+            "distribution_channels": distribution_channels,
         }
         cache = Mock()
         mock_is_contract_required.return_value = False
@@ -441,7 +465,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_is_the_ordered_solidarity_allowed.return_value = True
         mock_legal_status_is_cooperative.return_value = True
 
-        BestellWizardOrderValidator.validate_order_and_user_data(
+        BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
             validated_serializer_data=data,
             contract_start_date=contract_start_date,
             cache=cache,
@@ -476,7 +500,13 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_validate_coop_content.assert_called_once_with(
             validated_data=data, order=order, cache=cache
         )
+        mock_validate_distribution_channels.assert_called_once_with(
+            distribution_channels, cache=cache
+        )
 
+    @patch.object(
+        BestellWizardOrderValidator, "validate_distribution_channels", autospec=True
+    )
     @patch.object(BestellWizardOrderValidator, "validate_coop_content", autospec=True)
     @patch(
         "tapir.bestell_wizard.services.bestell_wizard_order_validator.legal_status_is_cooperative",
@@ -498,7 +528,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
     @patch.object(
         PersonalDataValidator, "validate_personal_data_new_member", autospec=True
     )
-    def test_validateOrderAndUserData_statusIsNotCooperative_DoesntValidateCoopContent(
+    def test_validateOrderAndUserData_statusIsNotCooperative_doesntValidateCoopContent(
         self,
         mock_validate_personal_data_new_member: Mock,
         mock_is_contract_required: Mock,
@@ -508,11 +538,13 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_is_the_ordered_solidarity_allowed: Mock,
         mock_legal_status_is_cooperative: Mock,
         mock_validate_coop_content: Mock,
+        mock_validate_distribution_channels: Mock,
     ):
         pickup_location_ids = Mock()
         contract_start_date = Mock()
         shopping_cart = Mock()
         order = Mock()
+        distribution_channels = Mock()
         data = {
             "personal_data": {
                 "email": "test_mail",
@@ -525,6 +557,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             "shopping_cart_order": shopping_cart,
             "solidarity_contribution": 12,
             "pickup_location_ids": pickup_location_ids,
+            "distribution_channels": distribution_channels,
         }
         cache = Mock()
         mock_is_contract_required.return_value = False
@@ -533,7 +566,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         mock_is_the_ordered_solidarity_allowed.return_value = True
         mock_legal_status_is_cooperative.return_value = False
 
-        BestellWizardOrderValidator.validate_order_and_user_data(
+        BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
             validated_serializer_data=data,
             contract_start_date=contract_start_date,
             cache=cache,
@@ -566,3 +599,6 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         )
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
         mock_validate_coop_content.assert_not_called()
+        mock_validate_distribution_channels.assert_called_once_with(
+            distribution_channels, cache=cache
+        )

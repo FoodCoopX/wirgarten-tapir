@@ -23,7 +23,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     coopStatuteLink: "",
     logoUrl: "",
     contactMailAddress: "",
-    distributionChannels: [],
+    distributionChannels: {},
     solidarityContributionChoices: [],
     solidarityContributionMinimum: 0,
     solidarityContributionDefault: 0,

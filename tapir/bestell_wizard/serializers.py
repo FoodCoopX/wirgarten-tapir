@@ -38,6 +38,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     cancellation_policy_read = serializers.BooleanField()
     growing_period_id = serializers.CharField()
     solidarity_contribution = serializers.FloatField()
+    distribution_channels = serializers.ListField(child=serializers.CharField())
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
@@ -141,7 +142,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     organization_name = serializers.CharField()
     logo_url = serializers.URLField()
     contact_mail_address = serializers.EmailField()
-    distribution_channels = serializers.ListField(child=serializers.CharField())
+    distribution_channels = serializers.DictField(child=serializers.CharField())
     solidarity_contribution_choices = serializers.ListField(
         child=serializers.CharField()
     )

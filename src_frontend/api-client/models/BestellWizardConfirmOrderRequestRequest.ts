@@ -117,6 +117,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
     solidarityContribution: number;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BestellWizardConfirmOrderRequestRequest
+     */
+    distributionChannels: Array<string>;
 }
 
 /**
@@ -138,6 +144,7 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object)
     if (!('cancellationPolicyRead' in value) || value['cancellationPolicyRead'] === undefined) return false;
     if (!('growingPeriodId' in value) || value['growingPeriodId'] === undefined) return false;
     if (!('solidarityContribution' in value) || value['solidarityContribution'] === undefined) return false;
+    if (!('distributionChannels' in value) || value['distributionChannels'] === undefined) return false;
     return true;
 }
 
@@ -166,6 +173,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'cancellationPolicyRead': json['cancellation_policy_read'],
         'growingPeriodId': json['growing_period_id'],
         'solidarityContribution': json['solidarity_contribution'],
+        'distributionChannels': json['distribution_channels'],
     };
 }
 
@@ -195,6 +203,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'cancellation_policy_read': value['cancellationPolicyRead'],
         'growing_period_id': value['growingPeriodId'],
         'solidarity_contribution': value['solidarityContribution'],
+        'distribution_channels': value['distributionChannels'],
     };
 }
 

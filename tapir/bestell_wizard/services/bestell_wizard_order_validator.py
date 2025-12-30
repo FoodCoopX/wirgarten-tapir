@@ -3,6 +3,9 @@ import datetime
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
+from tapir.bestell_wizard.services.questionnaire_source_service import (
+    QuestionnaireSourceService,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
@@ -27,14 +30,17 @@ from tapir.subscriptions.services.required_product_types_validator import (
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Member, GrowingPeriod
+from tapir.wirgarten.models import (
+    Member,
+    GrowingPeriod,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import legal_status_is_cooperative, get_today
 
 
 class BestellWizardOrderValidator:
     @classmethod
-    def validate_order_and_user_data(
+    def validate_order_and_user_data_and_distribution_channels(
         cls,
         validated_serializer_data: dict,
         contract_start_date: datetime.date,
@@ -92,6 +98,21 @@ class BestellWizardOrderValidator:
             cls.validate_coop_content(
                 validated_data=validated_serializer_data, order=order, cache=cache
             )
+
+        cls.validate_distribution_channels(
+            validated_serializer_data["distribution_channels"], cache=cache
+        )
+
+    @classmethod
+    def validate_distribution_channels(cls, given_channel_ids: list[str], cache: dict):
+        valid_ids = set(
+            QuestionnaireSourceService.get_questionnaire_source_choices(
+                cache=cache
+            ).keys()
+        )
+
+        if not set(given_channel_ids).issubset(valid_ids):
+            raise ValidationError("Ungültige Vertriebskanäle")
 
     @classmethod
     def is_cancellation_policy_required(

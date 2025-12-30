@@ -26,6 +26,8 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
     Member,
     Subscription,
+    QuestionaireTrafficSourceResponse,
+    QuestionaireTrafficSourceOption,
 )
 from tapir.wirgarten.service.member import (
     send_product_order_confirmation,
@@ -109,6 +111,11 @@ class BestellWizardOrderFulfiller:
             cache=cache,
         )
 
+        cls.create_questionnaire_responses(
+            questionnaire_source_ids=validated_serializer_data["distribution_channels"],
+            member_id=member.id,
+        )
+
         if coop_share_transaction is not None and len(subscriptions) == 0:
             send_investing_membership_confirmation(
                 member_id=member.id, coop_share_transaction=coop_share_transaction
@@ -119,6 +126,16 @@ class BestellWizardOrderFulfiller:
             )
 
         return member
+
+    @classmethod
+    def create_questionnaire_responses(
+        cls, questionnaire_source_ids: list[str], member_id: str
+    ):
+        response = QuestionaireTrafficSourceResponse.objects.create(member_id=member_id)
+        sources = QuestionaireTrafficSourceOption.objects.filter(
+            id__in=questionnaire_source_ids
+        )
+        response.sources.set(sources)
 
     @classmethod
     def create_member(cls, personal_data, is_student: bool, cache: dict):
