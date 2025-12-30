@@ -122,7 +122,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
     setSelectedProductTypeId(undefined);
     if (!productType) return;
 
-    setSelectedProductTypeId(productType.id!);
+    setSelectedProductTypeId(productType.id);
     setName(productType.name);
     setIconLink(productType.iconLink ?? "");
     setCapacity(0);
@@ -144,34 +144,41 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   function onSave() {
     setSaving(true);
 
-    productsApi
-      .productsApiExtendedProductTypeCreate({
-        saveExtendedProductTypeRequest: {
-          productTypeId: selectedProductTypeId,
-          growingPeriodId: getPeriodIdFromUrl(),
-          extendedProductType: {
-            isAssociationMembership: isAssociationMembership,
-            contractLink: contractLink,
-            orderInBestellwizard: orderInBestellwizard,
-            descriptionBestellwizardLong: descriptionBestellwizardLong,
-            descriptionBestellwizardShort: descriptionBestellwizardShort,
-            mustBeSubscribedTo: mustBeSubscribedTo,
-            singleSubscriptionOnly: singleSubscriptionOnly,
-            taxRateChangeDate: taxRateChangeDate,
-            taxRate: taxRate,
-            noticePeriod: noticePeriod,
-            isAffectedByJokers: isAffectedByJokers,
-            deliveryCycle: deliveryCycle,
-            capacity: capacity,
-            iconLink: iconLink,
-            name: name,
-            forceWaitingList: forceWaitingList,
-            accordionsInBestellWizard: accordions,
-            titleBestellwizardProductChoice: titleBestellWizardProductChoices,
-            backgroundImageInBestellwizard: backgroundImageInBestellWizard,
-          },
-        },
-      })
+    const request = {
+      productTypeId: selectedProductTypeId,
+      growingPeriodId: getPeriodIdFromUrl(),
+      extendedProductType: {
+        isAssociationMembership: isAssociationMembership,
+        contractLink: contractLink,
+        orderInBestellwizard: orderInBestellwizard,
+        descriptionBestellwizardLong: descriptionBestellwizardLong,
+        descriptionBestellwizardShort: descriptionBestellwizardShort,
+        mustBeSubscribedTo: mustBeSubscribedTo,
+        singleSubscriptionOnly: singleSubscriptionOnly,
+        taxRateChangeDate: taxRateChangeDate,
+        taxRate: taxRate,
+        noticePeriod: noticePeriod,
+        isAffectedByJokers: isAffectedByJokers,
+        deliveryCycle: deliveryCycle,
+        capacity: capacity,
+        iconLink: iconLink,
+        name: name,
+        forceWaitingList: forceWaitingList,
+        accordionsInBestellWizard: accordions,
+        titleBestellwizardProductChoice: titleBestellWizardProductChoices,
+        backgroundImageInBestellwizard: backgroundImageInBestellWizard,
+      },
+    };
+
+    const promise = selectedProductTypeId
+      ? productsApi.productsApiExtendedProductTypePartialUpdate({
+          patchedSaveExtendedProductTypeRequest: request,
+        })
+      : productsApi.productsApiExtendedProductTypeCreate({
+          saveExtendedProductTypeRequest: request,
+        });
+
+    promise
       .then(() => location.reload())
       .catch((error) =>
         handleRequestError(
