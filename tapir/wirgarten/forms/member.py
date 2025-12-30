@@ -66,7 +66,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
-            if k not in ["street_2", "is_student"]:
+            if k not in ["street_2", "is_student", "birthdate"]:
                 v.required = True
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
@@ -149,7 +149,9 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
             self._validate_duplicate_email_keycloak()
 
     def _validate_birthdate(self):
-        birthdate = self.cleaned_data["birthdate"]
+        birthdate = self.cleaned_data.get("birthdate", None)
+        if birthdate is None:
+            return
         today = get_today()
         if birthdate > today or birthdate < (today + relativedelta(years=-120)):
             self.add_error("birthdate", _("Bitte wähle ein gültiges Datum aus."))

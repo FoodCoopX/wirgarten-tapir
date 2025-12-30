@@ -1,5 +1,7 @@
 import datetime
 
+from icecream import ic
+
 from tapir.accounts.models import TapirUser
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
@@ -33,6 +35,7 @@ from tapir.wirgarten.service.member import (
     send_product_order_confirmation,
     send_investing_membership_confirmation,
 )
+from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import (
     get_today,
     get_now,
@@ -104,10 +107,15 @@ class BestellWizardOrderFulfiller:
                 actor=actor,
             )
 
+        solidarity_contribution_start_date = contract_start_date
+        if len(subscriptions) == 0 and coop_share_transaction is not None:
+            ic("PROUT")
+            solidarity_contribution_start_date = coop_share_transaction.valid_at
+        ic(contract_start_date, solidarity_contribution_start_date)
         cls.create_solidarity_contribution(
             member=member,
             contribution=validated_serializer_data["solidarity_contribution"],
-            contract_start_date=contract_start_date,
+            contract_start_date=solidarity_contribution_start_date,
             cache=cache,
         )
 
@@ -219,12 +227,19 @@ class BestellWizardOrderFulfiller:
         if contribution == 0:
             return
 
-        growing_period = TapirCache.get_growing_period_at_date(
+        growing_period_current = TapirCache.get_growing_period_at_date(
             reference_date=contract_start_date, cache=cache
         )
+        if growing_period_current is None:
+            soli_end_date = get_next_growing_period(
+                reference_date=contract_start_date, cache=cache
+            ).start_date - datetime.timedelta(days=1)
+        else:
+            soli_end_date = growing_period_current.end_date
+
         SolidarityContribution.objects.create(
             member=member,
             amount=contribution,
             start_date=contract_start_date,
-            end_date=growing_period.end_date,
+            end_date=soli_end_date,
         )

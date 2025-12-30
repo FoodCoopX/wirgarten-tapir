@@ -431,6 +431,57 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(WaitingListEntry.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_investingMemberWithoutCurrentGrowingPeriod_solidarityContributionStartsAtMembershipStart(
+        self, mock_fire_action: Mock
+    ):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_order"] = {}
+        data["become_member_now"] = True
+        data["pickup_location_ids"] = []
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE
+        ).update(value=300)
+        data["growing_period_id"] = self.growing_period_future.id
+        self.growing_period.delete()
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should have been confirmed, error: {response_content["error"]}",
+        )
+
+        self.assertEqual(1, Member.objects.count())
+        member = Member.objects.get()
+        self.assert_personal_data_is_valid_member(member)
+
+        self.assertEqual(1, CoopShareTransaction.objects.count())
+        coop_share_transaction = CoopShareTransaction.objects.get()
+        self.assertEqual(member, coop_share_transaction.member)
+        self.assertEqual(2, coop_share_transaction.quantity)
+
+        self.assertFalse(Subscription.objects.exists())
+        self.assertFalse(MemberPickupLocation.objects.exists())
+
+        mock_fire_action.assert_called_once()
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action, key=Events.REGISTER_MEMBERSHIP_ONLY
+        )
+        self.assert_solidarity_contribution_created_correctly(
+            member_id=member.id,
+            amount_as_string="12.70",
+            growing_period=self.growing_period,
+        )
+
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_investingMemberWithSolidarityContribution_cancellationPolicyIsRequired(
         self, mock_fire_action: Mock
     ):
