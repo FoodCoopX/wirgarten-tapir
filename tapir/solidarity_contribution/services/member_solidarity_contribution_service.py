@@ -5,6 +5,7 @@ from tapir.accounts.models import TapirUser
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_now
 
 
@@ -40,11 +41,19 @@ class MemberSolidarityContributionService:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=change_date, cache=cache
         )
+        if growing_period is None:
+            future_growing_period = get_next_growing_period(
+                reference_date=change_date, cache=cache
+            )
+            end_date = future_growing_period.start_date - datetime.timedelta(days=1)
+        else:
+            end_date = growing_period.end_date
+
         SolidarityContribution.objects.create(
             member_id=member_id,
             amount=amount,
             start_date=change_date,
-            end_date=growing_period.end_date,
+            end_date=end_date,
         )
 
     @classmethod

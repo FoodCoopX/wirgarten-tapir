@@ -120,69 +120,65 @@ const SubscriptionCancellationModal: React.FC<
   }
 
   return (
-    <>
-      <Modal
-        onHide={onHide}
-        show={show && !showConfirmationModal}
-        centered={true}
-        size={"lg"}
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <h4>Verträge kündigen</h4>
-          </Modal.Title>
-        </Modal.Header>
-        {loading ? (
-          <>
-            <Modal.Body>
-              <Spinner />
-            </Modal.Body>
-            <Modal.Footer />
-          </>
-        ) : (
-          <>
-            {currentStep === "subscriptions" && (
-              <CancellationStepSubscriptions
-                errors={errors}
-                subscribedProducts={subscribedProducts}
-                selectedProducts={selectedProducts}
-                setSelectedProducts={setSelectedProducts}
-                canCancelCoopMembership={canCancelCoopMembership}
-                membershipText={getMembershipText()}
-                cancelCoopMembershipSelected={cancelCoopMembershipSelected}
-                setCancelCoopMembershipSelected={
-                  setCancelCoopMembershipSelected
-                }
-                goToNextStep={() => setCurrentStep("reasons")}
-              />
-            )}
-            {currentStep === "reasons" && (
-              <CancellationStepReasons
-                goToNextStep={() => setCurrentStep("confirmation")}
-                selectedCancellationReasons={selectedCancellationReasons}
-                setSelectedCancellationReasons={setSelectedCancellationReasons}
-                defaultCancellationReasons={defaultCancellationReasons}
-                customCancellationReason={customCancellationReason}
-                setCustomCancellationReason={setCustomCancellationReason}
-                goToPreviousStep={() => setCurrentStep("subscriptions")}
-              />
-            )}
-            {currentStep === "confirmation" && (
-              <CancellationStepConfirmation
-                selectedCancellationReasons={selectedCancellationReasons}
-                selectedProducts={selectedProducts}
-                onConfirm={onConfirm}
-                cancelCoopMembershipSelected={cancelCoopMembershipSelected}
-                membershipText={getMembershipText()}
-                customCancellationReasons={customCancellationReason}
-                goToPreviousStep={() => setCurrentStep("reasons")}
-                confirmationLoading={confirmationLoading}
-              />
-            )}
-          </>
-        )}
-      </Modal>
-    </>
+    <Modal
+      onHide={onHide}
+      show={show && !showConfirmationModal}
+      centered={true}
+      size={"lg"}
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>
+          <h4>Verträge kündigen</h4>
+        </Modal.Title>
+      </Modal.Header>
+      {loading ? (
+        <>
+          <Modal.Body>
+            <Spinner />
+          </Modal.Body>
+          <Modal.Footer />
+        </>
+      ) : (
+        <>
+          {currentStep === "subscriptions" && (
+            <CancellationStepSubscriptions
+              errors={errors}
+              subscribedProducts={subscribedProducts}
+              selectedProducts={selectedProducts}
+              setSelectedProducts={setSelectedProducts}
+              canCancelCoopMembership={canCancelCoopMembership}
+              membershipText={getMembershipText()}
+              cancelCoopMembershipSelected={cancelCoopMembershipSelected}
+              setCancelCoopMembershipSelected={setCancelCoopMembershipSelected}
+              goToNextStep={() => setCurrentStep("reasons")}
+            />
+          )}
+          {currentStep === "reasons" && (
+            <CancellationStepReasons
+              goToNextStep={() => setCurrentStep("confirmation")}
+              selectedCancellationReasons={selectedCancellationReasons}
+              setSelectedCancellationReasons={setSelectedCancellationReasons}
+              defaultCancellationReasons={defaultCancellationReasons}
+              customCancellationReason={customCancellationReason}
+              setCustomCancellationReason={setCustomCancellationReason}
+              goToPreviousStep={() => setCurrentStep("subscriptions")}
+            />
+          )}
+          {currentStep === "confirmation" && (
+            <CancellationStepConfirmation
+              selectedCancellationReasons={selectedCancellationReasons}
+              selectedProducts={selectedProducts}
+              onConfirm={onConfirm}
+              cancelCoopMembershipSelected={cancelCoopMembershipSelected}
+              membershipText={getMembershipText()}
+              customCancellationReasons={customCancellationReason}
+              goToPreviousStep={() => setCurrentStep("reasons")}
+              confirmationLoading={confirmationLoading}
+            />
+          )}
+        </>
+      )}
+    </Modal>
   );
 };
 

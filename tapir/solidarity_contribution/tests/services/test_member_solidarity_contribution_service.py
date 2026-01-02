@@ -168,6 +168,29 @@ class TestMemberSolidarityContributionService(TapirIntegrationTest):
             datetime.date(year=2024, month=12, day=31), new_contribution.end_date
         )
 
+    def test_assignContributionToMember_noCurrentGrowingPeriod_useFutureGrowingPeriodAsEndDate(
+        self,
+    ):
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2025, month=2, day=1))
+        member = MemberFactory.create()
+
+        MemberSolidarityContributionService.assign_contribution_to_member(
+            member_id=member.id,
+            change_date=datetime.date(year=2024, month=6, day=1),
+            amount=17,
+            cache={},
+        )
+
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        new_contribution = SolidarityContribution.objects.get()
+        self.assertEqual(Decimal(17), new_contribution.amount)
+        self.assertEqual(
+            datetime.date(year=2024, month=6, day=1), new_contribution.start_date
+        )
+        self.assertEqual(
+            datetime.date(year=2025, month=1, day=31), new_contribution.end_date
+        )
+
     @patch.object(MemberSolidarityContributionService, "get_member_contribution")
     def test_isUserAllowedToChangeContribution_userIsAdmin_returnsTrue(
         self, mock_get_member_contribution: Mock
