@@ -88,15 +88,10 @@ class UpdateMemberSolidarityContributionApiView(APIView):
             raise ValidationError("Ungültige Zahl " + request.data.get("amount"))
 
         cache = {}
-        growing_period = GrowingPeriodChoiceProvider.get_available_growing_periods(
-            reference_date=get_today(cache=cache), cache=cache
-        )[0]
-        change_date = (
-            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period,
-                apply_buffer_time=False,
-                cache=cache,
-            )
+        change_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=cache),
+            apply_buffer_time=False,
+            cache=cache,
         )
 
         if not MemberSolidarityContributionService.is_user_allowed_to_change_contribution(
