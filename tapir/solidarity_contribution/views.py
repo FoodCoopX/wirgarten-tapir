@@ -25,9 +25,6 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
-from tapir.subscriptions.services.growing_period_choice_provider import (
-    GrowingPeriodChoiceProvider,
-)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -45,17 +42,13 @@ class MemberSolidarityContributionsApiView(APIView):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
         cache = {}
-        growing_period = GrowingPeriodChoiceProvider.get_available_growing_periods(
-            reference_date=get_today(cache=cache), cache=cache
-        )[0]
+
         data = {
             "contributions": SolidarityContribution.objects.filter(
                 member_id=member_id
             ).order_by("start_date"),
-            "change_valid_from": ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
-                growing_period=growing_period,
-                apply_buffer_time=True,
-                cache=cache,
+            "change_valid_from": UpdateMemberSolidarityContributionApiView.get_change_date(
+                cache=cache
             ),
             "user_can_set_lower_value": request.user.has_perm(Permission.Coop.MANAGE),
         }
@@ -88,11 +81,7 @@ class UpdateMemberSolidarityContributionApiView(APIView):
             raise ValidationError("Ungültige Zahl " + request.data.get("amount"))
 
         cache = {}
-        change_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=cache),
-            apply_buffer_time=False,
-            cache=cache,
-        )
+        change_date = self.get_change_date(cache=cache)
 
         if not MemberSolidarityContributionService.is_user_allowed_to_change_contribution(
             logged_in_user=request.user,
@@ -124,3 +113,11 @@ class UpdateMemberSolidarityContributionApiView(APIView):
         ).order_by("start_date")
 
         return Response(SolidarityContributionSerializer(contributions, many=True).data)
+
+    @classmethod
+    def get_change_date(cls, cache: dict):
+        return ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=cache),
+            apply_buffer_time=False,
+            cache=cache,
+        )
