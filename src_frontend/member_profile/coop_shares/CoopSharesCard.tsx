@@ -21,7 +21,6 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<CoopShareTransaction[]>([]);
   const [bestellWizardUrl, setBestellWizardUrl] = useState("");
-  const [bestellWizardLoading, setBestellWizardLoading] = useState(false);
 
   useEffect(() => {
     loadShareData();
@@ -133,9 +132,8 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
                 return;
               }
               location.assign(bestellWizardUrl);
-              setBestellWizardLoading(true);
             }}
-            loading={loading || bestellWizardLoading}
+            loading={loading}
           />
         </div>
       </Card.Footer>
