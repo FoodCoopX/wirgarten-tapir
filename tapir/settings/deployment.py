@@ -58,7 +58,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "generate_member_numbers": {
         "task": "tapir.wirgarten.tasks.generate_member_numbers",
-        "schedule": celery.schedules.crontab(minute="0", hour="3"),
+        "schedule": celery.schedules.crontab(minute="0", hour="10"),
     },
     "resolve_segment_and_create_email_dispatches_task": {
         "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
