@@ -1327,11 +1327,11 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,
             label="Seite 6B: Genossenschaft - Rechtliches - Checkbox-Label Satzung gelesen",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Ich habe die Satzung der {betriebsname} und die Kündigungsfrist von (2) Jahren zum Jahresende zur Kenntnis genommen.",
-            description="",
+            initial_value="Ich habe die <a href='{link_zu_satzung}' target='_blank'>Satzung</a> der {betriebsname} und die Kündigungsfrist von (2) Jahren zum Jahresende zur Kenntnis genommen.",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(vars_hint=["betriebsname"]),
+            meta=ParameterMeta(vars_hint=["betriebsname", "link_zu_satzung"]),
         )
         bestellwizard_parameter_order -= 1
 
@@ -1340,7 +1340,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 6B: Genossenschaft - Rechtliches - Erklärtext Satzung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10 und § 37.",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )

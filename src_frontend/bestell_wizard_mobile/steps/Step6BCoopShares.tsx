@@ -106,12 +106,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   function buildLabelStatute() {
     let label = settings.strings.step6cCheckboxStatute;
     label = label.replace("{betriebsname}", settings.organizationName);
-    label =
-      label +
-      " <a href='" +
-      settings.coopStatuteLink +
-      "' target='blank'>Satzung</a>";
-
+    label = label.replace("{link_zu_satzung}", settings.coopStatuteLink);
     return label;
   }
 
