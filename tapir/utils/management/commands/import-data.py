@@ -15,6 +15,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     GrowingPeriod,
     Product,
+    ProductType,
     PickupLocation,
     MandateReference,
     MemberPickupLocation,
@@ -425,18 +426,44 @@ class Command(BaseCommand):
                     mref = get_or_create_mandate_ref(m)
                     # identify product
                     try:
-                        if _normalize_cell(row.get("product")):
-                            # print(row)
-                            prod = Product.objects.get(
-                                name=_normalize_cell(row.get("product"))
-                            )
+                        product_name = _normalize_cell(row.get("product"))
+                        product_type_name = _normalize_cell(row.get("product_type"))
+
+                        if product_name:
+                            filter_kwargs = {"name": product_name}
+                            if product_type_name:
+                                try:
+                                    ptype = ProductType.objects.get(
+                                        name=product_type_name
+                                    )
+                                    filter_kwargs["type"] = ptype
+                                except ProductType.DoesNotExist:
+                                    self.stderr.write(str(row))
+                                    self.stderr.write(
+                                        f"ProductType '{product_type_name}' not found"
+                                    )
+                                    continue
+
+                            prod = Product.objects.get(**filter_kwargs)
                         else:
                             self.stderr.write(str(row))
                             self.stderr.write("No product defined in subscription.")
                             continue
+                    except Product.DoesNotExist:
+                        self.stderr.write(str(row))
+                        self.stderr.write(
+                            f"Product '{product_name}' (Type: {product_type_name or 'any'}) not found"
+                        )
+                        continue
+                    except Product.MultipleObjectsReturned:
+                        self.stderr.write(str(row))
+                        self.stderr.write(
+                            f"Multiple products found for name '{product_name}'. Please specify 'product_type'."
+                        )
+                        continue
                     except django.core.exceptions.ObjectDoesNotExist as e:
                         self.stderr.write(str(row))
-                        self.stderr.write("Product not found")
+                        self.stderr.write(f"Error finding product: {e}")
                         continue
                     # prepare cancellation value
                     if _normalize_cell(row.get("cancellation.ts")) != "":
