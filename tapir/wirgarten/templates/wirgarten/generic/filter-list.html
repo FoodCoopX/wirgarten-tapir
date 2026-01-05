@@ -21,7 +21,7 @@
             <div class="card-body"
                  style="height: calc(100vh - {% if is_paginated %}14em{% else %}9.5em{% endif %}); overflow-y: scroll; padding: 0px;">
                 <table class="table" aria-label="Liste" style="margin:1em; width: calc(100% - 2em)">
-                    <thead class="sticky-top" style="background: #FFFFFF;">
+                    <thead class="sticky-top" style="background: #FFFFFF; z-index: 0;">
                     {% block table_head %}
                     {% endblock %}
                     </thead>
