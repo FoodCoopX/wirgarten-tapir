@@ -210,7 +210,8 @@ class Command(BaseCommand):
                     m = Member(
                         first_name=_normalize_cell(row.get("Vorname")),
                         last_name=_normalize_cell(row.get("Nachname")),
-                        # birthdate=row["Geburtstag/Gründungsdatum"],
+                        birthdate=_to_date(row.get("Geburtstag/Gründungsdatum")),
+                        form_of_address=_normalize_cell(row.get("Anrede")),
                         street=" ".join(
                             s.rstrip()
                             for s in [
@@ -223,18 +224,19 @@ class Command(BaseCommand):
                         city=_normalize_cell(row.get("Ort")),
                         email=_normalize_cell(row.get("Mailadresse")),
                         phone_number=_normalize_cell(row.get("Telefon")),
+                        phone_number_landline=_normalize_cell(row.get("Telefon 2")),
                         member_no=_normalize_cell(row.get("Nr")),
                         iban=_normalize_cell(row.get("IBAN")),
                         account_owner=_normalize_cell(row.get("Kontoinhaber")),
                         sepa_consent=_to_datetime(row.get("consent_sepa")),
                         privacy_consent=_to_datetime(row.get("privacy_consent")),
-                        # pickup_location=picloc
                     )
                     mp = MemberPickupLocation(
                         member=m,
                         pickup_location=picloc,
                         valid_from=_to_date(row.get("AO_gueltig_ab")),
                     )
+                    # Persists member and pickup location transactionally; handles errors
                     try:
                         if dry_run:
                             created += 1
