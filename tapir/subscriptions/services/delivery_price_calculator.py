@@ -60,7 +60,10 @@ class DeliveryPriceCalculator:
         product_price = get_product_price(
             subscription.product, at_date, cache=cache
         ).price
-        delivery_price = product_price * 12 / 52
+        delivery_price = (
+            product_price * 12 / cls.get_number_of_weeks_in_year(at_date.year)
+        )
+
         if (
             subscription.product.type.delivery_cycle == ODD_WEEKS[0]
             or subscription.product.type.delivery_cycle == EVEN_WEEKS[0]
@@ -96,3 +99,11 @@ class DeliveryPriceCalculator:
         cls, growing_period: GrowingPeriod
     ) -> int:
         return round((growing_period.end_date - growing_period.start_date).days / 30)
+
+    @classmethod
+    def get_number_of_weeks_in_year(cls, year: int):
+        # According to this article: https://en.wikipedia.org/wiki/ISO_week_date#Last_week
+        # The 28th of December is always the last week of the year,
+        # so we can use that property to get the number of weeks in a year
+        last_week = datetime.date(year, month=12, day=28)
+        return last_week.isocalendar().week
