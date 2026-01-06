@@ -99,7 +99,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
     ):
         EmailConfigurationDispatch.objects.filter(
             email_configuration_version=version,
-            override_recipients=[recipient.email],
+            override_recipients=[{"recipient_id_in_base_queryset": recipient.id}],
             is_sent=False,
         ).delete()
 
@@ -132,7 +132,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
 
         EmailConfigurationDispatch.objects.create(
             email_configuration_version=version,
-            override_recipients={"recipient_id_in_base_queryset": recipient.id},
+            override_recipients=[{"recipient_id_in_base_queryset": recipient.id}],
             scheduled_time=scheduled_time,
             is_sent=False,
         )
