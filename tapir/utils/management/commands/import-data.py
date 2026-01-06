@@ -110,10 +110,11 @@ class Command(BaseCommand):
             return dt
 
         if options["reset_all"]:
+            CoopShareTransaction.objects.all().delete()
+            Subscription.objects.all().delete()
             Payment.objects.all().delete()
             MandateReference.objects.all().delete()
-            Subscription.objects.all().delete()
-            CoopShareTransaction.objects.all().delete()
+            MemberPickupLocation.objects.all().delete()
             LogEntry.objects.all().delete()
             QuestionaireCancellationReasonResponse.objects.all().delete()
             QuestionaireTrafficSourceResponse.objects.all().delete()
