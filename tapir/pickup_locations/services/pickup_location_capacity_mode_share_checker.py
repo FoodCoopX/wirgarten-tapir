@@ -140,10 +140,13 @@ class PickupLocationCapacityModeShareChecker:
         subscriptions_with_product_type = TapirCache.get_subscriptions_by_product_type(
             cache
         )[product_type]
+        subscriptions_ids_with_product_type = {
+            s.id for s in subscriptions_with_product_type
+        }
 
         def subscription_filter(subscription: Subscription):
             return (
-                subscription in subscriptions_with_product_type
+                subscription.id in subscriptions_ids_with_product_type
                 and subscription.member_id in member_ids_at_pickup_location
             )
 
@@ -217,11 +220,11 @@ class PickupLocationCapacityModeShareChecker:
         return PickupLocationHighestUsageAfterDateService.get_highest_usage_after_date_generic(
             pickup_location=pickup_location,
             reference_date=reference_date,
-            lambda_get_usage_at_date=lambda data: (
+            lambda_get_usage_at_date=lambda date: (
                 PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
                     pickup_location=pickup_location,
                     product_type=product_type,
-                    reference_date=data,
+                    reference_date=date,
                     cache=cache,
                 )
             ),
