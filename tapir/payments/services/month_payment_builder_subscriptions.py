@@ -83,6 +83,7 @@ class MonthPaymentBuilderSubscriptions:
                         generated_payments=generated_payments,
                         in_trial=in_trial,
                         total_to_pay_function=cls.get_total_to_pay,
+                        allow_negative_amounts=False,
                     )
                 )
                 if payment is not None:

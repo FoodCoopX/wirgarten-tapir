@@ -117,6 +117,7 @@ class MonthPaymentBuilderUtils:
         in_trial: bool,
         total_to_pay_function,
         payment_type: str,
+        allow_negative_amounts: bool,
     ) -> Payment | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -155,7 +156,7 @@ class MonthPaymentBuilderUtils:
 
         new_payment_amount = total_to_pay - already_paid
         new_payment_amount = Decimal(new_payment_amount).quantize(Decimal("0.01"))
-        if new_payment_amount <= 0:
+        if new_payment_amount <= 0 and not allow_negative_amounts:
             return None
 
         payments_due_date = MonthPaymentBuilderUtils.get_payment_due_date_on_month(

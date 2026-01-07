@@ -67,6 +67,7 @@ class MonthPaymentBuilderSolidarityContributions:
                 in_trial=in_trial,
                 payment_type=cls.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
                 total_to_pay_function=cls.get_total_to_pay,
+                allow_negative_amounts=True,
             )
             if payment is not None:
                 payments_to_create.append(payment)
