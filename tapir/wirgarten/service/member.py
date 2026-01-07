@@ -179,7 +179,7 @@ def get_or_create_mandate_ref(
     def compute():
         return {
             mandate_ref.member_id: mandate_ref
-            for mandate_ref in MandateReference.objects.all()
+            for mandate_ref in MandateReference.objects.select_related("member")
         }
 
     mandate_ref_cache = get_from_cache_or_compute(cache, "mandate_ref_cache", compute)

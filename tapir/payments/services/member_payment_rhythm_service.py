@@ -13,6 +13,8 @@ from tapir.wirgarten.utils import get_today
 
 
 class MemberPaymentRhythmService:
+    RELATIVE_DELTA_ONE_MONTH = relativedelta(months=1)
+
     @staticmethod
     def get_member_payment_rhythm(
         member: Member, reference_date: datetime.date, cache: dict
@@ -93,7 +95,7 @@ class MemberPaymentRhythmService:
         while not cls.is_start_of_rhythm_period(
             rhythm=rhythm, reference_date=reference_date, cache=cache
         ):
-            reference_date = reference_date - relativedelta(months=1)
+            reference_date = reference_date - cls.RELATIVE_DELTA_ONE_MONTH
         return reference_date
 
     @classmethod

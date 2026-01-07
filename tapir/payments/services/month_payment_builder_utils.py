@@ -62,7 +62,8 @@ class MonthPaymentBuilderUtils:
         existing_payments = existing_payments.union(
             payment
             for payment in generated_payments
-            if payment.mandate_ref == mandate_ref and payment.type == payment_type
+            if payment.mandate_ref_id == mandate_ref.ref
+            and payment.type == payment_type
         )
 
         payments_for_this_period = [

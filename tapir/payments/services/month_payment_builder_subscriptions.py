@@ -187,7 +187,7 @@ class MonthPaymentBuilderSubscriptions:
                 else:
                     number_of_single_deliveries_to_pay += number_of_deliveries
 
-            current_month += relativedelta(months=1)
+            current_month += MemberPaymentRhythmService.RELATIVE_DELTA_ONE_MONTH
         return number_of_full_month_to_pay, number_of_single_deliveries_to_pay
 
     @classmethod
