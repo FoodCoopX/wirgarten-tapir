@@ -1,12 +1,12 @@
 {
-    "files": [],
-    "references": [
-        { "path": "./tsconfig.app.json" },
-        { "path": "./tsconfig.node.json" }
-    ],
-    "compilerOptions": {
-        "types": ["node"],
-        "noUnusedParameters": false,
-        "noUnusedLocals": false
-    }
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "types": ["node"],
+    "noUnusedParameters": false,
+    "noUnusedLocals": false
+  }
 }
