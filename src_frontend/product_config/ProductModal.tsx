@@ -121,7 +121,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
         handleRequestError(error, "Fehler beim Speichern", setToastDatas),
       )
       .finally(() => setSaving(false));
-    return;
   }
 
   function onEquivalenceChanged(index: number, value: number) {
@@ -181,11 +180,12 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     type={"number"}
                     min={0}
                     step={0.01}
-                    onChange={(e) => setPrice(parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      setPrice(Number.parseFloat(e.target.value))
+                    }
                   />
                 </Form.Group>
               </Col>
-
               <Col>
                 <Form.Group>
                   <Form.Label>Pflicht-Genossenschaftsanteile</Form.Label>
@@ -195,7 +195,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     min={0}
                     step={1}
                     onChange={(e) =>
-                      setMinCoopShares(parseFloat(e.target.value))
+                      setMinCoopShares(Number.parseFloat(e.target.value))
                     }
                   />
                 </Form.Group>
@@ -260,7 +260,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     type={"number"}
                     step={"any"}
                     min={0}
-                    onChange={(e) => setSize(parseFloat(e.target.value))}
+                    onChange={(e) => setSize(Number.parseFloat(e.target.value))}
                   />
                 </Form.Group>
               </Col>
@@ -274,7 +274,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     min={0}
                     onChange={(e) => {
                       setCapacity(
-                        e.target.value ? parseFloat(e.target.value) : null,
+                        e.target.value
+                          ? Number.parseFloat(e.target.value)
+                          : null,
                       );
                     }}
                   />
@@ -309,7 +311,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                                 onChange={(event) =>
                                   onEquivalenceChanged(
                                     index,
-                                    parseInt(event.target.value),
+                                    Number.parseInt(event.target.value),
                                   )
                                 }
                               />

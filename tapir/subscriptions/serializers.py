@@ -56,7 +56,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     growing_period_id = serializers.CharField(required=False)
     picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
     description_in_bestellwizard = serializers.CharField()
-    url_of_image_in_bestellwizard = serializers.URLField()
+    url_of_image_in_bestellwizard = serializers.URLField(allow_blank=True)
     capacity = serializers.IntegerField(allow_null=True)
     min_coop_shares = serializers.IntegerField()
 

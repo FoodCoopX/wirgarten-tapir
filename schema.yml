@@ -7581,7 +7581,6 @@ components:
         url_of_image_in_bestellwizard:
           type: string
           format: uri
-          minLength: 1
         capacity:
           type: integer
           nullable: true
