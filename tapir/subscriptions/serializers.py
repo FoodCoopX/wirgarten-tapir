@@ -154,7 +154,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
     @extend_schema_field(PublicProductSerializer(many=True))
     def get_products(self, product_type: ProductType):
         return PublicProductSerializer(
-            Product.objects.filter(type=product_type), many=True
+            Product.objects.filter(type=product_type, deleted=False), many=True
         ).data
 
     @staticmethod
