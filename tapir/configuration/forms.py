@@ -113,15 +113,17 @@ class ParameterForm(forms.Form):
         if not is_debug_instance():
             params = params.filter(debug=False)
 
-        cache = {}
+        self.cache = {}
 
         categories = list(set(map(lambda p: p.category, params)))
-        categories.sort(key=lambda category: tokenize_parameter(category, cache=cache))
+        categories.sort(
+            key=lambda category: tokenize_parameter(category, cache=self.cache)
+        )
 
         self.categories = categories
 
         for param in params:
-            field = create_field(param, cache=cache)
+            field = create_field(param, cache=self.cache)
             if field is not None:
                 self.fields[param.key] = field
 

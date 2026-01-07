@@ -61,6 +61,8 @@ class ParameterMetaInfo:
     initialized = False
 
     def initialize(self):
+        if self.initialized:
+            return
         for cls in TapirParameterDefinitionImporter.__subclasses__():
             cls().import_definitions()
         self.initialized = True
