@@ -406,16 +406,15 @@ def send_product_order_confirmation(
     )
 
 
-def annotate_member_queryset_with_coop_shares_total_value(queryset, outer_ref="id"):
-    today = get_today()
-    overnext_month = today + relativedelta(months=2)
-
+def annotate_member_queryset_with_coop_shares_total_value(
+    queryset, outer_ref="id", cache: dict = None
+):
     return queryset.annotate(
         coop_shares_total_value=Coalesce(
             Subquery(
                 CoopShareTransaction.objects.filter(
                     member_id=OuterRef(outer_ref),
-                    valid_at__lte=overnext_month,
+                    valid_at__lte=get_today(cache=cache),
                     # I do this to include new members in the list, which will join the coop soon
                 )
                 .values("member_id")

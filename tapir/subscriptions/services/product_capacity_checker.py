@@ -62,7 +62,9 @@ class ProductCapacityChecker:
         highest_usage = float("-inf")
         while (
             current_date
-            < ProductTypeLowestFreeCapacityAfterDateCalculator.get_date_of_last_possible_capacity_change()
+            < ProductTypeLowestFreeCapacityAfterDateCalculator.get_date_of_last_possible_capacity_change(
+                cache=cache
+            )
         ):
             highest_usage = max(
                 highest_usage,

@@ -5,7 +5,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
-from tapir.wirgarten.models import GrowingPeriod, ProductType
+from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.service.products import get_product_price
 
 
@@ -20,7 +20,7 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
         current_date = get_monday(reference_date)
 
         lowest_free_capacity = float("inf")
-        last_date = cls.get_date_of_last_possible_capacity_change()
+        last_date = cls.get_date_of_last_possible_capacity_change(cache=cache)
         while current_date < last_date:
             lowest_free_capacity = min(
                 lowest_free_capacity,
@@ -82,5 +82,5 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
         return usage
 
     @classmethod
-    def get_date_of_last_possible_capacity_change(cls):
-        return GrowingPeriod.objects.order_by("-end_date").first().end_date
+    def get_date_of_last_possible_capacity_change(cls, cache: dict):
+        return TapirCache.get_all_growing_periods_ascending(cache=cache)[-1].end_date

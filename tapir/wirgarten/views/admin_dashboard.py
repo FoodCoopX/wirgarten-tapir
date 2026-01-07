@@ -29,7 +29,6 @@ from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
-    Product,
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
@@ -37,6 +36,9 @@ from tapir.wirgarten.models import (
     Payment,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.member import (
+    annotate_member_queryset_with_coop_shares_total_value,
+)
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
 )
@@ -156,9 +158,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         self.add_cancelled_coop_shares_context(context)
         self.add_cancelled_association_memberships_context(context)
 
-        context["active_members"] = len(
-            list(filter(lambda x: x.coop_shares_quantity > 0, Member.objects.all()))
-        )
+        members_with_shares = annotate_member_queryset_with_coop_shares_total_value(
+            Member.objects.all(), cache=self.cache
+        ).filter(coop_shares_total_value__gt=0)
+        context["active_members"] = members_with_shares.count()
         context["coop_shares_value"] = format_currency(
             (
                 CoopShareTransaction.objects.filter(
@@ -280,12 +283,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         ]
 
         for index, month in enumerate(month_labels):
-            start_of_month = month
-
-            # Calculate the total number of subscriptions in trial - cancelled for this month
             cancelled_subscriptions = Subscription.objects.filter(
-                start_date=start_of_month
-            ).filter(cancellation_ts__isnull=False)
+                cancellation_ts__isnull=False,
+                cancellation_ts__year=month.year,
+                cancellation_ts__month=month.month,
+            )
             subscriptions_cancelled_while_in_trial = list(
                 filter(
                     lambda subscription: TrialPeriodManager.is_contract_in_trial(
@@ -298,10 +300,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             )
             trial_cancelled_count = len(subscriptions_cancelled_while_in_trial)
 
-            # Calculate the total number of new subscriptions for this month
-            total_count = Subscription.objects.filter(
-                start_date=start_of_month,
-            ).count()
+            total_count = cancelled_subscriptions.count()
 
             cancellations_data[0]["data"][index] = total_count
             cancellations_data[1]["data"][index] = trial_cancelled_count
@@ -324,8 +323,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             reference_date = get_first_of_next_month(date=get_today(cache=self.cache))
 
         active_product_capacities = {
-            c.product_type.id: c
-            for c in get_active_product_capacities(reference_date, cache=self.cache)
+            c.product_type_id: c
+            for c in get_active_product_capacities(
+                reference_date, cache=self.cache
+            ).select_related("period", "product_type")
         }
 
         KEY_CAPACITY_LINKS = prefix + "_capacity_links"
@@ -363,9 +364,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context[KEY_CAPACITY_LINKS].append(
                 f"{reverse_lazy('wirgarten:product')}?periodId={product_capacity.period.id}&capacityId={product_capacity.id}"
             )
-            base_product = Product.objects.filter(
-                type=product_capacity.product_type, base=True
-            ).first()
+            base_product = TapirCache.get_base_product_by_product_type_id(
+                product_type_id=product_capacity.product_type_id, cache=self.cache
+            )
 
             product_price = get_product_price(
                 base_product, reference_date, cache=self.cache

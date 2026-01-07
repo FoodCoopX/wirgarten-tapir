@@ -556,3 +556,19 @@ class TapirCache:
             key=reference_date,
             compute_function=compute,
         )
+
+    @classmethod
+    def get_base_product_by_product_type_id(cls, product_type_id: str, cache: dict):
+        base_product_by_product_type_id = get_from_cache_or_compute(
+            cache=cache,
+            key="base_product_by_product_type_id",
+            compute_function=lambda: {},
+        )
+
+        return get_from_cache_or_compute(
+            base_product_by_product_type_id,
+            key=product_type_id,
+            compute_function=lambda: Product.objects.filter(
+                type_id=product_type_id, base=True
+            ).first(),
+        )
