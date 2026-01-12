@@ -123,7 +123,12 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   }
 
   function getConfirmButtonText() {
-    return "Jetzt " + selectedNumberOfCoopShares + " Anteile zeichnen";
+    let share = " zusätzliche Anteile";
+    if (selectedNumberOfCoopShares === 1) {
+      share = " zusätzlicher Anteil";
+    }
+
+    return "Jetzt " + selectedNumberOfCoopShares + share + " zeichnen";
   }
 
   function getStepComponent(step: Step) {
