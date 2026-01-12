@@ -18,6 +18,9 @@ from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.pickup_location_mail_token_service import (
+    PickupLocationMailTokenService,
+)
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -220,8 +223,17 @@ def _register_tokens():
             "Jahr (nächstes)": lambda: get_today(cache=cache).year + 1,
             "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
         },
+        dynamic_tokens={
+            "Verteilstation - Name": PickupLocationMailTokenService.pickup_location_name,
+            "Verteilstation - Adresse": PickupLocationMailTokenService.pickup_location_address,
+            "Verteilstation - Zugangscode": PickupLocationMailTokenService.pickup_location_access_code,
+            "Verteilstation - Signal-Gruppe": PickupLocationMailTokenService.pickup_location_messenger_group_link,
+            "Verteilstation - Kontaktname": PickupLocationMailTokenService.pickup_location_contact_name,
+            "Verteilstation - Photo-Link": PickupLocationMailTokenService.pickup_location_photo_link,
+            "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
+            "Verteilstation - Abholzeiten": PickupLocationMailTokenService.pickup_location_opening_times,
+        },
     )
-    pass
 
 
 def _register_triggers():
