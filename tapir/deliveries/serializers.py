@@ -2,7 +2,7 @@ import datetime
 
 from rest_framework import serializers
 
-from tapir.deliveries.models import Joker
+from tapir.deliveries.models import Joker, DeliveryDonation
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
@@ -67,11 +67,19 @@ class DeliverySerializer(serializers.Serializer):
     can_joker_be_used = serializers.BooleanField()
     can_joker_be_used_relative_to_date_limit = serializers.BooleanField()
     is_delivery_cancelled_this_week = serializers.BooleanField()
+    donation_used = serializers.BooleanField()
+    can_delivery_be_donated = serializers.BooleanField()
 
 
 class JokerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Joker
+        fields = "__all__"
+
+
+class DeliveryDonationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeliveryDonation
         fields = "__all__"
 
 
@@ -103,6 +111,12 @@ class JokerWithCancellationLimitSerializer(serializers.Serializer):
     delivery_date = serializers.DateField()
 
 
+class DeliveryDonationWithCancellationLimitSerializer(serializers.Serializer):
+    donation = DeliveryDonationSerializer()
+    cancellation_limit = serializers.DateField()
+    delivery_date = serializers.DateField()
+
+
 class JokerRestrictionSerializer(serializers.Serializer):
     start_day = serializers.IntegerField()
     start_month = serializers.IntegerField()
@@ -121,6 +135,7 @@ class UsedJokerInGrowingPeriodSerializer(serializers.Serializer):
 
 class MemberJokerInformationSerializer(serializers.Serializer):
     used_jokers = JokerWithCancellationLimitSerializer(many=True)
+    used_donations = DeliveryDonationWithCancellationLimitSerializer(many=True)
     weekday_limit = serializers.IntegerField()
     used_joker_in_growing_period = UsedJokerInGrowingPeriodSerializer(many=True)
 

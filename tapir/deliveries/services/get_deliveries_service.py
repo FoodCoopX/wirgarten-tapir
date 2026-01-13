@@ -2,12 +2,16 @@ import datetime
 from typing import Dict, Set
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
+from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
+)
+from tapir.pickup_locations.services.pickup_location_opening_times_manager import (
+    PickupLocationOpeningTimesManager,
 )
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -70,8 +74,10 @@ class GetDeliveriesService:
             opening_times = TapirCache.get_opening_times_by_pickup_location_id(
                 cache=cache, pickup_location_id=pickup_location.id
             )
-        delivery_date = cls.update_delivery_date_to_opening_times(
-            opening_times, delivery_date
+        delivery_date = (
+            PickupLocationOpeningTimesManager.update_delivery_date_to_opening_times(
+                opening_times, delivery_date
+            )
         )
 
         joker_used = JokerManagementService.does_member_have_a_joker_in_week(
@@ -108,6 +114,12 @@ class GetDeliveriesService:
                 delivery_date,
                 cache=cache,
             ),
+            "can_delivery_be_donated": DeliveryDonationManager.can_delivery_be_donated(
+                member=member, delivery_date=delivery_date, cache=cache
+            ),
+            "donation_used": DeliveryDonationManager.does_member_have_a_donation_in_week(
+                member=member, reference_date=delivery_date, cache=cache
+            ),
         }
 
     @classmethod
@@ -137,16 +149,3 @@ class GetDeliveriesService:
             cache=cache,
             subscription_filter=subscription_filter,
         )
-
-    @classmethod
-    def update_delivery_date_to_opening_times(
-        cls, opening_times, delivery_date: datetime.date
-    ):
-        delivery_date += datetime.timedelta(
-            days=(
-                opening_times[0].day_of_week - delivery_date.weekday()
-                if opening_times
-                else 0
-            )
-        )
-        return delivery_date

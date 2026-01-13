@@ -11,6 +11,9 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
+from tapir.subscriptions.services.subscription_delivered_in_week_checked import (
+    SubscriptionDeliveredInWeekChecker,
+)
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     ExportedFile,
@@ -92,16 +95,25 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
         Product.objects.filter(type_id=product_type.id, base=True).first(), cache=cache
     ).price
 
-    for pickup_location, subs in sorted(
+    for pickup_location, subscriptions in sorted(
         grouped_subscriptions.items(), key=lambda x: x[0]
     ):
-        subs.sort(key=lambda x: x.product.name)
+        subscriptions = [
+            subscription
+            for subscription in subscriptions
+            if SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
+                subscription=subscription, delivery_date=next_delivery_date, cache=cache
+            )
+        ]
+        subscriptions.sort(key=lambda x: x.product.name)
         grouped_subs = {
             key: sum([x.quantity for x in group])
-            for key, group in itertools.groupby(subs, key=lambda sub: sub.product.name)
+            for key, group in itertools.groupby(
+                subscriptions, key=lambda sub: sub.product.name
+            )
         }
 
-        sum_without_soli = sum(map(lambda x: x.total_price_without_soli, subs))
+        sum_without_soli = sum(map(lambda x: x.total_price_without_soli, subscriptions))
 
         data = {
             KEY_PICKUP_LOCATION: pickup_location,

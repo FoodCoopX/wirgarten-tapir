@@ -17,7 +17,10 @@ if (domNodeDeliveryListCard) {
     <DeliveryListCard
       memberId={domNodeDeliveryListCard.dataset.memberId!}
       areJokersEnabled={
-        domNodeDeliveryListCard.dataset.jokersEnabled! == "true"
+        domNodeDeliveryListCard.dataset.jokersEnabled === "true"
+      }
+      areDonationsEnabled={
+        domNodeDeliveryListCard.dataset.donationsEnabled === "true"
       }
       csrfToken={getCsrfToken()}
     />,

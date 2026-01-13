@@ -13,7 +13,7 @@ import RelativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
 import PickupLocationDeliveryDetailsModal from "./PickupLocationDeliveryDetailsModal.tsx";
-import ManageJokersModal from "./ManageJokersModal.tsx";
+import ManageJokersAndDonationsModal from "./ManageJokersAndDonationsModal.tsx";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
@@ -24,12 +24,30 @@ import { ToastData } from "../../types/ToastData.ts";
 interface DeliveryListCardProps {
   memberId: string;
   areJokersEnabled: boolean;
+  areDonationsEnabled: boolean;
   csrfToken: string;
+}
+
+function loadingPlaceholder() {
+  return Array.from(new Array(7).keys()).map((index) => {
+    return (
+      <tr key={index}>
+        {Array.from(new Array(3).keys()).map((index) => {
+          return (
+            <td key={index}>
+              <Placeholder lg={10} />
+            </td>
+          );
+        })}
+      </tr>
+    );
+  });
 }
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   memberId,
   areJokersEnabled,
+  areDonationsEnabled,
   csrfToken,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
@@ -67,22 +85,6 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         ),
       )
       .finally(() => setDeliveriesLoading(false));
-  }
-
-  function loadingPlaceholder() {
-    return Array.from(Array(7).keys()).map((index) => {
-      return (
-        <tr key={index}>
-          {Array.from(Array(3).keys()).map((index) => {
-            return (
-              <td key={index}>
-                <Placeholder lg={10} />
-              </td>
-            );
-          })}
-        </tr>
-      );
-    });
   }
 
   function dateCell(delivery: Delivery) {
@@ -143,6 +145,22 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
     );
   }
 
+  function getJokerButtonText() {
+    if (areJokersEnabled && areDonationsEnabled) {
+      return "Jokers & Spenden verwalten";
+    }
+
+    if (areJokersEnabled) {
+      return "Jokers verwalten";
+    }
+
+    if (areDonationsEnabled) {
+      return "Spenden verwalten";
+    }
+
+    return "Feature disabled";
+  }
+
   function getHeaderButtons() {
     if (deliveriesLoading) {
       return <Spinner />;
@@ -154,9 +172,9 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
 
     return (
       <span className={"d-flex gap-2"}>
-        {areJokersEnabled && (
+        {(areJokersEnabled || areDonationsEnabled) && (
           <TapirButton
-            text={"Joker verwalten"}
+            text={getJokerButtonText()}
             icon={"free_cancellation"}
             variant={"outline-primary"}
             onClick={() => {
@@ -223,8 +241,8 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           onHide={() => setSelectedPickupLocation(undefined)}
         />
       )}
-      {areJokersEnabled && (
-        <ManageJokersModal
+      {(areJokersEnabled || areDonationsEnabled) && (
+        <ManageJokersAndDonationsModal
           show={showManageJokersModal}
           onHide={() => setShowManageJokersModal(false)}
           memberId={memberId}
@@ -233,6 +251,8 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           deliveriesLoading={deliveriesLoading}
           csrfToken={csrfToken}
           setToastDatas={setToastDatas}
+          areDonationsEnabled={areDonationsEnabled}
+          areJokersEnabled={areJokersEnabled}
         />
       )}
       <PickupLocationChangeModal

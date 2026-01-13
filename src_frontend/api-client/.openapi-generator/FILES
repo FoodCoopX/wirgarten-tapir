@@ -42,6 +42,8 @@ models/Delivery.ts
 models/DeliveryCycleEnum.ts
 models/DeliveryDayAdjustment.ts
 models/DeliveryDayAdjustmentRequest.ts
+models/DeliveryDonation.ts
+models/DeliveryDonationWithCancellationLimit.ts
 models/DisableLinkSerializerRequest.ts
 models/DispatchStatusEnum.ts
 models/EmailConfiguration.ts

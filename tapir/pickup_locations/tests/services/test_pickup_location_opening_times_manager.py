@@ -1,6 +1,8 @@
 import datetime
 
-from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
+from tapir.pickup_locations.services.pickup_location_opening_times_manager import (
+    PickupLocationOpeningTimesManager,
+)
 from tapir.wirgarten.models import PickupLocationOpeningTime
 from tapir.wirgarten.tests.factories import PickupLocationFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -21,16 +23,16 @@ class TestUpdateDeliveryDateToOpeningTimes(TapirIntegrationTest):
 
         self.assertEqual(
             datetime.date(year=2025, month=3, day=5),
-            GetDeliveriesService.update_delivery_date_to_opening_times(
-                PickupLocationOpeningTime.objects.all(),
+            PickupLocationOpeningTimesManager.update_delivery_date_to_opening_times(
+                list(PickupLocationOpeningTime.objects.all()),
                 datetime.date(year=2025, month=3, day=3),
             ),
         )
 
         self.assertEqual(
             datetime.date(year=2025, month=3, day=5),
-            GetDeliveriesService.update_delivery_date_to_opening_times(
-                PickupLocationOpeningTime.objects.all(),
+            PickupLocationOpeningTimesManager.update_delivery_date_to_opening_times(
+                list(PickupLocationOpeningTime.objects.all()),
                 datetime.date(year=2025, month=3, day=7),
             ),
         )
@@ -40,7 +42,7 @@ class TestUpdateDeliveryDateToOpeningTimes(TapirIntegrationTest):
     ):
         self.assertEqual(
             datetime.date(year=2025, month=3, day=5),
-            GetDeliveriesService.update_delivery_date_to_opening_times(
+            PickupLocationOpeningTimesManager.update_delivery_date_to_opening_times(
                 [],
                 datetime.date(year=2025, month=3, day=5),
             ),

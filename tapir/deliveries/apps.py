@@ -7,6 +7,8 @@ class DeliveriesConfig(AppConfig):
     name = "tapir.deliveries"
     MAIL_TRIGGER_JOKER_USED = "deliveries.joker_used"
     MAIL_TRIGGER_JOKER_CANCELLED = "deliveries.joker_cancelled"
+    MAIL_TRIGGER_DONATION_USED = "deliveries.donation_used"
+    MAIL_TRIGGER_DONATION_CANCELLED = "deliveries.donation_cancelled"
 
     def ready(self):
         TransactionalTrigger.register_action(
@@ -19,4 +21,16 @@ class DeliveriesConfig(AppConfig):
             "Joker: Joker storniert",
             self.MAIL_TRIGGER_JOKER_CANCELLED,
             {"Joker Datum": "joker_date"},
+        )
+
+        TransactionalTrigger.register_action(
+            "Lieferung Spende: Spende eingesetzt",
+            self.MAIL_TRIGGER_DONATION_USED,
+            {"Spende Datum": "donation_date"},
+        )
+
+        TransactionalTrigger.register_action(
+            "Lieferung Spende: Spende storniert",
+            self.MAIL_TRIGGER_DONATION_CANCELLED,
+            {"Spende Datum": "donation_date"},
         )

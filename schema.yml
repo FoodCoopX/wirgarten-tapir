@@ -346,6 +346,33 @@ paths:
                 - mm
                 type: string
           description: ''
+  /deliveries/api/cancel_donation:
+    post:
+      operationId: deliveries_api_cancel_donation_create
+      parameters:
+      - in: query
+        name: donation_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /deliveries/api/cancel_joker:
     post:
       operationId: deliveries_api_cancel_joker_create
@@ -463,6 +490,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberJokerInformation'
+          description: ''
+  /deliveries/api/use_donation:
+    post:
+      operationId: deliveries_api_use_donation_create
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /deliveries/api/use_joker:
     post:
@@ -5968,10 +6027,16 @@ components:
           type: boolean
         is_delivery_cancelled_this_week:
           type: boolean
+        donation_used:
+          type: boolean
+        can_delivery_be_donated:
+          type: boolean
       required:
+      - can_delivery_be_donated
       - can_joker_be_used
       - can_joker_be_used_relative_to_date_limit
       - delivery_date
+      - donation_used
       - is_delivery_cancelled_this_week
       - joker_used
       - pickup_location
@@ -6011,6 +6076,35 @@ components:
       required:
       - adjusted_weekday
       - calendar_week
+    DeliveryDonation:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        date:
+          type: string
+          format: date
+        member:
+          type: string
+      required:
+      - date
+      - member
+    DeliveryDonationWithCancellationLimit:
+      type: object
+      properties:
+        donation:
+          $ref: '#/components/schemas/DeliveryDonation'
+        cancellation_limit:
+          type: string
+          format: date
+        delivery_date:
+          type: string
+          format: date
+      required:
+      - cancellation_limit
+      - delivery_date
+      - donation
     DispatchStatusEnum:
       enum:
       - error
@@ -7108,6 +7202,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/JokerWithCancellationLimit'
+        used_donations:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDonationWithCancellationLimit'
         weekday_limit:
           type: integer
         used_joker_in_growing_period:
@@ -7115,6 +7213,7 @@ components:
           items:
             $ref: '#/components/schemas/UsedJokerInGrowingPeriod'
       required:
+      - used_donations
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit

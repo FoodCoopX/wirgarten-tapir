@@ -27,6 +27,13 @@ import {
     JokerWithCancellationLimitToJSON,
     JokerWithCancellationLimitToJSONTyped,
 } from './JokerWithCancellationLimit';
+import type { DeliveryDonationWithCancellationLimit } from './DeliveryDonationWithCancellationLimit';
+import {
+    DeliveryDonationWithCancellationLimitFromJSON,
+    DeliveryDonationWithCancellationLimitFromJSONTyped,
+    DeliveryDonationWithCancellationLimitToJSON,
+    DeliveryDonationWithCancellationLimitToJSONTyped,
+} from './DeliveryDonationWithCancellationLimit';
 
 /**
  * 
@@ -40,6 +47,12 @@ export interface MemberJokerInformation {
      * @memberof MemberJokerInformation
      */
     usedJokers: Array<JokerWithCancellationLimit>;
+    /**
+     * 
+     * @type {Array<DeliveryDonationWithCancellationLimit>}
+     * @memberof MemberJokerInformation
+     */
+    usedDonations: Array<DeliveryDonationWithCancellationLimit>;
     /**
      * 
      * @type {number}
@@ -59,6 +72,7 @@ export interface MemberJokerInformation {
  */
 export function instanceOfMemberJokerInformation(value: object): value is MemberJokerInformation {
     if (!('usedJokers' in value) || value['usedJokers'] === undefined) return false;
+    if (!('usedDonations' in value) || value['usedDonations'] === undefined) return false;
     if (!('weekdayLimit' in value) || value['weekdayLimit'] === undefined) return false;
     if (!('usedJokerInGrowingPeriod' in value) || value['usedJokerInGrowingPeriod'] === undefined) return false;
     return true;
@@ -75,6 +89,7 @@ export function MemberJokerInformationFromJSONTyped(json: any, ignoreDiscriminat
     return {
         
         'usedJokers': ((json['used_jokers'] as Array<any>).map(JokerWithCancellationLimitFromJSON)),
+        'usedDonations': ((json['used_donations'] as Array<any>).map(DeliveryDonationWithCancellationLimitFromJSON)),
         'weekdayLimit': json['weekday_limit'],
         'usedJokerInGrowingPeriod': ((json['used_joker_in_growing_period'] as Array<any>).map(UsedJokerInGrowingPeriodFromJSON)),
     };
@@ -92,6 +107,7 @@ export function MemberJokerInformationFromJSONTyped(json: any, ignoreDiscriminat
     return {
         
         'used_jokers': ((value['usedJokers'] as Array<any>).map(JokerWithCancellationLimitToJSON)),
+        'used_donations': ((value['usedDonations'] as Array<any>).map(DeliveryDonationWithCancellationLimitToJSON)),
         'weekday_limit': value['weekdayLimit'],
         'used_joker_in_growing_period': ((value['usedJokerInGrowingPeriod'] as Array<any>).map(UsedJokerInGrowingPeriodToJSON)),
     };

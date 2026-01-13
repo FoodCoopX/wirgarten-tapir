@@ -26,6 +26,10 @@ from tapir.core.config import (
     THEME_WIRGARTEN,
     THEME_OPTIONS,
 )
+from tapir.deliveries.config import (
+    DELIVERY_DONATION_MODE_DISABLED,
+    DELIVERY_DONATION_MODE_OPTIONS,
+)
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
     SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
@@ -599,6 +603,19 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Temporäre Liefer-Pausen pro Mitglied erlauben",
             category=ParameterCategory.JOKERS,
             order_priority=3,
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.DELIVERY_DONATION_MODE,
+            label="Lieferung-Spende Modus",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=DELIVERY_DONATION_MODE_DISABLED,
+            description="Ob die Mitglieder einzelne Lieferungen spenden dürfen",
+            category=ParameterCategory.JOKERS,
+            order_priority=2,
+            meta=ParameterMeta(
+                options=DELIVERY_DONATION_MODE_OPTIONS,
+            ),
         )
 
         self.parameter_definition(

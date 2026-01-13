@@ -11,6 +11,7 @@ from tapir.coop.services.membership_cancellation_manager import (
 )
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
+from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -165,6 +166,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             "true"
             if get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache)
             else "false"
+        )
+        context["donationsEnabled"] = (
+            "false"
+            if get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)
+            == DELIVERY_DONATION_MODE_DISABLED
+            else "true"
         )
         context["subscriptionAutomaticRenewal"] = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache

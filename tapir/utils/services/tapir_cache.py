@@ -4,7 +4,7 @@ from typing import Dict, Set
 
 from django.db import models
 
-from tapir.deliveries.models import Joker, DeliveryDayAdjustment
+from tapir.deliveries.models import Joker, DeliveryDayAdjustment, DeliveryDonation
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import NoticePeriod
@@ -634,3 +634,18 @@ class TapirCache:
         )
 
         return delivery_adjustments_by_calendar_week.get(calendar_week, None)
+
+    @classmethod
+    def get_all_delivery_donations_for_member(cls, member_id: str, cache: dict):
+        donations_by_member_id = get_from_cache_or_compute(
+            cache=cache, key="donations_by_member_id", compute_function=lambda: {}
+        )
+
+        def compute():
+            return list(
+                DeliveryDonation.objects.filter(member_id=member_id).order_by("date")
+            )
+
+        return get_from_cache_or_compute(
+            cache=donations_by_member_id, key=member_id, compute_function=compute
+        )

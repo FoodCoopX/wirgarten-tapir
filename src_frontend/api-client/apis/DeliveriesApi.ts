@@ -40,6 +40,10 @@ import {
     PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequestToJSON,
 } from '../models/index';
 
+export interface DeliveriesApiCancelDonationCreateRequest {
+    donationId?: string;
+}
+
 export interface DeliveriesApiCancelJokerCreateRequest {
     jokerId?: string;
 }
@@ -57,6 +61,11 @@ export interface DeliveriesApiMemberDeliveriesListRequest {
 }
 
 export interface DeliveriesApiMemberJokerInformationRetrieveRequest {
+    memberId?: string;
+}
+
+export interface DeliveriesApiUseDonationCreateRequest {
+    date?: Date;
     memberId?: string;
 }
 
@@ -91,6 +100,45 @@ export interface DeliveriesGrowingPeriodsUpdateRequest {
  * 
  */
 export class DeliveriesApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async deliveriesApiCancelDonationCreateRaw(requestParameters: DeliveriesApiCancelDonationCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['donationId'] != null) {
+            queryParameters['donation_id'] = requestParameters['donationId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/deliveries/api/cancel_donation`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async deliveriesApiCancelDonationCreate(requestParameters: DeliveriesApiCancelDonationCreateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.deliveriesApiCancelDonationCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */
@@ -271,6 +319,49 @@ export class DeliveriesApi extends runtime.BaseAPI {
      */
     async deliveriesApiMemberJokerInformationRetrieve(requestParameters: DeliveriesApiMemberJokerInformationRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MemberJokerInformation> {
         const response = await this.deliveriesApiMemberJokerInformationRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async deliveriesApiUseDonationCreateRaw(requestParameters: DeliveriesApiUseDonationCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['date'] != null) {
+            queryParameters['date'] = (requestParameters['date'] as any).toISOString().substring(0,10);
+        }
+
+        if (requestParameters['memberId'] != null) {
+            queryParameters['member_id'] = requestParameters['memberId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/deliveries/api/use_donation`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async deliveriesApiUseDonationCreate(requestParameters: DeliveriesApiUseDonationCreateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.deliveriesApiUseDonationCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

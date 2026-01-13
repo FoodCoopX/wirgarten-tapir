@@ -76,6 +76,10 @@ class JokerManagementService:
     def can_joker_be_used_in_week(
         cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> bool:
+        from tapir.deliveries.services.delivery_donation_manager import (
+            DeliveryDonationManager,
+        )
+
         return (
             not cls.does_member_have_a_joker_in_week(
                 member, reference_date, cache=cache
@@ -91,6 +95,9 @@ class JokerManagementService:
             )
             and cls.can_joker_be_used_relative_to_weeks_without_delivery(
                 reference_date, cache=cache
+            )
+            and not DeliveryDonationManager.does_member_have_a_donation_in_week(
+                member=member, reference_date=reference_date, cache=cache
             )
         )
 

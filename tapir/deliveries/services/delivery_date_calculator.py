@@ -1,9 +1,11 @@
 import datetime
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
-from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
+)
+from tapir.pickup_locations.services.pickup_location_opening_times_manager import (
+    PickupLocationOpeningTimesManager,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
@@ -19,7 +21,7 @@ class DeliveryDateCalculator:
         )
 
         delivery_date_this_week = (
-            GetDeliveriesService.update_delivery_date_to_opening_times(
+            PickupLocationOpeningTimesManager.update_delivery_date_to_opening_times(
                 opening_times=opening_times, delivery_date=reference_date
             )
         )
@@ -27,7 +29,7 @@ class DeliveryDateCalculator:
             return delivery_date_this_week
 
         delivery_date_next_week = (
-            GetDeliveriesService.update_delivery_date_to_opening_times(
+            PickupLocationOpeningTimesManager.update_delivery_date_to_opening_times(
                 opening_times=opening_times,
                 delivery_date=reference_date + datetime.timedelta(days=7),
             )

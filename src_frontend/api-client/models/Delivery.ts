@@ -89,6 +89,18 @@ export interface Delivery {
      * @memberof Delivery
      */
     isDeliveryCancelledThisWeek: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Delivery
+     */
+    donationUsed: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Delivery
+     */
+    canDeliveryBeDonated: boolean;
 }
 
 /**
@@ -103,6 +115,8 @@ export function instanceOfDelivery(value: object): value is Delivery {
     if (!('canJokerBeUsed' in value) || value['canJokerBeUsed'] === undefined) return false;
     if (!('canJokerBeUsedRelativeToDateLimit' in value) || value['canJokerBeUsedRelativeToDateLimit'] === undefined) return false;
     if (!('isDeliveryCancelledThisWeek' in value) || value['isDeliveryCancelledThisWeek'] === undefined) return false;
+    if (!('donationUsed' in value) || value['donationUsed'] === undefined) return false;
+    if (!('canDeliveryBeDonated' in value) || value['canDeliveryBeDonated'] === undefined) return false;
     return true;
 }
 
@@ -124,6 +138,8 @@ export function DeliveryFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'canJokerBeUsed': json['can_joker_be_used'],
         'canJokerBeUsedRelativeToDateLimit': json['can_joker_be_used_relative_to_date_limit'],
         'isDeliveryCancelledThisWeek': json['is_delivery_cancelled_this_week'],
+        'donationUsed': json['donation_used'],
+        'canDeliveryBeDonated': json['can_delivery_be_donated'],
     };
 }
 
@@ -146,6 +162,8 @@ export function DeliveryFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'can_joker_be_used': value['canJokerBeUsed'],
         'can_joker_be_used_relative_to_date_limit': value['canJokerBeUsedRelativeToDateLimit'],
         'is_delivery_cancelled_this_week': value['isDeliveryCancelledThisWeek'],
+        'donation_used': value['donationUsed'],
+        'can_delivery_be_donated': value['canDeliveryBeDonated'],
     };
 }
 

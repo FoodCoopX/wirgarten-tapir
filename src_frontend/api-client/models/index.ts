@@ -30,6 +30,8 @@ export * from './Delivery';
 export * from './DeliveryCycleEnum';
 export * from './DeliveryDayAdjustment';
 export * from './DeliveryDayAdjustmentRequest';
+export * from './DeliveryDonation';
+export * from './DeliveryDonationWithCancellationLimit';
 export * from './DisableLinkSerializerRequest';
 export * from './DispatchStatusEnum';
 export * from './EmailConfiguration';

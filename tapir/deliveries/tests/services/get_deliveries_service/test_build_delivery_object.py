@@ -12,6 +12,9 @@ from tapir.deliveries.services.weeks_without_delivery_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.pickup_locations.services.pickup_location_opening_times_manager import (
+    PickupLocationOpeningTimesManager,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -54,7 +57,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             )
         )
 
-    @patch.object(GetDeliveriesService, "update_delivery_date_to_opening_times")
+    @patch.object(
+        PickupLocationOpeningTimesManager, "update_delivery_date_to_opening_times"
+    )
     def test_buildDeliveryObject_default_returnsCorrectDeliveryDate(
         self,
         mock_update_delivery_date_to_opening_times: Mock,
@@ -79,7 +84,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
     @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
-    @patch.object(GetDeliveriesService, "update_delivery_date_to_opening_times")
+    @patch.object(
+        PickupLocationOpeningTimesManager, "update_delivery_date_to_opening_times"
+    )
     @patch.object(PickupLocationOpeningTime, "objects")
     @patch.object(
         MemberPickupLocationService, "get_member_pickup_location_id_from_cache"

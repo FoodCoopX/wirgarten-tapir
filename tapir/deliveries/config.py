@@ -1,0 +1,12 @@
+DELIVERY_DONATION_MODE_DISABLED = "disabled"
+DELIVERY_DONATION_MODE_ONLY_AFTER_JOKERS = "only_after_jokers"
+DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE = "always_possible"
+
+DELIVERY_DONATION_MODE_OPTIONS = [
+    (DELIVERY_DONATION_MODE_DISABLED, "Nie möglich"),
+    (DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE, "Immer möglich"),
+    (
+        DELIVERY_DONATION_MODE_ONLY_AFTER_JOKERS,
+        "Erst wenn alle Joker aufgebraucht sind",
+    ),
+]

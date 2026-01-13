@@ -21,9 +21,19 @@ urlpatterns = [
         name="cancel_joker",
     ),
     path(
+        "api/cancel_donation",
+        views.CancelDeliveryDonationView.as_view(),
+        name="cancel_donation",
+    ),
+    path(
         "api/use_joker",
         views.UseJokerView.as_view(),
         name="use_joker",
+    ),
+    path(
+        "api/use_donation",
+        views.UseDonationView.as_view(),
+        name="use_donation",
     ),
     path(
         "api/growing_period_with_adjustments",

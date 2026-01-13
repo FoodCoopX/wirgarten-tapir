@@ -63,6 +63,7 @@ class ParameterKeys:
     )
     MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
+    DELIVERY_DONATION_MODE = f"{PREFIX}.delivery_donation.mode"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT = (

@@ -14,7 +14,16 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.apps import DeliveriesConfig
-from tapir.deliveries.models import Joker, DeliveryDayAdjustment
+from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
+from tapir.deliveries.models import (
+    Joker,
+    DeliveryDayAdjustment,
+    DeliveryDonation,
+    DeliveryDonationCancelledLogEntry,
+    JokerCancelledLogEntry,
+    JokerUsedLogEntry,
+    DeliveryDonationUsedLogEntry,
+)
 from tapir.deliveries.serializers import (
     DeliverySerializer,
     MemberJokerInformationSerializer,
@@ -22,6 +31,7 @@ from tapir.deliveries.serializers import (
     GrowingPeriodSerializer,
     GrowingPeriodWithDeliveryDayAdjustmentsSerializer,
 )
+from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import (
     JokerManagementService,
@@ -66,9 +76,13 @@ class GetMemberJokerInformationView(APIView):
     )
     def get(self, request):
         cache = {}
-        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
+        if (
+            not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache)
+            and get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)
+            == DELIVERY_DONATION_MODE_DISABLED
+        ):
             return Response(
-                "The joker feature is disabled",
+                "This feature is disabled",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -79,8 +93,12 @@ class GetMemberJokerInformationView(APIView):
             end_date__gte=get_today()
         ).order_by("start_date")
         jokers = []
+        donations = []
         if growing_periods.exists():
             jokers = Joker.objects.filter(
+                member_id=member_id, date__gte=growing_periods.first().start_date
+            ).order_by("date")
+            donations = DeliveryDonation.objects.filter(
                 member_id=member_id, date__gte=growing_periods.first().start_date
             ).order_by("date")
 
@@ -97,8 +115,22 @@ class GetMemberJokerInformationView(APIView):
             for joker in jokers
         ]
 
+        donation_data = [
+            {
+                "donation": donation,
+                "cancellation_limit": JokerManagementService.get_date_limit_for_joker_changes(
+                    donation.date, cache=cache
+                ),
+                "delivery_date": get_next_delivery_date(
+                    get_monday(donation.date), cache=cache
+                ),
+            }
+            for donation in donations
+        ]
+
         data = {
             "used_jokers": joker_data,
+            "used_donations": donation_data,
             "weekday_limit": get_parameter_value(
                 ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
             ),
@@ -164,6 +196,10 @@ class CancelJokerView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        JokerCancelledLogEntry().populate_joker(
+            joker=joker, actor=request.user, user=joker.member
+        ).save()
+
         JokerManagementService.cancel_joker(joker)
 
         TransactionalTrigger.fire_action(
@@ -176,6 +212,52 @@ class CancelJokerView(APIView):
 
         return Response(
             "Joker abgesagt",
+            status=status.HTTP_200_OK,
+        )
+
+
+class CancelDeliveryDonationView(APIView):
+    @extend_schema(
+        responses={200: str, 403: str},
+        parameters=[OpenApiParameter(name="donation_id", type=str)],
+    )
+    def post(self, request):
+        cache = {}
+        if (
+            get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)
+            == DELIVERY_DONATION_MODE_DISABLED
+        ):
+            return Response(
+                "The donation feature is disabled",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        donation_id = request.query_params.get("donation_id")
+        donation = get_object_or_404(DeliveryDonation, id=donation_id)
+        check_permission_or_self(donation.member_id, request)
+
+        if not DeliveryDonationManager.can_donation_be_cancelled(donation, cache=cache):
+            return Response(
+                f"Es ist zu spät um diese Spende abzusagen. Heute: {format_date(get_today(cache=cache))}, Spende: {format_date(donation.date)}",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        DeliveryDonationCancelledLogEntry().populate_delivery_donation(
+            delivery_donation=donation, actor=request.user, user=donation.member
+        ).save()
+
+        DeliveryDonationManager.cancel_donation(donation)
+
+        TransactionalTrigger.fire_action(
+            trigger_data=TransactionalTriggerData(
+                key=DeliveriesConfig.MAIL_TRIGGER_DONATION_CANCELLED,
+                recipient_id_in_base_queryset=donation.member.id,
+                token_data={"donation_date": donation.date},
+            ),
+        )
+
+        return Response(
+            "Spende abgesagt",
             status=status.HTTP_200_OK,
         )
 
@@ -221,8 +303,58 @@ class UseJokerView(APIView):
             ),
         )
 
+        JokerUsedLogEntry().populate_joker(
+            joker=joker, actor=request.user, user=member
+        ).save()
+
         return Response(
             "Joker angesetzt",
+            status=status.HTTP_200_OK,
+        )
+
+
+class UseDonationView(APIView):
+    @extend_schema(
+        responses={200: str, 403: str},
+        parameters=[
+            OpenApiParameter(name="member_id", type=str),
+            OpenApiParameter(name="date", type=datetime.date),
+        ],
+    )
+    def post(self, request):
+        cache = {}
+
+        member_id = request.query_params.get("member_id")
+        date_string = request.query_params.get("date")
+        date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+        check_permission_or_self(member_id, request)
+
+        member = get_object_or_404(Member, id=member_id)
+
+        if not DeliveryDonationManager.can_delivery_be_donated(
+            member=member, delivery_date=date, cache=cache
+        ):
+            return Response(
+                "Du darfst an dem Liefertag keine Lieferung spenden",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        donation = DeliveryDonation.objects.create(member=member, date=date)
+
+        TransactionalTrigger.fire_action(
+            TransactionalTriggerData(
+                key=DeliveriesConfig.MAIL_TRIGGER_DONATION_USED,
+                recipient_id_in_base_queryset=donation.member.id,
+                token_data={"donation_date": donation.date},
+            ),
+        )
+
+        DeliveryDonationUsedLogEntry().populate_delivery_donation(
+            delivery_donation=donation, actor=request.user, user=donation.member
+        ).save()
+
+        return Response(
+            "Lieferung gespendet",
             status=status.HTTP_200_OK,
         )
 
