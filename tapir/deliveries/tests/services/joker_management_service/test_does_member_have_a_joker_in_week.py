@@ -1,7 +1,9 @@
 import datetime
 
+from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -11,6 +13,9 @@ class TestJokerManagementServiceDoesMemberHaveAJokerInWeek(TapirIntegrationTest)
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
+            value=True
+        )
 
     def test_doesMemberHaveAJokerInWeek_noJokerInWeek_returnsFalse(self):
         member = MemberFactory.create()
@@ -23,7 +28,7 @@ class TestJokerManagementServiceDoesMemberHaveAJokerInWeek(TapirIntegrationTest)
 
         self.assertFalse(
             JokerManagementService.does_member_have_a_joker_in_week(
-                member, datetime.date(year=2025, month=3, day=3)
+                member, datetime.date(year=2025, month=3, day=3), cache={}
             )
         )
 
@@ -35,6 +40,6 @@ class TestJokerManagementServiceDoesMemberHaveAJokerInWeek(TapirIntegrationTest)
 
         self.assertTrue(
             JokerManagementService.does_member_have_a_joker_in_week(
-                member, datetime.date(year=2025, month=3, day=3)
+                member, datetime.date(year=2025, month=3, day=3), cache={}
             )
         )

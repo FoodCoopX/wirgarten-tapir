@@ -2,9 +2,7 @@ import datetime
 from typing import Dict
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.models import DeliveryDayAdjustment
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
@@ -21,18 +19,10 @@ class DeliveryDayAdjustmentService:
 
         delivery_week = delivery_date.isocalendar().week
 
-        delivery_adjustment_by_growing_period_cache = get_from_cache_or_compute(
-            cache, "delivery_adjustments_by_growing_period", lambda: {}
-        )
-        delivery_adjustment_by_calendar_week = get_from_cache_or_compute(
-            delivery_adjustment_by_growing_period_cache, growing_period, lambda: {}
-        )
-        adjustment = get_from_cache_or_compute(
-            delivery_adjustment_by_calendar_week,
-            delivery_week,
-            lambda: DeliveryDayAdjustment.objects.filter(
-                growing_period=growing_period, calendar_week=delivery_week
-            ).first(),
+        adjustment = TapirCache.get_delivery_day_adjustment(
+            growing_period_id=growing_period.id,
+            calendar_week=delivery_week,
+            cache=cache,
         )
 
         if adjustment:

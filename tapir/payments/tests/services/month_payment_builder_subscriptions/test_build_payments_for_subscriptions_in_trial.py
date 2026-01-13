@@ -58,10 +58,12 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
             subscription_member_2_product_type_1,
         }
 
-        mock_build_payment_for_contract_and_member.side_effect = lambda member, first_of_month, contracts, payment_type, rhythm, cache, generated_payments, in_trial, total_to_pay_function: (
+        mock_build_payment_for_contract_and_member.side_effect = lambda **kwargs: (
             None
-            if subscription_member_1_product_type_2 in contracts
-            else PaymentFactory.build(mandate_ref__member=member, type=payment_type)
+            if subscription_member_1_product_type_2 in kwargs["contracts"]
+            else PaymentFactory.build(
+                mandate_ref__member=kwargs["member"], type=kwargs["payment_type"]
+            )
         )
 
         current_month = datetime.date(year=2027, month=6, day=1)
@@ -105,6 +107,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     generated_payments=generated_payments,
                     in_trial=True,
                     total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    allow_negative_amounts=False,
                 ),
                 call(
                     member=member_1,
@@ -116,6 +119,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     generated_payments=generated_payments,
                     in_trial=True,
                     total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    allow_negative_amounts=False,
                 ),
                 call(
                     member=member_2,
@@ -127,6 +131,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     generated_payments=generated_payments,
                     in_trial=True,
                     total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+                    allow_negative_amounts=False,
                 ),
             ],
             any_order=True,

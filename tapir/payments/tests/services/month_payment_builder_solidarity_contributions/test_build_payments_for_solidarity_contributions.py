@@ -79,9 +79,9 @@ class TestBuildPaymentsForSolidarityContributions(SimpleTestCase):
         payment_m2 = PaymentFactory.build(mandate_ref__ref="2")
         payments = {member_1: payment_m1, member_2: payment_m2, member_3: None}
 
-        mock_build_payment_for_contract_and_member.side_effect = lambda member, first_of_month, contracts, rhythm, cache, generated_payments, in_trial, payment_type, total_to_pay_function: payments[
-            member
-        ]
+        mock_build_payment_for_contract_and_member.side_effect = (
+            lambda **kwargs: payments[kwargs["member"]]
+        )
 
         cache = Mock()
         generated_payments = Mock()
@@ -120,6 +120,7 @@ class TestBuildPaymentsForSolidarityContributions(SimpleTestCase):
                     in_trial=False,
                     payment_type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
                     total_to_pay_function=MonthPaymentBuilderSolidarityContributions.get_total_to_pay,
+                    allow_negative_amounts=True,
                 )
                 for member in members
             ],
@@ -189,9 +190,9 @@ class TestBuildPaymentsForSolidarityContributions(SimpleTestCase):
         payment_m2 = PaymentFactory.build(mandate_ref__ref="2")
         payments = {member_1: payment_m1, member_2: payment_m2, member_3: None}
 
-        mock_build_payment_for_contract_and_member.side_effect = lambda member, first_of_month, contracts, rhythm, cache, generated_payments, in_trial, payment_type, total_to_pay_function: payments[
-            member
-        ]
+        mock_build_payment_for_contract_and_member.side_effect = (
+            lambda **kwargs: payments[kwargs["member"]]
+        )
 
         cache = Mock()
         generated_payments = Mock()
@@ -224,6 +225,7 @@ class TestBuildPaymentsForSolidarityContributions(SimpleTestCase):
                     in_trial=True,
                     payment_type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
                     total_to_pay_function=MonthPaymentBuilderSolidarityContributions.get_total_to_pay,
+                    allow_negative_amounts=True,
                 )
                 for member in members
             ],

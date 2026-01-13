@@ -1,12 +1,13 @@
 import datetime
 from typing import Dict, Set
 
-from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.models import Joker
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
+)
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
 )
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -14,11 +15,9 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.models import (
-    PickupLocationOpeningTime,
     Member,
     Subscription,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 
 
@@ -49,7 +48,7 @@ class GetDeliveriesService:
 
     @classmethod
     def build_delivery_object(
-        cls, member: Member, delivery_date: datetime.date, cache: Dict
+        cls, member: Member, delivery_date: datetime.date, cache: dict
     ):
         relevant_subscriptions = cls.get_relevant_subscriptions(
             member=member,
@@ -60,15 +59,24 @@ class GetDeliveriesService:
         if len(relevant_subscriptions) == 0:
             return None
 
-        pickup_location = member.get_pickup_location(delivery_date)
-        opening_times = PickupLocationOpeningTime.objects.filter(
-            pickup_location=pickup_location
+        pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=cache,
+            pickup_location_id=MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                member_id=member.id, reference_date=delivery_date, cache=cache
+            ),
         )
+        opening_times = None
+        if pickup_location is not None:
+            opening_times = TapirCache.get_opening_times_by_pickup_location_id(
+                cache=cache, pickup_location_id=pickup_location.id
+            )
         delivery_date = cls.update_delivery_date_to_opening_times(
             opening_times, delivery_date
         )
 
-        joker_used = cls.is_joker_used_in_week(member, delivery_date, cache=cache)
+        joker_used = JokerManagementService.does_member_have_a_joker_in_week(
+            member=member, reference_date=delivery_date, cache=cache
+        )
 
         if joker_used:
             relevant_subscriptions = set(
@@ -142,16 +150,3 @@ class GetDeliveriesService:
             )
         )
         return delivery_date
-
-    @classmethod
-    def is_joker_used_in_week(
-        cls, member: Member, delivery_date: datetime.date, cache: Dict
-    ) -> bool:
-        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
-            return False
-
-        week_start = get_monday(delivery_date)
-        week_end = week_start + datetime.timedelta(days=6)
-        return Joker.objects.filter(
-            member=member, date__gte=week_start, date__lte=week_end
-        ).exists()

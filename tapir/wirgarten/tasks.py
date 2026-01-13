@@ -154,7 +154,7 @@ def export_pick_list_csv():
         type_name = type_name.strip()
         if type_name not in all_product_types:
             print(
-                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{ParameterKeys.PICKING_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
+                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{ParameterKeys.PICKING_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys()}"""
             )
             continue
         _export_pick_list(all_product_types[type_name], True, cache=cache)
@@ -178,7 +178,7 @@ def export_supplier_list_csv():
         type_name = type_name.strip()
         if type_name not in all_product_types:
             print(
-                f"""export_supplier_list_csv(): Ignoring unknown product type value in parameter '{ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
+                f"""export_supplier_list_csv(): Ignoring unknown product type value in parameter '{ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys()}"""
             )
             continue
         _export_pick_list(all_product_types[type_name], False, cache=cache)

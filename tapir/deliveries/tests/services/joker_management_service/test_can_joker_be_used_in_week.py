@@ -68,7 +68,7 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
             reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_called_once_with(
             reference_date, cache=cache
@@ -121,7 +121,7 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
             reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_not_called()
 
@@ -173,7 +173,7 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
             reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
 
     @patch.object(
@@ -220,7 +220,7 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
             reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
 
     @patch.object(
@@ -265,7 +265,7 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
         mock_can_joker_be_used_relative_to_max_amount_per_growing_period.assert_not_called()
         mock_can_joker_be_used_relative_to_date_limit.assert_not_called()
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
 
     @patch.object(
@@ -315,7 +315,7 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
             reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_called_once_with(
             reference_date, cache=cache

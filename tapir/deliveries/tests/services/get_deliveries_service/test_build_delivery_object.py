@@ -9,8 +9,11 @@ from tapir.deliveries.services.joker_management_service import JokerManagementSe
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.wirgarten.constants import WEEKLY
-from tapir.wirgarten.models import ProductType, Member, PickupLocationOpeningTime
+from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
@@ -75,13 +78,15 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         mock_update_delivery_date_to_opening_times.assert_called_once()
 
     @patch.object(JokerManagementService, "can_joker_be_used_in_week")
-    @patch.object(GetDeliveriesService, "is_joker_used_in_week")
+    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
     @patch.object(GetDeliveriesService, "update_delivery_date_to_opening_times")
     @patch.object(PickupLocationOpeningTime, "objects")
-    @patch.object(Member, "get_pickup_location")
+    @patch.object(
+        MemberPickupLocationService, "get_member_pickup_location_id_from_cache"
+    )
     def test_buildDeliveryObject_default_returnsCorrectPickupLocationData(
         self,
-        mock_get_pickup_location: Mock,
+        mock_get_member_pickup_location_id_from_cache: Mock,
         mock_pickup_location_opening_times_objects: Mock,
         mock_update_delivery_date_to_opening_times: Mock,
         *_,
@@ -91,11 +96,12 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
 
         mock_pickup_location = Mock()
-        mock_get_pickup_location.return_value = mock_pickup_location
-        mock_opening_times = Mock()
-        mock_pickup_location_opening_times_objects.filter.return_value = (
-            mock_opening_times
-        )
+        mock_get_member_pickup_location_id_from_cache.return_value = "test_pl_id"
+        cache = {"pickup_location_by_id": {"test_pl_id": mock_pickup_location}}
+        mock_opening_time = Mock()
+        mock_pickup_location_opening_times_objects.filter.return_value = [
+            mock_opening_time
+        ]
         mock_update_delivery_date_to_opening_times.return_value = datetime.date(
             year=2023, month=6, day=7
         )
@@ -104,13 +110,13 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         delivery_object = GetDeliveriesService.build_delivery_object(
             member=member,
             delivery_date=given_delivery_date,
-            cache={},
+            cache=cache,
         )
 
         self.assertIsNotNone(delivery_object)
         self.assertEqual(mock_pickup_location, delivery_object["pickup_location"])
         self.assertEqual(
-            mock_opening_times, delivery_object["pickup_location_opening_times"]
+            [mock_opening_time], delivery_object["pickup_location_opening_times"]
         )
 
     def test_buildDeliveryObject_default_returnsCorrectSubscriptions(
@@ -137,17 +143,19 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self.assertIn(active_subscription_2, delivery_object["subscriptions"])
 
     @patch.object(JokerManagementService, "can_joker_be_used_in_week")
-    @patch.object(GetDeliveriesService, "is_joker_used_in_week")
+    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
     def test_buildDeliveryObject_default_returnsCorrectJokerData(
         self,
-        mock_is_joker_used_in_week: Mock,
+        mock_does_member_have_a_joker_in_week: Mock,
         mock_can_joker_be_used_in_week: Mock,
     ):
         member = MemberFactory.create()
         SubscriptionFactory.create(member=member)
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
         mock_is_joker_used_in_week_value = Mock()
-        mock_is_joker_used_in_week.return_value = mock_is_joker_used_in_week_value
+        mock_does_member_have_a_joker_in_week.return_value = (
+            mock_is_joker_used_in_week_value
+        )
         mock_can_joker_be_used_value = Mock()
         mock_can_joker_be_used_in_week.return_value = mock_can_joker_be_used_value
 
@@ -166,10 +174,10 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         )
 
     @patch.object(JokerManagementService, "can_joker_be_used_in_week")
-    @patch.object(GetDeliveriesService, "is_joker_used_in_week")
+    @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
     def test_buildDeliveryObject_jokerUsed_returnsOnlySubscriptionsFromProductTypesNotAffectedByJokers(
         self,
-        mock_is_joker_used_in_week: Mock,
+        mock_does_member_have_a_joker_in_week: Mock,
         mock_can_joker_be_used_in_week: Mock,
     ):
         member = MemberFactory.create()
@@ -178,8 +186,10 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         SubscriptionFactory.create(member=member, product__type=type_1)
         subscription_2 = SubscriptionFactory.create(member=member, product__type=type_2)
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
-        mock_is_joker_used_in_week_value = Mock()
-        mock_is_joker_used_in_week.return_value = mock_is_joker_used_in_week_value
+        mock_does_member_have_a_joker_in_week_value = Mock()
+        mock_does_member_have_a_joker_in_week.return_value = (
+            mock_does_member_have_a_joker_in_week_value
+        )
         mock_can_joker_be_used_value = Mock()
         mock_can_joker_be_used_in_week.return_value = mock_can_joker_be_used_value
 

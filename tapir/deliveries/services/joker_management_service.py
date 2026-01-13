@@ -5,6 +5,7 @@ from typing import List, Dict
 
 from django.core.exceptions import ValidationError
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
@@ -14,6 +15,7 @@ from tapir.deliveries.services.weeks_without_delivery_service import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, Subscription, GrowingPeriod
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
 
@@ -52,11 +54,11 @@ class JokerManagementService:
         if not growing_period:
             return False
 
-        nb_used_jokers_in_growing_period = Joker.objects.filter(
-            member=member,
-            date__gte=growing_period.start_date,
-            date__lte=growing_period.end_date,
-        ).count()
+        nb_used_jokers_in_growing_period = (
+            TapirCache.get_number_of_jokers_used_by_member_in_growing_period(
+                member_id=member.id, growing_period=growing_period, cache=cache
+            )
+        )
 
         return nb_used_jokers_in_growing_period < growing_period.max_jokers_per_member
 
@@ -72,10 +74,12 @@ class JokerManagementService:
 
     @classmethod
     def can_joker_be_used_in_week(
-        cls, member: Member, reference_date: datetime.date, cache: Dict
+        cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> bool:
         return (
-            not cls.does_member_have_a_joker_in_week(member, reference_date)
+            not cls.does_member_have_a_joker_in_week(
+                member, reference_date, cache=cache
+            )
             and cls.can_joker_be_used_relative_to_date_limit(
                 reference_date, cache=cache
             )
@@ -92,13 +96,24 @@ class JokerManagementService:
 
     @classmethod
     def does_member_have_a_joker_in_week(
-        cls, member: Member, reference_date: datetime.date
+        cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> bool:
-        return Joker.objects.filter(
-            member=member,
-            date__week=reference_date.isocalendar().week,
-            date__year=reference_date.year,
-        ).exists()
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
+            return False
+
+        jokers = TapirCache.get_all_jokers_for_member(member_id=member.id, cache=cache)
+        for joker in jokers:
+            if (
+                joker.date.isocalendar().week == reference_date.isocalendar().week
+                and joker.date.year == reference_date.isocalendar().year
+            ):
+                return True
+            if joker.date > reference_date:
+                # jokers are sorted by date,
+                # if we reach a joker that is past our given date we know we won't find one for the given date
+                return False
+
+        return False
 
     @classmethod
     def get_extra_joker_restrictions(cls, growing_period: GrowingPeriod):
