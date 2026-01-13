@@ -20,6 +20,7 @@ from tapir.wirgarten.utils import (
     get_now,
     get_today,
     legal_status_is_association,
+    legal_status_is_cooperative,
 )
 from tapir.wirgarten.views.member.list.member_list import MemberFilter, MemberListView
 
@@ -147,7 +148,9 @@ def export_coop_member_list(request, **kwargs):
 
         today = get_today()
         # skip future members. TODO: check cancellation, when must old members be removed from the list?
-        if entry.coop_entry_date is None or entry.coop_entry_date > today:
+        if legal_status_is_cooperative(cache=cache) and (
+            entry.coop_entry_date is None or entry.coop_entry_date > today
+        ):
             continue
 
         transfers = entry.coopsharetransaction_set.filter(
