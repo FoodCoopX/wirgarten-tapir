@@ -9,7 +9,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.models import TapirParameter
-from tapir.deliveries.models import Joker
+from tapir.deliveries.models import Joker, JokerCancelledLogEntry
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -39,7 +39,7 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.post(
-            reverse("Deliveries:cancel_joker") + "?joker_id=" + joker.id
+            reverse("deliveries:cancel_joker") + "?joker_id=" + joker.id
         )
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
@@ -59,7 +59,7 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.post(
-            reverse("Deliveries:cancel_joker") + "?joker_id=" + joker.id
+            reverse("deliveries:cancel_joker") + "?joker_id=" + joker.id
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -73,19 +73,25 @@ class TestCancelJokerView(TapirIntegrationTest):
             )
         )
 
+        self.assertEqual(1, JokerCancelledLogEntry.objects.count())
+        log_entry = JokerCancelledLogEntry.objects.get()
+        self.assertEqual(other_member.email, log_entry.user.email)
+        self.assertEqual(user.email, log_entry.actor.email)
+        self.assertEqual(joker.date, log_entry.date)
+
     @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "cancel_joker")
     def test_cancelJokerView_cancelOwnJokerAsNormalMember_callsCancelJoker(
         self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
-        user = MemberFactory.create(is_superuser=False)
+        member = MemberFactory.create(is_superuser=False)
         joker = Joker.objects.create(
-            member=user, date=datetime.date(year=2024, month=5, day=1)
+            member=member, date=datetime.date(year=2024, month=5, day=1)
         )
-        self.client.force_login(user)
+        self.client.force_login(member)
 
         response = self.client.post(
-            reverse("Deliveries:cancel_joker") + "?joker_id=" + joker.id
+            reverse("deliveries:cancel_joker") + "?joker_id=" + joker.id
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -93,10 +99,16 @@ class TestCancelJokerView(TapirIntegrationTest):
         mock_fire_action.assert_called_once_with(
             trigger_data=TransactionalTriggerData(
                 key="deliveries.joker_cancelled",
-                recipient_id_in_base_queryset=user.id,
+                recipient_id_in_base_queryset=member.id,
                 token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
             ),
         )
+
+        self.assertEqual(1, JokerCancelledLogEntry.objects.count())
+        log_entry = JokerCancelledLogEntry.objects.get()
+        self.assertEqual(member.email, log_entry.user.email)
+        self.assertEqual(member.email, log_entry.actor.email)
+        self.assertEqual(joker.date, log_entry.date)
 
     @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "can_joker_be_cancelled")
@@ -115,7 +127,7 @@ class TestCancelJokerView(TapirIntegrationTest):
         mock_can_joker_be_cancelled.return_value = False
 
         response = self.client.post(
-            reverse("Deliveries:cancel_joker") + "?joker_id=" + joker.id
+            reverse("deliveries:cancel_joker") + "?joker_id=" + joker.id
         )
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
@@ -140,7 +152,7 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.post(
-            reverse("Deliveries:cancel_joker") + "?joker_id=" + joker.id
+            reverse("deliveries:cancel_joker") + "?joker_id=" + joker.id
         )
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)

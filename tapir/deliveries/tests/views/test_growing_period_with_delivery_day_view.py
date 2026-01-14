@@ -19,7 +19,7 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
         self.client.force_login(member)
         growing_period = GrowingPeriodFactory.create()
 
-        url = reverse("Deliveries:growing_period_with_adjustments")
+        url = reverse("deliveries:growing_period_with_adjustments")
         response = self.client.get(
             f"{url}?growing_period_id={growing_period.id}",
         )
@@ -31,7 +31,7 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
         self.client.force_login(member)
         growing_period = GrowingPeriodFactory.create()
 
-        url = reverse("Deliveries:growing_period_with_adjustments")
+        url = reverse("deliveries:growing_period_with_adjustments")
         response = self.client.get(
             f"{url}?growing_period_id={growing_period.id}",
         )
@@ -56,7 +56,7 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
             growing_period=growing_period, calendar_week=4, adjusted_weekday=1
         )
 
-        url = reverse("Deliveries:growing_period_with_adjustments")
+        url = reverse("deliveries:growing_period_with_adjustments")
         response = self.client.get(
             f"{url}?growing_period_id={growing_period.id}",
         )
@@ -85,7 +85,7 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
         member = MemberFactory.create()
         self.client.force_login(member)
 
-        url = reverse("Deliveries:growing_period_with_adjustments")
+        url = reverse("deliveries:growing_period_with_adjustments")
         response = self.client.patch(url)
 
         self.assertStatusCode(response, 403)
@@ -94,7 +94,7 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
-        url = reverse("Deliveries:growing_period_with_adjustments")
+        url = reverse("deliveries:growing_period_with_adjustments")
         response = self.client.patch(
             url,
             data={
@@ -131,7 +131,7 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
             growing_period=growing_period, calendar_week=4, adjusted_weekday=1
         )
 
-        url = reverse("Deliveries:growing_period_with_adjustments")
+        url = reverse("deliveries:growing_period_with_adjustments")
         response = self.client.patch(
             url,
             data={

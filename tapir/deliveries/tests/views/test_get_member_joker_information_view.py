@@ -6,7 +6,12 @@ from rest_framework.reverse import reverse
 
 from tapir.configuration.models import TapirParameter
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.config import (
+    DELIVERY_DONATION_MODE_DISABLED,
+    DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE,
+)
 from tapir.deliveries.models import Joker
+from tapir.deliveries.tests.factories import DeliveryDonationFactory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
@@ -21,6 +26,9 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DONATION_MODE).update(
+            value=DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE
+        )
 
     def setUp(self) -> None:
         mock_timezone(self, factories.NOW)
@@ -35,7 +43,7 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.get(
-            reverse("Deliveries:member_joker_information")
+            reverse("deliveries:member_joker_information")
             + "?member_id="
             + other_member.id
         )
@@ -51,14 +59,14 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.get(
-            reverse("Deliveries:member_joker_information")
+            reverse("deliveries:member_joker_information")
             + "?member_id="
             + other_member.id
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-    def test_getMemberJokerInformationView_accessOwnInfoAsNormalMember_returnsCorrectInformation(
+    def test_getMemberJokerInformationView_accessOwnInfoAsNormalMember_returnsCorrectJokerInformation(
         self,
     ):
         user = MemberFactory.create(is_superuser=False)
@@ -80,7 +88,7 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
         )
 
         response = self.client.get(
-            reverse("Deliveries:member_joker_information") + "?member_id=" + user.id
+            reverse("deliveries:member_joker_information") + "?member_id=" + user.id
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -140,7 +148,7 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
         )
 
         response = self.client.get(
-            reverse("Deliveries:member_joker_information") + "?member_id=" + user.id
+            reverse("deliveries:member_joker_information") + "?member_id=" + user.id
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -150,11 +158,48 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
             "2023-07-15", response_content["used_jokers"][0]["joker"]["date"]
         )
 
-    def test_getMemberJokerInformationView_jokerFeatureDisabled_returns403(
+    def test_getMemberJokerInformationView_accessOwnInfoAsNormalMember_returnsCorrectDonationInformation(
+        self,
+    ):
+        user = MemberFactory.create(is_superuser=False)
+        self.client.force_login(user)
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+        )
+        DeliveryDonationFactory.create(
+            member=user, date=datetime.date(year=2022, month=12, day=31)
+        )
+        DeliveryDonationFactory.create(
+            member=user, date=datetime.date(year=2023, month=7, day=17)
+        )
+        DeliveryDonationFactory.create(
+            member=user, date=datetime.date(year=2023, month=8, day=18)
+        )
+
+        response = self.client.get(
+            reverse("deliveries:member_joker_information") + "?member_id=" + user.id
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        response_content = json.loads(response.content)
+
+        self.assertEqual(2, len(response_content["used_donations"]))
+        self.assertEqual(
+            "2023-07-17", response_content["used_donations"][0]["donation"]["date"]
+        )
+        self.assertEqual(
+            "2023-08-18", response_content["used_donations"][1]["donation"]["date"]
+        )
+
+    def test_getMemberJokerInformationView_bothJokerAndDonationFeatureDisabled_returns403(
         self,
     ):
         TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
-            value="False"
+            value=False
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DONATION_MODE).update(
+            value=DELIVERY_DONATION_MODE_DISABLED
         )
         GrowingPeriodFactory.create()
 
@@ -163,7 +208,7 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.get(
-            reverse("Deliveries:member_joker_information")
+            reverse("deliveries:member_joker_information")
             + "?member_id="
             + other_member.id
         )

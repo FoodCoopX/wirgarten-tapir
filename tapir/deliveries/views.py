@@ -313,7 +313,7 @@ class UseJokerView(APIView):
         )
 
 
-class UseDonationView(APIView):
+class UseDeliveryDonationView(APIView):
     @extend_schema(
         responses={200: str, 403: str},
         parameters=[
@@ -323,6 +323,15 @@ class UseDonationView(APIView):
     )
     def post(self, request):
         cache = {}
+
+        if (
+            get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)
+            == DELIVERY_DONATION_MODE_DISABLED
+        ):
+            return Response(
+                "The donation feature is disabled",
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         member_id = request.query_params.get("member_id")
         date_string = request.query_params.get("date")

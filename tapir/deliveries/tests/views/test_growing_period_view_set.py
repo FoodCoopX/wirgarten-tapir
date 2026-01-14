@@ -14,12 +14,12 @@ class TestGrowingPeriodViewSet(TapirIntegrationTest):
         member = MemberFactory()
         self.client.force_login(member)
 
-        response = self.client.get(reverse("Deliveries:growing_periods-list"))
+        response = self.client.get(reverse("deliveries:growing_periods-list"))
         self.assertStatusCode(response, 403)
 
     def test_growingPeriodViewSet_loggedInAsAdmin_returns200(self):
         member = MemberFactory(is_superuser=True)
         self.client.force_login(member)
 
-        response = self.client.get(reverse("Deliveries:growing_periods-list"))
+        response = self.client.get(reverse("deliveries:growing_periods-list"))
         self.assertStatusCode(response, 200)

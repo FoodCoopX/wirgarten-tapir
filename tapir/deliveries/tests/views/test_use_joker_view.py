@@ -9,7 +9,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.models import TapirParameter
-from tapir.deliveries.models import Joker
+from tapir.deliveries.models import Joker, JokerUsedLogEntry
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -36,7 +36,7 @@ class TestUseJokerView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.post(
-            f"{reverse('Deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
+            f"{reverse('deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
         )
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
@@ -55,7 +55,7 @@ class TestUseJokerView(TapirIntegrationTest):
         mock_can_joker_be_used_in_week.return_value = True
 
         response = self.client.post(
-            f"{reverse('Deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
+            f"{reverse('deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -72,6 +72,12 @@ class TestUseJokerView(TapirIntegrationTest):
             ),
         )
 
+        self.assertEqual(1, JokerUsedLogEntry.objects.count())
+        log_entry = JokerUsedLogEntry.objects.get()
+        self.assertEqual(other_member.email, log_entry.user.email)
+        self.assertEqual(user.email, log_entry.actor.email)
+        self.assertEqual(date, log_entry.date)
+
     @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     def test_useJokerView_useOwnJokerAsNormalMember_jokerCreated(
@@ -82,7 +88,7 @@ class TestUseJokerView(TapirIntegrationTest):
         mock_can_joker_be_used_in_week.return_value = True
 
         response = self.client.post(
-            f"{reverse('Deliveries:use_joker')}?member_id={user.id}&date=2024-07-23"
+            f"{reverse('deliveries:use_joker')}?member_id={user.id}&date=2024-07-23"
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -100,6 +106,12 @@ class TestUseJokerView(TapirIntegrationTest):
             ),
         )
 
+        self.assertEqual(1, JokerUsedLogEntry.objects.count())
+        log_entry = JokerUsedLogEntry.objects.get()
+        self.assertEqual(user.email, log_entry.user.email)
+        self.assertEqual(user.email, log_entry.actor.email)
+        self.assertEqual(date, log_entry.date)
+
     @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     def test_useJokerView_notAllowedToUseJoker_returns403(
@@ -110,7 +122,7 @@ class TestUseJokerView(TapirIntegrationTest):
         mock_can_joker_be_used_in_week.return_value = False
 
         response = self.client.post(
-            f"{reverse('Deliveries:use_joker')}?member_id={user.id}&date=2024-07-23"
+            f"{reverse('deliveries:use_joker')}?member_id={user.id}&date=2024-07-23"
         )
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
@@ -134,7 +146,7 @@ class TestUseJokerView(TapirIntegrationTest):
         mock_can_joker_be_used_in_week.return_value = True
 
         response = self.client.post(
-            f"{reverse('Deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
+            f"{reverse('deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
         )
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)

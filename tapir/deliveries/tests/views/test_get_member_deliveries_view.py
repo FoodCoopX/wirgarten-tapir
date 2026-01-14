@@ -34,7 +34,7 @@ class TestGetMemberDeliveriesView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.get(
-            reverse("Deliveries:member_deliveries") + "?member_id=" + other_member.id
+            reverse("deliveries:member_deliveries") + "?member_id=" + other_member.id
         )
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
@@ -49,7 +49,7 @@ class TestGetMemberDeliveriesView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.get(
-            reverse("Deliveries:member_deliveries") + "?member_id=" + other_member.id
+            reverse("deliveries:member_deliveries") + "?member_id=" + other_member.id
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -64,7 +64,7 @@ class TestGetMemberDeliveriesView(TapirIntegrationTest):
         self.client.force_login(user)
 
         response = self.client.get(
-            reverse("Deliveries:member_deliveries") + "?member_id=" + user.id
+            reverse("deliveries:member_deliveries") + "?member_id=" + user.id
         )
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)

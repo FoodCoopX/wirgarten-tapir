@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from tapir.deliveries import views
 
-app_name = "Deliveries"
+app_name = "deliveries"
 urlpatterns = [
     path(
         "api/member_joker_information",
@@ -32,7 +32,7 @@ urlpatterns = [
     ),
     path(
         "api/use_donation",
-        views.UseDonationView.as_view(),
+        views.UseDeliveryDonationView.as_view(),
         name="use_donation",
     ),
     path(
