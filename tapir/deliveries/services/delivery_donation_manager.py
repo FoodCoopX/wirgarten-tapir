@@ -99,7 +99,7 @@ class DeliveryDonationManager:
         return get_today(
             cache=cache
         ) <= JokerManagementService.get_date_limit_for_joker_changes(
-            donation.date, cache=cache
+            reference_date=donation.date, cache=cache
         )
 
     @classmethod
