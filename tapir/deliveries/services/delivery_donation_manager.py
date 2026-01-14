@@ -21,7 +21,9 @@ class DeliveryDonationManager:
     def can_delivery_be_donated(
         cls, member: Member, delivery_date: datetime.date, cache: dict
     ):
-        mode = get_parameter_value(key=ParameterKeys.DELIVERY_DONATION_MODE)
+        mode = get_parameter_value(
+            key=ParameterKeys.DELIVERY_DONATION_MODE, cache=cache
+        )
         if mode == DELIVERY_DONATION_MODE_DISABLED:
             return False
 

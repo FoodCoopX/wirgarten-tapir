@@ -1,4 +1,6 @@
 from io import StringIO
+from typing import Any
+from unittest.mock import Mock
 
 from django.contrib.auth.models import Permission as PermissionModel
 from django.contrib.contenttypes.models import ContentType
@@ -6,6 +8,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import GrowingPeriod
 from tapir.wirgarten.models import Product
@@ -56,3 +59,12 @@ class KeycloakServiceTestCase(KeycloakTestCase):
     """base class to interact with a running Keycloak service"""
 
     pass
+
+
+def mock_parameter_value(cache: dict, key: str, value: Any):
+    parameters_by_key = get_from_cache_or_compute(
+        cache=cache, key="parameters_by_key", compute_function=lambda: {}
+    )
+    tapir_parameter = Mock()
+    tapir_parameter.get_value.return_value = value
+    parameters_by_key[key] = tapir_parameter
