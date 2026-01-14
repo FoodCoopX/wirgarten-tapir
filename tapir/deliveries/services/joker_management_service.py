@@ -112,7 +112,7 @@ class JokerManagementService:
         for joker in jokers:
             if (
                 joker.date.isocalendar().week == reference_date.isocalendar().week
-                and joker.date.year == reference_date.isocalendar().year
+                and joker.date.year == reference_date.year
             ):
                 return True
             if joker.date > reference_date:
