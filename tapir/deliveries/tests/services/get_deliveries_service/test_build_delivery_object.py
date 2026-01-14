@@ -4,6 +4,7 @@ from unittest.mock import patch, Mock
 from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.models import TapirParameter
+from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.deliveries.services.weeks_without_delivery_service import (
@@ -209,7 +210,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self.assertEqual([subscription_2], list(delivery_object["subscriptions"]))
 
     @patch.object(WeeksWithoutDeliveryService, "is_delivery_cancelled_this_week")
-    def test_buildDeliveryObject_default_returnsCorrectJokerData(
+    def test_buildDeliveryObject_default_returnsCorrectCancelData(
         self, mock_is_delivery_cancelled_this_week: Mock
     ):
         member = MemberFactory.create()
@@ -230,6 +231,41 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self.assertEqual(
             mock_is_delivery_cancelled_this_week_value,
             delivery_object["is_delivery_cancelled_this_week"],
+        )
+
+    @patch.object(
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
+    )
+    @patch.object(DeliveryDonationManager, "can_delivery_be_donated", autospec=True)
+    def test_buildDeliveryObject_default_returnsCorrectDonationData(
+        self,
+        mock_can_delivery_be_donated: Mock,
+        mock_does_member_have_a_donation_in_week: Mock,
+    ):
+        member = MemberFactory.create()
+        SubscriptionFactory.create(member=member)
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+        mock_can_delivery_be_donated_value = Mock()
+        mock_can_delivery_be_donated.return_value = mock_can_delivery_be_donated_value
+        mock_does_member_have_a_donation_in_week_value = Mock()
+        mock_does_member_have_a_donation_in_week.return_value = (
+            mock_does_member_have_a_donation_in_week_value
+        )
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertEqual(
+            mock_can_delivery_be_donated_value,
+            delivery_object["can_delivery_be_donated"],
+        )
+        self.assertEqual(
+            mock_does_member_have_a_donation_in_week_value,
+            delivery_object["donation_used"],
         )
 
     def test_buildDeliveryObject_givenDateIsAfterSubscriptionEndButSubscriptionNotCancelled_returnsPreviousSubscriptions(
