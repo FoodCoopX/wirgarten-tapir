@@ -345,9 +345,11 @@ class BaseProductForm(forms.Form):
             )
 
         if self.choose_growing_period:
-            available_growing_periods = GrowingPeriod.objects.filter(
-                end_date__gte=self.start_date,
-            ).order_by("start_date")
+            available_growing_periods = (
+                GrowingPeriodChoiceProvider.get_available_growing_periods(
+                    end_date_after=self.start_date
+                )
+            )
         else:
             available_growing_periods = [self.growing_period]
         harvest_share_strings = []
