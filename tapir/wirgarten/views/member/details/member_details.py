@@ -74,12 +74,28 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 subscription.price_at_renewal_date = price_at_renewal_date
 
         context["sub_quantities"] = {
-            k: sum(map(lambda x: x.quantity, v))
-            for k, v in context["subscriptions"].items()
+            product_type: sum(
+                [
+                    subscription.quantity
+                    for subscription in subscriptions_for_product_type
+                    if subscription.start_date <= today <= subscription.end_date
+                ]
+            )
+            for product_type, subscriptions_for_product_type in context[
+                "subscriptions"
+            ].items()
         }
         context["sub_totals"] = {
-            k: sum(map(lambda x: x.total_price(), v))
-            for k, v in context["subscriptions"].items()
+            product_type: sum(
+                [
+                    subscription.total_price()
+                    for subscription in subscriptions_of_product_type
+                    if subscription.start_date <= today <= subscription.end_date
+                ]
+            )
+            for product_type, subscriptions_of_product_type in context[
+                "subscriptions"
+            ].items()
         }
 
         product_types = get_active_product_types(reference_date=next_month, cache=cache)
