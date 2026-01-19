@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("wirgarten", "0086_remove_subscription_solidarity_price_percentage"),
+        ("solidarity_contribution", "0002_auto_20251212_1036"),
     ]
 
     operations = [
