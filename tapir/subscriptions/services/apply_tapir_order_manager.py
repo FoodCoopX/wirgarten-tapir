@@ -24,6 +24,7 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_active_subscriptions,
 )
+from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
 from tapir.wirgarten.utils import get_now
 
 
@@ -115,6 +116,8 @@ class ApplyTapirOrderManager:
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
         TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+        if len(new_subscriptions) > 0:
+            OnboardingTrigger.on_subscription_updated(new_subscriptions[0])
 
         SubscriptionChangeLogEntry().populate_subscription_changed(
             actor=actor,

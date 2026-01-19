@@ -54,6 +54,7 @@ from tapir.wirgarten.tests.factories import (
     PickupLocationCapabilityFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
+from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
 
 
 class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
@@ -105,9 +106,10 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         if user_id is not None:
             client.delete_user(user_id)
 
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_orderIsValid_memberAndContractGetCreated(
-        self, mock_fire_action: Mock
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
     ):
         response = self.client.post(
             reverse("bestell_wizard:bestell_wizard_confirm_order"),
@@ -139,6 +141,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             mock_fire_action=mock_fire_action,
             key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
         )
+        mock_on_subscription_updated.assert_called_once_with()
 
     def test_post_requestDataIsInvalid_returns400(self):
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
