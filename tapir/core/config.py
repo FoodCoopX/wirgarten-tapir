@@ -35,6 +35,7 @@ THEME_ERNTEUNIONOST = "ernteunion_ost"
 THEME_KATRINGER_GRUENZEUG = "katringer"
 THEME_SOLAWI_HALL = "solawi_hall"
 THEME_LEISTENMUEHLE = "leistenmuehle"
+THEME_GROSSHOECHBERG = "grosshoechberg"
 
 THEME_OPTIONS = [
     (THEME_BIOTOP, "Biotop Oberland"),
@@ -46,4 +47,5 @@ THEME_OPTIONS = [
     (THEME_KATRINGER_GRUENZEUG, "Katringer Grünzeug"),
     (THEME_SOLAWI_HALL, "Solawi Hall"),
     (THEME_LEISTENMUEHLE, "Leistenmühle"),
+    (THEME_GROSSHOECHBERG, "Grosshöchberg"),
 ]
