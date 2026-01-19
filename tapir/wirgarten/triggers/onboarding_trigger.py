@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 from dateutil.relativedelta import relativedelta
-from django.db import models, transaction
+from django.db import transaction
 from django.utils import timezone
 from tapir_mail.models import (
     EmailConfigurationDispatch,
@@ -161,11 +161,3 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 ],
             ),
         ]
-
-
-models.signals.post_save.connect(
-    receiver=lambda instance, **kwargs: OnboardingTrigger.on_subscription_updated(
-        instance
-    ),
-    sender=Subscription,
-)

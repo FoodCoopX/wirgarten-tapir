@@ -61,6 +61,7 @@ from tapir.wirgarten.service.products import (
     get_total_price_for_subs,
     get_next_growing_period,
 )
+from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
@@ -452,6 +453,9 @@ class BaseProductForm(forms.Form):
         if new_pickup_location:
             change_date = self.cleaned_data.get("pickup_location_change_date")
             change_pickup_location(member_id, new_pickup_location, change_date)
+
+        if len(self.subscriptions) > 0:
+            OnboardingTrigger.on_subscription_updated(self.subscriptions[0])
 
     def build_solidarity_fields(self):
         value = self.cleaned_data["solidarity_price_choice"]
