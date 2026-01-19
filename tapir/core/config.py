@@ -34,6 +34,7 @@ THEME_HUMUSWERKSTATT = "huw"
 THEME_ERNTEUNIONOST = "ernteunion_ost"
 THEME_KATRINGER_GRUENZEUG = "katringer"
 THEME_SOLAWI_HALL = "solawi_hall"
+THEME_LEISTENMUEHLE = "leistenmuehle"
 
 THEME_OPTIONS = [
     (THEME_BIOTOP, "Biotop Oberland"),
@@ -44,4 +45,5 @@ THEME_OPTIONS = [
     (THEME_ERNTEUNIONOST, "Ernte Union Ost"),
     (THEME_KATRINGER_GRUENZEUG, "Katringer Grünzeug"),
     (THEME_SOLAWI_HALL, "Solawi Hall"),
+    (THEME_LEISTENMUEHLE, "Leistenmühle"),
 ]
