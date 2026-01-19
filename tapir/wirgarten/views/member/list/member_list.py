@@ -22,6 +22,9 @@ from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Member,
@@ -260,6 +263,12 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             queryset, today
         )
         queryset = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_name_at_date(
+            queryset, today
+        )
+        queryset = MemberSolidarityContributionService.annotate_member_queryset_with_current_contribution(
+            queryset, today
+        )
+        queryset = MemberSolidarityContributionService.annotate_member_queryset_with_future_contribution(
             queryset, today
         )
 

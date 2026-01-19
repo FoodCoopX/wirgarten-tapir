@@ -73,6 +73,7 @@
             <th class="sort-header" data-sort="coop_shares_total_value">{% translate "Geschäftsguthaben" %}</th>
         {% endif %}
         <th class="sort-header" data-sort="monthly_payment">{% translate "Umsatz/Monat" %}</th>
+        <th>{% translate "Solidarbeitrag" %}</th>
         <th>{% translate "Abholort" %}</th>
         <th class="sort-header" data-sort="created_at">{% translate "Eintritt" %}</th>
     </tr>
@@ -101,6 +102,18 @@
                 <td class="text-end">{{ member.coop_shares_total_value|format_currency }} €&nbsp;&nbsp;</td>
             {% endif %}
             <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
+            <td class="text-end">
+                {% if not member.current_member_contribution and not member.future_member_contribution_amount %}
+                    <span> - </span>
+                {% elif member.current_member_contribution and not member.future_member_contribution_amount %}
+                    <span>{{ member.current_member_contribution|format_currency }} €</span>
+                {% elif not member.current_member_contribution and member.future_member_contribution_amount %}
+                    <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}: </small>{{ member.future_member_contribution_amount|format_currency }} €</span>
+                {% elif member.current_member_contribution and member.future_member_contribution_amount %}
+                    <span><small>Aktuell: </small>{{ member.current_member_contribution|format_currency }} €</span><br />
+                    <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}: </small>{{ member.future_member_contribution_amount|format_currency }} €</span>
+                {% endif %}
+            </td>
             <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
             <td>{{ member.coop_entry_date|format_date }}</td>
         </tr>

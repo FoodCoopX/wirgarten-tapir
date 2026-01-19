@@ -36,9 +36,6 @@
         <th style="text-align:center">{% translate "Vertragslaufzeit" %}</th>
         <th style="text-align:center">{% translate "Vertrag" %}</th>
         <th style="text-align:center">{% translate "Variante" %}</th>
-        <th class="sort-header"
-            data-sort="solidarity_price"
-            style="text-align:center">{% translate "Solipreis" %}</th>
         <th style="text-align:center">{% translate "Betrag" %}</th>
         <th style="text-align:center">{% translate "Abholort" %}</th>
     </tr>
@@ -78,15 +75,6 @@
                 <td style="text-align:center">{{ entry.start_date|format_date }} - {{ entry.end_date|format_date }}</td>
                 <td style="text-align:center">{{ entry.product.type.name }}</td>
                 <td style="text-align:center">{{ entry.product.name }}</td>
-                <td style="text-align:center">
-                    {% if entry.solidarity_price_percentage %}
-                        {{ entry.solidarity_price_percentage|format_percent }}
-                    {% elif entry.solidarity_price_absolute %}
-                        {{ entry.solidarity_price_absolute|format_currency }} €
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
                 <td style="text-align:right">
                     {% if idx == 0 %}
                         {% if entry.price_override %}

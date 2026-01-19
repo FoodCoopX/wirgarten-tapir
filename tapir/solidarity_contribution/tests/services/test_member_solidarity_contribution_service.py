@@ -7,6 +7,7 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
     MemberSolidarityContributionService,
 )
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
+from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -253,3 +254,114 @@ class TestMemberSolidarityContributionService(TapirIntegrationTest):
         )
 
         self.assertFalse(result)
+
+    def test_annotateMemberQuerysetWithCurrentContribution_memberHasNoContribution_annotatesWithNone(
+        self,
+    ):
+        member_1, member_2 = MemberFactory.create_batch(size=2)
+        SolidarityContributionFactory.create(
+            member=member_2, start_date=datetime.date(year=2020, month=1, day=3)
+        )
+
+        annotated_queryset = MemberSolidarityContributionService.annotate_member_queryset_with_current_contribution(
+            Member.objects.all(),
+            reference_date=datetime.date(year=2020, month=1, day=5),
+        )
+
+        annotated_member = annotated_queryset.get(id=member_1.id)
+        self.assertIsNone(
+            getattr(
+                annotated_member,
+                MemberSolidarityContributionService.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION,
+            )
+        )
+
+    def test_annotateMemberQuerysetWithCurrentContribution_memberHasContribution_annotatesCorrectAmount(
+        self,
+    ):
+        _, member_2 = MemberFactory.create_batch(size=2)
+        SolidarityContributionFactory.create(
+            member=member_2,
+            start_date=datetime.date(year=2020, month=1, day=3),
+            amount=Decimal("12.7"),
+        )
+
+        annotated_queryset = MemberSolidarityContributionService.annotate_member_queryset_with_current_contribution(
+            Member.objects.all(),
+            reference_date=datetime.date(year=2020, month=1, day=5),
+        )
+
+        annotated_member = annotated_queryset.get(id=member_2.id)
+        self.assertEqual(
+            Decimal("12.7"),
+            getattr(
+                annotated_member,
+                MemberSolidarityContributionService.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION,
+            ),
+        )
+
+    def test_annotateMemberQuerysetWithFutureContribution_memberHasNoFutureContribution_annotatesWithNone(
+        self,
+    ):
+        member_1, member_2 = MemberFactory.create_batch(size=2)
+        SolidarityContributionFactory.create(
+            member=member_2, start_date=datetime.date(year=2020, month=6, day=12)
+        )
+        SolidarityContributionFactory.create(
+            member=member_1,
+            start_date=datetime.date(year=2019, month=5, day=3),
+            amount=Decimal("-23.5"),
+        )
+
+        annotated_queryset = MemberSolidarityContributionService.annotate_member_queryset_with_future_contribution(
+            Member.objects.all(),
+            reference_date=datetime.date(year=2020, month=1, day=5),
+        )
+
+        annotated_member = annotated_queryset.get(id=member_1.id)
+        self.assertIsNone(
+            getattr(
+                annotated_member,
+                MemberSolidarityContributionService.ANNOTATION_FUTURE_MEMBER_CONTRIBUTION_AMOUNT,
+            ),
+        )
+        self.assertIsNone(
+            getattr(
+                annotated_member,
+                MemberSolidarityContributionService.ANNOTATION_FUTURE_MEMBER_CONTRIBUTION_START_DATE,
+            ),
+        )
+
+    def test_annotateMemberQuerysetWithFutureContribution_memberHasAFutureContribution_annotatesWithCorrectAmountAndDate(
+        self,
+    ):
+        member_1, member_2 = MemberFactory.create_batch(size=2)
+        SolidarityContributionFactory.create(
+            member=member_2, start_date=datetime.date(year=2020, month=6, day=12)
+        )
+        SolidarityContributionFactory.create(
+            member=member_1,
+            start_date=datetime.date(year=2020, month=5, day=3),
+            amount=Decimal("-23.5"),
+        )
+
+        annotated_queryset = MemberSolidarityContributionService.annotate_member_queryset_with_future_contribution(
+            Member.objects.all(),
+            reference_date=datetime.date(year=2020, month=1, day=5),
+        )
+
+        annotated_member = annotated_queryset.get(id=member_1.id)
+        self.assertEqual(
+            Decimal("-23.5"),
+            getattr(
+                annotated_member,
+                MemberSolidarityContributionService.ANNOTATION_FUTURE_MEMBER_CONTRIBUTION_AMOUNT,
+            ),
+        )
+        self.assertEqual(
+            datetime.date(year=2020, month=5, day=3),
+            getattr(
+                annotated_member,
+                MemberSolidarityContributionService.ANNOTATION_FUTURE_MEMBER_CONTRIBUTION_START_DATE,
+            ),
+        )

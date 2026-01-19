@@ -1,15 +1,24 @@
 import datetime
 from decimal import Decimal
 
+from django.db.models import QuerySet, OuterRef, Subquery
+
 from tapir.accounts.models import TapirUser
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_now
 
 
 class MemberSolidarityContributionService:
+    ANNOTATION_CURRENT_MEMBER_CONTRIBUTION = "current_member_contribution"
+    ANNOTATION_FUTURE_MEMBER_CONTRIBUTION_AMOUNT = "future_member_contribution_amount"
+    ANNOTATION_FUTURE_MEMBER_CONTRIBUTION_START_DATE = (
+        "future_member_contribution_start_date"
+    )
+
     @classmethod
     def get_member_contribution(
         cls, member_id: str, reference_date: datetime.date, cache: dict
@@ -75,3 +84,57 @@ class MemberSolidarityContributionService:
         )
 
         return new_amount > current_contribution
+
+    @classmethod
+    def annotate_member_queryset_with_current_contribution(
+        cls, queryset: QuerySet[Member], reference_date: datetime.date
+    ):
+        current_member_contribution = (
+            SolidarityContribution.objects.filter(
+                member=OuterRef("id"),
+                start_date__lte=reference_date,
+                end_date__gte=reference_date,
+            )
+            .order_by("-start_date")
+            .values("amount")[:1]
+        )
+
+        return queryset.annotate(
+            **{
+                cls.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION: Subquery(
+                    current_member_contribution
+                )
+            }
+        )
+
+    @classmethod
+    def annotate_member_queryset_with_future_contribution(
+        cls, queryset: QuerySet[Member], reference_date: datetime.date
+    ):
+        future_member_contribution_amount = (
+            SolidarityContribution.objects.filter(
+                member=OuterRef("id"),
+                start_date__gt=reference_date,
+            )
+            .order_by("start_date")
+            .values("amount")[:1]
+        )
+        future_member_contribution_start_date = (
+            SolidarityContribution.objects.filter(
+                member=OuterRef("id"),
+                start_date__gt=reference_date,
+            )
+            .order_by("start_date")
+            .values("start_date")[:1]
+        )
+
+        return queryset.annotate(
+            **{
+                cls.ANNOTATION_FUTURE_MEMBER_CONTRIBUTION_AMOUNT: Subquery(
+                    future_member_contribution_amount
+                ),
+                cls.ANNOTATION_FUTURE_MEMBER_CONTRIBUTION_START_DATE: Subquery(
+                    future_member_contribution_start_date
+                ),
+            }
+        )
