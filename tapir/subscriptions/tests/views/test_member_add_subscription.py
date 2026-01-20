@@ -96,22 +96,6 @@ class TestMemberAddSubscription(TapirIntegrationTest):
             },
         )
 
-    def test_memberAddSubscription_baseProductAndAutoRenewOff_subscriptionNoticePeriodSetToNone(
-        self,
-    ):
-        self.skipTest("Base product form will be deleted in the following commits")
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
-        ).update(value=False)
-
-        self.send_add_subscription_request(
-            product_type_name="Ernteanteile", post_data_key="base_product_M"
-        )
-
-        self.assertEqual(1, Subscription.objects.count())
-        subscription = Subscription.objects.get()
-        self.assertIsNone(subscription.notice_period_duration)
-
     def test_memberAddSubscription_baseProductAndAutoRenewOn_subscriptionNoticePeriodSetToCorrectValue(
         self,
     ):
@@ -129,32 +113,6 @@ class TestMemberAddSubscription(TapirIntegrationTest):
         self.assertEqual(1, Subscription.objects.count())
         subscription = Subscription.objects.get()
         self.assertEqual(2, subscription.notice_period_duration)
-
-    def test_memberAddSubscription_additionalProductAndAutoRenewOff_subscriptionNoticePeriodSetToNone(
-        self,
-    ):
-        self.skipTest("Base product form will be deleted in the following commits")
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
-        ).update(value=False)
-        base_product_subscription = SubscriptionFactory.create(
-            member=Member.objects.get(),
-            product=Product.objects.get(name="M"),
-            period=GrowingPeriod.objects.get(),
-        )
-
-        product_type = ProductType.objects.get(name="Hühneranteile")
-        product = Product.objects.get(type=product_type)
-        post_data_key = f"{product_type.id}_{product.name}"
-        self.send_add_subscription_request(
-            product_type_name="Hühneranteile", post_data_key=post_data_key
-        )
-
-        self.assertEqual(2, Subscription.objects.count())
-        subscription = Subscription.objects.exclude(
-            id=base_product_subscription.id
-        ).get()
-        self.assertIsNone(subscription.notice_period_duration)
 
     def test_memberAddSubscription_additionalProductAndAutoRenewOn_subscriptionNoticePeriodSetToCorrectValue(
         self,

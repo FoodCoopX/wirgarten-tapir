@@ -15,7 +15,6 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
-from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -360,6 +359,9 @@ class BaseProductForm(forms.Form):
             notice_period_duration = NoticePeriodManager.get_notice_period_duration(
                 self.product_type, self.growing_period, cache=self.cache
             )
+            notice_period_unit = NoticePeriodManager.get_notice_period_unit(
+                self.product_type, self.growing_period, cache=self.cache
+            )
 
             end_date = self.growing_period.end_date
             if not product.type.subscriptions_have_end_dates:
@@ -385,7 +387,7 @@ class BaseProductForm(forms.Form):
                 ),
                 trial_end_date_override=existing_trial_end_date,
                 notice_period_duration=notice_period_duration,
-                notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,  # this form will be deleted in the coming commits
+                notice_period_unit=notice_period_unit,
             )
 
             self.subscriptions.append(sub)
@@ -763,15 +765,12 @@ class AdditionalProductForm(forms.Form):
                     type=self.product_type,
                     name=key.replace(self.field_prefix, ""),
                 )
-                notice_period_duration = None
-                if get_parameter_value(
-                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
-                ):
-                    notice_period_duration = (
-                        NoticePeriodManager.get_notice_period_duration(
-                            self.product_type, self.growing_period, cache=self.cache
-                        )
-                    )
+                notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+                    self.product_type, self.growing_period, cache=self.cache
+                )
+                notice_period_unit = NoticePeriodManager.get_notice_period_unit(
+                    self.product_type, self.growing_period, cache=self.cache
+                )
                 end_date = self.growing_period.end_date
                 if not product.type.subscriptions_have_end_dates:
                     end_date = None
@@ -791,6 +790,7 @@ class AdditionalProductForm(forms.Form):
                         ),
                         trial_end_date_override=existing_trial_end_date,
                         notice_period_duration=notice_period_duration,
+                        notice_period_unit=notice_period_unit,
                     )
                 )
 
