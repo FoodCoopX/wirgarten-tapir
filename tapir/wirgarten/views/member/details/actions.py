@@ -8,6 +8,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
     AutomaticSolidarityContributionRenewalService,
@@ -21,6 +22,7 @@ from tapir.wirgarten.models import (
     Subscription,
     SubscriptionChangeLogEntry,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import send_product_order_confirmation
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
@@ -59,6 +61,13 @@ def renew_contract_same_conditions(request, **kwargs):
                     start_date=next_period.start_date,
                     end_date=next_period.end_date,
                     mandate_ref=sub.mandate_ref,
+                    notice_period_duration=get_parameter_value(
+                        ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+                    ),
+                    notice_period_unit=get_parameter_value(
+                        ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
+                        cache=cache,
+                    ),
                 )
             )
             # reset cancellation date on existing sub

@@ -295,6 +295,12 @@ class UserGenerator:
                 end_date=end_date,
                 mandate_ref=mandate_ref,
                 admin_confirmed=cls.get_confirmation_datetime(start_date, cache=cache),
+                notice_period_duration=get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+                ),
+                notice_period_unit=get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
+                ),
             )
 
             needs_pickup_location = (
@@ -345,6 +351,13 @@ class UserGenerator:
                     admin_confirmed=cls.get_confirmation_datetime(
                         start_date, cache=cache
                     ),
+                    notice_period_duration=get_parameter_value(
+                        ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+                    ),
+                    notice_period_unit=get_parameter_value(
+                        ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
+                        cache=cache,
+                    ),
                 )
 
         return min_shares, needs_pickup_location
@@ -367,6 +380,12 @@ class UserGenerator:
             mandate_ref=get_or_create_mandate_ref(member, cache=cache),
             admin_confirmed=cls.get_confirmation_datetime(
                 growing_period.start_date, cache=cache
+            ),
+            notice_period_duration=get_parameter_value(
+                ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+            ),
+            notice_period_unit=get_parameter_value(
+                ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
             ),
         )
 
