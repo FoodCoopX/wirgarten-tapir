@@ -71,12 +71,6 @@
             {% if sub.start_date %}<small>({{ sub.start_date }} - {{ sub.end_date }})</small>{% endif %}
             <br />
         {% endfor %}
-        <hr>
-        <div style="float:right">
-            <button type="button"
-                    class="btn btn-danger"
-                    onclick="handleTrialCancellation()">Jetzt kündigen</button>
-        </div>
     </div>
 {% endif %}
 {% if show_renewal_warning %}

@@ -280,10 +280,6 @@
                 {% endif %}
             }
 
-            const handleTrialCancellation = () => {
-                FormModal.load(`{% url 'wirgarten:member_cancel_trial' object.pk %}`, 'Verträge kündigen')
-            }
-
         </script>
     {% endwith %}
 {% endblock content %}

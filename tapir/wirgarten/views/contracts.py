@@ -2,12 +2,10 @@ import csv
 from urllib.parse import parse_qs, urlencode
 
 from dateutil.relativedelta import relativedelta
-from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db import transaction
 from django.db.models import OuterRef, Subquery, Sum
 from django.forms import CheckboxInput
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView, View
@@ -15,14 +13,9 @@ from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFi
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
-    CoopShareTransaction,
     GrowingPeriod,
     Member,
     MemberPickupLocation,
@@ -40,83 +33,9 @@ from tapir.wirgarten.utils import format_date, get_now, get_today
 from tapir.wirgarten.views.filters import SecondaryOrderingFilter
 
 
-class NewContractsView(PermissionRequiredMixin, TemplateView):
-    """
-    Displays a list of all new contracts that are not confirmed by the admin yet
-    """
-
-    template_name = "wirgarten/subscription/new_contracts_overview.html"
-    permission_required = "accounts.view"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.cache = {}
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        coop_shares = CoopShareTransaction.objects.filter(
-            admin_confirmed__isnull=True,
-            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-        ).order_by("timestamp")
-
-        base_product_type = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
-        )
-        harvest_shares = Subscription.objects.filter(
-            admin_confirmed__isnull=True, product__type=base_product_type
-        ).order_by("created_at")
-
-        additional_shares = (
-            Subscription.objects.filter(admin_confirmed__isnull=True)
-            .exclude(product__type=base_product_type)
-            .order_by("created_at")
-        )
-
-        context["new_harvest_and_coop_shares"] = harvest_shares
-        context["new_coop_shares"] = coop_shares
-        context["new_additional_shares"] = additional_shares
-
-        context["show_cooperative_content"] = (
-            get_parameter_value(
-                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
-            )
-            == LEGAL_STATUS_COOPERATIVE
-        )
-
-        return context
-
-
 class ContractUpdatesView(PermissionRequiredMixin, TemplateView):
     permission_required = Permission.Accounts.MANAGE
     template_name = "wirgarten/subscription/contract_updates.html"
-
-
-@permission_required("accounts.manage")
-@transaction.atomic
-def confirm_new_contracts(request, **kwargs):
-    """
-    Admin action to confirm the selected contracts
-    """
-
-    query_dict = dict(x.split("=") for x in request.environ["QUERY_STRING"].split("&"))
-    for key, val in query_dict.items():
-        query_dict[key] = val.split(",")
-
-    harvest_and_coop_shares = query_dict.pop("new_harvest_and_coop_shares", [])
-    additional_shares = query_dict.pop("new_additional_shares", [])
-    subscription_ids = harvest_and_coop_shares + additional_shares
-    now = get_now()
-    if len(subscription_ids):
-        Subscription.objects.filter(id__in=subscription_ids).update(admin_confirmed=now)
-
-    coop_shares = query_dict.pop("new_coop_shares", [])
-    if len(coop_shares):
-        CoopShareTransaction.objects.filter(id__in=coop_shares).update(
-            admin_confirmed=now
-        )
-
-    return HttpResponseRedirect(reverse_lazy("wirgarten:new_contracts"))
 
 
 class SubscriptionListFilter(FilterSet):

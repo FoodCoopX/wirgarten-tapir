@@ -1,11 +1,10 @@
 from django.urls import path
+from django.views.generic import RedirectView
 
 from tapir.wirgarten.views import exported_files
 from tapir.wirgarten.views.contracts import (
     ExportSubscriptionList,
-    NewContractsView,
     SubscriptionListView,
-    confirm_new_contracts,
     ContractUpdatesView,
 )
 from tapir.wirgarten.views.debug.scheduled_tasks import (
@@ -20,11 +19,8 @@ from tapir.wirgarten.views.member.details.actions import (
 )
 from tapir.wirgarten.views.member.details.member_details import MemberDetailView
 from tapir.wirgarten.views.member.details.modals import (
-    get_add_subscription_form,
-    get_cancel_trial_form,
     get_cancellation_reason_form,
     get_coop_shares_waiting_list_form,
-    get_harvest_shares_waiting_list_form,
     get_member_payment_data_edit_form,
     get_member_personal_data_edit_form,
     get_renew_contracts_form,
@@ -58,11 +54,6 @@ from tapir.wirgarten.views.product_cfg import (
     get_period_copy_form,
     get_product_add_form,
 )
-from tapir.wirgarten.views.register import (
-    RegistrationWizardConfirmView,
-    questionaire_trafficsource_view,
-)
-from tapir.wirgarten.views.waitlist import WaitingListView, export_waitinglist
 
 urlpatterns = [
     path(
@@ -90,13 +81,7 @@ urlpatterns = [
     path("product/<str:periodId>/perioddelete", delete_period, name="period_delete"),
     path(
         "register",
-        dynamic_view("draftuser_register"),
-        name="draftuser_register",
-    ),
-    path(
-        "register/confirm",
-        RegistrationWizardConfirmView.as_view(),
-        name="draftuser_confirm_registration",
+        RedirectView.as_view(url="/bestell_wizard/bestell_wizard_mobile"),
     ),
     path(
         "admin/dashboard",
@@ -139,26 +124,9 @@ urlpatterns = [
         name="pickup_locations_delete",
     ),
     path(
-        "admin/waitinglist",
-        WaitingListView.as_view(),
-        name="waitinglist",
-    ),
-    path("admin/waitinglist/export", export_waitinglist, name="export_waitlist"),
-    path("admin/newcontracts", NewContractsView.as_view(), name="new_contracts"),
-    path(
         "admin/contract_updates",
         ContractUpdatesView.as_view(),
         name="contract_updates",
-    ),
-    path(
-        "admin/newcontracts/confirm",
-        confirm_new_contracts,
-        name="new_contracts_confirm",
-    ),
-    path(
-        "register/waitlist/hs",
-        get_harvest_shares_waiting_list_form,
-        name="waitlist_harvestshares",
     ),
     path(
         "register/waitlist/cs",
@@ -189,16 +157,6 @@ urlpatterns = [
         "members/<str:pk>/renewcontractwithchanges",
         get_renew_contracts_form,
         name="member_renew_changed_conditions",
-    ),
-    path(
-        "members/<str:pk>/addsubscription",
-        get_add_subscription_form,
-        name="member_add_subscription",
-    ),
-    path(
-        "members/<str:pk>/canceltrial",
-        get_cancel_trial_form,
-        name="member_cancel_trial",
     ),
     path(
         "members/<str:pk>/resendverifyemail",
@@ -240,11 +198,6 @@ urlpatterns = [
     path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
     path(
         "deliveries/<str:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
-    ),
-    path(
-        "registration/marketingfeedback",
-        questionaire_trafficsource_view,
-        name="marketing_feedback_form",
     ),
     path(
         "member/<str:pk>/cancellation_reason",
