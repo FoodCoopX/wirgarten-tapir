@@ -2,8 +2,6 @@ BASE_PRODUCT_NAME = "Ernteanteile"
 
 # define the custom views from the site module
 VIEWS = {
-    "draftuser_register": "tapir.wirgarten_site.registration.views.RegistrationView",
-    "draftuser_confirm_registration": "tapir.lueneburg.registration.views.RegistrationWizardConfirmView",
     "admin_dashboard": "tapir.wirgarten.views.admin_dashboard.AdminDashboardView",
     "admin_dashboard_cashflow_data": "tapir.wirgarten.views.admin_dashboard.get_cashflow_chart_data",
 }

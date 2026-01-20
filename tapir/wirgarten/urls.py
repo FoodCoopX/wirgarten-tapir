@@ -30,7 +30,6 @@ from tapir.wirgarten.views.member.list.actions import (
     export_coop_member_list,
     resend_verify_email,
 )
-from tapir.wirgarten.views.member.list.member_deliveries import MemberDeliveriesView
 from tapir.wirgarten.views.member.list.member_list import MemberListView
 from tapir.wirgarten.views.member.list.modals import (
     get_coop_share_cancel_form,
@@ -196,9 +195,6 @@ urlpatterns = [
         name="subscription_edit_price",
     ),
     path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
-    path(
-        "deliveries/<str:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
-    ),
     path(
         "member/<str:pk>/cancellation_reason",
         get_cancellation_reason_form,
