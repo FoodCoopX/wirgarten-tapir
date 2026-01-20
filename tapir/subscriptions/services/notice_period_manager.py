@@ -21,6 +21,7 @@ class NoticePeriodManager:
         product_type: ProductType,
         growing_period: GrowingPeriod,
         notice_period_duration: int | None,
+        notice_period_unit: str | None,
     ):
         notice_period = NoticePeriod.objects.filter(
             product_type=product_type,
@@ -34,6 +35,7 @@ class NoticePeriodManager:
 
         if notice_period:
             notice_period.duration = notice_period_duration
+            notice_period.unit = notice_period_unit
             notice_period.save()
             return
 
@@ -41,6 +43,7 @@ class NoticePeriodManager:
             product_type=product_type,
             growing_period=growing_period,
             duration=notice_period_duration,
+            unit=notice_period_unit,
         )
 
     @classmethod
@@ -61,20 +64,30 @@ class NoticePeriodManager:
         )
 
     @classmethod
+    def get_notice_period_unit(
+        cls,
+        product_type: ProductType,
+        growing_period: GrowingPeriod,
+        cache: dict,
+    ):
+        notice_period = TapirCache.get_notice_period_object(
+            product_type=product_type, growing_period=growing_period, cache=cache
+        )
+        if notice_period:
+            return notice_period.unit
+
+        return get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
+        )
+
+    @classmethod
     def get_max_cancellation_date_subscription(
         cls, subscription: Subscription, cache: dict
     ):
-        notice_period_duration = subscription.notice_period_duration
-        if notice_period_duration is None:
-            notice_period_duration = cls.get_notice_period_duration(
-                product_type=subscription.product.type,
-                growing_period=subscription.period,
-                cache=cache,
-            )
-
         return cls.get_max_cancellation_date_general(
             end_date=subscription.end_date,
-            notice_period_duration=notice_period_duration,
+            notice_period_duration=subscription.notice_period_duration,
+            notice_period_unit=subscription.notice_period_unit,
             cache=cache,
         )
 
@@ -85,20 +98,26 @@ class NoticePeriodManager:
         notice_period_duration = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
         )
+        notice_period_unit = get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
+        )
 
         return cls.get_max_cancellation_date_general(
             end_date=contribution.end_date,
             notice_period_duration=notice_period_duration,
+            notice_period_unit=notice_period_unit,
             cache=cache,
         )
 
     @classmethod
     def get_max_cancellation_date_general(
-        cls, end_date: datetime.date, notice_period_duration: int, cache: dict
+        cls,
+        end_date: datetime.date,
+        notice_period_duration: int,
+        notice_period_unit: str,
+        cache: dict,
     ):
-        match get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
-        ):
+        match notice_period_unit:
             case subscription_config.NOTICE_PERIOD_UNIT_MONTHS:
                 return cls.get_max_cancellation_date_unit_months(
                     end_date=end_date,
@@ -113,7 +132,7 @@ class NoticePeriodManager:
                 )
             case _:
                 raise ImproperlyConfigured(
-                    f"Unknown notice period unit: {subscription_config.NOTICE_PERIOD_UNIT_MONTHS}"
+                    f"Unknown notice period unit: {notice_period_unit}"
                 )
 
     @classmethod

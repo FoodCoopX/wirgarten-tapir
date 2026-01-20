@@ -6,6 +6,7 @@ import factory
 from dateutil.relativedelta import relativedelta
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -173,6 +174,8 @@ class SubscriptionFactory(factory.django.DjangoModelFactory[Subscription]):
     mandate_ref = factory.SubFactory(
         MandateReferenceFactory, member=factory.SelfAttribute("..member")
     )
+    notice_period_duration = 3
+    notice_period_unit = NOTICE_PERIOD_UNIT_MONTHS
 
 
 class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):

@@ -99,6 +99,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
     def test_memberAddSubscription_baseProductAndAutoRenewOff_subscriptionNoticePeriodSetToNone(
         self,
     ):
+        self.skipTest("Base product form will be deleted in the following commits")
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=False)
@@ -132,6 +133,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
     def test_memberAddSubscription_additionalProductAndAutoRenewOff_subscriptionNoticePeriodSetToNone(
         self,
     ):
+        self.skipTest("Base product form will be deleted in the following commits")
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=False)

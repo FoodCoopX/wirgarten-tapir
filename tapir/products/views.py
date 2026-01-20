@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -77,6 +78,7 @@ class ExtendedProductTypeApiView(APIView):
             "extended_product_type": self.build_extended_product_type_data(
                 product_type=product_type, growing_period=growing_period
             ),
+            "can_update_notice_period": settings.DEBUG,
         }
 
         return Response(ExtendedProductTypeAndConfigSerializer(data).data)
@@ -133,7 +135,10 @@ class ExtendedProductTypeApiView(APIView):
             NoticePeriodManager.set_notice_period_duration(
                 product_type=product_capacity.product_type,
                 growing_period=product_capacity.period,
-                notice_period_duration=extended_data.get("notice_period", None),
+                notice_period_duration=extended_data.get(
+                    "notice_period_duration", None
+                ),
+                notice_period_unit=extended_data.get("notice_period_unit", None),
             )
 
             TaxRateService.create_or_update_default_tax_rate(
@@ -173,10 +178,11 @@ class ExtendedProductTypeApiView(APIView):
             product_type=product_type,
             growing_period=growing_period,
         ).first()
-        if notice_period is None:
-            data["notice_period"] = None
-        else:
-            data["notice_period"] = notice_period.duration
+        data["notice_period_duration"] = None
+        data["notice_period_unit"] = None
+        if notice_period is not None:
+            data["notice_period_duration"] = notice_period.duration
+            data["notice_period_unit"] = notice_period.unit
 
         data["tax_rate"] = TaxRateService.get_tax_rate(
             product_type=product_type,
@@ -224,6 +230,7 @@ class ProductTypesWithoutCapacityAndConfigApiView(APIView):
             "show_jokers": get_parameter_value(
                 ParameterKeys.JOKERS_ENABLED, cache=cache
             ),
+            "can_update_notice_period": settings.DEBUG,
             "show_association_membership": legal_status_is_association(cache=cache),
             "delivery_cycle_options": DeliveryCycleDict,
             "product_types_without_capacity": types_without_capacity,

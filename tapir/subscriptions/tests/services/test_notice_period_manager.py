@@ -10,7 +10,11 @@ from tapir.subscriptions.models import NoticePeriod
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import ProductTypeFactory, GrowingPeriodFactory
+from tapir.wirgarten.tests.factories import (
+    ProductTypeFactory,
+    GrowingPeriodFactory,
+    SubscriptionFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -28,17 +32,20 @@ class TestNoticePeriodManager(TapirIntegrationTest):
             product_type=product_type,
             growing_period=growing_period,
             duration=2,
+            unit=NOTICE_PERIOD_UNIT_WEEKS,
         )
 
         NoticePeriodManager.set_notice_period_duration(
             product_type=product_type,
             growing_period=growing_period,
             notice_period_duration=3,
+            notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
         )
 
         self.assertEqual(1, NoticePeriod.objects.count())
         notice_period.refresh_from_db()
         self.assertEqual(3, notice_period.duration)
+        self.assertEqual(NOTICE_PERIOD_UNIT_MONTHS, notice_period.unit)
 
     def test_setNoticePeriodDuration_noticePeriodObjectDoesntExists_objectCreated(
         self,
@@ -50,6 +57,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
             product_type=product_type,
             growing_period=growing_period,
             notice_period_duration=3,
+            notice_period_unit=NOTICE_PERIOD_UNIT_WEEKS,
         )
 
         self.assertEqual(1, NoticePeriod.objects.count())
@@ -57,6 +65,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         self.assertEqual(product_type, notice_period.product_type)
         self.assertEqual(growing_period, notice_period.growing_period)
         self.assertEqual(3, notice_period.duration)
+        self.assertEqual(NOTICE_PERIOD_UNIT_WEEKS, notice_period.unit)
 
     def test_getNoticePeriodDuration_noticePeriodObjectDoesntExist_returnsDefaultValue(
         self,
@@ -96,18 +105,13 @@ class TestNoticePeriodManager(TapirIntegrationTest):
     def test_getMaxCancellationDate_durationIsInWeeks_returnsCorrectDate(self):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
-        ).update(value=2)
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT
-        ).update(value=NOTICE_PERIOD_UNIT_WEEKS)
 
         subscription = Mock()
         subscription.product.type = product_type
         subscription.period = growing_period
         subscription.end_date = datetime.date(year=2025, month=5, day=31)
-        subscription.notice_period_duration = None
+        subscription.notice_period_duration = 2
+        subscription.notice_period_unit = NOTICE_PERIOD_UNIT_WEEKS
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
             subscription, cache={}
@@ -116,20 +120,12 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         self.assertEqual(datetime.date(year=2025, month=5, day=17), result)
 
     def test_getMaxCancellationDate_durationIsInMonth_returnsCorrectDate(self):
-        product_type = ProductTypeFactory.create()
-        growing_period = GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
-        ).update(value=2)
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT
-        ).update(value=NOTICE_PERIOD_UNIT_MONTHS)
-
-        subscription = Mock()
-        subscription.product.type = product_type
-        subscription.period = growing_period
-        subscription.end_date = datetime.date(year=2025, month=5, day=31)
-        subscription.notice_period_duration = None
+        subscription = SubscriptionFactory.build(
+            notice_period_duration=2,
+            notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
+            end_date=datetime.date(year=2025, month=5, day=31),
+            mandate_ref__ref="test_ref",
+        )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
             subscription, cache={}
@@ -137,41 +133,15 @@ class TestNoticePeriodManager(TapirIntegrationTest):
 
         self.assertEqual(datetime.date(year=2025, month=3, day=31), result)
 
-    def test_getMaxCancellationDate_subscriptionHasNoticePeriodField_usePeriodFromSubscriptionInsteadOfDefault(
-        self,
-    ):
-        product_type = ProductTypeFactory.create()
-        growing_period = GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
-        ).update(value=2)
-
-        subscription = Mock()
-        subscription.product.type = product_type
-        subscription.period = growing_period
-        subscription.end_date = datetime.date(year=2025, month=5, day=31)
-        subscription.notice_period_duration = 3
-
-        result = NoticePeriodManager.get_max_cancellation_date_subscription(
-            subscription, cache={}
-        )
-
-        self.assertEqual(datetime.date(year=2025, month=2, day=28), result)
-
     def test_getMaxCancellationDate_maxCancellationDateIsPreviousYear_returnsCorrectDate(
         self,
     ):
-        product_type = ProductTypeFactory.create()
-        growing_period = GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
-        ).update(value=1)
-
-        subscription = Mock()
-        subscription.product.type = product_type
-        subscription.period = growing_period
-        subscription.end_date = datetime.date(year=2025, month=1, day=31)
-        subscription.notice_period_duration = None
+        subscription = SubscriptionFactory.build(
+            notice_period_duration=1,
+            notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
+            end_date=datetime.date(year=2025, month=1, day=31),
+            mandate_ref__ref="test_ref",
+        )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
             subscription, cache={}
@@ -182,17 +152,12 @@ class TestNoticePeriodManager(TapirIntegrationTest):
     def test_getMaxCancellationDate_monthOfMaxDateHasLessDaysThanSubscriptionEndMonth_returnsCorrectDate(
         self,
     ):
-        product_type = ProductTypeFactory.create()
-        growing_period = GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
-        ).update(value=2)
-
-        subscription = Mock()
-        subscription.product.type = product_type
-        subscription.period = growing_period
-        subscription.end_date = datetime.date(year=2025, month=4, day=29)
-        subscription.notice_period_duration = None
+        subscription = SubscriptionFactory.build(
+            notice_period_duration=2,
+            notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
+            end_date=datetime.date(year=2025, month=4, day=29),
+            mandate_ref__ref="test_ref",
+        )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
             subscription, cache={}
@@ -203,17 +168,12 @@ class TestNoticePeriodManager(TapirIntegrationTest):
     def test_getMaxCancellationDate_contractEndDateIsOnLastDayOfMonth_maxCancellationDateIsAlsoOnLastDayOfMonth(
         self,
     ):
-        product_type = ProductTypeFactory.create()
-        growing_period = GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
-        ).update(value=1)
-
-        subscription = Mock()
-        subscription.product.type = product_type
-        subscription.period = growing_period
-        subscription.end_date = datetime.date(year=2025, month=11, day=30)
-        subscription.notice_period_duration = None
+        subscription = SubscriptionFactory.build(
+            notice_period_duration=1,
+            notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
+            end_date=datetime.date(year=2025, month=11, day=30),
+            mandate_ref__ref="test_ref",
+        )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
             subscription, cache={}
@@ -224,17 +184,12 @@ class TestNoticePeriodManager(TapirIntegrationTest):
     def test_getMaxCancellationDate_contractEndDateIsNotOnLastDayOfMonth_maxCancellationDateIsOnSameDay(
         self,
     ):
-        product_type = ProductTypeFactory.create()
-        growing_period = GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
-        ).update(value=1)
-
-        subscription = Mock()
-        subscription.product.type = product_type
-        subscription.period = growing_period
-        subscription.end_date = datetime.date(year=2025, month=11, day=17)
-        subscription.notice_period_duration = None
+        subscription = SubscriptionFactory.build(
+            notice_period_duration=1,
+            notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
+            end_date=datetime.date(year=2025, month=11, day=17),
+            mandate_ref__ref="test_ref",
+        )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
             subscription, cache={}

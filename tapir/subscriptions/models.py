@@ -2,6 +2,7 @@ from django.db import models
 
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.wirgarten.models import ProductType, GrowingPeriod, Member, Subscription
 from tapir.wirgarten.utils import format_subscription_list_html
 
@@ -9,9 +10,8 @@ from tapir.wirgarten.utils import format_subscription_list_html
 class NoticePeriod(models.Model):
     product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
     growing_period = models.ForeignKey(GrowingPeriod, on_delete=models.CASCADE)
-    duration = (
-        models.IntegerField()
-    )  # can be weeks or months depending on ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT
+    duration = models.IntegerField()
+    unit = models.CharField(choices=NOTICE_PERIOD_UNIT_OPTIONS, max_length=20)
 
 
 class SubscriptionsRevokedLogEntry(LogEntry):

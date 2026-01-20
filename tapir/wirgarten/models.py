@@ -25,6 +25,7 @@ from tapir.accounts.models import TapirUser, KeycloakUserQuerySetManager
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -672,16 +673,17 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
     created_at = models.DateTimeField(default=partial(timezone.now), null=False)
-    consent_ts = models.DateTimeField(
-        null=True
-    )  # TODO this should probably be null=False
+    consent_ts = models.DateTimeField(null=True)
     withdrawal_consent_ts = models.DateTimeField(null=True)
     trial_disabled = models.BooleanField(default=False)
     trial_end_date_override = models.DateField(null=True)
     price_override = models.DecimalField(
         decimal_places=2, max_digits=8, null=True, blank=True
     )
-    notice_period_duration = models.IntegerField(null=True)
+    notice_period_duration = models.IntegerField()
+    notice_period_unit = models.CharField(
+        choices=NOTICE_PERIOD_UNIT_OPTIONS, max_length=20
+    )
     cancellation_admin_confirmed = models.DateTimeField(null=True)
 
     class Meta:

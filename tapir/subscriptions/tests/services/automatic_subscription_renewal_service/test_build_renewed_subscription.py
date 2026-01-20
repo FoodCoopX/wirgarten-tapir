@@ -2,6 +2,7 @@ from unittest.mock import patch, Mock
 
 from django.test import SimpleTestCase
 
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_WEEKS
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
@@ -17,6 +18,7 @@ from tapir.wirgarten.tests.factories import (
 
 class TestBuildRenewedSubscription(SimpleTestCase):
     @patch.object(AutomaticSubscriptionRenewalService, "get_renewed_trial_data")
+    @patch.object(NoticePeriodManager, "get_notice_period_unit")
     @patch.object(NoticePeriodManager, "get_notice_period_duration")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
@@ -25,6 +27,7 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         self,
         mock_get_next_growing_period: Mock,
         mock_get_notice_period_duration: Mock,
+        mock_get_notice_period_unit: Mock,
         mock_get_renewed_trial_data: Mock,
     ):
         product_type = ProductTypeFactory.build()
@@ -49,6 +52,7 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         mock_get_next_growing_period.return_value = next_growing_period
 
         mock_get_notice_period_duration.return_value = 4
+        mock_get_notice_period_unit.return_value = NOTICE_PERIOD_UNIT_WEEKS
 
         trial_disabled = Mock()
         trial_end_date_override = Mock()
@@ -81,4 +85,5 @@ class TestBuildRenewedSubscription(SimpleTestCase):
             trial_end_date_override, future_subscription.trial_end_date_override
         )
         self.assertEqual(4, future_subscription.notice_period_duration)
+        self.assertEqual("weeks", future_subscription.notice_period_unit)
         self.assertEqual(admin_confirmed, future_subscription.admin_confirmed)

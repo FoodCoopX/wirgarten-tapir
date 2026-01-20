@@ -4,10 +4,12 @@ import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import {
   DeliveryCycleEnum,
   GrowingPeriod,
+  NoticePeriodUnitEnum,
   type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
 import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
+import { getNoticePeriodUnitDisplay } from "./getNoticePeriodUnitDispay.ts";
 
 interface ProductTypeFormProps {
   name: string;
@@ -24,8 +26,8 @@ interface ProductTypeFormProps {
   isAffectedByJokers: boolean;
   setIsAffectedByJokers: (affected: boolean) => void;
   showNoticePeriod: boolean;
-  noticePeriod: number | undefined;
-  setNoticePeriod: (noticePeriod: number) => void;
+  noticePeriodDuration: number | undefined;
+  setNoticePeriodDuration: (noticePeriod: number) => void;
   taxRate: number;
   setTaxRate: (taxRate: number) => void;
   taxRateChangeDate: Date;
@@ -53,6 +55,11 @@ interface ProductTypeFormProps {
   setTitleBestellWizardProductChoices: (title: string) => void;
   backgroundImageInBestellWizard: string;
   setBackgroundImageInBestellWizard: (title: string) => void;
+  setNoticePeriodEnabled: (enabled: boolean) => void;
+  noticePeriodEnabled: boolean;
+  noticePeriodUnit: NoticePeriodUnitEnum;
+  setNoticePeriodUnit: (unit: NoticePeriodUnitEnum) => void;
+  canUpdateNoticePeriod: boolean;
 }
 
 type Tab = "general" | "contracts" | "bestell_wizard";
@@ -72,8 +79,8 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   isAffectedByJokers,
   setIsAffectedByJokers,
   showNoticePeriod,
-  noticePeriod,
-  setNoticePeriod,
+  noticePeriodDuration,
+  setNoticePeriodDuration,
   taxRate,
   setTaxRate,
   taxRateChangeDate,
@@ -101,6 +108,11 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setTitleBestellWizardProductChoices,
   backgroundImageInBestellWizard,
   setBackgroundImageInBestellWizard,
+  noticePeriodEnabled,
+  setNoticePeriodEnabled,
+  noticePeriodUnit,
+  setNoticePeriodUnit,
+  canUpdateNoticePeriod,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
 
@@ -180,7 +192,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                   <Form.Control
                     type={"number"}
                     onChange={(event) =>
-                      setCapacity(parseFloat(event.target.value))
+                      setCapacity(Number.parseFloat(event.target.value))
                     }
                     required={true}
                     value={capacity}
@@ -246,17 +258,64 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
             <Col>
               {showNoticePeriod && (
                 <Row className={"mt-2"}>
-                  <Form.Group controlId={"notice_period"}>
-                    <Form.Label>Kündigungsfrist</Form.Label>
+                  <Form.Group controlId={"notice_period_enabled"}>
+                    <Form.Label></Form.Label>
+                    <Form.Check
+                      label={"Kündigungsfrist überschrieben"}
+                      onChange={(event) =>
+                        setNoticePeriodEnabled(event.target.checked)
+                      }
+                      required={false}
+                      checked={noticePeriodEnabled}
+                      disabled={!canUpdateNoticePeriod}
+                    />
+                    <Form.Text>
+                      Ob dieses Produkt-Typ ein andere Kündigungsfrist nutzen
+                      soll als die aus der allgemeine Konfig. Wenn du diese
+                      Option einsetzen willst, wende dich an der Admins.
+                    </Form.Text>
+                  </Form.Group>
+                </Row>
+              )}
+              {showNoticePeriod && noticePeriodEnabled && (
+                <Row className={"mt-2"}>
+                  <Form.Group controlId={"notice_period_duration"}>
+                    <Form.Label>Kündigungsfrist Dauer</Form.Label>
                     <Form.Control
                       type={"number"}
                       onChange={(event) =>
-                        setNoticePeriod(parseInt(event.target.value))
+                        setNoticePeriodDuration(
+                          Number.parseInt(event.target.value),
+                        )
                       }
                       required={true}
-                      value={noticePeriod}
+                      value={noticePeriodDuration}
+                      disabled={!canUpdateNoticePeriod}
                     />
-                    <Form.Text>Anzahl an Monate</Form.Text>
+                  </Form.Group>
+                </Row>
+              )}
+              {showNoticePeriod && noticePeriodEnabled && (
+                <Row className={"mt-2"}>
+                  <Form.Group controlId={"notice_period_unit"}>
+                    <Form.Label>Kündigungsfrist Einheit</Form.Label>
+
+                    <Form.Select
+                      onChange={(event) =>
+                        setNoticePeriodUnit(
+                          event.target.value as NoticePeriodUnitEnum,
+                        )
+                      }
+                      required={true}
+                      value={noticePeriodUnit}
+                      disabled={!canUpdateNoticePeriod}
+                    >
+                      {Object.values(NoticePeriodUnitEnum).map((value) => (
+                        <option key={value} value={value}>
+                          {getNoticePeriodUnitDisplay(value)}
+                        </option>
+                      ))}
+                    </Form.Select>
                   </Form.Group>
                 </Row>
               )}
@@ -266,7 +325,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                   <Form.Control
                     type={"number"}
                     onChange={(event) =>
-                      setTaxRate(parseFloat(event.target.value))
+                      setTaxRate(Number.parseFloat(event.target.value))
                     }
                     required={true}
                     value={taxRate}
@@ -393,7 +452,9 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                   <Form.Control
                     type={"number"}
                     onChange={(event) =>
-                      setOrderInBestellwizard(parseInt(event.target.value))
+                      setOrderInBestellwizard(
+                        Number.parseInt(event.target.value),
+                      )
                     }
                     required={true}
                     value={orderInBestellwizard}

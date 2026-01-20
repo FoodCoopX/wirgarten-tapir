@@ -57,6 +57,12 @@ export interface ExtendedProductTypeAndConfig {
      * @memberof ExtendedProductTypeAndConfig
      */
     extendedProductType: ExtendedProductType;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ExtendedProductTypeAndConfig
+     */
+    canUpdateNoticePeriod: boolean;
 }
 
 /**
@@ -68,6 +74,7 @@ export function instanceOfExtendedProductTypeAndConfig(value: object): value is 
     if (!('showAssociationMembership' in value) || value['showAssociationMembership'] === undefined) return false;
     if (!('deliveryCycleOptions' in value) || value['deliveryCycleOptions'] === undefined) return false;
     if (!('extendedProductType' in value) || value['extendedProductType'] === undefined) return false;
+    if (!('canUpdateNoticePeriod' in value) || value['canUpdateNoticePeriod'] === undefined) return false;
     return true;
 }
 
@@ -86,6 +93,7 @@ export function ExtendedProductTypeAndConfigFromJSONTyped(json: any, ignoreDiscr
         'showAssociationMembership': json['show_association_membership'],
         'deliveryCycleOptions': json['delivery_cycle_options'],
         'extendedProductType': ExtendedProductTypeFromJSON(json['extended_product_type']),
+        'canUpdateNoticePeriod': json['can_update_notice_period'],
     };
 }
 
@@ -105,6 +113,7 @@ export function ExtendedProductTypeAndConfigFromJSONTyped(json: any, ignoreDiscr
         'show_association_membership': value['showAssociationMembership'],
         'delivery_cycle_options': value['deliveryCycleOptions'],
         'extended_product_type': ExtendedProductTypeToJSON(value['extendedProductType']),
+        'can_update_notice_period': value['canUpdateNoticePeriod'],
     };
 }
 

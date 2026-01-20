@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { NoticePeriodUnitEnum } from './NoticePeriodUnitEnum';
+import {
+    NoticePeriodUnitEnumFromJSON,
+    NoticePeriodUnitEnumFromJSONTyped,
+    NoticePeriodUnitEnumToJSON,
+    NoticePeriodUnitEnumToJSONTyped,
+} from './NoticePeriodUnitEnum';
 import type { Product } from './Product';
 import {
     ProductFromJSON,
@@ -116,7 +123,13 @@ export interface Subscription {
      * @type {number}
      * @memberof Subscription
      */
-    noticePeriodDuration?: number | null;
+    noticePeriodDuration: number;
+    /**
+     * 
+     * @type {NoticePeriodUnitEnum}
+     * @memberof Subscription
+     */
+    noticePeriodUnit: NoticePeriodUnitEnum;
     /**
      * 
      * @type {Date}
@@ -143,6 +156,8 @@ export interface Subscription {
     mandateRef: string;
 }
 
+
+
 /**
  * Check if a given object implements the Subscription interface.
  */
@@ -150,6 +165,8 @@ export function instanceOfSubscription(value: object): value is Subscription {
     if (!('product' in value) || value['product'] === undefined) return false;
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
+    if (!('noticePeriodDuration' in value) || value['noticePeriodDuration'] === undefined) return false;
+    if (!('noticePeriodUnit' in value) || value['noticePeriodUnit'] === undefined) return false;
     if (!('member' in value) || value['member'] === undefined) return false;
     if (!('mandateRef' in value) || value['mandateRef'] === undefined) return false;
     return true;
@@ -179,7 +196,8 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'trialDisabled': json['trial_disabled'] == null ? undefined : json['trial_disabled'],
         'trialEndDateOverride': json['trial_end_date_override'] == null ? undefined : (new Date(json['trial_end_date_override'])),
         'priceOverride': json['price_override'] == null ? undefined : json['price_override'],
-        'noticePeriodDuration': json['notice_period_duration'] == null ? undefined : json['notice_period_duration'],
+        'noticePeriodDuration': json['notice_period_duration'],
+        'noticePeriodUnit': NoticePeriodUnitEnumFromJSON(json['notice_period_unit']),
         'cancellationAdminConfirmed': json['cancellation_admin_confirmed'] == null ? undefined : (new Date(json['cancellation_admin_confirmed'])),
         'member': json['member'],
         'period': json['period'] == null ? undefined : json['period'],
@@ -213,6 +231,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'trial_end_date_override': value['trialEndDateOverride'] == null ? undefined : ((value['trialEndDateOverride'] as any).toISOString().substring(0,10)),
         'price_override': value['priceOverride'],
         'notice_period_duration': value['noticePeriodDuration'],
+        'notice_period_unit': NoticePeriodUnitEnumToJSON(value['noticePeriodUnit']),
         'cancellation_admin_confirmed': value['cancellationAdminConfirmed'] == null ? undefined : ((value['cancellationAdminConfirmed'] as any).toISOString()),
         'member': value['member'],
         'period': value['period'],

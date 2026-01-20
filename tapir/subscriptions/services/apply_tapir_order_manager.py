@@ -71,15 +71,16 @@ class ApplyTapirOrderManager:
             reference_date=contract_start_date, cache=cache
         )
 
-        notice_period_duration = None
-        if get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
-        ):
-            notice_period_duration = NoticePeriodManager.get_notice_period_duration(
-                product_type=product_type,
-                growing_period=growing_period,
-                cache=cache,
-            )
+        notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+            product_type=product_type,
+            growing_period=growing_period,
+            cache=cache,
+        )
+        notice_period_unit = NoticePeriodManager.get_notice_period_unit(
+            product_type=product_type,
+            growing_period=growing_period,
+            cache=cache,
+        )
 
         contract_end_date = None
         if product_type.subscriptions_have_end_dates:
@@ -110,6 +111,7 @@ class ApplyTapirOrderManager:
                     trial_disabled=trial_disabled,
                     trial_end_date_override=earliest_trial_period_end_date,
                     notice_period_duration=notice_period_duration,
+                    notice_period_unit=notice_period_unit,
                     auto_confirmed=None if needs_admin_confirmation else now,
                 )
             )

@@ -4,6 +4,7 @@ import {
   DeliveriesApi,
   DeliveryCycleEnum,
   GrowingPeriod,
+  NoticePeriodUnitEnum,
   ProductsApi,
   ProductType,
   type ProductTypeAccordionInBestellWizard,
@@ -38,6 +39,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [showAssociationMembership, setShowAssociationMembership] =
     useState(false);
   const [showNoticePeriod, setShowNoticePeriod] = useState(false);
+  const [canUpdateNoticePeriod, setCanUpdateNoticePeriod] = useState(false);
   const [name, setName] = useState("");
   const [descriptionBestellwizardShort, setDescriptionBestellwizardShort] =
     useState("");
@@ -53,7 +55,11 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [deliveryCycleOptions, setDeliveryCycleOptions] = useState<{
     [key: string]: string;
   }>({});
-  const [noticePeriod, setNoticePeriod] = useState<number | undefined>(0);
+  const [customNoticePeriodEnabled, setCustomNoticePeriodEnabled] =
+    useState<boolean>(false);
+  const [noticePeriodDuration, setNoticePeriodDuration] = useState<number>(2);
+  const [noticePeriodUnit, setNoticePeriodUnit] =
+    useState<NoticePeriodUnitEnum>(NoticePeriodUnitEnum.Months);
   const [taxRate, setTaxRate] = useState(0);
   const [taxRateChangeDate, setTaxRateChangeDate] = useState(new Date());
   const [singleSubscriptionOnly, setSingleSubscriptionOnly] = useState(false);
@@ -89,6 +95,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
         setShowAssociationMembership(result.showAssociationMembership);
         setShowJokers(result.showJokers);
         setShowNoticePeriod(result.showNoticePeriod);
+        setCanUpdateNoticePeriod(result.canUpdateNoticePeriod);
         setDeliveryCycleOptions(result.deliveryCycleOptions);
         if (result.productTypesWithoutCapacity.length === 0) {
           setMode("create");
@@ -157,7 +164,12 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
         singleSubscriptionOnly: singleSubscriptionOnly,
         taxRateChangeDate: taxRateChangeDate,
         taxRate: taxRate,
-        noticePeriod: noticePeriod,
+        noticePeriodDuration: customNoticePeriodEnabled
+          ? noticePeriodDuration
+          : undefined,
+        noticePeriodUnit: customNoticePeriodEnabled
+          ? noticePeriodUnit
+          : undefined,
         isAffectedByJokers: isAffectedByJokers,
         deliveryCycle: deliveryCycle,
         capacity: capacity,
@@ -268,8 +280,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           isAffectedByJokers={isAffectedByJokers}
           setIsAffectedByJokers={setIsAffectedByJokers}
           showNoticePeriod={showNoticePeriod}
-          noticePeriod={noticePeriod}
-          setNoticePeriod={setNoticePeriod}
+          canUpdateNoticePeriod={canUpdateNoticePeriod}
           taxRate={taxRate}
           setTaxRate={setTaxRate}
           taxRateChangeDate={taxRateChangeDate}
@@ -298,6 +309,12 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           }
           backgroundImageInBestellWizard={backgroundImageInBestellWizard}
           setBackgroundImageInBestellWizard={setBackgroundImageInBestellWizard}
+          noticePeriodEnabled={customNoticePeriodEnabled}
+          setNoticePeriodEnabled={setCustomNoticePeriodEnabled}
+          noticePeriodDuration={noticePeriodDuration}
+          setNoticePeriodDuration={setNoticePeriodDuration}
+          noticePeriodUnit={noticePeriodUnit}
+          setNoticePeriodUnit={setNoticePeriodUnit}
         />
       </Modal.Body>
     );

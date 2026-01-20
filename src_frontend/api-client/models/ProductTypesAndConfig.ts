@@ -57,6 +57,12 @@ export interface ProductTypesAndConfig {
      * @memberof ProductTypesAndConfig
      */
     deliveryCycleOptions: { [key: string]: any; };
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProductTypesAndConfig
+     */
+    canUpdateNoticePeriod: boolean;
 }
 
 /**
@@ -68,6 +74,7 @@ export function instanceOfProductTypesAndConfig(value: object): value is Product
     if (!('showJokers' in value) || value['showJokers'] === undefined) return false;
     if (!('showAssociationMembership' in value) || value['showAssociationMembership'] === undefined) return false;
     if (!('deliveryCycleOptions' in value) || value['deliveryCycleOptions'] === undefined) return false;
+    if (!('canUpdateNoticePeriod' in value) || value['canUpdateNoticePeriod'] === undefined) return false;
     return true;
 }
 
@@ -86,6 +93,7 @@ export function ProductTypesAndConfigFromJSONTyped(json: any, ignoreDiscriminato
         'showJokers': json['show_jokers'],
         'showAssociationMembership': json['show_association_membership'],
         'deliveryCycleOptions': json['delivery_cycle_options'],
+        'canUpdateNoticePeriod': json['can_update_notice_period'],
     };
 }
 
@@ -105,6 +113,7 @@ export function ProductTypesAndConfigFromJSONTyped(json: any, ignoreDiscriminato
         'show_jokers': value['showJokers'],
         'show_association_membership': value['showAssociationMembership'],
         'delivery_cycle_options': value['deliveryCycleOptions'],
+        'can_update_notice_period': value['canUpdateNoticePeriod'],
     };
 }
 

@@ -6634,8 +6634,10 @@ components:
           format: double
         delivery_cycle:
           $ref: '#/components/schemas/DeliveryCycleEnum'
-        notice_period:
+        notice_period_duration:
           type: integer
+        notice_period_unit:
+          $ref: '#/components/schemas/NoticePeriodUnitEnum'
         tax_rate:
           type: number
           format: double
@@ -6689,7 +6691,10 @@ components:
           additionalProperties: {}
         extended_product_type:
           $ref: '#/components/schemas/ExtendedProductType'
+        can_update_notice_period:
+          type: boolean
       required:
+      - can_update_notice_period
       - delivery_cycle_options
       - extended_product_type
       - show_association_membership
@@ -6717,8 +6722,10 @@ components:
           format: double
         delivery_cycle:
           $ref: '#/components/schemas/DeliveryCycleEnum'
-        notice_period:
+        notice_period_duration:
           type: integer
+        notice_period_unit:
+          $ref: '#/components/schemas/NoticePeriodUnitEnum'
         tax_rate:
           type: number
           format: double
@@ -7322,6 +7329,14 @@ components:
       - draft_version_exists
       - key
       - name
+    NoticePeriodUnitEnum:
+      enum:
+      - months
+      - weeks
+      type: string
+      description: |-
+        * `months` - Monate
+        * `weeks` - Wochen
     OptionalWaitingListEntryDetails:
       type: object
       properties:
@@ -8524,7 +8539,10 @@ components:
         delivery_cycle_options:
           type: object
           additionalProperties: {}
+        can_update_notice_period:
+          type: boolean
       required:
+      - can_update_notice_period
       - delivery_cycle_options
       - product_types_without_capacity
       - show_association_membership
@@ -9176,7 +9194,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
-          nullable: true
+        notice_period_unit:
+          $ref: '#/components/schemas/NoticePeriodUnitEnum'
         cancellation_admin_confirmed:
           type: string
           format: date-time
@@ -9191,6 +9210,8 @@ components:
       required:
       - mandate_ref
       - member
+      - notice_period_duration
+      - notice_period_unit
       - product
       - quantity
       - start_date

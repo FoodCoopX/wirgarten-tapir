@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { NoticePeriodUnitEnum } from './NoticePeriodUnitEnum';
+import {
+    NoticePeriodUnitEnumFromJSON,
+    NoticePeriodUnitEnumFromJSONTyped,
+    NoticePeriodUnitEnumToJSON,
+    NoticePeriodUnitEnumToJSONTyped,
+} from './NoticePeriodUnitEnum';
 import type { ProductTypeAccordionInBestellWizardRequest } from './ProductTypeAccordionInBestellWizardRequest';
 import {
     ProductTypeAccordionInBestellWizardRequestFromJSON,
@@ -87,7 +94,13 @@ export interface ExtendedProductTypeRequest {
      * @type {number}
      * @memberof ExtendedProductTypeRequest
      */
-    noticePeriod?: number;
+    noticePeriodDuration?: number;
+    /**
+     * 
+     * @type {NoticePeriodUnitEnum}
+     * @memberof ExtendedProductTypeRequest
+     */
+    noticePeriodUnit?: NoticePeriodUnitEnum;
     /**
      * 
      * @type {number}
@@ -191,7 +204,8 @@ export function ExtendedProductTypeRequestFromJSONTyped(json: any, ignoreDiscrim
         'contractLink': json['contract_link'] == null ? undefined : json['contract_link'],
         'capacity': json['capacity'],
         'deliveryCycle': DeliveryCycleEnumFromJSON(json['delivery_cycle']),
-        'noticePeriod': json['notice_period'] == null ? undefined : json['notice_period'],
+        'noticePeriodDuration': json['notice_period_duration'] == null ? undefined : json['notice_period_duration'],
+        'noticePeriodUnit': json['notice_period_unit'] == null ? undefined : NoticePeriodUnitEnumFromJSON(json['notice_period_unit']),
         'taxRate': json['tax_rate'],
         'taxRateChangeDate': (new Date(json['tax_rate_change_date'])),
         'singleSubscriptionOnly': json['single_subscription_only'],
@@ -224,7 +238,8 @@ export function ExtendedProductTypeRequestFromJSONTyped(json: any, ignoreDiscrim
         'contract_link': value['contractLink'],
         'capacity': value['capacity'],
         'delivery_cycle': DeliveryCycleEnumToJSON(value['deliveryCycle']),
-        'notice_period': value['noticePeriod'],
+        'notice_period_duration': value['noticePeriodDuration'],
+        'notice_period_unit': NoticePeriodUnitEnumToJSON(value['noticePeriodUnit']),
         'tax_rate': value['taxRate'],
         'tax_rate_change_date': ((value['taxRateChangeDate']).toISOString().substring(0,10)),
         'single_subscription_only': value['singleSubscriptionOnly'],

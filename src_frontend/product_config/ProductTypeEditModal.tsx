@@ -4,6 +4,7 @@ import {
   DeliveriesApi,
   DeliveryCycleEnum,
   GrowingPeriod,
+  NoticePeriodUnitEnum,
   ProductsApi,
   type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
@@ -38,6 +39,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   const [showAssociationMembership, setShowAssociationMembership] =
     useState(false);
   const [showNoticePeriod, setShowNoticePeriod] = useState(false);
+  const [canUpdateNoticePeriod, setCanUpdateNoticePeriod] = useState(false);
   const [name, setName] = useState("");
   const [descriptionBestellwizardShort, setDescriptionBestellwizardShort] =
     useState("");
@@ -53,7 +55,11 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   const [deliveryCycleOptions, setDeliveryCycleOptions] = useState<{
     [key: string]: string;
   }>({});
-  const [noticePeriod, setNoticePeriod] = useState<number | undefined>(0);
+  const [customNoticePeriodEnabled, setCustomNoticePeriodEnabled] =
+    useState<boolean>(false);
+  const [noticePeriodDuration, setNoticePeriodDuration] = useState<number>(2);
+  const [noticePeriodUnit, setNoticePeriodUnit] =
+    useState<NoticePeriodUnitEnum>(NoticePeriodUnitEnum.Months);
   const [taxRate, setTaxRate] = useState(0);
   const [taxRateChangeDate, setTaxRateChangeDate] = useState(new Date());
   const [singleSubscriptionOnly, setSingleSubscriptionOnly] = useState(false);
@@ -89,6 +95,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
         setShowJokers(result.showJokers);
         setShowAssociationMembership(result.showAssociationMembership);
         setShowNoticePeriod(result.showNoticePeriod);
+        setCanUpdateNoticePeriod(result.canUpdateNoticePeriod);
         setDeliveryCycleOptions(result.deliveryCycleOptions);
         setName(result.extendedProductType.name);
         setDescriptionBestellwizardLong(
@@ -104,7 +111,16 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
         setContractLink(result.extendedProductType.contractLink ?? "");
         setCapacity(result.extendedProductType.capacity);
         setDeliveryCycle(result.extendedProductType.deliveryCycle);
-        setNoticePeriod(result.extendedProductType.noticePeriod);
+        setCustomNoticePeriodEnabled(
+          result.extendedProductType.noticePeriodDuration !== undefined,
+        );
+        setNoticePeriodDuration(
+          result.extendedProductType.noticePeriodDuration ?? 2,
+        );
+        setNoticePeriodUnit(
+          result.extendedProductType.noticePeriodUnit ??
+            NoticePeriodUnitEnum.Months,
+        );
         setTaxRate(result.extendedProductType.taxRate);
         setTaxRateChangeDate(result.extendedProductType.taxRateChangeDate);
         setSingleSubscriptionOnly(
@@ -159,7 +175,12 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
             capacity: capacity,
             deliveryCycle: deliveryCycle,
             isAffectedByJokers: isAffectedByJokers,
-            noticePeriod: noticePeriod,
+            noticePeriodDuration: customNoticePeriodEnabled
+              ? noticePeriodDuration
+              : undefined,
+            noticePeriodUnit: customNoticePeriodEnabled
+              ? noticePeriodUnit
+              : undefined,
             taxRate: taxRate,
             taxRateChangeDate: taxRateChangeDate,
             singleSubscriptionOnly: singleSubscriptionOnly,
@@ -214,8 +235,13 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
           isAffectedByJokers={isAffectedByJokers}
           setIsAffectedByJokers={setIsAffectedByJokers}
           showNoticePeriod={showNoticePeriod}
-          noticePeriod={noticePeriod}
-          setNoticePeriod={setNoticePeriod}
+          canUpdateNoticePeriod={canUpdateNoticePeriod}
+          noticePeriodDuration={noticePeriodDuration}
+          setNoticePeriodDuration={setNoticePeriodDuration}
+          noticePeriodEnabled={customNoticePeriodEnabled}
+          setNoticePeriodEnabled={setCustomNoticePeriodEnabled}
+          noticePeriodUnit={noticePeriodUnit}
+          setNoticePeriodUnit={setNoticePeriodUnit}
           taxRate={taxRate}
           setTaxRate={setTaxRate}
           taxRateChangeDate={taxRateChangeDate}

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import ProductTypeSerializer
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.wirgarten.constants import DeliveryCycle
 
 
@@ -23,7 +24,10 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
     contract_link = serializers.URLField(required=False, allow_blank=True)
     capacity = serializers.FloatField()
     delivery_cycle = serializers.ChoiceField(choices=DeliveryCycle)
-    notice_period = serializers.IntegerField(required=False)
+    notice_period_duration = serializers.IntegerField(required=False)
+    notice_period_unit = serializers.ChoiceField(
+        choices=NOTICE_PERIOD_UNIT_OPTIONS, required=False
+    )
     tax_rate = serializers.FloatField()
     tax_rate_change_date = serializers.DateField()
     single_subscription_only = serializers.BooleanField()
@@ -44,6 +48,7 @@ class ExtendedProductTypeAndConfigSerializer(serializers.Serializer):
     show_association_membership = serializers.BooleanField()
     delivery_cycle_options = serializers.DictField()
     extended_product_type = ExtendedProductTypeSerializer()
+    can_update_notice_period = serializers.BooleanField()
 
 
 class SaveExtendedProductTypeSerializer(serializers.Serializer):
@@ -58,3 +63,4 @@ class ProductTypesAndConfigSerializer(serializers.Serializer):
     show_jokers = serializers.BooleanField()
     show_association_membership = serializers.BooleanField()
     delivery_cycle_options = serializers.DictField()
+    can_update_notice_period = serializers.BooleanField()

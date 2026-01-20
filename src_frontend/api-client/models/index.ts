@@ -80,6 +80,7 @@ export * from './MemberSubscriptionData';
 export * from './MinimumNumberOfSharesResponse';
 export * from './MissingTrigger';
 export * from './Mpl';
+export * from './NoticePeriodUnitEnum';
 export * from './OptionalWaitingListEntryDetails';
 export * from './OrderConfirmationResponse';
 export * from './PaginatedEmailConfigurationDispatchList';

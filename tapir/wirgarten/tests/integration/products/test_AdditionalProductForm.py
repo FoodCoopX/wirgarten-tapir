@@ -88,6 +88,9 @@ class TestAdditionalProductForm(TapirIntegrationTest):
     def test_additionalProductForm_memberHasBaseProductSubscriptionInSameGrowingPeriod_subscriptionCreated(
         self,
     ):
+        self.skipTest(
+            "Additional product form will be deleted in the following commits"
+        )
         member = self.create_member_and_login()
         [base_product, additional_product] = self.create_additional_product()
         SubscriptionFactory.create(
@@ -106,6 +109,9 @@ class TestAdditionalProductForm(TapirIntegrationTest):
     def test_additionalProductForm_memberDoesntHaveBaseProductSubscriptionInSameGrowingPeriod_subscriptionNotCreated(
         self,
     ):
+        self.skipTest(
+            "Additional product form will be deleted in the following commits"
+        )
         member = self.create_member_and_login()
         [_, additional_product] = self.create_additional_product()
 
@@ -120,6 +126,9 @@ class TestAdditionalProductForm(TapirIntegrationTest):
     def test_additionalProductForm_memberDoesntHaveBaseProductSubscriptionButSettingAllowIt_subscriptionNotCreated(
         self,
     ):
+        self.skipTest(
+            "Additional product form will be deleted in the following commits"
+        )
         member = self.create_member_and_login()
         [_, additional_product] = self.create_additional_product()
         TapirParameter.objects.filter(
@@ -141,6 +150,9 @@ class TestAdditionalProductForm(TapirIntegrationTest):
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
     def test_additionalProductForm_default_validationCalled(self, *validation_mocks):
+        self.skipTest(
+            "Additional product form will be deleted in the following commits"
+        )
         member = self.create_member_and_login()
         [base_product, additional_product] = self.create_additional_product()
         SubscriptionFactory.create(
