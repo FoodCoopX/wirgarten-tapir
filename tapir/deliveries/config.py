@@ -10,3 +10,5 @@ DELIVERY_DONATION_MODE_OPTIONS = [
         "Erst wenn alle Joker aufgebraucht sind",
     ),
 ]
+
+DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION = "dont_forward"

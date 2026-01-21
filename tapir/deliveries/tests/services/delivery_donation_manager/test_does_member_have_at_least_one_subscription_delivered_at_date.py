@@ -61,7 +61,10 @@ class TestDoesMemberHaveAtLeastOneSubscriptionDeliveredAtDate(SimpleTestCase):
 
         self.assertFalse(result)
         mock_is_subscription_delivered_in_week.assert_called_once_with(
-            subscription=subscription_3, delivery_date=delivery_date, cache=cache
+            subscription=subscription_3,
+            delivery_date=delivery_date,
+            cache=cache,
+            skip_donation_check=False,
         )
         mock_get_subscriptions_active_at_date.assert_called_once_with(
             reference_date=delivery_date, cache=cache
@@ -107,7 +110,10 @@ class TestDoesMemberHaveAtLeastOneSubscriptionDeliveredAtDate(SimpleTestCase):
         mock_is_subscription_delivered_in_week.assert_has_calls(
             [
                 call(
-                    subscription=subscription, delivery_date=delivery_date, cache=cache
+                    subscription=subscription,
+                    delivery_date=delivery_date,
+                    cache=cache,
+                    skip_donation_check=False,
                 )
                 for subscription in [subscription_3, subscription_4]
             ]

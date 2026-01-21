@@ -11,7 +11,11 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 class SubscriptionDeliveredInWeekChecker:
     @classmethod
     def is_subscription_delivered_in_week(
-        cls, subscription: Subscription, delivery_date: datetime.date, cache: dict
+        cls,
+        subscription: Subscription,
+        delivery_date: datetime.date,
+        cache: dict,
+        skip_donation_check: bool,
     ):
         if not DeliveryDateCalculator.is_week_delivered(
             delivery_cycle=subscription.product.type.delivery_cycle,
@@ -27,6 +31,9 @@ class SubscriptionDeliveredInWeekChecker:
             member=subscription.member, reference_date=delivery_date, cache=cache
         ):
             return False
+
+        if skip_donation_check:
+            return True
 
         from tapir.deliveries.services.delivery_donation_manager import (
             DeliveryDonationManager,

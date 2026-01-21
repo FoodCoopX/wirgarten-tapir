@@ -28,7 +28,10 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
         cache = Mock()
 
         result = SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
-            subscription=subscription, delivery_date=delivery_date, cache=cache
+            subscription=subscription,
+            delivery_date=delivery_date,
+            cache=cache,
+            skip_donation_check=False,
         )
 
         self.assertFalse(result)
@@ -55,7 +58,10 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
         mock_parameter_value(cache=cache, key=ParameterKeys.JOKERS_ENABLED, value=True)
 
         result = SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
-            subscription=subscription, delivery_date=delivery_date, cache=cache
+            subscription=subscription,
+            delivery_date=delivery_date,
+            cache=cache,
+            skip_donation_check=False,
         )
 
         self.assertFalse(result)
@@ -97,7 +103,10 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
         )
 
         result = SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
-            subscription=subscription, delivery_date=delivery_date, cache=cache
+            subscription=subscription,
+            delivery_date=delivery_date,
+            cache=cache,
+            skip_donation_check=False,
         )
 
         self.assertFalse(result)
@@ -139,7 +148,54 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
         )
 
         result = SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
-            subscription=subscription, delivery_date=delivery_date, cache=cache
+            subscription=subscription,
+            delivery_date=delivery_date,
+            cache=cache,
+            skip_donation_check=False,
+        )
+
+        self.assertTrue(result)
+
+        mock_is_week_delivered.assert_called_once_with(
+            delivery_cycle=subscription.product.type.delivery_cycle,
+            delivery_date=delivery_date,
+            check_for_weeks_without_delivery=True,
+            cache=cache,
+        )
+        mock_does_member_have_a_joker_in_week.assert_not_called()
+        mock_does_member_have_a_donation_in_week.assert_not_called()
+
+    @patch.object(
+        DeliveryDonationManager, "does_member_have_a_donation_in_week", autospec=True
+    )
+    @patch.object(
+        JokerManagementService, "does_member_have_a_joker_in_week", autospec=True
+    )
+    @patch.object(DeliveryDateCalculator, "is_week_delivered", autospec=True)
+    def test_isSubscriptionDeliveredInWeek_memberHasDonationOnWeekButDonationCheckIsSkipped_returnsTrue(
+        self,
+        mock_is_week_delivered: Mock,
+        mock_does_member_have_a_joker_in_week: Mock,
+        mock_does_member_have_a_donation_in_week: Mock,
+    ):
+        mock_is_week_delivered.return_value = True
+        mock_does_member_have_a_donation_in_week.return_value = True
+
+        subscription = Mock()
+        delivery_date = Mock()
+        cache = {}
+        mock_parameter_value(cache=cache, key=ParameterKeys.JOKERS_ENABLED, value=False)
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.DELIVERY_DONATION_MODE,
+            value=DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE,
+        )
+
+        result = SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
+            subscription=subscription,
+            delivery_date=delivery_date,
+            cache=cache,
+            skip_donation_check=True,
         )
 
         self.assertTrue(result)

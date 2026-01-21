@@ -62,7 +62,10 @@ class DeliveryDonationManager:
                 continue
 
             if SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
-                subscription=subscription, delivery_date=delivery_date, cache=cache
+                subscription=subscription,
+                delivery_date=delivery_date,
+                cache=cache,
+                skip_donation_check=False,
             ):
                 return True
 

@@ -26,7 +26,7 @@ def create_field(param: TapirParameter, cache: Dict):
 
     help_text = description
     if param_meta.vars_hint:
-        vars_sorted = map(lambda x: "{" + x + "}", sorted(param_meta.vars_hint))
+        vars_sorted = ["{" + x + "}" for x in sorted(param_meta.vars_hint)]
         if param.description != "":
             help_text += "<br />"
         help_text += (
@@ -37,7 +37,7 @@ def create_field(param: TapirParameter, cache: Dict):
 
     options = param_meta.options
     if param_meta.options_callable is not None:
-        options = param_meta.options_callable()
+        options = param_meta.options_callable(cache=cache)
 
     if options is not None and len(options) > 0:
         return forms.ChoiceField(
@@ -115,7 +115,7 @@ class ParameterForm(forms.Form):
 
         self.cache = {}
 
-        categories = list(set(map(lambda p: p.category, params)))
+        categories = list({param.category for param in params})
         categories.sort(
             key=lambda category: tokenize_parameter(category, cache=self.cache)
         )

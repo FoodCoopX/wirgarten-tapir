@@ -1,25 +1,34 @@
+import datetime
 import itertools
 from collections import defaultdict
 
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from icecream import ic
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.config import DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
+from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.subscriptions.services.subscription_delivered_in_week_checked import (
     SubscriptionDeliveredInWeekChecker,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     ExportedFile,
     Member,
     Product,
     ScheduledTask,
+    PickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
@@ -52,12 +61,39 @@ def execute_scheduled_tasks():
         scheduled_task.execute()
 
 
+def get_member_pickup_location_for_pick_list(
+    member: Member, reference_date: datetime.date, cache: dict
+) -> PickupLocation | None:
+    if DeliveryDonationManager.does_member_have_a_donation_in_week(
+        member=member, reference_date=reference_date, cache=cache
+    ):
+        pickup_location_id = get_parameter_value(
+            key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION, cache=cache
+        )
+        if pickup_location_id == DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION:
+            return None
+    else:
+        pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                member_id=member.id, reference_date=reference_date, cache=cache
+            )
+        )
+    if pickup_location_id is None:
+        return None
+
+    pickup_location = TapirCache.get_pickup_location_by_id(
+        cache=cache, pickup_location_id=pickup_location_id
+    )
+    return pickup_location
+
+
 def _export_pick_list(product_type, include_equivalents=True, cache: dict = None):
     """
     Exports picklist or supplier list as CSV for a product type.
     include_equivalents: If true, the M-Äquivalent column is included -> Kommissionierliste, else Lieferantenliste
     """
     next_delivery_date = get_next_delivery_date(cache=cache)
+    ic(next_delivery_date)
     if not DeliveryCycleService.is_cycle_delivered_in_week(
         cycle=product_type.delivery_cycle, date=next_delivery_date, cache=cache
     ):
@@ -75,9 +111,12 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
     grouped_subscriptions = defaultdict(list)
 
     for subscription in subscriptions:
-        grouped_subscriptions[
-            subscription.member.get_pickup_location(next_delivery_date).name
-        ].append(subscription)
+        pickup_location = get_member_pickup_location_for_pick_list(
+            member=subscription.member, reference_date=next_delivery_date, cache=cache
+        )
+        if pickup_location is None:
+            continue
+        grouped_subscriptions[pickup_location.name].append(subscription)
 
     variants = list(Product.objects.filter(type_id=product_type.id))
     variants.sort(key=lambda x: get_product_price(x, cache=cache).price)
@@ -102,7 +141,10 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
             subscription
             for subscription in subscriptions
             if SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
-                subscription=subscription, delivery_date=next_delivery_date, cache=cache
+                subscription=subscription,
+                delivery_date=next_delivery_date,
+                cache=cache,
+                skip_donation_check=True,
             )
         ]
         subscriptions.sort(key=lambda x: x.product.name)
@@ -113,7 +155,9 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
             )
         }
 
-        sum_without_soli = sum(map(lambda x: x.total_price_without_soli, subscriptions))
+        sum_without_soli = sum(
+            [subscription.total_price_without_soli for subscription in subscriptions]
+        )
 
         data = {
             KEY_PICKUP_LOCATION: pickup_location,
@@ -143,7 +187,7 @@ def should_export_list_today(cache: dict):
         ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
     )
     today = get_today(cache=cache)
-
+    ic(today.weekday(), weekday_limit, (weekday_limit + 1) % 7)
     # if the limit is wednesdays, export on thursday morning
     return today.weekday() == (weekday_limit + 1) % 7
 
@@ -155,6 +199,7 @@ def export_pick_list_csv():
     """
     cache = {}
     if not should_export_list_today(cache=cache):
+        ic("NO LIST TODAY")
         return
 
     all_product_types = {pt.name: pt for pt in get_active_product_types(cache=cache)}

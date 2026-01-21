@@ -29,6 +29,7 @@ from tapir.core.config import (
 from tapir.deliveries.config import (
     DELIVERY_DONATION_MODE_DISABLED,
     DELIVERY_DONATION_MODE_OPTIONS,
+    DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION,
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
@@ -87,7 +88,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             TapirParameter.objects.bulk_create(self.parameters_to_create)
 
     def define_all_parameters(self):
-        from tapir.wirgarten.models import ProductType
+        from tapir.wirgarten.models import ProductType, PickupLocation
         from tapir.wirgarten.validators import (
             validate_html,
             validate_iso_datetime,
@@ -358,10 +359,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Zahlungsintervall das vorausgewählt ist im BestellWizard.",
             category=ParameterCategory.PAYMENT,
             meta=ParameterMeta(
-                options_callable=lambda: [
+                options_callable=lambda cache: [
                     (rhythm, MemberPaymentRhythmService.get_rhythm_display_name(rhythm))
                     for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
-                        cache={}
+                        cache=cache
                     )
                 ]
             ),
@@ -576,7 +577,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Der Basis Produkttyp. Wird als erste im BestellWizard angezeigt.",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(
-                options_callable=lambda: [
+                options_callable=lambda cache: [
                     (product_type.id, product_type.name)
                     for product_type in ProductType.objects.all()
                 ],
@@ -615,6 +616,29 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=2,
             meta=ParameterMeta(
                 options=DELIVERY_DONATION_MODE_OPTIONS,
+            ),
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION,
+            label="Lieferung-Spende werden an diese Abholort versetzt",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION,
+            description="Wenn eine Station ausgewählte ist werden die gespendete Lieferungen in der Kommissionierliste zu die ausgewählte Station versetzt."
+            "<br />Wenn keine Station ausgewählt ist tauchen gespendete Lieferungen in der Kommissionierliste gar nicht auf.",
+            category=ParameterCategory.JOKERS,
+            order_priority=1,
+            meta=ParameterMeta(
+                options_callable=lambda cache: [
+                    (
+                        DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION,
+                        "Keine Versetzung",
+                    )
+                ]
+                + [
+                    (pickup_location.id, pickup_location.name)
+                    for pickup_location in PickupLocation.objects.order_by("name")
+                ],
             ),
         )
 
