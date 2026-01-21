@@ -33,7 +33,6 @@ ENABLE_SILK_PROFILING = False
 INSTALLED_APPS = [
     # Must come before contrib.auth to let the custom templates be discovered for auth views
     "tapir.accounts",
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
