@@ -430,7 +430,7 @@ const ManageJokersAndDonationsModal: React.FC<
               {buildRelevantNames()} können bis {getWeekdayLimitDisplay()} 23:59
               Uhr vor Liefertag eingesetzt oder abgesagt werden.{" "}
             </p>
-            {buildJokerRestrictions()}
+            {areJokersEnabled && buildJokerRestrictions()}
           </ListGroup.Item>
           <ListGroup.Item>
             <Row>
