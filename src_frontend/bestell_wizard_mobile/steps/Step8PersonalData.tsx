@@ -161,6 +161,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
     <div className={"d-flex flex-column gap-2 align-items-center"}>
       {settings.strings.step8Text && (
         <div
+          className={"text-center"}
           dangerouslySetInnerHTML={{
             __html: settings.strings.step8Text.replace(
               "{vorname}",
