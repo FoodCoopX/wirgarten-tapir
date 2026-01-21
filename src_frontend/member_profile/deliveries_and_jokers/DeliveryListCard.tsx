@@ -105,6 +105,8 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
       content = <>Keine Lieferung</>;
     } else if (delivery.jokerUsed) {
       content = <>Joker eingesetzt</>;
+    } else if (delivery.donationUsed) {
+      content = <>Lieferung gespendet</>;
     } else {
       content = (
         <>
