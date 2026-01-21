@@ -45,6 +45,12 @@ export interface MemberSolidarityContributionsResponse {
      * @memberof MemberSolidarityContributionsResponse
      */
     userCanSetLowerValue: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof MemberSolidarityContributionsResponse
+     */
+    userCanUpdateContribution: boolean;
 }
 
 /**
@@ -54,6 +60,7 @@ export function instanceOfMemberSolidarityContributionsResponse(value: object): 
     if (!('contributions' in value) || value['contributions'] === undefined) return false;
     if (!('changeValidFrom' in value) || value['changeValidFrom'] === undefined) return false;
     if (!('userCanSetLowerValue' in value) || value['userCanSetLowerValue'] === undefined) return false;
+    if (!('userCanUpdateContribution' in value) || value['userCanUpdateContribution'] === undefined) return false;
     return true;
 }
 
@@ -70,6 +77,7 @@ export function MemberSolidarityContributionsResponseFromJSONTyped(json: any, ig
         'contributions': ((json['contributions'] as Array<any>).map(SolidarityContributionFromJSON)),
         'changeValidFrom': (new Date(json['change_valid_from'])),
         'userCanSetLowerValue': json['user_can_set_lower_value'],
+        'userCanUpdateContribution': json['user_can_update_contribution'],
     };
 }
 
@@ -87,6 +95,7 @@ export function MemberSolidarityContributionsResponseFromJSONTyped(json: any, ig
         'contributions': ((value['contributions'] as Array<any>).map(SolidarityContributionToJSON)),
         'change_valid_from': ((value['changeValidFrom']).toISOString().substring(0,10)),
         'user_can_set_lower_value': value['userCanSetLowerValue'],
+        'user_can_update_contribution': value['userCanUpdateContribution'],
     };
 }
 

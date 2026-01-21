@@ -7287,10 +7287,13 @@ components:
           format: date
         user_can_set_lower_value:
           type: boolean
+        user_can_update_contribution:
+          type: boolean
       required:
       - change_valid_from
       - contributions
       - user_can_set_lower_value
+      - user_can_update_contribution
     MemberSubscriptionData:
       type: object
       properties:

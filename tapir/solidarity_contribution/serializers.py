@@ -13,3 +13,4 @@ class MemberSolidarityContributionsResponseSerializer(serializers.Serializer):
     contributions = SolidarityContributionSerializer(many=True)
     change_valid_from = serializers.DateField()
     user_can_set_lower_value = serializers.BooleanField()
+    user_can_update_contribution = serializers.BooleanField()

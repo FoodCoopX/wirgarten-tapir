@@ -51,6 +51,13 @@ class MemberSolidarityContributionsApiView(APIView):
                 cache=cache
             ),
             "user_can_set_lower_value": request.user.has_perm(Permission.Coop.MANAGE),
+            "user_can_update_contribution": request.user.has_perm(
+                Permission.Coop.MANAGE
+            )
+            or get_parameter_value(
+                ParameterKeys.HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE,
+                cache=cache,
+            ),
         }
 
         return Response(MemberSolidarityContributionsResponseSerializer(data).data)

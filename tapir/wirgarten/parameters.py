@@ -916,7 +916,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=False,
             description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "
             "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
-            category=ParameterCategory.HARVEST,
+            category=ParameterCategory.SOLIDARITY,
             order_priority=order_priority,
         )
         order_priority -= 1

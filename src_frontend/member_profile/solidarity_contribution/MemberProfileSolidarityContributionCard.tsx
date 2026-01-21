@@ -31,6 +31,8 @@ const MemberProfileSolidarityContributionCard: React.FC<
   const [showValidation, setShowValidation] = useState(false);
   const [changeValidFrom, setChangeValidFrom] = useState(new Date());
   const [userCanSetLowerValue, setUserCanSetLowerValue] = useState(false);
+  const [userCanUpdateContribution, setUserCanUpdateContribution] =
+    useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -43,6 +45,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
         setSolidarityContributions(response.contributions);
         setChangeValidFrom(response.changeValidFrom);
         setUserCanSetLowerValue(response.userCanSetLowerValue);
+        setUserCanUpdateContribution(response.userCanUpdateContribution);
       })
       .catch(async (error) => {
         await handleRequestError(
@@ -187,12 +190,14 @@ const MemberProfileSolidarityContributionCard: React.FC<
               className={"d-flex justify-content-between align-items-center"}
             >
               <h5 className={"mb-0"}>Solidarbeitrag</h5>
-              <TapirButton
-                variant={"outline-primary"}
-                icon={"edit"}
-                text={"Beitrag anpassen"}
-                onClick={() => setModalOpen(true)}
-              />
+              {userCanUpdateContribution && (
+                <TapirButton
+                  variant={"outline-primary"}
+                  icon={"edit"}
+                  text={"Beitrag anpassen"}
+                  onClick={() => setModalOpen(true)}
+                />
+              )}
             </span>
           </Card.Header>
           <Card.Body>
