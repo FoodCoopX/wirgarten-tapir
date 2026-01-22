@@ -95,7 +95,10 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       )}
 
       <div>
-        <div id={"product_types_choice"} className={"d-flex gap-2"}>
+        <div
+          id={"product_types_choice"}
+          className={"d-flex gap-2 justify-content-center"}
+        >
           {settings.productTypes.map((productType) => (
             <div key={productType.id}>
               <input
