@@ -13,14 +13,10 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.constants import (
-    NO_DELIVERY,
-)
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
     PickupLocationCapability,
-    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
@@ -72,31 +68,6 @@ def get_next_delivery_date(
             days=delivery_weekday - reference_date.weekday()
         )
     return next_delivery
-
-
-def get_next_delivery_date_for_product_type(
-    product_type: ProductType, reference_date: date = None, cache: Dict = None
-):
-    """
-    Calculates the next delivery date for a given product type based on the reference date.
-    """
-
-    if reference_date is None:
-        reference_date = get_today(cache=cache)
-
-    if product_type.delivery_cycle == NO_DELIVERY[0]:
-        return reference_date
-
-    next_delivery_date = get_next_delivery_date(reference_date, cache=cache)
-
-    if DeliveryCycleService.is_cycle_delivered_in_week(
-        cycle=product_type.delivery_cycle, date=next_delivery_date, cache=cache
-    ):
-        return next_delivery_date
-    else:
-        return get_next_delivery_date_for_product_type(
-            product_type, next_delivery_date + relativedelta(days=1), cache=cache
-        )
 
 
 @deprecated(
@@ -159,14 +130,14 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = 
             )
 
             opening_times = enumerate(
-                map(
-                    lambda x: {
-                        "day_of_week": OPTIONS_WEEKDAYS[x.day_of_week][1],
-                        "open_time": x.open_time,
-                        "close_time": x.close_time,
-                    },
-                    opening_times,
-                )
+                [
+                    {
+                        "day_of_week": OPTIONS_WEEKDAYS[opening_time.day_of_week][1],
+                        "open_time": opening_time.open_time,
+                        "close_time": opening_time.close_time,
+                    }
+                    for opening_time in opening_times
+                ]
             )
 
             deliveries.append(
