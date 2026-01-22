@@ -141,13 +141,11 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
           wrap={false}
           defaultActiveIndex={productType.products.length > 1 ? 1 : 0}
         >
-          {productType.products
-            .toSorted((a, b) => a.price - b.price)
-            .map((product, index) => (
-              <Carousel.Item key={product.id}>
-                {buildProduct(product, index, true)}
-              </Carousel.Item>
-            ))}
+          {productType.products.map((product, index) => (
+            <Carousel.Item key={product.id}>
+              {buildProduct(product, index, true)}
+            </Carousel.Item>
+          ))}
         </Carousel>
       )}
 

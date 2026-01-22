@@ -153,9 +153,11 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(PublicProductSerializer(many=True))
     def get_products(self, product_type: ProductType):
-        return PublicProductSerializer(
+        serialized_products = PublicProductSerializer(
             Product.objects.filter(type=product_type, deleted=False), many=True
         ).data
+
+        return sorted(serialized_products, key=lambda product: product["price"])
 
     @staticmethod
     def get_no_delivery(product_type: ProductType) -> bool:
