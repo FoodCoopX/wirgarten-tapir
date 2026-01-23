@@ -608,7 +608,7 @@ class BestellWizardBaseDataApiView(APIView):
                         cache=cache,
                     ).size
                     for product in products
-                ]
+                ],
             )
             if lowest_free_capacity < smallest_size:
                 ids.append(product_type.id)

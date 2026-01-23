@@ -19,6 +19,9 @@ from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.services.newsletter_management_link_provider import (
+    NewsletterManagementLinkProvider,
+)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -252,6 +255,7 @@ def _register_tokens():
             "Verteilstation - Photo-Link": PickupLocationMailTokenService.pickup_location_photo_link,
             "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
             "Verteilstation - Abholzeiten": PickupLocationMailTokenService.pickup_location_opening_times,
+            "Newsletter - Verwaltungslink": NewsletterManagementLinkProvider.get_newsletter_management_link,
         },
     )
 
