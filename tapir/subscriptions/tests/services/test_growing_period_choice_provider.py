@@ -137,3 +137,19 @@ class TestGrowingPeriodChoiceProvider(TapirIntegrationTest):
         )
 
         self.assertEqual([future_growing_period], result)
+
+    def test_getAvailableGrowingPeriods_onlyExistingPeriodIsInTheFuture_futurePeriodReturnedIgnoringThreshold(
+        self,
+    ):
+        now = mock_timezone(self, now=datetime.datetime(year=2000, month=1, day=1))
+        future_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2001, month=1, day=1),
+            is_available_in_bestell_wizard=True,
+        )
+        cache = {}
+
+        result = GrowingPeriodChoiceProvider.get_available_growing_periods(
+            reference_date=now.date(), cache=cache
+        )
+
+        self.assertEqual([future_growing_period], result)
