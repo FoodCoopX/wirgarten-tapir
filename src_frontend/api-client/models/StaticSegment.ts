@@ -35,38 +35,31 @@ export interface StaticSegment {
     id?: string;
     /**
      * 
+     * @type {string}
+     * @memberof StaticSegment
+     */
+    name: string;
+    /**
+     * 
      * @type {Array<StaticSegmentRecipient>}
      * @memberof StaticSegment
      */
     readonly recipients: Array<StaticSegmentRecipient>;
     /**
      * 
-     * @type {Date}
+     * @type {boolean}
      * @memberof StaticSegment
      */
-    readonly createdAt: Date;
-    /**
-     * 
-     * @type {Date}
-     * @memberof StaticSegment
-     */
-    readonly updatedAt: Date;
-    /**
-     * 
-     * @type {string}
-     * @memberof StaticSegment
-     */
-    name: string;
+    readonly belongsToACategory: boolean;
 }
 
 /**
  * Check if a given object implements the StaticSegment interface.
  */
 export function instanceOfStaticSegment(value: object): value is StaticSegment {
-    if (!('recipients' in value) || value['recipients'] === undefined) return false;
-    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
-    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('recipients' in value) || value['recipients'] === undefined) return false;
+    if (!('belongsToACategory' in value) || value['belongsToACategory'] === undefined) return false;
     return true;
 }
 
@@ -81,10 +74,9 @@ export function StaticSegmentFromJSONTyped(json: any, ignoreDiscriminator: boole
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
-        'recipients': ((json['recipients'] as Array<any>).map(StaticSegmentRecipientFromJSON)),
-        'createdAt': (new Date(json['created_at'])),
-        'updatedAt': (new Date(json['updated_at'])),
         'name': json['name'],
+        'recipients': ((json['recipients'] as Array<any>).map(StaticSegmentRecipientFromJSON)),
+        'belongsToACategory': json['belongs_to_a_category'],
     };
 }
 
@@ -92,7 +84,7 @@ export function StaticSegmentFromJSONTyped(json: any, ignoreDiscriminator: boole
       return StaticSegmentToJSONTyped(json, false);
   }
 
-  export function StaticSegmentToJSONTyped(value?: Omit<StaticSegment, 'recipients'|'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
+  export function StaticSegmentToJSONTyped(value?: Omit<StaticSegment, 'recipients'|'belongs_to_a_category'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

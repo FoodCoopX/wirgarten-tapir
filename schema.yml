@@ -346,6 +346,54 @@ paths:
                 - mm
                 type: string
           description: ''
+  /core/api/member_mail_category_data:
+    get:
+      operationId: core_api_member_mail_category_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/member_mail_category_data'
+          description: ''
+    post:
+      operationId: core_api_member_mail_category_data_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberMailCategoryRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberMailCategoryRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberMailCategoryRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
   /deliveries/api/cancel_donation:
     post:
       operationId: deliveries_api_cancel_donation_create
@@ -2293,6 +2341,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedEmailConfigurationVersionList'
           description: ''
+  /tapirmail/api/email_configuration/filter_by_trigger/:
+    get:
+      operationId: tapirmail_api_email_configuration_filter_by_trigger_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      - in: query
+        name: trigger_id
+        schema:
+          type: string
+      tags:
+      - tapirmail
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailConfigurationList'
+          description: ''
   /tapirmail/api/email_configuration_dispatch/:
     get:
       operationId: tapirmail_api_email_configuration_dispatch_list
@@ -3322,6 +3403,159 @@ paths:
         schema:
           type: string
         description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/mail_category/:
+    get:
+      operationId: tapirmail_api_mail_category_list
+      tags:
+      - tapirmail
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MailCategory'
+          description: ''
+    post:
+      operationId: tapirmail_api_mail_category_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailCategoryRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailCategory'
+          description: ''
+  /tapirmail/api/mail_category/{id}/:
+    get:
+      operationId: tapirmail_api_mail_category_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this mail category.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailCategory'
+          description: ''
+    put:
+      operationId: tapirmail_api_mail_category_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this mail category.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailCategoryRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailCategory'
+          description: ''
+    patch:
+      operationId: tapirmail_api_mail_category_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this mail category.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMailCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMailCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMailCategoryRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailCategory'
+          description: ''
+    delete:
+      operationId: tapirmail_api_mail_category_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this mail category.
         required: true
       tags:
       - tapirmail
@@ -6968,6 +7202,50 @@ components:
       description: |-
         * `de_DE.utf-8` - Deutsch (DE)
         * `en_US.utf-8` - English (US)
+    MailCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 255
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+        available_for_external_recipients:
+          type: boolean
+        nb_recipients:
+          type: integer
+          readOnly: true
+        registration_form_link:
+          type: string
+          readOnly: true
+      required:
+      - available_for_external_recipients
+      - mode
+      - name
+      - nb_recipients
+      - registration_form_link
+    MailCategoryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+        available_for_external_recipients:
+          type: boolean
+      required:
+      - available_for_external_recipients
+      - mode
+      - name
     Member:
       type: object
       properties:
@@ -7224,6 +7502,19 @@ components:
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
+    MemberMailCategoryRequestRequest:
+      type: object
+      properties:
+        categories_registered_to:
+          type: object
+          additionalProperties:
+            type: boolean
+        member_id:
+          type: string
+          minLength: 1
+      required:
+      - categories_registered_to
+      - member_id
     MemberPaymentRhythm:
       type: object
       properties:
@@ -7332,6 +7623,16 @@ components:
       - draft_version_exists
       - key
       - name
+    ModeEnum:
+      enum:
+      - always_on
+      - optional_default_on
+      - optional_default_off
+      type: string
+      description: |-
+        * `always_on` - Pflicht
+        * `optional_default_on` - Optional (Standard: ON)
+        * `optional_default_off` - Optional (Standard: OFF)
     NoticePeriodUnitEnum:
       enum:
       - months
@@ -7758,6 +8059,21 @@ components:
           type: string
           minLength: 1
         is_available_in_bestell_wizard:
+          type: boolean
+    PatchedMailCategoryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+        available_for_external_recipients:
           type: boolean
     PatchedPdfExportModelRequest:
       type: object
@@ -8988,27 +9304,21 @@ components:
         id:
           type: string
           maxLength: 10
+        name:
+          type: string
+          maxLength: 255
         recipients:
           type: array
           items:
             $ref: '#/components/schemas/StaticSegmentRecipient'
           readOnly: true
-        created_at:
-          type: string
-          format: date-time
+        belongs_to_a_category:
+          type: boolean
           readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        name:
-          type: string
-          maxLength: 255
       required:
-      - created_at
+      - belongs_to_a_category
       - name
       - recipients
-      - updated_at
     StaticSegmentRecipient:
       type: object
       properties:
@@ -9862,6 +10172,20 @@ components:
       - iban
       - member_id
       - number_of_shares_to_add
+    member_mail_category_data:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/MailCategory'
+        categories_registered_to:
+          type: object
+          additionalProperties:
+            type: boolean
+      required:
+      - categories
+      - categories_registered_to
     mpl:
       type: object
       properties:

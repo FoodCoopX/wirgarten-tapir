@@ -14,6 +14,24 @@
 
 
 import * as runtime from '../runtime';
+import type {
+  MemberMailCategoryData,
+  MemberMailCategoryRequestRequest,
+} from '../models/index';
+import {
+    MemberMailCategoryDataFromJSON,
+    MemberMailCategoryDataToJSON,
+    MemberMailCategoryRequestRequestFromJSON,
+    MemberMailCategoryRequestRequestToJSON,
+} from '../models/index';
+
+export interface CoreApiMemberMailCategoryDataCreateRequest {
+    memberMailCategoryRequestRequest: MemberMailCategoryRequestRequest;
+}
+
+export interface CoreApiMemberMailCategoryDataRetrieveRequest {
+    memberId?: string;
+}
 
 /**
  * 
@@ -52,6 +70,86 @@ export class CoreApi extends runtime.BaseAPI {
      */
     async coreApiGetThemeRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.coreApiGetThemeRetrieveRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async coreApiMemberMailCategoryDataCreateRaw(requestParameters: CoreApiMemberMailCategoryDataCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
+        if (requestParameters['memberMailCategoryRequestRequest'] == null) {
+            throw new runtime.RequiredError(
+                'memberMailCategoryRequestRequest',
+                'Required parameter "memberMailCategoryRequestRequest" was null or undefined when calling coreApiMemberMailCategoryDataCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/core/api/member_mail_category_data`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: MemberMailCategoryRequestRequestToJSON(requestParameters['memberMailCategoryRequestRequest']),
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<boolean>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async coreApiMemberMailCategoryDataCreate(requestParameters: CoreApiMemberMailCategoryDataCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
+        const response = await this.coreApiMemberMailCategoryDataCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async coreApiMemberMailCategoryDataRetrieveRaw(requestParameters: CoreApiMemberMailCategoryDataRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MemberMailCategoryData>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['memberId'] != null) {
+            queryParameters['member_id'] = requestParameters['memberId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/core/api/member_mail_category_data`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MemberMailCategoryDataFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async coreApiMemberMailCategoryDataRetrieve(requestParameters: CoreApiMemberMailCategoryDataRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MemberMailCategoryData> {
+        const response = await this.coreApiMemberMailCategoryDataRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

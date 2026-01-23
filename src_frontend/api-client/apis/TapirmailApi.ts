@@ -26,6 +26,8 @@ import type {
   EmailDispatchRequest,
   EmailTemplate,
   EmailTemplateRequest,
+  MailCategory,
+  MailCategoryRequest,
   MissingTrigger,
   PaginatedEmailConfigurationDispatchList,
   PaginatedEmailConfigurationList,
@@ -38,6 +40,7 @@ import type {
   PatchedEmailConfigurationDispatchRequest,
   PatchedEmailConfigurationRequest,
   PatchedEmailTemplateRequest,
+  PatchedMailCategoryRequest,
   PatchedStaticSegmentRecipientRequest,
   PatchedStaticSegmentRequest,
   PatchedStoredUploadRequest,
@@ -80,6 +83,10 @@ import {
     EmailTemplateToJSON,
     EmailTemplateRequestFromJSON,
     EmailTemplateRequestToJSON,
+    MailCategoryFromJSON,
+    MailCategoryToJSON,
+    MailCategoryRequestFromJSON,
+    MailCategoryRequestToJSON,
     MissingTriggerFromJSON,
     MissingTriggerToJSON,
     PaginatedEmailConfigurationDispatchListFromJSON,
@@ -104,6 +111,8 @@ import {
     PatchedEmailConfigurationRequestToJSON,
     PatchedEmailTemplateRequestFromJSON,
     PatchedEmailTemplateRequestToJSON,
+    PatchedMailCategoryRequestFromJSON,
+    PatchedMailCategoryRequestToJSON,
     PatchedStaticSegmentRecipientRequestFromJSON,
     PatchedStaticSegmentRecipientRequestToJSON,
     PatchedStaticSegmentRequestFromJSON,
@@ -225,6 +234,12 @@ export interface TapirmailApiEmailConfigurationDispatchUpdateRequest {
 
 export interface TapirmailApiEmailConfigurationDuplicateRetrieveRequest {
     id: string;
+}
+
+export interface TapirmailApiEmailConfigurationFilterByTriggerListRequest {
+    limit?: number;
+    offset?: number;
+    triggerId?: string;
 }
 
 export interface TapirmailApiEmailConfigurationListRequest {
@@ -368,6 +383,28 @@ export interface TapirmailApiEmailTemplateRetrieveRequest {
 export interface TapirmailApiEmailTemplateUpdateRequest {
     id: string;
     emailTemplateRequest: EmailTemplateRequest;
+}
+
+export interface TapirmailApiMailCategoryCreateRequest {
+    mailCategoryRequest: MailCategoryRequest;
+}
+
+export interface TapirmailApiMailCategoryDestroyRequest {
+    id: string;
+}
+
+export interface TapirmailApiMailCategoryPartialUpdateRequest {
+    id: string;
+    patchedMailCategoryRequest?: PatchedMailCategoryRequest;
+}
+
+export interface TapirmailApiMailCategoryRetrieveRequest {
+    id: string;
+}
+
+export interface TapirmailApiMailCategoryUpdateRequest {
+    id: string;
+    mailCategoryRequest: MailCategoryRequest;
 }
 
 export interface TapirmailApiMediaLibraryFilepondPatchPartialUpdateRequest {
@@ -1267,6 +1304,49 @@ export class TapirmailApi extends runtime.BaseAPI {
      */
     async tapirmailApiEmailConfigurationDuplicateRetrieve(requestParameters: TapirmailApiEmailConfigurationDuplicateRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EmailConfiguration> {
         const response = await this.tapirmailApiEmailConfigurationDuplicateRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async tapirmailApiEmailConfigurationFilterByTriggerListRaw(requestParameters: TapirmailApiEmailConfigurationFilterByTriggerListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PaginatedEmailConfigurationList>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['offset'] != null) {
+            queryParameters['offset'] = requestParameters['offset'];
+        }
+
+        if (requestParameters['triggerId'] != null) {
+            queryParameters['trigger_id'] = requestParameters['triggerId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/email_configuration/filter_by_trigger/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PaginatedEmailConfigurationListFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async tapirmailApiEmailConfigurationFilterByTriggerList(requestParameters: TapirmailApiEmailConfigurationFilterByTriggerListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaginatedEmailConfigurationList> {
+        const response = await this.tapirmailApiEmailConfigurationFilterByTriggerListRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -2585,6 +2665,242 @@ export class TapirmailApi extends runtime.BaseAPI {
      */
     async tapirmailApiEmailTemplateUpdate(requestParameters: TapirmailApiEmailTemplateUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<EmailTemplate> {
         const response = await this.tapirmailApiEmailTemplateUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryCreateRaw(requestParameters: TapirmailApiMailCategoryCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MailCategory>> {
+        if (requestParameters['mailCategoryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'mailCategoryRequest',
+                'Required parameter "mailCategoryRequest" was null or undefined when calling tapirmailApiMailCategoryCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/mail_category/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: MailCategoryRequestToJSON(requestParameters['mailCategoryRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MailCategoryFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryCreate(requestParameters: TapirmailApiMailCategoryCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MailCategory> {
+        const response = await this.tapirmailApiMailCategoryCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryDestroyRaw(requestParameters: TapirmailApiMailCategoryDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling tapirmailApiMailCategoryDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/mail_category/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryDestroy(requestParameters: TapirmailApiMailCategoryDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.tapirmailApiMailCategoryDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<MailCategory>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/mail_category/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(MailCategoryFromJSON));
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<MailCategory>> {
+        const response = await this.tapirmailApiMailCategoryListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryPartialUpdateRaw(requestParameters: TapirmailApiMailCategoryPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MailCategory>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling tapirmailApiMailCategoryPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/mail_category/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedMailCategoryRequestToJSON(requestParameters['patchedMailCategoryRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MailCategoryFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryPartialUpdate(requestParameters: TapirmailApiMailCategoryPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MailCategory> {
+        const response = await this.tapirmailApiMailCategoryPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryRetrieveRaw(requestParameters: TapirmailApiMailCategoryRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MailCategory>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling tapirmailApiMailCategoryRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/mail_category/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MailCategoryFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryRetrieve(requestParameters: TapirmailApiMailCategoryRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MailCategory> {
+        const response = await this.tapirmailApiMailCategoryRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryUpdateRaw(requestParameters: TapirmailApiMailCategoryUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MailCategory>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling tapirmailApiMailCategoryUpdate().'
+            );
+        }
+
+        if (requestParameters['mailCategoryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'mailCategoryRequest',
+                'Required parameter "mailCategoryRequest" was null or undefined when calling tapirmailApiMailCategoryUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/mail_category/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: MailCategoryRequestToJSON(requestParameters['mailCategoryRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MailCategoryFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async tapirmailApiMailCategoryUpdate(requestParameters: TapirmailApiMailCategoryUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MailCategory> {
+        const response = await this.tapirmailApiMailCategoryUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

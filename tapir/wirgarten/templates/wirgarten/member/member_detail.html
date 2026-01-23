@@ -142,14 +142,19 @@
                  class="card"
                  style="margin-bottom:1em;
                         margin-top:1em">
-                <h5 class="card-header d-flex justify-content-between align-items-center">
-                    {% translate "Persönliche Daten" %}
-                    <button class="btn tapir-btn btn-outline-primary"
-                            onclick="FormModal.load(`{% url 'wirgarten:member_edit' object.pk %}`, 'Persönliche Daten ändern')"
-                            id="tapir_user_edit_button">
-                        <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-                    </button>
-                </h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>{% translate "Persönliche Daten" %}</h5>
+                    <span class="d-flex gap-2">
+                        <button class="btn tapir-btn btn-outline-primary"
+                                onclick="FormModal.load(`{% url 'wirgarten:member_edit' object.pk %}`, 'Persönliche Daten ändern')"
+                                id="tapir_user_edit_button">
+                            <span class="material-icons">edit</span><h5 class="mb-0">{% translate 'Bearbeiten' %}</h5>
+                        </button>
+                        {% if show_mail_category_content %}
+                            <span id="member_mail_category" data-member-id="{{ object.id }}"></span>
+                        {% endif %}
+                    </span>
+                </div>
                 <div class="card-body">
                     <div class="row m-1">
                         <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
@@ -226,7 +231,7 @@
                     <button class="btn tapir-btn btn-outline-primary"
                             {% if lock_functions %}disabled="disabled"{% endif %}
                             onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
-                        <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
+                        <span class="material-icons">edit</span><h5 class="mb-0">{% translate 'Bearbeiten' %}</h5>
                     </button>
                 </h5>
                 <div class="card-body">

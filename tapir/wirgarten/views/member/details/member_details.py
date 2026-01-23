@@ -3,6 +3,7 @@ from typing import Dict
 from dateutil.relativedelta import relativedelta
 from django.db.models import F, Sum
 from django.views import generic
+from tapir_mail.models import MailCategory
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
@@ -197,6 +198,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             context["payment_rhythm"] = (
                 f"Aktuell: {context["payment_rhythm"]}. ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
             )
+
+        context["show_mail_category_content"] = MailCategory.objects.exists()
 
         return context
 
