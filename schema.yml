@@ -7625,12 +7625,10 @@ components:
       - name
     ModeEnum:
       enum:
-      - always_on
       - optional_default_on
       - optional_default_off
       type: string
       description: |-
-        * `always_on` - Pflicht
         * `optional_default_on` - Optional (Standard: ON)
         * `optional_default_off` - Optional (Standard: OFF)
     NoticePeriodUnitEnum:

@@ -1,5 +1,8 @@
 import datetime
 
+from tapir_mail.models import MailCategory, MailCategoryMode
+from tapir_mail.service.external_recipient_manager import ExternalRecipientManager
+
 from tapir.accounts.models import TapirUser
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
@@ -152,6 +155,15 @@ class BestellWizardOrderFulfiller:
         contracts_signed = dict.fromkeys(
             ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
         )
+
+        for mail_category in MailCategory.objects.filter(
+            mode=MailCategoryMode.OPTIONAL_DEFAULT_ON
+        ):
+            ExternalRecipientManager.register_static_recipient_to_category(
+                mail_category=mail_category,
+                email=personal_data["email"],
+                first_name=personal_data["first_name"],
+            )
 
         return Member.objects.create(
             **personal_data, **contracts_signed, is_student=is_student

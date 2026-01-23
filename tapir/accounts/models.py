@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
+from tapir_mail.models import StaticSegmentRecipient
 
 from tapir import utils
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
@@ -121,9 +122,9 @@ class KeycloakUser(AbstractUser):
             except:
                 has_kc_account = False
 
-        if has_kc_account:
-            self_before_save = type(self).objects.get(id=self.id)
+        self_before_save = type(self).objects.get(id=self.id)
 
+        if has_kc_account:
             _partial = partial(
                 KeycloakUserManager.update_keycloak_user,
                 user=self,
@@ -159,6 +160,10 @@ class KeycloakUser(AbstractUser):
             _partial()
         else:
             transaction.on_commit(_partial)
+
+        StaticSegmentRecipient.objects.filter(email=self_before_save.email).update(
+            first_name=self.first_name, last_name=self.last_name
+        )
 
         super().save(*args, **kwargs)
 

@@ -81,9 +81,7 @@ const MemberMailCategoryModal: React.FC<MemberMailCategoryModalProps> = ({
                   checked={categoriesRegisteredTo[category.id!]}
                   onChange={(event) => {
                     categoriesRegisteredTo[category.id!] = event.target.checked;
-                    setCategoriesRegisteredTo(
-                      Object.assign({}, categoriesRegisteredTo),
-                    );
+                    setCategoriesRegisteredTo({ ...categoriesRegisteredTo });
                   }}
                 />
               </Form.Group>

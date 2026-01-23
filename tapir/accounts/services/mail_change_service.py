@@ -5,6 +5,7 @@ from typing import Dict
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.urls import reverse_lazy
+from tapir_mail.models import StaticSegmentRecipient, ExternalRecipient
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -64,7 +65,7 @@ class MailChangeService:
     @transaction.atomic
     def apply_mail_change(cls, user: TapirUser, new_email: str, cache: Dict):
         # token is valid -> actually change email
-        orig_email = user.email
+        old_email = user.email
         user.change_email(new_email, cache=cache)
 
         # delete other change requests for this user
@@ -74,6 +75,9 @@ class MailChangeService:
         EmailChangeRequest.objects.filter(
             created_at__lte=get_now(cache=cache) - link_validity
         ).delete()
+
+        StaticSegmentRecipient.objects.filter(email=old_email).update(email=new_email)
+        ExternalRecipient.objects.filter(email=old_email).update(email=new_email)
 
         TransactionalTrigger.fire_action(
             trigger_data=TransactionalTriggerData(
