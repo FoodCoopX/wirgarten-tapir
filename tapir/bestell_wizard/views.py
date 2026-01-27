@@ -40,6 +40,9 @@ from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalcu
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.public_pickup_locations_provider import (
+    PublicPickupLocationProvider,
+)
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
@@ -439,7 +442,9 @@ class BestellWizardBaseDataApiView(APIView):
         response_data.update(
             {
                 "product_types": ProductType.objects.all(),
-                "pickup_locations": PickupLocation.objects.order_by("name"),
+                "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+                    cache=self.cache
+                ),
                 "show_coop_content": legal_status_is_cooperative(cache=self.cache),
                 "trial_period_length_in_weeks": trial_period_length_in_weeks,
                 "payment_rhythm_choices": {

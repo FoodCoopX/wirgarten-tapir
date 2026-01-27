@@ -2,6 +2,7 @@ import datetime
 
 from django.core.exceptions import ValidationError
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
@@ -19,6 +20,7 @@ from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_active_subscriptions
 
 
@@ -49,6 +51,13 @@ class OrderValidator:
         ):
             raise ValidationError(
                 "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
+            )
+
+        if pickup_location and pickup_location.id == get_parameter_value(
+            ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION, cache=cache
+        ):
+            raise ValidationError(
+                "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
             )
 
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(

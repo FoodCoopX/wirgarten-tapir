@@ -787,6 +787,30 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(WaitingListEntry.objects.exists())
         self.assertFalse(SolidarityContribution.objects.exists())
 
+    def test_post_pickupLocationIsDonationLocation_returnOrderNotConfirmedAndDontCreateMember(
+        self,
+    ):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        TapirParameter.objects.filter(
+            key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION
+        ).update(value=data["pickup_location_ids"][0])
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertIn(
+            "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort).",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+        self.assertFalse(SolidarityContribution.objects.exists())
+
     @classmethod
     def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
         return {

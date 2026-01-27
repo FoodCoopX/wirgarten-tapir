@@ -190,6 +190,8 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               },
               setToastDatas,
             );
+
+            onHide();
           } else {
             addToast(
               {
@@ -212,13 +214,35 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         )
         .finally(() => {
           setConfirmLoading(false);
-          onHide();
         });
     } else {
       pickupLocationsApi
         .pickupLocationsApiChangeMemberPickupLocationCreate({
           pickupLocationId: selectedPickupLocations[0].id!,
           memberId: memberId,
+        })
+        .then((response) => {
+          if (response.orderConfirmed) {
+            onHide();
+            addToast(
+              {
+                id: uuidv4(),
+                variant: "success",
+                title: "Verteilstation-Weschel bestätig",
+              },
+              setToastDatas,
+            );
+          } else {
+            addToast(
+              {
+                id: uuidv4(),
+                variant: "danger",
+                title: "Fehler",
+                message: response.error,
+              },
+              setToastDatas,
+            );
+          }
         })
         .catch((error) =>
           handleRequestError(
@@ -229,7 +253,6 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         )
         .finally(() => {
           setConfirmLoading(false);
-          onHide();
           reloadDeliveries();
         });
     }

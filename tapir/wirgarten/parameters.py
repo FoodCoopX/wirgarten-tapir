@@ -625,6 +625,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.STRING,
             initial_value=DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION,
             description="Wenn eine Station ausgewählte ist werden die gespendete Lieferungen in der Kommissionierliste zu die ausgewählte Station versetzt."
+            "<br />Die ausgewählte Station steht Mitglieder nicht mehr zu Verfügung, z.B. taucht sie nicht mehr im BestellWizard oder Mitgleiderbereich auf."
             "<br />Wenn keine Station ausgewählt ist tauchen gespendete Lieferungen in der Kommissionierliste gar nicht auf.",
             category=ParameterCategory.JOKERS,
             order_priority=1,

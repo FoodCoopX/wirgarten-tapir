@@ -11,6 +11,7 @@ from rest_framework import status, viewsets, permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import PickupLocationSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.serializers import (
@@ -32,6 +33,9 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
 )
+from tapir.pickup_locations.services.public_pickup_locations_provider import (
+    PublicPickupLocationProvider,
+)
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
@@ -51,6 +55,7 @@ from tapir.wirgarten.models import (
     Member,
     GrowingPeriod,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
@@ -212,8 +217,12 @@ class PickupLocationCapacityEvolutionView(APIView):
 
 class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = []
-    queryset = PickupLocation.objects.all()
     serializer_class = PublicPickupLocationSerializer
+
+    def get_queryset(self):
+        return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+            cache={}
+        )
 
 
 class PickupLocationCapacityCheckApiView(APIView):
@@ -390,6 +399,14 @@ class ChangeMemberPickupLocationApiView(APIView):
         )
         if old_pickup_location_id == new_pickup_location.id:
             raise ValidationError("Du bist schon für diese Verteilstation eingetragen.")
+
+        if new_pickup_location.id == get_parameter_value(
+            key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION,
+            cache=self.cache,
+        ):
+            raise ValidationError(
+                "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
+            )
 
         subscriptions = (
             get_active_and_future_subscriptions(cache=self.cache)
