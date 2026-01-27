@@ -16,7 +16,6 @@ from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.accounts.services.mail_change_service import MailChangeService
 from tapir.wirgarten.constants import Permission
 
-
 # FIXME: this file has a dependency on tapir/wirgarten! Replace the send_email call as soon as the mail module is ready
 
 

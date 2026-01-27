@@ -66,7 +66,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         ParameterDefinitions().import_definitions()
         configure_mail_module()
 
-        (cls.product_1, cls.product_2, cls.product_3) = ProductFactory.create_batch(
+        cls.product_1, cls.product_2, cls.product_3 = ProductFactory.create_batch(
             size=3, type__delivery_cycle=WEEKLY[0]
         )
         cls.product_3.type.single_subscription_only = True

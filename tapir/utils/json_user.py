@@ -5,7 +5,6 @@ from tapir.accounts.models import TapirUser
 from tapir.utils.models import get_country_code
 from tapir.utils.user_utils import UserUtils
 
-
 # Helper class to deal with users generated from https://randomuser.me/
 
 
