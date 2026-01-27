@@ -15,7 +15,7 @@ django-filter = "^25.1"
 tablib = "^3.8.0"
 django-phonenumber-field = {version = "^5.2.0", extras = ["phonenumbers"]}
 phonenumbers = "^9.0.6"
-weasyprint = "^65.1"
+weasyprint = "^68.0"
 django-select2 = "^8.4.1"
 django-silk = "^5.4.0"
 gunicorn = "^23.0.0"
