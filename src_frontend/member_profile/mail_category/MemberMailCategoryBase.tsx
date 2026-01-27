@@ -18,7 +18,7 @@ const MemberMailCategoryBase: React.FC<MemberMailCategoryBaseProps> = ({
     <>
       <TapirButton
         variant={"outline-primary"}
-        text={"Newsletter"}
+        text={"Mail-Abos verwalten"}
         icon={"mail"}
         onClick={() => setModalOpen(true)}
       />

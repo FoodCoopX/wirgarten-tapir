@@ -67,7 +67,7 @@ const MemberMailCategoryModal: React.FC<MemberMailCategoryModalProps> = ({
   return (
     <Modal show={open} onHide={onClose} centered={true}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Newsletter-Abo verwalten</h5>
+        <h5 className={"mb-0"}>Mail-Abos verwalten</h5>
       </Modal.Header>
       <Modal.Body>
         {dataLoading ? (
