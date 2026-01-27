@@ -134,27 +134,13 @@ const ManageJokersAndDonationsModal: React.FC<
     return dayjs().weekday(weekdayLimit).format("dddd");
   }
 
-  function getJokerStatus(delivery: Delivery) {
+  function getDeliveryStatus(delivery: Delivery) {
     if (delivery.jokerUsed) {
       return <span>Joker eingesetzt</span>;
     }
 
     if (delivery.donationUsed) {
       return <span>Lieferung gespendet</span>;
-    }
-
-    if (delivery.canJokerBeUsed) {
-      return (
-        <TapirButton
-          text={"Joker einsetzen"}
-          variant={"outline-primary"}
-          size={"sm"}
-          icon={"free_cancellation"}
-          disabled={requestLoading}
-          loading={selectedDeliveryForJokerUse == delivery}
-          onClick={() => useJoker(delivery)}
-        />
-      );
     }
 
     if (!delivery.canJokerBeUsedRelativeToDateLimit) {
@@ -185,63 +171,36 @@ const ManageJokersAndDonationsModal: React.FC<
       return <span>Keine Lieferung in dieser Woche</span>;
     }
 
-    return <span>Joker kann nicht eingesetzt werden</span>;
-  }
-
-  function getDonationStatus(delivery: Delivery) {
-    if (delivery.jokerUsed) {
-      return <span>Joker eingesetzt</span>;
-    }
-
-    if (delivery.donationUsed) {
-      return <span>Lieferung gespendet</span>;
-    }
-
-    if (delivery.canDeliveryBeDonated) {
+    if (delivery.canJokerBeUsed || delivery.canDeliveryBeDonated) {
       return (
-        <TapirButton
-          text={"Lieferung spenden"}
-          variant={"outline-primary"}
-          size={"sm"}
-          icon={"free_cancellation"}
-          disabled={requestLoading}
-          loading={selectedDeliveryForDonationUse == delivery}
-          onClick={() => useDonation(delivery)}
-        />
-      );
-    }
-
-    if (!delivery.canJokerBeUsedRelativeToDateLimit) {
-      return (
-        <span>
-          Lieferung kann nicht mehr gespendet werden{" "}
-          <OverlayTrigger
-            overlay={
-              <Tooltip
-                id={
-                  "tooltip-donation-" + formatDateNumeric(delivery.deliveryDate)
-                }
-              >
-                Du musst bis zum {getWeekdayLimitDisplay()} Mitternacht die
-                Spende setzen
-              </Tooltip>
-            }
-          >
-            <Button size={"sm"} variant={"outline-secondary"}>
-              <span className={"material-icons"} style={{ fontSize: "16px" }}>
-                info
-              </span>
-            </Button>
-          </OverlayTrigger>
+        <span className={"d-flex flex-row gap-2"}>
+          {delivery.canJokerBeUsed && (
+            <TapirButton
+              text={"Joker einsetzen"}
+              variant={"outline-primary"}
+              size={"sm"}
+              icon={"free_cancellation"}
+              disabled={requestLoading}
+              loading={selectedDeliveryForJokerUse == delivery}
+              onClick={() => useJoker(delivery)}
+            />
+          )}
+          {delivery.canDeliveryBeDonated && (
+            <TapirButton
+              text={"Lieferung spenden"}
+              variant={"outline-primary"}
+              size={"sm"}
+              icon={"free_cancellation"}
+              disabled={requestLoading}
+              loading={selectedDeliveryForDonationUse == delivery}
+              onClick={() => useDonation(delivery)}
+            />
+          )}
         </span>
       );
     }
 
-    if (delivery.isDeliveryCancelledThisWeek) {
-      return <span>Keine Lieferung in dieser Woche</span>;
-    }
-
-    return <span>Spende kann nicht eingesetzt werden</span>;
+    return <span>Keine Ausnahme möglich</span>;
   }
 
   function cancelJoker(joker: Joker) {
@@ -481,8 +440,7 @@ const ManageJokersAndDonationsModal: React.FC<
                 <tr>
                   <th>KW</th>
                   <th>Lieferdatum</th>
-                  {areJokersEnabled && <th>Joker Status</th>}
-                  {areDonationsEnabled && <th>Spende Status</th>}
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -493,16 +451,9 @@ const ManageJokersAndDonationsModal: React.FC<
                         <tr key={formatDateNumeric(delivery.deliveryDate)}>
                           <td>KW{dayjs(delivery.deliveryDate).week()}</td>
                           <td>{formatDateText(delivery.deliveryDate)}</td>
-                          {areJokersEnabled && (
-                            <td className={"text-wrap"}>
-                              {getJokerStatus(delivery)}
-                            </td>
-                          )}
-                          {areDonationsEnabled && (
-                            <td className={"text-wrap"}>
-                              {getDonationStatus(delivery)}
-                            </td>
-                          )}
+                          <td className={"text-wrap"}>
+                            {getDeliveryStatus(delivery)}
+                          </td>
                         </tr>
                       );
                     })}
