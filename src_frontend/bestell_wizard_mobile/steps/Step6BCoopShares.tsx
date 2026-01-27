@@ -194,9 +194,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                   checked ? 0 : minimumNumberOfShares,
                 );
               }}
-              label={
-                "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
-              }
+              label={settings.strings.labelStudentCheckbox}
               controlId={"studentStatus"}
             />
             {studentStatusEnabled && (

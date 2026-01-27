@@ -97,6 +97,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step14b_title = serializers.CharField()
     step14b_text = serializers.CharField()
     privacy_policy_url = serializers.URLField()
+    label_student_checkbox = serializers.CharField()
 
 
 class BestellWizardImagesSerializer(serializers.Serializer):

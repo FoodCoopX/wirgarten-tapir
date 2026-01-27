@@ -72,6 +72,7 @@ export function buildEmptySettings(): BestellWizardSettings {
       step14bTitle: "",
       step14bText: "",
       privacyPolicyUrl: "",
+      labelStudentCheckbox: "",
     },
     images: {
       step1BackgroundImage: "",

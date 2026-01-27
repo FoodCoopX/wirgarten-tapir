@@ -552,6 +552,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step14b_title": ParameterKeys.BESTELLWIZARD_STEP14B_TITLE,
             "step14b_text": ParameterKeys.BESTELLWIZARD_STEP14B_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
+            "label_student_checkbox": ParameterKeys.LABEL_STUDENT_CHECKBOX,
         }
         return cls.build_dictionary_from_config_parameters(
             string_id_to_parameter_key_map, cache

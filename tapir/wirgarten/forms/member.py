@@ -77,6 +77,9 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
         if self.request and not self.request.user.has_perm(Permission.Accounts.MANAGE):
             self.fields["is_student"].disabled = True
+        self.fields["is_student"].label = get_parameter_value(
+            key=ParameterKeys.LABEL_STUDENT_CHECKBOX, cache={}
+        )
 
     class Meta:
         model = Member
@@ -114,7 +117,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
                         )
                     }
                 )
-        except Exception as e:
+        except Exception:
             pass
 
     def _validate_duplicate_email(self):
@@ -220,13 +223,14 @@ class PersonalDataRegistrationForm(Form):
     def is_valid(self):
         super().is_valid()
         for form in self.forms:
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        if field == "__all__":
-                            self.add_error(None, error)
-                        else:
-                            self.add_error(field, error)
+            if form.is_valid():
+                continue
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == "__all__":
+                        self.add_error(None, error)
+                    else:
+                        self.add_error(field, error)
 
         return len(self.errors) == 0
 
@@ -249,7 +253,7 @@ class PaymentAmountEditForm(Form):
         if len(payments) < 1:
             initial = self.initial_amount
         elif len(payments) > 1:
-            raise AssertionError("TOO MANY PAYMENTS FOUND!!")  # FIXME
+            raise AssertionError("TOO MANY PAYMENTS FOUND!!")
         else:
             self.payment = payments[0]
             initial = self.payment.amount
@@ -284,12 +288,12 @@ class CoopShareTransferForm(Form):
         def member_to_string(m):
             return f"{m.first_name} {m.last_name} ({m.email})"
 
-        choices = map(
-            lambda x: (x.id, member_to_string(x)),
-            Member.objects.exclude(pk=kwargs["pk"]).order_by(
+        choices = [
+            (member.id, member_to_string(member))
+            for member in Member.objects.exclude(pk=kwargs["pk"]).order_by(
                 "first_name", "last_name", "email"
-            ),
-        )
+            )
+        ]
 
         self.fields["origin"] = CharField(
             label=_("Ursprünglicher Anteilseigner")
@@ -436,13 +440,14 @@ class SubscriptionRenewalForm(Form):
     def is_valid(self):
         super().is_valid()
         for form in self.product_forms:
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        if field == "__all__":
-                            self.add_error(None, error)
-                        else:
-                            self.add_error(field, error)
+            if form.is_valid():
+                continue
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == "__all__":
+                        self.add_error(None, error)
+                    else:
+                        self.add_error(field, error)
 
         return len(self.errors) == 0
 
@@ -470,15 +475,16 @@ class SubscriptionRenewalForm(Form):
 
 class CancellationReasonForm(Form):
     def __init__(self, *args, **kwargs):
+
         super(CancellationReasonForm, self).__init__(*args, **kwargs)
         self.fields["reason"] = MultipleChoiceField(
             label="Grund für deine Kündigung",
-            choices=map(
-                lambda x: (x.strip(), x.strip()),
-                get_parameter_value(
+            choices=[
+                (reason.strip(), reason.strip)
+                for reason in get_parameter_value(
                     ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES
-                ).split(";"),
-            ),
+                ).split(";")
+            ],
             widget=CheckboxSelectMultiple,
             required=False,
         )

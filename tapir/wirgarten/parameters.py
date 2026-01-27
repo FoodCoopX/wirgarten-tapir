@@ -874,6 +874,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
         )
 
+        self.parameter_definition(
+            key=ParameterKeys.LABEL_STUDENT_CHECKBOX,
+            label="Label für die Checkbox 'Student*in'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen",
+            description="Text neben der Checkbox zu Studentenstatus im Bestellwizard und Mitgliederbereich",
+            category=ParameterCategory.ORGANIZATION,
+            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
+        )
+
     def import_definitions_solidarity(self):
         from tapir.solidarity_contribution.services.solidarity_validator import (
             SolidarityValidator,

@@ -271,6 +271,12 @@ export interface BestellWizardStrings {
      * @memberof BestellWizardStrings
      */
     privacyPolicyUrl: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    labelStudentCheckbox: string;
 }
 
 /**
@@ -319,6 +325,7 @@ export function instanceOfBestellWizardStrings(value: object): value is BestellW
     if (!('step14bTitle' in value) || value['step14bTitle'] === undefined) return false;
     if (!('step14bText' in value) || value['step14bText'] === undefined) return false;
     if (!('privacyPolicyUrl' in value) || value['privacyPolicyUrl'] === undefined) return false;
+    if (!('labelStudentCheckbox' in value) || value['labelStudentCheckbox'] === undefined) return false;
     return true;
 }
 
@@ -374,6 +381,7 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step14bTitle': json['step14b_title'],
         'step14bText': json['step14b_text'],
         'privacyPolicyUrl': json['privacy_policy_url'],
+        'labelStudentCheckbox': json['label_student_checkbox'],
     };
 }
 
@@ -430,6 +438,7 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step14b_title': value['step14bTitle'],
         'step14b_text': value['step14bText'],
         'privacy_policy_url': value['privacyPolicyUrl'],
+        'label_student_checkbox': value['labelStudentCheckbox'],
     };
 }
 

@@ -5359,7 +5359,10 @@ components:
         privacy_policy_url:
           type: string
           format: uri
+        label_student_checkbox:
+          type: string
       required:
+      - label_student_checkbox
       - privacy_policy_url
       - step10_title
       - step11_title
