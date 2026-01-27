@@ -238,7 +238,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
                 id: uuidv4(),
                 variant: "danger",
                 title: "Fehler",
-                message: response.error,
+                message: response.error ?? undefined,
               },
               setToastDatas,
             );
