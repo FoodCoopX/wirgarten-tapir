@@ -128,7 +128,7 @@ class MemberPickupLocationService:
         def build_if_cache_miss():
             member_pickup_locations = {}
             for member_pickup_location in MemberPickupLocation.objects.order_by(
-                "valid_from"
+                "-valid_from"
             ):
                 if member_pickup_location.member_id not in member_pickup_locations:
                     member_pickup_locations[member_pickup_location.member_id] = []
