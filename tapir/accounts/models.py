@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from keycloak.exceptions import KeycloakDeleteError
+from keycloak.exceptions import KeycloakDeleteError, KeycloakGetError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
 from tapir_mail.models import StaticSegmentRecipient
@@ -119,7 +119,7 @@ class KeycloakUser(AbstractUser):
         if has_kc_account:
             try:  # try fetch the keycloak user to see if it exists
                 keycloak_client.get_user(self.keycloak_id)
-            except:
+            except KeycloakGetError:
                 has_kc_account = False
 
         self_before_save = type(self).objects.filter(id=self.id).first()
