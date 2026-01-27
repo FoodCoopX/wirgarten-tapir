@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django_bootstrap5",
     "django_drf_filepond",
-    "bootstrap_datepicker_plus",
     "tapir_mail",
     "tapir.core",
     "tapir.log",
@@ -180,25 +179,6 @@ KEYCLOAK_NON_TAPIR_ROLES = [
     "uma_authorization",
     "default-roles-tapir",
 ]
-
-# The link above contains all settings
-BOOTSTRAP_DATEPICKER_PLUS = {
-    "options": {
-        "locale": "de",
-        "showClose": True,
-        "showClear": True,
-        "showTodayButton": True,
-        "allowInputToggle": True,
-    },
-    "variant_options": {
-        "date": {
-            "format": "DD.MM.YYYY",
-        },
-        "datetime": {
-            "format": "DD.MM.YYYY HH:mm",
-        },
-    },
-}
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

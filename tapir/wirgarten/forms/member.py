@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from bootstrap_datepicker_plus.widgets import DatePickerInput
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
@@ -18,6 +17,7 @@ from django.forms import (
     ModelForm,
     ModelMultipleChoiceField,
     MultipleChoiceField,
+    DateInput,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -93,7 +93,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
             "birthdate",
             "is_student",
         ]
-        widgets = {"birthdate": DatePickerInput(options={"format": "DD.MM.YYYY"})}
+        widgets = {"birthdate": DateInput()}
 
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
