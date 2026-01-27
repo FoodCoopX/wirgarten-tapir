@@ -138,6 +138,7 @@ class MemberJokerInformationSerializer(serializers.Serializer):
     used_donations = DeliveryDonationWithCancellationLimitSerializer(many=True)
     weekday_limit = serializers.IntegerField()
     used_joker_in_growing_period = UsedJokerInGrowingPeriodSerializer(many=True)
+    explanation_text = serializers.CharField()
 
 
 class DeliveryDayAdjustmentSerializer(serializers.Serializer):

@@ -97,6 +97,7 @@ const ManageJokersAndDonationsModal: React.FC<
   const [usedJokerInGrowingPeriods, setUsedJokerInGrowingPeriods] = useState<
     UsedJokerInGrowingPeriod[]
   >([]);
+  const [explanationText, setExplanationText] = useState("");
 
   dayjs.extend(Weekday);
   dayjs.extend(WeekOfYear);
@@ -117,6 +118,7 @@ const ManageJokersAndDonationsModal: React.FC<
         setDonations(info.usedDonations);
         setWeekdayLimit(info.weekdayLimit);
         setUsedJokerInGrowingPeriods(info.usedJokerInGrowingPeriod);
+        setExplanationText(info.explanationText);
       })
       .catch((error) =>
         handleRequestError(
@@ -356,6 +358,11 @@ const ManageJokersAndDonationsModal: React.FC<
         </Modal.Body>
       ) : (
         <ListGroup variant="flush">
+          {explanationText && (
+            <ListGroup.Item>
+              <p dangerouslySetInnerHTML={{ __html: explanationText }}></p>
+            </ListGroup.Item>
+          )}
           {areJokersEnabled && (
             <ListGroup.Item>
               <p>Überischt deiner Joker:</p>

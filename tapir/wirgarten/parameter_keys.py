@@ -67,6 +67,7 @@ class ParameterKeys:
     DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION = (
         f"{PREFIX}.delivery_donation.forward_to_pickup_location"
     )
+    EXPLANATION_TEXT_FOR_JOKERS_AND_DONATIONS = f"{PREFIX}.jokers.explanation_text"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT = (

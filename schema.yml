@@ -310,7 +310,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this member.
+        description: Ein eindeutiger Wert, der member identifiziert.
         required: true
       tags:
       - coop
@@ -656,7 +656,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this growing period.
+        description: Ein eindeutiger Wert, der growing period identifiziert.
         required: true
       tags:
       - deliveries
@@ -678,7 +678,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this growing period.
+        description: Ein eindeutiger Wert, der growing period identifiziert.
         required: true
       tags:
       - deliveries
@@ -712,7 +712,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this growing period.
+        description: Ein eindeutiger Wert, der growing period identifiziert.
         required: true
       tags:
       - deliveries
@@ -745,7 +745,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this growing period.
+        description: Ein eindeutiger Wert, der growing period identifiziert.
         required: true
       tags:
       - deliveries
@@ -861,7 +861,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this csv export.
+        description: Ein eindeutiger Wert, der csv export identifiziert.
         required: true
       tags:
       - generic_exports
@@ -883,7 +883,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this csv export.
+        description: Ein eindeutiger Wert, der csv export identifiziert.
         required: true
       tags:
       - generic_exports
@@ -917,7 +917,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this csv export.
+        description: Ein eindeutiger Wert, der csv export identifiziert.
         required: true
       tags:
       - generic_exports
@@ -950,7 +950,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this csv export.
+        description: Ein eindeutiger Wert, der csv export identifiziert.
         required: true
       tags:
       - generic_exports
@@ -1032,7 +1032,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this pdf export.
+        description: Ein eindeutiger Wert, der pdf export identifiziert.
         required: true
       tags:
       - generic_exports
@@ -1054,7 +1054,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this pdf export.
+        description: Ein eindeutiger Wert, der pdf export identifiziert.
         required: true
       tags:
       - generic_exports
@@ -1088,7 +1088,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this pdf export.
+        description: Ein eindeutiger Wert, der pdf export identifiziert.
         required: true
       tags:
       - generic_exports
@@ -1121,7 +1121,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this pdf export.
+        description: Ein eindeutiger Wert, der pdf export identifiziert.
         required: true
       tags:
       - generic_exports
@@ -1456,7 +1456,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this pickup location.
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -1497,7 +1497,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this pickup location.
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -1994,7 +1994,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this product.
+        description: Ein eindeutiger Wert, der product identifiziert.
         required: true
       tags:
       - subscriptions
@@ -2035,7 +2035,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this product type.
+        description: Ein eindeutiger Wert, der product type identifiziert.
         required: true
       tags:
       - subscriptions
@@ -2076,7 +2076,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this subscription.
+        description: Ein eindeutiger Wert, der subscription identifiziert.
         required: true
       tags:
       - subscriptions
@@ -2126,13 +2126,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       tags:
@@ -2183,7 +2184,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration.
+        description: Ein eindeutiger Wert, der email configuration identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2205,7 +2206,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration.
+        description: Ein eindeutiger Wert, der email configuration identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2239,7 +2240,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration.
+        description: Ein eindeutiger Wert, der email configuration identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2272,7 +2273,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration.
+        description: Ein eindeutiger Wert, der email configuration identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2291,7 +2292,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration.
+        description: Ein eindeutiger Wert, der email configuration identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2314,18 +2315,19 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration.
+        description: Ein eindeutiger Wert, der email configuration identifiziert.
         required: true
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       tags:
@@ -2348,13 +2350,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       - in: query
@@ -2381,13 +2384,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       tags:
@@ -2438,7 +2442,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration dispatch.
+        description: Ein eindeutiger Wert, der email configuration dispatch identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2460,7 +2464,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration dispatch.
+        description: Ein eindeutiger Wert, der email configuration dispatch identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2494,7 +2498,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration dispatch.
+        description: Ein eindeutiger Wert, der email configuration dispatch identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2527,7 +2531,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration dispatch.
+        description: Ein eindeutiger Wert, der email configuration dispatch identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2546,7 +2550,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration dispatch.
+        description: Ein eindeutiger Wert, der email configuration dispatch identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2581,13 +2585,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       tags:
@@ -2611,13 +2616,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       tags:
@@ -2687,7 +2693,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2709,7 +2715,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2743,7 +2749,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2776,7 +2782,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2795,7 +2801,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2819,7 +2825,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2843,7 +2849,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2866,7 +2872,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2890,7 +2896,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email configuration version.
+        description: Ein eindeutiger Wert, der email configuration version identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2933,13 +2939,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       tags:
@@ -2963,7 +2970,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email dispatch.
+        description: Ein eindeutiger Wert, der email dispatch identifiziert.
         required: true
       tags:
       - tapirmail
@@ -2986,7 +2993,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email dispatch.
+        description: Ein eindeutiger Wert, der email dispatch identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3025,13 +3032,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       - in: query
@@ -3069,13 +3077,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       - in: query
@@ -3149,7 +3158,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email template.
+        description: Ein eindeutiger Wert, der email template identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3171,7 +3180,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email template.
+        description: Ein eindeutiger Wert, der email template identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3205,7 +3214,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email template.
+        description: Ein eindeutiger Wert, der email template identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3238,7 +3247,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email template.
+        description: Ein eindeutiger Wert, der email template identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3256,13 +3265,14 @@ paths:
       - name: limit
         required: false
         in: query
-        description: Number of results to return per page.
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
         schema:
           type: integer
       - name: offset
         required: false
         in: query
-        description: The initial index from which to return the results.
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
         schema:
           type: integer
       tags:
@@ -3313,7 +3323,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email template.
+        description: Ein eindeutiger Wert, der email template identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3335,7 +3345,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email template.
+        description: Ein eindeutiger Wert, der email template identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3369,7 +3379,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email template.
+        description: Ein eindeutiger Wert, der email template identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3402,7 +3412,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this email template.
+        description: Ein eindeutiger Wert, der email template identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3466,7 +3476,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this mail category.
+        description: Ein eindeutiger Wert, der mail category identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3488,7 +3498,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this mail category.
+        description: Ein eindeutiger Wert, der mail category identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3522,7 +3532,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this mail category.
+        description: Ein eindeutiger Wert, der mail category identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3555,7 +3565,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this mail category.
+        description: Ein eindeutiger Wert, der mail category identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3720,7 +3730,7 @@ paths:
         name: upload_id
         schema:
           type: string
-        description: A unique value identifying this stored upload.
+        description: Ein eindeutiger Wert, der stored upload identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3742,7 +3752,7 @@ paths:
         name: upload_id
         schema:
           type: string
-        description: A unique value identifying this stored upload.
+        description: Ein eindeutiger Wert, der stored upload identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3776,7 +3786,7 @@ paths:
         name: upload_id
         schema:
           type: string
-        description: A unique value identifying this stored upload.
+        description: Ein eindeutiger Wert, der stored upload identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3809,7 +3819,7 @@ paths:
         name: upload_id
         schema:
           type: string
-        description: A unique value identifying this stored upload.
+        description: Ein eindeutiger Wert, der stored upload identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3873,7 +3883,7 @@ paths:
         name: upload_id
         schema:
           type: string
-        description: A unique value identifying this temporary upload.
+        description: Ein eindeutiger Wert, der temporary upload identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3895,7 +3905,7 @@ paths:
         name: upload_id
         schema:
           type: string
-        description: A unique value identifying this temporary upload.
+        description: Ein eindeutiger Wert, der temporary upload identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3929,7 +3939,7 @@ paths:
         name: upload_id
         schema:
           type: string
-        description: A unique value identifying this temporary upload.
+        description: Ein eindeutiger Wert, der temporary upload identifiziert.
         required: true
       tags:
       - tapirmail
@@ -3962,7 +3972,7 @@ paths:
         name: upload_id
         schema:
           type: string
-        description: A unique value identifying this temporary upload.
+        description: Ein eindeutiger Wert, der temporary upload identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4133,7 +4143,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this static segment.
+        description: Ein eindeutiger Wert, der static segment identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4155,7 +4165,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this static segment.
+        description: Ein eindeutiger Wert, der static segment identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4189,7 +4199,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this static segment.
+        description: Ein eindeutiger Wert, der static segment identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4222,7 +4232,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this static segment.
+        description: Ein eindeutiger Wert, der static segment identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4286,7 +4296,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this static segment recipient.
+        description: Ein eindeutiger Wert, der static segment recipient identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4308,7 +4318,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this static segment recipient.
+        description: Ein eindeutiger Wert, der static segment recipient identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4342,7 +4352,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this static segment recipient.
+        description: Ein eindeutiger Wert, der static segment recipient identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4375,7 +4385,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this static segment recipient.
+        description: Ein eindeutiger Wert, der static segment recipient identifiziert.
         required: true
       tags:
       - tapirmail
@@ -4850,7 +4860,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this waiting list entry.
+        description: Ein eindeutiger Wert, der waiting list entry identifiziert.
         required: true
       tags:
       - waiting_list
@@ -4872,7 +4882,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this waiting list entry.
+        description: Ein eindeutiger Wert, der waiting list entry identifiziert.
         required: true
       tags:
       - waiting_list
@@ -4906,7 +4916,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this waiting list entry.
+        description: Ein eindeutiger Wert, der waiting list entry identifiziert.
         required: true
       tags:
       - waiting_list
@@ -4939,7 +4949,7 @@ paths:
         name: id
         schema:
           type: string
-        description: A unique value identifying this waiting list entry.
+        description: Ein eindeutiger Wert, der waiting list entry identifiziert.
         required: true
       tags:
       - waiting_list
@@ -7497,7 +7507,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UsedJokerInGrowingPeriod'
+        explanation_text:
+          type: string
       required:
+      - explanation_text
       - used_donations
       - used_joker_in_growing_period
       - used_jokers

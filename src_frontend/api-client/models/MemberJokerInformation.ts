@@ -65,6 +65,12 @@ export interface MemberJokerInformation {
      * @memberof MemberJokerInformation
      */
     usedJokerInGrowingPeriod: Array<UsedJokerInGrowingPeriod>;
+    /**
+     * 
+     * @type {string}
+     * @memberof MemberJokerInformation
+     */
+    explanationText: string;
 }
 
 /**
@@ -75,6 +81,7 @@ export function instanceOfMemberJokerInformation(value: object): value is Member
     if (!('usedDonations' in value) || value['usedDonations'] === undefined) return false;
     if (!('weekdayLimit' in value) || value['weekdayLimit'] === undefined) return false;
     if (!('usedJokerInGrowingPeriod' in value) || value['usedJokerInGrowingPeriod'] === undefined) return false;
+    if (!('explanationText' in value) || value['explanationText'] === undefined) return false;
     return true;
 }
 
@@ -92,6 +99,7 @@ export function MemberJokerInformationFromJSONTyped(json: any, ignoreDiscriminat
         'usedDonations': ((json['used_donations'] as Array<any>).map(DeliveryDonationWithCancellationLimitFromJSON)),
         'weekdayLimit': json['weekday_limit'],
         'usedJokerInGrowingPeriod': ((json['used_joker_in_growing_period'] as Array<any>).map(UsedJokerInGrowingPeriodFromJSON)),
+        'explanationText': json['explanation_text'],
     };
 }
 
@@ -110,6 +118,7 @@ export function MemberJokerInformationFromJSONTyped(json: any, ignoreDiscriminat
         'used_donations': ((value['usedDonations'] as Array<any>).map(DeliveryDonationWithCancellationLimitToJSON)),
         'weekday_limit': value['weekdayLimit'],
         'used_joker_in_growing_period': ((value['usedJokerInGrowingPeriod'] as Array<any>).map(UsedJokerInGrowingPeriodToJSON)),
+        'explanation_text': value['explanationText'],
     };
 }
 

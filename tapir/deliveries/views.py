@@ -137,6 +137,10 @@ class GetMemberJokerInformationView(APIView):
             "used_joker_in_growing_period": self.build_data_used_joker_in_growing_period(
                 member_id
             ),
+            "explanation_text": get_parameter_value(
+                key=ParameterKeys.EXPLANATION_TEXT_FOR_JOKERS_AND_DONATIONS,
+                cache=cache,
+            ),
         }
 
         return Response(

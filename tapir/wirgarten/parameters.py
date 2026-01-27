@@ -644,6 +644,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         self.parameter_definition(
+            key=ParameterKeys.EXPLANATION_TEXT_FOR_JOKERS_AND_DONATIONS,
+            label="Erklärungstext zu Joker und/oder Spende",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Standard Erklärungstext zu Joker und Spende, in der Konfig anzupassen unter 'Erklärungstext zu Joker und/oder Spende",
+            description=HTML_ALLOWED_TEXT,
+            category=ParameterCategory.JOKERS,
+            order_priority=0,
+            meta=ParameterMeta(textarea=True),
+        )
+
+        self.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL,
             label="Automatische Verlängerung der Verträge",
             datatype=TapirParameterDatatype.BOOLEAN,
