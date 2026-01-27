@@ -122,7 +122,7 @@ class KeycloakUser(AbstractUser):
             except:
                 has_kc_account = False
 
-        self_before_save = type(self).objects.get(id=self.id)
+        self_before_save = type(self).objects.filter(id=self.id).first()
 
         if has_kc_account:
             _partial = partial(
@@ -138,7 +138,7 @@ class KeycloakUser(AbstractUser):
                 cache=cache,
             )
 
-            if self.email_verified(cache=cache):
+            if self.email_verified(cache=cache) and self_before_save:
                 # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
                 # a confirmation link is only sent the email is verified
                 self.email = self_before_save.email
@@ -161,9 +161,10 @@ class KeycloakUser(AbstractUser):
         else:
             transaction.on_commit(_partial)
 
-        StaticSegmentRecipient.objects.filter(email=self_before_save.email).update(
-            first_name=self.first_name, last_name=self.last_name
-        )
+        if self_before_save:
+            StaticSegmentRecipient.objects.filter(email=self_before_save.email).update(
+                first_name=self.first_name, last_name=self.last_name
+            )
 
         super().save(*args, **kwargs)
 
