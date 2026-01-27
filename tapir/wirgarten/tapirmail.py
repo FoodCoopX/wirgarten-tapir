@@ -22,6 +22,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.services.newsletter_management_link_provider import (
     NewsletterManagementLinkProvider,
 )
+from tapir.generic_exports.services.member_segment_provider import MemberSegmentProvider
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -53,6 +54,9 @@ class Segments:
     NON_COOP_MEMBERS = "Nicht Geno-Mitglieder"
     WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Ertevertrag"
     WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufenden Ertevertrag"
+    MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO = (
+        "Mit Vertrag über einem Jahr aber kein Geno-Anteil"
+    )
 
 
 class Filters:
@@ -92,6 +96,11 @@ def _register_segments():
     register_segment(
         Segments.WITHOUT_ACTIVE_SUBSCRIPTION,
         lambda: Member.objects.without_active_subscription(),
+    )
+
+    register_segment(
+        Segments.MEMBERS_WITH_CONTRACT_SINCE_MORE_THAN_ONE_YEAR_BUT_NO,
+        lambda: MemberSegmentProvider.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share(),
     )
 
     cache = {}

@@ -407,15 +407,20 @@ def send_product_order_confirmation(
 
 
 def annotate_member_queryset_with_coop_shares_total_value(
-    queryset, outer_ref="id", cache: dict = None
+    queryset,
+    outer_ref="id",
+    cache: dict = None,
+    reference_date: datetime.date | None = None,
 ):
+    if reference_date is None:
+        reference_date = get_today(cache=cache)
+
     return queryset.annotate(
         coop_shares_total_value=Coalesce(
             Subquery(
                 CoopShareTransaction.objects.filter(
                     member_id=OuterRef(outer_ref),
                     valid_at__lte=get_today(cache=cache),
-                    # I do this to include new members in the list, which will join the coop soon
                 )
                 .values("member_id")
                 .annotate(total_value=Sum(F("quantity") * F("share_price")))
