@@ -8,7 +8,7 @@ import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
 import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
 import CoopSharesCard from "./coop_shares/CoopSharesCard.tsx";
 import MemberProfileSolidarityContributionCard from "./solidarity_contribution/MemberProfileSolidarityContributionCard.tsx";
-import MemberMailCategoryBase from "./mail_category/MemberMailCategoryBase.tsx";
+import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -134,7 +134,7 @@ if (domNodeMemberMailCategory) {
   const root = createRoot(domNodeMemberMailCategory);
 
   root.render(
-    <MemberMailCategoryBase
+    <MemberMailCategoryCard
       memberId={domNodeMemberMailCategory.dataset.memberId!}
       csrfToken={getCsrfToken()}
     />,

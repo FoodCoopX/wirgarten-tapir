@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
-import { Form, Modal, Spinner } from "react-bootstrap";
+import { Card, Form, Spinner } from "react-bootstrap";
 import { useApi } from "../../hooks/useApi.ts";
 import { CoreApi, type MailCategory } from "../../api-client";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
@@ -9,15 +9,11 @@ import TapirButton from "../../components/TapirButton.tsx";
 interface MemberMailCategoryModalProps {
   memberId: string;
   csrfToken: string;
-  open: boolean;
-  onClose: () => void;
 }
 
-const MemberMailCategoryModal: React.FC<MemberMailCategoryModalProps> = ({
+const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
   memberId,
   csrfToken,
-  open,
-  onClose,
 }) => {
   const api = useApi(CoreApi, csrfToken);
   const [categories, setCategories] = useState<MailCategory[]>([]);
@@ -28,10 +24,10 @@ const MemberMailCategoryModal: React.FC<MemberMailCategoryModalProps> = ({
   const [saveLoading, setSaveLoading] = useState(false);
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    loadData();
+  }, []);
 
+  function loadData() {
     setDataLoading(true);
     api
       .coreApiMemberMailCategoryDataRetrieve({ memberId: memberId })
@@ -40,10 +36,10 @@ const MemberMailCategoryModal: React.FC<MemberMailCategoryModalProps> = ({
         setCategoriesRegisteredTo(data.categoriesRegisteredTo);
       })
       .catch((error) =>
-        handleRequestError(error, "Fehler beim Laden der Newsletter-Daten"),
+        handleRequestError(error, "Fehler beim Laden der Mail-Abos"),
       )
       .finally(() => setDataLoading(false));
-  }, [open]);
+  }
 
   function onSave() {
     setSaveLoading(true);
@@ -55,21 +51,21 @@ const MemberMailCategoryModal: React.FC<MemberMailCategoryModalProps> = ({
           categoriesRegisteredTo: categoriesRegisteredTo,
         },
       })
-      .then(() => {
-        onClose();
-      })
       .catch((error) =>
-        handleRequestError(error, "Fehler beim Speichern der Newsletter-Daten"),
+        handleRequestError(error, "Fehler beim Speichern der Mail-Abos"),
       )
-      .finally(() => setSaveLoading(false));
+      .finally(() => {
+        setSaveLoading(false);
+        loadData();
+      });
   }
 
   return (
-    <Modal show={open} onHide={onClose} centered={true}>
-      <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Mail-Abos verwalten</h5>
-      </Modal.Header>
-      <Modal.Body>
+    <Card>
+      <Card.Header>
+        <h5 className={"mb-0"}>Mail-Abos</h5>
+      </Card.Header>
+      <Card.Body>
         {dataLoading ? (
           <Spinner />
         ) : (
@@ -88,18 +84,20 @@ const MemberMailCategoryModal: React.FC<MemberMailCategoryModalProps> = ({
             ))}
           </Form>
         )}
-      </Modal.Body>
-      <Modal.Footer>
-        <TapirButton
-          variant={"primary"}
-          text={"Speichern"}
-          icon={"save"}
-          onClick={onSave}
-          loading={saveLoading}
-        />
-      </Modal.Footer>
-    </Modal>
+      </Card.Body>
+      <Card.Footer>
+        <span className={"d-flex flex-row justify-content-end"}>
+          <TapirButton
+            variant={"primary"}
+            text={"Speichern"}
+            icon={"save"}
+            onClick={onSave}
+            loading={saveLoading}
+          />
+        </span>
+      </Card.Footer>
+    </Card>
   );
 };
 
-export default MemberMailCategoryModal;
+export default MemberMailCategoryCard;
