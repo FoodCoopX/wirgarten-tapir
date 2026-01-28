@@ -80,6 +80,9 @@ class JokerManagementService:
             DeliveryDonationManager,
         )
 
+        if not get_parameter_value(key=ParameterKeys.JOKERS_ENABLED, cache=cache):
+            return False
+
         return (
             not cls.does_member_have_a_joker_in_week(
                 member, reference_date, cache=cache

@@ -5,7 +5,6 @@ from collections import defaultdict
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from icecream import ic
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -93,7 +92,6 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
     include_equivalents: If true, the M-Äquivalent column is included -> Kommissionierliste, else Lieferantenliste
     """
     next_delivery_date = get_next_delivery_date(cache=cache)
-    ic(next_delivery_date)
     if not DeliveryCycleService.is_cycle_delivered_in_week(
         cycle=product_type.delivery_cycle, date=next_delivery_date, cache=cache
     ):
@@ -187,7 +185,6 @@ def should_export_list_today(cache: dict):
         ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
     )
     today = get_today(cache=cache)
-    ic(today.weekday(), weekday_limit, (weekday_limit + 1) % 7)
     # if the limit is wednesdays, export on thursday morning
     return today.weekday() == (weekday_limit + 1) % 7
 
@@ -199,7 +196,6 @@ def export_pick_list_csv():
     """
     cache = {}
     if not should_export_list_today(cache=cache):
-        ic("NO LIST TODAY")
         return
 
     all_product_types = {pt.name: pt for pt in get_active_product_types(cache=cache)}
