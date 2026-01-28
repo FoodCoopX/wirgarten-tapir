@@ -62,7 +62,7 @@ export function getStepTitle(
 
   const subStep = step.slice(separatorIndex + 1);
   if (subStep === "intro") {
-    return "Unser " + productType.name;
+    return productType.titleBestellwizardIntro;
   }
   return productType.titleBestellwizardProductChoice;
 }

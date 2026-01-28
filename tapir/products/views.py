@@ -42,6 +42,7 @@ class ExtendedProductTypeApiView(APIView):
         "is_association_membership",
         "force_waiting_list",
         "title_bestellwizard_product_choice",
+        "title_bestellwizard_intro",
         "background_image_in_bestellwizard",
     ]
 

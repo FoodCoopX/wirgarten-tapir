@@ -3,6 +3,7 @@ import { Col, Modal, Row, Spinner } from "react-bootstrap";
 import {
   DeliveriesApi,
   DeliveryCycleEnum,
+  type ExtendedProductTypeRequest,
   GrowingPeriod,
   NoticePeriodUnitEnum,
   ProductsApi,
@@ -79,6 +80,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
     titleBestellWizardProductChoices,
     setTitleBestellWizardProductChoices,
   ] = useState("");
+  const [titleBestellWizardIntro, setTitleBestellWizardIntro] = useState("");
   const [backgroundImageInBestellWizard, setBackgroundImageInBestellWizard] =
     useState("");
 
@@ -151,35 +153,38 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   function onSave() {
     setSaving(true);
 
+    const extendedProductType: ExtendedProductTypeRequest = {
+      isAssociationMembership: isAssociationMembership,
+      contractLink: contractLink,
+      orderInBestellwizard: orderInBestellwizard,
+      descriptionBestellwizardLong: descriptionBestellwizardLong,
+      descriptionBestellwizardShort: descriptionBestellwizardShort,
+      mustBeSubscribedTo: mustBeSubscribedTo,
+      singleSubscriptionOnly: singleSubscriptionOnly,
+      taxRateChangeDate: taxRateChangeDate,
+      taxRate: taxRate,
+      noticePeriodDuration: customNoticePeriodEnabled
+        ? noticePeriodDuration
+        : undefined,
+      noticePeriodUnit: customNoticePeriodEnabled
+        ? noticePeriodUnit
+        : undefined,
+      isAffectedByJokers: isAffectedByJokers,
+      deliveryCycle: deliveryCycle,
+      capacity: capacity,
+      iconLink: iconLink,
+      name: name,
+      forceWaitingList: forceWaitingList,
+      accordionsInBestellWizard: accordions,
+      titleBestellwizardProductChoice: titleBestellWizardProductChoices,
+      titleBestellwizardIntro: titleBestellWizardIntro,
+      backgroundImageInBestellwizard: backgroundImageInBestellWizard,
+    };
+
     const request = {
       productTypeId: selectedProductTypeId,
       growingPeriodId: getPeriodIdFromUrl(),
-      extendedProductType: {
-        isAssociationMembership: isAssociationMembership,
-        contractLink: contractLink,
-        orderInBestellwizard: orderInBestellwizard,
-        descriptionBestellwizardLong: descriptionBestellwizardLong,
-        descriptionBestellwizardShort: descriptionBestellwizardShort,
-        mustBeSubscribedTo: mustBeSubscribedTo,
-        singleSubscriptionOnly: singleSubscriptionOnly,
-        taxRateChangeDate: taxRateChangeDate,
-        taxRate: taxRate,
-        noticePeriodDuration: customNoticePeriodEnabled
-          ? noticePeriodDuration
-          : undefined,
-        noticePeriodUnit: customNoticePeriodEnabled
-          ? noticePeriodUnit
-          : undefined,
-        isAffectedByJokers: isAffectedByJokers,
-        deliveryCycle: deliveryCycle,
-        capacity: capacity,
-        iconLink: iconLink,
-        name: name,
-        forceWaitingList: forceWaitingList,
-        accordionsInBestellWizard: accordions,
-        titleBestellwizardProductChoice: titleBestellWizardProductChoices,
-        backgroundImageInBestellwizard: backgroundImageInBestellWizard,
-      },
+      extendedProductType: extendedProductType,
     };
 
     const promise = selectedProductTypeId
@@ -307,6 +312,8 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setTitleBestellWizardProductChoices={
             setTitleBestellWizardProductChoices
           }
+          titleBestellWizardIntro={titleBestellWizardIntro}
+          setTitleBestellWizardIntro={setTitleBestellWizardIntro}
           backgroundImageInBestellWizard={backgroundImageInBestellWizard}
           setBackgroundImageInBestellWizard={setBackgroundImageInBestellWizard}
           noticePeriodEnabled={customNoticePeriodEnabled}

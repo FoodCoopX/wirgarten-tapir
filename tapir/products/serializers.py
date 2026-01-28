@@ -39,6 +39,7 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
         many=True
     )
     title_bestellwizard_product_choice = serializers.CharField(allow_blank=True)
+    title_bestellwizard_intro = serializers.CharField(allow_blank=True)
     background_image_in_bestellwizard = serializers.CharField(allow_blank=True)
 
 

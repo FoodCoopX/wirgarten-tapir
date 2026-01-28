@@ -160,6 +160,12 @@ export interface ExtendedProductTypeRequest {
      * @type {string}
      * @memberof ExtendedProductTypeRequest
      */
+    titleBestellwizardIntro: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExtendedProductTypeRequest
+     */
     backgroundImageInBestellwizard: string;
 }
 
@@ -182,6 +188,7 @@ export function instanceOfExtendedProductTypeRequest(value: object): value is Ex
     if (!('forceWaitingList' in value) || value['forceWaitingList'] === undefined) return false;
     if (!('accordionsInBestellWizard' in value) || value['accordionsInBestellWizard'] === undefined) return false;
     if (!('titleBestellwizardProductChoice' in value) || value['titleBestellwizardProductChoice'] === undefined) return false;
+    if (!('titleBestellwizardIntro' in value) || value['titleBestellwizardIntro'] === undefined) return false;
     if (!('backgroundImageInBestellwizard' in value) || value['backgroundImageInBestellwizard'] === undefined) return false;
     return true;
 }
@@ -215,6 +222,7 @@ export function ExtendedProductTypeRequestFromJSONTyped(json: any, ignoreDiscrim
         'forceWaitingList': json['force_waiting_list'],
         'accordionsInBestellWizard': ((json['accordions_in_bestell_wizard'] as Array<any>).map(ProductTypeAccordionInBestellWizardRequestFromJSON)),
         'titleBestellwizardProductChoice': json['title_bestellwizard_product_choice'],
+        'titleBestellwizardIntro': json['title_bestellwizard_intro'],
         'backgroundImageInBestellwizard': json['background_image_in_bestellwizard'],
     };
 }
@@ -249,6 +257,7 @@ export function ExtendedProductTypeRequestFromJSONTyped(json: any, ignoreDiscrim
         'force_waiting_list': value['forceWaitingList'],
         'accordions_in_bestell_wizard': ((value['accordionsInBestellWizard'] as Array<any>).map(ProductTypeAccordionInBestellWizardRequestToJSON)),
         'title_bestellwizard_product_choice': value['titleBestellwizardProductChoice'],
+        'title_bestellwizard_intro': value['titleBestellwizardIntro'],
         'background_image_in_bestellwizard': value['backgroundImageInBestellwizard'],
     };
 }

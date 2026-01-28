@@ -6907,6 +6907,8 @@ components:
             $ref: '#/components/schemas/ProductTypeAccordionInBestellWizard'
         title_bestellwizard_product_choice:
           type: string
+        title_bestellwizard_intro:
+          type: string
         background_image_in_bestellwizard:
           type: string
       required:
@@ -6923,6 +6925,7 @@ components:
       - single_subscription_only
       - tax_rate
       - tax_rate_change_date
+      - title_bestellwizard_intro
       - title_bestellwizard_product_choice
     ExtendedProductTypeAndConfig:
       type: object
@@ -6995,6 +6998,8 @@ components:
             $ref: '#/components/schemas/ProductTypeAccordionInBestellWizardRequest'
         title_bestellwizard_product_choice:
           type: string
+        title_bestellwizard_intro:
+          type: string
         background_image_in_bestellwizard:
           type: string
       required:
@@ -7011,6 +7016,7 @@ components:
       - single_subscription_only
       - tax_rate
       - tax_rate_change_date
+      - title_bestellwizard_intro
       - title_bestellwizard_product_choice
     FuturePaymentsResponse:
       type: object
@@ -8820,6 +8826,9 @@ components:
           title: Reihenfolge im BestellWizard (kleiner ist früher)
         force_waiting_list:
           type: boolean
+        title_bestellwizard_intro:
+          type: string
+          maxLength: 512
         title_bestellwizard_product_choice:
           type: string
           maxLength: 512
@@ -9058,6 +9067,9 @@ components:
             $ref: '#/components/schemas/ProductTypeAccordionInBestellWizard'
           readOnly: true
         title_bestellwizard_product_choice:
+          type: string
+          maxLength: 512
+        title_bestellwizard_intro:
           type: string
           maxLength: 512
         icon_link:

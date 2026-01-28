@@ -224,6 +224,7 @@ class ProductType(TapirModel):
         verbose_name=_("Reihenfolge im BestellWizard (kleiner ist früher)"),
     )
     force_waiting_list = models.BooleanField(default=False)
+    title_bestellwizard_intro = models.CharField(max_length=512, default="")
     title_bestellwizard_product_choice = models.CharField(max_length=512, default="")
     background_image_in_bestellwizard = models.CharField(max_length=512, default="")
 
@@ -1070,14 +1071,11 @@ class SubscriptionChangeLogEntry(LogEntry):
     @staticmethod
     def build_subscription_list_as_string(subscriptions: list[Subscription]) -> str:
         subscriptions.sort(key=lambda subscription: subscription.product_id)
-        return ", ".join(
-            list(
-                map(
-                    lambda x: f"{x.quantity} × {x.product.name} ({format_date(x.start_date)} - {format_date(x.end_date)})",
-                    subscriptions,
-                )
-            )
-        )
+        subscriptions_as_string = [
+            f"{subscription.quantity} × {subscription.product.name} ({format_date(subscription.start_date)} - {format_date(subscription.end_date)})"
+            for subscription in subscriptions
+        ]
+        return ", ".join(subscriptions_as_string)
 
     def get_context_data(self):
         context = super().get_context_data()

@@ -116,6 +116,12 @@ export interface ProductType {
      * @type {string}
      * @memberof ProductType
      */
+    titleBestellwizardIntro?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProductType
+     */
     titleBestellwizardProductChoice?: string;
     /**
      * 
@@ -159,6 +165,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'descriptionBestellwizardLong': json['description_bestellwizard_long'] == null ? undefined : json['description_bestellwizard_long'],
         'orderInBestellwizard': json['order_in_bestellwizard'] == null ? undefined : json['order_in_bestellwizard'],
         'forceWaitingList': json['force_waiting_list'] == null ? undefined : json['force_waiting_list'],
+        'titleBestellwizardIntro': json['title_bestellwizard_intro'] == null ? undefined : json['title_bestellwizard_intro'],
         'titleBestellwizardProductChoice': json['title_bestellwizard_product_choice'] == null ? undefined : json['title_bestellwizard_product_choice'],
         'backgroundImageInBestellwizard': json['background_image_in_bestellwizard'] == null ? undefined : json['background_image_in_bestellwizard'],
     };
@@ -189,6 +196,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'description_bestellwizard_long': value['descriptionBestellwizardLong'],
         'order_in_bestellwizard': value['orderInBestellwizard'],
         'force_waiting_list': value['forceWaitingList'],
+        'title_bestellwizard_intro': value['titleBestellwizardIntro'],
         'title_bestellwizard_product_choice': value['titleBestellwizardProductChoice'],
         'background_image_in_bestellwizard': value['backgroundImageInBestellwizard'],
     };

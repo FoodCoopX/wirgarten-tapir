@@ -143,6 +143,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "force_waiting_list",
             "accordions",
             "title_bestellwizard_product_choice",
+            "title_bestellwizard_intro",
             "icon_link",
             "background_image_in_bestellwizard",
         ]

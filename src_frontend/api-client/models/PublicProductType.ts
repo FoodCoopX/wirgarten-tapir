@@ -111,6 +111,12 @@ export interface PublicProductType {
      * @type {string}
      * @memberof PublicProductType
      */
+    titleBestellwizardIntro?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PublicProductType
+     */
     iconLink?: string | null;
     /**
      * 
@@ -153,6 +159,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'forceWaitingList': json['force_waiting_list'] == null ? undefined : json['force_waiting_list'],
         'accordions': ((json['accordions'] as Array<any>).map(ProductTypeAccordionInBestellWizardFromJSON)),
         'titleBestellwizardProductChoice': json['title_bestellwizard_product_choice'] == null ? undefined : json['title_bestellwizard_product_choice'],
+        'titleBestellwizardIntro': json['title_bestellwizard_intro'] == null ? undefined : json['title_bestellwizard_intro'],
         'iconLink': json['icon_link'] == null ? undefined : json['icon_link'],
         'backgroundImageInBestellwizard': json['background_image_in_bestellwizard'] == null ? undefined : json['background_image_in_bestellwizard'],
     };
@@ -178,6 +185,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'single_subscription_only': value['singleSubscriptionOnly'],
         'force_waiting_list': value['forceWaitingList'],
         'title_bestellwizard_product_choice': value['titleBestellwizardProductChoice'],
+        'title_bestellwizard_intro': value['titleBestellwizardIntro'],
         'icon_link': value['iconLink'],
         'background_image_in_bestellwizard': value['backgroundImageInBestellwizard'],
     };

@@ -53,6 +53,8 @@ interface ProductTypeFormProps {
   setAccordions: (accordions: ProductTypeAccordionInBestellWizard[]) => void;
   titleBestellWizardProductChoices: string;
   setTitleBestellWizardProductChoices: (title: string) => void;
+  titleBestellWizardIntro: string;
+  setTitleBestellWizardIntro: (title: string) => void;
   backgroundImageInBestellWizard: string;
   setBackgroundImageInBestellWizard: (title: string) => void;
   setNoticePeriodEnabled: (enabled: boolean) => void;
@@ -106,6 +108,8 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setAccordions,
   titleBestellWizardProductChoices,
   setTitleBestellWizardProductChoices,
+  titleBestellWizardIntro,
+  setTitleBestellWizardIntro,
   backgroundImageInBestellWizard,
   setBackgroundImageInBestellWizard,
   noticePeriodEnabled,
@@ -475,6 +479,22 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                     }
                     required={true}
                     value={titleBestellWizardProductChoices}
+                  />
+                </Form.Group>
+              </Row>
+
+              <Row className={"mt-4"}>
+                <Form.Group controlId={"title_bestellwizard"}>
+                  <Form.Label>
+                    Titel im BestellWizard bei der Produkt-Typ-Intro
+                  </Form.Label>
+                  <Form.Control
+                    type={"text"}
+                    onChange={(event) =>
+                      setTitleBestellWizardIntro(event.target.value)
+                    }
+                    required={true}
+                    value={titleBestellWizardIntro}
                   />
                 </Form.Group>
               </Row>
