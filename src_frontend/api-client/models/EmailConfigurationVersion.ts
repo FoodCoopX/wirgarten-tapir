@@ -20,13 +20,6 @@ import {
     EmailConfigurationToJSON,
     EmailConfigurationToJSONTyped,
 } from './EmailConfiguration';
-import type { SegmentData } from './SegmentData';
-import {
-    SegmentDataFromJSON,
-    SegmentDataFromJSONTyped,
-    SegmentDataToJSON,
-    SegmentDataToJSONTyped,
-} from './SegmentData';
 import type { TriggerData } from './TriggerData';
 import {
     TriggerDataFromJSON,
@@ -68,12 +61,6 @@ export interface EmailConfigurationVersion {
     emailConfiguration: EmailConfiguration;
     /**
      * 
-     * @type {SegmentData}
-     * @memberof EmailConfigurationVersion
-     */
-    segmentData: SegmentData;
-    /**
-     * 
      * @type {boolean}
      * @memberof EmailConfigurationVersion
      */
@@ -108,6 +95,42 @@ export interface EmailConfigurationVersion {
      * @memberof EmailConfigurationVersion
      */
     status?: EmailConfigurationVersionStatusEnum;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersion
+     */
+    dynamicSegmentsAdditive?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersion
+     */
+    dynamicSegmentsSubtractive?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersion
+     */
+    filterList?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersion
+     */
+    staticSegmentsAdditive: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersion
+     */
+    staticSegmentsSubtractive: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersion
+     */
+    mailCategoriesAdditive: Array<string>;
 }
 
 
@@ -117,10 +140,12 @@ export interface EmailConfigurationVersion {
  */
 export function instanceOfEmailConfigurationVersion(value: object): value is EmailConfigurationVersion {
     if (!('emailConfiguration' in value) || value['emailConfiguration'] === undefined) return false;
-    if (!('segmentData' in value) || value['segmentData'] === undefined) return false;
     if (!('canBeDeleted' in value) || value['canBeDeleted'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
+    if (!('staticSegmentsAdditive' in value) || value['staticSegmentsAdditive'] === undefined) return false;
+    if (!('staticSegmentsSubtractive' in value) || value['staticSegmentsSubtractive'] === undefined) return false;
+    if (!('mailCategoriesAdditive' in value) || value['mailCategoriesAdditive'] === undefined) return false;
     return true;
 }
 
@@ -137,13 +162,18 @@ export function EmailConfigurationVersionFromJSONTyped(json: any, ignoreDiscrimi
         'id': json['id'] == null ? undefined : json['id'],
         'triggers': json['triggers'] == null ? undefined : ((json['triggers'] as Array<any>).map(TriggerDataFromJSON)),
         'emailConfiguration': EmailConfigurationFromJSON(json['email_configuration']),
-        'segmentData': SegmentDataFromJSON(json['segment_data']),
         'canBeDeleted': json['can_be_deleted'],
         'createdAt': (new Date(json['created_at'])),
         'updatedAt': (new Date(json['updated_at'])),
         'content': json['content'] == null ? undefined : json['content'],
         'subject': json['subject'] == null ? undefined : json['subject'],
         'status': json['status'] == null ? undefined : EmailConfigurationVersionStatusEnumFromJSON(json['status']),
+        'dynamicSegmentsAdditive': json['dynamic_segments_additive'] == null ? undefined : json['dynamic_segments_additive'],
+        'dynamicSegmentsSubtractive': json['dynamic_segments_subtractive'] == null ? undefined : json['dynamic_segments_subtractive'],
+        'filterList': json['filter_list'] == null ? undefined : json['filter_list'],
+        'staticSegmentsAdditive': json['static_segments_additive'],
+        'staticSegmentsSubtractive': json['static_segments_subtractive'],
+        'mailCategoriesAdditive': json['mail_categories_additive'],
     };
 }
 
@@ -161,10 +191,15 @@ export function EmailConfigurationVersionFromJSONTyped(json: any, ignoreDiscrimi
         'id': value['id'],
         'triggers': value['triggers'] == null ? undefined : ((value['triggers'] as Array<any>).map(TriggerDataToJSON)),
         'email_configuration': EmailConfigurationToJSON(value['emailConfiguration']),
-        'segment_data': SegmentDataToJSON(value['segmentData']),
         'content': value['content'],
         'subject': value['subject'],
         'status': EmailConfigurationVersionStatusEnumToJSON(value['status']),
+        'dynamic_segments_additive': value['dynamicSegmentsAdditive'],
+        'dynamic_segments_subtractive': value['dynamicSegmentsSubtractive'],
+        'filter_list': value['filterList'],
+        'static_segments_additive': value['staticSegmentsAdditive'],
+        'static_segments_subtractive': value['staticSegmentsSubtractive'],
+        'mail_categories_additive': value['mailCategoriesAdditive'],
     };
 }
 

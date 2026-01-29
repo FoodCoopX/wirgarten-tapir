@@ -16,11 +16,13 @@
 /**
  * * `optional_default_on` - Optional (Standard: ON)
  * * `optional_default_off` - Optional (Standard: OFF)
+ * * `always_on` - Pflicht
  * @export
  */
 export const ModeEnum = {
-    On: 'optional_default_on',
-    Off: 'optional_default_off'
+    OptionalDefaultOn: 'optional_default_on',
+    OptionalDefaultOff: 'optional_default_off',
+    AlwaysOn: 'always_on'
 } as const;
 export type ModeEnum = typeof ModeEnum[keyof typeof ModeEnum];
 

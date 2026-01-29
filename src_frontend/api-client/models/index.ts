@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AutomatedExportCycleEnum';
+export * from './AvailableSegmentsResponse';
 export * from './BestellWizardBaseDataResponse';
 export * from './BestellWizardCapacityCheckRequestRequest';
 export * from './BestellWizardCapacityCheckResponse';
@@ -166,7 +167,6 @@ export * from './SubscriptionChange';
 export * from './SubscriptionChangeLogEntry';
 export * from './SubscriptionDateChangeRequest';
 export * from './TapirmailApiSegmentAvailableFiltersRetrieve200Response';
-export * from './TapirmailApiSegmentAvailableSegmentsRetrieve200Response';
 export * from './TapirmailApiSegmentCombineCreate200Response';
 export * from './TapirmailApiSegmentCombineCreate200ResponseRecipientsInner';
 export * from './TemporaryUpload';

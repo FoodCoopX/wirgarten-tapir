@@ -13,6 +13,7 @@ apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AutomatedExportCycleEnum.ts
+models/AvailableSegmentsResponse.ts
 models/BestellWizardBaseDataResponse.ts
 models/BestellWizardCapacityCheckRequestRequest.ts
 models/BestellWizardCapacityCheckResponse.ts
@@ -178,7 +179,6 @@ models/SubscriptionChange.ts
 models/SubscriptionChangeLogEntry.ts
 models/SubscriptionDateChangeRequest.ts
 models/TapirmailApiSegmentAvailableFiltersRetrieve200Response.ts
-models/TapirmailApiSegmentAvailableSegmentsRetrieve200Response.ts
 models/TapirmailApiSegmentCombineCreate200Response.ts
 models/TapirmailApiSegmentCombineCreate200ResponseRecipientsInner.ts
 models/TemporaryUpload.ts

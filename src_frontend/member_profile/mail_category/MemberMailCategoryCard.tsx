@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
 import { Card, Form, Spinner } from "react-bootstrap";
 import { useApi } from "../../hooks/useApi.ts";
-import { CoreApi, type MailCategory } from "../../api-client";
+import { CoreApi, type MailCategory, ModeEnum } from "../../api-client";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 
@@ -79,6 +79,7 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
                     categoriesRegisteredTo[category.id!] = event.target.checked;
                     setCategoriesRegisteredTo({ ...categoriesRegisteredTo });
                   }}
+                  disabled={category.mode === ModeEnum.AlwaysOn}
                 />
               </Form.Group>
             ))}
@@ -89,7 +90,7 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
         <span className={"d-flex flex-row justify-content-end"}>
           <TapirButton
             variant={"primary"}
-            text={"Speichern"}
+            text={"Abos anpassen"}
             icon={"save"}
             onClick={onSave}
             loading={saveLoading}

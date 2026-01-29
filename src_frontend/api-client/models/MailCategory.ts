@@ -63,6 +63,12 @@ export interface MailCategory {
      * @memberof MailCategory
      */
     readonly registrationFormLink: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MailCategory
+     */
+    dynamicSegmentName?: string;
 }
 
 
@@ -95,6 +101,7 @@ export function MailCategoryFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'availableForExternalRecipients': json['available_for_external_recipients'],
         'nbRecipients': json['nb_recipients'],
         'registrationFormLink': json['registration_form_link'],
+        'dynamicSegmentName': json['dynamic_segment_name'] == null ? undefined : json['dynamic_segment_name'],
     };
 }
 
@@ -113,6 +120,7 @@ export function MailCategoryFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'name': value['name'],
         'mode': ModeEnumToJSON(value['mode']),
         'available_for_external_recipients': value['availableForExternalRecipients'],
+        'dynamic_segment_name': value['dynamicSegmentName'],
     };
 }
 

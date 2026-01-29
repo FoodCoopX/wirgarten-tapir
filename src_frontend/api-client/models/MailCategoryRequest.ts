@@ -51,6 +51,12 @@ export interface MailCategoryRequest {
      * @memberof MailCategoryRequest
      */
     availableForExternalRecipients: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof MailCategoryRequest
+     */
+    dynamicSegmentName?: string;
 }
 
 
@@ -79,6 +85,7 @@ export function MailCategoryRequestFromJSONTyped(json: any, ignoreDiscriminator:
         'name': json['name'],
         'mode': ModeEnumFromJSON(json['mode']),
         'availableForExternalRecipients': json['available_for_external_recipients'],
+        'dynamicSegmentName': json['dynamic_segment_name'] == null ? undefined : json['dynamic_segment_name'],
     };
 }
 
@@ -97,6 +104,7 @@ export function MailCategoryRequestFromJSONTyped(json: any, ignoreDiscriminator:
         'name': value['name'],
         'mode': ModeEnumToJSON(value['mode']),
         'available_for_external_recipients': value['availableForExternalRecipients'],
+        'dynamic_segment_name': value['dynamicSegmentName'],
     };
 }
 

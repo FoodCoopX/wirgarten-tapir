@@ -13,13 +13,6 @@
  */
 
 import { mapValues } from '../runtime';
-import type { SegmentDataRequest } from './SegmentDataRequest';
-import {
-    SegmentDataRequestFromJSON,
-    SegmentDataRequestFromJSONTyped,
-    SegmentDataRequestToJSON,
-    SegmentDataRequestToJSONTyped,
-} from './SegmentDataRequest';
 import type { TriggerDataRequest } from './TriggerDataRequest';
 import {
     TriggerDataRequestFromJSON,
@@ -68,12 +61,6 @@ export interface EmailConfigurationVersionRequest {
     emailConfiguration: EmailConfigurationRequest;
     /**
      * 
-     * @type {SegmentDataRequest}
-     * @memberof EmailConfigurationVersionRequest
-     */
-    segmentData: SegmentDataRequest;
-    /**
-     * 
      * @type {string}
      * @memberof EmailConfigurationVersionRequest
      */
@@ -90,6 +77,42 @@ export interface EmailConfigurationVersionRequest {
      * @memberof EmailConfigurationVersionRequest
      */
     status?: EmailConfigurationVersionStatusEnum;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersionRequest
+     */
+    dynamicSegmentsAdditive?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersionRequest
+     */
+    dynamicSegmentsSubtractive?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersionRequest
+     */
+    filterList?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersionRequest
+     */
+    staticSegmentsAdditive: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersionRequest
+     */
+    staticSegmentsSubtractive: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EmailConfigurationVersionRequest
+     */
+    mailCategoriesAdditive: Array<string>;
 }
 
 
@@ -99,7 +122,9 @@ export interface EmailConfigurationVersionRequest {
  */
 export function instanceOfEmailConfigurationVersionRequest(value: object): value is EmailConfigurationVersionRequest {
     if (!('emailConfiguration' in value) || value['emailConfiguration'] === undefined) return false;
-    if (!('segmentData' in value) || value['segmentData'] === undefined) return false;
+    if (!('staticSegmentsAdditive' in value) || value['staticSegmentsAdditive'] === undefined) return false;
+    if (!('staticSegmentsSubtractive' in value) || value['staticSegmentsSubtractive'] === undefined) return false;
+    if (!('mailCategoriesAdditive' in value) || value['mailCategoriesAdditive'] === undefined) return false;
     return true;
 }
 
@@ -116,10 +141,15 @@ export function EmailConfigurationVersionRequestFromJSONTyped(json: any, ignoreD
         'id': json['id'] == null ? undefined : json['id'],
         'triggers': json['triggers'] == null ? undefined : ((json['triggers'] as Array<any>).map(TriggerDataRequestFromJSON)),
         'emailConfiguration': EmailConfigurationRequestFromJSON(json['email_configuration']),
-        'segmentData': SegmentDataRequestFromJSON(json['segment_data']),
         'content': json['content'] == null ? undefined : json['content'],
         'subject': json['subject'] == null ? undefined : json['subject'],
         'status': json['status'] == null ? undefined : EmailConfigurationVersionStatusEnumFromJSON(json['status']),
+        'dynamicSegmentsAdditive': json['dynamic_segments_additive'] == null ? undefined : json['dynamic_segments_additive'],
+        'dynamicSegmentsSubtractive': json['dynamic_segments_subtractive'] == null ? undefined : json['dynamic_segments_subtractive'],
+        'filterList': json['filter_list'] == null ? undefined : json['filter_list'],
+        'staticSegmentsAdditive': json['static_segments_additive'],
+        'staticSegmentsSubtractive': json['static_segments_subtractive'],
+        'mailCategoriesAdditive': json['mail_categories_additive'],
     };
 }
 
@@ -137,10 +167,15 @@ export function EmailConfigurationVersionRequestFromJSONTyped(json: any, ignoreD
         'id': value['id'],
         'triggers': value['triggers'] == null ? undefined : ((value['triggers'] as Array<any>).map(TriggerDataRequestToJSON)),
         'email_configuration': EmailConfigurationRequestToJSON(value['emailConfiguration']),
-        'segment_data': SegmentDataRequestToJSON(value['segmentData']),
         'content': value['content'],
         'subject': value['subject'],
         'status': EmailConfigurationVersionStatusEnumToJSON(value['status']),
+        'dynamic_segments_additive': value['dynamicSegmentsAdditive'],
+        'dynamic_segments_subtractive': value['dynamicSegmentsSubtractive'],
+        'filter_list': value['filterList'],
+        'static_segments_additive': value['staticSegmentsAdditive'],
+        'static_segments_subtractive': value['staticSegmentsSubtractive'],
+        'mail_categories_additive': value['mailCategoriesAdditive'],
     };
 }
 

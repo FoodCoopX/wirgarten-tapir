@@ -6,12 +6,13 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serial
 from rest_framework import status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.models import MailCategory
+from tapir_mail.models import MailCategory, InternalRecipientCategoryRegistration
+from tapir_mail.registries import segment_registry
 from tapir_mail.serializers import MailCategorySerializer
-from tapir_mail.service.external_recipient_manager import ExternalRecipientManager
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.serializers import MemberMailCategoryRequestSerializer
+from tapir.core.services.internal_recipient_manager import InternalRecipientManager
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import check_permission_or_self
@@ -54,9 +55,16 @@ class MemberMailCategoryDataApiView(APIView):
         member = get_object_or_404(Member, id=member_id)
         mail_categories = MailCategory.objects.select_related("static_segment")
 
+        mail_categories = [
+            category
+            for category in mail_categories
+            if category.dynamic_segment_name != ""
+            and member in segment_registry[category.dynamic_segment_name]()
+        ]
+
         categories_registered_to = {
-            category.id: ExternalRecipientManager.is_email_address_registered_to_category(
-                mail_category=category, email=member.email
+            category.id: InternalRecipientManager.is_member_registered_to_mail_category(
+                mail_category=category, member=member
             )
             for category in mail_categories
         }
@@ -81,19 +89,25 @@ class MemberMailCategoryDataApiView(APIView):
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
+        InternalRecipientCategoryRegistration.objects.filter(
+            internal_recipient_id=member.id,
+        ).delete()
+
         for category_id, enabled in serializer.validated_data[
             "categories_registered_to"
         ].items():
             mail_category = get_object_or_404(MailCategory, id=category_id)
             if enabled:
-                ExternalRecipientManager.register_static_recipient_to_category(
+                InternalRecipientCategoryRegistration.objects.create(
                     mail_category=mail_category,
-                    email=member.email,
-                    first_name=member.first_name,
+                    internal_recipient_id=member.id,
+                    is_registered=True,
                 )
             else:
-                ExternalRecipientManager.remove_static_recipient_from_category(
-                    mail_category=mail_category, email=member.email
+                InternalRecipientCategoryRegistration.objects.create(
+                    mail_category=mail_category,
+                    internal_recipient_id=member.id,
+                    is_registered=False,
                 )
 
         return Response(True)

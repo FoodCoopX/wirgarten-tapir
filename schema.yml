@@ -4038,16 +4038,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  segments:
-                    type: array
-                    items:
-                      type: string
-                  staticSegments:
-                    type: array
-                    items:
-                      type: string
+                $ref: '#/components/schemas/AvailableSegmentsResponse'
           description: ''
   /tapirmail/api/segment/combine/:
     post:
@@ -4976,6 +4967,25 @@ components:
         * `weekly` - Wöchentlich
         * `daily` - Täglich
         * `never` - Nie
+    AvailableSegmentsResponse:
+      type: object
+      properties:
+        dynamic_segments:
+          type: object
+          additionalProperties:
+            type: string
+        static_segments:
+          type: object
+          additionalProperties:
+            type: string
+        mail_categories:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+      - dynamic_segments
+      - mail_categories
+      - static_segments
     BestellWizardBaseDataResponse:
       type: object
       properties:
@@ -6479,8 +6489,6 @@ components:
             $ref: '#/components/schemas/TriggerData'
         email_configuration:
           $ref: '#/components/schemas/EmailConfiguration'
-        segment_data:
-          $ref: '#/components/schemas/SegmentData'
         can_be_deleted:
           type: boolean
           readOnly: true
@@ -6501,11 +6509,40 @@ components:
           maxLength: 255
         status:
           $ref: '#/components/schemas/EmailConfigurationVersionStatusEnum'
+        dynamic_segments_additive:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+        dynamic_segments_subtractive:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+        filter_list:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+        static_segments_additive:
+          type: array
+          items:
+            type: string
+        static_segments_subtractive:
+          type: array
+          items:
+            type: string
+        mail_categories_additive:
+          type: array
+          items:
+            type: string
       required:
       - can_be_deleted
       - created_at
       - email_configuration
-      - segment_data
+      - mail_categories_additive
+      - static_segments_additive
+      - static_segments_subtractive
       - updated_at
     EmailConfigurationVersionRequest:
       type: object
@@ -6520,8 +6557,6 @@ components:
             $ref: '#/components/schemas/TriggerDataRequest'
         email_configuration:
           $ref: '#/components/schemas/EmailConfigurationRequest'
-        segment_data:
-          $ref: '#/components/schemas/SegmentDataRequest'
         content:
           type: string
           nullable: true
@@ -6532,9 +6567,44 @@ components:
           maxLength: 255
         status:
           $ref: '#/components/schemas/EmailConfigurationVersionStatusEnum'
+        dynamic_segments_additive:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+        dynamic_segments_subtractive:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+        filter_list:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+        static_segments_additive:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        static_segments_subtractive:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        mail_categories_additive:
+          type: array
+          items:
+            type: string
+            minLength: 1
       required:
       - email_configuration
-      - segment_data
+      - mail_categories_additive
+      - static_segments_additive
+      - static_segments_subtractive
     EmailConfigurationVersionStatusEnum:
       enum:
       - draft
@@ -7240,6 +7310,9 @@ components:
         registration_form_link:
           type: string
           readOnly: true
+        dynamic_segment_name:
+          type: string
+          maxLength: 100
       required:
       - available_for_external_recipients
       - mode
@@ -7261,6 +7334,9 @@ components:
           $ref: '#/components/schemas/ModeEnum'
         available_for_external_recipients:
           type: boolean
+        dynamic_segment_name:
+          type: string
+          maxLength: 100
       required:
       - available_for_external_recipients
       - mode
@@ -7649,10 +7725,12 @@ components:
       enum:
       - optional_default_on
       - optional_default_off
+      - always_on
       type: string
       description: |-
         * `optional_default_on` - Optional (Standard: ON)
         * `optional_default_off` - Optional (Standard: OFF)
+        * `always_on` - Pflicht
     NoticePeriodUnitEnum:
       enum:
       - months
@@ -8095,6 +8173,9 @@ components:
           $ref: '#/components/schemas/ModeEnum'
         available_for_external_recipients:
           type: boolean
+        dynamic_segment_name:
+          type: string
+          maxLength: 100
     PatchedPdfExportModelRequest:
       type: object
       properties:
@@ -8696,9 +8777,8 @@ components:
       - de
       - en
       type: string
-      description: |-
-        * `de` - 🇩🇪 Deutsch
-        * `en` - 🇬🇧 English
+      description: "* `de` - \U0001F1E9\U0001F1EA Deutsch\n* `en` - \U0001F1EC\U0001F1E7
+        English"
     Product:
       type: object
       properties:
@@ -9229,20 +9309,23 @@ components:
     SegmentData:
       type: object
       properties:
-        add_segments:
+        dynamic_segment_names_additive:
           type: array
           items:
             type: string
-        static_segments:
+        dynamic_segment_names_subtractive:
           type: array
           items:
             type: string
-        static_segments_subtractive:
+        static_segment_ids_additive:
           type: array
           items:
             type: string
-          nullable: true
-        remove_segments:
+        static_segment_ids_subtractive:
+          type: array
+          items:
+            type: string
+        mail_category_ids_additive:
           type: array
           items:
             type: string
@@ -9251,31 +9334,36 @@ components:
           items:
             type: string
       required:
-      - add_segments
+      - dynamic_segment_names_additive
+      - dynamic_segment_names_subtractive
       - filter_list
-      - remove_segments
-      - static_segments
-      - static_segments_subtractive
+      - mail_category_ids_additive
+      - static_segment_ids_additive
+      - static_segment_ids_subtractive
     SegmentDataRequest:
       type: object
       properties:
-        add_segments:
+        dynamic_segment_names_additive:
           type: array
           items:
             type: string
             minLength: 1
-        static_segments:
+        dynamic_segment_names_subtractive:
           type: array
           items:
             type: string
             minLength: 1
-        static_segments_subtractive:
+        static_segment_ids_additive:
           type: array
           items:
             type: string
             minLength: 1
-          nullable: true
-        remove_segments:
+        static_segment_ids_subtractive:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        mail_category_ids_additive:
           type: array
           items:
             type: string
@@ -9286,11 +9374,12 @@ components:
             type: string
             minLength: 1
       required:
-      - add_segments
+      - dynamic_segment_names_additive
+      - dynamic_segment_names_subtractive
       - filter_list
-      - remove_segments
-      - static_segments
-      - static_segments_subtractive
+      - mail_category_ids_additive
+      - static_segment_ids_additive
+      - static_segment_ids_subtractive
     SolidarityContribution:
       type: object
       properties:

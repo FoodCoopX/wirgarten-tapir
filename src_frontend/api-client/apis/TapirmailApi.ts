@@ -15,6 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
+  AvailableSegmentsResponse,
   BundledEmailConfiguration,
   BundledEmailConfigurationRequest,
   CreateMissingTriggerMailRequest,
@@ -54,13 +55,14 @@ import type {
   StoredUpload,
   StoredUploadRequest,
   TapirmailApiSegmentAvailableFiltersRetrieve200Response,
-  TapirmailApiSegmentAvailableSegmentsRetrieve200Response,
   TapirmailApiSegmentCombineCreate200Response,
   TemporaryUpload,
   TemporaryUploadRequest,
   TriggerDefinition,
 } from '../models/index';
 import {
+    AvailableSegmentsResponseFromJSON,
+    AvailableSegmentsResponseToJSON,
     BundledEmailConfigurationFromJSON,
     BundledEmailConfigurationToJSON,
     BundledEmailConfigurationRequestFromJSON,
@@ -139,8 +141,6 @@ import {
     StoredUploadRequestToJSON,
     TapirmailApiSegmentAvailableFiltersRetrieve200ResponseFromJSON,
     TapirmailApiSegmentAvailableFiltersRetrieve200ResponseToJSON,
-    TapirmailApiSegmentAvailableSegmentsRetrieve200ResponseFromJSON,
-    TapirmailApiSegmentAvailableSegmentsRetrieve200ResponseToJSON,
     TapirmailApiSegmentCombineCreate200ResponseFromJSON,
     TapirmailApiSegmentCombineCreate200ResponseToJSON,
     TemporaryUploadFromJSON,
@@ -3164,7 +3164,7 @@ export class TapirmailApi extends runtime.BaseAPI {
     /**
      * Get a list of available segments.
      */
-    async tapirmailApiSegmentAvailableSegmentsRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TapirmailApiSegmentAvailableSegmentsRetrieve200Response>> {
+    async tapirmailApiSegmentAvailableSegmentsRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AvailableSegmentsResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -3183,13 +3183,13 @@ export class TapirmailApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => TapirmailApiSegmentAvailableSegmentsRetrieve200ResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => AvailableSegmentsResponseFromJSON(jsonValue));
     }
 
     /**
      * Get a list of available segments.
      */
-    async tapirmailApiSegmentAvailableSegmentsRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TapirmailApiSegmentAvailableSegmentsRetrieve200Response> {
+    async tapirmailApiSegmentAvailableSegmentsRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AvailableSegmentsResponse> {
         const response = await this.tapirmailApiSegmentAvailableSegmentsRetrieveRaw(initOverrides);
         return await response.value();
     }

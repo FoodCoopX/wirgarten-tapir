@@ -51,6 +51,12 @@ export interface PatchedMailCategoryRequest {
      * @memberof PatchedMailCategoryRequest
      */
     availableForExternalRecipients?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatchedMailCategoryRequest
+     */
+    dynamicSegmentName?: string;
 }
 
 
@@ -76,6 +82,7 @@ export function PatchedMailCategoryRequestFromJSONTyped(json: any, ignoreDiscrim
         'name': json['name'] == null ? undefined : json['name'],
         'mode': json['mode'] == null ? undefined : ModeEnumFromJSON(json['mode']),
         'availableForExternalRecipients': json['available_for_external_recipients'] == null ? undefined : json['available_for_external_recipients'],
+        'dynamicSegmentName': json['dynamic_segment_name'] == null ? undefined : json['dynamic_segment_name'],
     };
 }
 
@@ -94,6 +101,7 @@ export function PatchedMailCategoryRequestFromJSONTyped(json: any, ignoreDiscrim
         'name': value['name'],
         'mode': ModeEnumToJSON(value['mode']),
         'available_for_external_recipients': value['availableForExternalRecipients'],
+        'dynamic_segment_name': value['dynamicSegmentName'],
     };
 }
 

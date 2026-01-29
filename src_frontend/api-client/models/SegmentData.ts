@@ -24,25 +24,31 @@ export interface SegmentData {
      * @type {Array<string>}
      * @memberof SegmentData
      */
-    addSegments: Array<string>;
+    dynamicSegmentNamesAdditive: Array<string>;
     /**
      * 
      * @type {Array<string>}
      * @memberof SegmentData
      */
-    staticSegments: Array<string>;
+    dynamicSegmentNamesSubtractive: Array<string>;
     /**
      * 
      * @type {Array<string>}
      * @memberof SegmentData
      */
-    staticSegmentsSubtractive: Array<string> | null;
+    staticSegmentIdsAdditive: Array<string>;
     /**
      * 
      * @type {Array<string>}
      * @memberof SegmentData
      */
-    removeSegments: Array<string>;
+    staticSegmentIdsSubtractive: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof SegmentData
+     */
+    mailCategoryIdsAdditive: Array<string>;
     /**
      * 
      * @type {Array<string>}
@@ -55,10 +61,11 @@ export interface SegmentData {
  * Check if a given object implements the SegmentData interface.
  */
 export function instanceOfSegmentData(value: object): value is SegmentData {
-    if (!('addSegments' in value) || value['addSegments'] === undefined) return false;
-    if (!('staticSegments' in value) || value['staticSegments'] === undefined) return false;
-    if (!('staticSegmentsSubtractive' in value) || value['staticSegmentsSubtractive'] === undefined) return false;
-    if (!('removeSegments' in value) || value['removeSegments'] === undefined) return false;
+    if (!('dynamicSegmentNamesAdditive' in value) || value['dynamicSegmentNamesAdditive'] === undefined) return false;
+    if (!('dynamicSegmentNamesSubtractive' in value) || value['dynamicSegmentNamesSubtractive'] === undefined) return false;
+    if (!('staticSegmentIdsAdditive' in value) || value['staticSegmentIdsAdditive'] === undefined) return false;
+    if (!('staticSegmentIdsSubtractive' in value) || value['staticSegmentIdsSubtractive'] === undefined) return false;
+    if (!('mailCategoryIdsAdditive' in value) || value['mailCategoryIdsAdditive'] === undefined) return false;
     if (!('filterList' in value) || value['filterList'] === undefined) return false;
     return true;
 }
@@ -73,10 +80,11 @@ export function SegmentDataFromJSONTyped(json: any, ignoreDiscriminator: boolean
     }
     return {
         
-        'addSegments': json['add_segments'],
-        'staticSegments': json['static_segments'],
-        'staticSegmentsSubtractive': json['static_segments_subtractive'] == null ? null : json['static_segments_subtractive'],
-        'removeSegments': json['remove_segments'],
+        'dynamicSegmentNamesAdditive': json['dynamic_segment_names_additive'],
+        'dynamicSegmentNamesSubtractive': json['dynamic_segment_names_subtractive'],
+        'staticSegmentIdsAdditive': json['static_segment_ids_additive'],
+        'staticSegmentIdsSubtractive': json['static_segment_ids_subtractive'],
+        'mailCategoryIdsAdditive': json['mail_category_ids_additive'],
         'filterList': json['filter_list'],
     };
 }
@@ -92,10 +100,11 @@ export function SegmentDataFromJSONTyped(json: any, ignoreDiscriminator: boolean
 
     return {
         
-        'add_segments': value['addSegments'],
-        'static_segments': value['staticSegments'],
-        'static_segments_subtractive': value['staticSegmentsSubtractive'],
-        'remove_segments': value['removeSegments'],
+        'dynamic_segment_names_additive': value['dynamicSegmentNamesAdditive'],
+        'dynamic_segment_names_subtractive': value['dynamicSegmentNamesSubtractive'],
+        'static_segment_ids_additive': value['staticSegmentIdsAdditive'],
+        'static_segment_ids_subtractive': value['staticSegmentIdsSubtractive'],
+        'mail_category_ids_additive': value['mailCategoryIdsAdditive'],
         'filter_list': value['filterList'],
     };
 }
