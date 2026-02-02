@@ -201,7 +201,7 @@ def calculate_pickup_location_change_date(
             ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
         )
 
-    change_date = reference_date + datetime.timedelta(days=1)
+    change_date = reference_date
 
     while change_date.weekday() != change_until_weekday:
         change_date += datetime.timedelta(days=1)

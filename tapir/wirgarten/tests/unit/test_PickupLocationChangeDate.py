@@ -32,3 +32,12 @@ class PickupLocationChangeDateTestCase(TestCase):
                 change_until_weekday=1,
             ),
         )
+
+        self.assertEqual(
+            datetime.date(year=2025, month=11, day=9),
+            calculate_pickup_location_change_date(
+                reference_date=datetime.date(year=2025, month=11, day=9),
+                change_until_weekday=6,
+            ),
+            msg="Changing on the same day as the change_until_weekday parameter should return the reference date",
+        )
