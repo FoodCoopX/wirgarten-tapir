@@ -243,19 +243,24 @@ class RegistrationWizardViewBase(CookieWizardView):
         self.condition_dict = self.init_conditions()
         return super().dispatch(request, *args, **kwargs)
 
+    def should_show_harvest_share_step(self):
+        growing_periods = GrowingPeriodChoiceProvider.get_available_growing_periods(
+            end_date_after=self.start_date
+        )
+        if len(growing_periods) == 0:
+            return False
+
+        reference_date = max(self.start_date, growing_periods[0].start_date)
+
+        return is_product_type_available(
+            BaseProductTypeService.get_base_product_type(cache=self.cache),
+            reference_date=reference_date,
+            cache=self.cache,
+        )
+
     def init_conditions(self):
         _coop_shares_without_harvest_shares_possible = get_parameter_value(
             ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=self.cache
-        )
-
-        _show_harvest_shares = is_product_type_available(
-            BaseProductTypeService.get_base_product_type(cache=self.cache),
-            reference_date=self.start_date,
-            cache=self.cache,
-        ) and len(
-            GrowingPeriodChoiceProvider.get_available_growing_periods(
-                end_date_after=self.start_date
-            )
         )
 
         if legal_status_is_cooperative(cache=self.cache):
@@ -278,6 +283,8 @@ class RegistrationWizardViewBase(CookieWizardView):
             show_additional_products = True
         else:
             show_additional_products = lambda wizard: has_selected_base_product(wizard)
+
+        _show_harvest_shares = self.should_show_harvest_share_step()
 
         return {
             STEP_BASE_PRODUCT: _show_harvest_shares,
