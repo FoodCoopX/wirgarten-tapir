@@ -103,7 +103,11 @@ class UpdateMemberSolidarityContributionApiView(APIView):
             )
 
         MemberSolidarityContributionService.assign_contribution_to_member(
-            member_id=member.id, change_date=change_date, cache=cache, amount=amount
+            member=member,
+            change_date=change_date,
+            cache=cache,
+            amount=amount,
+            actor=request.user,
         )
 
         MemberCreditCreator.create_member_credit_if_necessary(

@@ -2,7 +2,10 @@ import datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
-from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.solidarity_contribution.models import (
+    SolidarityContribution,
+    SolidarityContributionChangedLogEntry,
+)
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
 )
@@ -91,10 +94,11 @@ class TestMemberSolidarityContributionService(TapirIntegrationTest):
         member = MemberFactory.create()
 
         MemberSolidarityContributionService.assign_contribution_to_member(
-            member_id=member.id,
+            member=member,
             change_date=datetime.date(year=2024, month=1, day=1),
             amount=0,
             cache={},
+            actor=member,
         )
 
         self.assertFalse(SolidarityContribution.objects.exists())
@@ -124,10 +128,11 @@ class TestMemberSolidarityContributionService(TapirIntegrationTest):
         )
 
         MemberSolidarityContributionService.assign_contribution_to_member(
-            member_id=member.id,
+            member=member,
             change_date=datetime.date(year=2024, month=6, day=1),
             amount=17,
             cache={},
+            actor=member,
         )
 
         self.assertEqual(3, SolidarityContribution.objects.count())
@@ -176,10 +181,11 @@ class TestMemberSolidarityContributionService(TapirIntegrationTest):
         member = MemberFactory.create()
 
         MemberSolidarityContributionService.assign_contribution_to_member(
-            member_id=member.id,
+            member=member,
             change_date=datetime.date(year=2024, month=6, day=1),
             amount=17,
             cache={},
+            actor=member,
         )
 
         self.assertEqual(1, SolidarityContribution.objects.count())
@@ -191,6 +197,153 @@ class TestMemberSolidarityContributionService(TapirIntegrationTest):
         self.assertEqual(
             datetime.date(year=2025, month=1, day=31), new_contribution.end_date
         )
+
+    def test_assignContributionToMember_noPastContributionAndNewAmountIsZero_logEntryNotCreated(
+        self,
+    ):
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2024, month=1, day=1))
+        member = MemberFactory.create()
+
+        MemberSolidarityContributionService.assign_contribution_to_member(
+            member=member,
+            change_date=datetime.date(year=2024, month=6, day=1),
+            amount=0,
+            cache={},
+            actor=member,
+        )
+
+        self.assertFalse(SolidarityContribution.objects.exists())
+        self.assertFalse(SolidarityContributionChangedLogEntry.objects.exists())
+
+    def test_assignContributionToMember_noCurrentContributionAndNewAmountIsNotZero_logEntryCreatedWithJustNewContribution(
+        self,
+    ):
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2024, month=1, day=1))
+        member = MemberFactory.create()
+
+        MemberSolidarityContributionService.assign_contribution_to_member(
+            member=member,
+            change_date=datetime.date(year=2024, month=6, day=1),
+            amount=10,
+            cache={},
+            actor=member,
+        )
+
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        self.assertEqual(1, SolidarityContributionChangedLogEntry.objects.count())
+
+        contribution = SolidarityContribution.objects.get()
+        log_entry = SolidarityContributionChangedLogEntry.objects.get()
+        self.assertEqual(Decimal(10), log_entry.new_contribution_amount)
+        self.assertEqual(contribution, log_entry.new_contribution)
+        self.assertEqual(contribution.start_date, log_entry.new_contribution_start_date)
+        self.assertIsNone(log_entry.old_contribution)
+        self.assertEqual(Decimal(0), log_entry.old_contribution_amount)
+        self.assertIsNone(log_entry.old_contribution_end_date)
+
+    def test_assignContributionToMember_hasCurrentContributionAndNewAmountIsZero_logEntryCreatedWithJustOldContribution(
+        self,
+    ):
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2024, month=1, day=1))
+        member = MemberFactory.create()
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=15,
+            start_date=datetime.date(year=2024, month=1, day=1),
+            end_date=datetime.date(year=2024, month=12, day=31),
+        )
+
+        MemberSolidarityContributionService.assign_contribution_to_member(
+            member=member,
+            change_date=datetime.date(year=2024, month=6, day=1),
+            amount=0,
+            cache={},
+            actor=member,
+        )
+
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        self.assertEqual(1, SolidarityContributionChangedLogEntry.objects.count())
+
+        contribution = SolidarityContribution.objects.get()
+        log_entry = SolidarityContributionChangedLogEntry.objects.get()
+
+        self.assertIsNone(log_entry.new_contribution)
+        self.assertEqual(Decimal(0), log_entry.new_contribution_amount)
+        self.assertIsNone(log_entry.new_contribution_start_date)
+
+        self.assertEqual(contribution, log_entry.old_contribution)
+        self.assertEqual(Decimal(15), log_entry.old_contribution_amount)
+        self.assertEqual(contribution.end_date, log_entry.old_contribution_end_date)
+
+    def test_assignContributionToMember_hasCurrentContributionAndNewAmountIsNotZero_logEntryCreatedWithOldAndNewContribution(
+        self,
+    ):
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2024, month=1, day=1))
+        member = MemberFactory.create()
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=15,
+            start_date=datetime.date(year=2024, month=1, day=1),
+            end_date=datetime.date(year=2024, month=12, day=31),
+        )
+
+        MemberSolidarityContributionService.assign_contribution_to_member(
+            member=member,
+            change_date=datetime.date(year=2024, month=6, day=1),
+            amount=20,
+            cache={},
+            actor=member,
+        )
+
+        self.assertEqual(2, SolidarityContribution.objects.count())
+        self.assertEqual(1, SolidarityContributionChangedLogEntry.objects.count())
+
+        new_contribution = SolidarityContribution.objects.order_by("start_date").last()
+        log_entry = SolidarityContributionChangedLogEntry.objects.get()
+
+        self.assertEqual(new_contribution, log_entry.new_contribution)
+        self.assertEqual(Decimal(20), log_entry.new_contribution_amount)
+        self.assertEqual(
+            new_contribution.start_date, log_entry.new_contribution_start_date
+        )
+
+        old_contribution = SolidarityContribution.objects.order_by("start_date").first()
+        self.assertEqual(old_contribution, log_entry.old_contribution)
+        self.assertEqual(Decimal(15), log_entry.old_contribution_amount)
+        self.assertEqual(old_contribution.end_date, log_entry.old_contribution_end_date)
+
+    def test_assignContributionToMember_hadPastContributionAndNewAmountIsNotZero_logEntryCreatedWithJustNewContribution(
+        self,
+    ):
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2024, month=1, day=1))
+        member = MemberFactory.create()
+        # This contribution ended before the new one started, so it should not be linked
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=15,
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+        )
+
+        MemberSolidarityContributionService.assign_contribution_to_member(
+            member=member,
+            change_date=datetime.date(year=2024, month=6, day=1),
+            amount=10,
+            cache={},
+            actor=member,
+        )
+
+        self.assertEqual(2, SolidarityContribution.objects.count())
+        self.assertEqual(1, SolidarityContributionChangedLogEntry.objects.count())
+
+        contribution = SolidarityContribution.objects.order_by("start_date").last()
+        log_entry = SolidarityContributionChangedLogEntry.objects.get()
+        self.assertEqual(Decimal(10), log_entry.new_contribution_amount)
+        self.assertEqual(contribution, log_entry.new_contribution)
+        self.assertEqual(contribution.start_date, log_entry.new_contribution_start_date)
+        self.assertIsNone(log_entry.old_contribution)
+        self.assertEqual(Decimal(0), log_entry.old_contribution_amount)
+        self.assertIsNone(log_entry.old_contribution_end_date)
 
     @patch.object(MemberSolidarityContributionService, "get_member_contribution")
     def test_isUserAllowedToChangeContribution_userIsAdmin_returnsTrue(

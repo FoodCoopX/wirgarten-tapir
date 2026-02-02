@@ -39,12 +39,14 @@ class ContractStartDateCalculator:
         date_limit = DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
             reference_date=reference_date, cache=cache
         )
+
         if apply_buffer_time:
             date_limit -= datetime.timedelta(
                 days=get_parameter_value(
                     key=ParameterKeys.SUBSCRIPTION_BUFFER_TIME_BEFORE_START, cache=cache
                 )
             )
+
         return date_limit >= get_today(cache=cache)
 
     @classmethod

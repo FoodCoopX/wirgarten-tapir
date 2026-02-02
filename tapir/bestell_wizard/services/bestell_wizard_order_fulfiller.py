@@ -14,7 +14,9 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
-from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
 )
@@ -25,7 +27,6 @@ from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.types import TapirOrder
-from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -36,7 +37,6 @@ from tapir.wirgarten.service.member import (
     send_product_order_confirmation,
     send_investing_membership_confirmation,
 )
-from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import (
     get_today,
     get_now,
@@ -117,6 +117,7 @@ class BestellWizardOrderFulfiller:
             contribution=validated_serializer_data["solidarity_contribution"],
             contract_start_date=solidarity_contribution_start_date,
             cache=cache,
+            actor=actor,
         )
 
         cls.create_questionnaire_responses(
@@ -236,23 +237,15 @@ class BestellWizardOrderFulfiller:
         contribution: float,
         contract_start_date: datetime.date,
         cache: dict,
+        actor: TapirUser,
     ):
         if contribution == 0:
             return
 
-        growing_period_current = TapirCache.get_growing_period_at_date(
-            reference_date=contract_start_date, cache=cache
-        )
-        if growing_period_current is None:
-            soli_end_date = get_next_growing_period(
-                reference_date=contract_start_date, cache=cache
-            ).start_date - datetime.timedelta(days=1)
-        else:
-            soli_end_date = growing_period_current.end_date
-
-        SolidarityContribution.objects.create(
+        MemberSolidarityContributionService.assign_contribution_to_member(
             member=member,
+            change_date=contract_start_date,
+            cache=cache,
             amount=contribution,
-            start_date=contract_start_date,
-            end_date=soli_end_date,
+            actor=actor,
         )

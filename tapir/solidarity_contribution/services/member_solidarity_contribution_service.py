@@ -4,7 +4,10 @@ from decimal import Decimal
 from django.db.models import QuerySet, OuterRef, Subquery
 
 from tapir.accounts.models import TapirUser
-from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.solidarity_contribution.models import (
+    SolidarityContribution,
+    SolidarityContributionChangedLogEntry,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
@@ -30,13 +33,14 @@ class MemberSolidarityContributionService:
     @classmethod
     def assign_contribution_to_member(
         cls,
-        member_id: str,
+        member: Member,
         change_date: datetime.date,
         amount: float | Decimal,
         cache: dict,
+        actor: TapirUser,
     ):
         member_contributions = SolidarityContribution.objects.filter(
-            member_id=member_id
+            member_id=member.id
         )
         member_contributions.filter(start_date__gte=change_date).delete()
         member_contributions.filter(end_date__gte=change_date).update(
@@ -44,7 +48,17 @@ class MemberSolidarityContributionService:
             cancellation_ts=get_now(cache=cache),
         )
 
+        last_contribution = member_contributions.filter(
+            end_date=change_date - datetime.timedelta(days=1),
+        ).last()
+
         if amount == 0:
+            cls.create_log_entry_if_necessary(
+                actor=actor,
+                user=member,
+                old_contribution=last_contribution,
+                new_contribution=None,
+            )
             return
 
         growing_period = TapirCache.get_growing_period_at_date(
@@ -58,12 +72,37 @@ class MemberSolidarityContributionService:
         else:
             end_date = growing_period.end_date
 
-        SolidarityContribution.objects.create(
-            member_id=member_id,
+        new_contribution = SolidarityContribution.objects.create(
+            member_id=member.id,
             amount=amount,
             start_date=change_date,
             end_date=end_date,
         )
+
+        cls.create_log_entry_if_necessary(
+            actor=actor,
+            user=member,
+            old_contribution=last_contribution,
+            new_contribution=new_contribution,
+        )
+
+    @classmethod
+    def create_log_entry_if_necessary(
+        cls,
+        actor: TapirUser,
+        user: Member,
+        old_contribution: SolidarityContribution | None,
+        new_contribution: SolidarityContribution | None,
+    ):
+        if old_contribution is None and new_contribution is None:
+            return
+
+        SolidarityContributionChangedLogEntry().populate_solidarity_contribution(
+            actor=actor,
+            user=user,
+            new_contribution=new_contribution,
+            old_contribution=old_contribution,
+        ).save()
 
     @classmethod
     def is_user_allowed_to_change_contribution(
