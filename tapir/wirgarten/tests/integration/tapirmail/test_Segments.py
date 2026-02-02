@@ -53,19 +53,23 @@ class SegmentTest(TapirIntegrationTest):
             self.member_with_shares.id,
             self.member_with_subscription.id,
         ]
-        segment_members = resolve_segments(add_segments=[Segments.COOP_MEMBERS])
+        segment_members = resolve_segments(
+            dynamic_segment_names_additive=[Segments.COOP_MEMBERS]
+        )
 
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
 
     def test_resolveSegment_nonCoopMembers_correctResult(self):
         expected_member_ids = [self.member_without_shares.id]
-        segment_members = resolve_segments(add_segments=[Segments.NON_COOP_MEMBERS])
+        segment_members = resolve_segments(
+            dynamic_segment_names_additive=[Segments.NON_COOP_MEMBERS]
+        )
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
 
     def test_resolveSegment_withActiveSubscription_correctResult(self):
         expected_member_ids = [self.member_with_subscription.id]
         segment_members = resolve_segments(
-            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION]
+            dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION]
         )
 
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
@@ -76,7 +80,7 @@ class SegmentTest(TapirIntegrationTest):
             self.member_with_shares.id,
         ]
         segment_members = resolve_segments(
-            add_segments=[Segments.WITHOUT_ACTIVE_SUBSCRIPTION]
+            dynamic_segment_names_additive=[Segments.WITHOUT_ACTIVE_SUBSCRIPTION]
         )
 
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
@@ -98,7 +102,7 @@ class SegmentTest(TapirIntegrationTest):
             end_date=start_date_next_month + relativedelta(months=1),
         )
         segment_members = resolve_segments(
-            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION]
+            dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION]
         )
 
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
@@ -110,7 +114,7 @@ class SegmentTest(TapirIntegrationTest):
 
         expected_member_ids = [self.member_with_subscription.id]
         segment_members = resolve_segments(
-            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION]
+            dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION]
         )
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
 
@@ -118,6 +122,6 @@ class SegmentTest(TapirIntegrationTest):
 
         expected_member_ids = set()
         segment_members = resolve_segments(
-            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION]
+            dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION]
         )
         self.assertSetEqual(self.ids(segment_members), expected_member_ids)

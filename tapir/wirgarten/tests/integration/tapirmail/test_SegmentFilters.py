@@ -44,23 +44,24 @@ class SegmentFilterTest(TapirIntegrationTest):
         _register_segments()
         _register_filters()
 
-    def ids(self, collection):
-        return set([m.id for m in collection])
+    @staticmethod
+    def ids(collection):
+        return {m.id for m in collection}
 
     def test_combineFiltersWithSegment_contractExtendedYes_correctResult(self):
         included_member = MemberWithSubscriptionFactory.create(id="ext_yes")
-        subscription = SubscriptionFactory.create(
+        SubscriptionFactory.create(
             period=self.next_growing_period,
             member=included_member,
         )
-        excluded_member = MemberWithSubscriptionFactory.create(id="ext_no")
+        MemberWithSubscriptionFactory.create(id="ext_no")
 
         expected_member_ids = [
             included_member.id,
         ]
 
         segment_members = resolve_segments(
-            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION],
+            dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION],
             filter_list=[Filters.CONTRACT_EXTENDED_YES],
         )
 
@@ -80,12 +81,12 @@ class SegmentFilterTest(TapirIntegrationTest):
         )
 
         # Member who does not cancel
-        excluded_member = MemberWithSubscriptionFactory.create()
+        MemberWithSubscriptionFactory.create()
 
         expected_member_ids = [included_member.id]
 
         segment_members = resolve_segments(
-            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION],
+            dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION],
             filter_list=[Filters.CONTRACT_EXTENDED_NO],
         )
 
@@ -120,7 +121,7 @@ class SegmentFilterTest(TapirIntegrationTest):
         expected_member_ids = [included_member.id]
 
         segment_members = resolve_segments(
-            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION],
+            dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION],
             filter_list=[Filters.CONTRACT_EXTENDED_NO_REACTION],
         )
 
@@ -144,7 +145,7 @@ class SegmentFilterTest(TapirIntegrationTest):
         expected_member_ids = {included_member.id}
 
         segment_members = resolve_segments(
-            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION],
+            dynamic_segment_names_additive=[Segments.WITH_ACTIVE_SUBSCRIPTION],
             filter_list=[filter_name],
         )
 
