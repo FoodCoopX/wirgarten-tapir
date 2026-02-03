@@ -47,3 +47,5 @@ class Events:
     ORDER_CONFIRMED_BY_ADMIN = "order_confirmed_by_admin"
 
     ORDER_REVOKED = "order_revoked"
+
+    EXTRA_MAIL_CONFIRMATION = "extra_mail_confirmation"

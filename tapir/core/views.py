@@ -1,9 +1,11 @@
 from typing import Literal
 
+from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, serializers
 from rest_framework.exceptions import ValidationError as RestValidationError
@@ -12,6 +14,10 @@ from rest_framework.views import APIView
 from tapir_mail.models import MailCategory, InternalRecipientCategoryRegistration
 from tapir_mail.registries import segment_registry
 from tapir_mail.serializers import MailCategorySerializer
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.serializers import (
@@ -19,6 +25,7 @@ from tapir.core.serializers import (
     MemberExtraMailDataSerializer,
 )
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     MemberExtraEmail,
@@ -179,6 +186,24 @@ class MemberExtraEmailApiView(APIView):
             email=extra_email, user=member, actor=request.user
         ).save()
 
+        confirmation_link = (
+            f"{settings.SITE_URL}{reverse('wirgarten:member_extra_email_confirm')}"
+        )
+        TransactionalTrigger.fire_action(
+            TransactionalTriggerData(
+                key=Events.EXTRA_MAIL_CONFIRMATION,
+                token_data={
+                    "confirmation_link": confirmation_link,
+                    "main_mail_address": member.email,
+                },
+                recipient_outside_of_base_queryset=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
+                    email=extra_email,
+                    first_name=member.first_name,
+                    last_name=member.last_name,
+                ),
+            ),
+        )
+
         return Response(True)
 
     @extend_schema(
@@ -219,6 +244,7 @@ class ConfirmMemberExtraEmailApiView(APIView):
         member_extra_email = get_object_or_404(MemberExtraEmail, secret=secret)
 
         member_extra_email.confirmed_on = get_now(cache={})
+        member_extra_email.save()
 
         MemberExtraEmailConfirmedLogEntry().populate_email(
             email=member_extra_email.email,

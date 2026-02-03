@@ -1235,6 +1235,9 @@ class MemberExtraEmail(TapirModel):
     confirmed_on = models.DateTimeField(null=True)
     secret = models.UUIDField(default=uuid.uuid4)
 
+    def __str__(self):
+        return f"{self.member} - Extra-Mail:{self.email}"
+
 
 class MemberExtraEmailCreatedLogEntry(LogEntry):
     template_name = "wirgarten/log/member_extra_email_created_log_entry.html"

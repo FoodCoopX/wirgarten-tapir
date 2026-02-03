@@ -423,6 +423,18 @@ def _register_triggers():
         required=True,
     )
 
+    register_transactional_trigger(
+        name="Extra Mail-Adresse muss bestätigt werden",
+        key=Events.EXTRA_MAIL_CONFIRMATION,
+        tokens={
+            "Bestätigungslink": "confirmation_link",
+            "Haupt-Mail-Adresse": "main_mail_address",
+        },
+        required=lambda: get_parameter_value(
+            ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache={}
+        ),
+    )
+
 
 def register_transactional_trigger(
     name: str, key: str, tokens: dict = None, required: bool | Callable = False
