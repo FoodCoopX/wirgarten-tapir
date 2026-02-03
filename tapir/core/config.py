@@ -36,6 +36,7 @@ THEME_KATRINGER_GRUENZEUG = "katringer"
 THEME_SOLAWI_HALL = "solawi_hall"
 THEME_LEISTENMUEHLE = "leistenmuehle"
 THEME_GROSSHOECHBERG = "grosshoechberg"
+THEME_SACHERL_TANNBERG = "sacherl_tannberg"
 
 THEME_OPTIONS = [
     (THEME_BIOTOP, "Biotop Oberland"),
@@ -48,4 +49,5 @@ THEME_OPTIONS = [
     (THEME_SOLAWI_HALL, "Solawi Hall"),
     (THEME_LEISTENMUEHLE, "Leistenmühle"),
     (THEME_GROSSHOECHBERG, "Grosshöchberg"),
+    (THEME_SACHERL_TANNBERG, "Sacherl Tannberg"),
 ]
