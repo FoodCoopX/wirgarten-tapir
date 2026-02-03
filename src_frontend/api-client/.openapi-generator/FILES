@@ -88,6 +88,7 @@ models/MemberCredit.ts
 models/MemberCreditCreateRequest.ts
 models/MemberDataToConfirm.ts
 models/MemberExtraEmail.ts
+models/MemberExtraMailData.ts
 models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts
 models/MemberMailCategoryRequestRequest.ts

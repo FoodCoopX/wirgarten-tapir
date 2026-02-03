@@ -15,11 +15,11 @@
 
 import * as runtime from '../runtime';
 import type {
-  MemberExtraEmail,
+  MemberExtraMailData,
 } from '../models/index';
 import {
-    MemberExtraEmailFromJSON,
-    MemberExtraEmailToJSON,
+    MemberExtraMailDataFromJSON,
+    MemberExtraMailDataToJSON,
 } from '../models/index';
 
 export interface TapirApiMemberExtraEmailConfirmRetrieveRequest {
@@ -35,7 +35,7 @@ export interface TapirApiMemberExtraEmailsDestroyRequest {
     extraEmailId?: string;
 }
 
-export interface TapirApiMemberExtraEmailsListRequest {
+export interface TapirApiMemberExtraEmailsRetrieveRequest {
     memberId?: string;
 }
 
@@ -167,7 +167,7 @@ export class TapirApi extends runtime.BaseAPI {
 
     /**
      */
-    async tapirApiMemberExtraEmailsListRaw(requestParameters: TapirApiMemberExtraEmailsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<MemberExtraEmail>>> {
+    async tapirApiMemberExtraEmailsRetrieveRaw(requestParameters: TapirApiMemberExtraEmailsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MemberExtraMailData>> {
         const queryParameters: any = {};
 
         if (requestParameters['memberId'] != null) {
@@ -190,13 +190,13 @@ export class TapirApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(MemberExtraEmailFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => MemberExtraMailDataFromJSON(jsonValue));
     }
 
     /**
      */
-    async tapirApiMemberExtraEmailsList(requestParameters: TapirApiMemberExtraEmailsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<MemberExtraEmail>> {
-        const response = await this.tapirApiMemberExtraEmailsListRaw(requestParameters, initOverrides);
+    async tapirApiMemberExtraEmailsRetrieve(requestParameters: TapirApiMemberExtraEmailsRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MemberExtraMailData> {
+        const response = await this.tapirApiMemberExtraEmailsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

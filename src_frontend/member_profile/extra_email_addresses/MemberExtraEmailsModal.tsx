@@ -25,6 +25,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
 }) => {
   const api = useApi(TapirApi, csrfToken);
   const [extraEmails, setExtraEmails] = useState<MemberExtraEmail[]>([]);
+  const [explanationText, setExplanationText] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,8 +42,11 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
     setLoading(true);
 
     api
-      .tapirApiMemberExtraEmailsList({ memberId: memberId })
-      .then(setExtraEmails)
+      .tapirApiMemberExtraEmailsRetrieve({ memberId: memberId })
+      .then((response) => {
+        setExtraEmails(response.extraMails);
+        setExplanationText(response.explanationText);
+      })
       .catch((error) =>
         handleRequestError(
           error,
@@ -141,16 +145,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       <ListGroup>
         <>
           <ListGroup.Item>
-            <p>
-              Du kannst hier zusätzliche Mail-Adressen hinzufügen. Alle Mails
-              die du von hier bekommst werden zusätzlich an alle diese Adressen
-              versendet.
-            </p>
-            <p>
-              Vor eine zusätzliche Adresse die Mails bekommt, muss sie bestätigt
-              werden. Dafür wird ein einzigartigem Link an der zusätzliche
-              Adresse versendet.
-            </p>
+            <div dangerouslySetInnerHTML={{ __html: explanationText }}></div>
           </ListGroup.Item>
           <ListGroup.Item>{getTable()}</ListGroup.Item>
           <ListGroup.Item>

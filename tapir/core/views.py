@@ -14,7 +14,10 @@ from tapir_mail.registries import segment_registry
 from tapir_mail.serializers import MailCategorySerializer
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.serializers import MemberMailCategoryRequestSerializer
+from tapir.core.serializers import (
+    MemberMailCategoryRequestSerializer,
+    MemberExtraMailDataSerializer,
+)
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
 from tapir.wirgarten.models import (
     Member,
@@ -24,7 +27,6 @@ from tapir.wirgarten.models import (
     MemberExtraEmailConfirmedLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.serializers import MemberExtraEmailSerializer
 from tapir.wirgarten.utils import check_permission_or_self, get_now
 
 
@@ -125,7 +127,7 @@ class MemberMailCategoryDataApiView(APIView):
 
 class MemberExtraEmailApiView(APIView):
     @extend_schema(
-        responses={200: MemberExtraEmailSerializer(many=True)},
+        responses={200: MemberExtraMailDataSerializer},
         parameters=[
             OpenApiParameter(name="member_id", type=str),
         ],
@@ -136,9 +138,16 @@ class MemberExtraEmailApiView(APIView):
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
+        cache = {}
+
         return Response(
-            MemberExtraEmailSerializer(
-                MemberExtraEmail.objects.filter(member=member), many=True
+            MemberExtraMailDataSerializer(
+                {
+                    "extra_mails": MemberExtraEmail.objects.filter(member=member),
+                    "explanation_text": get_parameter_value(
+                        ParameterKeys.EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES, cache=cache
+                    ),
+                }
             ).data
         )
 

@@ -2114,7 +2114,7 @@ paths:
           description: ''
   /tapir/api/member_extra_emails:
     get:
-      operationId: tapir_api_member_extra_emails_list
+      operationId: tapir_api_member_extra_emails_retrieve
       parameters:
       - in: query
         name: member_id
@@ -2131,9 +2131,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MemberExtraEmail'
+                $ref: '#/components/schemas/MemberExtraMailData'
           description: ''
     post:
       operationId: tapir_api_member_extra_emails_create
@@ -7685,6 +7683,18 @@ components:
       required:
       - email
       - member
+    MemberExtraMailData:
+      type: object
+      properties:
+        extra_mails:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberExtraEmail'
+        explanation_text:
+          type: string
+      required:
+      - explanation_text
+      - extra_mails
     MemberJokerInformation:
       type: object
       properties:

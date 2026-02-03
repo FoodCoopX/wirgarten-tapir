@@ -847,6 +847,33 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         order_priority -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES,
+            label="Erklärungstext zu zusätzliche Adressen",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""<p>
+        Du kannst hier zusätzliche Mail-Adressen hinzufügen. Alle Mails
+        die du von hier bekommst werden zusätzlich an alle diese Adressen
+        versendet.
+</p>
+<p>
+          Vor eine zusätzliche Adresse die Mails bekommt, muss sie bestätigt
+        werden. Dafür wird ein einzigartigem Link an der zusätzliche
+        Adresse versendet.
+</p>""",
+            description="Erklärungstext im Modal zu Zusätzliche Adressen im Mitgleiderbereich. "
+            + HTML_ALLOWED_TEXT,
+            category=ParameterCategory.MAIL,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                textarea=True,
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
+                ),
+            ),
+        )
+        order_priority -= 1
+
     def import_definitions_organization(self):
         self.parameter_definition(
             key=ParameterKeys.ORGANISATION_LEGAL_STATUS,

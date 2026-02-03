@@ -75,6 +75,7 @@ export * from './MemberCredit';
 export * from './MemberCreditCreateRequest';
 export * from './MemberDataToConfirm';
 export * from './MemberExtraEmail';
+export * from './MemberExtraMailData';
 export * from './MemberJokerInformation';
 export * from './MemberMailCategoryData';
 export * from './MemberMailCategoryRequestRequest';
