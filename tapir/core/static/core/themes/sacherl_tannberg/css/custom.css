@@ -232,8 +232,8 @@ main {
 @font-face {
   font-family: "DinNextLight";
   font-style: normal;
-  src: url("static/core/themes/sacherl_tannberg/fonts/din-next-light.woff2")
+  src: url("/static/core/themes/sacherl_tannberg/fonts/din-next-light.woff2")
     format("woff2");
-  src: url("static/core/themes/sacherl_tannberg/fonts/din-next-light.ttf")
+  src: url("/static/core/themes/sacherl_tannberg/fonts/din-next-light.ttf")
     format("ttf");
 }
