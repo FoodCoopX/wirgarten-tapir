@@ -74,6 +74,7 @@ class ParameterCategory:
     TRIAL_PERIOD = "Probezeit"
     SOLIDARITY = "Solidarbeitrag"
     BESTELLWIZARD = "BestellWizard"
+    MAIL = "E-Mails"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -829,6 +830,22 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         self.import_definitions_solidarity()
         self.import_definitions_organization()
         self.import_definitions_bestellwizard()
+        self.import_definitions_emails()
+
+    def import_definitions_emails(self):
+        order_priority = 100
+
+        self.parameter_definition(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES,
+            label="Zusätzlich E-Mail-Adressen erlauben",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Ob Mitglieder im Mitgliederbereich zusätzliche Mail-Adressen eintragen können. "
+            "Diese Adressen bekommen Kopie von alle Mails die an der Mitgliedshauptadresse versendet werden.",
+            category=ParameterCategory.MAIL,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
 
     def import_definitions_organization(self):
         self.parameter_definition(

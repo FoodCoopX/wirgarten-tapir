@@ -1,6 +1,7 @@
 from django.urls import path
 from django.views.generic import RedirectView
 
+from tapir.core.views import MemberExtraEmailApiView, ConfirmMemberExtraEmailApiView
 from tapir.wirgarten.views import exported_files
 from tapir.wirgarten.views.contracts import (
     ExportSubscriptionList,
@@ -203,5 +204,15 @@ urlpatterns = [
     path("admin/debug/tasks", ScheduledTasksListView.as_view(), name="scheduled_tasks"),
     path("admin/debug/jobs", JobsListView.as_view(), name="jobs"),
     path("admin/debug/jobs/execute", run_job, name="job_execute"),
+    path(
+        "api/member_extra_emails",
+        MemberExtraEmailApiView.as_view(),
+        name="member_extra_emails",
+    ),
+    path(
+        "api/member_extra_email_confirm",
+        ConfirmMemberExtraEmailApiView.as_view(),
+        name="member_extra_email_confirm",
+    ),
 ]
 app_name = "wirgarten"

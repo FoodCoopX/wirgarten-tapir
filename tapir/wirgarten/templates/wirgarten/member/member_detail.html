@@ -159,8 +159,11 @@
                  style="margin-bottom:1em;
                         margin-top:1em">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>{% translate "Persönliche Daten" %}</h5>
-                    <span class="d-flex gap-2">
+                    <h5 class="mb-0">{% translate "Persönliche Daten" %}</h5>
+                    <span class="d-flex flex-row gap-2">
+                        {% if extra_email_addresses_enabled %}
+                            <span id="extra_email_addresses" data-member-id="{{ object.id }}"></span>
+                        {% endif %}
                         <button class="btn tapir-btn btn-outline-primary"
                                 onclick="FormModal.load(`{% url 'wirgarten:member_edit' object.pk %}`, 'Persönliche Daten ändern')"
                                 id="tapir_user_edit_button">

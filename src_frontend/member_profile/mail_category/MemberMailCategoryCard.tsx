@@ -5,6 +5,9 @@ import { useApi } from "../../hooks/useApi.ts";
 import { CoreApi, type MailCategory, ModeEnum } from "../../api-client";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import MemberExtraEmailsModal from "../extra_email_addresses/MemberExtraEmailsModal.tsx";
+import { ToastData } from "../../types/ToastData.ts";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 
 interface MemberMailCategoryModalProps {
   memberId: string;
@@ -22,6 +25,8 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
   }>({});
   const [dataLoading, setDataLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     loadData();
@@ -36,7 +41,11 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
         setCategoriesRegisteredTo(data.categoriesRegisteredTo);
       })
       .catch((error) =>
-        handleRequestError(error, "Fehler beim Laden der Mail-Abos"),
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Mail-Abos",
+          setToastDatas,
+        ),
       )
       .finally(() => setDataLoading(false));
   }
@@ -52,7 +61,11 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
         },
       })
       .catch((error) =>
-        handleRequestError(error, "Fehler beim Speichern der Mail-Abos"),
+        handleRequestError(
+          error,
+          "Fehler beim Speichern der Mail-Abos",
+          setToastDatas,
+        ),
       )
       .finally(() => {
         setSaveLoading(false);
@@ -61,43 +74,63 @@ const MemberMailCategoryCard: React.FC<MemberMailCategoryModalProps> = ({
   }
 
   return (
-    <Card>
-      <Card.Header>
-        <h5 className={"mb-0"}>Mail-Abos</h5>
-      </Card.Header>
-      <Card.Body>
-        {dataLoading ? (
-          <Spinner />
-        ) : (
-          <Form>
-            {categories.map((category) => (
-              <Form.Group key={category.id} controlId={category.id}>
-                <Form.Check
-                  label={category.name}
-                  checked={categoriesRegisteredTo[category.id!]}
-                  onChange={(event) => {
-                    categoriesRegisteredTo[category.id!] = event.target.checked;
-                    setCategoriesRegisteredTo({ ...categoriesRegisteredTo });
-                  }}
-                  disabled={category.mode === ModeEnum.AlwaysOn}
-                />
-              </Form.Group>
-            ))}
-          </Form>
-        )}
-      </Card.Body>
-      <Card.Footer>
-        <span className={"d-flex flex-row justify-content-end"}>
-          <TapirButton
-            variant={"primary"}
-            text={"Abos anpassen"}
-            icon={"save"}
-            onClick={onSave}
-            loading={saveLoading}
-          />
-        </span>
-      </Card.Footer>
-    </Card>
+    <>
+      <Card>
+        <Card.Header>
+          <span
+            className={
+              "d-flex flex-row justify-content-between align-items-center"
+            }
+          >
+            <h5 className={"mb-0"}>Mail-Abos</h5>
+          </span>
+        </Card.Header>
+        <Card.Body>
+          {dataLoading ? (
+            <Spinner />
+          ) : (
+            <Form>
+              {categories.map((category) => (
+                <Form.Group key={category.id} controlId={category.id}>
+                  <Form.Check
+                    label={category.name}
+                    checked={categoriesRegisteredTo[category.id!]}
+                    onChange={(event) => {
+                      categoriesRegisteredTo[category.id!] =
+                        event.target.checked;
+                      setCategoriesRegisteredTo({ ...categoriesRegisteredTo });
+                    }}
+                    disabled={category.mode === ModeEnum.AlwaysOn}
+                  />
+                </Form.Group>
+              ))}
+            </Form>
+          )}
+        </Card.Body>
+        <Card.Footer>
+          <span className={"d-flex flex-row justify-content-end"}>
+            <TapirButton
+              variant={"primary"}
+              text={"Abos anpassen"}
+              icon={"save"}
+              onClick={onSave}
+              loading={saveLoading}
+            />
+          </span>
+        </Card.Footer>
+      </Card>
+      <MemberExtraEmailsModal
+        memberId={memberId}
+        onHide={() => setShowModal(false)}
+        csrfToken={csrfToken}
+        show={showModal}
+        setToastDatas={setToastDatas}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
+    </>
   );
 };
 

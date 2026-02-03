@@ -75,17 +75,17 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 subscription.price_at_renewal_date = price_at_renewal_date
 
         context["sub_quantities"] = {
-            k: sum(map(lambda x: x.quantity, v))
-            for k, v in context["subscriptions"].items()
+            key: sum([subscription.quantity for subscription in subscriptions])
+            for key, subscriptions in context["subscriptions"].items()
         }
         context["sub_totals"] = {
-            k: sum(map(lambda x: x.total_price(), v))
-            for k, v in context["subscriptions"].items()
+            key: sum([subscription.total_price() for subscription in subscriptions])
+            for key, subscriptions in context["subscriptions"].items()
         }
 
         product_types = get_active_product_types(reference_date=next_month, cache=cache)
         types_to_remove = []
-        product_type_names = list(map(lambda x: x.name, product_types))
+        product_type_names = [product_type.name for product_type in product_types]
         for key in context["subscriptions"].keys():
             if key not in product_type_names:
                 types_to_remove.append(key)
@@ -200,6 +200,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             )
 
         context["show_mail_category_content"] = MailCategory.objects.exists()
+        context["extra_email_addresses_enabled"] = get_parameter_value(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
+        )
 
         return context
 
@@ -252,11 +255,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             else None
         )
         cancelled = any(
-            map(
-                lambda x: (None if type(x) is dict else x.cancellation_ts) is not None,
-                harvest_share_subs,
-            )
+            (None if type(sub) is dict else sub.cancellation_ts) is not None
+            for sub in harvest_share_subs
         )
+
         future_subs = get_active_and_future_subscriptions(
             next_growing_period.start_date, cache=cache
         ).filter(member_id=self.object.id)

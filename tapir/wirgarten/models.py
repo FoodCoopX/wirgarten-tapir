@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from decimal import Decimal
 from functools import partial
 from typing import Dict
@@ -528,6 +529,18 @@ class Member(TapirUser):
 
     def __str__(self):
         return f"[{self.member_no if self.member_no else '---'}] {self.first_name} {self.last_name} ({self.email})"
+
+    def get_extra_recipient_addresses(self, cache: dict):
+        if not get_parameter_value(
+            ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
+        ):
+            return []
+
+        return list(
+            self.memberextraemail_set.filter(confirmed_on__isnull=False).values_list(
+                "email"
+            )
+        )
 
 
 class MemberPickupLocation(TapirModel):
@@ -1206,3 +1219,54 @@ class ScheduledTask(TapirModel):
 
     def __str__(self):
         return f"{self.task_function} | eta: {self.eta} | status: {self.status}"
+
+
+class MemberExtraEmail(TapirModel):
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["member", "email"],
+                name="unique_extra_email",
+            ),
+        ]
+
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    email = models.EmailField()
+    confirmed_on = models.DateTimeField(null=True)
+    secret = models.UUIDField(default=uuid.uuid4)
+
+
+class MemberExtraEmailCreatedLogEntry(LogEntry):
+    template_name = "wirgarten/log/member_extra_email_created_log_entry.html"
+
+    email = models.EmailField(max_length=1024)
+
+    def populate_email(self, email: str, actor: TapirUser, user: Member):
+        self.populate(actor=actor, user=user)
+        self.email = email
+
+        return self
+
+
+class MemberExtraEmailDeletedLogEntry(LogEntry):
+    template_name = "wirgarten/log/member_extra_email_deleted_log_entry.html"
+
+    email = models.EmailField(max_length=1024)
+
+    def populate_email(self, email: str, actor: TapirUser, user: Member):
+        self.populate(actor=actor, user=user)
+        self.email = email
+
+        return self
+
+
+class MemberExtraEmailConfirmedLogEntry(LogEntry):
+    template_name = "wirgarten/log/member_extra_email_confirmed_log_entry.html"
+
+    email = models.EmailField(max_length=1024)
+
+    def populate_email(self, email: str, actor: TapirUser, user: Member):
+        self.populate(actor=actor, user=user)
+        self.email = email
+
+        return self

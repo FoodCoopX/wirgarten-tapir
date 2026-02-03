@@ -1,0 +1,182 @@
+import React, { useEffect, useState } from "react";
+import "dayjs/locale/de";
+import { MemberExtraEmail, TapirApi } from "../../api-client";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { Form, ListGroup, Modal, Spinner, Table } from "react-bootstrap";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+
+interface MemberExtraEmailsModalProps {
+  memberId: string;
+  csrfToken: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  show: boolean;
+  onHide: () => void;
+}
+
+const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
+  memberId,
+  csrfToken,
+  setToastDatas,
+  show,
+  onHide,
+}) => {
+  const api = useApi(TapirApi, csrfToken);
+  const [extraEmails, setExtraEmails] = useState<MemberExtraEmail[]>([]);
+  const [newAddress, setNewAddress] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!show) return;
+
+    setNewAddress("");
+    loadData();
+  }, [show]);
+
+  function loadData() {
+    setLoading(true);
+
+    api
+      .tapirApiMemberExtraEmailsList({ memberId: memberId })
+      .then(setExtraEmails)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der zusätzliche Adressen",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setLoading(false));
+  }
+
+  function onSave() {
+    setSaving(true);
+
+    api
+      .tapirApiMemberExtraEmailsCreate({
+        memberId: memberId,
+        extraEmail: newAddress,
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern eine zusätzliche Adresse",
+          setToastDatas,
+        ),
+      )
+      .finally(() => {
+        loadData();
+        setSaving(false);
+      });
+  }
+
+  function onDelete(id: string) {
+    setDeleting(true);
+
+    api
+      .tapirApiMemberExtraEmailsDestroy({ extraEmailId: id })
+      .then(loadData)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern eine zusätzliche Adresse",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setDeleting(false));
+  }
+
+  function getTable() {
+    if (loading) {
+      return <Spinner />;
+    }
+
+    if (extraEmails.length === 0) {
+      return <p>Keine zusätzliche Adresse eingetragen</p>;
+    }
+
+    return (
+      <Table striped hover responsive>
+        <thead style={{ textAlign: "center" }}>
+          <tr>
+            <th>E-Mail</th>
+            <th>Bestätigt am</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {extraEmails.map((extraEmail) => (
+            <tr key={extraEmail.id}>
+              <td>{extraEmail.email}</td>
+              <td>
+                {extraEmail.confirmedOn
+                  ? formatDateNumeric(extraEmail.confirmedOn)
+                  : "Nicht bestätigt"}
+              </td>
+              <td>
+                <TapirButton
+                  variant={"outline-danger"}
+                  icon={"delete"}
+                  size={"sm"}
+                  onClick={() => onDelete(extraEmail.id!)}
+                  loading={deleting}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    );
+  }
+
+  return (
+    <Modal show={show} onHide={onHide} centered>
+      <Modal.Header closeButton>
+        <h5 className={"mb-0"}>Zusätzliche Mail-Adressen verwalten</h5>
+      </Modal.Header>
+      <ListGroup>
+        <>
+          <ListGroup.Item>
+            <p>
+              Du kannst hier zusätzliche Mail-Adressen hinzufügen. Alle Mails
+              die du von hier bekommst werden zusätzlich an alle diese Adressen
+              versendet.
+            </p>
+            <p>
+              Vor eine zusätzliche Adresse die Mails bekommt, muss sie bestätigt
+              werden. Dafür wird ein einzigartigem Link an der zusätzliche
+              Adresse versendet.
+            </p>
+          </ListGroup.Item>
+          <ListGroup.Item>{getTable()}</ListGroup.Item>
+          <ListGroup.Item>
+            <Form>
+              <h5>Zusätzliche Adresse hinzufügen</h5>
+              <div className={"d-flex flex-row gap-2"}>
+                <Form.Group controlId={"new_extra"}>
+                  <Form.Control
+                    type={"email"}
+                    value={newAddress}
+                    onChange={(event) => setNewAddress(event.target.value)}
+                  />
+                </Form.Group>
+                <TapirButton
+                  variant={"primary"}
+                  icon={"add_circle"}
+                  onClick={onSave}
+                  loading={saving}
+                />
+              </div>
+            </Form>
+          </ListGroup.Item>
+        </>
+      </ListGroup>
+    </Modal>
+  );
+};
+
+export default MemberExtraEmailsModal;

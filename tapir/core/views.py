@@ -1,9 +1,12 @@
 from typing import Literal
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, serializers
+from rest_framework.exceptions import ValidationError as RestValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.models import MailCategory, InternalRecipientCategoryRegistration
@@ -13,9 +16,16 @@ from tapir_mail.serializers import MailCategorySerializer
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.serializers import MemberMailCategoryRequestSerializer
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import (
+    Member,
+    MemberExtraEmail,
+    MemberExtraEmailCreatedLogEntry,
+    MemberExtraEmailDeletedLogEntry,
+    MemberExtraEmailConfirmedLogEntry,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import check_permission_or_self
+from tapir.wirgarten.serializers import MemberExtraEmailSerializer
+from tapir.wirgarten.utils import check_permission_or_self, get_now
 
 
 class GetThemeView(APIView):
@@ -109,5 +119,102 @@ class MemberMailCategoryDataApiView(APIView):
                     internal_recipient_id=member.id,
                     is_registered=False,
                 )
+
+        return Response(True)
+
+
+class MemberExtraEmailApiView(APIView):
+    @extend_schema(
+        responses={200: MemberExtraEmailSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="member_id", type=str),
+        ],
+    )
+    @transaction.atomic
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        return Response(
+            MemberExtraEmailSerializer(
+                MemberExtraEmail.objects.filter(member=member), many=True
+            ).data
+        )
+
+    @extend_schema(
+        responses={200: bool},
+        parameters=[
+            OpenApiParameter(name="extra_email", type=str),
+            OpenApiParameter(name="member_id", type=str),
+        ],
+    )
+    @transaction.atomic
+    def post(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        extra_email = request.query_params.get("extra_email").strip()
+        try:
+            validate_email(extra_email)
+        except DjangoValidationError:
+            raise RestValidationError("Ungültige Adresse")
+
+        if MemberExtraEmail.objects.filter(member=member, email=extra_email).exists():
+            raise RestValidationError("Diese zusätzliche Adresse existiert bereits")
+
+        MemberExtraEmail.objects.create(member=member, email=extra_email)
+
+        MemberExtraEmailCreatedLogEntry().populate_email(
+            email=extra_email, user=member, actor=request.user
+        ).save()
+
+        return Response(True)
+
+    @extend_schema(
+        responses={200: bool},
+        parameters=[
+            OpenApiParameter(name="extra_email_id", type=str),
+        ],
+    )
+    @transaction.atomic
+    def delete(self, request):
+        extra_email_id = request.query_params.get("extra_email_id")
+        member_extra_email = get_object_or_404(MemberExtraEmail, id=extra_email_id)
+        check_permission_or_self(pk=member_extra_email.member_id, request=request)
+
+        MemberExtraEmailDeletedLogEntry().populate_email(
+            email=member_extra_email.email,
+            user=member_extra_email.member,
+            actor=request.user,
+        ).save()
+
+        member_extra_email.delete()
+
+        return Response(True)
+
+
+class ConfirmMemberExtraEmailApiView(APIView):
+    permission_classes = []
+
+    @extend_schema(
+        responses={200: bool},
+        parameters=[
+            OpenApiParameter(name="secret", type=str),
+        ],
+    )
+    @transaction.atomic
+    def get(self, request):
+        secret = request.query_params.get("secret")
+        member_extra_email = get_object_or_404(MemberExtraEmail, secret=secret)
+
+        member_extra_email.confirmed_on = get_now(cache={})
+
+        MemberExtraEmailConfirmedLogEntry().populate_email(
+            email=member_extra_email.email,
+            user=member_extra_email.member,
+            actor=request.user,
+        ).save()
 
         return Response(True)

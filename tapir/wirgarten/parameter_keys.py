@@ -218,3 +218,4 @@ class ParameterKeys:
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )
     LABEL_STUDENT_CHECKBOX = f"{PREFIX}.coop.label_student_checkbox"
+    ENABLE_EXTRA_MAIL_ADDRESSES = f"{PREFIX}.emails.enable_extra_mail_addresses"
