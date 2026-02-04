@@ -1,7 +1,3 @@
-import datetime
-import itertools
-from collections import defaultdict
-
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -11,32 +7,21 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.config import DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
-from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
-)
-from tapir.subscriptions.services.subscription_delivered_in_week_checked import (
-    SubscriptionDeliveredInWeekChecker,
-)
-from tapir.utils.services.tapir_cache import TapirCache
+from tapir.deliveries.services.pick_list_builder import PickListBuilder
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     ExportedFile,
     Member,
-    Product,
     ScheduledTask,
-    PickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
-from tapir.wirgarten.service.file_export import begin_csv_string, export_file
+from tapir.wirgarten.service.file_export import export_file
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
     get_active_and_future_subscriptions,
-    get_product_price,
 )
 from tapir.wirgarten.utils import (
     format_subscription_list_html,
@@ -60,32 +45,6 @@ def execute_scheduled_tasks():
         scheduled_task.execute()
 
 
-def get_member_pickup_location_for_pick_list(
-    member: Member, reference_date: datetime.date, cache: dict
-) -> PickupLocation | None:
-    if DeliveryDonationManager.does_member_have_a_donation_in_week(
-        member=member, reference_date=reference_date, cache=cache
-    ):
-        pickup_location_id = get_parameter_value(
-            key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION, cache=cache
-        )
-        if pickup_location_id == DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION:
-            return None
-    else:
-        pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id_from_cache(
-                member_id=member.id, reference_date=reference_date, cache=cache
-            )
-        )
-    if pickup_location_id is None:
-        return None
-
-    pickup_location = TapirCache.get_pickup_location_by_id(
-        cache=cache, pickup_location_id=pickup_location_id
-    )
-    return pickup_location
-
-
 def _export_pick_list(product_type, include_equivalents=True, cache: dict = None):
     """
     Exports picklist or supplier list as CSV for a product type.
@@ -100,75 +59,14 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
         )
         return
 
-    KEY_PICKUP_LOCATION = "Abholort"
-    KEY_M_EQUIVALENT = "M-Äquivalent"
-
-    subscriptions = get_active_subscriptions(next_delivery_date, cache=cache).filter(
-        product__type_id=product_type.id
+    cls_string = PickListBuilder.build_pick_list(
+        product_type=product_type, delivery_date=next_delivery_date, cache=cache
     )
-    grouped_subscriptions = defaultdict(list)
-
-    for subscription in subscriptions:
-        pickup_location = get_member_pickup_location_for_pick_list(
-            member=subscription.member, reference_date=next_delivery_date, cache=cache
-        )
-        if pickup_location is None:
-            continue
-        grouped_subscriptions[pickup_location.name].append(subscription)
-
-    variants = list(Product.objects.filter(type_id=product_type.id))
-    variants.sort(key=lambda x: get_product_price(x, cache=cache).price)
-    variant_names = [x.name for x in variants]
-
-    header = [
-        KEY_PICKUP_LOCATION,
-        *variant_names,
-    ]
-    if include_equivalents:
-        header.append(KEY_M_EQUIVALENT)
-    output, writer = begin_csv_string(header)
-
-    base_price = get_product_price(
-        Product.objects.filter(type_id=product_type.id, base=True).first(), cache=cache
-    ).price
-
-    for pickup_location, subscriptions in sorted(
-        grouped_subscriptions.items(), key=lambda x: x[0]
-    ):
-        subscriptions = [
-            subscription
-            for subscription in subscriptions
-            if SubscriptionDeliveredInWeekChecker.is_subscription_delivered_in_week(
-                subscription=subscription,
-                delivery_date=next_delivery_date,
-                cache=cache,
-                skip_donation_check=True,
-            )
-        ]
-        subscriptions.sort(key=lambda x: x.product.name)
-        grouped_subs = {
-            key: sum([x.quantity for x in group])
-            for key, group in itertools.groupby(
-                subscriptions, key=lambda sub: sub.product.name
-            )
-        }
-
-        sum_without_soli = sum(
-            [subscription.total_price_without_soli for subscription in subscriptions]
-        )
-
-        data = {
-            KEY_PICKUP_LOCATION: pickup_location,
-            **grouped_subs,
-        }
-        if include_equivalents:
-            data[KEY_M_EQUIVALENT] = round(sum_without_soli / base_price, 2)
-        writer.writerow(data)
 
     export_file(
         filename=f"{'Kommissionierliste' if include_equivalents else 'Lieferantenliste'}_{product_type.name}",
         filetype=ExportedFile.FileType.CSV,
-        content=bytes("".join(output.csv_string), "utf-8"),
+        content=bytes(cls_string, "utf-8"),
         send_email=get_parameter_value(
             (
                 ParameterKeys.PICKING_SEND_ADMIN_EMAIL
