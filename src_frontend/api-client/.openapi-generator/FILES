@@ -8,7 +8,6 @@ apis/PickupLocationsApi.ts
 apis/ProductsApi.ts
 apis/SolidarityContributionApi.ts
 apis/SubscriptionsApi.ts
-apis/TapirApi.ts
 apis/TapirmailApi.ts
 apis/WaitingListApi.ts
 apis/index.ts

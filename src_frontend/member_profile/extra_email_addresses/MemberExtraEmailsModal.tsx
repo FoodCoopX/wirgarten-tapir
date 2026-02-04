@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
-import { MemberExtraEmail, TapirApi } from "../../api-client";
+import { CoreApi, MemberExtraEmail } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { Form, ListGroup, Modal, Spinner, Table } from "react-bootstrap";
@@ -23,7 +23,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
   show,
   onHide,
 }) => {
-  const api = useApi(TapirApi, csrfToken);
+  const api = useApi(CoreApi, csrfToken);
   const [extraEmails, setExtraEmails] = useState<MemberExtraEmail[]>([]);
   const [explanationText, setExplanationText] = useState("");
   const [newAddress, setNewAddress] = useState("");
@@ -42,7 +42,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
     setLoading(true);
 
     api
-      .tapirApiMemberExtraEmailsRetrieve({ memberId: memberId })
+      .coreApiMemberExtraEmailsRetrieve({ memberId: memberId })
       .then((response) => {
         setExtraEmails(response.extraMails);
         setExplanationText(response.explanationText);
@@ -61,7 +61,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
     setSaving(true);
 
     api
-      .tapirApiMemberExtraEmailsCreate({
+      .coreApiMemberExtraEmailsCreate({
         memberId: memberId,
         extraEmail: newAddress,
       })
@@ -82,7 +82,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
     setDeleting(true);
 
     api
-      .tapirApiMemberExtraEmailsDestroy({ extraEmailId: id })
+      .coreApiMemberExtraEmailsDestroy({ extraEmailId: id })
       .then(loadData)
       .catch((error) =>
         handleRequestError(

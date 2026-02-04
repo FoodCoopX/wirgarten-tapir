@@ -10,6 +10,5 @@ export * from './PickupLocationsApi';
 export * from './ProductsApi';
 export * from './SolidarityContributionApi';
 export * from './SubscriptionsApi';
-export * from './TapirApi';
 export * from './TapirmailApi';
 export * from './WaitingListApi';

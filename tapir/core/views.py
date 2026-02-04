@@ -8,7 +8,9 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, serializers
-from rest_framework.exceptions import ValidationError as RestValidationError
+from rest_framework.exceptions import (
+    ValidationError as RestValidationError,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.models import MailCategory, InternalRecipientCategoryRegistration
@@ -133,6 +135,12 @@ class MemberMailCategoryDataApiView(APIView):
 
 
 class MemberExtraEmailApiView(APIView):
+    FEATURE_DISABLED_MESSAGE = "Dieses Funktionalität ist ausgeschaltet."
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     @extend_schema(
         responses={200: MemberExtraMailDataSerializer},
         parameters=[
@@ -141,18 +149,24 @@ class MemberExtraEmailApiView(APIView):
     )
     @transaction.atomic
     def get(self, request):
+        if not get_parameter_value(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=self.cache
+        ):
+            raise RestValidationError(self.FEATURE_DISABLED_MESSAGE)
+
         member_id = request.query_params.get("member_id")
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
-        cache = {}
-
         return Response(
             MemberExtraMailDataSerializer(
                 {
-                    "extra_mails": MemberExtraEmail.objects.filter(member=member),
+                    "extra_mails": MemberExtraEmail.objects.filter(
+                        member=member
+                    ).order_by("email"),
                     "explanation_text": get_parameter_value(
-                        ParameterKeys.EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES, cache=cache
+                        ParameterKeys.EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES,
+                        cache=self.cache,
                     ),
                 }
             ).data
@@ -167,28 +181,38 @@ class MemberExtraEmailApiView(APIView):
     )
     @transaction.atomic
     def post(self, request):
+        if not get_parameter_value(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=self.cache
+        ):
+            raise RestValidationError(self.FEATURE_DISABLED_MESSAGE)
+
         member_id = request.query_params.get("member_id")
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
-        extra_email = request.query_params.get("extra_email").strip()
+        extra_email_address = request.query_params.get("extra_email").strip()
         try:
-            validate_email(extra_email)
+            validate_email(extra_email_address)
         except DjangoValidationError:
             raise RestValidationError("Ungültige Adresse")
 
-        if MemberExtraEmail.objects.filter(member=member, email=extra_email).exists():
+        if MemberExtraEmail.objects.filter(
+            member=member, email=extra_email_address
+        ).exists():
             raise RestValidationError("Diese zusätzliche Adresse existiert bereits")
 
-        MemberExtraEmail.objects.create(member=member, email=extra_email)
+        member_extra_email = MemberExtraEmail.objects.create(
+            member=member, email=extra_email_address
+        )
 
         MemberExtraEmailCreatedLogEntry().populate_email(
-            email=extra_email, user=member, actor=request.user
+            email=extra_email_address, user=member, actor=request.user
         ).save()
 
         confirmation_link = (
-            f"{settings.SITE_URL}{reverse('wirgarten:member_extra_email_confirm')}"
+            f"{settings.SITE_URL}{reverse('core:member_extra_email_confirm')}"
         )
+        confirmation_link = f"{confirmation_link}?secret={member_extra_email.secret}"
         TransactionalTrigger.fire_action(
             TransactionalTriggerData(
                 key=Events.EXTRA_MAIL_CONFIRMATION,
@@ -197,7 +221,7 @@ class MemberExtraEmailApiView(APIView):
                     "main_mail_address": member.email,
                 },
                 recipient_outside_of_base_queryset=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
-                    email=extra_email,
+                    email=extra_email_address,
                     first_name=member.first_name,
                     last_name=member.last_name,
                 ),
@@ -214,6 +238,11 @@ class MemberExtraEmailApiView(APIView):
     )
     @transaction.atomic
     def delete(self, request):
+        if not get_parameter_value(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=self.cache
+        ):
+            raise RestValidationError(self.FEATURE_DISABLED_MESSAGE)
+
         extra_email_id = request.query_params.get("extra_email_id")
         member_extra_email = get_object_or_404(MemberExtraEmail, id=extra_email_id)
         check_permission_or_self(pk=member_extra_email.member_id, request=request)
@@ -240,10 +269,16 @@ class ConfirmMemberExtraEmailApiView(APIView):
     )
     @transaction.atomic
     def get(self, request):
+        cache = {}
+        if not get_parameter_value(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
+        ):
+            raise RestValidationError(MemberExtraEmailApiView.FEATURE_DISABLED_MESSAGE)
+
         secret = request.query_params.get("secret")
         member_extra_email = get_object_or_404(MemberExtraEmail, secret=secret)
 
-        member_extra_email.confirmed_on = get_now(cache={})
+        member_extra_email.confirmed_on = get_now(cache=cache)
         member_extra_email.save()
 
         MemberExtraEmailConfirmedLogEntry().populate_email(

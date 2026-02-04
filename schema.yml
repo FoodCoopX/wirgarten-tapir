@@ -346,6 +346,92 @@ paths:
                 - mm
                 type: string
           description: ''
+  /core/api/member_extra_email_confirm:
+    get:
+      operationId: core_api_member_extra_email_confirm_retrieve
+      parameters:
+      - in: query
+        name: secret
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /core/api/member_extra_emails:
+    get:
+      operationId: core_api_member_extra_emails_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberExtraMailData'
+          description: ''
+    post:
+      operationId: core_api_member_extra_emails_create
+      parameters:
+      - in: query
+        name: extra_email
+        schema:
+          type: string
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+    delete:
+      operationId: core_api_member_extra_emails_destroy
+      parameters:
+      - in: query
+        name: extra_email_id
+        schema:
+          type: string
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
   /core/api/member_mail_category_data:
     get:
       operationId: core_api_member_mail_category_data_retrieve
@@ -2090,92 +2176,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Subscription'
-          description: ''
-  /tapir/api/member_extra_email_confirm:
-    get:
-      operationId: tapir_api_member_extra_email_confirm_retrieve
-      parameters:
-      - in: query
-        name: secret
-        schema:
-          type: string
-      tags:
-      - tapir
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: boolean
-          description: ''
-  /tapir/api/member_extra_emails:
-    get:
-      operationId: tapir_api_member_extra_emails_retrieve
-      parameters:
-      - in: query
-        name: member_id
-        schema:
-          type: string
-      tags:
-      - tapir
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberExtraMailData'
-          description: ''
-    post:
-      operationId: tapir_api_member_extra_emails_create
-      parameters:
-      - in: query
-        name: extra_email
-        schema:
-          type: string
-      - in: query
-        name: member_id
-        schema:
-          type: string
-      tags:
-      - tapir
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: boolean
-          description: ''
-    delete:
-      operationId: tapir_api_member_extra_emails_destroy
-      parameters:
-      - in: query
-        name: extra_email_id
-        schema:
-          type: string
-      tags:
-      - tapir
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: boolean
           description: ''
   /tapirmail/api/create_missing_trigger:
     post:

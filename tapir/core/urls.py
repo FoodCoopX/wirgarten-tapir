@@ -1,7 +1,6 @@
 from django.urls import path
 
 from tapir.core import views
-from tapir.core.views import MemberMailCategoryDataApiView
 
 app_name = "core"
 urlpatterns = [
@@ -12,7 +11,17 @@ urlpatterns = [
     ),
     path(
         "api/member_mail_category_data",
-        MemberMailCategoryDataApiView.as_view(),
+        views.MemberMailCategoryDataApiView.as_view(),
         name="member_mail_category_data",
+    ),
+    path(
+        "api/member_extra_emails",
+        views.MemberExtraEmailApiView.as_view(),
+        name="member_extra_emails",
+    ),
+    path(
+        "api/member_extra_email_confirm",
+        views.ConfirmMemberExtraEmailApiView.as_view(),
+        name="member_extra_email_confirm",
     ),
 ]
