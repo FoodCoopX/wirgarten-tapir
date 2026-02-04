@@ -284,7 +284,7 @@ class ConfirmMemberExtraEmailApiView(APIView):
         MemberExtraEmailConfirmedLogEntry().populate_email(
             email=member_extra_email.email,
             user=member_extra_email.member,
-            actor=request.user,
+            actor=request.user if request.user.is_authenticated else None,
         ).save()
 
         return Response(True)

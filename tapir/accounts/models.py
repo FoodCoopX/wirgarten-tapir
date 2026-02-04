@@ -239,6 +239,9 @@ class TapirUser(KeycloakUser):
 
 @receiver(user_logged_out)
 def terminate_session(sender, request, user, **kwargs):
+    if user is None:
+        return
+
     keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
     keycloak_client.user_logout(user.keycloak_id)
 

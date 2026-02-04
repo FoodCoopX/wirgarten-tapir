@@ -1268,7 +1268,7 @@ class MemberExtraEmailConfirmedLogEntry(LogEntry):
 
     email = models.EmailField(max_length=1024)
 
-    def populate_email(self, email: str, actor: TapirUser, user: Member):
+    def populate_email(self, email: str, actor: TapirUser | None, user: Member):
         self.populate(actor=actor, user=user)
         self.email = email
 
