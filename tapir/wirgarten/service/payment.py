@@ -1,16 +1,14 @@
 from collections import OrderedDict
 from datetime import date
-from decimal import Decimal
 from typing import Dict
 
 from dateutil.relativedelta import relativedelta
-from django.db.models import Sum
 from nanoid import generate
 from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Member, Payment, Subscription
+from tapir.wirgarten.models import Member, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
@@ -60,47 +58,6 @@ def get_next_payment_date(reference_date: date = None, cache: Dict = None):
     return next_payment
 
 
-def generate_new_payments(due_date: date, cache: Dict) -> list[Payment]:
-    """
-    Generates payments for the given due date. The generated payments are not persisted!
-
-    :return: the list of new Payments
-    """
-    payments = []
-
-    subscriptions = Subscription.objects.filter(
-        start_date__lte=due_date, end_date__gte=due_date
-    ).order_by("mandate_ref", "product__type")
-
-    grouped = {}
-    for sub in subscriptions:
-        key = (sub.mandate_ref, sub.product.type)
-        if key not in grouped:
-            grouped[key] = []
-        grouped[key].append(sub)
-
-    for (mandate_ref, product_type), subs in grouped.items():
-        existing = Payment.objects.filter(
-            mandate_ref=mandate_ref, due_date=due_date, type=product_type.name
-        )
-        if not existing.exists():
-            amount = sum(sub.total_price(cache=cache) for sub in subs)
-
-            payments.append(
-                Payment(
-                    due_date=due_date,
-                    amount=Decimal(amount).quantize(Decimal("0.01")),
-                    mandate_ref=mandate_ref,
-                    status=Payment.PaymentStatus.DUE,
-                    type=product_type.name,
-                )
-            )
-        else:
-            payments.extend(existing)
-
-    return payments
-
-
 def get_active_subscriptions_grouped_by_product_type(
     member: Member,
     reference_date: date = None,
@@ -134,37 +91,3 @@ def get_active_subscriptions_grouped_by_product_type(
         subscriptions_by_product_type[product_type].append(sub)
 
     return subscriptions_by_product_type
-
-
-def get_total_payment_amount(due_date: date, cache: dict) -> list[Payment]:
-    """
-    Returns the total € amount for all due payments on this date.
-
-    :param due_date: the date on which the payments are due
-    :return: the list of existing and projected payments for the given date
-    """
-
-    total_amount = 0.0
-
-    subscriptions = (
-        Subscription.objects.filter(start_date__lte=due_date, end_date__gte=due_date)
-        .order_by("mandate_ref", "product__type")
-        .select_related("mandate_ref", "product__type")
-    )
-
-    existing_payments = {
-        f"{p.mandate_ref.ref}-{p.type}": float(p.amount)
-        for p in Payment.objects.filter(due_date=due_date)
-    }
-    for sub in subscriptions:
-        total_amount += existing_payments.get(
-            f"{sub.mandate_ref.ref}-{sub.product.type.name}", None
-        ) or sub.total_price(due_date, cache=cache)
-
-    total_amount += float(
-        Payment.objects.filter(
-            type="Genossenschaftsanteile", due_date=due_date
-        ).aggregate(Sum("amount"))["amount__sum"]
-        or 0.0
-    )
-    return total_amount

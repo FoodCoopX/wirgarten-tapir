@@ -157,7 +157,11 @@ class MonthPaymentBuilderUtils:
 
         new_payment_amount = total_to_pay - already_paid
         new_payment_amount = Decimal(new_payment_amount).quantize(Decimal("0.01"))
-        if new_payment_amount <= 0 and not allow_negative_amounts:
+        if (
+            new_payment_amount == 0
+            or new_payment_amount < 0
+            and not allow_negative_amounts
+        ):
             return None
 
         payments_due_date = MonthPaymentBuilderUtils.get_payment_due_date_on_month(

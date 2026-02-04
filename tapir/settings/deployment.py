@@ -92,6 +92,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tapir.payments.tasks.create_payments_for_this_month",
         "schedule": celery.schedules.crontab(hour="23", minute="59"),
     },
+    "export_payments_for_this_month": {
+        "task": "tapir.payments.tasks.export_payments_for_this_month",
+        "schedule": celery.schedules.crontab(hour="5", minute="0"),
+    },
 }
 
 EMAIL_DISPATCH_BATCH_SIZE = (

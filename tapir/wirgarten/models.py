@@ -796,9 +796,9 @@ class PaymentTransaction(TapirModel):
     The relevant payments must reference the transaction in the same step.
     """
 
-    created_at = models.DateTimeField(null=False, default=partial(timezone.now))
-    file = models.ForeignKey(ExportedFile, on_delete=models.DO_NOTHING, null=False)
-    type = models.CharField(max_length=32, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    file = models.ForeignKey(ExportedFile, on_delete=models.PROTECT)
+    type = models.CharField(max_length=100)
 
 
 class Payment(TapirModel):
@@ -826,7 +826,7 @@ class Payment(TapirModel):
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )
-    type = models.CharField(max_length=64, null=True)
+    type = models.CharField(max_length=64)
     subscription_payment_range_start = models.DateField(null=True)
     subscription_payment_range_end = models.DateField(null=True)
 
