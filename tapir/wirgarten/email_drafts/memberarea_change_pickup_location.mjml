@@ -1,0 +1,10 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "Abholortänderung" werden an Mitglieder geschickt nach dem sie im Mitgliederbereich deren Abholort gewechselt haben.
+                Die Tokens sind {{Abholortänderung.Neuer Abholort}} und {{Abholortänderung.Gültig ab}}.
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

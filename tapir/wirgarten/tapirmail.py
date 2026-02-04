@@ -39,7 +39,7 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
 
 TOKENS_COOP_ENTRY = {
     "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
@@ -301,13 +301,14 @@ def _register_triggers():
     TransactionalTrigger.register_action(
         "Mitgliedsdatenänderungen", Events.MEMBERAREA_CHANGE_DATA
     )
-    TransactionalTrigger.register_action(
-        "Abholortänderung",
-        Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
-        {
+    register_transactional_trigger(
+        name="Abholortänderung",
+        key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+        tokens={
             "Neuer Abholort": "pickup_location",
             "Gültig ab": "pickup_location_start_date",
         },
+        required=True,
     )
 
     register_transactional_trigger(
@@ -357,8 +358,10 @@ def _register_triggers():
         },
         required=True,
     )
-    TransactionalTrigger.register_action(
-        "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY
+    register_transactional_trigger(
+        name="Beitritt zur Genossenschaft",
+        key=Events.MEMBERSHIP_ENTRY,
+        required=lambda: legal_status_is_cooperative(cache={}),
     )
 
     register_transactional_trigger(
