@@ -10,5 +10,4 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **kwargs):
         self.stdout.write("Importing parameter definitions")
-
         ParameterDefinitions().import_definitions(bulk_create=False)

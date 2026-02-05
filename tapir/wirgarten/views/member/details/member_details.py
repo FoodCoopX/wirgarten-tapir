@@ -207,7 +207,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["show_payments_card"] = self.request.user.has_perm(
             Permission.Coop.MANAGE
         ) or get_parameter_value(
-            key=ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS, cache=cache
+            key=ParameterKeys.MEMBERS_CAN_SEE_OWN_PAYMENTS, cache=cache
+        )
+
+        context["show_contract_edit"] = self.request.user.has_perm(
+            Permission.Coop.MANAGE
+        ) or get_parameter_value(
+            key=ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS, cache=cache
         )
 
         return context

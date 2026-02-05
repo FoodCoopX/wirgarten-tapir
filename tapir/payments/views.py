@@ -66,7 +66,7 @@ class GetFutureMemberPaymentsApiView(APIView):
         if not request.user.has_perm(
             Permission.Coop.MANAGE
         ) and not get_parameter_value(
-            ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS, cache=self.cache
+            ParameterKeys.MEMBERS_CAN_SEE_OWN_PAYMENTS, cache=self.cache
         ):
             raise PermissionDenied()
 

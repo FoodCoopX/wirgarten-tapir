@@ -41,6 +41,9 @@ if (contractTilesElement) {
       <SubscriptionCards
         memberId={contractTilesElement.dataset.memberId!}
         csrfToken={getCsrfToken()}
+        showContractEdit={
+          contractTilesElement.dataset.showContractEdit === "True"
+        }
       />
       {showCancellationCard && (
         <SubscriptionCancellationCard

@@ -8,7 +8,6 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from tapir.configuration.models import (
     TapirParameter,
     TapirParameterDatatype,
-    TapirParameterDefinitionImporter,
 )
 from tapir.utils.shortcuts import get_from_cache_or_compute
 
@@ -57,14 +56,16 @@ class ParameterMeta:
 
 
 class ParameterMetaInfo:
-    parameters = {str: ParameterMeta}
+    parameters: dict[str, ParameterMeta] = {}
     initialized = False
 
     def initialize(self):
         if self.initialized:
             return
-        for cls in TapirParameterDefinitionImporter.__subclasses__():
-            cls().import_definitions()
+
+        from tapir.wirgarten.parameters import ParameterDefinitions
+
+        ParameterDefinitions().import_definitions()
         self.initialized = True
 
 
@@ -202,15 +203,15 @@ def __create_or_update_parameter(
 
 def __validate_initial_value(datatype, initial_value, key, validators):
     try:
-        if type(initial_value) == str:
+        if isinstance(initial_value, str):
             assert datatype == TapirParameterDatatype.STRING
-        elif type(initial_value) == int:
-            assert datatype == TapirParameterDatatype.INTEGER
-        elif type(initial_value) == float:
-            assert datatype == TapirParameterDatatype.DECIMAL
-        elif type(initial_value) == bool:
+        elif isinstance(initial_value, bool):
             assert datatype == TapirParameterDatatype.BOOLEAN
-        elif type(initial_value) == datetime.date:
+        elif isinstance(initial_value, int):
+            assert datatype == TapirParameterDatatype.INTEGER
+        elif isinstance(initial_value, float):
+            assert datatype == TapirParameterDatatype.DECIMAL
+        elif isinstance(initial_value, datetime.date):
             assert datatype == TapirParameterDatatype.DATE
     except AssertionError:
         raise TypeError(

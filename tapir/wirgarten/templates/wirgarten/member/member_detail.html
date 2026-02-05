@@ -36,7 +36,8 @@
                     {% if show_coop_shares %}<div id="coop_shares_card" data-member-id="{{ object.id }}"></div>{% endif %}
                     <div id="contract-tiles"
                          data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
-                         data-member-id="{{ object.pk }}">
+                         data-member-id="{{ object.pk }}"
+                         data-show-contract-edit="{{ show_contract_edit }}">
                         <div id="subscription_cards" data-member-id="{{ object.pk }}">
                             <span class="spinner-border">
                                 <span class="visually-hidden">Loading...</span>

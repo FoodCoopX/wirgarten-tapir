@@ -1,7 +1,7 @@
 import datetime
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
@@ -74,6 +74,7 @@ from tapir.waiting_list.services.waiting_list_entry_creator import (
 from tapir.waiting_list.services.waiting_list_entry_validator import (
     WaitingListEntryValidator,
 )
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     ProductType,
     WaitingListEntry,
@@ -152,6 +153,12 @@ class BestellWizardProductTypeView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         check_permission_or_self(pk=kwargs["member_id"], request=request)
+        if not request.user.has_perm(
+            Permission.Coop.MANAGE
+        ) and not get_parameter_value(
+            ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS, cache={}
+        ):
+            raise PermissionDenied()
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):

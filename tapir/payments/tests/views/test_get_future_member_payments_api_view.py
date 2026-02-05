@@ -41,7 +41,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
 
     def test_get_normalMemberGetsOwnPaymentsButSelfViewIsDisabled_returns403(self):
         TapirParameter.objects.filter(
-            key=ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS
+            key=ParameterKeys.MEMBERS_CAN_SEE_OWN_PAYMENTS
         ).update(value=False)
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
@@ -78,7 +78,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS
+            key=ParameterKeys.MEMBERS_CAN_SEE_OWN_PAYMENTS
         ).update(value=False)
 
         logged_in_member = MemberFactory.create(is_superuser=True)

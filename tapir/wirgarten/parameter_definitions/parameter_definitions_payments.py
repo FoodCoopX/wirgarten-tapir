@@ -4,7 +4,7 @@ import typing
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from tapir.configuration.models import TapirParameterDatatype
-from tapir.configuration.parameter import ParameterMeta, get_parameter_value
+from tapir.configuration.parameter import ParameterMeta
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -87,17 +87,6 @@ class ParameterDefinitionsPayments:
             description="Ab welche Datum sollen Zahlungen eingezogen werden. Es ist relevant wenn Verträge in Tapir importiert werden wo außerhalb von Tapir Zahlungen schon eingezogen sind.",
             category=ParameterCategory.PAYMENT,
             meta=ParameterMeta(validators=[validate_date_is_first_of_month]),
-            order_priority=order_priority,
-        )
-        order_priority -= 1
-
-        importer.parameter_definition(
-            key=ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS,
-            label="Mitglieder können deren eigene Zahlungsreihe sehen",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=True,
-            description="Im Mitgliederbereich gibt es ein Abteil 'Nächste Zahlung' und ein Popup mit der Zahlungsreihe. Wenn dieses Parameter ausgeschaltet ist ist dieses Abteil nur für Admins sichtbar. ",
-            category=ParameterCategory.PAYMENT,
             order_priority=order_priority,
         )
         order_priority -= 1

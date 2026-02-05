@@ -11,12 +11,14 @@ interface SubscriptionCardProps {
   subscriptions: PublicSubscription[];
   productType: PublicProductType;
   bestellWizardUrl: string;
+  showContractEdit: boolean;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   subscriptions,
   productType,
   bestellWizardUrl,
+  showContractEdit,
 }) => {
   const [loading, setLoading] = useState(false);
 
@@ -90,15 +92,17 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             </strong>
             <small> / Monat</small>
           </span>
-          <TapirButton
-            variant={"outline-primary"}
-            icon={subscriptions.length == 0 ? "add" : "contract_edit"}
-            onClick={() => {
-              location.assign(bestellWizardUrl);
-              setLoading(true);
-            }}
-            loading={loading}
-          />
+          {showContractEdit && (
+            <TapirButton
+              variant={"outline-primary"}
+              icon={subscriptions.length == 0 ? "add" : "contract_edit"}
+              onClick={() => {
+                location.assign(bestellWizardUrl);
+                setLoading(true);
+              }}
+              loading={loading}
+            />
+          )}
         </div>
       </Card.Footer>
     </Card>

@@ -159,3 +159,26 @@ class ParameterDefinitionsMemberDashboard:
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=400,
         )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBERS_CAN_SEE_OWN_PAYMENTS,
+            label="Mitglieder können deren eigene Zahlungsreihe sehen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Im Mitgliederbereich gibt es ein Abteil 'Nächste Zahlung' und ein Popup mit der Zahlungsreihe. Wenn dieses Parameter ausgeschaltet ist ist dieses Abteil nur für Admins sichtbar.",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=300,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS,
+            label="Mitglieder können deren eigene Verträge anpassen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Im Mitgliederbereich können Mitglieder deren Verträge (z.B. Ernteanteil) und Solidarbeitrag selber anpassen. "
+            "Wenn dieses Parameter ausgeschaltet ist, können die Mitglieder selber nichts anpassen. "
+            "Admins können weiterhin alle Anpassungen ausführen. "
+            "Wenn es eingeschaltet ist, können die Mitglieder deren Verträge selber anpassen, dafür nur 'nach Oben' (Höhere Solidarbeitrag, größere Anteil-Größe...)'",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=200,
+        )

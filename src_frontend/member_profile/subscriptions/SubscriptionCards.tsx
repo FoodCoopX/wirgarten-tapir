@@ -16,11 +16,13 @@ import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts
 interface SubscriptionCardsProps {
   memberId: string;
   csrfToken: string;
+  showContractEdit: boolean;
 }
 
 const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
   memberId,
   csrfToken,
+  showContractEdit,
 }) => {
   const api = useApi(SubscriptionsApi, csrfToken);
   const [subscriptions, setSubscriptions] = useState<PublicSubscription[]>([]);
@@ -68,6 +70,7 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
               "product_type_id",
               productType.id!,
             )}
+            showContractEdit={showContractEdit}
           />
         ))
       )}
