@@ -13,13 +13,13 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
     PickupLocationCapability,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import (
     get_active_product_types,

@@ -7,6 +7,7 @@ from tapir.deliveries.services.joker_management_service import JokerManagementSe
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
 from tapir.wirgarten.models import (
     Subscription,
     PickupLocation,
@@ -15,7 +16,6 @@ from tapir.wirgarten.models import (
     ProductType,
     GrowingPeriod,
 )
-from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):

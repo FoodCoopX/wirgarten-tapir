@@ -13,7 +13,38 @@ DeliveryCycle = [
     ),
 ]
 
-DeliveryCycleDict = {key: value for key, value in DeliveryCycle}
+DeliveryCycleDict = dict(DeliveryCycle)
+
+OPTIONS_WEEKDAYS = [
+    (0, _("Montag")),
+    (1, _("Dienstag")),
+    (2, _("Mittwoch")),
+    (3, _("Donnerstag")),
+    (4, _("Freitag")),
+    (5, _("Samstag")),
+    (6, _("Sonntag")),
+]
+
+
+class ParameterCategory:
+    BESTELLWIZARD = "BestellWizard"
+    BUSINESS = "{{legal_status}}"
+    DELIVERY = "Lieferung"
+    JOKERS = "Joker"
+    MAIL = "E-Mails"
+    MEMBER_DASHBOARD = "Mitgliederbereich"
+    ORGANIZATION = "Organisation"
+    PAYMENT = "Zahlungen"
+    PICKING = "Kommissionierung"
+    SITE = "Standort"
+    SOLIDARITY = "Solidarbeitrag"
+    SUBSCRIPTIONS = "Verträge"
+    SUPPLIER_LIST = "Lieferantenliste"
+    TEST = "Tests"
+    TRIAL_PERIOD = "Probezeit"
+
+
+HTML_ALLOWED_TEXT = "HTML erlaubt"
 
 
 class Permission:
@@ -40,7 +71,6 @@ class Permission:
     class Coop:
         VIEW = "coop.view"
         MANAGE = "coop.manage"
-        # ADMIN = "coop.admin"
 
     class Accounts:
         VIEW = "accounts.view"

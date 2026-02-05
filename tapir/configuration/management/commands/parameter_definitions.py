@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 from django.db import transaction
 
-from tapir.configuration.models import TapirParameterDefinitionImporter
+from tapir.wirgarten.parameters import ParameterDefinitions
 
 
 class Command(BaseCommand):
@@ -9,8 +9,6 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **kwargs):
-        self.stdout.write("Importing parameter definitions:")
+        self.stdout.write("Importing parameter definitions")
 
-        for cls in TapirParameterDefinitionImporter.__subclasses__():
-            self.stdout.write(" - " + cls.__module__ + "." + cls.__name__)
-            cls().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=False)

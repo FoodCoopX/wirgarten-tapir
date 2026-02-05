@@ -31,9 +31,8 @@ from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
 from tapir.utils.models import CountryField
-from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
+from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDAYS
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 

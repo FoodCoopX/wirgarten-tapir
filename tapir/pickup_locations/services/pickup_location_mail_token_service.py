@@ -5,8 +5,8 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
+from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
 from tapir.wirgarten.models import Member, PickupLocationOpeningTime
-from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 from tapir.wirgarten.utils import get_today
 
 

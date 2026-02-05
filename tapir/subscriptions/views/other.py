@@ -24,14 +24,13 @@ from tapir.subscriptions.serializers import (
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.constants import Permission, OPTIONS_WEEKDAYS
 from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 from tapir.wirgarten.service.products import (
     get_product_price,
 )
