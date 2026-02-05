@@ -1,16 +1,19 @@
 import datetime
-import itertools
 from collections.abc import Iterable
+from decimal import Decimal
 
 from django.db import transaction
 
-from tapir.payments.services.month_payment_builder_solidarity_contributions import (
-    MonthPaymentBuilderSolidarityContributions,
-)
+from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.utils.shortcuts import get_last_day_of_month
-from tapir.wirgarten.models import Payment, ExportedFile, PaymentTransaction
+from tapir.wirgarten.models import (
+    Payment,
+    ExportedFile,
+    PaymentTransaction,
+    MandateReference,
+)
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, get_now
 
 
 class PaymentExportBuilder:
@@ -25,14 +28,110 @@ class PaymentExportBuilder:
     @transaction.atomic
     def export_all_unexported_payments(cls, reference_date: datetime.date, cache: dict):
         payments = cls.get_unexported_payments(reference_date=reference_date)
-        payments_grouped_by_type = cls.group_payments_by_type(payments)
+        contract_payments, coop_share_payments = (
+            cls.split_payments_by_contract_or_coop_shares(payments)
+        )
 
-        for payment_type, payments in payments_grouped_by_type.items():
-            cls.export_payments_of_type(
-                payment_type,
-                payments,
-                cache=cache,
+        combined_contract_payments = cls.combine_contract_payments_by_mandate_ref(
+            contract_payments
+        )
+
+        cls.export_payments_if_necessary(
+            combined_payments=combined_contract_payments,
+            database_payments=contract_payments,
+            is_contract_payments=True,
+            reference_date=reference_date,
+            cache=cache,
+        )
+        cls.export_payments_if_necessary(
+            combined_payments=coop_share_payments,
+            database_payments=coop_share_payments,
+            is_contract_payments=False,
+            reference_date=reference_date,
+            cache=cache,
+        )
+
+    @classmethod
+    def export_payments_if_necessary(
+        cls,
+        combined_payments: Iterable[Payment],
+        database_payments: Iterable[Payment],
+        is_contract_payments: bool,
+        reference_date: datetime.date,
+        cache: dict,
+    ):
+        if not cls.should_export_payments(
+            is_contract_payments=is_contract_payments, reference_date=reference_date
+        ):
+            return
+
+        exported_file = cls.export_payments(
+            combined_payments,
+            contract_payments=is_contract_payments,
+            cache=cache,
+        )
+        cls.create_and_assign_transaction(
+            file=exported_file,
+            is_contract_payments=is_contract_payments,
+            payments=database_payments,
+            reference_date=reference_date,
+            cache=cache,
+        )
+
+    @classmethod
+    def should_export_payments(
+        cls, is_contract_payments: bool, reference_date: datetime.date
+    ):
+        payment_type_display = cls.get_payment_type_display(is_contract_payments)
+        last_transaction = (
+            PaymentTransaction.objects.filter(
+                type=payment_type_display, created_at__lte=reference_date
             )
+            .order_by("created_at")
+            .last()
+        )
+        if last_transaction is None:
+            return True
+
+        return reference_date.month != last_transaction.created_at.month
+
+    @classmethod
+    def create_and_assign_transaction(
+        cls,
+        file: ExportedFile,
+        is_contract_payments: bool,
+        payments: Iterable[Payment],
+        reference_date: datetime.date,
+        cache: dict,
+    ):
+        created_at = datetime.datetime.combine(
+            reference_date,
+            get_now(cache=cache).time(),
+            tzinfo=get_now(cache=cache).tzinfo,
+        )
+        payment_transaction = PaymentTransaction.objects.create(
+            file=file,
+            type=cls.get_payment_type_display(is_contract_payments),
+            created_at=created_at,
+        )
+        for payment in payments:
+            payment.transaction = payment_transaction
+            payment.status = Payment.PaymentStatus.PAID
+        Payment.objects.bulk_update(payments, ["transaction", "status"])
+
+    @classmethod
+    def combine_contract_payments_by_mandate_ref(cls, payments: list[Payment]):
+        combined_payments: dict[MandateReference, Payment] = {}
+
+        for payment in payments:
+            if payment.mandate_ref not in combined_payments.keys():
+                combined_payments[payment.mandate_ref] = Payment(
+                    mandate_ref=payment.mandate_ref,
+                    amount=Decimal(0),
+                )
+            combined_payments[payment.mandate_ref].amount += payment.amount
+
+        return combined_payments.values()
 
     @classmethod
     def get_unexported_payments(cls, reference_date: datetime.date):
@@ -42,19 +141,11 @@ class PaymentExportBuilder:
         )
 
     @classmethod
-    def group_payments_by_type(cls, payments: Iterable[Payment]):
-        payments = sorted(payments, key=lambda payment: payment.type)
-        payments_grouped_by_type = {
-            payment_type: list(group)
-            for payment_type, group in itertools.groupby(
-                payments, key=lambda payment: payment.type
-            )
-        }
-        return payments_grouped_by_type
-
-    @classmethod
-    def export_payments_of_type(
-        cls, payment_type: str, payments: list[Payment], cache: dict
+    def export_payments(
+        cls,
+        payments: Iterable[Payment],
+        contract_payments: bool,
+        cache: dict,
     ):
         output, writer = begin_csv_string(
             [
@@ -67,8 +158,11 @@ class PaymentExportBuilder:
             ]
         )
 
+        payment_type_display = cls.get_payment_type_display(contract_payments)
         for payment in payments:
-            verwendungszweck = f"{payment.mandate_ref.member.last_name} {payment_type}"
+            verwendungszweck = (
+                f"{payment.mandate_ref.member.last_name} {payment_type_display}"
+            )
 
             writer.writerow(
                 {
@@ -83,22 +177,26 @@ class PaymentExportBuilder:
                 }
             )
 
-        payment_type_display = payment_type
-        if (
-            payment_type_display
-            == MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
-        ):
-            payment_type_display = "Solidarbeitrag"
-        file = export_file(
+        return export_file(
             filename=f"{payment_type_display}-Einzahlungen",
             filetype=ExportedFile.FileType.CSV,
             content=bytes("".join(output.csv_string), "utf-8"),
             send_email=True,
             cache=cache,
         )
-        payment_transaction = PaymentTransaction.objects.create(
-            file=file, type=payment_type_display
-        )
+
+    @classmethod
+    def get_payment_type_display(cls, contract_payments: bool):
+        return "Verträge" if contract_payments else PAYMENT_TYPE_COOP_SHARES
+
+    @classmethod
+    def split_payments_by_contract_or_coop_shares(cls, payments: Iterable[Payment]):
+        contract_payments = []
+        coop_share_payments = []
         for payment in payments:
-            payment.transaction = payment_transaction
-        Payment.objects.bulk_update(payments, ["transaction"])
+            if payment.type == PAYMENT_TYPE_COOP_SHARES:
+                coop_share_payments.append(payment)
+            else:
+                contract_payments.append(payment)
+
+        return contract_payments, coop_share_payments

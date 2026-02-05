@@ -796,7 +796,7 @@ class PaymentTransaction(TapirModel):
     The relevant payments must reference the transaction in the same step.
     """
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField()
     file = models.ForeignKey(ExportedFile, on_delete=models.PROTECT)
     type = models.CharField(max_length=100)
 
@@ -811,18 +811,15 @@ class Payment(TapirModel):
         PAID = "PAID", _("Bezahlt")
         DUE = "DUE", _("Offen")
 
-    due_date = models.DateField(null=False)
-    mandate_ref = models.ForeignKey(
-        MandateReference, on_delete=models.DO_NOTHING, null=False
-    )
-    amount = models.DecimalField(decimal_places=2, max_digits=8, null=False)
+    due_date = models.DateField()
+    mandate_ref = models.ForeignKey(MandateReference, on_delete=models.DO_NOTHING)
+    amount = models.DecimalField(decimal_places=2, max_digits=8)
     status = models.CharField(
         max_length=8,
         choices=PaymentStatus.choices,
-        null=False,
         default=PaymentStatus.DUE,
     )
-    edited = models.BooleanField(default=False, null=False)
+    edited = models.BooleanField(default=False)
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )

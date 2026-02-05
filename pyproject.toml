@@ -62,6 +62,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.djlint]
 profile="django"
+use_gitignore=true
+format_css=true
+format_js=true
 
 [tool.coverage.run]
 omit = [
