@@ -584,7 +584,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 ],
                 validators=[validate_base_product_type_exists],
             ),
-            enabled=is_debug_instance(),
+            enabled=True,
         )
 
         self.parameter_definition(
