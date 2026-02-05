@@ -1,6 +1,7 @@
 import datetime
 
 from django.urls import reverse
+from rest_framework import status
 from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.models import TapirParameter
@@ -38,6 +39,19 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
 
+    def test_get_normalMemberGetsOwnPaymentsButSelfViewIsDisabled_returns403(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS
+        ).update(value=False)
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
+
     def test_get_normalMemberGetsPaymentsOfOtherMember_returns403(self):
         logged_in_member = MemberFactory.create(is_superuser=False)
         other_member = MemberFactory.create()
@@ -50,6 +64,23 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.assertStatusCode(response, 403)
 
     def test_get_adminUserGetsPaymentsOfOtherMember_returns200(self):
+        logged_in_member = MemberFactory.create(is_superuser=True)
+        other_member = MemberFactory.create()
+        self.client.force_login(logged_in_member)
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={other_member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+
+    def test_get_adminUserGetsPaymentsOfOtherMemberWithSelfViewDisabled_returns200Anyway(
+        self,
+    ):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS
+        ).update(value=False)
+
         logged_in_member = MemberFactory.create(is_superuser=True)
         other_member = MemberFactory.create()
         self.client.force_login(logged_in_member)

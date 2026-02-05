@@ -96,8 +96,6 @@ if (domNodeFuturePaymentsCard) {
       csrfToken={getCsrfToken()}
     />,
   );
-} else {
-  console.error("Failed to render future payments card from React");
 }
 
 const domNodePaymentRhythmButton = document.getElementById(

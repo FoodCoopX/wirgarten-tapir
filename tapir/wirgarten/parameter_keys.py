@@ -36,6 +36,9 @@ class ParameterKeys:
     PAYMENT_DEFAULT_RHYTHM = f"{PREFIX}.payment.default_rhythm"
     PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
+    PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS = (
+        f"{PREFIX}.payment.members_can_see_own_payments"
+    )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
         f"{PREFIX}.member.dashboard.renewal_alert.unkown.header"

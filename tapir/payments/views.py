@@ -5,9 +5,11 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, permissions
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.payments.models import (
     MemberPaymentRhythm,
@@ -44,6 +46,7 @@ from tapir.wirgarten.models import (
     MandateReference,
     Member,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.utils import check_permission_or_self, get_today
 
@@ -60,6 +63,12 @@ class GetFutureMemberPaymentsApiView(APIView):
     def get(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(pk=member_id, request=request)
+        if not request.user.has_perm(
+            Permission.Coop.MANAGE
+        ) and not get_parameter_value(
+            ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS, cache=self.cache
+        ):
+            raise PermissionDenied()
 
         member_payments = self.get_due_and_future_payments(member_id)
         extended_payments = self.build_extended_payments(

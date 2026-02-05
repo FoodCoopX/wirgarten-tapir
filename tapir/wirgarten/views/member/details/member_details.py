@@ -204,6 +204,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
         )
 
+        context["show_payments_card"] = self.request.user.has_perm(
+            Permission.Coop.MANAGE
+        ) or get_parameter_value(
+            key=ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS, cache=cache
+        )
+
         return context
 
     def add_renewal_notice_context(self, context, next_month, today, cache: Dict):

@@ -94,14 +94,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             validate_html,
             validate_iso_datetime,
             validate_base_product_type_exists,
-            validate_date_is_first_of_month,
         )
         from tapir.pickup_locations.services.basket_size_capacities_service import (
             BasketSizeCapacitiesService,
-        )
-        from tapir.payments.models import MemberPaymentRhythm
-        from tapir.payments.services.member_payment_rhythm_service import (
-            MemberPaymentRhythmService,
         )
 
         self.parameter_definition(
@@ -334,63 +329,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(
                 validators=[BasketSizeCapacitiesService.validate_basket_sizes]
             ),
-        )
-
-        self.parameter_definition(
-            key=ParameterKeys.PAYMENT_DUE_DAY,
-            label="Fälligkeitsdatum der Beitragszahlungen (Tag des Monats)",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=15,
-            description="Der Tag im Monat an dem Beitragszahlungen für Abonnements fällig sind.",
-            category=ParameterCategory.PAYMENT,
-            meta=ParameterMeta(
-                validators=[
-                    MinValueValidator(limit_value=1),
-                    MaxValueValidator(limit_value=31),
-                ]
-            ),
-            enabled=is_debug_instance(),
-        )
-
-        self.parameter_definition(
-            key=ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
-            label="Standard Zahlungsintervall.",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=MemberPaymentRhythm.Rhythm.MONTHLY,
-            description="Zahlungsintervall das vorausgewählt ist im BestellWizard.",
-            category=ParameterCategory.PAYMENT,
-            meta=ParameterMeta(
-                options_callable=lambda cache: [
-                    (rhythm, MemberPaymentRhythmService.get_rhythm_display_name(rhythm))
-                    for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
-                        cache=cache
-                    )
-                ]
-            ),
-        )
-
-        self.parameter_definition(
-            key=ParameterKeys.PAYMENT_ALLOWED_RHYTHMS,
-            label="Erlaubte Zahlungsintervalle.",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=", ".join(
-                [str(choice[1]) for choice in MemberPaymentRhythm.Rhythm.choices]
-            ),
-            description="Zahlungsintervalle die ausgewählt werden können, als Komma-getrennte liste. Beispiel: 'Monatlich, Vierteljährlich, Halbjährlich, Jährlich'.",
-            category=ParameterCategory.PAYMENT,
-            meta=ParameterMeta(
-                validators=[MemberPaymentRhythmService.validate_rhythms]
-            ),
-        )
-
-        self.parameter_definition(
-            key=ParameterKeys.PAYMENT_START_DATE,
-            label="Start-Datum für die Zahlungen",
-            datatype=TapirParameterDatatype.DATE,
-            initial_value=datetime.date.today().replace(day=1),
-            description="Ab welche Datum sollen Zahlungen eingezogen werden. Es ist relevant wenn Verträge in Tapir importiert werden wo außerhalb von Tapir Zahlungen schon eingezogen sind.",
-            category=ParameterCategory.PAYMENT,
-            meta=ParameterMeta(validators=[validate_date_is_first_of_month]),
         )
 
         self.parameter_definition(
@@ -831,6 +769,92 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         self.import_definitions_organization()
         self.import_definitions_bestellwizard()
         self.import_definitions_emails()
+        self.import_definitions_payments()
+
+    def import_definitions_payments(self):
+        from tapir.wirgarten.validators import validate_date_is_first_of_month
+        from tapir.payments.models import MemberPaymentRhythm
+        from tapir.payments.services.member_payment_rhythm_service import (
+            MemberPaymentRhythmService,
+        )
+
+        order_priority = 100
+
+        self.parameter_definition(
+            key=ParameterKeys.PAYMENT_DUE_DAY,
+            label="Fälligkeitsdatum der Beitragszahlungen (Tag des Monats)",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=15,
+            description="Der Tag im Monat an dem Beitragszahlungen für Abonnements fällig sind.",
+            category=ParameterCategory.PAYMENT,
+            meta=ParameterMeta(
+                validators=[
+                    MinValueValidator(limit_value=1),
+                    MaxValueValidator(limit_value=31),
+                ]
+            ),
+            enabled=is_debug_instance(),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
+            label="Standard Zahlungsintervall.",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=MemberPaymentRhythm.Rhythm.MONTHLY,
+            description="Zahlungsintervall das vorausgewählt ist im BestellWizard.",
+            category=ParameterCategory.PAYMENT,
+            meta=ParameterMeta(
+                options_callable=lambda cache: [
+                    (rhythm, MemberPaymentRhythmService.get_rhythm_display_name(rhythm))
+                    for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
+                        cache=cache
+                    )
+                ]
+            ),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.PAYMENT_ALLOWED_RHYTHMS,
+            label="Erlaubte Zahlungsintervalle.",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=", ".join(
+                [str(choice[1]) for choice in MemberPaymentRhythm.Rhythm.choices]
+            ),
+            description="Zahlungsintervalle die ausgewählt werden können, als Komma-getrennte liste. Beispiel: 'Monatlich, Vierteljährlich, Halbjährlich, Jährlich'.",
+            category=ParameterCategory.PAYMENT,
+            meta=ParameterMeta(
+                validators=[MemberPaymentRhythmService.validate_rhythms]
+            ),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            label="Start-Datum für die Zahlungen",
+            datatype=TapirParameterDatatype.DATE,
+            initial_value=datetime.date.today().replace(day=1),
+            description="Ab welche Datum sollen Zahlungen eingezogen werden. Es ist relevant wenn Verträge in Tapir importiert werden wo außerhalb von Tapir Zahlungen schon eingezogen sind.",
+            category=ParameterCategory.PAYMENT,
+            meta=ParameterMeta(validators=[validate_date_is_first_of_month]),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.PAYMENT_MEMBERS_CAN_SEE_OWN_PAYMENTS,
+            label="Mitglieder können deren eigene Zahlungsreihe sehen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Im Mitgliederbereich gibt es ein Abteil 'Nächste Zahlung' und ein Popup mit der Zahlungsreihe. Wenn dieses Parameter ausgeschaltet ist ist dieses Abteil nur für Admins sichtbar. ",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
 
     def import_definitions_emails(self):
         order_priority = 100
