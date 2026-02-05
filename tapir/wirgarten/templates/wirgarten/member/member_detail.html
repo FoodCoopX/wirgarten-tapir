@@ -213,16 +213,6 @@
                         </div>
                     </div>
                     <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "Geburtsdatum" %}:</div>
-                        <div class="col-8" id="tapir_user_birthdate">
-                            {% if object.birthdate %}
-                                {{ object.birthdate|format_date }}
-                            {% else %}
-                                <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row m-1">
                         <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
                         <div class="col-8" id="tapir_user_address">
                             {% if object.street and object.city %}
