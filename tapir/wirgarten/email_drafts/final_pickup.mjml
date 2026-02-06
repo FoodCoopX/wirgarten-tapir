@@ -2,8 +2,28 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Vertrags-/Lieferende" werden an Mitglieder geschickt in der Woche deren letze Lieferung, z.B. wenn sie alle Verträge gekündigt haben.
-                Folgende Token steht zu verfügung: {{Vertrags-/Lieferende.Vertragsliste}}
+Trigger: Transaktionale Mail, die am Montag in der letzten Abholwoche an das Mitglied, welches entweder gekündigt (regulär zum Ende der Vertragsperiode hin oder innerhalb der Probezeit) oder den Vertrag nicht verlängert hat (wenn Opt-In bei Vetragsverlängerung eingeschaltet) versendet wird. 
+Zweck: Benachrichtigung / Erinnerung daran, dass diese Woche die letzte Abholung stattfindet, damit die Leute nicht ggf. weiter am Abholort Gemüse abholen, obwohl sie kein gültigen Vertrag mehr haben.
+Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.                
+
+"
+Moin {{Empfänger.Vorname}},
+
+du hast diese Woche Deine letzte Abholung gehabt. 
+
+Folgende Verträge sind nun abgelaufen:
+{{Vertrags-/Lieferende.Vertragsliste}}
+
+Egal ob letzte Lieferung nach dem Probemonat oder nach einer oder mehreren Saisons - wir danken Dir für Deine Unterstützung und Dein Vertrauen und freuen uns, Dich auch ohne Ernteanteil bald wieder bei uns zu treffen! 
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Tokens sind hier relevant: 
+{{Vertrags-/Lieferende.Vertragsliste}}
             </mj-text>
         </mj-column>
     </mj-section>
