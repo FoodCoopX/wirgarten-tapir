@@ -19,7 +19,13 @@ Es wäre super, wenn Du Deinen Freund:innen und Bekannten von uns erzählst. Den
 
 Vielen Dank dafür! 
 
-Folgende Token steht zu verfügung: {{Vertrag gekündigt.Vertragsliste}} {{Vertrag gekündigt.Vertragsende}}
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Token sind hier relevant: {{Vertrag gekündigt.Vertragsliste}} {{Vertrag gekündigt.Vertragsende}}
             </mj-text>
         </mj-column>
     </mj-section>
