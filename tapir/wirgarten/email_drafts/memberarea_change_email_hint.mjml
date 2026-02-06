@@ -3,11 +3,25 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Email-Änderung: Hinweis an neue Email die alte Adresse zu lesen"
-                werden an Mitglieder geschickt wenn sie deren Email-Adresse geändert habe. Die neue
-                Adresse bekommt die Mail. Die Mail soll das Mitglied Bescheid geben dass das Bestätigungslink an der
-                alte EMail-Adresse verschickt worden ist, und dass er/sie, falls es kein Zugang zu diese alte Adresse mehr gibt, sich ans der Verwaltung wenden soll.
-                Das Trigger hat keine spezifische Tokens.
+Trigger: Email-Adresse wird im Mitgliederbereich verändert. 
+Zweck: Es wird ein Hinweis an die neu eingetragene Email versendet, die Emails der alten Emailadresse zu lesen, da an diese der Bestätigungslink für die Änderung der Mailadresse versendet wird und nur durch Klick darauf die Änderung wirksam wird. 
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+
+"Moin {{Empfänger.Vorname}},
+wir haben die Änderung Deiner E-Mail-Adresse erhalten. 
+
+Zur Sicherheit haben wir einen Bestätigungslink an Deine alte E-Mail-Adresse geschickt. Bitte klicke dort auf den Link, um die Änderung zu bestätigen. 
+
+Wenn Du keinen Zugriff mehr auf Deine alte Adresse hast, melde Dich gern bei uns – dann kümmern wir uns gemeinsam darum.
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Token sind hier relevant: keine besonderen. 
             </mj-text>
         </mj-column>
     </mj-section>
