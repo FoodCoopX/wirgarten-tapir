@@ -22,10 +22,17 @@ class TestConfirmMemberExtraEmailApiView(TapirIntegrationTest):
         TapirParameter.objects.filter(
             key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES
         ).update(value=False)
+        extra_email = MemberExtraEmail.objects.create(
+            member=MemberFactory.create(), email="test@example.com"
+        )
 
-        response = self.client.get(reverse("core:member_extra_email_confirm"))
+        response = self.client.get(
+            reverse(
+                "core:member_extra_email_confirm", kwargs={"secret": extra_email.secret}
+            )
+        )
 
-        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
     def test_get_default_confirmRecipientAndCreatesLogEntry(self):
         member = MemberFactory.create()
@@ -36,11 +43,20 @@ class TestConfirmMemberExtraEmailApiView(TapirIntegrationTest):
 
         self.assertIsNone(extra_email.confirmed_on)
 
-        url = reverse("core:member_extra_email_confirm")
-        url = f"{url}?secret={extra_email.secret}"
+        url = reverse(
+            "core:member_extra_email_confirm", kwargs={"secret": extra_email.secret}
+        )
         response = self.client.get(url)
 
-        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertStatusCode(response, status.HTTP_302_FOUND)
+        self.assertRedirects(
+            response,
+            expected_url=reverse(
+                "core:member_extra_email_confirmed",
+                kwargs={"secret": extra_email.secret},
+            ),
+        )
+
         extra_email.refresh_from_db()
         self.assertIsNotNone(extra_email.confirmed_on)
 

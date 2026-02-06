@@ -1,11 +1,15 @@
 from typing import Literal
 
 from django.conf import settings
-from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.exceptions import (
+    ValidationError as DjangoValidationError,
+    PermissionDenied,
+)
 from django.core.validators import validate_email
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.views.generic import TemplateView, RedirectView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, serializers
 from rest_framework.exceptions import (
@@ -209,10 +213,7 @@ class MemberExtraEmailApiView(APIView):
             email=extra_email_address, user=member, actor=request.user
         ).save()
 
-        confirmation_link = (
-            f"{settings.SITE_URL}{reverse('core:member_extra_email_confirm')}"
-        )
-        confirmation_link = f"{confirmation_link}?secret={member_extra_email.secret}"
+        confirmation_link = f"{settings.SITE_URL}{reverse('core:member_extra_email_confirm', kwargs={"secret": member_extra_email.secret})}"
         TransactionalTrigger.fire_action(
             TransactionalTriggerData(
                 key=Events.EXTRA_MAIL_CONFIRMATION,
@@ -258,24 +259,18 @@ class MemberExtraEmailApiView(APIView):
         return Response(True)
 
 
-class ConfirmMemberExtraEmailApiView(APIView):
+class ConfirmMemberExtraEmailApiView(RedirectView):
     permission_classes = []
 
-    @extend_schema(
-        responses={200: bool},
-        parameters=[
-            OpenApiParameter(name="secret", type=str),
-        ],
-    )
     @transaction.atomic
-    def get(self, request):
+    def get_redirect_url(self, *args, **kwargs):
         cache = {}
         if not get_parameter_value(
             key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
         ):
-            raise RestValidationError(MemberExtraEmailApiView.FEATURE_DISABLED_MESSAGE)
+            raise PermissionDenied(MemberExtraEmailApiView.FEATURE_DISABLED_MESSAGE)
 
-        secret = request.query_params.get("secret")
+        secret = kwargs["secret"]
         member_extra_email = get_object_or_404(MemberExtraEmail, secret=secret)
 
         member_extra_email.confirmed_on = get_now(cache=cache)
@@ -284,7 +279,23 @@ class ConfirmMemberExtraEmailApiView(APIView):
         MemberExtraEmailConfirmedLogEntry().populate_email(
             email=member_extra_email.email,
             user=member_extra_email.member,
-            actor=request.user if request.user.is_authenticated else None,
+            actor=self.request.user if self.request.user.is_authenticated else None,
         ).save()
 
-        return Response(True)
+        return reverse("core:member_extra_email_confirmed", kwargs={"secret": secret})
+
+
+class MemberExtraEmailConfirmedView(TemplateView):
+    template_name = "core/member_extra_email_confirmed.html"
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        member_extra_email = get_object_or_404(
+            MemberExtraEmail, secret=kwargs["secret"]
+        )
+        context_data["extra_mail_address"] = member_extra_email.email
+        context_data["main_mail_address"] = member_extra_email.member.email
+        context_data["site_name"] = get_parameter_value(
+            ParameterKeys.SITE_NAME, cache={}
+        )
+        return context_data

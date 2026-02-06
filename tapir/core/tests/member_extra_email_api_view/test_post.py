@@ -62,7 +62,7 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.assertEqual(member.email, log_entry.user.email)
         self.assertEqual("test@example.com", log_entry.email)
 
-        confirmation_link = f"{settings.SITE_URL}/core/api/member_extra_email_confirm?secret={extra_email.secret}"
+        confirmation_link = f"{settings.SITE_URL}{reverse("core:member_extra_email_confirm", kwargs={"secret": extra_email.secret})}"
         mock_fire_action.assert_called_once_with(
             TransactionalTriggerData(
                 key=Events.EXTRA_MAIL_CONFIRMATION,
@@ -103,7 +103,7 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.assertEqual(other_member.email, log_entry.user.email)
         self.assertEqual("test@example.com", log_entry.email)
 
-        confirmation_link = f"{settings.SITE_URL}/core/api/member_extra_email_confirm?secret={extra_email.secret}"
+        confirmation_link = f"{settings.SITE_URL}{reverse("core:member_extra_email_confirm", kwargs={"secret": extra_email.secret})}"
         mock_fire_action.assert_called_once_with(
             TransactionalTriggerData(
                 key=Events.EXTRA_MAIL_CONFIRMATION,

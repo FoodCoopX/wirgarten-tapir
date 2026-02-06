@@ -20,8 +20,13 @@ urlpatterns = [
         name="member_extra_emails",
     ),
     path(
-        "api/member_extra_email_confirm",
+        "member_extra_email_confirm/<uuid:secret>",
         views.ConfirmMemberExtraEmailApiView.as_view(),
         name="member_extra_email_confirm",
+    ),
+    path(
+        "member_extra_email_confirmed/<uuid:secret>",
+        views.MemberExtraEmailConfirmedView.as_view(),
+        name="member_extra_email_confirmed",
     ),
 ]
