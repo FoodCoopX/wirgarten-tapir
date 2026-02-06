@@ -2,9 +2,27 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Email-Änderung: Bestätigung Anfordern" werden an Mitglieder geschickt wenn sie deren Email-Adresse ändern wollen.
-                Diese Email wird an der alte Adresse verschickt und beinhaltet ein Bestätigungslink.
-                Der Link wird aus folgenden Token angelegt: {{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}
+Trigger: Transaktionale Mail, die bei Änderung der Email-Adresse im Mitgliederbereich versendet wird. 
+Zweck: Die Email wird an die alte Email-Adresse verschickt. Sie enthält einen Bestätigungslink, welcher geklickt werden muss, damit die Änderung der Email-Adresse wirksam wird. 
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.  
+
+Moin {{Empfänger.Vorname}} ,
+
+du hast gerade die E-Mail-Adresse für Deinen Account geändert. 
+
+Bitte klicke den folgenden Link, um die Änderung zu bestätigen:
+{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}} (ggf. auch als Button einbinden!)
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+{{Allgemein.WirGarten Standort}}"
+
+Folgende Token sind hier relevant: 
+{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}
             </mj-text>
         </mj-column>
     </mj-section>
