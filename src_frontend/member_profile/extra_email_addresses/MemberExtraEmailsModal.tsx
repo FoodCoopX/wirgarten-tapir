@@ -106,7 +106,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
 
     return (
       <Table striped hover responsive>
-        <thead style={{ textAlign: "center" }}>
+        <thead>
           <tr>
             <th>E-Mail</th>
             <th>Bestätigt am</th>
