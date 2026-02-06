@@ -2,8 +2,24 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Vertrag gekündigt" werden an Mitglieder geschickt wenn sie ein Vertrag kündigen.
-                Folgende Token steht zu verfügung: {{Vertrag gekündigt.Vertragsliste}} {{Vertrag gekündigt.Vertragsende}}
+Nachfolgend erhaltet ihr einen Text-Vorschlag für die transaktionale Mail, die versendet wird, wenn Mitglieder ihren Vertrag regulär (also nicht in der Probezeit) kündigen. Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.                  
+"Moin {{Empfänger.Vorname}},
+
+schade, dass Du gehst! 
+
+Wir danken Dir für Dein Vertrauen und Deine Unterstützung bis hierher! 
+
+Wir bestätigen dir hiermit die Kündigung folgender Verträge: 
+{{Vertrag gekündigt.Vertragsliste}} 
+
+Dein Vertrag endet am:
+{{Vertrag gekündigt.Vertragsende}}. 
+
+Es wäre super, wenn Du Deinen Freund:innen und Bekannten von uns erzählst. Denn unsere Solidarische Landwirtschaft kann nur weiter bestehen, wenn ausreichend Menschen den Betrieb und unsere Art der Landwirtschaft unterstützen. 
+
+Vielen Dank dafür! 
+
+Folgende Token steht zu verfügung: {{Vertrag gekündigt.Vertragsliste}} {{Vertrag gekündigt.Vertragsende}}
             </mj-text>
         </mj-column>
     </mj-section>
