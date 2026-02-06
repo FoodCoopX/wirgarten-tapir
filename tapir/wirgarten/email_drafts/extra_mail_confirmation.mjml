@@ -21,7 +21,7 @@ Dein {{Allgemein.Admin Name}}
 {{Allgemein.Admin Email}}"
 {{Allgemein.WirGarten Standort}}"
 
-Folgende Token stehen zur Verfügung: 
+Folgende Token sind hier relevant: 
 Bestätigungslink: {{Extra Mail-Adresse muss bestätigt werden.Bestätigungslink}}.
 Die Haupt-Mail-Adresse, welche die Eintragung vorgenommen hat: {{Extra Mail-Adresse muss bestätigt werden.Haupt-Mail-Adresse}}
             </mj-text>
