@@ -2,13 +2,37 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Vertragsänderungen im Mitgliederbereich" werden an Mitglieder geschickt wenn sie deren Vertrag mit Basis-Produkt ändern.
-                Verträge ohne Basis-Produkt sind nicht betroffen.
-                Folgende Token stehen zu verfügung:
-                {{Vertragsänderungen im Mitgliederbereich.Vertragsliste}}
-                {{Vertragsänderungen im Mitgliederbereich.Vertragsstart}}
-                {{Vertragsänderungen im Mitgliederbereich.Vertragsende}}
-                {{Vertragsänderungen im Mitgliederbereich.Erste Abholung am}}
+               
+Trigger: Transaktionale Email, die bei einer Vertragsänderung im Mitgliederbereich (Wechsel Anteilsgröße, Veränderung Solidarbeitrag, neuer Produktvertrag abgeschlossen) versendet wird. 
+Zweck: Information und Bestätigung der Änderungen und aktuellen Vertragskonstellation. 
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+                
+"Moin {{Empfänger.Vorname}}
+
+wir bestätigen dir hiermit deine Vertragsänderung. 
+
+Deine neuen Daten sind:
+
+{{Vertragsänderungen im Mitgliederbereich.Vertragsliste}} 
+{{Vertragsänderungen im Mitgliederbereich.Vertragsstart}} 
+{{Vertragsänderungen im Mitgliederbereich.Vertragsende}} 
+{{Vertragsänderungen im Mitgliederbereich.Erste Abholung am}}
+
+Im Mitgliederbereich findest du eine Zahlungs-und Lieferübersicht, da kannst du nochmal genau sehen, wann und wie die Änderung in Kraft tritt.
+
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Token stehen zu verfügung:
+{{Vertragsänderungen im Mitgliederbereich.Vertragsliste}}
+{{Vertragsänderungen im Mitgliederbereich.Vertragsstart}}
+{{Vertragsänderungen im Mitgliederbereich.Vertragsende}}
+{{Vertragsänderungen im Mitgliederbereich.Erste Abholung am}}
             </mj-text>
         </mj-column>
     </mj-section>
