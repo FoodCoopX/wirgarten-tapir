@@ -65,6 +65,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
         memberId: memberId,
         extraEmail: newAddress,
       })
+      .then(() => setNewAddress(""))
       .catch((error) =>
         handleRequestError(
           error,
