@@ -5104,8 +5104,6 @@ components:
           type: string
         label_checkbox_contract_policy:
           type: string
-        revocation_rights_explanation:
-          type: string
         trial_period_length_in_weeks:
           type: integer
         payment_rhythm_choices:
@@ -5182,7 +5180,6 @@ components:
       - product_ids_that_are_already_at_capacity
       - product_type_ids_that_are_already_at_capacity
       - product_types
-      - revocation_rights_explanation
       - show_coop_content
       - solidarity_contribution_choices
       - solidarity_contribution_default
@@ -5438,6 +5435,14 @@ components:
           type: string
         step11_title:
           type: string
+        step11_privacy_policy_label:
+          type: string
+        step11_privacy_policy_text:
+          type: string
+        step11_revocation_label:
+          type: string
+        step11_revocation_text:
+          type: string
         step12_title:
           type: string
         step13_title:
@@ -5461,6 +5466,10 @@ components:
       - label_student_checkbox
       - privacy_policy_url
       - step10_title
+      - step11_privacy_policy_label
+      - step11_privacy_policy_text
+      - step11_revocation_label
+      - step11_revocation_text
       - step11_title
       - step12_title
       - step13_text
@@ -8537,7 +8546,6 @@ components:
           type: boolean
         type:
           type: string
-          nullable: true
           maxLength: 64
         subscription_payment_range_start:
           type: string
@@ -8556,6 +8564,7 @@ components:
       - amount
       - due_date
       - mandate_ref
+      - type
     PaymentStatusEnum:
       enum:
       - PAID

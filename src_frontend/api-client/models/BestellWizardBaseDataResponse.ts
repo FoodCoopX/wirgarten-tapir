@@ -129,12 +129,6 @@ export interface BestellWizardBaseDataResponse {
     labelCheckboxContractPolicy: string;
     /**
      * 
-     * @type {string}
-     * @memberof BestellWizardBaseDataResponse
-     */
-    revocationRightsExplanation: string;
-    /**
-     * 
      * @type {number}
      * @memberof BestellWizardBaseDataResponse
      */
@@ -259,7 +253,6 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('introStepText' in value) || value['introStepText'] === undefined) return false;
     if (!('labelCheckboxSepaMandat' in value) || value['labelCheckboxSepaMandat'] === undefined) return false;
     if (!('labelCheckboxContractPolicy' in value) || value['labelCheckboxContractPolicy'] === undefined) return false;
-    if (!('revocationRightsExplanation' in value) || value['revocationRightsExplanation'] === undefined) return false;
     if (!('trialPeriodLengthInWeeks' in value) || value['trialPeriodLengthInWeeks'] === undefined) return false;
     if (!('paymentRhythmChoices' in value) || value['paymentRhythmChoices'] === undefined) return false;
     if (!('defaultPaymentRhythm' in value) || value['defaultPaymentRhythm'] === undefined) return false;
@@ -303,7 +296,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'introStepText': json['intro_step_text'],
         'labelCheckboxSepaMandat': json['label_checkbox_sepa_mandat'],
         'labelCheckboxContractPolicy': json['label_checkbox_contract_policy'],
-        'revocationRightsExplanation': json['revocation_rights_explanation'],
         'trialPeriodLengthInWeeks': json['trial_period_length_in_weeks'],
         'paymentRhythmChoices': json['payment_rhythm_choices'],
         'defaultPaymentRhythm': json['default_payment_rhythm'],
@@ -348,7 +340,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'intro_step_text': value['introStepText'],
         'label_checkbox_sepa_mandat': value['labelCheckboxSepaMandat'],
         'label_checkbox_contract_policy': value['labelCheckboxContractPolicy'],
-        'revocation_rights_explanation': value['revocationRightsExplanation'],
         'trial_period_length_in_weeks': value['trialPeriodLengthInWeeks'],
         'payment_rhythm_choices': value['paymentRhythmChoices'],
         'default_payment_rhythm': value['defaultPaymentRhythm'],

@@ -90,18 +90,6 @@ class ParameterDefinitionsBestellwizard:
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
-            key=ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
-            label="Erklärungstext unter dem Checkbox zur Widerrufsbelehrung",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Du kannst deine Verträge innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an der Verwaltung.",
-            description=HTML_ALLOWED_TEXT,
-            category=ParameterCategory.BESTELLWIZARD,
-            order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(textarea=True),
-        )
-        bestellwizard_parameter_order -= 1
-
-        importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_BACKGROUND_COLOR,
             label="Hintergrundfarbe im BestellWizard",
             datatype=TapirParameterDatatype.STRING,
@@ -625,6 +613,57 @@ class ParameterDefinitionsBestellwizard:
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_PRIVACY_POLICY_LABEL,
+            label="Seite 11: Label zu Checkbox zur Datenschutzerklärung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen.",
+            description=HTML_ALLOWED_TEXT,
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_PRIVACY_POLICY_EXPLANATION,
+            label="Seite 11: Erklärungstext unter dem Checkbox zur Datenschutzerklärung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen der Mitgliederverwaltung und geben sie nicht an Dritte weiter. "
+            'Unsere Datenschutzerklärung kannst du hier einsehen: <a href="{{link_zu_datenschutzerklärung}}">Datenschutzerklärung</a>',
+            description=HTML_ALLOWED_TEXT,
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(
+                textarea=True, vars_hint=["link_zu_datenschutzerklärung"]
+            ),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_LABEL,
+            label="Seite 11: Label Checkbox zur Widerrufsbelehrung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen.",
+            description=HTML_ALLOWED_TEXT,
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
+            label="Seite 11: Erklärungstext unter dem Checkbox zur Widerrufsbelehrung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du kannst deine Verträge innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an der Verwaltung.",
+            description=HTML_ALLOWED_TEXT,
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
         )
         bestellwizard_parameter_order -= 1
 

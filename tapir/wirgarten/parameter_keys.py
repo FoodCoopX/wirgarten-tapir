@@ -124,6 +124,13 @@ class ParameterKeys:
     BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT = (
         f"{PREFIX}.bestellwizard.contract_policy_checkbox_text"
     )
+    BESTELLWIZARD_PRIVACY_POLICY_LABEL = f"{PREFIX}.bestellwizard.privacy_policy_label"
+    BESTELLWIZARD_PRIVACY_POLICY_EXPLANATION = (
+        f"{PREFIX}.bestellwizard.privacy_policy_explanation"
+    )
+    BESTELLWIZARD_REVOCATION_RIGHTS_LABEL = (
+        f"{PREFIX}.bestellwizard.revocation_rights_label"
+    )
     BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION = (
         f"{PREFIX}.bestellwizard.revocation_rights_explanation"
     )

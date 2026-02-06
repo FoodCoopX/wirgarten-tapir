@@ -91,16 +91,14 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
                 controlId={"legal_cancellation"}
                 checked={cancellationPolicyRead}
                 onChange={setCancellationPolicyRead}
-                label={
-                  "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
-                }
+                label={settings.strings.step11RevocationLabel}
                 showError={showValidation && !cancellationPolicyRead}
               />
             </Accordion.Header>
             <Accordion.Body>
               <span
                 dangerouslySetInnerHTML={{
-                  __html: settings.revocationRightsExplanation,
+                  __html: settings.strings.step11RevocationText,
                 }}
               />
             </Accordion.Body>
@@ -114,19 +112,19 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
               controlId={"legal_privacy"}
               checked={privacyPolicyRead}
               onChange={setPrivacyPolicyRead}
-              label={
-                "Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."
-              }
+              label={settings.strings.step11PrivacyPolicyLabel}
               showError={showValidation && !privacyPolicyRead}
             />
           </Accordion.Header>
           <Accordion.Body>
-            Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen
-            der Mitgliederverwaltung und geben sie nicht an Dritte weiter.
-            Unsere Datenschutzerklärung kannst du hier einsehen:{" "}
-            <a href={settings.strings.privacyPolicyUrl} target="_blank">
-              Datenschutzerklärung
-            </a>
+            <span
+              dangerouslySetInnerHTML={{
+                __html: settings.strings.step11PrivacyPolicyText.replace(
+                  "{link_zu_datenschutzerklärung}",
+                  settings.strings.privacyPolicyUrl,
+                ),
+              }}
+            />
           </Accordion.Body>
         </Accordion.Item>
       </Accordion>

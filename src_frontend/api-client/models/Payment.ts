@@ -62,7 +62,7 @@ export interface Payment {
      * @type {string}
      * @memberof Payment
      */
-    type?: string | null;
+    type: string;
     /**
      * 
      * @type {Date}
@@ -97,6 +97,7 @@ export interface Payment {
 export function instanceOfPayment(value: object): value is Payment {
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('dueDate' in value) || value['dueDate'] === undefined) return false;
+    if (!('type' in value) || value['type'] === undefined) return false;
     if (!('mandateRef' in value) || value['mandateRef'] === undefined) return false;
     return true;
 }
@@ -116,7 +117,7 @@ export function PaymentFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'dueDate': (new Date(json['due_date'])),
         'status': json['status'] == null ? undefined : PaymentStatusEnumFromJSON(json['status']),
         'edited': json['edited'] == null ? undefined : json['edited'],
-        'type': json['type'] == null ? undefined : json['type'],
+        'type': json['type'],
         'subscriptionPaymentRangeStart': json['subscription_payment_range_start'] == null ? undefined : (new Date(json['subscription_payment_range_start'])),
         'subscriptionPaymentRangeEnd': json['subscription_payment_range_end'] == null ? undefined : (new Date(json['subscription_payment_range_end'])),
         'mandateRef': json['mandate_ref'],

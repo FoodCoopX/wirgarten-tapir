@@ -228,6 +228,30 @@ export interface BestellWizardStrings {
      * @type {string}
      * @memberof BestellWizardStrings
      */
+    step11PrivacyPolicyLabel: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    step11PrivacyPolicyText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    step11RevocationLabel: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    step11RevocationText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
     step12Title: string;
     /**
      * 
@@ -317,6 +341,10 @@ export function instanceOfBestellWizardStrings(value: object): value is BestellW
     if (!('step9PaymentRhythmModalText' in value) || value['step9PaymentRhythmModalText'] === undefined) return false;
     if (!('step10Title' in value) || value['step10Title'] === undefined) return false;
     if (!('step11Title' in value) || value['step11Title'] === undefined) return false;
+    if (!('step11PrivacyPolicyLabel' in value) || value['step11PrivacyPolicyLabel'] === undefined) return false;
+    if (!('step11PrivacyPolicyText' in value) || value['step11PrivacyPolicyText'] === undefined) return false;
+    if (!('step11RevocationLabel' in value) || value['step11RevocationLabel'] === undefined) return false;
+    if (!('step11RevocationText' in value) || value['step11RevocationText'] === undefined) return false;
     if (!('step12Title' in value) || value['step12Title'] === undefined) return false;
     if (!('step13Title' in value) || value['step13Title'] === undefined) return false;
     if (!('step13Text' in value) || value['step13Text'] === undefined) return false;
@@ -373,6 +401,10 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step9PaymentRhythmModalText': json['step9_payment_rhythm_modal_text'],
         'step10Title': json['step10_title'],
         'step11Title': json['step11_title'],
+        'step11PrivacyPolicyLabel': json['step11_privacy_policy_label'],
+        'step11PrivacyPolicyText': json['step11_privacy_policy_text'],
+        'step11RevocationLabel': json['step11_revocation_label'],
+        'step11RevocationText': json['step11_revocation_text'],
         'step12Title': json['step12_title'],
         'step13Title': json['step13_title'],
         'step13Text': json['step13_text'],
@@ -430,6 +462,10 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step9_payment_rhythm_modal_text': value['step9PaymentRhythmModalText'],
         'step10_title': value['step10Title'],
         'step11_title': value['step11Title'],
+        'step11_privacy_policy_label': value['step11PrivacyPolicyLabel'],
+        'step11_privacy_policy_text': value['step11PrivacyPolicyText'],
+        'step11_revocation_label': value['step11RevocationLabel'],
+        'step11_revocation_text': value['step11RevocationText'],
         'step12_title': value['step12Title'],
         'step13_title': value['step13Title'],
         'step13_text': value['step13Text'],
