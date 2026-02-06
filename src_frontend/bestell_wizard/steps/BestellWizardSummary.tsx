@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
@@ -184,7 +184,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
               <Form.Text>
                 <span
                   dangerouslySetInnerHTML={{
-                    __html: settings.revocationRightsExplanation,
+                    __html: settings.strings.step11RevocationText,
                   }}
                 />
               </Form.Text>

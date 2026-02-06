@@ -18,7 +18,6 @@ export type BestellWizardSettings = {
   introStepText: string;
   labelCheckboxSepaMandat: string;
   labelCheckboxContractPolicy: string;
-  revocationRightsExplanation: string;
   trialPeriodLengthInWeeks: number;
   paymentRhythmChoices: { [key: string]: string };
   studentStatusAllowed: boolean;
