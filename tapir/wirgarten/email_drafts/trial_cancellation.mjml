@@ -2,11 +2,34 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Kündigung im Probemonat" werden an Mitglieder geschickt wenn sie während der Probezeit kündigen.
-                Folgende Token stehen zu verfügung:
-                {{Kündigung im Probemonat.Vertragsliste}}
-                {{Kündigung im Probemonat.Vertragsende}}
-                {{Kündigung im Probemonat.Letzte Abholung am}}
+Trigger: Transaktionale Mail, die versendet wird, wenn das Mitglied in der Probezeit kündigt. 
+Zweck: Kündigungsbestätigung
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+
+"Moin {{Empfänger.Vorname}},
+
+schade, dass du gekündigt hast! 
+
+Wir bestätigen dir hiermit deine Kündigung für:
+{{Kündigung im Probemonat.Vertragsliste}}
+
+Dein Vertrag endet am: {{Kündigung im Probemonat.Vertragsende}}
+
+Deine letzte Gemüsekiste erhältst du am: {{Kündigung im Probemonat.Letzte Abholung am}}
+
+Wenn du doch nochmal Lust auf unser Gemüse hast, freuen wir uns dich wieder bei uns Begrüßen zu dürfen!
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Token sind hier relevant: 
+{{Kündigung im Probemonat.Vertragsliste}}
+{{Kündigung im Probemonat.Vertragsende}}
+{{Kündigung im Probemonat.Letzte Abholung am}}
             </mj-text>
         </mj-column>
     </mj-section>
