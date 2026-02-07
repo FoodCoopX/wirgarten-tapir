@@ -2,12 +2,37 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "BestellWizard: Mitgliedschaft + Ernteanteile" werden an Mitglieder geschickt wenn sie ein neuen Vertrag abschließen oder explizit verlängern.
-                Folgende Token steht zu verfügung:
-                {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}}
-                {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}}
-                {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}}
-                {{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}}
+Trigger: Transaktionale Mail, die versendet wird, wenn über den Bestellwizard Produktverträge (und nicht nur Geno-Anteile) gezeichnet werden. Sie wird auch verschickt, wenn ihr den Opt-In bei der Verlängerung habt, also Mitglieder explizit über den Mitgliederbereich ihren Vertrag verlängern müssen. 
+Zweck: Bestellbestätigung und Information. Ihr könnt die Mail so gestalten, dass es eine reine Bestellübersicht ist, aber noch keine Bestätigung der Bestellung ist (dann braucht ihr unbedingt die transaktionale Mail "Admin bestätigt"). Ihr könnt die Mail aber auch direkt so gestalten, als wäre die Bestellung bestätigt.                Folgende Token steht zu verfügung:
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+
+Moin {{Empfänger.Vorname}},
+
+danke für dein Interesse an einer Mitgliedschaft bei uns.  
+
+Du hast folgende Bestellung bei uns aufgegeben:
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}}
+Vertragsstart: {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}}
+Vertragsende: {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}}
+
+Erste Abholung am: {{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}}
+
+Wir prüfen nun die Bestellung und melden uns bei dir, sobald dies geschehen ist.
+
+Wir freuen uns sehr über dein Interesse. 
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Tokens sind hier relevant:
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}}
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}}
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}}
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}}
             </mj-text>
         </mj-column>
     </mj-section>
