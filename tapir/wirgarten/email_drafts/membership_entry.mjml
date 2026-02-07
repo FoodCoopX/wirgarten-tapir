@@ -2,9 +2,25 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Beitritt zur Genossenschaft"
-                werden an Mitglieder geschickt wenn sie ihren Mitgliedsnummer bekommen, also wenn die Geno-Anteile gültig werden.
-                Das Trigger hat keine spezifische Tokens.
+Trigger: Transaktionale Email wenn das Beitrittsdatum zur Genossenschaft erreicht ist. 
+Zweck: Information und Bestätigung des Beitritts für das Mitglied. 
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+
+"Moin {{Empfänger.Vorname}},
+
+herzlich willkommen in der {{Allgemein.WirGarten Standort}}". Wir freuen uns sehr, dich ab heute offiziell als Mitglied in der Genossenschaft begrüßen zu dürfen.
+
+Mit deiner Mitgliedschaft in der Genossenschaft trägst du aktiv dazu bei, ökologische, regionale, kleinbäuerliche Landwirtschaft zu ermöglichen. Gemeinsam sorgen wir dafür, dass Lebensmittel fair produziert werden – für die Menschen, die sie anbauen, und für die, die sie genießen.
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+ 
+
+Folgende Trigger sind hier relevant: - 
             </mj-text>
         </mj-column>
     </mj-section>
