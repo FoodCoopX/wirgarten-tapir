@@ -2,10 +2,32 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Bestellung vom Admin bestätigt" werden an Mitglieder geschickt wenn deren Zeichnung (aus Produkt-Anteil, Geno-Anteile, oder beides) bestätigt wird.
-                Folgende Token stehen zu verfügung:
-                {{Bestellung vom Admin bestätigt.Vertragsliste}}
-                {{Bestellung vom Admin bestätigt.Anzahl an GenoAnteile}}
+Trigger: Transaktionale Email, wenn die neue Zeichnung durch Klick des Admins auf "Auswahl bestätigen" in der Zeichnungsübersicht bestätigt werden bzw. wenn die Frist abgelaufen ist, in der der Admin die Zeichnung hätte widerrufen oder pausieren können. 
+Zweck: Mit dieser Mail kann ggf. erst final die Bestellung bestätigt werden. Dann sollte die Bestellbestätigung allerdings so formuliert sein, dass die Bestellung noch nicht final bearbeitet ist. Ansonsten kann sie nochmal eine Erinnerung sein, sie ist aber nicht notwendig unbedingt. 
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+
+Moin {{Empfänger.Vorname}},
+
+wir bestätigen dir hiermit deine Bestellung. 
+
+Du erhältst folgende Produkte: 
+{{Bestellung vom Admin bestätigt.Vertragsliste}}
+{{Bestellung vom Admin bestätigt.Anzahl an GenoAnteile}}
+
+Dein ausgewählter Abholort ist: 
+{{Empfänger.Abholort}}
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+
+Folgende Tokens sind hier relevant:
+{{Bestellung vom Admin bestätigt.Vertragsliste}}
+{{Bestellung vom Admin bestätigt.Anzahl an GenoAnteile}}
             </mj-text>
         </mj-column>
     </mj-section>
