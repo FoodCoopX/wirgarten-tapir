@@ -2,10 +2,28 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Bestellung widerruft" werden an Mitglieder geschickt wenn deren Zeichnung (aus Produkt-Anteil, Geno-Anteile, oder beides) widerruft wird.
-                Folgende Token stehen zu verfügung:
-                {{Bestellung widerruft.Vertragsliste}}
-                {{Bestellung widerruft.Anzahl an GenoAnteile}}
+Trigger: Transaktionale Mail, die versendet wird, wenn der Admin die Bestellung widerruft. 
+Zweck: Information des betreffenden Intressenten
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+
+"Moin {{Empfänger.Vorname}}, 
+
+du hattest folgende Bestellung bei uns aufgegeben. 
+{{Bestellung widerruft.Vertragsliste}}
+{{Bestellung widerruft.Anzahl an GenoAnteile}}
+
+Leider können wir dir deine Bestellung nicht bestätigen. 
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Token sind hier relevant: 
+{{Bestellung widerruft.Vertragsliste}}
+{{Bestellung widerruft.Anzahl an GenoAnteile}}
             </mj-text>
         </mj-column>
     </mj-section>
