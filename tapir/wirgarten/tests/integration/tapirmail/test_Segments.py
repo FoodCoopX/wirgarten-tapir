@@ -38,15 +38,19 @@ class SegmentTest(TapirIntegrationTest):
         self.create_test_data()
 
     def create_test_data(self):
-        self.member_without_shares = MemberFactory.create(id="no_shares")
-        self.member_with_shares = MemberWithCoopSharesFactory.create(id="has_shares")
+        self.member_without_shares = MemberFactory.create(
+            id="no_shares", first_name="no_shares"
+        )
+        self.member_with_shares = MemberWithCoopSharesFactory.create(
+            id="has_shares", first_name="with_shares"
+        )
         self.member_with_subscription = MemberWithSubscriptionFactory.create(
-            id="has_sub"
+            id="has_sub", first_name="with_subscription"
         )
 
     @staticmethod
     def ids(collection):
-        return set([m.id for m in collection])
+        return {m.id for m in collection}
 
     def test_resolveSegment_coopMembers_correctResult(self):
         expected_member_ids = [
@@ -75,15 +79,15 @@ class SegmentTest(TapirIntegrationTest):
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
 
     def test_resolveSegment_withoutActiveSubscription_correctResult(self):
-        expected_member_ids = [
-            self.member_without_shares.id,
-            self.member_with_shares.id,
-        ]
+        expected_members = {
+            self.member_without_shares,
+            self.member_with_shares,
+        }
         segment_members = resolve_segments(
             dynamic_segment_names_additive=[Segments.WITHOUT_ACTIVE_SUBSCRIPTION]
         )
 
-        self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
+        self.assertEqual(expected_members, set(segment_members))
 
     def test_resolveSegment_withActiveSubscriptionStartsInFuture_memberIsNotIncluded(
         self,

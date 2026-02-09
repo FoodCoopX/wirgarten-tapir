@@ -190,7 +190,12 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(0, len(response.json()["errors"]))
         self.assertEqual(3, mock_cancel_subscriptions.call_count)
-        mock_cancel_coop_membership.assert_called_once_with(member, cache=ANY)
+        mock_cancel_coop_membership.assert_called_once_with(
+            member, cache=ANY, actor=ANY
+        )
+        self.assertEqual(
+            member.email, mock_cancel_coop_membership.call_args.kwargs["actor"].email
+        )
 
     @patch.object(MembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")

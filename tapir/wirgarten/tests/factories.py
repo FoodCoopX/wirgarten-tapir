@@ -260,4 +260,5 @@ class CoopShareTransactionFactory(
             lambda payment: payment.factory_parent.quantity
             * payment.factory_parent.share_price
         ),
+        mandate_ref__member=factory.SelfAttribute("...member"),
     )

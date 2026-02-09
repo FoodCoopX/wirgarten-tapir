@@ -13,7 +13,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, MemberPickupLocation, PickupLocation
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import get_today, format_date
 
 
 class MemberPickupLocationService:
@@ -197,7 +197,7 @@ class MemberPickupLocationService:
                         "pickup_location": TapirCache.get_pickup_location_by_id(
                             cache=cache, pickup_location_id=pickup_location_id
                         ).name,
-                        "pickup_location_start_date": valid_from,
+                        "pickup_location_start_date": format_date(valid_from),
                     },
                 ),
             )
