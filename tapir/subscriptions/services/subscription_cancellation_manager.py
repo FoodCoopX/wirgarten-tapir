@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
@@ -15,7 +13,7 @@ from tapir.wirgarten.utils import get_now
 class SubscriptionCancellationManager:
     @classmethod
     def get_earliest_possible_cancellation_date(
-        cls, product: Product, member: Member, cache: Dict
+        cls, product: Product, member: Member, cache: dict
     ):
         subscriptions_for_this_product = (
             get_active_and_future_subscriptions(cache=cache)
@@ -36,7 +34,7 @@ class SubscriptionCancellationManager:
         return subscriptions_for_this_product[-1].end_date
 
     @classmethod
-    def cancel_subscriptions(cls, product: Product, member: Member, cache: Dict):
+    def cancel_subscriptions(cls, product: Product, member: Member, cache: dict):
         cancellation_date = cls.get_earliest_possible_cancellation_date(
             product=product, member=member, cache=cache
         )
@@ -51,7 +49,7 @@ class SubscriptionCancellationManager:
             member=member, product=product, cancellation_ts__isnull=True
         ):
             if (
-                not TrialPeriodManager.is_contract_in_trial(subscription)
+                not TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
                 and not auto_renew_enabled
             ):
                 raise ImproperlyConfigured(
@@ -63,8 +61,8 @@ class SubscriptionCancellationManager:
                 deleted_subscriptions.append(subscription)
                 continue
 
-            subscription.cancellation_ts = get_now()
-            subscription.end_date = cancellation_date
+            subscription.cancellation_ts = get_now(cache=cache)
+            subscription.end_date = min(cancellation_date, subscription.end_date)
             subscription.save()
             cancelled_subscriptions.append(subscription)
 

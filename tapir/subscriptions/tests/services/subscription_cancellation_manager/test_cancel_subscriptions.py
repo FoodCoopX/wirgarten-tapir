@@ -46,15 +46,12 @@ class TestCancelSubscriptions(TapirIntegrationTest):
             end_date=datetime.datetime(year=2022, month=12, day=31),
         )
         product = ProductFactory.create()
-        subscriptions = [
-            SubscriptionFactory.create(
-                member=member, period=growing_period, product=product
-            )
-            for _ in range(3)
-        ]
+        subscriptions = SubscriptionFactory.create_batch(
+            member=member, period=growing_period, product=product, size=3
+        )
         mock_is_contract_in_trial.return_value = False
 
-        cancellation_date = datetime.date(year=2024, month=11, day=17)
+        cancellation_date = datetime.date(year=2022, month=11, day=17)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
@@ -68,7 +65,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
     @patch.object(
         SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
     )
-    def test_cancelSubscriptions_default_deletesFutureSubscriptions(
+    def test_cancelSubscriptions_cancellationDateIsBeforeStartDate_deletesFutureSubscriptions(
         self,
         mock_get_earliest_possible_cancellation_date: Mock,
         mock_is_contract_in_trial: Mock,
@@ -145,7 +142,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         )
         mock_is_contract_in_trial.return_value = True
 
-        cancellation_date = datetime.date(year=2024, month=11, day=17)
+        cancellation_date = datetime.date(year=2022, month=11, day=17)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
@@ -183,3 +180,47 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
         self.assertFalse(Subscription.objects.exists())
+
+    @patch.object(TrialPeriodManager, "is_contract_in_trial")
+    @patch.object(
+        SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
+    )
+    def test_cancelSubscriptions_subscriptionIsRenewed_cancelsCurrentAndFutureSubscription(
+        self,
+        mock_get_earliest_possible_cancellation_date: Mock,
+        mock_is_contract_in_trial: Mock,
+    ):
+        member = MemberFactory.create()
+        current_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.datetime(year=2022, month=1, day=1),
+            end_date=datetime.datetime(year=2022, month=12, day=31),
+        )
+        future_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.datetime(year=2023, month=1, day=1),
+            end_date=datetime.datetime(year=2023, month=12, day=31),
+        )
+        product = ProductFactory.create()
+        current_subscription = SubscriptionFactory.create(
+            member=member, period=current_growing_period, product=product
+        )
+        renewed_subscription = SubscriptionFactory.create(
+            member=member, period=future_growing_period, product=product
+        )
+        mock_is_contract_in_trial.return_value = False
+
+        cancellation_date = datetime.date(year=2023, month=8, day=19)
+        mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
+
+        SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
+
+        current_subscription.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2022, month=12, day=31),
+            current_subscription.end_date,
+            "The cancellation date is after this subscription's end date therefore the end date should not change",
+        )
+        self.assertEqual(self.now, current_subscription.cancellation_ts)
+
+        renewed_subscription.refresh_from_db()
+        self.assertEqual(cancellation_date, renewed_subscription.end_date)
+        self.assertEqual(self.now, renewed_subscription.cancellation_ts)
