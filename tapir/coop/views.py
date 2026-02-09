@@ -7,6 +7,7 @@ from rest_framework import status, viewsets, permissions, serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.models import EmailConfigurationDispatch
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.coop.serializers import (
@@ -254,6 +255,10 @@ class DeleteMemberApiView(APIView):
             ]
             for model in models:
                 model.objects.filter(member=member).delete()
+            EmailConfigurationDispatch.objects.filter(
+                is_sent=False,
+                override_recipients__0__recipient_id_in_base_queryset=member.id,
+            ).delete()
 
             member.delete()
 

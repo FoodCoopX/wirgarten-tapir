@@ -42,7 +42,14 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         email_configuration_version: EmailConfigurationVersion,
         trigger_data: OnboardingTriggerData,
     ):
-        for recipient in resolve_segments(**email_configuration_version.segment_data):
+        for recipient in resolve_segments(
+            dynamic_segment_names_additive=email_configuration_version.dynamic_segments_additive,
+            dynamic_segment_names_subtractive=email_configuration_version.dynamic_segments_subtractive,
+            static_segment_ids_additive=email_configuration_version.static_segments_additive.all(),
+            static_segment_ids_subtractive=email_configuration_version.static_segments_subtractive.all(),
+            filter_list=email_configuration_version.filter_list,
+            mail_category_ids_additive=email_configuration_version.mail_categories_additive.all(),
+        ):
             cls._delete_unsent_config_dispatch(
                 version=email_configuration_version, recipient=recipient
             )
