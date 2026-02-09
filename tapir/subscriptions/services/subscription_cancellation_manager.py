@@ -57,7 +57,7 @@ class SubscriptionCancellationManager:
                 continue
 
             subscription.cancellation_ts = get_now()
-            subscription.end_date = cancellation_date
+            subscription.end_date = min(cancellation_date, subscription.end_date)
             subscription.save()
             cancelled_subscriptions.append(subscription)
 
