@@ -213,21 +213,6 @@ class MemberPickupLocationFactory(
     valid_from = TODAY - relativedelta(months=1)
 
 
-class CoopShareTransactionFactory(
-    factory.django.DjangoModelFactory[CoopShareTransaction]
-):
-    class Meta:
-        model = CoopShareTransaction
-
-    member = factory.SubFactory(MemberFactory)
-    transaction_type = factory.Faker(
-        "random_element", elements=["purchase"]
-    )  # cancellation, transfer_in, transfer_out (not implemented yet)
-    quantity = factory.Faker("random_int", min=1, max=10)
-    share_price = 50
-    valid_at = NOW - datetime.timedelta(days=1)
-
-
 class ExportedFileFactory(factory.django.DjangoModelFactory[ExportedFile]):
     class Meta:
         model = ExportedFile
@@ -254,3 +239,25 @@ class PaymentFactory(factory.django.DjangoModelFactory[Payment]):
     amount = 100
     status = "PAID"
     transaction = factory.SubFactory(PaymentTransactionFactory)
+
+
+class CoopShareTransactionFactory(
+    factory.django.DjangoModelFactory[CoopShareTransaction]
+):
+    class Meta:
+        model = CoopShareTransaction
+
+    member = factory.SubFactory(MemberFactory)
+    transaction_type = factory.Faker(
+        "random_element", elements=["purchase"]
+    )  # cancellation, transfer_in, transfer_out (not implemented yet)
+    quantity = factory.Faker("random_int", min=1, max=10)
+    share_price = 50
+    valid_at = NOW - datetime.timedelta(days=1)
+    payment = factory.SubFactory(
+        PaymentFactory,
+        amount=factory.LazyAttribute(
+            lambda payment: payment.factory_parent.quantity
+            * payment.factory_parent.share_price
+        ),
+    )

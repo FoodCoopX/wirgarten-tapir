@@ -153,3 +153,33 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         subscription.refresh_from_db()
         self.assertEqual(cancellation_date, subscription.end_date)
         self.assertEqual(self.now, subscription.cancellation_ts)
+
+    @patch.object(TrialPeriodManager, "is_contract_in_trial")
+    @patch.object(
+        SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
+    )
+    def test_cancelSubscriptions_cancelDateIsSameAsStartDate_deletesSubscription(
+        self,
+        mock_get_earliest_possible_cancellation_date: Mock,
+        mock_is_contract_in_trial: Mock,
+    ):
+        member = MemberFactory.create()
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.datetime(year=2022, month=1, day=1),
+            end_date=datetime.datetime(year=2022, month=12, day=31),
+        )
+        product = ProductFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            period=growing_period,
+            product=product,
+            start_date=datetime.date(year=2022, month=6, day=1),
+        )
+        mock_is_contract_in_trial.return_value = True
+
+        cancellation_date = datetime.date(year=2022, month=6, day=1)
+        mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
+
+        SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
+
+        self.assertFalse(Subscription.objects.exists())

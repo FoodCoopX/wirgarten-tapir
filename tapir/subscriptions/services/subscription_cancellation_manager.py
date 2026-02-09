@@ -17,7 +17,7 @@ class SubscriptionCancellationManager:
     def get_earliest_possible_cancellation_date(
         cls, product: Product, member: Member, cache: Dict
     ):
-        subscriptions_for_this_product = list(
+        subscriptions_for_this_product = (
             get_active_and_future_subscriptions(cache=cache)
             .filter(member=member, product=product)
             .order_by("end_date")
@@ -58,7 +58,7 @@ class SubscriptionCancellationManager:
                     "Subscriptions outside of trial period can only be cancelled if auto renew is enabled"
                 )
 
-            if subscription.start_date > cancellation_date:
+            if subscription.start_date >= cancellation_date:
                 subscription.delete()
                 deleted_subscriptions.append(subscription)
                 continue

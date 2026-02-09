@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from typing import Dict
 
 from tapir.wirgarten.models import Member, CoopShareTransaction
@@ -44,10 +45,19 @@ class MembershipCancellationManager:
         if reference_date is None:
             reference_date = get_today(cache=cache)
 
-        member.coopsharetransaction_set.filter(
+        future_coop_share_purchases = member.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
             valid_at__gte=reference_date,
-        ).delete()
+        )
+
+        for purchase in future_coop_share_purchases:
+            purchase.payment.amount -= purchase.share_price * purchase.quantity
+            if purchase.payment.amount <= Decimal(0):
+                purchase.payment.delete()
+            else:
+                purchase.payment.save()
+
+        future_coop_share_purchases.delete()
 
     @classmethod
     def is_in_coop_trial(cls, member: Member):
