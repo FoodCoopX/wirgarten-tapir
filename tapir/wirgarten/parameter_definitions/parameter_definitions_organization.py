@@ -5,8 +5,8 @@ from tapir.configuration.parameter import ParameterMeta
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
     LEGAL_STATUS_OPTIONS,
-    THEME_WIRGARTEN,
     THEME_OPTIONS,
+    THEME_TEST,
 )
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
@@ -38,7 +38,7 @@ class ParameterDefinitionsOrganization:
             key=ParameterKeys.ORGANISATION_THEME,
             label="Theme",
             datatype=TapirParameterDatatype.STRING,
-            initial_value=THEME_WIRGARTEN,
+            initial_value=THEME_TEST,
             description="",
             category=ParameterCategory.ORGANIZATION,
             order_priority=5,

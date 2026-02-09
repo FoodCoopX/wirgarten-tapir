@@ -37,6 +37,7 @@ THEME_SOLAWI_HALL = "solawi_hall"
 THEME_LEISTENMUEHLE = "leistenmuehle"
 THEME_GROSSHOECHBERG = "grosshoechberg"
 THEME_SACHERL_TANNBERG = "sacherl_tannberg"
+THEME_TEST = "test"
 
 THEME_OPTIONS = [
     (THEME_BIOTOP, "Biotop Oberland"),
@@ -50,4 +51,5 @@ THEME_OPTIONS = [
     (THEME_LEISTENMUEHLE, "Leistenmühle"),
     (THEME_GROSSHOECHBERG, "Grosshöchberg"),
     (THEME_SACHERL_TANNBERG, "Sacherl Tannberg"),
+    (THEME_TEST, "Test"),
 ]
