@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 
+from tapir.coop.models import CoopSharesCancelledLogEntry
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
@@ -22,31 +23,41 @@ class TestCancelCoopMembership(TapirIntegrationTest):
     def setUp(self) -> None:
         mock_timezone(self, datetime.datetime(year=2024, month=9, day=27))
 
-    def test_cancelCoopMembership_default_deletesAllFutureSharePurchases(self):
+    def test_cancelCoopMembership_default_deletesAllFutureSharePurchasesAndCreatesLogEntry(
+        self,
+    ):
         member = MemberFactory.create()
+        actor = MemberFactory.create()
 
         transaction_1 = CoopShareTransactionFactory.create(  # transaction in the past, should not be deleted
             member=member,
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-            valid_at=datetime.datetime(year=2024, month=9, day=26),
+            valid_at=datetime.date(year=2024, month=9, day=26),
         )
         transaction_2 = CoopShareTransactionFactory.create(  # is not a purchase, should not be deleted
             member=member,
             transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
-            valid_at=datetime.datetime(year=2024, month=9, day=28),
+            valid_at=datetime.date(year=2024, month=9, day=28),
             quantity=-1,
         )
-        CoopShareTransactionFactory.create(  # should get deleted
+        transaction_3 = CoopShareTransactionFactory.create(  # should get deleted
             member=member,
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-            valid_at=datetime.datetime(year=2024, month=9, day=28),
+            valid_at=datetime.date(year=2024, month=9, day=28),
         )
 
-        MembershipCancellationManager.cancel_coop_membership(member)
+        MembershipCancellationManager.cancel_coop_membership(member=member, actor=actor)
 
         self.assertEqual(2, CoopShareTransaction.objects.count())
         self.assertIn(transaction_1, CoopShareTransaction.objects.all())
         self.assertIn(transaction_2, CoopShareTransaction.objects.all())
+
+        self.assertEqual(1, CoopSharesCancelledLogEntry.objects.count())
+        log_entry = CoopSharesCancelledLogEntry.objects.get()
+        self.assertEqual(member.email, log_entry.user.email)
+        self.assertEqual(actor.email, log_entry.actor.email)
+        self.assertEqual(transaction_3.quantity, log_entry.nb_shares)
+        self.assertEqual(transaction_3.valid_at, log_entry.shares_valid_at)
 
     def test_cancelCoopMembership_default_paymentsGetUpdateCorrectly(
         self,

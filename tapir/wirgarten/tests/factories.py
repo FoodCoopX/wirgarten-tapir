@@ -253,7 +253,7 @@ class CoopShareTransactionFactory(
     )  # cancellation, transfer_in, transfer_out (not implemented yet)
     quantity = factory.Faker("random_int", min=1, max=10)
     share_price = 50
-    valid_at = NOW - datetime.timedelta(days=1)
+    valid_at = NOW.date() - datetime.timedelta(days=1)
     payment = factory.SubFactory(
         PaymentFactory,
         amount=factory.LazyAttribute(

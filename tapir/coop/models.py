@@ -42,3 +42,20 @@ class CoopSharesPurchasedLogEntry(LogEntry):
         log_entry.populate(actor=actor, user=user)
         log_entry.coop_share_transaction = f"{coop_share_transaction.quantity} Genossenschaftsanteilen die am {format_date(coop_share_transaction.valid_at)} gültig werden"
         return log_entry
+
+
+class CoopSharesCancelledLogEntry(LogEntry):
+    template_name = "coop/log/coop_shares_cancelled_log_entry.html"
+
+    nb_shares = models.IntegerField()
+    shares_valid_at = models.DateField()
+
+    @classmethod
+    def populate_transaction(
+        cls, coop_share_transaction: CoopShareTransaction, actor, user
+    ):
+        log_entry = cls()
+        log_entry.populate(actor=actor, user=user)
+        log_entry.nb_shares = coop_share_transaction.quantity
+        log_entry.shares_valid_at = coop_share_transaction.valid_at
+        return log_entry

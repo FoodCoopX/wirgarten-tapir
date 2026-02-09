@@ -224,7 +224,7 @@ class CancelSubscriptionsView(APIView):
 
         if cancel_coop_membership:
             MembershipCancellationManager.cancel_coop_membership(
-                member, cache=self.cache
+                member, cache=self.cache, actor=actor
             )
 
         for reason in cancellation_reasons:

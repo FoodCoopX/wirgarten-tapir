@@ -2,6 +2,8 @@ import datetime
 from decimal import Decimal
 from typing import Dict
 
+from tapir.accounts.models import TapirUser
+from tapir.coop.models import CoopSharesCancelledLogEntry
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.utils import get_today
 
@@ -40,7 +42,10 @@ class MembershipCancellationManager:
 
     @staticmethod
     def cancel_coop_membership(
-        member: Member, reference_date: datetime.date | None = None, cache: Dict = None
+        member: Member,
+        reference_date: datetime.date | None = None,
+        actor: TapirUser = None,
+        cache: dict = None,
     ):
         if reference_date is None:
             reference_date = get_today(cache=cache)
@@ -56,6 +61,13 @@ class MembershipCancellationManager:
                 purchase.payment.delete()
             else:
                 purchase.payment.save()
+
+        for purchase in future_coop_share_purchases:
+            CoopSharesCancelledLogEntry.populate_transaction(
+                coop_share_transaction=purchase,
+                user=member,
+                actor=actor,
+            ).save()
 
         future_coop_share_purchases.delete()
 
