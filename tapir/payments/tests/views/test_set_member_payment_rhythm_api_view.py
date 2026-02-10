@@ -63,9 +63,9 @@ class TestSetPaymentRhythmApiView(TapirIntegrationTest):
 
         self.assertEqual(1, MemberPaymentRhythmChangeLogEntry.objects.count())
         log_entry = MemberPaymentRhythmChangeLogEntry.objects.get()
-        log_entry.new_rhythm = "yearly"
-        log_entry.user = other_member
-        log_entry.actor = member
+        self.assertEqual("yearly", log_entry.new_rhythm)
+        self.assertEqual(other_member.email, log_entry.user.email)
+        self.assertEqual(member.email, log_entry.actor.email)
 
     def test_post_adminSetsInvalidRhythm_raisesValidationError(self):
         member = MemberFactory.create(is_superuser=True)
