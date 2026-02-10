@@ -6,7 +6,7 @@ from tapir.generic_exports.services.member_column_provider import MemberColumnPr
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
