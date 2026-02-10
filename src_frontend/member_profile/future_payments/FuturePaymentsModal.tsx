@@ -58,7 +58,6 @@ function getStartDate(extendedPayment: ExtendedPayment) {
   );
 
   const minDate = getMinimumDate([
-    paymentRangeStart!,
     ...subscriptionStartDates,
     ...contributionsStartDates,
   ]);
@@ -78,12 +77,23 @@ function getEndDate(extendedPayment: ExtendedPayment) {
   );
 
   const maxDate = getMaximumDate([
-    paymentRangeEnd!,
     ...subscriptionEndDates,
     ...contributionEndDates,
   ]);
 
   return getMinimumDate([maxDate, paymentRangeEnd!]);
+}
+
+function partialMonthText(extendedPayment: ExtendedPayment) {
+  if (
+    getStartDate(extendedPayment) !==
+      extendedPayment.payment.subscriptionPaymentRangeStart ||
+    getEndDate(extendedPayment) !==
+      extendedPayment.payment.subscriptionPaymentRangeEnd
+  ) {
+    return " (anteilig für Monat)";
+  }
+  return "";
 }
 
 const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
@@ -109,6 +119,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
           {extendedPayment.subscriptions.map((subscription) => (
             <span key={subscription.id}>
               {formatSubscription(subscription)}
+              {partialMonthText(extendedPayment)}
             </span>
           ))}
           {extendedPayment.coopShareTransactions.map((transaction) => (
@@ -118,7 +129,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
             </span>
           ))}
           {extendedPayment.solidarityContributions.length > 0 && (
-            <span>Solidarbeitrag</span>
+            <span>Solidarbeitrag{partialMonthText(extendedPayment)}</span>
           )}
           {(extendedPayment.subscriptions.length > 0 ||
             extendedPayment.solidarityContributions.length > 0) && (
