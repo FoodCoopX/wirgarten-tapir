@@ -55,7 +55,7 @@ class KeycloakUserManager:
             user.send_verify_email(cache=cache)
         except Exception as e:
             print(
-                f"Failed to send verify email to new user: ",
+                "Failed to send verify email to new user: ",
                 e,
                 f" (email: '{user.email}', id: '{user.id}', keycloak_id: '{user.keycloak_id}'): ",
             )

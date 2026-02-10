@@ -49,6 +49,8 @@ class Command(BaseCommand):
                 for m in members:
                     try:
                         m.save(bypass_keycloak=False)
+                        # The member must be saved twice in order to persist the keycloak ID
+                        m.save(bypass_keycloak=False)
                     except Exception as e:
                         print(e)
                         continue
