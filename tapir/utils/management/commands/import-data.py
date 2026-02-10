@@ -9,6 +9,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 
+from tapir.utils.models import MemberImportedLogEntry
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -245,6 +246,9 @@ class Command(BaseCommand):
                         else:
                             with transaction.atomic():
                                 m.save(bypass_keycloak=True)
+                                MemberImportedLogEntry().populate(
+                                    actor=None, user=m, model=m
+                                ).save()
                                 if picloc is not None:
                                     mp.save()
                             created += 1
