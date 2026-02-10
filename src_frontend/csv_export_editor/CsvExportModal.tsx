@@ -159,9 +159,9 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
     };
 
     let promise;
-    if (exportToEdit) {
+    if (exportToEdit?.id) {
       promise = api.genericExportsCsvExportsUpdate({
-        id: exportToEdit.id!,
+        id: exportToEdit.id,
         csvExportModelRequest: request,
       });
     } else {
@@ -378,7 +378,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       </Modal.Body>
       <Modal.Footer>
         <TapirButton
-          text={exportToEdit ? "Speichern" : "Erzeugen"}
+          text={exportToEdit?.id ? "Speichern" : "Erzeugen"}
           icon={"save"}
           variant={"primary"}
           onClick={save}

@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Card, Col, Row } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
+  AutomatedExportCycleEnum,
   CsvExportModel,
   ExportSegment,
   GenericExportsApi,
+  LocaleEnum,
 } from "../api-client";
 import CsvExportTable from "./CsvExportTable.tsx";
 import CsvExportModal from "./CsvExportModal.tsx";
@@ -80,6 +82,53 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
       .finally(() => setExportSelectedForDeletion(undefined));
   }
 
+  function promptNewGenGExport() {
+    setExportSelectedForEdition({
+      exportSegmentId: "members.all",
+      name: "GenG. Mitgliederliste",
+      separator: ",",
+      fileName: "GenG. Mitgliederliste.csv",
+      columnIds: [
+        "member_number",
+        // https://www.gesetze-im-internet.de/geng/__30.html
+        // (2) In die Mitgliederliste ist jedes Mitglied der Genossenschaft mit folgenden Angaben einzutragen:
+
+        // 1. Familienname, Vornamen und Anschrift, bei juristischen Personen und Personenhandelsgesellschaften Firma und Anschrift, bei anderen Personenvereinigungen Bezeichnung und Anschrift der Vereinigung oder Familiennamen, Vornamen und Anschriften ihrer Mitglieder,
+        "member_last_name",
+        "member_first_name",
+        "member_full_address",
+        // "member_phone_number",
+        // "member_email_address",
+
+        // 2. Zahl der von ihm übernommenen weiteren Geschäftsanteile,
+        "member_admission_date",
+        "member_share_quantity",
+        // 3. Ausscheiden aus der Genossenschaft.
+        // Der Zeitpunkt, zu dem der Beitritt, eine Veränderung der Zahl weiterer Geschäftsanteile oder das Ausscheiden wirksam wird oder geworden ist, ist anzugeben.
+        "member_share_history",
+        "member_termination_date",
+      ],
+      customColumnNames: [
+        "Mitgliedsnummer",
+        // 1.
+        "Familienname",
+        "Vorname(n)",
+        "Anschrift",
+        // 2.
+        "Beitrittsdatum",
+        "Anzahl Anteile",
+        // 3.
+        "Anteilshistorie",
+        "Austrittsdatum",
+      ],
+      automatedExportCycle: AutomatedExportCycleEnum.Never,
+      automatedExportDay: 1,
+      automatedExportHour: "12:00",
+      locale: LocaleEnum.DeDeUtf8,
+    });
+    setShowCsvExportModal(true);
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -92,6 +141,13 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
                 }
               >
                 <h5 className={"mb-0"}>CSV-Export Editor</h5>
+                <TapirButton
+                  variant={"outline-primary"}
+                  text={"GenG. Mitgliederliste erzeugen"}
+                  icon={"add_circle"}
+                  onClick={promptNewGenGExport}
+                  disabled={segmentsLoading}
+                />
                 <TapirButton
                   variant={"outline-primary"}
                   text={"Neuen Export erzeugen"}

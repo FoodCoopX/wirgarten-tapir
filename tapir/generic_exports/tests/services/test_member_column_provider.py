@@ -1,17 +1,18 @@
 import datetime
-from unittest.mock import patch, Mock, call
+from unittest.mock import Mock, call, patch
 
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
+    GrowingPeriodFactory,
     MemberFactory,
     SubscriptionFactory,
-    GrowingPeriodFactory,
+    CoopShareTransactionFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -69,6 +70,95 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         result = MemberColumnProvider.get_value_member_account_owner(member, None, {})
 
         self.assertEqual("test owner", result)
+
+    def test_getValueMemberFullAddress_default_returnsMemberFullAddress(self):
+        member = MemberFactory.build(
+            street="Musterstraße 1", postcode="12345", city="Musterstadt"
+        )
+
+        result = MemberColumnProvider.get_value_member_full_address(member, None, {})
+
+        self.assertEqual("Musterstraße 1, 12345 Musterstadt", result)
+
+    def createTerminatedMemberWithShareHistory(self):
+        member = MemberFactory.create()
+        start = datetime.datetime(2024, 1, 1)
+        # admission
+        CoopShareTransactionFactory.create(member=member, quantity=23, valid_at=start)
+        # more shares
+        CoopShareTransactionFactory.create(
+            member=member, quantity=19, valid_at=start + datetime.timedelta(days=20)
+        )
+        # termination
+        CoopShareTransactionFactory.create(
+            member=member,
+            quantity=-42,
+            valid_at=start + datetime.timedelta(days=40),
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
+        )
+        return member
+
+    def test_getValueMemberShareQuantity_default_returnsMemberShareQuantity(self):
+        member = self.createTerminatedMemberWithShareHistory()
+
+        result = MemberColumnProvider.get_value_member_share_quantity(
+            member, datetime.datetime(2023, 12, 1), {}
+        )
+        self.assertEqual(0, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity(
+            member, datetime.datetime(2024, 1, 1), {}
+        )
+        self.assertEqual(23, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity(
+            member, datetime.datetime(2024, 2, 1), {}
+        )
+        self.assertEqual(42, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity(
+            member, datetime.datetime(2024, 3, 1), {}
+        )
+        self.assertEqual(0, result)
+
+    def test_getValueMemberAdmissionDate_default_returnsMemberAdmissionDate(self):
+        member = self.createTerminatedMemberWithShareHistory()
+
+        result = MemberColumnProvider.get_value_member_admission_date(member, None, {})
+        self.assertEqual("01.01.2024", result)
+
+    def test_getValueMemberTerminationDate_default_returnsMemberTerminationDate(self):
+        member = self.createTerminatedMemberWithShareHistory()
+
+        result = MemberColumnProvider.get_value_member_termination_date(
+            member, None, {}
+        )
+        self.assertEqual("10.02.2024", result)
+
+    def test_getValueMemberShareHistory_default_returnsMemberShareHistory(self):
+        member = self.createTerminatedMemberWithShareHistory()
+
+        result = MemberColumnProvider.get_value_member_share_history(
+            member, datetime.datetime(2023, 12, 1), {}
+        )
+        self.assertEqual("", result)
+
+        result = MemberColumnProvider.get_value_member_share_history(
+            member, datetime.datetime(2024, 1, 1), {}
+        )
+        self.assertEqual("+23 am 01.01.2024", result)
+
+        result = MemberColumnProvider.get_value_member_share_history(
+            member, datetime.datetime(2024, 2, 1), {}
+        )
+        self.assertEqual("+23 am 01.01.2024\n+19 am 21.01.2024", result)
+
+        result = MemberColumnProvider.get_value_member_share_history(
+            member, datetime.datetime(2024, 3, 1), {}
+        )
+        self.assertEqual(
+            "+23 am 01.01.2024\n+19 am 21.01.2024\n-42 am 10.02.2024", result
+        )
 
     @staticmethod
     def setupJokerData(member: Member):

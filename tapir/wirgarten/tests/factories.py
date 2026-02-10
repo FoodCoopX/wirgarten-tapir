@@ -45,7 +45,6 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
 
     @factory.post_generation
     def member_no(self: Member, create, member_no, **kwargs):
-
         if member_no is not None:
             self.member_no = member_no
 
@@ -249,7 +248,8 @@ class CoopShareTransactionFactory(
 
     member = factory.SubFactory(MemberFactory)
     transaction_type = factory.Faker(
-        "random_element", elements=["purchase"]
+        "random_element",
+        elements=[CoopShareTransaction.CoopShareTransactionType.PURCHASE],
     )  # cancellation, transfer_in, transfer_out (not implemented yet)
     quantity = factory.Faker("random_int", min=1, max=10)
     share_price = 50
