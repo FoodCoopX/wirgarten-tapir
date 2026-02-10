@@ -49,6 +49,17 @@ Javascript and React files are formatted with [Prettier](https://prettier.io/).
 
 Django template files are formatted with [djLint](https://djlint.com/)
 
+## Frontend API clients
+API Requests made from the React frontend use API clients. Here are the steps to get updated API clients:
+- Annotate your API view with [Spectacular](https://github.com/tfranzel/drf-spectacular) (search for `@extend_schema(` for examples)
+- Generate the API schema file with `python ./manage.py spectacular --file schema.yml`
+- Generate the TypeScript API clients using [OpenAPI Generator](https://openapi-generator.tech/) with `npx openapi-generator-cli generate -i schema.yml -g typescript-fetch -o ./src_frontend/api-client`
+
+There are help scripts in the `/scripts` folder. You can do a full update with the following command:
+```bash
+docker compose exec web ./scripts/generate_api_schema.sh && docker compose exec vite ./scripts/generate_api_clients.sh
+```
+
 ## Class diagram
 
 [![models.png](models.png)](https://raw.githubusercontent.com/FoodCoopX/wirgarten-tapir/master/models.png)
