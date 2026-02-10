@@ -124,7 +124,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
       case "street":
         return "Straße & Hausnummer";
       case "street2":
-        return "Adresszusatz";
+        return "Adresszusatz (optional)";
       case "postcode":
         return "Postleitzahl";
       case "city":
