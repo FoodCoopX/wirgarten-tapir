@@ -2,7 +2,7 @@ import phonenumbers
 from django import template
 from django.conf import settings
 from django.template.defaultfilters import stringfilter
-from phonenumbers import PhoneNumberFormat, PhoneNumber
+from phonenumbers import PhoneNumberFormat
 
 register = template.Library()
 

@@ -1,4 +1,3 @@
-import datetime
 import uuid
 
 from django.conf import settings
@@ -6,7 +5,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import QuerySet, Subquery, OuterRef
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
@@ -20,18 +18,10 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
-from tapir.accounts.models import TapirUser
-from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
-    BestellWizardOrderFulfiller,
-)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
-from tapir.coop.services.minimum_number_of_shares_validator import (
-    MinimumNumberOfSharesValidator,
-)
-from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -40,19 +30,9 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
-from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
-    MemberSolidarityContributionService,
-)
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
-from tapir.subscriptions.services.apply_tapir_order_manager import (
-    ApplyTapirOrderManager,
-)
-from tapir.subscriptions.services.contract_start_date_calculator import (
-    ContractStartDateCalculator,
-)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.waiting_list.models import WaitingListChangeConfirmedLogEntry
 from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
     WaitingListEntrySerializer,
@@ -66,8 +46,14 @@ from tapir.waiting_list.serializers import (
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
 )
+from tapir.waiting_list.services.waiting_list_entry_confirmation_applier import (
+    WaitingListEntryConfirmationApplier,
+)
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
     WaitingListEntryConfirmationEmailSender,
+)
+from tapir.waiting_list.services.waiting_list_entry_confirmation_validator import (
+    WaitingListEntryConfirmationValidator,
 )
 from tapir.waiting_list.services.waiting_list_entry_creator import (
     WaitingListEntryCreator,
@@ -87,7 +73,6 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
 
 
@@ -770,8 +755,10 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
         entry_id = request.query_params.get("entry_id")
         link_key = request.query_params.get("link_key")
 
-        waiting_list_entry = self.get_entry_by_id_and_validate_link_key(
-            entry_id, link_key
+        waiting_list_entry = (
+            WaitingListEntryConfirmationValidator.get_entry_by_id_and_validate_link_key(
+                entry_id, link_key
+            )
         )
 
         data = self.build_public_entry_data(waiting_list_entry, cache={})
@@ -824,21 +811,6 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             "payment_rhythm": payment_rhythm,
         }
 
-    @classmethod
-    def get_entry_by_id_and_validate_link_key(
-        cls, entry_id: str, link_key: str
-    ) -> WaitingListEntry:
-        waiting_list_entry = get_object_or_404(WaitingListEntry, id=entry_id)
-        try:
-            link_key = uuid.UUID(link_key)
-        except ValueError:
-            raise Http404(f"Unknown entry (id:{entry_id}, key:{link_key})")
-
-        if waiting_list_entry.confirmation_link_key != link_key:
-            raise Http404(f"Unknown entry (id:{entry_id}, key:{link_key})")
-
-        return waiting_list_entry
-
 
 class PublicConfirmWaitingListEntryView(APIView):
     permission_classes = []
@@ -856,8 +828,8 @@ class PublicConfirmWaitingListEntryView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            waiting_list_entry = self.validate_request_and_get_waiting_list_entry(
-                serializer.validated_data
+            waiting_list_entry = WaitingListEntryConfirmationValidator.validate_request_and_get_waiting_list_entry(
+                serializer.validated_data, cache=self.cache
             )
         except ValidationError as error:
             return Response(
@@ -866,207 +838,17 @@ class PublicConfirmWaitingListEntryView(APIView):
                 ).data
             )
 
-        is_new_member = waiting_list_entry.member is None
-
-        with transaction.atomic():
-            member = waiting_list_entry.member
-            if is_new_member:
-                member = self.create_member(
-                    waiting_list_entry, serializer.validated_data
-                )
-
-            actor = request.user if request.user.is_authenticated else member
-            WaitingListChangeConfirmedLogEntry().populate(
-                actor=actor, user=member
-            ).save()
-
-            MemberPaymentRhythmService.assign_payment_rhythm_to_member(
-                member=member,
-                rhythm=serializer.validated_data["payment_rhythm"],
-                valid_from=get_today(cache=self.cache),
-                cache=self.cache,
-                actor=actor,
-            )
-
-            subscriptions_existed_before_changes, new_subscriptions = (
-                self.apply_changes(
-                    waiting_list_entry=waiting_list_entry,
-                    actor=actor,
-                    member=member,
-                    solidarity_contribution_amount=serializer.validated_data[
-                        "solidarity_contribution"
-                    ],
-                )
-            )
-            waiting_list_entry.delete()
-
-            if len(new_subscriptions) > 0:
-                ApplyTapirOrderManager.send_order_confirmation_mail(
-                    member=member,
-                    subscriptions_existed_before_changes=subscriptions_existed_before_changes,
-                    new_subscriptions=new_subscriptions,
-                    cache=self.cache,
-                    from_waiting_list=True,
-                )
-
-            if is_new_member:
-                BestellWizardOrderFulfiller.create_coop_shares(
-                    member=member,
-                    number_of_shares=serializer.validated_data["number_of_coop_shares"],
-                    subscriptions=new_subscriptions,
-                    cache=self.cache,
-                    actor=actor,
-                )
+        WaitingListEntryConfirmationApplier.apply_changes(
+            waiting_list_entry=waiting_list_entry,
+            validated_data=serializer.validated_data,
+            request=request,
+            cache=self.cache,
+        )
 
         return Response(
             OrderConfirmationResponseSerializer(
                 {"order_confirmed": True, "error": None}
             ).data
-        )
-
-    def validate_request_and_get_waiting_list_entry(self, validated_data: dict):
-        waiting_list_entry = PublicGetWaitingListEntryDetailsApiView.get_entry_by_id_and_validate_link_key(
-            validated_data["entry_id"], validated_data["link_key"]
-        )
-
-        if waiting_list_entry.member is None:
-            PersonalDataValidator.validate_personal_data_new_member(
-                email=waiting_list_entry.email,
-                phone_number=str(waiting_list_entry.phone_number),
-                iban=validated_data["iban"],
-                account_owner=validated_data["account_owner"],
-                payment_rhythm=validated_data["payment_rhythm"],
-                cache=self.cache,
-                check_waiting_list=False,
-            )
-            order = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
-                waiting_list_entry
-            )
-
-            min_number_of_shares = MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_tapir_order(
-                order, cache=self.cache
-            )
-            if validated_data["number_of_coop_shares"] < min_number_of_shares:
-                raise ValidationError(
-                    f"Diese Bestellung erfordert mindestens {min_number_of_shares} Genossenschaftsanteile"
-                )
-
-        if waiting_list_entry.product_wishes.exists():
-            if not validated_data["sepa_allowed"]:
-                raise ValidationError("SEPA-Mandat muss erlaubt sein")
-
-            if not validated_data["contract_accepted"]:
-                raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
-
-        return waiting_list_entry
-
-    def create_member(self, waiting_list_entry: WaitingListEntry, validated_data: dict):
-        now = get_now(cache=self.cache)
-        contracts_signed = dict.fromkeys(
-            ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
-        )
-
-        return Member.objects.create(
-            first_name=waiting_list_entry.first_name,
-            last_name=waiting_list_entry.last_name,
-            email=waiting_list_entry.email,
-            phone_number=waiting_list_entry.phone_number,
-            street=waiting_list_entry.street,
-            street_2=waiting_list_entry.street_2,
-            postcode=waiting_list_entry.postcode,
-            city=waiting_list_entry.city,
-            country=waiting_list_entry.country,
-            account_owner=validated_data["account_owner"],
-            iban=validated_data["iban"],
-            **contracts_signed,
-        )
-
-    def apply_changes(
-        self,
-        waiting_list_entry: WaitingListEntry,
-        actor: TapirUser,
-        member: Member,
-        solidarity_contribution_amount: float,
-    ):
-        reference_date = waiting_list_entry.desired_start_date
-        if reference_date is None:
-            reference_date = get_today(cache=self.cache)
-
-        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=reference_date,
-            apply_buffer_time=False,
-            cache=self.cache,
-        )
-
-        pickup_location_change_valid_from = contract_start_date
-        if not waiting_list_entry.product_wishes.exists():
-            pickup_location_change_valid_from = calculate_pickup_location_change_date(
-                reference_date=reference_date, cache=self.cache
-            )
-        self.apply_pickup_location_changes(
-            waiting_list_entry=waiting_list_entry,
-            valid_from=pickup_location_change_valid_from,
-            actor=actor,
-            member=member,
-        )
-
-        if not waiting_list_entry.member:
-            MemberSolidarityContributionService.assign_contribution_to_member(
-                member=member,
-                change_date=contract_start_date,
-                actor=actor,
-                cache=self.cache,
-                amount=solidarity_contribution_amount,
-            )
-
-        return self.apply_subscription_changes(
-            waiting_list_entry=waiting_list_entry,
-            contract_start_date=contract_start_date,
-            actor=actor,
-            member=member,
-        )
-
-    def apply_subscription_changes(
-        self,
-        waiting_list_entry: WaitingListEntry,
-        contract_start_date: datetime.date,
-        actor: TapirUser,
-        member: Member,
-    ):
-        order = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
-            waiting_list_entry
-        )
-        if len(order) == 0:
-            return False, []
-
-        return ApplyTapirOrderManager.apply_order_with_several_product_types(
-            member=member,
-            order=order,
-            contract_start_date=contract_start_date,
-            actor=actor,
-            needs_admin_confirmation=False,
-            cache=self.cache,
-        )
-
-    def apply_pickup_location_changes(
-        self,
-        waiting_list_entry: WaitingListEntry,
-        valid_from: datetime.date,
-        actor: TapirUser,
-        member: Member,
-    ):
-        pickup_location_wish = waiting_list_entry.pickup_location_wishes.order_by(
-            "priority"
-        ).first()
-        if pickup_location_wish is None:
-            return
-
-        MemberPickupLocationService.link_member_to_pickup_location(
-            pickup_location_wish.pickup_location_id,
-            member=member,
-            valid_from=valid_from,
-            actor=actor,
-            cache=self.cache,
         )
 
 
