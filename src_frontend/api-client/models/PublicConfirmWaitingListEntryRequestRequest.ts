@@ -67,6 +67,12 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
      * @memberof PublicConfirmWaitingListEntryRequestRequest
      */
     paymentRhythm: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof PublicConfirmWaitingListEntryRequestRequest
+     */
+    solidarityContribution: number;
 }
 
 /**
@@ -81,6 +87,7 @@ export function instanceOfPublicConfirmWaitingListEntryRequestRequest(value: obj
     if (!('contractAccepted' in value) || value['contractAccepted'] === undefined) return false;
     if (!('numberOfCoopShares' in value) || value['numberOfCoopShares'] === undefined) return false;
     if (!('paymentRhythm' in value) || value['paymentRhythm'] === undefined) return false;
+    if (!('solidarityContribution' in value) || value['solidarityContribution'] === undefined) return false;
     return true;
 }
 
@@ -102,6 +109,7 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(json: a
         'contractAccepted': json['contract_accepted'],
         'numberOfCoopShares': json['number_of_coop_shares'],
         'paymentRhythm': json['payment_rhythm'],
+        'solidarityContribution': json['solidarity_contribution'],
     };
 }
 
@@ -124,6 +132,7 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(json: a
         'contract_accepted': value['contractAccepted'],
         'number_of_coop_shares': value['numberOfCoopShares'],
         'payment_rhythm': value['paymentRhythm'],
+        'solidarity_contribution': value['solidarityContribution'],
     };
 }
 

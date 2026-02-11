@@ -40,6 +40,9 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
@@ -607,7 +610,9 @@ class WaitingListCreateEntryExistingMemberView(APIView):
         )
         serializer.is_valid(raise_exception=True)
 
-        check_permission_or_self(serializer.validated_data["member_id"], request)
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(member_id, request)
+        member = get_object_or_404(Member, id=member_id)
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=serializer.validated_data["shopping_cart"],
@@ -616,7 +621,7 @@ class WaitingListCreateEntryExistingMemberView(APIView):
 
         try:
             WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_an_existing_member(
-                member_id=serializer.validated_data["member_id"],
+                member_id=member_id,
                 order=order,
                 cache=self.cache,
             )
@@ -633,11 +638,14 @@ class WaitingListCreateEntryExistingMemberView(APIView):
                 pickup_location_ids_in_priority_order=serializer.validated_data[
                     "pickup_location_ids"
                 ],
-                member_id=serializer.validated_data["member_id"],
+                member=member,
+                growing_period_id=TapirCache.get_growing_period_at_date(
+                    reference_date=get_today(cache=self.cache), cache=self.cache
+                ).id,
                 cache=self.cache,
             )
             WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
-                existing_member_id=serializer.validated_data["member_id"],
+                existing_member_id=member_id,
                 entry=entry,
             )
 
@@ -885,6 +893,9 @@ class PublicConfirmWaitingListEntryView(APIView):
                     waiting_list_entry=waiting_list_entry,
                     actor=actor,
                     member=member,
+                    solidarity_contribution_amount=serializer.validated_data[
+                        "solidarity_contribution"
+                    ],
                 )
             )
             waiting_list_entry.delete()
@@ -951,10 +962,9 @@ class PublicConfirmWaitingListEntryView(APIView):
 
     def create_member(self, waiting_list_entry: WaitingListEntry, validated_data: dict):
         now = get_now(cache=self.cache)
-        contracts_signed = {
-            contract: now
-            for contract in ["sepa_consent", "withdrawal_consent", "privacy_consent"]
-        }
+        contracts_signed = dict.fromkeys(
+            ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
+        )
 
         return Member.objects.create(
             first_name=waiting_list_entry.first_name,
@@ -966,14 +976,17 @@ class PublicConfirmWaitingListEntryView(APIView):
             postcode=waiting_list_entry.postcode,
             city=waiting_list_entry.city,
             country=waiting_list_entry.country,
-            birthdate=validated_data["birthdate"],
             account_owner=validated_data["account_owner"],
             iban=validated_data["iban"],
             **contracts_signed,
         )
 
     def apply_changes(
-        self, waiting_list_entry: WaitingListEntry, actor: TapirUser, member: Member
+        self,
+        waiting_list_entry: WaitingListEntry,
+        actor: TapirUser,
+        member: Member,
+        solidarity_contribution_amount: float,
     ):
         reference_date = waiting_list_entry.desired_start_date
         if reference_date is None:
@@ -996,6 +1009,16 @@ class PublicConfirmWaitingListEntryView(APIView):
             actor=actor,
             member=member,
         )
+
+        if not waiting_list_entry.member:
+            MemberSolidarityContributionService.assign_contribution_to_member(
+                member=member,
+                change_date=contract_start_date,
+                actor=actor,
+                cache=self.cache,
+                amount=solidarity_contribution_amount,
+            )
+
         return self.apply_subscription_changes(
             waiting_list_entry=waiting_list_entry,
             contract_start_date=contract_start_date,

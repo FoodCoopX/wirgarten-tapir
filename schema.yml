@@ -9142,6 +9142,9 @@ components:
         payment_rhythm:
           type: string
           minLength: 1
+        solidarity_contribution:
+          type: number
+          format: double
       required:
       - account_owner
       - contract_accepted
@@ -9151,6 +9154,7 @@ components:
       - number_of_coop_shares
       - payment_rhythm
       - sepa_allowed
+      - solidarity_contribution
     PublicGrowingPeriod:
       type: object
       properties:

@@ -630,9 +630,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             contractAccepted: contractAccepted,
             iban: personalData.iban,
             sepaAllowed: sepaAllowed,
-            birthdate: new Date("01.01.1990"),
             numberOfCoopShares: selectedNumberOfCoopShares,
             paymentRhythm: personalData.paymentRhythm,
+            solidarityContribution: 0,
           },
         })
         .then((response) => {

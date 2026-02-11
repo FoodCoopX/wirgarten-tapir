@@ -452,6 +452,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             linkKey: waitingListEntryDetails.linkKey,
             numberOfCoopShares: selectedNumberOfCoopShares,
             paymentRhythm: personalData.paymentRhythm,
+            solidarityContribution: solidarityContribution,
           },
         })
         .then(handleOrderResponse)
