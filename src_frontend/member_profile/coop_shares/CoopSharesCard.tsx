@@ -41,10 +41,9 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
   }
 
   function getCurrentNumberOfShares(): number {
-    return transactions.reduce(
-      (sum, transaction) => sum + transaction.quantity,
-      0,
-    );
+    return transactions
+      .filter((transaction) => transaction.validAt <= new Date())
+      .reduce((sum, transaction) => sum + transaction.quantity, 0);
   }
 
   function getTransactionIcon(transaction: CoopShareTransaction) {
