@@ -160,6 +160,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             nextButtonText={
               step === steps.at(-1) ? getConfirmButtonText() : undefined
             }
+            canChangeNumberOfShares={true}
           />
         );
       case "9_banking_data":

@@ -21,6 +21,7 @@ interface Step5BPickupLocationListProps {
   };
   productTypesInWaitingList: Set<PublicProductType>;
   shoppingCart: ShoppingCart;
+  changesDisabled: boolean;
 }
 
 const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
@@ -34,12 +35,17 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   firstDeliveryDatesByPickupLocationAndProductType,
   shoppingCart,
   productTypesInWaitingList,
+  changesDisabled,
 }) => {
   function getClassForPickupLocationListItem(
     pickupLocation: PublicPickupLocation,
   ) {
     if (selectedPickupLocations.includes(pickupLocation)) {
       return "active";
+    }
+
+    if (changesDisabled) {
+      return "disabled";
     }
 
     return "";
@@ -119,14 +125,18 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
 
   return (
     <ListGroup style={{ maxHeight: "50dvh", overflow: "scroll" }}>
-      {pickupLocations.sort(sortPickupLocations).map((pickupLocation) => (
+      {pickupLocations.toSorted(sortPickupLocations).map((pickupLocation) => (
         <ListGroupItem
           key={pickupLocation.id}
           style={{
-            cursor: "pointer",
+            cursor: changesDisabled ? "" : "pointer",
             lineHeight: "1.1rem",
           }}
-          onClick={() => setSelectedPickupLocations([pickupLocation])}
+          onClick={
+            changesDisabled
+              ? () => {}
+              : () => setSelectedPickupLocations([pickupLocation])
+          }
           className={getClassForPickupLocationListItem(pickupLocation)}
           id={pickupLocation.id}
         >

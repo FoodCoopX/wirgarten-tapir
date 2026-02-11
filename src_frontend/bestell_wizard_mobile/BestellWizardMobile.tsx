@@ -8,7 +8,8 @@ import {
   PublicGrowingPeriod,
   PublicPickupLocation,
   type PublicProductType,
-  WaitingListEntryDetails,
+  PublicWaitingListEntryDetails,
+  WaitingListApi,
 } from "../api-client";
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -61,10 +62,13 @@ import { addToast } from "../utils/addToast.ts";
 import { v4 as uuidv4 } from "uuid";
 import { updateWaitingList } from "./utils/updateWaitingList.ts";
 import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
+import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
+import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
+import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
-  waitingListEntryDetails?: WaitingListEntryDetails;
+  waitingListEntryDetails?: PublicWaitingListEntryDetails;
 }
 
 const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
@@ -73,6 +77,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
   const coopApi = useApi(CoopApi, csrfToken);
+  const waitingListApi = useApi(WaitingListApi, csrfToken);
 
   const [settings, setSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
@@ -154,10 +159,46 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         setSettings(newSettings);
         setSettingsLoaded(true);
         setSelectedProductTypes(newSettings.productTypes);
-        setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
+        if (waitingListEntryDetails) {
+          setShoppingCart(
+            buildShoppingCartFromWaitingListEntry(
+              newSettings,
+              waitingListEntryDetails,
+              setSelectedProductTypes,
+            ),
+          );
+        } else {
+          setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
+        }
         setMinimumNumberOfShares(minNumberOfShares.minimumNumberOfShares);
 
         personalData.paymentRhythm = baseData.defaultPaymentRhythm;
+
+        if (waitingListEntryDetails) {
+          personalData.firstName = waitingListEntryDetails.firstName;
+          personalData.lastName = waitingListEntryDetails.lastName;
+          personalData.email = waitingListEntryDetails.email;
+          personalData.phoneNumber = waitingListEntryDetails.phoneNumber;
+          personalData.street = waitingListEntryDetails.street;
+          personalData.street2 = waitingListEntryDetails.street2;
+          personalData.postcode = waitingListEntryDetails.postcode;
+          personalData.city = waitingListEntryDetails.city;
+          personalData.iban = waitingListEntryDetails.iban ?? "";
+          personalData.accountOwner =
+            waitingListEntryDetails.accountOwner ?? "";
+          personalData.paymentRhythm =
+            waitingListEntryDetails.paymentRhythm ??
+            baseData.defaultPaymentRhythm;
+
+          setSelectedPickupLocations(
+            (waitingListEntryDetails.pickupLocationWishes ?? [])
+              .map((pickupLocation) =>
+                getPublicPickupLocationById(pickupLocation.id!, newSettings),
+              )
+              .filter((pl) => pl !== undefined),
+          );
+        }
+
         setPersonalData({ ...personalData });
 
         if (newSettings.growingPeriodChoices.length > 0) {
@@ -235,10 +276,14 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       productTypesInWaitingList,
       selectedPickupLocations,
       pickupLocationsWithCapacityFull,
+      waitingListEntryDetails,
     );
 
     setSteps(newSteps);
-    if (!newSteps.includes(currentStep)) {
+    if (waitingListEntryDetails) {
+      const index = newSteps.indexOf("2_first_name");
+      setCurrentStep(newSteps[index + 1]);
+    } else if (!newSteps.includes(currentStep)) {
       setCurrentStep(newSteps[0]);
     }
   }, [
@@ -250,6 +295,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     productTypesInWaitingList,
     selectedPickupLocations,
     pickupLocationsWithCapacityFull,
+    waitingListEntryDetails,
   ]);
 
   useEffect(() => {
@@ -339,6 +385,28 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     setBecomeMemberNow(null);
   }, [shoppingCart]);
 
+  function buildShoppingCartFromWaitingListEntry(
+    settings: BestellWizardSettings,
+    waitingListEntryDetails: PublicWaitingListEntryDetails,
+    setSelectedProductTypes: (types: PublicProductType[]) => void,
+  ) {
+    const newShoppingCart = buildEmptyShoppingCart(settings.productTypes);
+    const selectedProductTypes = new Set<PublicProductType>();
+    for (const wish of waitingListEntryDetails.productWishes ?? []) {
+      newShoppingCart[wish.product.id!] = wish.quantity;
+
+      const publicProductType = getProductTypeByProductId(
+        wish.product.id!,
+        settings,
+      );
+      if (publicProductType) {
+        selectedProductTypes.add(publicProductType);
+      }
+    }
+    setSelectedProductTypes(sortProductTypes([...selectedProductTypes]));
+    return newShoppingCart;
+  }
+
   function goToNextStep() {
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex + 1 >= steps.length) {
@@ -371,7 +439,30 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     setConfirmOrderLoading(true);
 
     if (waitingListEntryDetails !== undefined) {
-      alert("Warteliste-Link-Bestellung noch nicht implementiert");
+      waitingListApi
+        .waitingListApiPublicConfirmWaitingListEntryCreate({
+          publicConfirmWaitingListEntryRequestRequest: {
+            entryId: waitingListEntryDetails.entryId,
+            accountOwner: personalData.accountOwner,
+            contractAccepted:
+              contractAccepted || waitingListEntryDetails.memberAlreadyExists,
+            iban: personalData.iban,
+            sepaAllowed:
+              sepaAllowed || waitingListEntryDetails.memberAlreadyExists,
+            linkKey: waitingListEntryDetails.linkKey,
+            numberOfCoopShares: selectedNumberOfCoopShares,
+            paymentRhythm: personalData.paymentRhythm,
+          },
+        })
+        .then(handleOrderResponse)
+        .catch(async (error) => {
+          await handleRequestError(
+            error,
+            "Fehler bei der Bestätigung der Warteliste-Eintrag",
+            setToastDatas,
+          );
+        })
+        .finally(() => setConfirmOrderLoading(false));
       return;
     }
 
@@ -532,6 +623,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             productIdsOverCapacity={productIdsOverCapacity}
             isOrderStep={false}
             orderLoading={false}
+            changesDisabled={
+              (waitingListEntryDetails?.pickupLocationWishes ?? []).length > 0
+            }
           />
         );
       case "5c_pickup_location_confirm_waiting_list":
@@ -567,6 +661,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             active={currentStep === step}
             isOrderStep={false}
             orderLoading={false}
+            canChangeNumberOfShares={
+              !waitingListEntryDetails?.memberAlreadyExists
+            }
           />
         );
       case "6c_coop_member_now":
@@ -604,6 +701,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               setEmailAddressAlreadyInUseLoading
             }
             setToastDatas={setToastDatas}
+            changesDisabled={waitingListEntryDetails !== undefined}
           />
         );
       case "9_banking_data":
@@ -650,6 +748,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             productTypesInWaitingList={productTypesInWaitingList}
             becomeMemberNow={becomeMemberNow}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+            confirmOrderLoading={confirmOrderLoading}
+            isOrderStep={waitingListEntryDetails !== undefined}
+            confirmOrder={onConfirmOrder}
+            waitingListEntryDetails={waitingListEntryDetails}
           />
         );
       case "11_legal":

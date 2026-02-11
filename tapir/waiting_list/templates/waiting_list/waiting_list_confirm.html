@@ -6,7 +6,6 @@
 <html lang="{{ LANGUAGE_CODE }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>
             {% block title %}{{ "wirgarten.site.name"|parameter }} - Tapir{% endblock %}
         </title>
@@ -17,18 +16,18 @@
             <link rel="stylesheet"
                   href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
         {% endwith %}
-        <script src="{% static 'core/bootstrap/5.3.8/js/bootstrap.bundle.min.js' %}"></script>
         {% javascript_environment_variables %}
         {% vite_hmr_client %}
         {% vite_react_refresh %}
         {% vite_asset 'waiting_list/waiting_list_confirm_entry.tsx' %}
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="{% static 'core/bootstrap/5.3.8/js/bootstrap.bundle.min.js' %}"></script>
     </head>
-    <body>
-        <div class="container-fluid">
-            <main id="main-content" role="main">
-                {% csrf_token %}
-                <span id="waiting_list_confirm" data-entry-id="{{ entry_id }}" data-link-key="{{ link_key }}" data-admin-email="{{ "wirgarten.site.admin_email"|parameter }}"></span>
-            </main>
-        </div>
+    <body style="{{ body_style }}; width: 100dvw; height: 100dvh;">
+        {% csrf_token %}
+        <span id="waiting_list_confirm"
+              data-entry-id="{{ entry_id }}"
+              data-link-key="{{ link_key }}"
+              data-admin-email="{{ "wirgarten.site.admin_email"|parameter }}"></span>
     </body>
 </html>

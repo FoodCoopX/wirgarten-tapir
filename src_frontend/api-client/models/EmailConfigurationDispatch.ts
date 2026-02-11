@@ -68,6 +68,12 @@ export interface EmailConfigurationDispatch {
      * @type {number}
      * @memberof EmailConfigurationDispatch
      */
+    readonly deliveredCount: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof EmailConfigurationDispatch
+     */
     readonly errorCount: number;
 }
 
@@ -81,6 +87,7 @@ export function instanceOfEmailConfigurationDispatch(value: object): value is Em
     if (!('overrideRecipients' in value) || value['overrideRecipients'] === undefined) return false;
     if (!('sentCount' in value) || value['sentCount'] === undefined) return false;
     if (!('openedCount' in value) || value['openedCount'] === undefined) return false;
+    if (!('deliveredCount' in value) || value['deliveredCount'] === undefined) return false;
     if (!('errorCount' in value) || value['errorCount'] === undefined) return false;
     return true;
 }
@@ -101,6 +108,7 @@ export function EmailConfigurationDispatchFromJSONTyped(json: any, ignoreDiscrim
         'overrideRecipients': json['override_recipients'],
         'sentCount': json['sent_count'],
         'openedCount': json['opened_count'],
+        'deliveredCount': json['delivered_count'],
         'errorCount': json['error_count'],
     };
 }
@@ -109,7 +117,7 @@ export function EmailConfigurationDispatchFromJSONTyped(json: any, ignoreDiscrim
       return EmailConfigurationDispatchToJSONTyped(json, false);
   }
 
-  export function EmailConfigurationDispatchToJSONTyped(value?: Omit<EmailConfigurationDispatch, 'sent_count'|'opened_count'|'error_count'> | null, ignoreDiscriminator: boolean = false): any {
+  export function EmailConfigurationDispatchToJSONTyped(value?: Omit<EmailConfigurationDispatch, 'sent_count'|'opened_count'|'delivered_count'|'error_count'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -23,6 +23,7 @@ interface Step6BCoopSharesProps {
   isOrderStep: boolean;
   orderLoading: boolean;
   nextButtonText?: string;
+  canChangeNumberOfShares: boolean;
 }
 
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
@@ -39,6 +40,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   isOrderStep,
   orderLoading,
   nextButtonText,
+  canChangeNumberOfShares,
 }) => {
   const [statuteRead, setStatuteRead] = useState(false);
   const [commitmentChecked, setCommitmentChecked] = useState(false);
@@ -136,7 +138,8 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           }}
           disabled={
             studentStatusEnabled ||
-            selectedNumberOfCoopShares <= minimumNumberOfShares
+            selectedNumberOfCoopShares <= minimumNumberOfShares ||
+            !canChangeNumberOfShares
           }
           size={"sm"}
         />
@@ -147,7 +150,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             value={studentStatusEnabled ? 0 : internalNumberOfShares}
             onChange={(event) => setInternalNumberOfShares(event.target.value)}
             size={"sm"}
-            disabled={studentStatusEnabled}
+            disabled={studentStatusEnabled || !canChangeNumberOfShares}
             isValid={
               showValidation &&
               selectedNumberOfCoopShares >= minimumNumberOfShares
@@ -167,7 +170,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             );
           }}
           size={"sm"}
-          disabled={studentStatusEnabled}
+          disabled={studentStatusEnabled || !canChangeNumberOfShares}
         />
         <span>
           {" × "}

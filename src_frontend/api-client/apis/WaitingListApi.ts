@@ -22,11 +22,11 @@ import type {
   PaginatedWaitingListEntryDetailsList,
   PatchedWaitingListEntryRequest,
   PublicConfirmWaitingListEntryRequestRequest,
+  PublicWaitingListEntryDetails,
   PublicWaitingListEntryExistingMemberCreateRequest,
   PublicWaitingListEntryNewMemberCreateRequest,
   SendLinkSerializerRequest,
   WaitingListEntry,
-  WaitingListEntryDetails,
   WaitingListEntryRequest,
   WaitingListEntryUpdateRequest,
 } from '../models/index';
@@ -45,6 +45,8 @@ import {
     PatchedWaitingListEntryRequestToJSON,
     PublicConfirmWaitingListEntryRequestRequestFromJSON,
     PublicConfirmWaitingListEntryRequestRequestToJSON,
+    PublicWaitingListEntryDetailsFromJSON,
+    PublicWaitingListEntryDetailsToJSON,
     PublicWaitingListEntryExistingMemberCreateRequestFromJSON,
     PublicWaitingListEntryExistingMemberCreateRequestToJSON,
     PublicWaitingListEntryNewMemberCreateRequestFromJSON,
@@ -53,8 +55,6 @@ import {
     SendLinkSerializerRequestToJSON,
     WaitingListEntryFromJSON,
     WaitingListEntryToJSON,
-    WaitingListEntryDetailsFromJSON,
-    WaitingListEntryDetailsToJSON,
     WaitingListEntryRequestFromJSON,
     WaitingListEntryRequestToJSON,
     WaitingListEntryUpdateRequestFromJSON,
@@ -455,7 +455,7 @@ export class WaitingListApi extends runtime.BaseAPI {
 
     /**
      */
-    async waitingListApiPublicGetWaitingListEntryDetailsRetrieveRaw(requestParameters: WaitingListApiPublicGetWaitingListEntryDetailsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WaitingListEntryDetails>> {
+    async waitingListApiPublicGetWaitingListEntryDetailsRetrieveRaw(requestParameters: WaitingListApiPublicGetWaitingListEntryDetailsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PublicWaitingListEntryDetails>> {
         if (requestParameters['entryId'] == null) {
             throw new runtime.RequiredError(
                 'entryId',
@@ -496,12 +496,12 @@ export class WaitingListApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => WaitingListEntryDetailsFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => PublicWaitingListEntryDetailsFromJSON(jsonValue));
     }
 
     /**
      */
-    async waitingListApiPublicGetWaitingListEntryDetailsRetrieve(requestParameters: WaitingListApiPublicGetWaitingListEntryDetailsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WaitingListEntryDetails> {
+    async waitingListApiPublicGetWaitingListEntryDetailsRetrieve(requestParameters: WaitingListApiPublicGetWaitingListEntryDetailsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PublicWaitingListEntryDetails> {
         const response = await this.waitingListApiPublicGetWaitingListEntryDetailsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }

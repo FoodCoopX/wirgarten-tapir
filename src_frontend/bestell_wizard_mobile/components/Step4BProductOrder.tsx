@@ -143,22 +143,24 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
           />
         ) : (
           <>
-            <TapirButton
-              variant={BUTTON_VARIANT}
-              icon={"remove"}
-              size={"sm"}
-              onClick={() => {
-                shoppingCart[product.id!] = Math.max(
-                  0,
-                  shoppingCart[product.id!] - 1,
-                );
-                setShoppingCart({ ...shoppingCart });
-              }}
-              disabled={
-                shoppingCart[product.id!] === 0 ||
-                waitingListLinkConfirmationModeEnabled
-              }
-            />
+            {!waitingListLinkConfirmationModeEnabled && (
+              <TapirButton
+                variant={BUTTON_VARIANT}
+                icon={"remove"}
+                size={"sm"}
+                onClick={() => {
+                  shoppingCart[product.id!] = Math.max(
+                    0,
+                    shoppingCart[product.id!] - 1,
+                  );
+                  setShoppingCart({ ...shoppingCart });
+                }}
+                disabled={
+                  shoppingCart[product.id!] === 0 ||
+                  waitingListLinkConfirmationModeEnabled
+                }
+              />
+            )}
             <span
               className={
                 showValidation &&
@@ -168,18 +170,20 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
                   : ""
               }
             >
-              {shoppingCart[product.id!]}
+              {shoppingCart[product.id!] ?? 0}
             </span>
-            <TapirButton
-              variant={BUTTON_VARIANT}
-              icon={"add"}
-              size={"sm"}
-              onClick={() => {
-                shoppingCart[product.id!] = shoppingCart[product.id!] + 1;
-                setShoppingCart({ ...shoppingCart });
-              }}
-              disabled={waitingListLinkConfirmationModeEnabled}
-            />
+            {!waitingListLinkConfirmationModeEnabled && (
+              <TapirButton
+                variant={BUTTON_VARIANT}
+                icon={"add"}
+                size={"sm"}
+                onClick={() => {
+                  shoppingCart[product.id!] = shoppingCart[product.id!] + 1;
+                  setShoppingCart({ ...shoppingCart });
+                }}
+                disabled={waitingListLinkConfirmationModeEnabled}
+              />
+            )}
           </>
         )}
       </div>

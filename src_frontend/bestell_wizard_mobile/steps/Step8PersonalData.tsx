@@ -27,6 +27,7 @@ interface Step8PersonalDataProps {
     emailAddressAlreadyInUseLoading: boolean,
   ) => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  changesDisabled: boolean;
 }
 
 const FIELDS: (keyof PersonalData)[] = [
@@ -62,6 +63,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   emailAddressAlreadyInUseLoading,
   setEmailAddressAlreadyInUseLoading,
   setToastDatas,
+  changesDisabled,
 }) => {
   const [isOver18, setIsOver18] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
@@ -75,6 +77,13 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   }, [active]);
 
   useEffect(() => {
+    setIsOver18(changesDisabled);
+  }, [changesDisabled]);
+
+  useEffect(() => {
+    if (changesDisabled) {
+      return;
+    }
     if (controller) controller.abort();
 
     if (!isEmailValid(personalData.email)) {
@@ -102,7 +111,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         );
       })
       .finally(() => setEmailAddressAlreadyInUseLoading(false));
-  }, [personalData.email]);
+  }, [personalData.email, changesDisabled]);
 
   function validate() {
     setShowValidation(true);
@@ -193,6 +202,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
                 : ""
             }
             style={{ width: "264px" }}
+            disabled={changesDisabled}
           />
         ))}
       </div>
@@ -202,6 +212,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         label={"Ich bin über 18 Jahre alt"}
         controlId={"over18"}
         showError={showValidation && !isOver18}
+        disabled={changesDisabled}
       />
       <NextStepButton onClick={validate} />
     </div>

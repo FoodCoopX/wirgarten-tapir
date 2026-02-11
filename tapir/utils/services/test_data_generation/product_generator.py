@@ -1,6 +1,5 @@
 import datetime
 
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
@@ -31,20 +30,14 @@ class ProductGenerator:
         base: bool,
         min_coop_shares: int,
         description_in_bestellwizard: str = "",
-        url_of_image_in_bestellwizard: str = "",
     ):
-        if url_of_image_in_bestellwizard.startswith("/"):
-            url_of_image_in_bestellwizard = (
-                settings.SITE_URL + url_of_image_in_bestellwizard
-            )
-
         product = Product.objects.create(
             type=product_type,
             name=name,
             base=base,
             min_coop_shares=min_coop_shares,
             description_in_bestellwizard=description_in_bestellwizard,
-            url_of_image_in_bestellwizard=url_of_image_in_bestellwizard,
+            url_of_image_in_bestellwizard=f"https://placehold.co/700x1000?text=Produkt+{name}",
         )
 
         # prices were a bit cheaper last year
@@ -329,7 +322,6 @@ class ProductGenerator:
             base=True,
             min_coop_shares=2,
             description_in_bestellwizard="für ca. 2 Personen",
-            url_of_image_in_bestellwizard="/static/lueneburg/registration/harvest_share_m_alpha.webp",
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
@@ -339,7 +331,6 @@ class ProductGenerator:
             base=False,
             min_coop_shares=1,
             description_in_bestellwizard="für ca. eine Person",
-            url_of_image_in_bestellwizard="/static/lueneburg/registration/harvest_share_s_alpha.webp",
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
@@ -349,7 +340,6 @@ class ProductGenerator:
             base=False,
             min_coop_shares=3,
             description_in_bestellwizard="für Familien mit großem Gemüsehunger",
-            url_of_image_in_bestellwizard="/static/lueneburg/registration/harvest_share_l_alpha.webp",
         )
 
         eggs = ProductType.objects.create(

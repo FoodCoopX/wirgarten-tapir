@@ -3,10 +3,7 @@ from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
     LEGAL_STATUS_ASSOCIATION,
     LEGAL_STATUS_COMPANY,
-    THEME_BIOTOP,
-    THEME_WIRGARTEN,
-    THEME_L2G,
-    THEME_MM,
+    THEME_TEST,
 )
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.utils.config import Organization
@@ -32,15 +29,8 @@ class ConfigurationGenerator:
             key=ParameterKeys.ORGANISATION_LEGAL_STATUS
         ).update(value=legal_statuses[organization])
 
-        themes = {
-            Organization.BIOTOP: THEME_BIOTOP,
-            Organization.WIRGARTEN: THEME_WIRGARTEN,
-            Organization.VEREIN: THEME_BIOTOP,
-            Organization.L2G: THEME_L2G,
-            Organization.MM: THEME_MM,
-        }
         TapirParameter.objects.filter(key=ParameterKeys.ORGANISATION_THEME).update(
-            value=themes[organization]
+            value=THEME_TEST
         )
 
         picking_modes = {

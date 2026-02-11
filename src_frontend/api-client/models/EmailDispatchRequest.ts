@@ -109,6 +109,24 @@ export interface EmailDispatchRequest {
     bounceType?: BounceTypeEnum;
     /**
      * 
+     * @type {number}
+     * @memberof EmailDispatchRequest
+     */
+    smtpResponseCode?: number | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof EmailDispatchRequest
+     */
+    smtpResponseMessage?: string | null;
+    /**
+     * 
+     * @type {Date}
+     * @memberof EmailDispatchRequest
+     */
+    dsnDeliveredTime?: Date | null;
+    /**
+     * 
      * @type {string}
      * @memberof EmailDispatchRequest
      */
@@ -148,6 +166,9 @@ export function EmailDispatchRequestFromJSONTyped(json: any, ignoreDiscriminator
         'errorMessage': json['error_message'] == null ? undefined : json['error_message'],
         'bounceMessage': json['bounce_message'] == null ? undefined : json['bounce_message'],
         'bounceType': json['bounce_type'] == null ? undefined : BounceTypeEnumFromJSON(json['bounce_type']),
+        'smtpResponseCode': json['smtp_response_code'] == null ? undefined : json['smtp_response_code'],
+        'smtpResponseMessage': json['smtp_response_message'] == null ? undefined : json['smtp_response_message'],
+        'dsnDeliveredTime': json['dsn_delivered_time'] == null ? undefined : (new Date(json['dsn_delivered_time'])),
         'nextRetry': json['next_retry'] == null ? undefined : json['next_retry'],
     };
 }
@@ -174,6 +195,9 @@ export function EmailDispatchRequestFromJSONTyped(json: any, ignoreDiscriminator
         'error_message': value['errorMessage'],
         'bounce_message': value['bounceMessage'],
         'bounce_type': BounceTypeEnumToJSON(value['bounceType']),
+        'smtp_response_code': value['smtpResponseCode'],
+        'smtp_response_message': value['smtpResponseMessage'],
+        'dsn_delivered_time': value['dsnDeliveredTime'] == null ? undefined : ((value['dsnDeliveredTime'] as any).toISOString()),
         'next_retry': value['nextRetry'],
     };
 }

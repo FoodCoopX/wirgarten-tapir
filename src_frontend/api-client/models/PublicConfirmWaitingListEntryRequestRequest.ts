@@ -33,12 +33,6 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
     linkKey: string;
     /**
      * 
-     * @type {Date}
-     * @memberof PublicConfirmWaitingListEntryRequestRequest
-     */
-    birthdate: Date;
-    /**
-     * 
      * @type {string}
      * @memberof PublicConfirmWaitingListEntryRequestRequest
      */
@@ -81,7 +75,6 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
 export function instanceOfPublicConfirmWaitingListEntryRequestRequest(value: object): value is PublicConfirmWaitingListEntryRequestRequest {
     if (!('entryId' in value) || value['entryId'] === undefined) return false;
     if (!('linkKey' in value) || value['linkKey'] === undefined) return false;
-    if (!('birthdate' in value) || value['birthdate'] === undefined) return false;
     if (!('accountOwner' in value) || value['accountOwner'] === undefined) return false;
     if (!('iban' in value) || value['iban'] === undefined) return false;
     if (!('sepaAllowed' in value) || value['sepaAllowed'] === undefined) return false;
@@ -103,7 +96,6 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(json: a
         
         'entryId': json['entry_id'],
         'linkKey': json['link_key'],
-        'birthdate': (new Date(json['birthdate'])),
         'accountOwner': json['account_owner'],
         'iban': json['iban'],
         'sepaAllowed': json['sepa_allowed'],
@@ -126,7 +118,6 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(json: a
         
         'entry_id': value['entryId'],
         'link_key': value['linkKey'],
-        'birthdate': ((value['birthdate']).toISOString().substring(0,10)),
         'account_owner': value['accountOwner'],
         'iban': value['iban'],
         'sepa_allowed': value['sepaAllowed'],

@@ -1,7 +1,11 @@
 import { Step } from "../types/Step.ts";
 import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import {
+  PublicPickupLocation,
+  PublicProductType,
+  PublicWaitingListEntryDetails,
+} from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
@@ -15,6 +19,7 @@ export function buildSteps(
   productTypesInWaitingList: Set<PublicProductType>,
   selectedPickupLocation: PublicPickupLocation[],
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>,
+  waitingListEntryDetails?: PublicWaitingListEntryDetails,
 ) {
   const newSteps: Step[] = [];
   newSteps.push(
@@ -22,7 +27,7 @@ export function buildSteps(
     "2_first_name",
   );
 
-  if (settings.introEnabled) {
+  if (settings.introEnabled && waitingListEntryDetails === undefined) {
     newSteps.push("3_product_type_choice");
   }
 
@@ -42,14 +47,18 @@ export function buildSteps(
   }
 
   if (
-    settings.pickupLocations.length > 0 &&
-    isAtLeastOneOrderedProductWithDelivery(shoppingCart, settings.productTypes)
+    shouldIncludeStepsPickupLocations(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+    )
   ) {
     newSteps.push("5a_pickup_location_intro", "5b_pickup_location_choice");
 
     if (
       selectedPickupLocation.length === 1 &&
-      pickupLocationsWithCapacityFull.has(selectedPickupLocation[0])
+      pickupLocationsWithCapacityFull.has(selectedPickupLocation[0]) &&
+      !waitingListEntryDetails
     ) {
       newSteps.push("5c_pickup_location_confirm_waiting_list");
     }
@@ -61,7 +70,12 @@ export function buildSteps(
     }
   }
 
-  if (settings.showCoopContent) {
+  if (
+    shouldIncludeStepsCoopShares(
+      waitingListEntryDetails,
+      settings.showCoopContent,
+    )
+  ) {
     newSteps.push("6a_coop_intro");
 
     if (
@@ -75,16 +89,26 @@ export function buildSteps(
     }
   }
 
-  newSteps.push("7_solidarity_contribution", "8_personal_data");
+  if (shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+    newSteps.push("7_solidarity_contribution");
+  }
 
-  if (becomeMemberNow !== false) {
+  newSteps.push("8_personal_data");
+
+  if (
+    becomeMemberNow !== false &&
+    !waitingListEntryDetails?.memberAlreadyExists
+  ) {
     newSteps.push("9_banking_data");
   }
 
-  newSteps.push("10_summary", "11_legal", "12_channel");
+  newSteps.push("10_summary", "11_legal");
 
-  if (settings.feedbackStepEnabled) {
-    newSteps.push("13_feedback");
+  if (!waitingListEntryDetails?.memberAlreadyExists) {
+    newSteps.push("12_channel");
+    if (settings.feedbackStepEnabled) {
+      newSteps.push("13_feedback");
+    }
   }
 
   if (
@@ -100,4 +124,48 @@ export function buildSteps(
   }
 
   return newSteps;
+}
+
+function shouldIncludeStepsCoopShares(
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  showCoopContent: boolean,
+) {
+  if (!showCoopContent) {
+    return false;
+  }
+
+  if (waitingListEntryDetails?.memberAlreadyExists) {
+    return waitingListEntryDetails.numberOfCoopShares > 0;
+  }
+
+  return true;
+}
+
+function shouldIncludeStepsPickupLocations(
+  settings: BestellWizardSettings,
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  shoppingCart: ShoppingCart,
+) {
+  if (settings.pickupLocations.length === 0) {
+    return false;
+  }
+
+  if (waitingListEntryDetails !== undefined) {
+    return (waitingListEntryDetails.pickupLocationWishes ?? []).length > 0;
+  }
+
+  return isAtLeastOneOrderedProductWithDelivery(
+    shoppingCart,
+    settings.productTypes,
+  );
+}
+
+function shouldShowStepSolidarityContribution(
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+) {
+  if (waitingListEntryDetails === undefined) {
+    return true;
+  }
+
+  return !waitingListEntryDetails.memberAlreadyExists;
 }

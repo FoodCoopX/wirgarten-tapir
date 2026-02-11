@@ -4,27 +4,29 @@
 {% load core %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" style="height: 100dvh; overflow: hidden">
-<head>
-    <meta charset="utf-8">
-    <title>
-        {% block title %}{% get_parameter_value_tag "wirgarten.site.name" cache %} - Tapir{% endblock %}
-    </title>
-    {% get_parameter_value_tag "organisation.theme" cache as theme %}
-    <link rel="shortcut icon"
-          type="image/png"
-          href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}"/>
-    <link rel="stylesheet"
-          href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}"/>
-    {% javascript_environment_variables %}
-    {% vite_hmr_client %}
-    {% vite_react_refresh %}
-    {% vite_asset 'bestell_wizard_mobile/bestell_wizard_mobile_entry.tsx' %}
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet"
-          href="{% static 'core/bootstrap/5.3.8/css/bootstrap.min.css' %}">
-</head>
-<body style="{{ body_style }}; width: 100dvw; height: 100dvh;">
-{% csrf_token %}
-<div id="bestell_wizard_mobile" style="width: 100dvw; height: 100dvh"></div>
-</body>
+    <head>
+        <meta charset="utf-8">
+        <title>
+            {% block title %}
+                {% get_parameter_value_tag "wirgarten.site.name" cache %} - Tapir
+            {% endblock %}
+        </title>
+        {% get_parameter_value_tag "organisation.theme" cache as theme %}
+        <link rel="shortcut icon"
+              type="image/png"
+              href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
+        <link rel="stylesheet"
+              href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
+        {% javascript_environment_variables %}
+        {% vite_hmr_client %}
+        {% vite_react_refresh %}
+        {% vite_asset 'bestell_wizard_mobile/bestell_wizard_mobile_entry.tsx' %}
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet"
+              href="{% static 'core/bootstrap/5.3.8/css/bootstrap.min.css' %}">
+    </head>
+    <body style="{{ body_style }}; width: 100dvw; height: 100dvh;">
+        {% csrf_token %}
+        <div id="bestell_wizard_mobile" style="width: 100dvw; height: 100dvh"></div>
+    </body>
 </html>

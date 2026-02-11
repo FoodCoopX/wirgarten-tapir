@@ -58,6 +58,7 @@ from tapir.waiting_list.serializers import (
     PublicWaitingListEntryExistingMemberCreateSerializer,
     PublicConfirmWaitingListEntryRequestSerializer,
     OptionalWaitingListEntryDetailsSerializer,
+    PublicWaitingListEntryDetailsSerializer,
 )
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
@@ -751,7 +752,7 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
     permission_classes = []
 
     @extend_schema(
-        responses={200: WaitingListEntryDetailsSerializer},
+        responses={200: PublicWaitingListEntryDetailsSerializer},
         parameters=[
             OpenApiParameter(name="entry_id", type=str, required=True),
             OpenApiParameter(name="link_key", type=str, required=True),
@@ -765,10 +766,55 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             entry_id, link_key
         )
 
-        data = WaitingListApiView.build_entry_data(waiting_list_entry, cache={})
-        serializer = WaitingListEntryDetailsSerializer(data)
+        data = self.build_public_entry_data(waiting_list_entry, cache={})
+        serializer = PublicWaitingListEntryDetailsSerializer(data)
 
         return Response(serializer.data)
+
+    @classmethod
+    def build_public_entry_data(cls, entry: WaitingListEntry, cache: dict):
+        birthdate = None
+        account_owner = None
+        iban = None
+        payment_rhythm = None
+        if entry.member is not None:
+            WaitingListApiView.fill_entry_with_personal_data(entry)
+
+            birthdate = entry.member.birthdate
+            account_owner = entry.member.account_owner
+            iban = entry.member.iban
+            payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=entry.member, reference_date=get_today(cache=cache), cache=cache
+            )
+
+        return {
+            "entry_id": entry.id,
+            "link_key": entry.confirmation_link_key,
+            "first_name": entry.first_name,
+            "last_name": entry.last_name,
+            "email": entry.email,
+            "phone_number": entry.phone_number,
+            "street": entry.street,
+            "street_2": entry.street_2,
+            "postcode": entry.postcode,
+            "city": entry.city,
+            "country": entry.country,
+            "pickup_location_wishes": PickupLocation.objects.filter(
+                id__in=entry.pickup_location_wishes.values_list(
+                    "pickup_location", flat=True
+                )
+            ),
+            "product_wishes": entry.product_wishes.all(),
+            "desired_start_date": entry.desired_start_date,
+            "number_of_coop_shares": entry.number_of_coop_shares,
+            "comment": entry.comment,
+            "category": entry.category,
+            "member_already_exists": entry.member is not None,
+            "birthdate": birthdate,
+            "account_owner": account_owner,
+            "iban": iban,
+            "payment_rhythm": payment_rhythm,
+        }
 
     @classmethod
     def get_entry_by_id_and_validate_link_key(
@@ -876,7 +922,6 @@ class PublicConfirmWaitingListEntryView(APIView):
             PersonalDataValidator.validate_personal_data_new_member(
                 email=waiting_list_entry.email,
                 phone_number=str(waiting_list_entry.phone_number),
-                birthdate=validated_data["birthdate"],
                 iban=validated_data["iban"],
                 account_owner=validated_data["account_owner"],
                 payment_rhythm=validated_data["payment_rhythm"],

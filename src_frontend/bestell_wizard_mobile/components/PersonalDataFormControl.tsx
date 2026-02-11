@@ -12,6 +12,7 @@ interface PersonalDataFormControlProps {
   isValid: boolean;
   extraText?: string;
   style?: CSSProperties;
+  disabled?: boolean;
 }
 
 const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
@@ -24,6 +25,7 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
   isValid,
   extraText,
   style,
+  disabled,
 }) => {
   return (
     <div style={style} className={"d-flex flex-column"}>
@@ -33,12 +35,13 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
           value={personalData[field]}
           onChange={(event) => {
             personalData[field] = event.target.value;
-            setPersonalData(Object.assign({}, personalData));
+            setPersonalData({ ...personalData });
           }}
           size={"sm"}
           type={type}
           isValid={showValidation && isValid}
           isInvalid={showValidation && !isValid}
+          disabled={disabled}
         />
       </FloatingLabel>
       {extraText && (

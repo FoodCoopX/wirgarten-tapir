@@ -3,7 +3,11 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import {
+  PublicPickupLocation,
+  PublicProductType,
+  PublicWaitingListEntryDetails,
+} from "../../api-client";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
@@ -41,6 +45,10 @@ interface Step10OrderSummaryProps {
   productTypesInWaitingList: Set<PublicProductType>;
   becomeMemberNow: boolean | null;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
+  confirmOrder: () => void | undefined;
+  confirmOrderLoading: boolean;
+  isOrderStep: boolean;
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -58,6 +66,10 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   productTypesInWaitingList,
   becomeMemberNow,
   pickupLocationsWithCapacityFull,
+  confirmOrder,
+  confirmOrderLoading,
+  isOrderStep,
+  waitingListEntryDetails,
 }) => {
   const [activePickupLocation, setActivePickupLocation] =
     useState<PublicPickupLocation>();
@@ -266,24 +278,29 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               </Accordion.Item>
             </Accordion>
           ))}
-          {settings.showCoopContent && becomeMemberNow !== false && (
-            <Accordion>
-              <Accordion.Item eventKey={"coop_shares"} onClick={scrollIntoView}>
-                <Accordion.Header>{getCoopSharesTitle()}</Accordion.Header>
-                <AccordionBody>
-                  {studentStatusEnabled
-                    ? "Keine Anteile gezeichnet da student."
-                    : numberOfCoopShares +
-                      " Genossenschaftsanteile à " +
-                      formatCurrency(settings.priceOfAShare) +
-                      " = " +
-                      formatCurrency(
-                        numberOfCoopShares * settings.priceOfAShare,
-                      )}
-                </AccordionBody>
-              </Accordion.Item>
-            </Accordion>
-          )}
+          {settings.showCoopContent &&
+            becomeMemberNow !== false &&
+            !waitingListEntryDetails?.memberAlreadyExists && (
+              <Accordion>
+                <Accordion.Item
+                  eventKey={"coop_shares"}
+                  onClick={scrollIntoView}
+                >
+                  <Accordion.Header>{getCoopSharesTitle()}</Accordion.Header>
+                  <AccordionBody>
+                    {studentStatusEnabled
+                      ? "Keine Anteile gezeichnet da student."
+                      : numberOfCoopShares +
+                        " Genossenschaftsanteile à " +
+                        formatCurrency(settings.priceOfAShare) +
+                        " = " +
+                        formatCurrency(
+                          numberOfCoopShares * settings.priceOfAShare,
+                        )}
+                  </AccordionBody>
+                </Accordion.Item>
+              </Accordion>
+            )}
           <hr />
           {(solidarityContribution > 0 ||
             isAtLeastOneProductOrdered(shoppingCart)) && (
@@ -334,23 +351,29 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       {getPaymentRhythmDisplay(personalData.paymentRhythm)}
                     </p>
                   )}
-                  {!studentStatusEnabled && settings.showCoopContent && (
-                    <p>
-                      Einmalig:{" "}
-                      {formatCurrency(
-                        numberOfCoopShares * settings.priceOfAShare,
-                      )}{" "}
-                      (Genossenschaftsanteile){" "}
-                      {becomeMemberNow === false && "(Start wenn Platz frei)"}
-                    </p>
-                  )}
+                  {!studentStatusEnabled &&
+                    settings.showCoopContent &&
+                    !waitingListEntryDetails?.memberAlreadyExists && (
+                      <p>
+                        Einmalig:{" "}
+                        {formatCurrency(
+                          numberOfCoopShares * settings.priceOfAShare,
+                        )}{" "}
+                        (Genossenschaftsanteile){" "}
+                        {becomeMemberNow === false && "(Start wenn Platz frei)"}
+                      </p>
+                    )}
                 </AccordionBody>
               </Accordion.Item>
             </Accordion>
           )}
         </div>
       </div>
-      <NextStepButton onClick={goToNextStep} />
+      <NextStepButton
+        onClick={isOrderStep ? confirmOrder : goToNextStep}
+        isOrderStep={isOrderStep}
+        loading={confirmOrderLoading}
+      />
     </>
   );
 };

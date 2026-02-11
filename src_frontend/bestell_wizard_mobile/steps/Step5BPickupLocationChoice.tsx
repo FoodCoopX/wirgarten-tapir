@@ -37,6 +37,7 @@ interface Step5BPickupLocationChoiceProps {
   isOrderStep: boolean;
   orderLoading: boolean;
   nextButtonTextOverride?: string;
+  changesDisabled: boolean;
 }
 
 function getTabName(tab: PickupLocationTab) {
@@ -69,6 +70,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   isOrderStep,
   nextButtonTextOverride,
   orderLoading,
+  changesDisabled,
 }) => {
   const [showValidation, setShowValidation] = useState(false);
   const carouselRef = useRef<CarouselRef>(null);
@@ -108,6 +110,10 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   }, [carouselRef, mapRef]);
 
   function showTabWishes() {
+    if (changesDisabled) {
+      return false;
+    }
+
     if (
       !wouldTheOrderFitTheProductCapacities(
         shoppingCart,
@@ -193,6 +199,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               settings={settings}
               productTypeIdsOverCapacity={productTypeIdsOverCapacity}
               productIdsOverCapacity={productIdsOverCapacity}
+              changesDisabled={changesDisabled}
             />
           </div>
         </Carousel.Item>
@@ -212,6 +219,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             }
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
+            changesDisabled={changesDisabled}
           />
         </Carousel.Item>
         {showTabWishes() && (

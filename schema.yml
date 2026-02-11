@@ -346,27 +346,6 @@ paths:
                 - mm
                 type: string
           description: ''
-  /core/api/member_extra_email_confirm:
-    get:
-      operationId: core_api_member_extra_email_confirm_retrieve
-      parameters:
-      - in: query
-        name: secret
-        schema:
-          type: string
-      tags:
-      - core
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: boolean
-          description: ''
   /core/api/member_extra_emails:
     get:
       operationId: core_api_member_extra_emails_retrieve
@@ -4754,7 +4733,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WaitingListEntryDetails'
+                $ref: '#/components/schemas/PublicWaitingListEntryDetails'
           description: ''
   /waiting_list/api/public_waiting_list_create_entry_potential_member:
     post:
@@ -6462,6 +6441,7 @@ components:
       - error
       - bounced
       - opened
+      - delivered
       - unknown
       - sending
       type: string
@@ -6469,6 +6449,7 @@ components:
         * `error` - Fehler beim Versand
         * `bounced` - Bounce
         * `opened` - Geöffnet
+        * `delivered` - Zugestellt
         * `unknown` - Nicht geöffnet
         * `sending` - Wird versendet
     EmailConfiguration:
@@ -6528,10 +6509,14 @@ components:
         opened_count:
           type: integer
           readOnly: true
+        delivered_count:
+          type: integer
+          readOnly: true
         error_count:
           type: integer
           readOnly: true
       required:
+      - delivered_count
       - email_configuration_version
       - error_count
       - id
@@ -6754,6 +6739,18 @@ components:
           nullable: true
         bounce_type:
           $ref: '#/components/schemas/BounceTypeEnum'
+        smtp_response_code:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        smtp_response_message:
+          type: string
+          nullable: true
+        dsn_delivered_time:
+          type: string
+          format: date-time
+          nullable: true
         next_retry:
           type: string
           nullable: true
@@ -6799,6 +6796,18 @@ components:
           nullable: true
         bounce_type:
           $ref: '#/components/schemas/BounceTypeEnum'
+        smtp_response_code:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        smtp_response_message:
+          type: string
+          nullable: true
+        dsn_delivered_time:
+          type: string
+          format: date-time
+          nullable: true
         next_retry:
           type: string
           minLength: 1
@@ -6854,6 +6863,18 @@ components:
           nullable: true
         bounce_type:
           $ref: '#/components/schemas/BounceTypeEnum'
+        smtp_response_code:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        smtp_response_message:
+          type: string
+          nullable: true
+        dsn_delivered_time:
+          type: string
+          format: date-time
+          nullable: true
         next_retry:
           type: string
           nullable: true
@@ -9108,9 +9129,6 @@ components:
         link_key:
           type: string
           minLength: 1
-        birthdate:
-          type: string
-          format: date
         account_owner:
           type: string
         iban:
@@ -9126,7 +9144,6 @@ components:
           minLength: 1
       required:
       - account_owner
-      - birthdate
       - contract_accepted
       - entry_id
       - iban
@@ -9329,6 +9346,67 @@ components:
       - product_type
       - quantity
       - start_date
+    PublicWaitingListEntryDetails:
+      type: object
+      properties:
+        entry_id:
+          type: string
+        link_key:
+          type: string
+        member_already_exists:
+          type: boolean
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        birthdate:
+          type: string
+          format: date
+        account_owner:
+          type: string
+        iban:
+          type: string
+        pickup_location_wishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicPickupLocation'
+        product_wishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicWaitingListProductWish'
+        number_of_coop_shares:
+          type: integer
+        payment_rhythm:
+          type: string
+      required:
+      - city
+      - country
+      - email
+      - entry_id
+      - first_name
+      - last_name
+      - link_key
+      - member_already_exists
+      - number_of_coop_shares
+      - phone_number
+      - postcode
+      - street
+      - street_2
     PublicWaitingListEntryExistingMemberCreateRequest:
       type: object
       properties:
@@ -9398,6 +9476,18 @@ components:
       - shopping_cart
       - street
       - street_2
+    PublicWaitingListProductWish:
+      type: object
+      properties:
+        product:
+          $ref: '#/components/schemas/PublicProduct'
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - product
+      - quantity
     RecipientRequest:
       type: object
       properties:

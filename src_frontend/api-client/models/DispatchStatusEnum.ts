@@ -17,6 +17,7 @@
  * * `error` - Fehler beim Versand
  * * `bounced` - Bounce
  * * `opened` - Geöffnet
+ * * `delivered` - Zugestellt
  * * `unknown` - Nicht geöffnet
  * * `sending` - Wird versendet
  * @export
@@ -25,6 +26,7 @@ export const DispatchStatusEnum = {
     Error: 'error',
     Bounced: 'bounced',
     Opened: 'opened',
+    Delivered: 'delivered',
     Unknown: 'unknown',
     Sending: 'sending'
 } as const;

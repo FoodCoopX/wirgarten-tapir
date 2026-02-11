@@ -28,10 +28,6 @@ import {
     MemberMailCategoryRequestRequestToJSON,
 } from '../models/index';
 
-export interface CoreApiMemberExtraEmailConfirmRetrieveRequest {
-    secret?: string;
-}
-
 export interface CoreApiMemberExtraEmailsCreateRequest {
     extraEmail?: string;
     memberId?: string;
@@ -90,45 +86,6 @@ export class CoreApi extends runtime.BaseAPI {
      */
     async coreApiGetThemeRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.coreApiGetThemeRetrieveRaw(initOverrides);
-        return await response.value();
-    }
-
-    /**
-     */
-    async coreApiMemberExtraEmailConfirmRetrieveRaw(requestParameters: CoreApiMemberExtraEmailConfirmRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<boolean>> {
-        const queryParameters: any = {};
-
-        if (requestParameters['secret'] != null) {
-            queryParameters['secret'] = requestParameters['secret'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.apiKey) {
-            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-        }
-
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
-        const response = await this.request({
-            path: `/core/api/member_extra_email_confirm`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<boolean>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
-    }
-
-    /**
-     */
-    async coreApiMemberExtraEmailConfirmRetrieve(requestParameters: CoreApiMemberExtraEmailConfirmRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<boolean> {
-        const response = await this.coreApiMemberExtraEmailConfirmRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

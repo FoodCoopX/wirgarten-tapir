@@ -444,6 +444,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             nextButtonTextOverride={
               step === steps.at(-1) ? getConfirmButtonText() : undefined
             }
+            changesDisabled={false}
           />
         );
       case "9_banking_data":

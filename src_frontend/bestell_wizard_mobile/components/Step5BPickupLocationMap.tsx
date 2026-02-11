@@ -33,6 +33,7 @@ interface Step5BPickupLocationMapProps {
   productTypeIdsOverCapacity: string[];
   productIdsOverCapacity: string[];
   settings: BestellWizardSettings;
+  changesDisabled: boolean;
 }
 
 const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
@@ -50,6 +51,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   productIdsOverCapacity,
   productTypeIdsOverCapacity,
   settings,
+  changesDisabled,
 }) => {
   useEffect(() => {
     if (tabIsActive && mapRef) {
@@ -115,6 +117,10 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   function getMarkerIcon(pickupLocation: PublicPickupLocation) {
     if (selectedPickupLocations.includes(pickupLocation)) {
       return "marker-icon-green.png";
+    }
+
+    if (changesDisabled) {
+      return "marker-icon-gray.png";
     }
 
     if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
@@ -222,17 +228,20 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
                 )}
               </div>
               <div>{formatOpeningTimes(pickupLocation)}</div>
-              <TapirButton
-                size={"sm"}
-                text={getPopupButtonText(pickupLocation)}
-                icon={
-                  selectedPickupLocations.includes(pickupLocation)
-                    ? "select_check_box"
-                    : "check_box_outline_blank"
-                }
-                variant={BUTTON_VARIANT}
-                onClick={() => updateSelection(pickupLocation)}
-              />
+              {!changesDisabled && (
+                <TapirButton
+                  size={"sm"}
+                  text={getPopupButtonText(pickupLocation)}
+                  icon={
+                    selectedPickupLocations.includes(pickupLocation)
+                      ? "select_check_box"
+                      : "check_box_outline_blank"
+                  }
+                  variant={BUTTON_VARIANT}
+                  onClick={() => updateSelection(pickupLocation)}
+                  disabled={changesDisabled}
+                />
+              )}
             </div>
           </Popup>
         </Marker>
