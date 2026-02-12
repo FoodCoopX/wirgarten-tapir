@@ -352,19 +352,20 @@ class UseDeliveryDonationView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        donation = DeliveryDonation.objects.create(member=member, date=date)
+        with transaction.atomic():
+            donation = DeliveryDonation.objects.create(member=member, date=date)
 
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=DeliveriesConfig.MAIL_TRIGGER_DONATION_USED,
-                recipient_id_in_base_queryset=donation.member.id,
-                token_data={"donation_date": donation.date},
-            ),
-        )
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=DeliveriesConfig.MAIL_TRIGGER_DONATION_USED,
+                    recipient_id_in_base_queryset=donation.member.id,
+                    token_data={"donation_date": format_date(donation.date)},
+                ),
+            )
 
-        DeliveryDonationUsedLogEntry().populate_delivery_donation(
-            delivery_donation=donation, actor=request.user, user=donation.member
-        ).save()
+            DeliveryDonationUsedLogEntry().populate_delivery_donation(
+                delivery_donation=donation, actor=request.user, user=donation.member
+            ).save()
 
         return Response(
             "Lieferung gespendet",

@@ -20,6 +20,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
+from tapir.wirgarten.utils import format_date
 
 
 class TestUseDeliveryDonationView(TapirIntegrationTest):
@@ -101,7 +102,7 @@ class TestUseDeliveryDonationView(TapirIntegrationTest):
             TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_DONATION_USED,
                 recipient_id_in_base_queryset=member.id,
-                token_data={"donation_date": donation.date},
+                token_data={"donation_date": format_date(donation.date)},
             ),
         )
 
@@ -163,7 +164,7 @@ class TestUseDeliveryDonationView(TapirIntegrationTest):
             TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_DONATION_USED,
                 recipient_id_in_base_queryset=normal_member.id,
-                token_data={"donation_date": donation.date},
+                token_data={"donation_date": format_date(donation.date)},
             ),
         )
 
