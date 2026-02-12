@@ -52,14 +52,14 @@ from tapir.waiting_list.services.waiting_list_entry_confirmation_applier import 
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
     WaitingListEntryConfirmationEmailSender,
 )
+from tapir.waiting_list.services.waiting_list_entry_confirmation_validator import (
+    WaitingListEntryConfirmationValidator,
+)
 from tapir.waiting_list.services.waiting_list_entry_creator import (
     WaitingListEntryCreator,
 )
 from tapir.waiting_list.services.waiting_list_entry_validator import (
     WaitingListEntryValidator,
-)
-from tapir.waiting_list.tests.services.waiting_list_entry_confirmation_validator import (
-    WaitingListEntryConfirmationValidator,
 )
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.mail_events import Events
