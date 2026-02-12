@@ -8,6 +8,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.pickup_locations.models import PickupLocationChangedLogEntry
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute
@@ -168,7 +169,7 @@ class MemberPickupLocationService:
         cache: dict,
     ):
         old_pickup_location = MemberPickupLocationService.get_member_pickup_location(
-            member=member, reference_date=get_today(cache=cache), cache=cache
+            member=member, reference_date=valid_from, cache=cache
         )
         if old_pickup_location is None:
             valid_from = get_today(cache=cache)
@@ -188,6 +189,14 @@ class MemberPickupLocationService:
             user=member,
         ).save()
 
+        date_of_first_delivery = (
+            DeliveryDateCalculator.get_next_delivery_date_any_product(
+                reference_date=valid_from,
+                pickup_location_id=pickup_location_id,
+                cache=cache,
+            )
+        )
+
         if old_pickup_location is not None:
             TransactionalTrigger.fire_action(
                 TransactionalTriggerData(
@@ -197,7 +206,9 @@ class MemberPickupLocationService:
                         "pickup_location": TapirCache.get_pickup_location_by_id(
                             cache=cache, pickup_location_id=pickup_location_id
                         ).name,
-                        "pickup_location_start_date": format_date(valid_from),
+                        "pickup_location_start_date": format_date(
+                            date_of_first_delivery
+                        ),
                     },
                 ),
             )
