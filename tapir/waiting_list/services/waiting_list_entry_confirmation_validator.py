@@ -18,7 +18,7 @@ class WaitingListEntryConfirmationValidator:
         cls, validated_data: dict, cache: dict
     ):
         waiting_list_entry = cls.get_entry_by_id_and_validate_link_key(
-            validated_data["entry_id"], validated_data["link_key"]
+            entry_id=validated_data["entry_id"], link_key=validated_data["link_key"]
         )
 
         if waiting_list_entry.member is None:
