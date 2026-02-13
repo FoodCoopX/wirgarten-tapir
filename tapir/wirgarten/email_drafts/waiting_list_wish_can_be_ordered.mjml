@@ -2,9 +2,30 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Warteliste Wunsch Link" werden an bestehende oder potenzielle Mitglieder versendet wenn ein Admin bestimmt das der Warteliste-Wunsch erfüllt werden kann..
-                Der Token mit dem Link muss unbedingt teil der Mail sein:
-                {{Warteliste Wunsch Link.Link zu Bestellwizard}}
+Trigger: Transaktionale Email, die versendet wird, wenn Menschen von der Warteliste den individuellen Zuteilungslink von der Warteliste geschickt bekommen weil seine Bestellung nun möglich geworden ist.
+Zweck: Mit Klick auf den Link Mail erhält der Mensch von der Warteliste einen individuellen Link zum Bestellwizard mit den bereits voreingestellten Wunschdaten (Vertrag, Abholort etc.). Damit kann das Mitglied nochmal seine Bestellung selbstständig checken und bestätigen/abschließen. 
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+
+"Moin {{Empfänger.Vorname}},
+
+du stehst bei uns auf der Warteliste und es gibt gute Neuigkeiten: Wir können dir nun deine Wünsche erfüllen. 
+
+Du findest nachfolgend einen Link zu unserem Bestellformular. Dort kannst du nochmal deine Angaben prüfen und dann selbstständig deine Bestellung abgeben. 
+{{Warteliste Wunsch Link.Link zu Bestellwizard}} (ggf. als Button)
+
+Deine Wünsche haben wir bereits hinterlegt. Sollte sich an denen mittlerweile etwas geändert haben, bitten wir um eine kurze Info. 
+
+Du erhältst nach Durchlaufen des Formulars dann eine Bestätigung aus unserem System. 
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Liebe Grüße,
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Token sind hier relevant:
+{{Warteliste Wunsch Link.Link zu Bestellwizard}}
             </mj-text>
         </mj-column>
     </mj-section>
