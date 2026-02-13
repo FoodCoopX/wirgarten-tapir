@@ -81,7 +81,15 @@ class GetFutureMemberPaymentsApiView(APIView):
 
         return Response(
             FuturePaymentsResponseSerializer(
-                {"payments": extended_payments, "credits": member_credits}
+                {
+                    "payments": sorted(
+                        extended_payments,
+                        key=lambda extended_payment: extended_payment[
+                            "payment"
+                        ].due_date,
+                    ),
+                    "credits": member_credits,
+                }
             ).data
         )
 

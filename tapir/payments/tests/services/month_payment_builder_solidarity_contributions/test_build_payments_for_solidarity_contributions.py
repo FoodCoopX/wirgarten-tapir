@@ -1,8 +1,8 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
-
+from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -12,10 +12,17 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 )
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
-from tapir.wirgarten.tests.factories import MemberFactory, PaymentFactory
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    PaymentFactory,
+    GrowingPeriodFactory,
+)
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestBuildPaymentsForSolidarityContributions(SimpleTestCase):
+class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
     @patch.object(
         MemberPaymentRhythmService, "get_member_payment_rhythm", autospec=True
     )
@@ -230,4 +237,131 @@ class TestBuildPaymentsForSolidarityContributions(SimpleTestCase):
                 for member in members
             ],
             any_order=True,
+        )
+
+    def test_buildPaymentsForSolidarityContribution_mixedTrialAndNotTrialInRhythmPeriod_buildsCorrectPayments(
+        self,
+    ):
+        # Regression test for #863
+
+        ParameterDefinitions().import_definitions(bulk_create=True)
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=True
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_DURATION).update(
+            value=8
+        )  # The trial period of the soli contribution should end during february
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_START_DATE).update(
+            value=datetime.date(year=2020, month=1, day=1)
+        )
+        member = MemberFactory.create()
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2020, month=1, day=1),
+            amount=Decimal("4.33"),
+        )
+        # We define a past contribution so that get_current_and_renewed_solidarity_contributions returns a non-empty array.
+        # This makes sure that build_payment_for_contract_and_member gets called.
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2019, month=1, day=1),
+            amount=Decimal("4.33"),
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+            rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
+        )
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2020, month=1, day=1))
+
+        cache = {}
+        generated_payments = set()
+
+        payments_in_trial_february = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
+            current_month=datetime.date(year=2020, month=2, day=1),
+            cache=cache,
+            generated_payments=generated_payments,
+            in_trial=True,
+        )
+        generated_payments.update(payments_in_trial_february)
+
+        self.assertEqual(
+            1,
+            len(payments_in_trial_february),
+            "There should be one payment for january generated in february, since the contribution is in trial all of january",
+        )
+        payment_in_trial_february = payments_in_trial_february[0]
+        self.assertEqual(Decimal("4.33"), payment_in_trial_february.amount)
+        self.assertEqual(
+            datetime.date(year=2020, month=1, day=1),
+            payment_in_trial_february.subscription_payment_range_start,
+        )
+        self.assertEqual(
+            datetime.date(year=2020, month=1, day=31),
+            payment_in_trial_february.subscription_payment_range_end,
+        )
+
+        payments_not_in_trial = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
+            current_month=datetime.date(year=2020, month=2, day=1),
+            cache=cache,
+            generated_payments=generated_payments,
+            in_trial=False,
+        )
+        generated_payments.update(payments_not_in_trial)
+
+        self.assertEqual(
+            0,
+            len(payments_not_in_trial),
+            "Since the contribution is still in trial for parts of february, no payment should be generated there yet",
+        )
+
+        payments_in_trial_march = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
+            current_month=datetime.date(year=2020, month=3, day=1),
+            cache=cache,
+            generated_payments=generated_payments,
+            in_trial=True,
+        )
+        generated_payments.update(payments_in_trial_march)
+
+        self.assertEqual(
+            1,
+            len(payments_in_trial_march),
+            "There should be a payment for February generated in March since the contribution is still on trial for parts of February",
+        )
+        payment_in_trial_march = payments_in_trial_march[0]
+        self.assertEqual(Decimal("4.33"), payment_in_trial_march.amount)
+        self.assertEqual(
+            datetime.date(year=2020, month=2, day=1),
+            payment_in_trial_march.subscription_payment_range_start,
+        )
+        self.assertEqual(
+            datetime.date(year=2020, month=2, day=29),
+            payment_in_trial_march.subscription_payment_range_end,
+        )
+
+        payments_not_in_trial_march = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
+            current_month=datetime.date(year=2020, month=3, day=1),
+            cache=cache,
+            generated_payments=generated_payments,
+            in_trial=False,
+        )
+
+        self.assertEqual(
+            1,
+            len(payments_not_in_trial_march),
+            "In March we generated the payment for the rest of the year since the member's payment rhythm is yearly",
+        )
+        payment_not_in_trial_march = payments_not_in_trial_march[0]
+        self.assertEqual(
+            Decimal("43.30"),
+            payment_not_in_trial_march.amount,
+            "The amount should be for 10 full months (12 months of the year minus 2 first month of trial)",
+        )
+        self.assertEqual(
+            datetime.date(year=2020, month=3, day=1),
+            payment_not_in_trial_march.subscription_payment_range_start,
+        )
+        self.assertEqual(
+            datetime.date(year=2020, month=12, day=31),
+            payment_not_in_trial_march.subscription_payment_range_end,
         )

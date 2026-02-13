@@ -21,8 +21,18 @@ class TestGetCurrentAndRenewedSolidarityContributions(SimpleTestCase):
         self.existing_contribution_in_trial = SolidarityContributionFactory.build(
             start_date=start_date
         )
+        self.existing_contribution_in_trial_outside_of_given_date = (
+            SolidarityContributionFactory.build(
+                start_date=datetime.date(year=1990, month=1, day=1)
+            )
+        )
         self.existing_contribution_not_in_trial = SolidarityContributionFactory.build(
             start_date=start_date
+        )
+        self.existing_contribution_not_in_trial_outside_of_given_date = (
+            SolidarityContributionFactory.build(
+                start_date=datetime.date(year=1990, month=1, day=1)
+            )
         )
 
         self.contribution_that_will_be_renewed_1 = Mock()
@@ -45,6 +55,8 @@ class TestGetCurrentAndRenewedSolidarityContributions(SimpleTestCase):
         mock_get_all_solidarity_contributions.return_value = {
             self.existing_contribution_in_trial,
             self.existing_contribution_not_in_trial,
+            self.existing_contribution_in_trial_outside_of_given_date,
+            self.existing_contribution_not_in_trial_outside_of_given_date,
         }
         mock_get_contributions_that_will_be_renewed.return_value = [
             self.contribution_that_will_be_renewed_1,
@@ -87,7 +99,7 @@ class TestGetCurrentAndRenewedSolidarityContributions(SimpleTestCase):
         )
 
         cache = Mock()
-        first_of_month = Mock()
+        first_of_month = datetime.date(year=1991, month=2, day=1)
 
         result = MonthPaymentBuilderSolidarityContributions.get_current_and_renewed_solidarity_contributions(
             cache=cache, first_of_month=first_of_month, is_in_trial=False
@@ -137,7 +149,7 @@ class TestGetCurrentAndRenewedSolidarityContributions(SimpleTestCase):
         )
 
         cache = Mock()
-        first_of_month = Mock()
+        first_of_month = datetime.date(year=1991, month=2, day=15)
 
         result = MonthPaymentBuilderSolidarityContributions.get_current_and_renewed_solidarity_contributions(
             cache=cache, first_of_month=first_of_month, is_in_trial=True
