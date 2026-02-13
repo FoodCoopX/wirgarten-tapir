@@ -2,12 +2,31 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Bestätigung Eintrag Warteliste" werden an bestehende oder potenzielle Mitglieder geschickt wenn sie sich auf der Warteliste eintragen lassen.
-                Das kann durch den BestellWizard oder den Mitgliederbereich erfolgen.
-                Folgende Token stehen zu verfügung:
-                {{Bestätigung Eintrag Warteliste.Vertragsliste}}
-                {{Bestätigung Eintrag Warteliste.Verteilstation Wünsche}}
-                {{Bestätigung Eintrag Warteliste.Gewünschtes Startdatum}}
+Trigger: Transaktionale Email, die versendet wird, wenn Wartelisteneinträge erzeugt werden. Das betrifft sowohl bestehende Mitglieder über den Mitgliederbereich als auch Neumitglieder über Bestellwizard). 
+Zweck: Information für die Person
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+
+"Moin {{Empfänger.Vorname}},
+
+wir bestätigen dir hiermit deinen Wartelisten-Eintrag bei uns. Folgende Daten haben wir abgespeichert: 
+Deine gewünschten Verträge: {{Bestätigung Eintrag Warteliste.Vertragsliste}}
+Dein gewünschter Verteilort: {{Bestätigung Eintrag Warteliste.Verteilstation Wünsche}}
+Dein gewünschtes Startdatum: {{Bestätigung Eintrag Warteliste.Gewünschtes Startdatum}}
+
+Gib uns gerne bescheid, wenn eine der Informationen falsch ist. 
+
+Sobald freie Kapazitäten bei uns vorliegen, melden wir uns wieder bei dir. 
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+
+Dein {{Allgemein.Admin Name}}
+{{Allgemein.Admin Telefonnr}}
+{{Allgemein.Admin Email}}"
+
+Folgende Token sind hier relevant:
+{{Bestätigung Eintrag Warteliste.Vertragsliste}}
+{{Bestätigung Eintrag Warteliste.Verteilstation Wünsche}}
+{{Bestätigung Eintrag Warteliste.Gewünschtes Startdatum}}
             </mj-text>
         </mj-column>
     </mj-section>
