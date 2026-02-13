@@ -3,29 +3,29 @@
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
 Trigger: Transaktionale Email, die versendet wird, wenn Menschen von der Warteliste den individuellen Zuteilungslink von der Warteliste geschickt bekommen weil seine Bestellung nun möglich geworden ist.
-Zweck: Mit Klick auf den Link Mail erhält der Mensch von der Warteliste einen individuellen Link zum Bestellwizard mit den bereits voreingestellten Wunschdaten (Vertrag, Abholort etc.). Damit kann das Mitglied nochmal seine Bestellung selbstständig checken und bestätigen/abschließen. 
-Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+<p>ABSATZ</p> Zweck: Mit Klick auf den Link Mail erhält der Mensch von der Warteliste einen individuellen Link zum Bestellwizard mit den bereits voreingestellten Wunschdaten (Vertrag, Abholort etc.). Damit kann das Mitglied nochmal seine Bestellung selbstständig checken und bestätigen/abschließen. 
+<p>ABSATZ</p> Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
 
-"Moin {{Empfänger.Vorname}},
+<p>ABSATZ</p>"Moin {{Empfänger.Vorname}},
 
-du stehst bei uns auf der Warteliste und es gibt gute Neuigkeiten: Wir können dir nun deine Wünsche erfüllen. 
+<p>ABSATZ</p>du stehst bei uns auf der Warteliste und es gibt gute Neuigkeiten: Wir können dir nun deine Wünsche erfüllen. 
 
-Du findest nachfolgend einen Link zu unserem Bestellformular. Dort kannst du nochmal deine Angaben prüfen und dann selbstständig deine Bestellung abgeben. 
+<p>ABSATZ</p>Du findest nachfolgend einen Link zu unserem Bestellformular. Dort kannst du nochmal deine Angaben prüfen und dann selbstständig deine Bestellung abgeben. 
 {{Warteliste Wunsch Link.Link zu Bestellwizard}} (ggf. als Button)
 
-Deine Wünsche haben wir bereits hinterlegt. Sollte sich an denen mittlerweile etwas geändert haben, bitten wir um eine kurze Info. 
+<p>ABSATZ</p>Deine Wünsche haben wir bereits hinterlegt. Sollte sich an denen mittlerweile etwas geändert haben, bitten wir um eine kurze Info. 
 
-Du erhältst nach Durchlaufen des Formulars dann eine Bestätigung aus unserem System. 
+<p>ABSATZ</p>Du erhältst nach Durchlaufen des Formulars dann eine Bestätigung aus unserem System. 
 
-Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+<p>ABSATZ</p>Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
 
-Liebe Grüße,
-Dein {{Allgemein.Admin Name}}
-{{Allgemein.Admin Telefonnr}}
-{{Allgemein.Admin Email}}"
+<p>ABSATZ</p>Liebe Grüße,
+<p>ABSATZ</p>Dein {{Allgemein.Admin Name}}
+<p>ABSATZ</p>{{Allgemein.Admin Telefonnr}}
+<p>ABSATZ</p>{{Allgemein.Admin Email}}"
 
-Folgende Token sind hier relevant:
-{{Warteliste Wunsch Link.Link zu Bestellwizard}}
+<p>ABSATZ</p>Folgende Token sind hier relevant:
+<p>ABSATZ</p>{{Warteliste Wunsch Link.Link zu Bestellwizard}}
             </mj-text>
         </mj-column>
     </mj-section>
