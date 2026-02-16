@@ -2,31 +2,31 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-Trigger: Transaktionale Email, die versendet wird, wenn Wartelisteneinträge erzeugt werden. Das betrifft sowohl bestehende Mitglieder über den Mitgliederbereich als auch Neumitglieder über Bestellwizard). 
-Zweck: Information für die Person
-Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+Trigger: Transaktionale Email, die versendet wird, wenn Wartelisteneinträge erzeugt werden. Das betrifft sowohl bestehende Mitglieder über den Mitgliederbereich als auch Neumitglieder über Bestellwizard). <br />
+Zweck: Information für die Person <br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br />
 
-"Moin {{Empfänger.Vorname}},
+<p> "Moin {{Empfänger.Vorname}}, <br />
 
-wir bestätigen dir hiermit deinen Wartelisten-Eintrag bei uns. Folgende Daten haben wir abgespeichert: 
-Deine gewünschten Verträge: {{Bestätigung Eintrag Warteliste.Vertragsliste}}
-Dein gewünschter Verteilort: {{Bestätigung Eintrag Warteliste.Verteilstation Wünsche}}
-Dein gewünschtes Startdatum: {{Bestätigung Eintrag Warteliste.Gewünschtes Startdatum}}
+wir bestätigen dir hiermit deinen Wartelisten-Eintrag bei uns. Folgende Daten haben wir abgespeichert: <br />
+Deine gewünschten Verträge: {{Bestätigung Eintrag Warteliste.Vertragsliste}} <br />
+Dein gewünschter Verteilort: {{Bestätigung Eintrag Warteliste.Verteilstation Wünsche}} <br />
+Dein gewünschtes Startdatum: {{Bestätigung Eintrag Warteliste.Gewünschtes Startdatum}} <br />
 
-Gib uns gerne bescheid, wenn eine der Informationen falsch ist. 
+Gib uns gerne bescheid, wenn eine der Informationen falsch ist. <br />
 
-Sobald freie Kapazitäten bei uns vorliegen, melden wir uns wieder bei dir. 
+Sobald freie Kapazitäten bei uns vorliegen, melden wir uns wieder bei dir. <br /> 
 
-Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br />
 
-Dein {{Allgemein.Admin Name}}
-{{Allgemein.Admin Telefonnr}}
-{{Allgemein.Admin Email}}"
+Dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br /> </p>
 
-Folgende Token sind hier relevant:
-{{Bestätigung Eintrag Warteliste.Vertragsliste}}
-{{Bestätigung Eintrag Warteliste.Verteilstation Wünsche}}
-{{Bestätigung Eintrag Warteliste.Gewünschtes Startdatum}}
+Folgende Token sind hier relevant: <br />
+{{Bestätigung Eintrag Warteliste.Vertragsliste}} <br />
+{{Bestätigung Eintrag Warteliste.Verteilstation Wünsche}} <br />
+{{Bestätigung Eintrag Warteliste.Gewünschtes Startdatum}} <br />
             </mj-text>
         </mj-column>
     </mj-section>
