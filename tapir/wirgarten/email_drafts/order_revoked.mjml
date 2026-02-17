@@ -2,28 +2,32 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-Trigger: Transaktionale Mail, die versendet wird, wenn der Admin die Bestellung widerruft. 
-Zweck: Information des betreffenden Intressenten
-Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+Trigger: Transaktionale Mail, die versendet wird, wenn der Admin die Bestellung widerruft. <br /><br />
+Zweck: Information des betreffenden Intressenten <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
 
-"Moin {{Empfänger.Vorname}}, 
+_________________ <br /><br />
 
-du hattest folgende Bestellung bei uns aufgegeben. 
-{{Bestellung widerruft.Vertragsliste}}
-{{Bestellung widerruft.Anzahl an GenoAnteile}}
+"Moin {{Empfänger.Vorname}}, <br /><br />
 
-Leider können wir dir deine Bestellung nicht bestätigen. 
+du hattest folgende Bestellung bei uns aufgegeben. <br />
+{{Bestellung widerruft.Vertragsliste}} <br />
+{{Bestellung widerruft.Anzahl an GenoAnteile}} <br /> <br />
 
-Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+Leider können wir dir deine Bestellung nicht bestätigen. <br /><br />
 
-Liebe Grüße,
-Dein {{Allgemein.Admin Name}}
-{{Allgemein.Admin Telefonnr}}
-{{Allgemein.Admin Email}}"
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
 
-Folgende Token sind hier relevant: 
-{{Bestellung widerruft.Vertragsliste}}
-{{Bestellung widerruft.Anzahl an GenoAnteile}}
+Liebe Grüße, <br />
+dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br />
+
+__________________ <br /><br />
+
+Folgende Token sind hier relevant: <br />
+{{Bestellung widerruft.Vertragsliste}} <br />
+{{Bestellung widerruft.Anzahl an GenoAnteile}} <br />
             </mj-text>
         </mj-column>
     </mj-section>
