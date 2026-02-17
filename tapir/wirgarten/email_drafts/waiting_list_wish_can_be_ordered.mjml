@@ -2,30 +2,34 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-Trigger: Transaktionale Email, die versendet wird, wenn Menschen von der Warteliste den individuellen Zuteilungslink von der Warteliste geschickt bekommen weil seine Bestellung nun möglich geworden ist. <br />
-<p>ABSATZ</p> Zweck: Mit Klick auf den Link Mail erhält der Mensch von der Warteliste einen individuellen Link zum Bestellwizard mit den bereits voreingestellten Wunschdaten (Vertrag, Abholort etc.). Damit kann das Mitglied nochmal seine Bestellung selbstständig checken und bestätigen/abschließen. 
-<p>ABSATZ</p> Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+Trigger: Transaktionale Email, die versendet wird, wenn Menschen von der Warteliste den individuellen Zuteilungslink von der Warteliste geschickt bekommen weil seine Bestellung nun möglich geworden ist. <br /> <br />
+Zweck: Mit Klick auf den Link Mail erhält der Mensch von der Warteliste einen individuellen Link zum Bestellwizard mit den bereits voreingestellten Wunschdaten (Vertrag, Abholort etc.). Damit kann das Mitglied nochmal seine Bestellung selbstständig checken und bestätigen/abschließen. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
 
-<p>ABSATZ</p>"Moin {{Empfänger.Vorname}},
+__________________ <br /><br />
 
-<p>ABSATZ</p>du stehst bei uns auf der Warteliste und es gibt gute Neuigkeiten: Wir können dir nun deine Wünsche erfüllen. 
+"Moin {{Empfänger.Vorname}}, <br /><br />
 
-<p>ABSATZ</p>Du findest nachfolgend einen Link zu unserem Bestellformular. Dort kannst du nochmal deine Angaben prüfen und dann selbstständig deine Bestellung abgeben. 
-{{Warteliste Wunsch Link.Link zu Bestellwizard}} (ggf. als Button)
+du stehst bei uns auf der Warteliste und es gibt gute Neuigkeiten: Wir können dir nun deine Wünsche erfüllen. <br /><br />
 
-<p>ABSATZ</p>Deine Wünsche haben wir bereits hinterlegt. Sollte sich an denen mittlerweile etwas geändert haben, bitten wir um eine kurze Info. 
+Du findest nachfolgend einen Link zu unserem Bestellformular. Dort kannst du nochmal deine Angaben prüfen und dann selbstständig deine Bestellung abgeben. <br />
+{{Warteliste Wunsch Link.Link zu Bestellwizard}} (ggf. als Button) <br /><br />
 
-<p>ABSATZ</p>Du erhältst nach Durchlaufen des Formulars dann eine Bestätigung aus unserem System. 
+Deine Wünsche haben wir bereits hinterlegt. Sollte sich an denen mittlerweile etwas geändert haben, bitten wir um eine kurze Info. <br /><br />
 
-<p>ABSATZ</p>Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+Du erhältst nach Durchlaufen des Formulars dann eine Bestätigung aus unserem System. <br /><br />
 
-<p>ABSATZ</p>Liebe Grüße,
-<p>ABSATZ</p>Dein {{Allgemein.Admin Name}}
-<p>ABSATZ</p>{{Allgemein.Admin Telefonnr}}
-<p>ABSATZ</p>{{Allgemein.Admin Email}}"
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
 
-<p>ABSATZ</p>Folgende Token sind hier relevant:
-<p>ABSATZ</p>{{Warteliste Wunsch Link.Link zu Bestellwizard}}
+Liebe Grüße, <br />
+dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br />
+
+___________________ <br /><br />
+
+Folgende Token sind hier relevant: <br />
+{{Warteliste Wunsch Link.Link zu Bestellwizard}} <br />
             </mj-text>
         </mj-column>
     </mj-section>
