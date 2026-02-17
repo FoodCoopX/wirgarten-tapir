@@ -2,27 +2,31 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-Trigger: Transaktionale Mail, die an die Email-Adresse versendet wird, welche durch ein Mitglied bei Angabe einer weiteren Mail-Adresse im Mitgliederbereich, an die die gleichen Emails ebenfalls gesendet werden sollen, angelegt wird.                 
-Zweck: Einhaltung Datenschutz. Diese Email-Adresse muss über Klick auf den als Token verfügbaren Link in dieser Mail bestätigt werden. Erst danach erhält sie alle Kommunikation, die mit dem Haupt-Emailaccount stattfindet, ebenfalls.  
-Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+Trigger: Transaktionale Mail, die an die Email-Adresse versendet wird, welche durch ein Mitglied bei Angabe einer weiteren Mail-Adresse im Mitgliederbereich, an die die gleichen Emails ebenfalls gesendet werden sollen, angelegt wird. <br /><br />                 
+Zweck: Einhaltung Datenschutz. Diese Email-Adresse muss über Klick auf den als Token verfügbaren Link in dieser Mail bestätigt werden. Erst danach erhält sie alle Kommunikation, die mit dem Haupt-Emailaccount stattfindet, ebenfalls.  <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
 
-"Moin,
-deine Emailadresse wurde gerade von unserem Solawi-Mitglied {{Empfänger.Vorname}} {{Empfänger.Nachname}} (mit der Email-Adresse {{Extra Mail-Adresse muss bestätigt werden.Haupt-Mail-Adresse}})im Mitgliederbereich hinterlegt. Du würdest nach Bestätigung deiner Email-Adresse dann parallel alle E-Mail-Kommunikation mit dem {{Empfänger.Vorname}} ebenfalls erhalten.
+________________ <br /><br />
 
-Bitte bestätige die Anmeldung deiner Email-Adresse hier: {{Extra Mail-Adresse muss bestätigt werden.Bestätigungslink}}.
+"Moin, <br /><br />
+deine Emailadresse wurde gerade von unserem Solawi-Mitglied {{Empfänger.Vorname}} {{Empfänger.Nachname}} (mit der Email-Adresse {{Extra Mail-Adresse muss bestätigt werden.Haupt-Mail-Adresse}})im Mitgliederbereich hinterlegt. Du würdest nach Bestätigung deiner Email-Adresse dann parallel alle E-Mail-Kommunikation mit dem {{Empfänger.Vorname}} ebenfalls erhalten. <br /><br />
 
-Wenn deine Email-Adresse fälschlicherweise eingetragen wurde, musst du nichts weiter unternehmen. Du erhältst keine weiteren Emails von uns, solange du nicht deine Email-Adresse bestätigt hast. 
+Bitte bestätige die Anmeldung deiner Email-Adresse hier: {{Extra Mail-Adresse muss bestätigt werden.Bestätigungslink}}. <br /><br />
 
-Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+Wenn deine Email-Adresse fälschlicherweise eingetragen wurde, musst du nichts weiter unternehmen. Du erhältst keine weiteren Emails von uns, solange du nicht deine Email-Adresse bestätigt hast. <br /><br />
 
-Liebe Grüße,
-Dein {{Allgemein.Admin Name}}
-{{Allgemein.Admin Telefonnr}}
-{{Allgemein.Admin Email}}"
-{{Allgemein.WirGarten Standort}}"
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
 
-Folgende Token sind hier relevant: 
-Bestätigungslink: {{Extra Mail-Adresse muss bestätigt werden.Bestätigungslink}}.
+Liebe Grüße, <br /><br />
+Dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br />
+{{Allgemein.WirGarten Standort}}" <br />
+
+_________________ <br /><br />
+
+Folgende Token sind hier relevant: <br />
+Bestätigungslink: {{Extra Mail-Adresse muss bestätigt werden.Bestätigungslink}}. <br />
 Die Haupt-Mail-Adresse, welche die Eintragung vorgenommen hat: {{Extra Mail-Adresse muss bestätigt werden.Haupt-Mail-Adresse}}
             </mj-text>
         </mj-column>
