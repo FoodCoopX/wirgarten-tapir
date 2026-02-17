@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
-
-interface Ingredient {
-  id: number;
-  name: string;
-  description: string;
-  is_organic: boolean;
-  is_active: boolean;
-}
+import type { Ingredient, IngredientRequest } from '../../../api-client/models';
 
 interface IngredientModalProps {
   ingredient: Ingredient | null;
-  onSave: (ingredient: Partial<Ingredient>) => void;
+  onSave: (ingredient: IngredientRequest) => void;
   onClose: () => void;
 }
 
@@ -19,7 +12,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
   onSave,
   onClose,
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<IngredientRequest>({
     name: '',
     description: '',
     is_organic: false,
@@ -30,7 +23,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
     if (ingredient) {
       setFormData({
         name: ingredient.name,
-        description: ingredient.description,
+        description: ingredient.description || '',
         is_organic: ingredient.is_organic,
         is_active: ingredient.is_active,
       });

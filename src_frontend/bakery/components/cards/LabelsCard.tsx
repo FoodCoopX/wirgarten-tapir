@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { labelsApi } from '../../types/client';
-import type { Label } from '../../types/api';
+import { BakeryApi, Configuration } from '../../../api-client';
+import type { BreadLabel, BreadLabelRequest } from '../../../api-client/models';
+
+// Create API instance
+const config = new Configuration({
+  basePath: '',
+});
+const bakeryApi = new BakeryApi(config);
 
 export const LabelsCard: React.FC = () => {
-  const [labels, setLabels] = useState<Label[]>([]);
+  const [labels, setLabels] = useState<BreadLabel[]>([]);
   const [loading, setLoading] = useState(true);
   const [newLabelName, setNewLabelName] = useState('');
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
   useEffect(() => {
@@ -16,7 +22,7 @@ export const LabelsCard: React.FC = () => {
   const loadLabels = async () => {
     setLoading(true);
     try {
-      const data = await labelsApi.list();
+      const data = await bakeryApi.bakeryLabelsList();
       setLabels(data);
     } catch (error) {
       console.error('Failed to load labels:', error);
@@ -31,7 +37,11 @@ export const LabelsCard: React.FC = () => {
     if (!newLabelName.trim()) return;
 
     try {
-      await labelsApi.create({ name: newLabelName, is_active: true });
+      const payload: BreadLabelRequest = { 
+        name: newLabelName, 
+        is_active: true 
+      };
+      await bakeryApi.bakeryLabelsCreate({ breadLabelRequest: payload });
       await loadLabels();
       setNewLabelName('');
     } catch (error) {
@@ -40,16 +50,19 @@ export const LabelsCard: React.FC = () => {
     }
   };
 
-  const handleStartEdit = (label: Label) => {
+  const handleStartEdit = (label: BreadLabel) => {
     setEditingId(label.id);
     setEditingName(label.name);
   };
 
-  const handleSaveEdit = async (id: number) => {
+  const handleSaveEdit = async (id: string) => {
     if (!editingName.trim()) return;
 
     try {
-      await labelsApi.update(id, { name: editingName });
+      await bakeryApi.bakeryLabelsPartialUpdate({
+        id,
+        patchedBreadLabelRequest: { name: editingName }
+      });
       await loadLabels();
       setEditingId(null);
       setEditingName('');
@@ -64,11 +77,11 @@ export const LabelsCard: React.FC = () => {
     setEditingName('');
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('Label wirklich löschen?')) return;
 
     try {
-      await labelsApi.delete(id);
+      await bakeryApi.bakeryLabelsDestroy({ id });
       await loadLabels();
     } catch (error) {
       console.error('Failed to delete label:', error);
@@ -76,9 +89,12 @@ export const LabelsCard: React.FC = () => {
     }
   };
 
-  const handleToggleActive = async (label: Label) => {
+  const handleToggleActive = async (label: BreadLabel) => {
     try {
-      await labelsApi.update(label.id, { is_active: !label.is_active });
+      await bakeryApi.bakeryLabelsPartialUpdate({
+        id: label.id,
+        patchedBreadLabelRequest: { is_active: !label.is_active }
+      });
       await loadLabels();
     } catch (error) {
       console.error('Failed to toggle label:', error);
@@ -110,7 +126,7 @@ export const LabelsCard: React.FC = () => {
               style={{ backgroundColor: '#2E7D32', color: 'white' }}
               disabled={!newLabelName.trim()}
             >
-              <span className="material-icons" style={{ fontSize: '16px' }}>add</span>
+              <span className="material-icons" style={{ fontSize: '16px', color: 'white' }}>+ </span>
             </button>
           </div>
         </form>

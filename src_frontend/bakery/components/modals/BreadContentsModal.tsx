@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { ingredientsApi, breadContentsApi } from '../../types/client';
-import type { Ingredient, BreadContent } from '../../types/api';
+import { BakeryApi, Configuration } from '../../../api-client';
+import type { Ingredient, BreadContent, BreadContentRequest, BreadList } from '../../../api-client/models';
 
-interface Bread {
-  id: string;
-  name: string;
-}
+// Create API instance
+const config = new Configuration({
+  basePath: '',
+});
+const bakeryApi = new BakeryApi(config);
 
 interface BreadContentsModalProps {
-  bread: Bread;
+  bread: BreadList;
   onClose: () => void;
 }
 
@@ -18,7 +19,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
   const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIngredient, setSelectedIngredient] = useState('');
-  const [amount, setAmount] = useState(100);
+  const [amount, setAmount] = useState('100');
 
   useEffect(() => {
     loadData();
@@ -35,8 +36,8 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
     setLoading(true);
     try {
       const [contentsData, ingredientsData] = await Promise.all([
-        breadContentsApi.listByBread(bread.id),
-        ingredientsApi.list()
+        bakeryApi.bakeryBreadsListContentsList({ id: bread.id }),
+        bakeryApi.bakeryIngredientsList()
       ]);
       setContents(contentsData);
       setAvailableIngredients(ingredientsData);
@@ -51,38 +52,42 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
   const handleAdd = async () => {
     if (!selectedIngredient) return;
 
-    const payload = {
+    const payload: BreadContentRequest = {
       bread: bread.id,
       ingredient: selectedIngredient,
       amount: amount,
-      sort_order: contents.length,
+      sort_order: String(contents.length),
     };
 
     console.log('Creating bread content with payload:', payload);
 
     try {
-      await breadContentsApi.create(payload);
+      await bakeryApi.bakeryBreadsListContentsCreate({
+        id: bread.id,
+        breadContentRequest: payload
+      });
       await loadData();
       setSelectedIngredient('');
-      setAmount(100);
+      setAmount('100');
     } catch (error) {
       console.error('Failed to add ingredient:', error);
       alert('Fehler beim Hinzufügen der Zutat');
     }
   };
 
-  const handleDelete = async (contentId: number) => {
+  const handleDelete = async (contentId: string) => {
     if (!confirm('Zutat wirklich entfernen?')) return;
     try {
-      await breadContentsApi.delete(contentId);
+      await bakeryApi.bakeryBreadsListContentsDestroy({
+        breadId: bread.id,
+        id: contentId
+      });
       await loadData();
     } catch (error) {
       console.error('Failed to delete content:', error);
       alert('Fehler beim Löschen der Zutat');
     }
   };
-
-  
 
   const modalContent = (
     <div
@@ -160,9 +165,9 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
                       >
                         <option value="">-- Zutat wählen --</option>
                         {availableIngredients
-                          .filter(ing => !contents.some(c => c.ingredient.id === ing.id))
+                          .filter(ing => !contents.some(c => c.ingredient === ing.id))
                           .map(ingredient => (
-                            <option key={ingredient.id} value={String(ingredient.id)}>
+                            <option key={ingredient.id} value={ingredient.id}>
                               {ingredient.name}
                             </option>
                           ))}
@@ -174,7 +179,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
                         type="number"
                         className="form-control"
                         value={amount}
-                        onChange={(e) => setAmount(Number(e.target.value))}
+                        onChange={(e) => setAmount(e.target.value)}
                         min="0"
                         step="1"
                       />

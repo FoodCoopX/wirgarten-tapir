@@ -1,32 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { labelsApi } from '../../types/client';
-import type { Label } from '../../types/api';
+import { BakeryApi, Configuration } from '../../../api-client';
+import type { BreadLabel, BreadList, BreadListRequest } from '../../../api-client/models';
 
-interface Bread {
-  id: string;
-  name: string;
-  description: string;
-  weight: number;
-  picture?: string;
-  is_active: boolean;
-  labels: string[];
-}
+// Create API instance
+const config = new Configuration({
+  basePath: '',
+});
+const bakeryApi = new BakeryApi(config);
 
 interface BreadModalProps {
-  bread: Bread | null;
-  onSave: (bread: Partial<Bread>) => void;
+  bread: BreadList | null;
+  onSave: (bread: BreadListRequest) => void;
   onClose: () => void;
 }
 
 export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BreadListRequest>({
     name: '',
     description: '',
-    weight: 500,
+    weight: '500',
     is_active: true,
     labels: [] as string[],
+    price: '0.00',
   });
-  const [availableLabels, setAvailableLabels] = useState<Label[]>([]);
+  const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,10 +36,11 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
 
       setFormData({
         name: bread.name,
-        description: bread.description,
-        weight: bread.weight,
+        description: bread.description || '',
+        weight: String(bread.weight),
         is_active: bread.is_active,
         labels: labelIds,
+        price: String(bread.price || '0.00'),
       });
     }
   }, [bread]);
@@ -50,7 +48,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
   const loadLabels = async () => {
     setLoading(true);
     try {
-      const data = await labelsApi.list();
+      const data = await bakeryApi.bakeryLabelsList();
       setAvailableLabels(data);
     } catch (error) {
       console.error('Failed to load labels:', error);
@@ -118,15 +116,16 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                       className="form-control"
                       id="weight"
                       value={formData.weight}
-                      onChange={(e) => setFormData({ ...formData, weight: Number(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                       required
                       min="0"
                       step="10"
                     />
-                    
                   </div>
                 </div>
               </div>
+
+             
 
               <div className="mb-3">
                 <label htmlFor="description" className="form-label fw-bold">
@@ -142,7 +141,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                 />
               </div>
 
-                            <div className="mb-3">
+              <div className="mb-3">
                 <label className="form-label fw-bold">
                   Labels
                   {formData.labels.length > 0 && (
@@ -206,8 +205,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                             >
                               {label.name}
                               <span className="ms-1 material-icons" style={{ fontSize: '12px', verticalAlign: 'middle' }}>
-                                add
-                              </span>
+                                ➕</span>
                             </span>
                           ))}
                         </div>
@@ -222,6 +220,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                   </>
                 )}
               </div>
+
               <div className="form-check form-switch">
                 <input
                   className="form-check-input"
@@ -229,7 +228,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                   id="is_active"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                style={{
+                  style={{
                     backgroundColor: formData.is_active ? '#2E7D32' : '',
                     borderColor: '#2E7D32',
                   }}

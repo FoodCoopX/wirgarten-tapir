@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { labelsApi, breadsApi } from '../../types/client';
-import type { Label } from '../../types/api';
+import { BakeryApi, Configuration } from '../../../api-client';
+import type { BreadLabel, BreadList } from '../../../api-client/models';
 
-interface Bread {
-  id: string;
-  name: string;
-  labels?: string[];
-}
+// Create API instance
+const config = new Configuration({
+  basePath: '',
+});
+const bakeryApi = new BakeryApi(config);
 
 interface BreadLabelsModalProps {
-  bread: Bread;
+  bread: BreadList;
   onClose: () => void;
   onUpdate?: () => void;
 }
 
 export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, onUpdate }) => {
-  const [availableLabels, setAvailableLabels] = useState<Label[]>([]);
+  const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
   const [assignedLabelIds, setAssignedLabelIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,8 +35,8 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, o
     setLoading(true);
     try {
       const [breadData, labelsData] = await Promise.all([
-        breadsApi.get(bread.id),
-        labelsApi.list()
+        bakeryApi.bakeryBreadsListRetrieve({ id: bread.id }),
+        bakeryApi.bakeryLabelsList()
       ]);
 
       // Ensure we're getting just the IDs as strings
@@ -56,14 +56,17 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, o
     }
   };
 
-const handleToggleLabel = async (labelId: string) => { // ← Changed from number
+  const handleToggleLabel = async (labelId: string) => {
     const newLabelIds = assignedLabelIds.includes(labelId)
       ? assignedLabelIds.filter(id => id !== labelId)
       : [...assignedLabelIds, labelId];
 
     try {
       // Send only the array of label IDs (strings)
-      await breadsApi.update(bread.id, { labels: newLabelIds });
+      await bakeryApi.bakeryBreadsListPartialUpdate({
+        id: bread.id,
+        patchedBreadListRequest: { labels: newLabelIds }
+      });
       setAssignedLabelIds(newLabelIds);
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -71,6 +74,7 @@ const handleToggleLabel = async (labelId: string) => { // ← Changed from numbe
       alert('Fehler beim Aktualisieren der Labels');
     }
   };
+
   const modalContent = (
     <div
       style={{
@@ -166,10 +170,10 @@ const handleToggleLabel = async (labelId: string) => { // ← Changed from numbe
                             onChange={() => handleToggleLabel(label.id)}
                             onClick={(e) => e.stopPropagation()}
                             style={{
-                                  backgroundColor: isAssigned ? '#8B6F47' : '',
-                                  borderColor: isAssigned ? '#8B6F47' : '',
-                                  cursor: 'pointer',
-                                }}
+                              backgroundColor: isAssigned ? '#8B6F47' : '',
+                              borderColor: isAssigned ? '#8B6F47' : '',
+                              cursor: 'pointer',
+                            }}
                           />
                         </div>
                       </div>

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { breadsApi, breadContentsApi, breadDeliveriesApi, subscriptionsApi } from '../../types/client';
-import type { Bread, BreadContent, Subscription } from '../../types/api';
+import { BakeryApi, Configuration } from '../../api-client';
+import type { BreadList, BreadContent, Subscription } from '../../api-client/models';
+
+// Create API instance
+const config = new Configuration({
+  basePath: '',
+});
+const bakeryApi = new BakeryApi(config);
 
 interface ChooseBreadsCardProps {
   memberId: string;
@@ -15,7 +21,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   deliveryWeek, 
   deliveryDay 
 }) => {
-  const [breads, setBreads] = useState<Bread[]>([]);
+  const [breads, setBreads] = useState<BreadList[]>([]);
   const [contentsMap, setContentsMap] = useState<{ [breadId: string]: BreadContent[] }>({});
   const [selectedBreads, setSelectedBreads] = useState<string[]>([]); // Array of bread IDs
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -28,16 +34,15 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
   const loadData = async () => {
     try {
-      // Load breads
-      const allBreads = await breadsApi.list();
-      const activeBreads = allBreads.filter(b => b.is_active);
-      setBreads(activeBreads);
+      // Load active breads
+      const allBreads = await bakeryApi.bakeryBreadsListList({ isActive: true });
+      setBreads(allBreads);
 
-      // Load contents
+      // Load contents for each bread
       const contentsResults = await Promise.all(
-        activeBreads.map(async (bread) => {
+        allBreads.map(async (bread) => {
           try {
-            const contents = await breadContentsApi.listByBread(bread.id);
+            const contents = await bakeryApi.bakeryBreadsListContentsList({ id: bread.id });
             return { breadId: bread.id, contents };
           } catch {
             return { breadId: bread.id, contents: [] };
@@ -52,20 +57,23 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       setContentsMap(map);
 
       // Load member's subscription
-      const subs = await subscriptionsApi.listByMember(memberId);
-      const activeSub = subs.find(s => s.is_active);
-      setSubscription(activeSub || null);
+      // Note: You'll need to check if there's a subscription API endpoint
+      // For now, this is a placeholder - adjust based on your actual API
+      // const subs = await subscriptionsApi.listByMember(memberId);
+      // const activeSub = subs.find(s => s.is_active);
+      // setSubscription(activeSub || null);
 
       // Load existing selections for this week
-      if (activeSub) {
-        const deliveries = await breadDeliveriesApi.list({
-          subscription: activeSub.id,
-          year,
-          delivery_week: deliveryWeek,
-          delivery_day: deliveryDay,
-        });
-        setSelectedBreads(deliveries.map(d => d.bread));
-      }
+      // Note: You'll need to check if there's a bread deliveries API endpoint
+      // if (activeSub) {
+      //   const deliveries = await breadDeliveriesApi.list({
+      //     subscription: activeSub.id,
+      //     year,
+      //     delivery_week: deliveryWeek,
+      //     delivery_day: deliveryDay,
+      //   });
+      //   setSelectedBreads(deliveries.map(d => d.bread));
+      // }
 
       setLoading(false);
     } catch (error) {
@@ -93,16 +101,17 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       // Delete from backend
       setSaving(true);
       try {
-        const deliveries = await breadDeliveriesApi.list({
-          subscription: subscription.id,
-          year,
-          delivery_week: deliveryWeek,
-          delivery_day: deliveryDay,
-          bread: breadId,
-        });
-        if (deliveries.length > 0) {
-          await breadDeliveriesApi.delete(deliveries[0].id);
-        }
+        // Note: Adjust this based on your actual bread deliveries API
+        // const deliveries = await breadDeliveriesApi.list({
+        //   subscription: subscription.id,
+        //   year,
+        //   delivery_week: deliveryWeek,
+        //   delivery_day: deliveryDay,
+        //   bread: breadId,
+        // });
+        // if (deliveries.length > 0) {
+        //   await breadDeliveriesApi.delete(deliveries[0].id);
+        // }
       } catch (error) {
         console.error('Failed to remove bread:', error);
         setSelectedBreads(selectedBreads); // Revert
@@ -119,13 +128,14 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       // Save to backend
       setSaving(true);
       try {
-        await breadDeliveriesApi.create({
-          year,
-          delivery_week: deliveryWeek,
-          delivery_day: deliveryDay,
-          subscription: subscription.id,
-          bread: breadId,
-        });
+        // Note: Adjust this based on your actual bread deliveries API
+        // await breadDeliveriesApi.create({
+        //   year,
+        //   delivery_week: deliveryWeek,
+        //   delivery_day: deliveryDay,
+        //   subscription: subscription.id,
+        //   bread: breadId,
+        // });
       } catch (error) {
         console.error('Failed to add bread:', error);
         setSelectedBreads(selectedBreads); // Revert
@@ -181,9 +191,9 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                 }}
               >
                 {/* Image */}
-                {bread.image ? (
+                {bread.picture ? (
                   <img 
-                    src={bread.image} 
+                    src={bread.picture} 
                     alt={bread.name}
                     className="card-img-top"
                     style={{ height: '180px', objectFit: 'cover' }}

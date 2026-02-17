@@ -1,3 +1,4 @@
+apis/BakeryApi.ts
 apis/BestellWizardApi.ts
 apis/CoopApi.ts
 apis/CoreApi.ts
@@ -14,6 +15,8 @@ apis/index.ts
 index.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableSegmentsResponse.ts
+models/BakeryBreadCapacityPickupStationBulkUpdateCreateRequest.ts
+models/BakeryBreadCapacityPickupStationBulkUpdateCreateRequestUpdatesInner.ts
 models/BestellWizardBaseDataResponse.ts
 models/BestellWizardCapacityCheckRequestRequest.ts
 models/BestellWizardCapacityCheckResponse.ts
@@ -24,6 +27,15 @@ models/BestellWizardImages.ts
 models/BestellWizardStrings.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts
+models/BreadCapacityPickupStation.ts
+models/BreadCapacityPickupStationRequest.ts
+models/BreadContent.ts
+models/BreadContentRequest.ts
+models/BreadDetail.ts
+models/BreadLabel.ts
+models/BreadLabelRequest.ts
+models/BreadList.ts
+models/BreadListRequest.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
@@ -74,6 +86,8 @@ models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
 models/GrowingPeriodWithDeliveryDayAdjustments.ts
+models/Ingredient.ts
+models/IngredientRequest.ts
 models/Joker.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
@@ -111,6 +125,10 @@ models/PaginatedEmailDispatchWithRetriesList.ts
 models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
 models/PaginatedWaitingListEntryDetailsList.ts
+models/PatchedBreadCapacityPickupStationRequest.ts
+models/PatchedBreadContentRequest.ts
+models/PatchedBreadLabelRequest.ts
+models/PatchedBreadListRequest.ts
 models/PatchedBundledEmailConfigurationRequest.ts
 models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts
@@ -119,6 +137,7 @@ models/PatchedEmailTemplateRequest.ts
 models/PatchedExtendedProductRequest.ts
 models/PatchedGrowingPeriodRequest.ts
 models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
+models/PatchedIngredientRequest.ts
 models/PatchedMailCategoryRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedPickupLocationCapacitiesRequest.ts

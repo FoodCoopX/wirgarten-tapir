@@ -2,20 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BreadModal } from '../modals/BreadModal';
 import { BreadContentsModal } from '../modals/BreadContentsModal';
 import { LabelsModal } from '../modals/LabelsModal';
-import { breadsApi } from '../../types/client';
-import type { Bread } from '../../types/api';
+import { BakeryApi, Configuration } from '../../../api-client';
+import type { BreadList, BreadListRequest } from '../../../api-client/models';
+
+// Create API instance
+const config = new Configuration({
+  basePath: '',
+});
+const bakeryApi = new BakeryApi(config);
 
 export const BreadsCard: React.FC = () => {
-  const [breads, setBreads] = useState<Bread[]>([]);
+  const [breads, setBreads] = useState<BreadList[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBreadModal, setShowBreadModal] = useState(false);
   const [showContentsModal, setShowContentsModal] = useState(false);
   const [showLabelsModal, setShowLabelsModal] = useState(false);
-  const [editingBread, setEditingBread] = useState<Bread | null>(null);
+  const [editingBread, setEditingBread] = useState<BreadList | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
-    const [showOnlyActive, setShowOnlyActive] = useState(true);
-
+  const [showOnlyActive, setShowOnlyActive] = useState(true);
 
   useEffect(() => {
     loadBreads();
@@ -24,7 +29,9 @@ export const BreadsCard: React.FC = () => {
   const loadBreads = async () => {
     setLoading(true);
     try {
-      const data = await breadsApi.list();
+      const data = await bakeryApi.bakeryBreadsListList({
+        isActive: showOnlyActive ? true : undefined
+      });
       setBreads(data);
     } catch (error) {
       console.error('Failed to load breads:', error);
@@ -34,10 +41,14 @@ export const BreadsCard: React.FC = () => {
     }
   };
 
+  // Reload when filter changes
+  useEffect(() => {
+    loadBreads();
+  }, [showOnlyActive]);
+
   const filteredBreads = breads.filter(bread => {
     const matchesSearch = bread.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesActive = showOnlyActive ? bread.is_active : true;
-    return matchesSearch && matchesActive;
+    return matchesSearch;
   });
 
   const handleCreate = () => {
@@ -45,17 +56,17 @@ export const BreadsCard: React.FC = () => {
     setShowBreadModal(true);
   };
 
-  const handleEdit = (bread: Bread) => {
+  const handleEdit = (bread: BreadList) => {
     setEditingBread(bread);
     setShowBreadModal(true);
   };
 
-  const handleManageContents = (bread: Bread) => {
+  const handleManageContents = (bread: BreadList) => {
     setEditingBread(bread);
     setShowContentsModal(true);
   };
 
-  const handleManageLabels = (bread: Bread) => {
+  const handleManageLabels = (bread: BreadList) => {
     setEditingBread(bread);
     setShowLabelsModal(true);
   };
@@ -69,7 +80,10 @@ export const BreadsCard: React.FC = () => {
     formData.append('picture', file);
 
     try {
-      await breadsApi.updateImage(breadId, formData);
+      await fetch(`/bakery/breads-list/${breadId}/`, {
+        method: 'PATCH',
+        body: formData,
+      });
       await loadBreads();
     } catch (error) {
       console.error('Failed to upload image:', error);
@@ -77,12 +91,17 @@ export const BreadsCard: React.FC = () => {
     }
   };
 
-  const handleSaveBread = async (bread: Partial<Bread>) => {
+  const handleSaveBread = async (bread: BreadListRequest) => {
     try {
       if (editingBread) {
-        await breadsApi.update(editingBread.id, bread);
+        await bakeryApi.bakeryBreadsListPartialUpdate({
+          id: editingBread.id,
+          patchedBreadListRequest: bread
+        });
       } else {
-        await breadsApi.create(bread);
+        await bakeryApi.bakeryBreadsListCreate({
+          breadListRequest: bread
+        });
       }
 
       await loadBreads();
@@ -98,7 +117,7 @@ export const BreadsCard: React.FC = () => {
     if (!confirm('Brot wirklich löschen?')) return;
 
     try {
-      await breadsApi.delete(id);
+      await bakeryApi.bakeryBreadsListDestroy({ id });
       await loadBreads();
     } catch (error) {
       console.error('Failed to delete bread:', error);
@@ -109,7 +128,7 @@ export const BreadsCard: React.FC = () => {
   return (
     <>
       <div className="card h-100 shadow-sm">
-                <div className="card-header border-0" 
+        <div className="card-header border-0" 
              style={{ backgroundColor: '#F5E6D3', color: '#8B4513' }}>
           <div className="d-flex justify-content-between align-items-center gap-2">
             <h5 className="mb-0">Brote</h5>
@@ -156,8 +175,8 @@ export const BreadsCard: React.FC = () => {
               style={{ backgroundColor: '#8B4513', color: 'white' }}
               onClick={handleCreate}
             >
-              <span className="material-icons" style={{ fontSize: '16px' }}>add</span>
-              Neu
+              <span className="material-icons" style={{ fontSize: '16px', color: 'white' }}>+ </span>
+              neu
             </button>
           </div>
         </div>
@@ -299,7 +318,6 @@ export const BreadsCard: React.FC = () => {
                     </div>
                   </div>
                   
-                 
                   <div className="btn-group btn-group-sm ms-2">
                     <button 
                       className="btn btn-outline-secondary border-0" 
