@@ -37,6 +37,7 @@ urlpatterns = [
         name="account_login",
     ),
     path("accounts/", include("allauth.urls")),
+    path("bakery/", include("tapir.bakery.urls")),
     path("bestell_wizard/", include("tapir.bestell_wizard.urls")),
     path("config/", include("tapir.configuration.urls")),
     path("coop/", include("tapir.coop.urls")),

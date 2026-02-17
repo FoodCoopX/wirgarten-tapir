@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "django_drf_filepond",
     "tapir_mail",
+    "tapir.bakery",
     "tapir.core",
     "tapir.log",
     "tapir.utils",
