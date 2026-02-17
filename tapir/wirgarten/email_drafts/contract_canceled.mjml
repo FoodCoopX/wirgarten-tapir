@@ -6,6 +6,8 @@ Trigger: Transaktionale Mail, die versendet wird, wenn Mitglieder ihren Vertrag 
 Zweck: Kündigungsbestätigung für das Mitglied <br /> <br />
 Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /> <br />
 
+_____________________________________ <br /><br />
+
 "Moin {{Empfänger.Vorname}}, <br /><br />
 
 schade, dass Du gehst! <br /><br />
