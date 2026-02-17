@@ -2,37 +2,41 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-Trigger: Transaktionale Mail, die versendet wird, wenn über den Bestellwizard Produktverträge (und nicht nur Geno-Anteile) gezeichnet werden. Sie wird auch verschickt, wenn ihr den Opt-In bei der Verlängerung habt, also Mitglieder explizit über den Mitgliederbereich ihren Vertrag verlängern müssen. 
-Zweck: Bestellbestätigung und Information. Ihr könnt die Mail so gestalten, dass es eine reine Bestellübersicht ist, aber noch keine Bestätigung der Bestellung ist (dann braucht ihr unbedingt die transaktionale Mail "Admin bestätigt"). Ihr könnt die Mail aber auch direkt so gestalten, als wäre die Bestellung bestätigt.                Folgende Token steht zu verfügung:
-Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.
+Trigger: Transaktionale Mail, die versendet wird, wenn über den Bestellwizard Produktverträge (und nicht nur Geno-Anteile) gezeichnet werden. Sie wird auch verschickt, wenn ihr den Opt-In bei der Verlängerung habt, also Mitglieder explizit über den Mitgliederbereich ihren Vertrag verlängern müssen. <br /><br />
+Zweck: Bestellbestätigung und Information. Ihr könnt die Mail so gestalten, dass es eine reine Bestellübersicht ist, aber noch keine Bestätigung der Bestellung ist (dann braucht ihr unbedingt die transaktionale Mail "Admin bestätigt"). Ihr könnt die Mail aber auch direkt so gestalten, als wäre die Bestellung bestätigt. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
 
-Moin {{Empfänger.Vorname}},
+_______________ <br /><br />
 
-danke für dein Interesse an einer Mitgliedschaft bei uns.  
+Moin {{Empfänger.Vorname}}, <br /><br />
 
-Du hast folgende Bestellung bei uns aufgegeben:
-{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}}
-Vertragsstart: {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}}
-Vertragsende: {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}}
+danke für dein Interesse an einer Mitgliedschaft bei uns.  <br /><br />
 
-Erste Abholung am: {{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}}
+Du hast folgende Bestellung bei uns aufgegeben: <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}} <br />
+Vertragsstart: {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}} <br />
+Vertragsende: {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}} <br /> <br />
 
-Wir prüfen nun die Bestellung und melden uns bei dir, sobald dies geschehen ist.
+Erste Abholung am: {{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}} <br /><br />
 
-Wir freuen uns sehr über dein Interesse. 
+Wir prüfen nun die Bestellung und melden uns bei dir, sobald dies geschehen ist. <br /><br />
 
-Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns!
+Wir freuen uns sehr über dein Interesse. <br /><br />
 
-Liebe Grüße,
-Dein {{Allgemein.Admin Name}}
-{{Allgemein.Admin Telefonnr}}
-{{Allgemein.Admin Email}}"
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
 
-Folgende Tokens sind hier relevant:
-{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}}
-{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}}
-{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}}
-{{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}}
+Liebe Grüße, <br />
+dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br />
+
+__________________ <br /><br />
+
+Folgende Tokens sind hier relevant: <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}} <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}} <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}} <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}} <br />
             </mj-text>
         </mj-column>
     </mj-section>
