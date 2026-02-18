@@ -1,27 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { BakeryApi, Configuration } from '../../../api-client';
+import { BakeryApi } from '../../../api-client';
+import { useApi } from '../../../hooks/useApi';
+import { PlusLg, XLg, Trash } from 'react-bootstrap-icons';
 import type { BreadLabel, BreadList, BreadListRequest } from '../../../api-client/models';
-
-// Create API instance
-const config = new Configuration({
-  basePath: '',
-});
-const bakeryApi = new BakeryApi(config);
 
 interface BreadModalProps {
   bread: BreadList | null;
+  csrfToken: string;
   onSave: (bread: BreadListRequest) => void;
   onClose: () => void;
 }
 
-export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }) => {
+export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave, onClose }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
+
   const [formData, setFormData] = useState<BreadListRequest>({
     name: '',
     description: '',
     weight: '500',
-    is_active: true,
+    isActive: true,
     labels: [] as string[],
-    price: '0.00',
+    
   });
   const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +28,6 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
   useEffect(() => {
     loadLabels();
     if (bread) {
-      // Handle both string IDs and full label objects
       const labelIds = Array.isArray(bread.labels)
         ? bread.labels.map(label => typeof label === 'object' ? label.id : String(label))
         : [];
@@ -38,9 +36,8 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
         name: bread.name,
         description: bread.description || '',
         weight: String(bread.weight),
-        is_active: bread.is_active,
+        isActive: bread.isActive,
         labels: labelIds,
-        price: String(bread.price || '0.00'),
       });
     }
   }, [bread]);
@@ -125,8 +122,6 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                 </div>
               </div>
 
-             
-
               <div className="mb-3">
                 <label htmlFor="description" className="form-label fw-bold">
                   Beschreibung
@@ -157,7 +152,6 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                   </div>
                 ) : (
                   <>
-                    {/* Assigned Labels */}
                     {assignedLabels.length > 0 && (
                       <div className="mb-2">
                         <small className="text-muted d-block mb-1">Zugewiesen:</small>
@@ -175,17 +169,13 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                               onClick={() => toggleLabel(label.id)}
                               title="Klicken zum Entfernen"
                             >
-                              {label.name}
-                              <span className="ms-1 material-icons" style={{ fontSize: '12px', verticalAlign: 'middle' }}>
-                                close
-                              </span>
+                              {label.name} <XLg size={10} />
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Unassigned Labels */}
                     {unassignedLabels.length > 0 && (
                       <div>
                         <small className="text-muted d-block mb-1">Verfügbar:</small>
@@ -203,15 +193,12 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                               onClick={() => toggleLabel(label.id)}
                               title="Klicken zum Hinzufügen"
                             >
-                              {label.name}
-                              <span className="ms-1 material-icons" style={{ fontSize: '12px', verticalAlign: 'middle' }}>
-                                ➕</span>
+                              {label.name} <PlusLg size={10} />
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
-
                     {availableLabels.length === 0 && (
                       <div className="text-muted small">
                         Keine Labels verfügbar.
@@ -225,15 +212,15 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                 <input
                   className="form-check-input"
                   type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                   style={{
-                    backgroundColor: formData.is_active ? '#2E7D32' : '',
+                    backgroundColor: formData.isActive ? '#2E7D32' : '',
                     borderColor: '#2E7D32',
                   }}
                 />
-                <label className="form-check-label" htmlFor="is_active">
+                <label className="form-check-label" htmlFor="isActive">
                   aktiv
                 </label>
               </div>
@@ -244,7 +231,6 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, onSave, onClose }
                 Abbrechen
               </button>
               <button type="submit" className="btn" style={{ backgroundColor: '#8B4513', color: 'white' }}>
-                <span className="material-icons me-2" style={{ fontSize: '16px' }}>save</span>
                 Speichern
               </button>
             </div>

@@ -15,8 +15,8 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
   const [formData, setFormData] = useState<IngredientRequest>({
     name: '',
     description: '',
-    is_organic: false,
-    is_active: true,
+    isOrganic: false,
+    isActive: true,
   });
 
   useEffect(() => {
@@ -24,8 +24,8 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
       setFormData({
         name: ingredient.name,
         description: ingredient.description || '',
-        is_organic: ingredient.is_organic,
-        is_active: ingredient.is_active,
+        isOrganic: ingredient.isOrganic,
+        isActive: ingredient.isActive,
       });
     }
   }, [ingredient]);
@@ -82,12 +82,12 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                   className="form-check-input"
                   type="checkbox"
                   id="is_organic"
-                  checked={formData.is_organic}
+                  checked={formData.isOrganic}
                   style={{
-                    backgroundColor: formData.is_organic ? '#2E7D32' : '',
+                    backgroundColor: formData.isOrganic ? '#2E7D32' : '',
                     borderColor: '#2E7D32',
                   }}
-                  onChange={(e) => setFormData({ ...formData, is_organic: e.target.checked })}
+                  onChange={(e) => setFormData({ ...formData, isOrganic: e.target.checked })}
                 />
                 <label className="form-check-label" htmlFor="is_organic">
                   <span className="badge" style={{ backgroundColor: '#81C784', color: 'white' }}>Bio</span>
@@ -99,15 +99,15 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                 <input
                   className="form-check-input"
                   type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active}
+                  id="isActive"
+                  checked={formData.isActive}
                   style={{
-                    backgroundColor: formData.is_active ? '#2E7D32' : '',
+                    backgroundColor: formData.isActive ? '#2E7D32' : '',
                     borderColor: '#2E7D32',
                   }}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 />
-                <label className="form-check-label" htmlFor="is_active">
+                <label className="form-check-label" htmlFor="isActive">
                   aktiv
                 </label>
               </div>
@@ -118,7 +118,6 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                 Abbrechen
               </button>
               <button type="submit" className="btn" style={{ backgroundColor: '#5D7A4A', color: 'white' }}>
-                <span className="material-icons me-2" style={{ fontSize: '16px' }}>save</span>
                 Speichern
               </button>
             </div>

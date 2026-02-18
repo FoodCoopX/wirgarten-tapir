@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { BakeryApi, Configuration } from '../../../api-client';
+import { Plus, Trash } from 'react-bootstrap-icons';
+import { BakeryApi } from '../../../api-client';
+import { useApi } from '../../../hooks/useApi';
 import type { Ingredient, BreadContent, BreadContentRequest, BreadList } from '../../../api-client/models';
-
-// Create API instance
-const config = new Configuration({
-  basePath: '',
-});
-const bakeryApi = new BakeryApi(config);
 
 interface BreadContentsModalProps {
   bread: BreadList;
+  csrfToken: string;
   onClose: () => void;
 }
 
-export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, onClose }) => {
+export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, csrfToken, onClose }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
   const [contents, setContents] = useState<BreadContent[]>([]);
   const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +34,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
     setLoading(true);
     try {
       const [contentsData, ingredientsData] = await Promise.all([
-        bakeryApi.bakeryBreadsListContentsList({ id: bread.id }),
+        bakeryApi.bakeryBreadsListContentsList({ id: bread.id! }),
         bakeryApi.bakeryIngredientsList()
       ]);
       setContents(contentsData);
@@ -53,17 +51,15 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
     if (!selectedIngredient) return;
 
     const payload: BreadContentRequest = {
-      bread: bread.id,
+      bread: bread.id!,
       ingredient: selectedIngredient,
       amount: amount,
-      sort_order: String(contents.length),
+      sortOrder: contents.length,
     };
-
-    console.log('Creating bread content with payload:', payload);
 
     try {
       await bakeryApi.bakeryBreadsListContentsCreate({
-        id: bread.id,
+        id: bread.id!,
         breadContentRequest: payload
       });
       await loadData();
@@ -79,10 +75,11 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
     if (!confirm('Zutat wirklich entfernen?')) return;
     try {
       await bakeryApi.bakeryBreadsListContentsDestroy({
-        breadId: bread.id,
+        breadId: bread.id!,
         id: contentId
       });
-      await loadData();
+      // Optimistic update
+      setContents(prev => prev.filter(c => c.id !== contentId));
     } catch (error) {
       console.error('Failed to delete content:', error);
       alert('Fehler beim Löschen der Zutat');
@@ -152,7 +149,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
           ) : (
             <>
               {/* Add New Ingredient */}
-              <div className="card mb-6 border-0" style={{ backgroundColor: '#FBF8F3' }}>
+              <div className="card mb-4 border-0" style={{ backgroundColor: '#FBF8F3' }}>
                 <div className="card-body">
                   <h6 className="card-title mb-3">Zutat hinzufügen</h6>
                   <div className="row g-2 align-items-end">
@@ -187,12 +184,12 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
                     <div className="col-md-2">
                       <button
                         type="button"
-                        className="btn w-100"
+                        className="btn w-100 d-inline-flex align-items-center justify-content-center"
                         style={{ backgroundColor: '#8B4513', color: 'white' }}
                         onClick={handleAdd}
                         disabled={!selectedIngredient}
                       >
-                        <span className="material-icons" style={{ fontSize: '16px' }}>add</span>
+                        <Plus size={16} />
                       </button>
                     </div>
                   </div>
@@ -209,18 +206,17 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, o
                   {contents.map((content) => (
                     <div key={content.id} className="list-group-item d-flex justify-content-between align-items-center">
                       <div className="flex-grow-1">
-                        <strong>{content.ingredient_name}</strong>
+                        <strong>{content.ingredientName}</strong>
                       </div>
                       <div className="d-flex align-items-center gap-2">
                         <strong>{content.amount}</strong>
-                        
                         <span className="text-muted">g</span>
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(content.id)}
+                          onClick={() => handleDelete(content.id!)}
                         >
-                          <span className="material-icons" style={{ fontSize: '16px' }}>delete</span>
+                          <Trash size={16} />
                         </button>
                       </div>
                     </div>

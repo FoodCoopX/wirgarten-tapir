@@ -2,16 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BreadModal } from '../modals/BreadModal';
 import { BreadContentsModal } from '../modals/BreadContentsModal';
 import { LabelsModal } from '../modals/LabelsModal';
-import { BakeryApi, Configuration } from '../../../api-client';
+import { Plus, Pencil, ListUl, Tag, Search, XLg, Camera, EggFried } from 'react-bootstrap-icons';
+import { BakeryApi } from '../../../api-client';
+import { useApi } from '../../../hooks/useApi';
 import type { BreadList, BreadListRequest } from '../../../api-client/models';
 
-// Create API instance
-const config = new Configuration({
-  basePath: '',
-});
-const bakeryApi = new BakeryApi(config);
+interface BreadsCardProps {
+  csrfToken: string;
+}
 
-export const BreadsCard: React.FC = () => {
+export const BreadsCard: React.FC<BreadsCardProps> = ({ csrfToken }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBreadModal, setShowBreadModal] = useState(false);
@@ -22,16 +23,14 @@ export const BreadsCard: React.FC = () => {
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [showOnlyActive, setShowOnlyActive] = useState(true);
 
-  useEffect(() => {
+useEffect(() => {
     loadBreads();
   }, []);
 
   const loadBreads = async () => {
     setLoading(true);
     try {
-      const data = await bakeryApi.bakeryBreadsListList({
-        isActive: showOnlyActive ? true : undefined
-      });
+      const data = await bakeryApi.bakeryBreadsListList({});
       setBreads(data);
     } catch (error) {
       console.error('Failed to load breads:', error);
@@ -41,14 +40,10 @@ export const BreadsCard: React.FC = () => {
     }
   };
 
-  // Reload when filter changes
-  useEffect(() => {
-    loadBreads();
-  }, [showOnlyActive]);
-
   const filteredBreads = breads.filter(bread => {
     const matchesSearch = bread.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const matchesActive = showOnlyActive ? bread.isActive !== false : true;
+    return matchesSearch && matchesActive;
   });
 
   const handleCreate = () => {
@@ -134,7 +129,7 @@ export const BreadsCard: React.FC = () => {
             <h5 className="mb-0">Brote</h5>
             <div className="input-group input-group-sm mx-3" style={{ maxWidth: '300px' }}>
               <span className="input-group-text bg-white border-end-0">
-                <span className="material-icons" style={{ fontSize: '16px', color: '#8B4513' }}>search</span>
+                <Search size={14} style={{ color: '#8B4513' }} />
               </span>
               <input
                 type="text"
@@ -150,7 +145,7 @@ export const BreadsCard: React.FC = () => {
                   onClick={() => setSearchTerm('')}
                   style={{ color: '#8B4513' }}
                 >
-                  <span className="material-icons" style={{ fontSize: '16px' }}>close</span>
+                  <XLg size={14} />
                 </button>
               )}
             </div>
@@ -171,12 +166,11 @@ export const BreadsCard: React.FC = () => {
               </label>
             </div>
             <button 
-              className="btn btn-sm py-0" 
+              className="btn btn-sm py-0 d-inline-flex align-items-center gap-1" 
               style={{ backgroundColor: '#8B4513', color: 'white' }}
               onClick={handleCreate}
             >
-              <span className="material-icons" style={{ fontSize: '16px', color: 'white' }}>+ </span>
-              neu
+              <Plus size={16} /> neu
             </button>
           </div>
         </div>
@@ -214,6 +208,7 @@ export const BreadsCard: React.FC = () => {
                   <div className="d-flex gap-3 flex-grow-1">
                     {/* Bread Image */}
                     <div
+                      className="bread-image-container"
                       style={{
                         width: '60px',
                         height: '60px',
@@ -248,14 +243,16 @@ export const BreadsCard: React.FC = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: '2px solid #F5E6D3'
+                            border: '2px solid #F5E6D3',
+                            borderRadius: '8px',
                           }}
                         >
-                          <span className="material-icons" style={{ fontSize: '30px', color: '#8B4513' }}>bakery_dining</span>
+                          <EggFried size={28} style={{ color: '#8B4513' }} />
                         </div>
                       )}
                       {/* Hover overlay */}
                       <div
+                        className="bread-image-overlay"
                         style={{
                           position: 'absolute',
                           top: 0,
@@ -268,26 +265,26 @@ export const BreadsCard: React.FC = () => {
                           justifyContent: 'center',
                           transition: 'background-color 0.2s',
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.5)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0)'}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                          const icon = e.currentTarget.querySelector('.camera-icon') as HTMLElement;
+                          if (icon) icon.style.opacity = '1';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0)';
+                          const icon = e.currentTarget.querySelector('.camera-icon') as HTMLElement;
+                          if (icon) icon.style.opacity = '0';
+                        }}
                       >
-                        <span 
-                          className="material-icons" 
+                        <Camera 
+                          size={22} 
+                          className="camera-icon"
                           style={{ 
-                            fontSize: '24px', 
                             color: 'white',
                             opacity: 0,
                             transition: 'opacity 0.2s',
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.opacity = '1';
-                            if (e.currentTarget.parentElement) {
-                              e.currentTarget.parentElement.style.backgroundColor = 'rgba(0,0,0,0.5)';
-                            }
-                          }}
-                        >
-                          photo_camera
-                        </span>
+                        />
                       </div>
                     </div>
                     <input
@@ -306,7 +303,7 @@ export const BreadsCard: React.FC = () => {
                     <div className="flex-grow-1">
                       <div className="d-flex align-items-center gap-2 mb-1">
                         <h6 className="mb-0">{bread.name}</h6>
-                        {!bread.is_active && (
+                        {!bread.isActive && (
                           <span className="badge bg-secondary">inaktiv</span>
                         )}
                       </div>
@@ -325,7 +322,7 @@ export const BreadsCard: React.FC = () => {
                       style={{ color: '#757575' }}
                       onClick={() => handleEdit(bread)}
                     >
-                      <span className="material-icons" style={{ fontSize: '16px' }}>edit</span>
+                      <Pencil size={16} />
                     </button>
                     <button 
                       className="btn border-0" 
@@ -333,7 +330,7 @@ export const BreadsCard: React.FC = () => {
                       style={{ color: '#8B4513' }}
                       onClick={() => handleManageContents(bread)}
                     >
-                      <span className="material-icons" style={{ fontSize: '16px' }}>list_alt</span>
+                      <ListUl size={16} />
                     </button>
                     <button 
                       className="btn border-0" 
@@ -341,7 +338,7 @@ export const BreadsCard: React.FC = () => {
                       style={{ color: '#5D7A4A' }}
                       onClick={() => handleManageLabels(bread)}
                     >
-                      <span className="material-icons" style={{ fontSize: '16px' }}>label</span>
+                      <Tag size={16} />
                     </button>
                   </div>
                 </div>
@@ -363,6 +360,7 @@ export const BreadsCard: React.FC = () => {
       {showBreadModal && (
         <BreadModal
           bread={editingBread}
+          csrfToken={csrfToken}
           onSave={handleSaveBread}
           onClose={() => {
             setShowBreadModal(false);
@@ -374,6 +372,7 @@ export const BreadsCard: React.FC = () => {
       {showContentsModal && editingBread && (
         <BreadContentsModal
           bread={editingBread}
+          csrfToken={csrfToken}
           onClose={() => {
             setShowContentsModal(false);
             setEditingBread(null);
@@ -384,6 +383,7 @@ export const BreadsCard: React.FC = () => {
       {showLabelsModal && editingBread && (
         <LabelsModal
           bread={editingBread}
+          csrfToken={csrfToken}
           onClose={() => {
             setShowLabelsModal(false);
             setEditingBread(null);

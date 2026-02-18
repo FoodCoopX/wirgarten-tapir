@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { IngredientModal } from '../modals/IngredientModal';
+import { Plus, Pencil, Trash } from 'react-bootstrap-icons';
 import { BakeryApi, Configuration } from '../../../api-client';
+import { useApi } from '../../../hooks/useApi';
 import type { Ingredient, IngredientRequest } from '../../../api-client/models';
 
-// Create API instance
-const config = new Configuration({
-  basePath: '',
-});
-const bakeryApi = new BakeryApi(config);
+interface IngredientsCardProps {
+  csrfToken: string;
+}
 
-export const IngredientsCard: React.FC = () => {
+export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) => {
+  
+  const bakeryApi = useApi(BakeryApi, csrfToken);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [showOnlyActive, setShowOnlyActive] = useState(true);
 
+
   useEffect(() => {
     loadIngredients();
-  }, [showOnlyActive]);
+  }, []);
 
   const loadIngredients = async () => {
     setLoading(true);
     try {
-      const data = await bakeryApi.bakeryIngredientsList({
-        isActive: showOnlyActive ? true : undefined
-      });
+      const data = await bakeryApi.bakeryIngredientsList({});
       setIngredients(data);
     } catch (error) {
       console.error('Failed to load ingredients:', error);
@@ -34,6 +35,10 @@ export const IngredientsCard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const filteredIngredients = ingredients.filter(ingredient => {
+    return showOnlyActive ? ingredient.isActive !== false : true;
+  });
 
   const handleCreate = () => {
     setEditingIngredient(null);
@@ -107,8 +112,7 @@ export const IngredientsCard: React.FC = () => {
               style={{ backgroundColor: '#5D7A4A', color: 'white' }}
               onClick={handleCreate}
             >
-              <span className="material-icons" style={{ fontSize: '16px', color: 'white' }}>+ </span>
-              neu
+              <Plus size={16} />              neu
             </button>
           </div>
         </div>
@@ -120,7 +124,7 @@ export const IngredientsCard: React.FC = () => {
                 <span className="visually-hidden">Lädt...</span>
               </div>
             </div>
-          ) : ingredients.length === 0 ? (
+          ) : filteredIngredients.length === 0 ? (
             <div className="text-center py-4 text-muted">
               {showOnlyActive ? (
                 <>
@@ -140,7 +144,7 @@ export const IngredientsCard: React.FC = () => {
             </div>
           ) : (
             <div className="list-group list-group-flush">
-              {ingredients.map((ingredient) => (
+              {filteredIngredients.map((ingredient) => (
                 <div key={ingredient.id} className="list-group-item px-0 d-flex justify-content-between align-items-start border-0"
                      style={{ backgroundColor: 'transparent' }}>
                   <div className="flex-grow-1">
@@ -164,15 +168,15 @@ export const IngredientsCard: React.FC = () => {
                       style={{ color: '#757575' }}
                       onClick={() => handleEdit(ingredient)}
                     >
-                      <span className="material-icons" style={{ fontSize: '16px' }}>edit</span>
+                      <Pencil size={16} />
                     </button>
                     {ingredient.canBeDeleted !== false && (
                       <button 
                         className="btn btn-outline-danger border-0" 
                         title="Löschen"
-                        onClick={() => handleDelete(ingredient.id)}
+                        onClick={() => handleDelete(ingredient.id!)}
                       >
-                        <span className="material-icons" style={{ fontSize: '16px' }}>delete</span>
+                        <Trash size={16} />
                       </button>
                     )}
                   </div>
@@ -182,6 +186,7 @@ export const IngredientsCard: React.FC = () => {
           )}
         </div>
         
+                        
         <div className="card-footer border-0 text-muted" style={{ backgroundColor: '#F9FBF7' }}>
           <small>
             {ingredients.length} Zutat{ingredients.length !== 1 ? 'en' : ''}

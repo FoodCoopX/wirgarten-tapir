@@ -5,6 +5,7 @@ import { IngredientsLabelsBreads } from '../pages/IngredientsLabelsBreads.tsx';
 const container = document.getElementById('ingredients-labels-breads-root');
 
 if (container) {
+  const csrfToken = container.getAttribute('data-csrf-token') || '';
   const root = createRoot(container);
-  root.render(<IngredientsLabelsBreads />);
+  root.render(<IngredientsLabelsBreads csrfToken={csrfToken} />);
 }

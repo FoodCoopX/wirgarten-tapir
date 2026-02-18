@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { BakeryApi, Configuration } from '../../../api-client';
+import { BakeryApi } from '../../../api-client';
+import { Plus, Pencil, Trash, Check, X, ToggleOn, ToggleOff } from 'react-bootstrap-icons';
+import { useApi } from '../../../hooks/useApi';
 import type { BreadLabel, BreadLabelRequest } from '../../../api-client/models';
 
-// Create API instance
-const config = new Configuration({
-  basePath: '',
-});
-const bakeryApi = new BakeryApi(config);
+interface LabelsCardProps {
+  csrfToken: string;
+}
 
-export const LabelsCard: React.FC = () => {
+export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
   const [labels, setLabels] = useState<BreadLabel[]>([]);
   const [loading, setLoading] = useState(true);
   const [newLabelName, setNewLabelName] = useState('');
@@ -39,11 +40,11 @@ export const LabelsCard: React.FC = () => {
     try {
       const payload: BreadLabelRequest = { 
         name: newLabelName, 
-        is_active: true 
+        isActive: true 
       };
       await bakeryApi.bakeryLabelsCreate({ breadLabelRequest: payload });
-      await loadLabels();
       setNewLabelName('');
+      await loadLabels();
     } catch (error) {
       console.error('Failed to create label:', error);
       alert('Fehler beim Erstellen des Labels');
@@ -63,7 +64,8 @@ export const LabelsCard: React.FC = () => {
         id,
         patchedBreadLabelRequest: { name: editingName }
       });
-      await loadLabels();
+      // Optimistic update
+      setLabels(prev => prev.map(l => l.id === id ? { ...l, name: editingName } : l));
       setEditingId(null);
       setEditingName('');
     } catch (error) {
@@ -82,7 +84,8 @@ export const LabelsCard: React.FC = () => {
 
     try {
       await bakeryApi.bakeryLabelsDestroy({ id });
-      await loadLabels();
+      // Optimistic update
+      setLabels(prev => prev.filter(l => l.id !== id));
     } catch (error) {
       console.error('Failed to delete label:', error);
       alert('Fehler beim Löschen des Labels');
@@ -90,27 +93,34 @@ export const LabelsCard: React.FC = () => {
   };
 
   const handleToggleActive = async (label: BreadLabel) => {
+    // Optimistic update first — no flicker
+    setLabels(prev => prev.map(l => 
+      l.id === label.id ? { ...l, isActive: !l.isActive } : l
+    ));
+
     try {
       await bakeryApi.bakeryLabelsPartialUpdate({
         id: label.id,
-        patchedBreadLabelRequest: { is_active: !label.is_active }
+        patchedBreadLabelRequest: { isActive: !label.isActive }
       });
-      await loadLabels();
     } catch (error) {
+      // Revert on failure
+      setLabels(prev => prev.map(l => 
+        l.id === label.id ? { ...l, isActive: label.isActive } : l
+      ));
       console.error('Failed to toggle label:', error);
       alert('Fehler beim Aktualisieren des Labels');
     }
   };
 
   return (
-    <div className="card h-100  shadow-sm">
+    <div className="card h-100 shadow-sm">
       <div className="card-header border-0 d-flex justify-content-between align-items-center" 
-     style={{ backgroundColor: '#E8F5E9', color: '#2E7D32' }}>
-  <h5 className="mb-0">Labels</h5>
-</div>
+           style={{ backgroundColor: '#E8F5E9', color: '#2E7D32' }}>
+        <h5 className="mb-0">Labels</h5>
+      </div>
       
       <div className="card-body" style={{ backgroundColor: '#F1F8F4' }}>
-        {/* Add new label form */}
         <form onSubmit={handleCreate} className="mb-4">
           <div className="input-group">
             <input
@@ -126,7 +136,7 @@ export const LabelsCard: React.FC = () => {
               style={{ backgroundColor: '#2E7D32', color: 'white' }}
               disabled={!newLabelName.trim()}
             >
-              <span className="material-icons" style={{ fontSize: '16px', color: 'white' }}>+ </span>
+              <Plus size={16} />
             </button>
           </div>
         </form>
@@ -167,32 +177,30 @@ export const LabelsCard: React.FC = () => {
                       onClick={() => handleSaveEdit(label.id)}
                       disabled={!editingName.trim()}
                     >
-                      <span className="material-icons" style={{ fontSize: '16px' }}>check</span>
+                      <Check size={16} />
                     </button>
                     <button
                       className="btn btn-sm btn-secondary"
                       onClick={handleCancelEdit}
                     >
-                      <span className="material-icons" style={{ fontSize: '16px' }}>close</span>
+                      <X size={16} />
                     </button>
                   </div>
                 ) : (
                   <>
                     <div className="flex-grow-1">
-                      <span className="badge" style={{ backgroundColor: label.is_active ? '#2E7D32' : '#9E9E9E' }}>
+                      <span className="badge" style={{ backgroundColor: label.isActive ? '#2E7D32' : '#9E9E9E' }}>
                         {label.name}
                       </span>
                     </div>
                     <div className="btn-group btn-group-sm">
                       <button
                         className="btn border-0"
-                        title={label.is_active ? 'Deaktivieren' : 'Aktivieren'}
-                        style={{ color: label.is_active ? '#2E7D32' : '#9E9E9E' }}
+                        title={label.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                        style={{ color: label.isActive ? '#2E7D32' : '#9E9E9E' }}
                         onClick={() => handleToggleActive(label)}
                       >
-                        <span className="material-icons" style={{ fontSize: '16px' }}>
-                          {label.is_active ? 'toggle_on' : 'toggle_off'}
-                        </span>
+                        {label.isActive ? <ToggleOn size={16} /> : <ToggleOff size={16} />}
                       </button>
                       <button
                         className="btn btn-outline-secondary border-0"
@@ -200,14 +208,14 @@ export const LabelsCard: React.FC = () => {
                         style={{ color: '#757575' }}
                         onClick={() => handleStartEdit(label)}
                       >
-                        <span className="material-icons" style={{ fontSize: '16px' }}>edit</span>
+                        <Pencil size={16} />
                       </button>
                       <button
                         className="btn btn-outline-danger border-0"
                         title="Löschen"
                         onClick={() => handleDelete(label.id)}
                       >
-                        <span className="material-icons" style={{ fontSize: '16px' }}>delete</span>
+                        <Trash size={16} />
                       </button>
                     </div>
                   </>

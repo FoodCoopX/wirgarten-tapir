@@ -27,6 +27,8 @@
     </head>
     <body style="width: 100dvw; height: 100dvh;">
         {% csrf_token %}
-        <div id="ingredients-labels-breads-root" style="width: 100dvw; height: 100dvh;"></div>
+        <div id="ingredients-labels-breads-root" 
+             data-csrf-token="{{ csrf_token }}"
+             style="width: 100dvw; height: 100dvh;"></div>
     </body>
 </html>

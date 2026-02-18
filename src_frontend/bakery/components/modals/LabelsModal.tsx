@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { BakeryApi, Configuration } from '../../../api-client';
+import { Tag } from 'react-bootstrap-icons';
+import { BakeryApi } from '../../../api-client';
+import { useApi } from '../../../hooks/useApi';
 import type { BreadLabel, BreadList } from '../../../api-client/models';
-
-// Create API instance
-const config = new Configuration({
-  basePath: '',
-});
-const bakeryApi = new BakeryApi(config);
 
 interface BreadLabelsModalProps {
   bread: BreadList;
+  csrfToken: string;
   onClose: () => void;
   onUpdate?: () => void;
 }
 
-export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, onUpdate }) => {
+export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken, onClose, onUpdate }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
   const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
   const [assignedLabelIds, setAssignedLabelIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,16 +33,21 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, o
     setLoading(true);
     try {
       const [breadData, labelsData] = await Promise.all([
-        bakeryApi.bakeryBreadsListRetrieve({ id: bread.id }),
+        bakeryApi.bakeryBreadsListRetrieve({ id: bread.id! }),
         bakeryApi.bakeryLabelsList()
       ]);
 
-      // Ensure we're getting just the IDs as strings
-      const labelIds = Array.isArray(breadData.labels) 
-        ? breadData.labels.map(label => typeof label === 'object' ? label.id : String(label))
+      console.log('breadData.labels:', JSON.stringify(breadData.labels));
+      console.log('labelsData:', JSON.stringify(labelsData.map(l => ({ id: l.id, name: l.name }))));
+
+      // Extract label IDs — handle both string[] and object[] formats
+      const labelIds: string[] = Array.isArray(breadData.labels) 
+        ? breadData.labels.map((label: any) => typeof label === 'object' ? label.id : String(label))
         : [];
       
-      const activeLabels = labelsData.filter(label => label.is_active);
+      console.log('Extracted labelIds:', labelIds);
+
+      const activeLabels = labelsData.filter(label => label.isActive !== false);
       
       setAssignedLabelIds(labelIds);
       setAvailableLabels(activeLabels);
@@ -57,19 +60,23 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, o
   };
 
   const handleToggleLabel = async (labelId: string) => {
-    const newLabelIds = assignedLabelIds.includes(labelId)
+    const isAssigned = assignedLabelIds.includes(labelId);
+    const newLabelIds = isAssigned
       ? assignedLabelIds.filter(id => id !== labelId)
       : [...assignedLabelIds, labelId];
 
+    // Optimistic update
+    setAssignedLabelIds(newLabelIds);
+
     try {
-      // Send only the array of label IDs (strings)
       await bakeryApi.bakeryBreadsListPartialUpdate({
-        id: bread.id,
+        id: bread.id!,
         patchedBreadListRequest: { labels: newLabelIds }
       });
-      setAssignedLabelIds(newLabelIds);
       if (onUpdate) onUpdate();
     } catch (error) {
+      // Revert on failure
+      setAssignedLabelIds(assignedLabelIds);
       console.error('Failed to update labels:', error);
       alert('Fehler beim Aktualisieren der Labels');
     }
@@ -122,8 +129,8 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, o
           className="p-3 d-flex justify-content-between align-items-center" 
           style={{ backgroundColor: '#F5E6D3', color: '#8B4513', borderRadius: '8px 8px 0 0' }}
         >
-          <h5 className="mb-0">
-            <span className="material-icons me-2" style={{ fontSize: '20px', verticalAlign: 'middle' }}>label</span>
+          <h5 className="mb-0 d-inline-flex align-items-center gap-2">
+            <Tag size={20} />
             Labels: {bread.name}
           </h5>
           <button type="button" className="btn-close" onClick={onClose}></button>
@@ -145,7 +152,7 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, o
               ) : (
                 <div className="list-group">
                   {availableLabels.map((label) => {
-                    const isAssigned = assignedLabelIds.includes(label.id);
+                    const isAssigned = assignedLabelIds.includes(label.id!);
                     return (
                       <div 
                         key={label.id} 
@@ -154,20 +161,18 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, onClose, o
                           cursor: 'pointer',
                           backgroundColor: isAssigned ? '#F5E6D3' : 'white'
                         }}
-                        onClick={() => handleToggleLabel(label.id)}
+                        onClick={() => handleToggleLabel(label.id!)}
                       >
                         <div className="flex-grow-1">
                           <strong>{label.name}</strong>
-                          {label.description && (
-                            <div className="text-muted small">{label.description}</div>
-                          )}
                         </div>
                         <div className="form-check form-switch">
                           <input
                             className="form-check-input"
                             type="checkbox"
+                            role="switch"
                             checked={isAssigned}
-                            onChange={() => handleToggleLabel(label.id)}
+                            onChange={() => handleToggleLabel(label.id!)}
                             onClick={(e) => e.stopPropagation()}
                             style={{
                               backgroundColor: isAssigned ? '#8B6F47' : '',
