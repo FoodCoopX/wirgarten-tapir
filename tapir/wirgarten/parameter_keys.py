@@ -235,3 +235,4 @@ class ParameterKeys:
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
     )
+    BAKERY = "is_bakery"

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
 import { AllocationModal } from '../components/modals/AllocationModal';
-import { breadsApi, availableBreadsForDeliveryApi, pickupLocationOpeningTimesApi } from '../types/client';
-import type { Bread } from '../types/api';
+import { InfoCircle } from 'react-bootstrap-icons';
+import { BakeryApi } from '../../api-client';
+import { useApi } from '../../hooks/useApi';
+import type { BreadList } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 
@@ -11,38 +13,39 @@ dayjs.extend(isoWeek);
 interface DayConfig {
   day: number;
   label: string;
-  dayNumber: number; // actual day of week (1-7)
+  dayNumber: number;
   breads: Record<string, boolean>;
 }
 
 const currentWeek = dayjs().isoWeek();
 const currentYear = dayjs().year();
 
-// Day labels mapping
 const DAY_LABELS: Record<number, string> = {
-  0: 'Montag',
-  1: 'Dienstag',
-  2: 'Mittwoch',
-  3: 'Donnerstag',
-  4: 'Freitag',
-  5: 'Samstag',
-  6: 'Sonntag',
+  1: 'Montag',
+  2: 'Dienstag',
+  3: 'Mittwoch',
+  4: 'Donnerstag',
+  5: 'Freitag',
+  6: 'Samstag',
+  7: 'Sonntag',
 };
 
+interface WeeklyPlanBreadsProps {
+  csrfToken: string;
+}
 
-export const WeeklyPlanBreads: React.FC = () => {
+export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(currentWeek);
-  const [allBreads, setAllBreads] = useState<Bread[]>([]);
+  const [allBreads, setAllBreads] = useState<BreadList[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [days, setDays] = useState<DayConfig[]>([]);
 
-  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<{ day: number; label: string } | null>(null);
 
-  // Get date for specific day in selected week
   const getDateForDay = (dayNumber: number): string => {
     const date = dayjs()
       .year(year)
@@ -59,22 +62,20 @@ export const WeeklyPlanBreads: React.FC = () => {
     if (allBreads.length > 0 && days.length > 0) {
       loadDayConfigs();
     }
-  }, [year, week, allBreads, days.length]);
+  }, [year, week, allBreads.length, days.length]);
 
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      // Load breads and delivery days in parallel
       const [breadsData, deliveryDaysData] = await Promise.all([
-        breadsApi.list(),
-        pickupLocationOpeningTimesApi.deliveryDays(),
+        bakeryApi.bakeryBreadsListList({}),
+        bakeryApi.bakeryPickupLocationOpeningTimesDeliveryDaysList(),
       ]);
 
-      setAllBreads(breadsData.filter(b => b.is_active));
+      setAllBreads(breadsData.filter((b: BreadList) => b.isActive !== false));
 
-      // Map delivery days to DayConfig
-      const dayConfigs: DayConfig[] = deliveryDaysData.days.map((dayNumber) => ({
-        day: dayNumber - 1, // Convert 1-7 to 0-6 for API
+      const dayConfigs: DayConfig[] = (deliveryDaysData as any).days.map((dayNumber: number) => ({
+        day: dayNumber - 1,
         label: DAY_LABELS[dayNumber] || `Tag ${dayNumber}`,
         dayNumber: dayNumber,
         breads: {},
@@ -95,36 +96,27 @@ export const WeeklyPlanBreads: React.FC = () => {
       const updatedDays = await Promise.all(
         days.map(async (dayConfig) => {
           try {
-            const response = await availableBreadsForDeliveryApi.list({
+            const response = await bakeryApi.bakeryAvailableBreadsForDeliveryList({
               year,
               week,
               day: dayConfig.day,
-            });
+            } as any);
 
-            // Create map of available breads
-            const availableBreadIds = new Set(response.breads.map(b => b.id));
+            const availableBreadIds = new Set((response as any).breads.map((b: any) => b.id));
 
-            // Set all breads to false, then mark available ones as true
             const breads: Record<string, boolean> = {};
             allBreads.forEach(bread => {
-              breads[bread.id] = availableBreadIds.has(bread.id);
+              breads[bread.id!] = availableBreadIds.has(bread.id!);
             });
 
-            return {
-              ...dayConfig,
-              breads,
-            };
+            return { ...dayConfig, breads };
           } catch (error) {
             console.error(`Failed to load config for day ${dayConfig.day}:`, error);
-            // Initialize with all breads disabled on error
             const breads: Record<string, boolean> = {};
             allBreads.forEach(bread => {
-              breads[bread.id] = false;
+              breads[bread.id!] = false;
             });
-            return {
-              ...dayConfig,
-              breads,
-            };
+            return { ...dayConfig, breads };
           }
         })
       );
@@ -145,17 +137,15 @@ export const WeeklyPlanBreads: React.FC = () => {
 
     setSaving(true);
     try {
-      await availableBreadsForDeliveryApi.toggle({
+      await bakeryApi.bakeryAvailableBreadsForDeliveryToggleCreate({
         year,
         week,
         day: newDays[dayIndex].day,
-        bread_id: breadId,
-        is_active: newState,
-      });
-      console.log('Saved:', { year, week, day: newDays[dayIndex].day, breadId, isActive: newState });
+        breadId: breadId,
+        isActive: newState,
+      } as any);
     } catch (error) {
       console.error('Failed to save:', error);
-      // Revert on error
       newDays[dayIndex].breads[breadId] = !newState;
       setDays(newDays);
       alert('Fehler beim Speichern');
@@ -186,7 +176,6 @@ export const WeeklyPlanBreads: React.FC = () => {
         )}
       </div>
 
-      {/* Year/Week Selector */}
       <div className="card mb-4">
         <div className="card-body">
           <YearWeekSelectorCard
@@ -199,7 +188,6 @@ export const WeeklyPlanBreads: React.FC = () => {
       </div>
       <div><h4>Liefertage</h4></div>
 
-      {/* Day Columns */}
       <div className="row">
         {loading && days.length === 0 ? (
           <div className="col-12 text-center py-5">
@@ -219,9 +207,7 @@ export const WeeklyPlanBreads: React.FC = () => {
                   style={{ backgroundColor: '#D4A574', color: 'white' }}
                 >
                   <div>
-                    <h5 className="mb-0">
-                      {dayConfig.label}
-                    </h5>
+                    <h5 className="mb-0">{dayConfig.label}</h5>
                     <small className="opacity-75">{getDateForDay(dayConfig.dayNumber)}</small>
                   </div>
                   <small>KW {week}</small>
@@ -237,7 +223,7 @@ export const WeeklyPlanBreads: React.FC = () => {
                   ) : (
                     <div className="list-group list-group-flush">
                       {allBreads.map((bread) => {
-                        const isActive = dayConfig.breads[bread.id] ?? false;
+                        const isActive = dayConfig.breads[bread.id!] ?? false;
                         return (
                           <div
                             key={bread.id}
@@ -265,12 +251,12 @@ export const WeeklyPlanBreads: React.FC = () => {
                               </div>
                             </div>
 
-                            <div className="form-check form-switch allocation-switch">
+                            <div className="form-check form-switch">
                               <input
                                 className="form-check-input"
                                 type="checkbox"
                                 checked={isActive}
-                                onChange={() => toggleBread(dayIndex, bread.id)}
+                                onChange={() => toggleBread(dayIndex, bread.id!)}
                                 style={{
                                   backgroundColor: isActive ? '#8B6F47' : '',
                                   borderColor: isActive ? '#8B6F47' : '',
@@ -285,9 +271,9 @@ export const WeeklyPlanBreads: React.FC = () => {
                   )}
                 </div>
                 <div className="card-footer text-muted">
-                  <small>
-                    <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>info</span>
-                    {' '}Änderungen werden automatisch gespeichert
+                  <small className="d-inline-flex align-items-center gap-1">
+                    <InfoCircle size={14} />
+                    Änderungen werden automatisch gespeichert
                   </small>
                 </div>
                 <div className="card-footer">
@@ -306,7 +292,6 @@ export const WeeklyPlanBreads: React.FC = () => {
         )}
       </div>
 
-      {/* Allocation Modal */}
       {selectedDay && (
         <AllocationModal
           isOpen={isModalOpen}
@@ -315,6 +300,7 @@ export const WeeklyPlanBreads: React.FC = () => {
           week={week}
           day={selectedDay.day}
           dayLabel={selectedDay.label}
+          csrfToken={csrfToken}
         />
       )}
     </div>

@@ -75,10 +75,15 @@ useEffect(() => {
     formData.append('picture', file);
 
     try {
-      await fetch(`/bakery/breads-list/${breadId}/`, {
-        method: 'PATCH',
+      await bakeryApi.bakeryBreadsListPartialUpdateRaw({
+        id: breadId,
+        patchedBreadListRequest: {} as any,
+      }, {
         body: formData,
-      });
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      } as any);
       await loadBreads();
     } catch (error) {
       console.error('Failed to upload image:', error);
@@ -90,7 +95,7 @@ useEffect(() => {
     try {
       if (editingBread) {
         await bakeryApi.bakeryBreadsListPartialUpdate({
-          id: editingBread.id,
+          id: editingBread.id!,
           patchedBreadListRequest: bread
         });
       } else {
@@ -220,7 +225,7 @@ useEffect(() => {
                         position: 'relative',
                         overflow: 'hidden',
                       }}
-                      onClick={() => handleImageClick(bread.id)}
+                      onClick={() => handleImageClick(bread.id!)}
                       title="Bild ändern"
                     >
                       {bread.picture ? (
@@ -291,11 +296,11 @@ useEffect(() => {
                       type="file"
                       accept="image/*"
                       style={{ display: 'none' }}
-                      ref={(el) => (fileInputRefs.current[bread.id] = el)}
+                      ref={(el) => (fileInputRefs.current[bread.id!] = el)}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          handleImageUpload(bread.id, file);
+                          handleImageUpload(bread.id!, file);
                         }
                       }}
                     />

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
-import { pickupLocationOpeningTimesApi } from '../types/client';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 

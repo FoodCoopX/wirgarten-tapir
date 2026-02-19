@@ -74,3 +74,12 @@ class ParameterDefinitionsOrganization:
             category=ParameterCategory.ORGANIZATION,
             meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
         )
+        importer.parameter_definition(
+            key=ParameterKeys.BAKERY,
+            label="Ist Bäckerei",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Gibt an, ob das Unternehmen eine Bäckerei ist.",
+            category=ParameterCategory.ORGANIZATION,
+            order_priority=1,
+        )

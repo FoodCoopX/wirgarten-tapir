@@ -8,6 +8,7 @@ LEGAL_STATUS_OPTIONS = [
     (LEGAL_STATUS_COMPANY, "Einzelunternehmen"),
 ]
 
+
 TEST_DATE_OVERRIDE_DISABLED = "disabled"
 TEST_DATE_OVERRIDE_FIRST_DAY_THIS_YEAR = "first_day_this_year"
 TEST_DATE_OVERRIDE_OCTOBER_TENTH_THIS_YEAR = "october_tenth_this_year"

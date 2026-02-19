@@ -87,32 +87,31 @@ class BreadViewSet(viewsets.ModelViewSet):
         summary="Get all ingredients for a specific bread",
         responses={200: BreadContentSerializer(many=True)},
     )
-    @action(detail=True, methods=["get"], url_path="contents")
+    @action(detail=True, methods=["get", "post"], url_path="contents")
     def contents(self, request: Request, pk=None) -> Response:
-        """Get all contents (ingredients) for a specific bread"""
+        """Get or add contents (ingredients) for a specific bread"""
         bread = self.get_object()
-        contents = BreadContent.objects.filter(bread=bread).select_related("ingredient")
-        serializer = BreadContentSerializer(contents, many=True)
-        return Response(serializer.data)
+
+        if request.method == "GET":
+            contents = BreadContent.objects.filter(bread=bread).select_related(
+                "ingredient"
+            )
+            serializer = BreadContentSerializer(contents, many=True)
+            return Response(serializer.data)
+
+        # POST
+        data = request.data.copy()
+        data["bread"] = bread.id
+        serializer = BreadContentSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         summary="Add an ingredient to a bread",
         request=BreadContentSerializer,
         responses={201: BreadContentSerializer},
     )
-    @action(detail=True, methods=["post"], url_path="contents")
-    def add_content(self, request: Request, pk=None) -> Response:
-        """Add an ingredient to a bread"""
-        bread = self.get_object()
-        data = request.data.copy()
-        data["bread"] = bread.id
-
-        serializer = BreadContentSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
     def get_serializer_class(self):
         """Use detailed serializer for retrieve, list serializer otherwise"""
         if self.action == "retrieve":

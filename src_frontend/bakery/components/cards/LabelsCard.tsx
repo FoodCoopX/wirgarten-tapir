@@ -52,7 +52,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
   };
 
   const handleStartEdit = (label: BreadLabel) => {
-    setEditingId(label.id);
+    setEditingId(label.id!);
     setEditingName(label.name);
   };
 
@@ -100,7 +100,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
 
     try {
       await bakeryApi.bakeryLabelsPartialUpdate({
-        id: label.id,
+        id: label.id!,
         patchedBreadLabelRequest: { isActive: !label.isActive }
       });
     } catch (error) {
@@ -168,13 +168,13 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
                       onChange={(e) => setEditingName(e.target.value)}
                       autoFocus
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveEdit(label.id);
+                        if (e.key === 'Enter') handleSaveEdit(label.id!);
                         if (e.key === 'Escape') handleCancelEdit();
                       }}
                     />
                     <button
                       className="btn btn-sm btn-success"
-                      onClick={() => handleSaveEdit(label.id)}
+                      onClick={() => handleSaveEdit(label.id!)}
                       disabled={!editingName.trim()}
                     >
                       <Check size={16} />
@@ -213,7 +213,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
                       <button
                         className="btn btn-outline-danger border-0"
                         title="Löschen"
-                        onClick={() => handleDelete(label.id)}
+                        onClick={() => handleDelete(label.id!)}
                       >
                         <Trash size={16} />
                       </button>

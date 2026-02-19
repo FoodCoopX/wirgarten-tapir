@@ -5,7 +5,9 @@ from tapir.bakery.views import (
     AvailableBreadsForDeliveryListView,
 )
 from tapir.bakery.views_templates import (
+    ChooseBreadsView,
     IngredientsLabelsBreadsView,
+    ReportsView,
     WeeklyPlanBreadsView,
 )
 from tapir.bakery.viewsets import (
@@ -34,6 +36,8 @@ urlpatterns = [
         WeeklyPlanBreadsView.as_view(),
         name="weekly-plan-breads",
     ),
+    path("choose-breads/", ChooseBreadsView.as_view(), name="choose-breads"),
+    path("reports/", ReportsView.as_view(), name="reports"),
 ]
 
 router = DefaultRouter()

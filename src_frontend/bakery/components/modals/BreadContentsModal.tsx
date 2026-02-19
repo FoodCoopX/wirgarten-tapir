@@ -30,11 +30,12 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
     };
   }, []);
 
+
   const loadData = async () => {
     setLoading(true);
     try {
       const [contentsData, ingredientsData] = await Promise.all([
-        bakeryApi.bakeryBreadsListContentsList({ id: bread.id! }),
+        bakeryApi.bakeryBreadcontentsList({ bread: bread.id! }),
         bakeryApi.bakeryIngredientsList()
       ]);
       setContents(contentsData);
@@ -58,8 +59,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
     };
 
     try {
-      await bakeryApi.bakeryBreadsListContentsCreate({
-        id: bread.id!,
+      await bakeryApi.bakeryBreadcontentsCreate({
         breadContentRequest: payload
       });
       await loadData();
@@ -72,19 +72,18 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
   };
 
   const handleDelete = async (contentId: string) => {
-    if (!confirm('Zutat wirklich entfernen?')) return;
+    
     try {
-      await bakeryApi.bakeryBreadsListContentsDestroy({
-        breadId: bread.id!,
+      await bakeryApi.bakeryBreadcontentsDestroy({
         id: contentId
       });
-      // Optimistic update
       setContents(prev => prev.filter(c => c.id !== contentId));
     } catch (error) {
       console.error('Failed to delete content:', error);
       alert('Fehler beim Löschen der Zutat');
     }
   };
+
 
   const modalContent = (
     <div

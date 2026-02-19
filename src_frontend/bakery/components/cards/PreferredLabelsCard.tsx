@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { labelsApi, profileApi } from '../../types/client';
-import type { BreadLabel } from '../../types/api';
+import { InfoCircle } from 'react-bootstrap-icons';
+import { useApi } from '../../../hooks/useApi';
+import { BakeryApi } from '../../../api-client';
+import { Plus, Pencil, Trash, Check, X, ToggleOn, ToggleOff } from 'react-bootstrap-icons';
+import type { BreadLabel, BreadLabelRequest } from '../../../api-client/models';
 
 interface PreferredLabelsCardProps {
   memberId: string;
+  csrfToken: string;
 }
+// ...existing code...
+export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ memberId, csrfToken }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
 
-export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ memberId }) => {
   const [labels, setLabels] = useState<BreadLabel[]>([]);
   const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -14,15 +20,15 @@ export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ member
   useEffect(() => {
     const loadLabels = async () => {
       try {
-        const allLabels = await labelsApi.list();
-        setLabels(allLabels.filter(l => l.is_active));
-        
-        // Load user's preferred labels
-        const profile = await profileApi.getProfile(memberId);
-        if (profile.preferred_bread_labels) {
-          setSelectedLabelIds(new Set(profile.preferred_bread_labels));
-        }
-        
+        const allLabels = await bakeryApi.bakeryLabelsList();
+        setLabels(allLabels.filter(l => l.isActive));
+
+        // // Load user's preferred labels
+        // const profile = await bakeryApi.bakeryProfileRetrieve(memberId);
+        // if (profile.preferred_bread_labels) {
+        //   setSelectedLabelIds(new Set(profile.preferred_bread_labels));
+        // }
+
         setLoading(false);
       } catch (error) {
         console.error('Failed to load labels:', error);
@@ -30,22 +36,22 @@ export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ member
       }
     };
     loadLabels();
-  }, [memberId]);
+  }, [memberId, bakeryApi]);
 
   const toggleLabel = async (labelId: string) => {
     const newSelected = new Set(selectedLabelIds);
-    
+
     if (newSelected.has(labelId)) {
       newSelected.delete(labelId);
     } else {
       newSelected.add(labelId);
     }
-    
+
     setSelectedLabelIds(newSelected);
-    
+
     // Save to backend
     try {
-      await profileApi.updatePreferredLabels(Array.from(newSelected), memberId);
+      await profileApi.profileUpdatePreferredLabels({ preferred_bread_labels: Array.from(newSelected) }, memberId);
     } catch (error) {
       console.error('Failed to save preferred labels:', error);
       // Revert on error
@@ -107,8 +113,8 @@ export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ member
       </div>
       <div className="card-footer text-muted">
         <small>
-          <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>info</span>
-          {' '}Änderungen werden automatisch gespeichert
+          <InfoCircle size={14} className="me-1" style={{ verticalAlign: 'middle' }} />
+          Änderungen werden automatisch gespeichert
         </small>
       </div>
     </div>
