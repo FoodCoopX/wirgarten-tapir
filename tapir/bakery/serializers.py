@@ -1,8 +1,6 @@
 from rest_framework import serializers
 
 from tapir.bakery.models import (
-    BakeryConfiguration,
-    BakeryUserProfile,
     Bread,
     BreadCapacityPickupStation,
     BreadContent,
@@ -11,7 +9,6 @@ from tapir.bakery.models import (
     Ingredient,
 )
 from tapir.bakery.utils import can_delete_instance
-from tapir.wirgarten.models import PickupLocationOpeningTime
 
 
 class BreadLabelSerializer(serializers.ModelSerializer):
@@ -82,45 +79,6 @@ class BreadDetailSerializer(serializers.ModelSerializer):
         return [label.name for label in obj.labels.all()]
 
 
-class BakeryUserProfileSerializer(serializers.ModelSerializer):
-    """Serializer for bakery user profile with pseudonym"""
-
-    member_name = serializers.CharField(
-        source="member.get_display_name", read_only=True
-    )
-    preferred_bread_labels = serializers.PrimaryKeyRelatedField(
-        many=True, read_only=True
-    )
-
-    class Meta:
-        model = BakeryUserProfile
-        fields = "__all__"
-
-    def get_display_name(self, obj) -> str:
-        return obj.get_display_name()
-
-
-class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
-    pickup_location_name = serializers.CharField(
-        source="pickup_location.name", read_only=True
-    )
-    weekday = serializers.IntegerField(source="day_of_week")
-    start_time = serializers.TimeField(source="open_time", format="%H:%M")
-    end_time = serializers.TimeField(source="close_time", format="%H:%M")
-
-    class Meta:
-        model = PickupLocationOpeningTime
-        fields = [
-            "id",
-            "pickup_location",
-            "pickup_location_name",
-            "weekday",
-            "start_time",
-            "end_time",
-        ]
-        read_only_fields = ["id", "pickup_location_name"]
-
-
 class BreadCapacityPickupStationSerializer(serializers.ModelSerializer):
     pickup_location = serializers.CharField(
         source="pickup_station_day.pickup_location.id", read_only=True
@@ -128,7 +86,7 @@ class BreadCapacityPickupStationSerializer(serializers.ModelSerializer):
     pickup_location_name = serializers.CharField(
         source="pickup_station_day.pickup_location.name", read_only=True
     )
-    weekday = serializers.IntegerField(
+    delivery_day = serializers.IntegerField(
         source="pickup_station_day.day_of_week", read_only=True
     )
 
@@ -136,14 +94,6 @@ class BreadCapacityPickupStationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BreadCapacityPickupStation
-        fields = "__all__"
-
-
-class BakeryConfigurationSerializer(serializers.ModelSerializer):
-    """Serializer for bakery configuration"""
-
-    class Meta:
-        model = BakeryConfiguration
         fields = "__all__"
 
 
@@ -178,3 +128,25 @@ class BreadDeliverySerializer(serializers.ModelSerializer):
             )
 
         return data
+
+
+class AvailableBreadsForDeliveryListResponseSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    week = serializers.IntegerField()
+    day = serializers.IntegerField()
+    breads = BreadListSerializer(many=True)
+
+
+class ToggleBreadRequestSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    week = serializers.IntegerField()
+    day = serializers.IntegerField()
+    bread_id = serializers.CharField()
+    is_active = serializers.BooleanField()
+
+
+class ToggleBreadResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    created = serializers.BooleanField(required=False)
+    deleted = serializers.BooleanField(required=False)
+    bread_id = serializers.CharField()

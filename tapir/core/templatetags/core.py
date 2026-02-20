@@ -164,18 +164,18 @@ def add_admin_links(groups, request, cache: dict):
 
         bakery_group.add_link(
             display_name=_("Wochenplan Brote"),
-            material_icon="label",
+            material_icon="calendar_view_month",
             url=reverse_lazy("bakery:weekly-plan-breads"),
         )
 
         bakery_group.add_link(
             display_name=_("Berichte"),
-            material_icon="label",
+            material_icon="download",
             url=reverse_lazy("bakery:reports"),
         )
         bakery_group.add_link(
             display_name=_("Zutaten & Labels & Brote"),
-            material_icon="label",
+            material_icon="bakery_dining",
             url=reverse_lazy("bakery:ingredients-labels-breads"),
         )
         groups.append(bakery_group)

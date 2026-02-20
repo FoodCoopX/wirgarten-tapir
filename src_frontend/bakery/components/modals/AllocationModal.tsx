@@ -57,13 +57,13 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
       const [breadsResponse, stationsResponse] = await Promise.all([
         bakeryApi.bakeryBreadsListList({ isActive: true }),
-        pickupLocationsApi.pickupLocationsOpeningTimesList({}),
+        bakeryApi.pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({dayOfWeek}),
       ]);
 
-      // Filter stations by day
-      const filteredStations: PickupStation[] = (stationsResponse as any[])
-        .filter((s: any) => s.day === dayOfWeek)
-        .map((s: any) => ({ id: s.id, name: s.pickupLocationName || s.name }));
+      const filteredStations: PickupStation[] = stationsResponse.pickupStations.map(s => ({
+      id: s.id,
+      name: s.name,
+    }));
 
       setBreads(breadsResponse);
       setPickupStations(filteredStations);

@@ -72,3 +72,16 @@ class PickupLocationCapacityCheckRequestSerializer(serializers.Serializer):
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
     pickup_location_id = serializers.CharField()
     growing_period_id = serializers.CharField(allow_null=True)
+
+
+class PickupStationDeliveryDaySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class PickupStationsByDeliveryDayResponseSerializer(serializers.Serializer):
+    pickup_stations = PickupStationDeliveryDaySerializer(many=True)
+
+
+class DeliveryDaysResponseSerializer(serializers.Serializer):
+    days = serializers.ListField(child=serializers.IntegerField())

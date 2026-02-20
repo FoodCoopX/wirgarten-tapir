@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from tapir.core.models import TapirModel
-from tapir.wirgarten.models import Member, PickupLocationOpeningTime, Subscription
+from tapir.wirgarten.models import PickupLocationOpeningTime, Subscription
 
 
 class BreadLabel(TapirModel):
@@ -78,46 +78,6 @@ class BreadContent(TapirModel):
 
     class Meta:
         unique_together = ("bread", "ingredient")
-
-
-class BakeryUserProfile(TapirModel):
-    """
-    Additional bakery-specific user data
-    Extends Member without modifying it
-    """
-
-    member = models.OneToOneField(
-        Member, on_delete=models.CASCADE, related_name="bakery_profile"
-    )
-
-    # Pseudonym feature
-    pseudonym = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        help_text="Nickname/Pseudonym for member list and subscription deliveries",
-    )
-
-    # Other bakery preferences
-    preferred_bread_labels = models.ManyToManyField(
-        "BreadLabel", blank=True, related_name="preferred_by_users"
-    )
-
-    class Meta:
-        verbose_name = "Bakery User Profile"
-        verbose_name_plural = "Bakery User Profiles"
-
-    def __str__(self):
-        display_name = self.pseudonym or self.member.get_display_name()
-        return f"{self.member.member_no} - {display_name}"
-
-    def get_display_name(self) -> str:
-        """
-        Returns pseudonym if set and active, otherwise member's real name
-        """
-        if self.pseudonym:
-            return self.pseudonym
-        return self.member.get_display_name()
 
 
 class BakeryConfiguration(TapirModel):

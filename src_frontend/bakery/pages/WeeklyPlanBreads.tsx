@@ -21,13 +21,13 @@ const currentWeek = dayjs().isoWeek();
 const currentYear = dayjs().year();
 
 const DAY_LABELS: Record<number, string> = {
-  1: 'Montag',
-  2: 'Dienstag',
-  3: 'Mittwoch',
-  4: 'Donnerstag',
-  5: 'Freitag',
-  6: 'Samstag',
-  7: 'Sonntag',
+  0: 'Montag',
+  1: 'Dienstag',
+  2: 'Mittwoch',
+  3: 'Donnerstag',
+  4: 'Freitag',
+  5: 'Samstag',
+  6: 'Sonntag',
 };
 
 interface WeeklyPlanBreadsProps {
@@ -69,13 +69,13 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
     try {
       const [breadsData, deliveryDaysData] = await Promise.all([
         bakeryApi.bakeryBreadsListList({}),
-        bakeryApi.bakeryPickupLocationOpeningTimesDeliveryDaysList(),
+        bakeryApi.pickupLocationsApiDeliveryDaysRetrieve(),
       ]);
 
       setAllBreads(breadsData.filter((b: BreadList) => b.isActive !== false));
 
-      const dayConfigs: DayConfig[] = (deliveryDaysData as any).days.map((dayNumber: number) => ({
-        day: dayNumber - 1,
+      const dayConfigs: DayConfig[] = deliveryDaysData.days.map((dayNumber: number) => ({
+        day: dayNumber,
         label: DAY_LABELS[dayNumber] || `Tag ${dayNumber}`,
         dayNumber: dayNumber,
         breads: {},
@@ -96,7 +96,7 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
       const updatedDays = await Promise.all(
         days.map(async (dayConfig) => {
           try {
-            const response = await bakeryApi.bakeryAvailableBreadsForDeliveryList({
+            const response = await bakeryApi.bakeryAvailableBreadsForDeliveryRetrieve({
               year,
               week,
               day: dayConfig.day,
@@ -129,30 +129,70 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
     }
   };
 
-  const toggleBread = async (dayIndex: number, breadId: string) => {
-    const newDays = [...days];
-    const newState = !newDays[dayIndex].breads[breadId];
-    newDays[dayIndex].breads[breadId] = newState;
-    setDays(newDays);
+// ...existing code...
 
-    setSaving(true);
-    try {
-      await bakeryApi.bakeryAvailableBreadsForDeliveryToggleCreate({
-        year,
-        week,
-        day: newDays[dayIndex].day,
-        breadId: breadId,
-        isActive: newState,
-      } as any);
-    } catch (error) {
-      console.error('Failed to save:', error);
-      newDays[dayIndex].breads[breadId] = !newState;
-      setDays(newDays);
-      alert('Fehler beim Speichern');
-    } finally {
-      setSaving(false);
-    }
+const toggleBread = async (dayIndex: number, breadId: string) => {
+  console.log("==================== TOGGLE BREAD DEBUG ====================");
+  console.log("CSRF Token:", csrfToken);
+  console.log("CSRF Token length:", csrfToken?.length);
+  console.log("CSRF Token type:", typeof csrfToken);
+  console.log("Day index:", dayIndex);
+  console.log("Bread ID:", breadId);
+  console.log("Day config:", days[dayIndex]);
+  
+  const newDays = [...days];
+  const newState = !newDays[dayIndex].breads[breadId];
+  newDays[dayIndex].breads[breadId] = newState;
+  setDays(newDays);
+
+  const payload = {
+    year: year,
+    week: week,
+    day: newDays[dayIndex].day,
+    breadId: breadId,
+    isActive: newState,
   };
+  
+  console.log("Payload to send:", payload);
+
+  setSaving(true);
+  try {
+    console.log("Calling bakeryApi.bakeryAvailableBreadsForDeliveryCreate...");
+    
+    const result = await bakeryApi.bakeryAvailableBreadsForDeliveryCreate({
+      toggleBreadRequestRequest: payload
+    });
+    
+    console.log("✅ SUCCESS! Result:", result);
+    console.log("===========================================================");
+  } catch (error) {
+    console.error("❌ FAILED! Error details:");
+    console.error("Error:", error);
+    console.error("Error type:", typeof error);
+    console.error("Error constructor:", error?.constructor?.name);
+    
+    if (error instanceof Response) {
+      console.error("Response status:", error.status);
+      console.error("Response statusText:", error.statusText);
+      try {
+        const errorText = await error.text();
+        console.error("Response body:", errorText);
+      } catch (e) {
+        console.error("Could not read response body");
+      }
+    }
+    
+    console.log("===========================================================");
+    
+    newDays[dayIndex].breads[breadId] = !newState;
+    setDays(newDays);
+    alert('Fehler beim Speichern');
+  } finally {
+    setSaving(false);
+  }
+};
+
+// ...existing code...
 
   const handleOpenModal = (day: number, label: string) => {
     setSelectedDay({ day, label });

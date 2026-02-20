@@ -14,6 +14,7 @@ apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AutomatedExportCycleEnum.ts
+models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts
 models/BakeryBreadCapacityPickupStationBulkUpdateCreateRequest.ts
 models/BakeryBreadCapacityPickupStationBulkUpdateCreateRequestUpdatesInner.ts
@@ -27,6 +28,7 @@ models/BestellWizardImages.ts
 models/BestellWizardStrings.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts
+models/Bread.ts
 models/BreadCapacityPickupStation.ts
 models/BreadCapacityPickupStationRequest.ts
 models/BreadContent.ts
@@ -55,6 +57,7 @@ models/Delivery.ts
 models/DeliveryCycleEnum.ts
 models/DeliveryDayAdjustment.ts
 models/DeliveryDayAdjustmentRequest.ts
+models/DeliveryDaysResponse.ts
 models/DeliveryDonation.ts
 models/DeliveryDonationWithCancellationLimit.ts
 models/DisableLinkSerializerRequest.ts
@@ -163,6 +166,8 @@ models/PickupLocationCapacityCheckRequestRequest.ts
 models/PickupLocationCapacityCheckResponse.ts
 models/PickupLocationCapacityEvolution.ts
 models/PickupLocationOpeningTime.ts
+models/PickupStationDeliveryDay.ts
+models/PickupStationsByDeliveryDayResponse.ts
 models/PreferredLanguageEnum.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts
@@ -206,6 +211,8 @@ models/TapirmailApiSegmentCombineCreate200Response.ts
 models/TapirmailApiSegmentCombineCreate200ResponseRecipientsInner.ts
 models/TemporaryUpload.ts
 models/TemporaryUploadRequest.ts
+models/ToggleBreadRequestRequest.ts
+models/ToggleBreadResponse.ts
 models/TransactionTypeEnum.ts
 models/TriggerData.ts
 models/TriggerDataRequest.ts

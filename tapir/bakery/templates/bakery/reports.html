@@ -28,5 +28,5 @@
 
 {% block content %}
     {% csrf_token %}
-    <div id="reports-root"></div>
+    <div id="reports-root" data-csrf-token="{{ csrf_token }}"></div>
 {% endblock %}

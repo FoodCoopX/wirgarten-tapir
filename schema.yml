@@ -3,6 +3,69 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /bakery/available-breads-for-delivery/:
+    get:
+      operationId: bakery_available_breads_for_delivery_retrieve
+      description: Get or toggle breads for a specific year, week and day
+      summary: Get breads for a delivery day
+      parameters:
+      - in: query
+        name: day
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: week
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableBreadsForDeliveryListResponse'
+          description: ''
+    post:
+      operationId: bakery_available_breads_for_delivery_create
+      description: Get or toggle breads for a specific year, week and day
+      summary: Toggle bread availability for a delivery day
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleBreadRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ToggleBreadRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ToggleBreadRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToggleBreadResponse'
+          description: ''
   /bakery/bread-capacity-pickup-station/:
     get:
       operationId: bakery_bread_capacity_pickup_station_list
@@ -12,7 +75,7 @@ paths:
         schema:
           type: array
           items:
-            type: integer
+            type: string
       - in: query
         name: week
         schema:
@@ -194,7 +257,7 @@ paths:
                     type: object
                     properties:
                       pickup_station_day:
-                        type: integer
+                        type: string
                       bread:
                         type: string
                       capacity:
@@ -556,7 +619,7 @@ paths:
   /bakery/breads-list/{id}/contents/:
     get:
       operationId: bakery_breads_list_contents_list
-      description: Get all contents (ingredients) for a specific bread
+      description: Get or add contents (ingredients) for a specific bread
       summary: Get all ingredients for a specific bread
       parameters:
       - in: path
@@ -582,8 +645,8 @@ paths:
           description: ''
     post:
       operationId: bakery_breads_list_contents_create
-      description: Add an ingredient to a bread
-      summary: Add an ingredient to a bread
+      description: Get or add contents (ingredients) for a specific bread
+      summary: Get all ingredients for a specific bread
       parameters:
       - in: path
         name: id
@@ -597,24 +660,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BreadContentRequest'
+              $ref: '#/components/schemas/BreadListRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/BreadContentRequest'
+              $ref: '#/components/schemas/BreadListRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/BreadContentRequest'
+              $ref: '#/components/schemas/BreadListRequest'
         required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
       responses:
-        '201':
+        '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BreadContent'
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadContent'
           description: ''
   /bakery/breads-list/by-labels/:
     get:
@@ -2339,6 +2404,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /pickup_locations/api/delivery_days:
+    get:
+      operationId: pickup_locations_api_delivery_days_retrieve
+      description: Returns the earliest delivery day per pickup location
+      summary: Get distinct list of delivery days
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryDaysResponse'
+          description: ''
   /pickup_locations/api/get_member_pickup_location:
     get:
       operationId: pickup_locations_api_get_member_pickup_location_retrieve
@@ -2465,6 +2548,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PickupLocationCapacityEvolution'
+          description: ''
+  /pickup_locations/api/pickup_locations_by_delivery_day:
+    get:
+      operationId: pickup_locations_api_pickup_locations_by_delivery_day_retrieve
+      description: Get pickup stations filtered by delivery day
+      summary: Get pickup stations filtered by delivery day
+      parameters:
+      - in: query
+        name: day_of_week
+        schema:
+          type: integer
+        description: Day of week (1-7)
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupStationsByDeliveryDayResponse'
           description: ''
   /pickup_locations/pickup_locations/:
     get:
@@ -6003,6 +6111,24 @@ components:
         * `weekly` - Wöchentlich
         * `daily` - Täglich
         * `never` - Nie
+    AvailableBreadsForDeliveryListResponse:
+      type: object
+      properties:
+        year:
+          type: integer
+        week:
+          type: integer
+        day:
+          type: integer
+        breads:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bread'
+      required:
+      - breads
+      - day
+      - week
+      - year
     AvailableSegmentsResponse:
       type: object
       properties:
@@ -6475,6 +6601,16 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
+    Bread:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - name
     BreadCapacityPickupStation:
       type: object
       properties:
@@ -6487,7 +6623,7 @@ components:
         pickup_location_name:
           type: string
           readOnly: true
-        weekday:
+        delivery_day:
           type: integer
           readOnly: true
         bread_name:
@@ -6518,11 +6654,11 @@ components:
       - bread
       - bread_name
       - capacity
+      - delivery_day
       - delivery_week
       - pickup_location
       - pickup_location_name
       - pickup_station_day
-      - weekday
       - year
     BreadCapacityPickupStationRequest:
       type: object
@@ -7682,6 +7818,15 @@ components:
       required:
       - adjusted_weekday
       - calendar_week
+    DeliveryDaysResponse:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            type: integer
+      required:
+      - days
     DeliveryDonation:
       type: object
       properties:
@@ -10356,6 +10501,25 @@ components:
       - day_of_week_string
       - open_time
       - pickup_location
+    PickupStationDeliveryDay:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    PickupStationsByDeliveryDayResponse:
+      type: object
+      properties:
+        pickup_stations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupStationDeliveryDay'
+      required:
+      - pickup_stations
     PreferredLanguageEnum:
       enum:
       - de
@@ -11421,6 +11585,40 @@ components:
       - upload_id
       - upload_name
       - upload_type
+    ToggleBreadRequestRequest:
+      type: object
+      properties:
+        year:
+          type: integer
+        week:
+          type: integer
+        day:
+          type: integer
+        bread_id:
+          type: string
+          minLength: 1
+        is_active:
+          type: boolean
+      required:
+      - bread_id
+      - day
+      - is_active
+      - week
+      - year
+    ToggleBreadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        created:
+          type: boolean
+        deleted:
+          type: boolean
+        bread_id:
+          type: string
+      required:
+      - bread_id
+      - success
     TransactionTypeEnum:
       enum:
       - purchase

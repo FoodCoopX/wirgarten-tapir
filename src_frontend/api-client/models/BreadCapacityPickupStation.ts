@@ -42,7 +42,7 @@ export interface BreadCapacityPickupStation {
      * @type {number}
      * @memberof BreadCapacityPickupStation
      */
-    readonly weekday: number;
+    readonly deliveryDay: number;
     /**
      * 
      * @type {string}
@@ -87,7 +87,7 @@ export interface BreadCapacityPickupStation {
 export function instanceOfBreadCapacityPickupStation(value: object): value is BreadCapacityPickupStation {
     if (!('pickupLocation' in value) || value['pickupLocation'] === undefined) return false;
     if (!('pickupLocationName' in value) || value['pickupLocationName'] === undefined) return false;
-    if (!('weekday' in value) || value['weekday'] === undefined) return false;
+    if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     if (!('breadName' in value) || value['breadName'] === undefined) return false;
     if (!('year' in value) || value['year'] === undefined) return false;
     if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
@@ -110,7 +110,7 @@ export function BreadCapacityPickupStationFromJSONTyped(json: any, ignoreDiscrim
         'id': json['id'] == null ? undefined : json['id'],
         'pickupLocation': json['pickup_location'],
         'pickupLocationName': json['pickup_location_name'],
-        'weekday': json['weekday'],
+        'deliveryDay': json['delivery_day'],
         'breadName': json['bread_name'],
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
@@ -124,7 +124,7 @@ export function BreadCapacityPickupStationFromJSONTyped(json: any, ignoreDiscrim
       return BreadCapacityPickupStationToJSONTyped(json, false);
   }
 
-  export function BreadCapacityPickupStationToJSONTyped(value?: Omit<BreadCapacityPickupStation, 'pickup_location'|'pickup_location_name'|'weekday'|'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadCapacityPickupStationToJSONTyped(value?: Omit<BreadCapacityPickupStation, 'pickup_location'|'pickup_location_name'|'delivery_day'|'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

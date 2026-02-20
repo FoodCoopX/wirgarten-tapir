@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
+import { BakeryApi } from '../../api-client';
+import { useApi } from '../../hooks/useApi';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 
@@ -14,7 +16,6 @@ interface DayConfig {
 const currentWeek = dayjs().isoWeek();
 const currentYear = dayjs().year();
 
-// Day labels mapping
 const DAY_LABELS: Record<number, string> = {
   0: 'Montag',
   1: 'Dienstag',
@@ -24,8 +25,13 @@ const DAY_LABELS: Record<number, string> = {
   5: 'Samstag',
   6: 'Sonntag',
 };
+ 
+interface ReportsProps {
+  csrfToken: string;
+}
 
-export const Reports: React.FC = () => {
+export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(currentWeek);
   const [downloading, setDownloading] = useState<string | null>(null);
@@ -39,10 +45,10 @@ export const Reports: React.FC = () => {
   const loadDeliveryDays = async () => {
     setLoading(true);
     try {
-      const deliveryDaysData = await pickupLocationOpeningTimesApi.deliveryDays();
+      const deliveryDaysData = await bakeryApi.pickupLocationsApiDeliveryDaysRetrieve();
       
-      const dayConfigs: DayConfig[] = deliveryDaysData.days.map((dayNumber) => ({
-        day: dayNumber - 1, // Convert 1-7 to 0-6 for API
+      const dayConfigs: DayConfig[] = deliveryDaysData.days.map((dayNumber: number) => ({
+        day: dayNumber - 1,
         label: DAY_LABELS[dayNumber] || `Tag ${dayNumber}`,
         dayNumber: dayNumber,
       }));
@@ -147,7 +153,6 @@ export const Reports: React.FC = () => {
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
                       <h5 className="mb-0">
-                       
                         {dayConfig.label}
                       </h5>
                       <small className="opacity-75">{getDateForDay(dayConfig.dayNumber)}</small>

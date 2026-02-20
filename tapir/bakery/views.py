@@ -1,36 +1,56 @@
-import json
-from typing import Any, Dict, List
-
-from django.http import HttpRequest, JsonResponse
-from django.views import View
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from tapir.bakery.models import AvailableBreadsForDeliveryDay, Bread
+from tapir.bakery.serializers import (
+    AvailableBreadsForDeliveryListResponseSerializer,
+    ToggleBreadRequestSerializer,
+    ToggleBreadResponseSerializer,
+)
+from tapir.generic_exports.permissions import HasCoopManagePermission
 
 
-class AvailableBreadsForDeliveryListView(View):
-    """Get list of breads for a specific year, week and day"""
+class AvailableBreadsForDeliveryListView(APIView):
+    """
+    Get or toggle breads for a specific year, week and day
+    """
 
-    def get(self, request: HttpRequest) -> JsonResponse:
-        """Get list of breads available for a specific year, week and day"""
-        year: str | None = request.GET.get("year")
-        week: str | None = request.GET.get("week")
-        day: str | None = request.GET.get("day")
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        summary="Get breads for a delivery day",
+        parameters=[
+            OpenApiParameter(name="year", type=int, required=True),
+            OpenApiParameter(name="week", type=int, required=True),
+            OpenApiParameter(name="day", type=int, required=True),
+        ],
+        responses={200: AvailableBreadsForDeliveryListResponseSerializer},
+    )
+    def get(self, request: Request) -> Response:
+        year = request.query_params.get("year")
+        week = request.query_params.get("week")
+        day = request.query_params.get("day")
 
         if not all([year, week, day]):
-            return JsonResponse(
-                {"error": "Missing parameters. Required: year, week, day"}, status=400
+            return Response(
+                {"error": "Missing parameters. Required: year, week, day"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-            year_int: int = int(year)
-            week_int: int = int(week)
-            day_int: int = int(day)
+            year_int = int(year)
+            week_int = int(week)
+            day_int = int(day)
         except (ValueError, TypeError):
-            return JsonResponse(
-                {"error": "Invalid year, week or day format"}, status=400
+            return Response(
+                {"error": "Invalid year, week or day format"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Get available breads for this delivery configuration
         available_breads = (
             AvailableBreadsForDeliveryDay.objects.filter(
                 year=year_int,
@@ -42,66 +62,46 @@ class AvailableBreadsForDeliveryListView(View):
             .order_by("bread__name")
         )
 
-        breads: List[Dict[str, Any]] = [
-            {
-                "id": str(entry.bread.id),
-                "name": entry.bread.name,
-            }
+        breads = [
+            {"id": str(entry.bread.id), "name": entry.bread.name}
             for entry in available_breads
         ]
 
-        return JsonResponse(
+        return Response(
             {"year": year_int, "week": week_int, "day": day_int, "breads": breads}
         )
 
-    def post(self, request: HttpRequest) -> JsonResponse:
-        """Toggle bread availability for a delivery day"""
-        try:
-            data = json.loads(request.body.decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            return JsonResponse({"error": f"Invalid JSON: {str(e)}"}, status=400)
+    @extend_schema(
+        summary="Toggle bread availability for a delivery day",
+        request=ToggleBreadRequestSerializer,
+        responses={200: ToggleBreadResponseSerializer},
+    )
+    def post(self, request):
+        serializer = ToggleBreadRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
 
-        year = data.get("year")
-        week = data.get("week")
-        day = data.get("day")
-        bread_id = data.get("bread_id")
-        is_active = data.get("is_active")
-
-        # Debug logging
-        print(f"Received POST data: {data}")
-        print(
-            f"year={year}, week={week}, day={day}, bread_id={bread_id}, is_active={is_active}"
-        )
-
-        if (
-            year is None
-            or week is None
-            or day is None
-            or bread_id is None
-            or is_active is None
-        ):
-            return JsonResponse(
-                {
-                    "error": "Missing required fields: year, week, day, bread_id, is_active",
-                    "received": data,
-                },
-                status=400,
-            )
+        year = data["year"]
+        week = data["week"]
+        day = data["day"]
+        bread_id = data["bread_id"]
+        is_active = data["is_active"]
 
         try:
             bread = Bread.objects.get(id=bread_id)
         except Bread.DoesNotExist:
-            return JsonResponse({"error": "Bread not found"}, status=404)
+            return Response(
+                {"error": "Bread not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         if is_active:
-            # Create or update entry
             entry, created = AvailableBreadsForDeliveryDay.objects.get_or_create(
-                year=int(year),
-                delivery_week=int(week),
-                delivery_day=int(day),
+                year=year,
+                delivery_week=week,
+                delivery_day=day,
                 bread=bread,
             )
-            return JsonResponse(
+            return Response(
                 {
                     "success": True,
                     "created": created,
@@ -109,14 +109,13 @@ class AvailableBreadsForDeliveryListView(View):
                 }
             )
         else:
-            # Delete entry
             deleted_count, _ = AvailableBreadsForDeliveryDay.objects.filter(
-                year=int(year),
-                delivery_week=int(week),
-                delivery_day=int(day),
+                year=year,
+                delivery_week=week,
+                delivery_day=day,
                 bread=bread,
             ).delete()
-            return JsonResponse(
+            return Response(
                 {
                     "success": True,
                     "deleted": deleted_count > 0,

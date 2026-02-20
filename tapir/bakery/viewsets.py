@@ -225,7 +225,7 @@ class BreadCapacityPickupStationViewSet(viewsets.ModelViewSet):
         parameters=[
             OpenApiParameter(name="year", type=int),
             OpenApiParameter(name="week", type=int),
-            OpenApiParameter(name="pickup_station_ids[]", type=int, many=True),
+            OpenApiParameter(name="pickup_station_ids[]", type=str, many=True),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -259,7 +259,7 @@ class BreadCapacityPickupStationViewSet(viewsets.ModelViewSet):
                         "items": {
                             "type": "object",
                             "properties": {
-                                "pickup_station_day": {"type": "integer"},
+                                "pickup_station_day": {"type": "string"},
                                 "bread": {"type": "string"},
                                 "capacity": {"type": "integer", "nullable": True},
                             },

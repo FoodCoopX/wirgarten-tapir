@@ -5,6 +5,7 @@ import { Reports } from '../pages/Reports.tsx';
 const container = document.getElementById('reports-root');
 
 if (container) {
+  const csrfToken = container.getAttribute('data-csrf-token') || '';
   const root = createRoot(container);
-  root.render(<Reports />);
+  root.render(<Reports csrfToken={csrfToken} />);
 }

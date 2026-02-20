@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface BakeryBreadCapacityPickupStationBulkUpdateCreateRequestUpdatesInner {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof BakeryBreadCapacityPickupStationBulkUpdateCreateRequestUpdatesInner
      */
-    pickupStationDay?: number;
+    pickupStationDay?: string;
     /**
      * 
      * @type {string}

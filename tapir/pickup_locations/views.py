@@ -1,13 +1,17 @@
 import datetime
 import locale
-from typing import Dict
+from typing import Any, Dict, List
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
-from rest_framework import status, viewsets, permissions, serializers
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -15,11 +19,13 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import PickupLocationSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.serializers import (
+    DeliveryDaysResponseSerializer,
     PickupLocationCapacitiesSerializer,
-    PickupLocationCapacityEvolutionSerializer,
-    PublicPickupLocationSerializer,
-    PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityCheckRequestSerializer,
+    PickupLocationCapacityCheckResponseSerializer,
+    PickupLocationCapacityEvolutionSerializer,
+    PickupStationsByDeliveryDayResponseSerializer,
+    PublicPickupLocationSerializer,
 )
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
@@ -49,17 +55,18 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
+    GrowingPeriod,
+    Member,
     PickupLocation,
     PickupLocationCapability,
+    PickupLocationOpeningTime,
     ProductType,
-    Member,
-    GrowingPeriod,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.utils import get_today, check_permission_or_self
+from tapir.wirgarten.utils import check_permission_or_self, get_today
 
 
 class PickupLocationCapacitiesView(APIView):
@@ -246,7 +253,7 @@ class PickupLocationCapacityCheckApiView(APIView):
         )
         if pickup_location is None:
             raise Http404(
-                f"Unknown pickup location, id: '{serializer.validated_data["pickup_location_id"]}'"
+                f"Unknown pickup location, id: '{serializer.validated_data['pickup_location_id']}'"
             )
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
@@ -438,3 +445,102 @@ class ChangeMemberPickupLocationApiView(APIView):
             raise ValidationError(
                 "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
+
+
+@extend_schema(tags=["bakery"])
+class DeliveryDaysView(APIView):
+    """
+    Get distinct list of delivery days, considering only the first (earliest) day per pickup location
+    """
+
+    @extend_schema(
+        summary="Get distinct list of delivery days",
+        description="Returns the earliest delivery day per pickup location",
+        responses={
+            200: DeliveryDaysResponseSerializer,
+        },
+    )
+    def get(self, request):
+        """Get distinct list of delivery days"""
+        from django.db.models import Min
+
+        # Get the earliest day_of_week per pickup location
+        earliest_days = (
+            PickupLocationOpeningTime.objects.values("pickup_location")
+            .annotate(first_day=Min("day_of_week"))
+            .values_list("first_day", flat=True)
+        )
+
+        # Get distinct sorted days
+        days = sorted(set(earliest_days))
+
+        return Response({"days": days})
+
+
+@extend_schema(tags=["bakery"])
+class PickupStationsByDeliveryDayView(APIView):
+    """
+    Get pickup stations filtered by delivery day
+    """
+
+    @extend_schema(
+        summary="Get pickup stations filtered by delivery day",
+        parameters=[
+            OpenApiParameter(
+                name="day_of_week",
+                type=int,
+                description="Day of week (1-7)",
+                required=True,
+            )
+        ],
+        responses={
+            200: PickupStationsByDeliveryDayResponseSerializer,
+        },
+    )
+    def get(self, request):
+        """Get pickup stations filtered by delivery day"""
+        day_of_week: str | None = request.query_params.get("day_of_week", None)
+
+        if not day_of_week:
+            return Response(
+                {"error": "day_of_week parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            day_int: int = int(day_of_week)
+        except ValueError:
+            return Response(
+                {"error": "day_of_week must be a number (1-7)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        all_records = PickupLocationOpeningTime.objects.all()
+        filtered_records = PickupLocationOpeningTime.objects.filter(day_of_week=day_int)
+
+        if not filtered_records.exists():
+            return Response(
+                {
+                    "error": f"No pickup locations found for day {day_int}",
+                    "available_days": list(
+                        all_records.values_list("day_of_week", flat=True).distinct()
+                    ),
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        stations: List[Dict[str, Any]] = list(
+            filtered_records.values(
+                "id", "pickup_location__id", "pickup_location__name"
+            ).order_by("pickup_location__name")
+        )
+
+        result: List[Dict[str, Any]] = [
+            {
+                "id": station["id"],
+                "name": station["pickup_location__name"],
+            }
+            for station in stations
+        ]
+
+        return Response({"pickup_stations": result})
