@@ -126,18 +126,18 @@ class BakeryConfiguration(TapirModel):
         return "Bakery Configuration"
 
 
-class BreadCapacityPickupStation(TapirModel):
+class BreadCapacityPickupLocation(TapirModel):
     """
-    Capacity of how many breads can be delivered to each pickup station on each delivery day
+    Capacity of how many breads can be delivered to each pickup location on each delivery day
     """
 
     year = models.PositiveIntegerField(help_text="Year for which this capacity applies")
     delivery_week = models.PositiveIntegerField(help_text="Delivery week number (1-53)")
-    pickup_station_day = models.ForeignKey(
+    pickup_location_day = models.ForeignKey(
         PickupLocationOpeningTime,
         on_delete=models.CASCADE,
         related_name="bread_capacities",
-        help_text="The pickup station and day this capacity applies to",
+        help_text="The pickup location and day this capacity applies to",
     )
     bread = models.ForeignKey(
         "Bread",
@@ -146,11 +146,11 @@ class BreadCapacityPickupStation(TapirModel):
     )
     capacity = models.PositiveIntegerField(
         validators=[MinValueValidator(0)],
-        help_text="Maximum number of breads of this label that can be delivered to this pickup station on this delivery day",
+        help_text="Maximum number of breads of this label that can be delivered to this pickup location on this delivery day",
     )
 
     class Meta:
-        unique_together = ("pickup_station_day", "year", "delivery_week", "bread")
+        unique_together = ("pickup_location_day", "year", "delivery_week", "bread")
 
 
 class AvailableBreadsForDeliveryDay(TapirModel):
@@ -178,7 +178,8 @@ class BreadDelivery(TapirModel):
     year = models.PositiveIntegerField()
     delivery_week = models.PositiveIntegerField()
     subscription = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, related_name="pickup_locations"
+        Subscription,
+        on_delete=models.CASCADE,
     )
     slot_number = models.PositiveIntegerField(
         default=1
@@ -186,14 +187,16 @@ class BreadDelivery(TapirModel):
     pickup_location = models.ForeignKey(
         PickupLocation,
         on_delete=models.CASCADE,
-        related_name="subscription_pickup_locations",
         blank=True,
         null=True,
     )
     bread = models.ForeignKey(
         Bread,
         on_delete=models.CASCADE,
-        related_name="bread_delivery_slots",
         blank=True,
         null=True,
     )
+
+    class Meta:
+        unique_together = [["subscription", "year", "delivery_week", "slot_number"]]
+        ordering = ["year", "delivery_week", "slot_number"]

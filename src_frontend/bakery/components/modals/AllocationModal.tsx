@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { InfoCircle, ExclamationTriangle, ArrowRepeat } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
-import type { BreadList, BreadCapacityPickupStation } from '../../../api-client/models';
+import type { 
+  BreadList, 
+  BreadCapacityPickupLocation, 
+  PickupStationsByDeliveryDayResponse 
+} from '../../../api-client/models';
 
 interface AllocationModalProps {
   isOpen: boolean;
@@ -14,13 +18,8 @@ interface AllocationModalProps {
   csrfToken: string;
 }
 
-interface PickupStation {
-  id: string;  // Changed back to string
-  name: string;
-}
-
 interface AllocationData {
-  [stationId: string]: {  // Changed back to string
+  [stationId: string]: {
     [breadId: string]: string;
   };
 }
@@ -37,7 +36,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
   const bakeryApi = useApi(BakeryApi, csrfToken);
 
   const [breads, setBreads] = useState<BreadList[]>([]);
-  const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
+  const [pickupStations, setPickupStations] = useState<PickupStationsByDeliveryDayResponse['pickupStations']>([]);
   const [loading, setLoading] = useState(true);
   const [allocations, setAllocations] = useState<AllocationData>({});
   const [saving, setSaving] = useState(false);
@@ -59,36 +58,29 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
         bakeryApi.pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({ dayOfWeek }),
       ]);
 
-      console.log('Loaded breads:', breadsResponse);
-      console.log('Loaded pickup stations:', stationsResponse);
-
-      // Use the PickupLocationOpeningTime.id from the response (it's a string)
-      const filteredStations: PickupStation[] = stationsResponse.pickupStations.map(s => ({
-        id: s.id,  // String ID from PickupLocationOpeningTime
-        name: s.name,  // pickup_location.name
-      }));
-
       setBreads(breadsResponse);
-      setPickupStations(filteredStations);
+      setPickupStations(stationsResponse.pickupStations);
 
-      // Load existing capacities
-      const stationIds = filteredStations.map(s => s.id);  // Already strings
-      let capacities: BreadCapacityPickupStation[] = [];
+      // Load existing capacities for these pickup stations
+      const stationIds = stationsResponse.pickupStations.map(s => s.id);
+      let capacities: BreadCapacityPickupLocation[] = [];
+      
       if (stationIds.length > 0) {
-        capacities = await bakeryApi.bakeryBreadCapacityPickupStationList({
+        capacities = await bakeryApi.bakeryBreadCapacityPickupLocationList({
           year,
           week,
-          pickupStationIds: stationIds,
+          pickupLocationIds: stationIds,
         });
       }
 
       // Initialize allocations (stations × breads)
       const initial: AllocationData = {};
-      filteredStations.forEach(station => {
+      stationsResponse.pickupStations.forEach(station => {
         initial[station.id] = {};
         breadsResponse.forEach(bread => {
+          // Find existing capacity for this station + bread combination
           const existingCapacity = capacities.find(
-            (c) => c.pickupStationDay === station.id && c.bread === bread.id
+            (c) => c.pickupLocationDay === station.id && c.bread === bread.id
           );
           initial[station.id][bread.id!] =
             existingCapacity ? String(existingCapacity.capacity) : '';
@@ -107,6 +99,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
   const handleCellChange = (stationId: string, breadId: string, value: string) => {
     const sanitized = value.trim().toLowerCase();
+    // Allow empty, 'x', or numeric values only
     if (sanitized !== '' && sanitized !== 'x' && isNaN(Number(sanitized))) {
       return;
     }
@@ -124,21 +117,23 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     setSaving(true);
     try {
       const updates: Array<{
-        pickupStationDay: string;  // Keep as string
+        pickupLocationDay: string;
         bread: string;
         capacity: number | null;
       }> = [];
 
+      // Compare current allocations with initial allocations
       Object.entries(allocations).forEach(([stationId, breadAllocs]) => {
         Object.entries(breadAllocs).forEach(([breadId, value]) => {
           const initialValue = initialAllocations[stationId]?.[breadId] || '';
 
           // Only save if value changed
           if (value !== initialValue) {
+            // Convert 'x' or empty to null, otherwise to number
             const capacityValue = value === '' || value === 'x' ? null : Number(value);
             
             updates.push({
-              pickupStationDay: stationId,  // Already a string
+              pickupLocationDay: stationId,
               bread: breadId,
               capacity: capacityValue,
             });
@@ -147,9 +142,8 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       });
 
       if (updates.length > 0) {
-        console.log('Sending updates:', { year, week, updates });
-        await bakeryApi.bakeryBreadCapacityPickupStationBulkUpdateCreate({
-          bakeryBreadCapacityPickupStationBulkUpdateCreateRequest: {
+        await bakeryApi.bakeryBreadCapacityPickupLocationBulkUpdateCreate({
+          bakeryBreadCapacityPickupLocationBulkUpdateCreateRequest: {
             year,
             week,
             updates,

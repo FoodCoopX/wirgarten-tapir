@@ -26,10 +26,10 @@ const years = Array.from({ length: (currentYear + 1) - 2026 + 1 }, (_, i) => 202
           Woche & Jahr auswählen
         </h5>
       </div>
-      <div className="card-body">
+      <div className="card-body small">
         <div className="row g-3">
           <div className="col-md-1">
-            <label className="form-label fw-bold">Jahr</label>
+      
             <select
               className="form-select"
               value={selectedYear}
@@ -42,7 +42,7 @@ const years = Array.from({ length: (currentYear + 1) - 2026 + 1 }, (_, i) => 202
             </select>
           </div>
           <div className="col-md-1">
-            <label className="form-label fw-bold">KW</label>
+          
             <select
               className="form-select"
               value={selectedWeek}

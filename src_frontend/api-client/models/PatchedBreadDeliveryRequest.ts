@@ -60,7 +60,7 @@ export interface PatchedBreadDeliveryRequest {
      * @type {string}
      * @memberof PatchedBreadDeliveryRequest
      */
-    bread?: string;
+    bread?: string | null;
 }
 
 /**

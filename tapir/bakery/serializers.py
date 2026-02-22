@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from tapir.bakery.models import (
     Bread,
-    BreadCapacityPickupStation,
+    BreadCapacityPickupLocation,
     BreadContent,
     BreadDelivery,
     BreadLabel,
@@ -58,6 +58,9 @@ class BreadDetailSerializer(serializers.ModelSerializer):
     labels = BreadLabelSerializer(many=True, read_only=True)
     contents = BreadContentSerializer(many=True, read_only=True)
     label_names = serializers.SerializerMethodField()
+    capacity = serializers.IntegerField(read_only=True, required=False)
+    delivery_count = serializers.IntegerField(read_only=True, required=False)
+    available_capacity = serializers.IntegerField(read_only=True, required=False)
 
     class Meta:
         model = Bread
@@ -73,28 +76,38 @@ class BreadDetailSerializer(serializers.ModelSerializer):
             "is_active",
             "created_at",
             "updated_at",
+            "capacity",
+            "delivery_count",
+            "available_capacity",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "capacity",
+            "delivery_count",
+            "available_capacity",
+        ]
 
     def get_label_names(self, obj) -> list[str]:
         return [label.name for label in obj.labels.all()]
 
 
-class BreadCapacityPickupStationSerializer(serializers.ModelSerializer):
+class BreadCapacityPickupLocationSerializer(serializers.ModelSerializer):
     pickup_location = serializers.CharField(
-        source="pickup_station_day.pickup_location.id", read_only=True
+        source="pickup_location_day.pickup_location.id", read_only=True
     )
     pickup_location_name = serializers.CharField(
-        source="pickup_station_day.pickup_location.name", read_only=True
+        source="pickup_location_day.pickup_location.name", read_only=True
     )
     delivery_day = serializers.IntegerField(
-        source="pickup_station_day.day_of_week", read_only=True
+        source="pickup_location_day.day_of_week", read_only=True
     )
 
     bread_name = serializers.CharField(source="bread.name", read_only=True)
 
     class Meta:
-        model = BreadCapacityPickupStation
+        model = BreadCapacityPickupLocation
         fields = "__all__"
 
 

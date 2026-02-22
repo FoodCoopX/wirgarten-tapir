@@ -11,7 +11,7 @@ from tapir.bakery.views_templates import (
     WeeklyPlanBreadsView,
 )
 from tapir.bakery.viewsets import (
-    BreadCapacityPickupStationViewSet,
+    BreadCapacityPickupLocationViewSet,
     BreadContentViewSet,
     BreadDeliveryViewSet,
     BreadLabelViewSet,
@@ -64,9 +64,9 @@ router.register(
     basename="breadcontents",
 )
 router.register(
-    r"bread-capacity-pickup-station",
-    BreadCapacityPickupStationViewSet,
-    basename="bread_capacity_pickup_station",
+    r"bread-capacity-pickup-location",
+    BreadCapacityPickupLocationViewSet,
+    basename="bread_capacity_pickup_location",
 )
 router.register(
     r"preferred-labels",

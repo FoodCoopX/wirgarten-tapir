@@ -66,12 +66,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ToggleBreadResponse'
           description: ''
-  /bakery/bread-capacity-pickup-station/:
+  /bakery/bread-capacity-pickup-location/:
     get:
-      operationId: bakery_bread_capacity_pickup_station_list
+      operationId: bakery_bread_capacity_pickup_location_list
       parameters:
       - in: query
-        name: pickup_station_ids[]
+        name: pickup_location_ids[]
         schema:
           type: array
           items:
@@ -97,23 +97,23 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BreadCapacityPickupStation'
+                  $ref: '#/components/schemas/BreadCapacityPickupLocation'
           description: ''
     post:
-      operationId: bakery_bread_capacity_pickup_station_create
+      operationId: bakery_bread_capacity_pickup_location_create
       tags:
       - bakery
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/BreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/BreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
         required: true
       security:
       - tokenAuth: []
@@ -124,17 +124,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BreadCapacityPickupStation'
+                $ref: '#/components/schemas/BreadCapacityPickupLocation'
           description: ''
-  /bakery/bread-capacity-pickup-station/{id}/:
+  /bakery/bread-capacity-pickup-location/{id}/:
     get:
-      operationId: bakery_bread_capacity_pickup_station_retrieve
+      operationId: bakery_bread_capacity_pickup_location_retrieve
       parameters:
       - in: path
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der bread capacity pickup station identifiziert.
+        description: Ein eindeutiger Wert, der bread capacity pickup location identifiziert.
         required: true
       tags:
       - bakery
@@ -147,16 +147,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BreadCapacityPickupStation'
+                $ref: '#/components/schemas/BreadCapacityPickupLocation'
           description: ''
     put:
-      operationId: bakery_bread_capacity_pickup_station_update
+      operationId: bakery_bread_capacity_pickup_location_update
       parameters:
       - in: path
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der bread capacity pickup station identifiziert.
+        description: Ein eindeutiger Wert, der bread capacity pickup location identifiziert.
         required: true
       tags:
       - bakery
@@ -164,13 +164,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/BreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/BreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
         required: true
       security:
       - tokenAuth: []
@@ -181,16 +181,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BreadCapacityPickupStation'
+                $ref: '#/components/schemas/BreadCapacityPickupLocation'
           description: ''
     patch:
-      operationId: bakery_bread_capacity_pickup_station_partial_update
+      operationId: bakery_bread_capacity_pickup_location_partial_update
       parameters:
       - in: path
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der bread capacity pickup station identifiziert.
+        description: Ein eindeutiger Wert, der bread capacity pickup location identifiziert.
         required: true
       tags:
       - bakery
@@ -198,13 +198,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedBreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/PatchedBreadCapacityPickupLocationRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedBreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/PatchedBreadCapacityPickupLocationRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedBreadCapacityPickupStationRequest'
+              $ref: '#/components/schemas/PatchedBreadCapacityPickupLocationRequest'
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -214,16 +214,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BreadCapacityPickupStation'
+                $ref: '#/components/schemas/BreadCapacityPickupLocation'
           description: ''
     delete:
-      operationId: bakery_bread_capacity_pickup_station_destroy
+      operationId: bakery_bread_capacity_pickup_location_destroy
       parameters:
       - in: path
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der bread capacity pickup station identifiziert.
+        description: Ein eindeutiger Wert, der bread capacity pickup location identifiziert.
         required: true
       tags:
       - bakery
@@ -234,9 +234,9 @@ paths:
       responses:
         '204':
           description: No response body
-  /bakery/bread-capacity-pickup-station/bulk-update/:
+  /bakery/bread-capacity-pickup-location/bulk-update/:
     post:
-      operationId: bakery_bread_capacity_pickup_station_bulk_update_create
+      operationId: bakery_bread_capacity_pickup_location_bulk_update_create
       description: Bulk create/update/delete capacities
       summary: Bulk create/update/delete bread capacities
       tags:
@@ -256,7 +256,7 @@ paths:
                   items:
                     type: object
                     properties:
-                      pickup_station_day:
+                      pickup_location_day:
                         type: string
                       bread:
                         type: string
@@ -627,6 +627,21 @@ paths:
         schema:
           type: string
         description: Filter by label ID
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+        description: Filter by pickup location ID (requires year and week)
+      - in: query
+        name: week
+        schema:
+          type: integer
+        description: Filter by delivery week (requires pickup_location_id and year)
+      - in: query
+        name: year
+        schema:
+          type: integer
+        description: Filter by delivery year (requires pickup_location_id and week)
       tags:
       - bakery
       security:
@@ -6973,7 +6988,7 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
-    BreadCapacityPickupStation:
+    BreadCapacityPickupLocation:
       type: object
       properties:
         id:
@@ -7006,10 +7021,10 @@ components:
           maximum: 2147483647
           minimum: 0
           description: Maximum number of breads of this label that can be delivered
-            to this pickup station on this delivery day
-        pickup_station_day:
+            to this pickup location on this delivery day
+        pickup_location_day:
           type: string
-          description: The pickup station and day this capacity applies to
+          description: The pickup location and day this capacity applies to
         bread:
           type: string
       required:
@@ -7019,10 +7034,10 @@ components:
       - delivery_day
       - delivery_week
       - pickup_location
+      - pickup_location_day
       - pickup_location_name
-      - pickup_station_day
       - year
-    BreadCapacityPickupStationRequest:
+    BreadCapacityPickupLocationRequest:
       type: object
       properties:
         id:
@@ -7044,11 +7059,11 @@ components:
           maximum: 2147483647
           minimum: 0
           description: Maximum number of breads of this label that can be delivered
-            to this pickup station on this delivery day
-        pickup_station_day:
+            to this pickup location on this delivery day
+        pickup_location_day:
           type: string
           minLength: 1
-          description: The pickup station and day this capacity applies to
+          description: The pickup location and day this capacity applies to
         bread:
           type: string
           minLength: 1
@@ -7056,7 +7071,7 @@ components:
       - bread
       - capacity
       - delivery_week
-      - pickup_station_day
+      - pickup_location_day
       - year
     BreadContent:
       type: object
@@ -7140,6 +7155,7 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+          default: 1
         subscription:
           type: string
         pickup_location:
@@ -7147,13 +7163,12 @@ components:
           nullable: true
         bread:
           type: string
+          nullable: true
       required:
-      - bread
       - bread_name
       - delivery_day
       - delivery_week
       - pickup_location_name
-      - slot_number
       - subscription
       - year
     BreadDeliveryRequest:
@@ -7175,6 +7190,7 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+          default: 1
         subscription:
           type: string
           minLength: 1
@@ -7185,10 +7201,9 @@ components:
         bread:
           type: string
           minLength: 1
+          nullable: true
       required:
-      - bread
       - delivery_week
-      - slot_number
       - subscription
       - year
     BreadDetail:
@@ -7239,9 +7254,21 @@ components:
           type: string
           format: date-time
           readOnly: true
+        capacity:
+          type: integer
+          readOnly: true
+        delivery_count:
+          type: integer
+          readOnly: true
+        available_capacity:
+          type: integer
+          readOnly: true
       required:
+      - available_capacity
+      - capacity
       - contents
       - created_at
+      - delivery_count
       - id
       - label_names
       - labels
@@ -9996,7 +10023,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WaitingListEntryDetails'
-    PatchedBreadCapacityPickupStationRequest:
+    PatchedBreadCapacityPickupLocationRequest:
       type: object
       properties:
         id:
@@ -10018,11 +10045,11 @@ components:
           maximum: 2147483647
           minimum: 0
           description: Maximum number of breads of this label that can be delivered
-            to this pickup station on this delivery day
-        pickup_station_day:
+            to this pickup location on this delivery day
+        pickup_location_day:
           type: string
           minLength: 1
-          description: The pickup station and day this capacity applies to
+          description: The pickup location and day this capacity applies to
         bread:
           type: string
           minLength: 1
@@ -10068,6 +10095,7 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+          default: 1
         subscription:
           type: string
           minLength: 1
@@ -10078,6 +10106,7 @@ components:
         bread:
           type: string
           minLength: 1
+          nullable: true
     PatchedBreadLabelRequest:
       type: object
       description: Serializer for bread labels/categories

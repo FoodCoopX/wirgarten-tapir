@@ -100,6 +100,24 @@ export interface BreadDetail {
      * @memberof BreadDetail
      */
     readonly updatedAt: Date;
+    /**
+     * 
+     * @type {number}
+     * @memberof BreadDetail
+     */
+    readonly capacity: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BreadDetail
+     */
+    readonly deliveryCount: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BreadDetail
+     */
+    readonly availableCapacity: number;
 }
 
 /**
@@ -114,6 +132,9 @@ export function instanceOfBreadDetail(value: object): value is BreadDetail {
     if (!('contents' in value) || value['contents'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
+    if (!('capacity' in value) || value['capacity'] === undefined) return false;
+    if (!('deliveryCount' in value) || value['deliveryCount'] === undefined) return false;
+    if (!('availableCapacity' in value) || value['availableCapacity'] === undefined) return false;
     return true;
 }
 
@@ -138,6 +159,9 @@ export function BreadDetailFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
         'createdAt': (new Date(json['created_at'])),
         'updatedAt': (new Date(json['updated_at'])),
+        'capacity': json['capacity'],
+        'deliveryCount': json['delivery_count'],
+        'availableCapacity': json['available_capacity'],
     };
 }
 
@@ -145,7 +169,7 @@ export function BreadDetailFromJSONTyped(json: any, ignoreDiscriminator: boolean
       return BreadDetailToJSONTyped(json, false);
   }
 
-  export function BreadDetailToJSONTyped(value?: Omit<BreadDetail, 'id'|'labels'|'label_names'|'contents'|'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadDetailToJSONTyped(value?: Omit<BreadDetail, 'id'|'labels'|'label_names'|'contents'|'created_at'|'updated_at'|'capacity'|'delivery_count'|'available_capacity'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -1,198 +1,204 @@
 import React, { useState, useEffect } from 'react';
-
-interface Bread {
-  id: number;
-  name: string;
-  description?: string;
-  available_quantity: number;
-}
-
-interface BreadSelection {
-  [breadId: number]: number; // breadId -> quantity
-}
+import { EggFried } from 'react-bootstrap-icons';
+import { BakeryApi } from '../../../api-client';
+import { useApi } from '../../../hooks/useApi';
+import type { BreadList, BreadContent } from '../../../api-client/models';
 
 interface BreadSelectionModalProps {
-  memberId: number;
-  currentSelection: BreadSelection;
-  onSave: (selection: BreadSelection) => void;
+  breads: BreadList[];
+  contentsMap: { [breadId: string]: BreadContent[] };
+  pickupLocationId: string;
+  pickupLocationName: string;
+  selectedWeek: number;
+  selectedYear: number;
+  onSelect: (breadId: string) => void;
   onClose: () => void;
-  isOpen: boolean;
+  csrfToken: string;
 }
 
 export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
-  memberId,
-  currentSelection,
-  onSave,
+  breads: initialBreads,
+  contentsMap,
+  pickupLocationId,
+  pickupLocationName,
+  selectedWeek,
+  selectedYear,
+  onSelect,
   onClose,
-  isOpen,
+  csrfToken,
 }) => {
-  const [availableBreads, setAvailableBreads] = useState<Bread[]>([]);
-  const [selection, setSelection] = useState<BreadSelection>(currentSelection);
+  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const [availableBreads, setAvailableBreads] = useState<BreadList[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isOpen) {
-      loadAvailableBreads();
-    }
-  }, [isOpen]);
+    loadAvailableBreads();
+    // eslint-disable-next-line
+  }, [pickupLocationId, selectedWeek, selectedYear]);
 
   const loadAvailableBreads = async () => {
+    setLoading(true);
     try {
-      // TODO: Call API to get available breads for current delivery
-      // const breads = await DeliveryService.getAvailableBreads();
+      // Fetch breads with capacity filtering
+      const breadsWithCapacity = await bakeryApi.bakeryBreadsListList({
+        isActive: true,
+        pickupLocationId,
+        year: selectedYear,
+        week: selectedWeek,
+      });
       
-      // Mock data for now
-      const mockBreads: Bread[] = [
-        { id: 1, name: 'Vollkornbrot', description: 'Aus 100% Vollkornmehl', available_quantity: 10 },
-        { id: 2, name: 'Sauerteigbrot', description: 'Traditionell mit Sauerteig', available_quantity: 8 },
-        { id: 3, name: 'Roggenbrot', description: 'Kräftiger Roggengeschmack', available_quantity: 5 },
-        { id: 4, name: 'Dinkelbrötchen', description: '6er Pack', available_quantity: 12 },
-      ];
-      
-      setAvailableBreads(mockBreads);
-      setSelection(currentSelection);
-      setLoading(false);
+      setAvailableBreads(breadsWithCapacity);
     } catch (error) {
       console.error('Failed to load available breads:', error);
+      setAvailableBreads([]);
+    } finally {
       setLoading(false);
     }
   };
-
-  const updateQuantity = (breadId: number, change: number) => {
-    setSelection((prev) => {
-      const currentQty = prev[breadId] || 0;
-      const newQty = Math.max(0, currentQty + change);
-      
-      if (newQty === 0) {
-        const { [breadId]: _, ...rest } = prev;
-        return rest;
-      }
-      
-      return { ...prev, [breadId]: newQty };
-    });
-  };
-
-  const handleSave = () => {
-    onSave(selection);
-    onClose();
-  };
-
-  const getTotalItems = () => {
-    return Object.values(selection).reduce((sum, qty) => sum + qty, 0);
-  };
-
-  if (!isOpen) return null;
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Modal Backdrop */}
       <div 
         className="modal-backdrop fade show" 
         onClick={onClose}
-        style={{ zIndex: 1040 }}
+        style={{ zIndex: 1050 }}
       />
-      
+
       {/* Modal */}
       <div 
         className="modal fade show d-block" 
         tabIndex={-1}
-        style={{ zIndex: 1050 }}
+        style={{ zIndex: 1055 }}
       >
-        <div className="modal-dialog modal-lg modal-dialog-scrollable">
+        <div className="modal-dialog modal-xl modal-dialog-scrollable">
           <div className="modal-content">
-            {/* Header */}
-            <div className="modal-header">
-              <h5 className="modal-title">Brotauswahl bearbeiten</h5>
+            <div 
+              className="modal-header" 
+              style={{ backgroundColor: '#D4A574', color: 'white' }}
+            >
+              <h5 className="modal-title">
+                <span className="material-icons align-middle me-2">bakery_dining</span>
+                Brot auswählen für {pickupLocationName}
+              </h5>
               <button 
                 type="button" 
-                className="btn-close" 
+                className="btn-close btn-close-white" 
                 onClick={onClose}
-                aria-label="Close"
               />
             </div>
 
-            {/* Body */}
-            <div className="modal-body">
+            <div className="modal-body" style={{ backgroundColor: '#FAF8F5' }}>
               {loading ? (
                 <div className="text-center py-5">
-                  <div className="spinner-border">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
+                  <div className="spinner-border" style={{ color: '#D4A574' }} />
+                  <p className="mt-2 text-muted">Lade verfügbare Brote...</p>
                 </div>
               ) : (
-                <div className="list-group">
-                  {availableBreads.map((bread) => {
-                    const quantity = selection[bread.id] || 0;
-                    const isOutOfStock = bread.available_quantity === 0;
-                    
-                    return (
-                      <div 
-                        key={bread.id} 
-                        className={`list-group-item ${isOutOfStock ? 'disabled' : ''}`}
-                      >
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1">{bread.name}</h6>
-                            {bread.description && (
-                              <p className="mb-1 text-muted small">{bread.description}</p>
-                            )}
-                            <small className="text-muted">
-                              {isOutOfStock ? (
-                                <span className="text-danger">Ausverkauft</span>
-                              ) : (
-                                `Noch ${bread.available_quantity} verfügbar`
-                              )}
-                            </small>
-                          </div>
-                          
-                          <div className="d-flex align-items-center gap-2">
-                            <button
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={() => updateQuantity(bread.id, -1)}
-                              disabled={quantity === 0 || isOutOfStock}
-                            >
-                              <span className="material-icons">remove</span>
-                            </button>
-                            
-                            <span className="badge bg-primary rounded-pill" style={{ minWidth: '40px' }}>
-                              {quantity}
-                            </span>
-                            
-                            <button
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={() => updateQuantity(bread.id, 1)}
-                              disabled={quantity >= bread.available_quantity || isOutOfStock}
-                            >
-                              <span className="material-icons">add</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                <>
+                  <div className="alert alert-info mb-4">
+                    <strong>KW {selectedWeek}/{selectedYear}</strong> - Station: {pickupLocationName}
+                    <br />
+                    <small>{availableBreads.length} Brotsorte{availableBreads.length !== 1 ? 'n' : ''} verfügbar</small>
+                  </div>
 
-            {/* Footer */}
-            <div className="modal-footer">
-              <div className="me-auto">
-                <strong>Gesamt: {getTotalItems()} Brote</strong>
-              </div>
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
-                onClick={onClose}
-              >
-                Abbrechen
-              </button>
-              <button 
-                type="button" 
-                className="btn btn-primary" 
-                onClick={handleSave}
-              >
-                Speichern
-              </button>
+                  {availableBreads.length === 0 ? (
+                    <div className="alert alert-warning">
+                      <strong>Keine Brote verfügbar</strong>
+                      <p className="mb-0">
+                        Für diese Abholstation und Woche sind keine Brote mit verfügbarer Kapazität vorhanden.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="d-flex flex-wrap gap-3">
+                      {availableBreads.map(bread => {
+                        const contents = contentsMap[bread.id!] || [];
+
+                        return (
+                          <div key={bread.id} style={{ width: '280px', flex: '0 0 280px' }}>
+                            <div
+                              className="card h-100 shadow-sm"
+                              style={{
+                                border: '1px solid #dee2e6',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => onSelect(bread.id!)}
+                            >
+                              {bread.picture ? (
+                                <img
+                                  src={bread.picture}
+                                  alt={bread.name}
+                                  className="card-img-top"
+                                  style={{ height: '180px', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <div
+                                  className="d-flex align-items-center justify-content-center"
+                                  style={{ height: '180px', backgroundColor: '#F5E6D3' }}
+                                >
+                                  <EggFried size={48} style={{ color: '#D4A574' }} />
+                                </div>
+                              )}
+
+                              <div className="card-body d-flex flex-column">
+                                <h6 className="card-title mb-0" style={{ color: '#8B4513' }}>
+                                  {bread.name}
+                                </h6>
+
+                                {bread.weight && (
+                                  <small className="text-muted mb-2">{Number(bread.weight).toFixed(0)}g</small>
+                                )}
+
+                                {bread.labels && bread.labels.length > 0 && (
+                                  <div className="mb-2">
+                                    {bread.labels.map(label => (
+                                      <span
+                                        key={label.id}
+                                        className="badge me-1"
+                                        style={{ backgroundColor: '#F5E6D3', color: '#8B4513', fontSize: '0.7rem' }}
+                                      >
+                                        {label.name}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {bread.description && (
+                                  <p className="card-text text-muted small mb-2">{bread.description}</p>
+                                )}
+
+                                {contents.length > 0 && (
+                                  <div className="mb-2" style={{ flex: 1 }}>
+                                    <small className="fw-bold" style={{ color: '#C4A882', fontSize: '0.7rem' }}>
+                                      ZUTATEN:
+                                    </small>
+                                    <br />
+                                    <small style={{ color: '#B8A99A', fontSize: '0.75rem' }}>
+                                      {contents.map(c => c.ingredientName).join(', ')}
+                                    </small>
+                                  </div>
+                                )}
+
+                                {bread.availableCapacity !== undefined && bread.availableCapacity !== null && (
+                                  <div className="mb-2">
+                                    <small className="text-muted">
+                                      Verfügbar: {bread.availableCapacity}
+                                    </small>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="card-footer text-center py-2" style={{ backgroundColor: '#8B4513', color: 'white' }}>
+                                Auswählen
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

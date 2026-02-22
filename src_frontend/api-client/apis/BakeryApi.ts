@@ -16,9 +16,9 @@
 import * as runtime from '../runtime';
 import type {
   AvailableBreadsForDeliveryListResponse,
-  BakeryBreadCapacityPickupStationBulkUpdateCreateRequest,
-  BreadCapacityPickupStation,
-  BreadCapacityPickupStationRequest,
+  BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest,
+  BreadCapacityPickupLocation,
+  BreadCapacityPickupLocationRequest,
   BreadContent,
   BreadContentRequest,
   BreadDelivery,
@@ -31,7 +31,7 @@ import type {
   DeliveryDaysResponse,
   Ingredient,
   IngredientRequest,
-  PatchedBreadCapacityPickupStationRequest,
+  PatchedBreadCapacityPickupLocationRequest,
   PatchedBreadContentRequest,
   PatchedBreadDeliveryRequest,
   PatchedBreadLabelRequest,
@@ -49,12 +49,12 @@ import type {
 import {
     AvailableBreadsForDeliveryListResponseFromJSON,
     AvailableBreadsForDeliveryListResponseToJSON,
-    BakeryBreadCapacityPickupStationBulkUpdateCreateRequestFromJSON,
-    BakeryBreadCapacityPickupStationBulkUpdateCreateRequestToJSON,
-    BreadCapacityPickupStationFromJSON,
-    BreadCapacityPickupStationToJSON,
-    BreadCapacityPickupStationRequestFromJSON,
-    BreadCapacityPickupStationRequestToJSON,
+    BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestFromJSON,
+    BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestToJSON,
+    BreadCapacityPickupLocationFromJSON,
+    BreadCapacityPickupLocationToJSON,
+    BreadCapacityPickupLocationRequestFromJSON,
+    BreadCapacityPickupLocationRequestToJSON,
     BreadContentFromJSON,
     BreadContentToJSON,
     BreadContentRequestFromJSON,
@@ -79,8 +79,8 @@ import {
     IngredientToJSON,
     IngredientRequestFromJSON,
     IngredientRequestToJSON,
-    PatchedBreadCapacityPickupStationRequestFromJSON,
-    PatchedBreadCapacityPickupStationRequestToJSON,
+    PatchedBreadCapacityPickupLocationRequestFromJSON,
+    PatchedBreadCapacityPickupLocationRequestToJSON,
     PatchedBreadContentRequestFromJSON,
     PatchedBreadContentRequestToJSON,
     PatchedBreadDeliveryRequestFromJSON,
@@ -119,36 +119,36 @@ export interface BakeryAvailableBreadsForDeliveryRetrieveRequest {
     year: number;
 }
 
-export interface BakeryBreadCapacityPickupStationBulkUpdateCreateOperationRequest {
-    bakeryBreadCapacityPickupStationBulkUpdateCreateRequest?: BakeryBreadCapacityPickupStationBulkUpdateCreateRequest;
+export interface BakeryBreadCapacityPickupLocationBulkUpdateCreateOperationRequest {
+    bakeryBreadCapacityPickupLocationBulkUpdateCreateRequest?: BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest;
 }
 
-export interface BakeryBreadCapacityPickupStationCreateRequest {
-    breadCapacityPickupStationRequest: BreadCapacityPickupStationRequest;
+export interface BakeryBreadCapacityPickupLocationCreateRequest {
+    breadCapacityPickupLocationRequest: BreadCapacityPickupLocationRequest;
 }
 
-export interface BakeryBreadCapacityPickupStationDestroyRequest {
+export interface BakeryBreadCapacityPickupLocationDestroyRequest {
     id: string;
 }
 
-export interface BakeryBreadCapacityPickupStationListRequest {
-    pickupStationIds?: Array<string>;
+export interface BakeryBreadCapacityPickupLocationListRequest {
+    pickupLocationIds?: Array<string>;
     week?: number;
     year?: number;
 }
 
-export interface BakeryBreadCapacityPickupStationPartialUpdateRequest {
+export interface BakeryBreadCapacityPickupLocationPartialUpdateRequest {
     id: string;
-    patchedBreadCapacityPickupStationRequest?: PatchedBreadCapacityPickupStationRequest;
+    patchedBreadCapacityPickupLocationRequest?: PatchedBreadCapacityPickupLocationRequest;
 }
 
-export interface BakeryBreadCapacityPickupStationRetrieveRequest {
+export interface BakeryBreadCapacityPickupLocationRetrieveRequest {
     id: string;
 }
 
-export interface BakeryBreadCapacityPickupStationUpdateRequest {
+export interface BakeryBreadCapacityPickupLocationUpdateRequest {
     id: string;
-    breadCapacityPickupStationRequest: BreadCapacityPickupStationRequest;
+    breadCapacityPickupLocationRequest: BreadCapacityPickupLocationRequest;
 }
 
 export interface BakeryBreadDeliveriesCreateRequest {
@@ -230,6 +230,9 @@ export interface BakeryBreadsListDestroyRequest {
 export interface BakeryBreadsListListRequest {
     isActive?: boolean;
     labelId?: string;
+    pickupLocationId?: string;
+    week?: number;
+    year?: number;
 }
 
 export interface BakeryBreadsListPartialUpdateRequest {
@@ -452,7 +455,7 @@ export class BakeryApi extends runtime.BaseAPI {
      * Bulk create/update/delete capacities
      * Bulk create/update/delete bread capacities
      */
-    async bakeryBreadCapacityPickupStationBulkUpdateCreateRaw(requestParameters: BakeryBreadCapacityPickupStationBulkUpdateCreateOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async bakeryBreadCapacityPickupLocationBulkUpdateCreateRaw(requestParameters: BakeryBreadCapacityPickupLocationBulkUpdateCreateOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -467,11 +470,11 @@ export class BakeryApi extends runtime.BaseAPI {
             headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
         }
         const response = await this.request({
-            path: `/bakery/bread-capacity-pickup-station/bulk-update/`,
+            path: `/bakery/bread-capacity-pickup-location/bulk-update/`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: BakeryBreadCapacityPickupStationBulkUpdateCreateRequestToJSON(requestParameters['bakeryBreadCapacityPickupStationBulkUpdateCreateRequest']),
+            body: BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestToJSON(requestParameters['bakeryBreadCapacityPickupLocationBulkUpdateCreateRequest']),
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -481,17 +484,17 @@ export class BakeryApi extends runtime.BaseAPI {
      * Bulk create/update/delete capacities
      * Bulk create/update/delete bread capacities
      */
-    async bakeryBreadCapacityPickupStationBulkUpdateCreate(requestParameters: BakeryBreadCapacityPickupStationBulkUpdateCreateOperationRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.bakeryBreadCapacityPickupStationBulkUpdateCreateRaw(requestParameters, initOverrides);
+    async bakeryBreadCapacityPickupLocationBulkUpdateCreate(requestParameters: BakeryBreadCapacityPickupLocationBulkUpdateCreateOperationRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.bakeryBreadCapacityPickupLocationBulkUpdateCreateRaw(requestParameters, initOverrides);
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationCreateRaw(requestParameters: BakeryBreadCapacityPickupStationCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadCapacityPickupStation>> {
-        if (requestParameters['breadCapacityPickupStationRequest'] == null) {
+    async bakeryBreadCapacityPickupLocationCreateRaw(requestParameters: BakeryBreadCapacityPickupLocationCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadCapacityPickupLocation>> {
+        if (requestParameters['breadCapacityPickupLocationRequest'] == null) {
             throw new runtime.RequiredError(
-                'breadCapacityPickupStationRequest',
-                'Required parameter "breadCapacityPickupStationRequest" was null or undefined when calling bakeryBreadCapacityPickupStationCreate().'
+                'breadCapacityPickupLocationRequest',
+                'Required parameter "breadCapacityPickupLocationRequest" was null or undefined when calling bakeryBreadCapacityPickupLocationCreate().'
             );
         }
 
@@ -509,30 +512,30 @@ export class BakeryApi extends runtime.BaseAPI {
             headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
         }
         const response = await this.request({
-            path: `/bakery/bread-capacity-pickup-station/`,
+            path: `/bakery/bread-capacity-pickup-location/`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: BreadCapacityPickupStationRequestToJSON(requestParameters['breadCapacityPickupStationRequest']),
+            body: BreadCapacityPickupLocationRequestToJSON(requestParameters['breadCapacityPickupLocationRequest']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => BreadCapacityPickupStationFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadCapacityPickupLocationFromJSON(jsonValue));
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationCreate(requestParameters: BakeryBreadCapacityPickupStationCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadCapacityPickupStation> {
-        const response = await this.bakeryBreadCapacityPickupStationCreateRaw(requestParameters, initOverrides);
+    async bakeryBreadCapacityPickupLocationCreate(requestParameters: BakeryBreadCapacityPickupLocationCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadCapacityPickupLocation> {
+        const response = await this.bakeryBreadCapacityPickupLocationCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationDestroyRaw(requestParameters: BakeryBreadCapacityPickupStationDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async bakeryBreadCapacityPickupLocationDestroyRaw(requestParameters: BakeryBreadCapacityPickupLocationDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters['id'] == null) {
             throw new runtime.RequiredError(
                 'id',
-                'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupStationDestroy().'
+                'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupLocationDestroy().'
             );
         }
 
@@ -548,7 +551,7 @@ export class BakeryApi extends runtime.BaseAPI {
             headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
         }
         const response = await this.request({
-            path: `/bakery/bread-capacity-pickup-station/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            path: `/bakery/bread-capacity-pickup-location/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -559,17 +562,17 @@ export class BakeryApi extends runtime.BaseAPI {
 
     /**
      */
-    async bakeryBreadCapacityPickupStationDestroy(requestParameters: BakeryBreadCapacityPickupStationDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.bakeryBreadCapacityPickupStationDestroyRaw(requestParameters, initOverrides);
+    async bakeryBreadCapacityPickupLocationDestroy(requestParameters: BakeryBreadCapacityPickupLocationDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.bakeryBreadCapacityPickupLocationDestroyRaw(requestParameters, initOverrides);
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationListRaw(requestParameters: BakeryBreadCapacityPickupStationListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BreadCapacityPickupStation>>> {
+    async bakeryBreadCapacityPickupLocationListRaw(requestParameters: BakeryBreadCapacityPickupLocationListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BreadCapacityPickupLocation>>> {
         const queryParameters: any = {};
 
-        if (requestParameters['pickupStationIds'] != null) {
-            queryParameters['pickup_station_ids[]'] = requestParameters['pickupStationIds'];
+        if (requestParameters['pickupLocationIds'] != null) {
+            queryParameters['pickup_location_ids[]'] = requestParameters['pickupLocationIds'];
         }
 
         if (requestParameters['week'] != null) {
@@ -590,29 +593,29 @@ export class BakeryApi extends runtime.BaseAPI {
             headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
         }
         const response = await this.request({
-            path: `/bakery/bread-capacity-pickup-station/`,
+            path: `/bakery/bread-capacity-pickup-location/`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(BreadCapacityPickupStationFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(BreadCapacityPickupLocationFromJSON));
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationList(requestParameters: BakeryBreadCapacityPickupStationListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BreadCapacityPickupStation>> {
-        const response = await this.bakeryBreadCapacityPickupStationListRaw(requestParameters, initOverrides);
+    async bakeryBreadCapacityPickupLocationList(requestParameters: BakeryBreadCapacityPickupLocationListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BreadCapacityPickupLocation>> {
+        const response = await this.bakeryBreadCapacityPickupLocationListRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationPartialUpdateRaw(requestParameters: BakeryBreadCapacityPickupStationPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadCapacityPickupStation>> {
+    async bakeryBreadCapacityPickupLocationPartialUpdateRaw(requestParameters: BakeryBreadCapacityPickupLocationPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadCapacityPickupLocation>> {
         if (requestParameters['id'] == null) {
             throw new runtime.RequiredError(
                 'id',
-                'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupStationPartialUpdate().'
+                'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupLocationPartialUpdate().'
             );
         }
 
@@ -630,30 +633,30 @@ export class BakeryApi extends runtime.BaseAPI {
             headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
         }
         const response = await this.request({
-            path: `/bakery/bread-capacity-pickup-station/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            path: `/bakery/bread-capacity-pickup-location/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
-            body: PatchedBreadCapacityPickupStationRequestToJSON(requestParameters['patchedBreadCapacityPickupStationRequest']),
+            body: PatchedBreadCapacityPickupLocationRequestToJSON(requestParameters['patchedBreadCapacityPickupLocationRequest']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => BreadCapacityPickupStationFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadCapacityPickupLocationFromJSON(jsonValue));
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationPartialUpdate(requestParameters: BakeryBreadCapacityPickupStationPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadCapacityPickupStation> {
-        const response = await this.bakeryBreadCapacityPickupStationPartialUpdateRaw(requestParameters, initOverrides);
+    async bakeryBreadCapacityPickupLocationPartialUpdate(requestParameters: BakeryBreadCapacityPickupLocationPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadCapacityPickupLocation> {
+        const response = await this.bakeryBreadCapacityPickupLocationPartialUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationRetrieveRaw(requestParameters: BakeryBreadCapacityPickupStationRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadCapacityPickupStation>> {
+    async bakeryBreadCapacityPickupLocationRetrieveRaw(requestParameters: BakeryBreadCapacityPickupLocationRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadCapacityPickupLocation>> {
         if (requestParameters['id'] == null) {
             throw new runtime.RequiredError(
                 'id',
-                'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupStationRetrieve().'
+                'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupLocationRetrieve().'
             );
         }
 
@@ -669,36 +672,36 @@ export class BakeryApi extends runtime.BaseAPI {
             headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
         }
         const response = await this.request({
-            path: `/bakery/bread-capacity-pickup-station/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            path: `/bakery/bread-capacity-pickup-location/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => BreadCapacityPickupStationFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadCapacityPickupLocationFromJSON(jsonValue));
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationRetrieve(requestParameters: BakeryBreadCapacityPickupStationRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadCapacityPickupStation> {
-        const response = await this.bakeryBreadCapacityPickupStationRetrieveRaw(requestParameters, initOverrides);
+    async bakeryBreadCapacityPickupLocationRetrieve(requestParameters: BakeryBreadCapacityPickupLocationRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadCapacityPickupLocation> {
+        const response = await this.bakeryBreadCapacityPickupLocationRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationUpdateRaw(requestParameters: BakeryBreadCapacityPickupStationUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadCapacityPickupStation>> {
+    async bakeryBreadCapacityPickupLocationUpdateRaw(requestParameters: BakeryBreadCapacityPickupLocationUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadCapacityPickupLocation>> {
         if (requestParameters['id'] == null) {
             throw new runtime.RequiredError(
                 'id',
-                'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupStationUpdate().'
+                'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupLocationUpdate().'
             );
         }
 
-        if (requestParameters['breadCapacityPickupStationRequest'] == null) {
+        if (requestParameters['breadCapacityPickupLocationRequest'] == null) {
             throw new runtime.RequiredError(
-                'breadCapacityPickupStationRequest',
-                'Required parameter "breadCapacityPickupStationRequest" was null or undefined when calling bakeryBreadCapacityPickupStationUpdate().'
+                'breadCapacityPickupLocationRequest',
+                'Required parameter "breadCapacityPickupLocationRequest" was null or undefined when calling bakeryBreadCapacityPickupLocationUpdate().'
             );
         }
 
@@ -716,20 +719,20 @@ export class BakeryApi extends runtime.BaseAPI {
             headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
         }
         const response = await this.request({
-            path: `/bakery/bread-capacity-pickup-station/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            path: `/bakery/bread-capacity-pickup-location/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: BreadCapacityPickupStationRequestToJSON(requestParameters['breadCapacityPickupStationRequest']),
+            body: BreadCapacityPickupLocationRequestToJSON(requestParameters['breadCapacityPickupLocationRequest']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => BreadCapacityPickupStationFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadCapacityPickupLocationFromJSON(jsonValue));
     }
 
     /**
      */
-    async bakeryBreadCapacityPickupStationUpdate(requestParameters: BakeryBreadCapacityPickupStationUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadCapacityPickupStation> {
-        const response = await this.bakeryBreadCapacityPickupStationUpdateRaw(requestParameters, initOverrides);
+    async bakeryBreadCapacityPickupLocationUpdate(requestParameters: BakeryBreadCapacityPickupLocationUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadCapacityPickupLocation> {
+        const response = await this.bakeryBreadCapacityPickupLocationUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -1471,6 +1474,18 @@ export class BakeryApi extends runtime.BaseAPI {
 
         if (requestParameters['labelId'] != null) {
             queryParameters['label_id'] = requestParameters['labelId'];
+        }
+
+        if (requestParameters['pickupLocationId'] != null) {
+            queryParameters['pickup_location_id'] = requestParameters['pickupLocationId'];
+        }
+
+        if (requestParameters['week'] != null) {
+            queryParameters['week'] = requestParameters['week'];
+        }
+
+        if (requestParameters['year'] != null) {
+            queryParameters['year'] = requestParameters['year'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};

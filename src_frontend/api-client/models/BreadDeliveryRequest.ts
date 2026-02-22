@@ -42,7 +42,7 @@ export interface BreadDeliveryRequest {
      * @type {number}
      * @memberof BreadDeliveryRequest
      */
-    slotNumber: number;
+    slotNumber?: number;
     /**
      * 
      * @type {string}
@@ -60,7 +60,7 @@ export interface BreadDeliveryRequest {
      * @type {string}
      * @memberof BreadDeliveryRequest
      */
-    bread: string;
+    bread?: string | null;
 }
 
 /**
@@ -69,9 +69,7 @@ export interface BreadDeliveryRequest {
 export function instanceOfBreadDeliveryRequest(value: object): value is BreadDeliveryRequest {
     if (!('year' in value) || value['year'] === undefined) return false;
     if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
-    if (!('slotNumber' in value) || value['slotNumber'] === undefined) return false;
     if (!('subscription' in value) || value['subscription'] === undefined) return false;
-    if (!('bread' in value) || value['bread'] === undefined) return false;
     return true;
 }
 
@@ -88,10 +86,10 @@ export function BreadDeliveryRequestFromJSONTyped(json: any, ignoreDiscriminator
         'id': json['id'] == null ? undefined : json['id'],
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
-        'slotNumber': json['slot_number'],
+        'slotNumber': json['slot_number'] == null ? undefined : json['slot_number'],
         'subscription': json['subscription'],
         'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
-        'bread': json['bread'],
+        'bread': json['bread'] == null ? undefined : json['bread'],
     };
 }
 

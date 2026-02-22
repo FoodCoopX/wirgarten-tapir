@@ -1,3 +1,4 @@
+from django.db.models import Case, Count, F, IntegerField, OuterRef, Subquery, When
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -6,7 +7,7 @@ from rest_framework.response import Response
 
 from tapir.bakery.models import (
     Bread,
-    BreadCapacityPickupStation,
+    BreadCapacityPickupLocation,
     BreadContent,
     BreadDelivery,
     BreadLabel,
@@ -14,7 +15,7 @@ from tapir.bakery.models import (
     PreferredLabel,
 )
 from tapir.bakery.serializers import (
-    BreadCapacityPickupStationSerializer,
+    BreadCapacityPickupLocationSerializer,
     BreadContentSerializer,
     BreadDeliverySerializer,
     BreadDetailSerializer,
@@ -128,6 +129,21 @@ class BreadViewSet(viewsets.ModelViewSet):
             OpenApiParameter(
                 name="is_active", type=bool, description="Filter by active status"
             ),
+            OpenApiParameter(
+                name="pickup_location_id",
+                type=str,
+                description="Filter by pickup location ID (requires year and week)",
+            ),
+            OpenApiParameter(
+                name="year",
+                type=int,
+                description="Filter by delivery year (requires pickup_location_id and week)",
+            ),
+            OpenApiParameter(
+                name="week",
+                type=int,
+                description="Filter by delivery week (requires pickup_location_id and year)",
+            ),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -139,13 +155,57 @@ class BreadViewSet(viewsets.ModelViewSet):
 
         # Filter by label name
         label_id = self.request.query_params.get("label_id", None)
+        pickup_location_id = self.request.query_params.get("pickup_location_id", None)
+        year = self.request.query_params.get("year", None)
+        week = self.request.query_params.get("week", None)
         if label_id:
             queryset = queryset.filter(labels__id=label_id)
 
         # Filter by active status
         is_active = str_to_bool(self.request.query_params.get("is_active", None))
+
         if is_active is not None:
             queryset = queryset.filter(is_active=is_active)
+
+        if pickup_location_id and year and week:
+            # Subquery to count how many BreadDelivery objects exist for each bread
+
+            delivery_count_subquery = (
+                BreadDelivery.objects.filter(
+                    bread=OuterRef("pk"),
+                    pickup_location_id=pickup_location_id,
+                    year=year,
+                    delivery_week=week,
+                )
+                .values("bread")
+                .annotate(total=Count("id"))
+                .values("total")
+            )
+
+            # Annotate queryset with capacity and delivery count
+            queryset = (
+                queryset.filter(
+                    capacity_entries__pickup_location_day__pickup_location_id=pickup_location_id,
+                    capacity_entries__year=year,
+                    capacity_entries__delivery_week=week,
+                )
+                .annotate(
+                    capacity=F("capacity_entries__capacity"),
+                    delivery_count=Subquery(
+                        delivery_count_subquery, output_field=IntegerField()
+                    ),
+                )
+                .annotate(
+                    available_capacity=F("capacity")
+                    - Case(
+                        When(delivery_count__isnull=True, then=0),
+                        default=F("delivery_count"),
+                        output_field=IntegerField(),
+                    )
+                )
+                .filter(available_capacity__gt=0)
+                .distinct()
+            )
 
         return queryset
 
@@ -218,16 +278,16 @@ class BreadContentViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(tags=["bakery"])
-class BreadCapacityPickupStationViewSet(viewsets.ModelViewSet):
-    queryset = BreadCapacityPickupStation.objects.all()
-    serializer_class = BreadCapacityPickupStationSerializer
+class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
+    queryset = BreadCapacityPickupLocation.objects.all()
+    serializer_class = BreadCapacityPickupLocationSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
         parameters=[
             OpenApiParameter(name="year", type=int),
             OpenApiParameter(name="week", type=int),
-            OpenApiParameter(name="pickup_station_ids[]", type=str, many=True),
+            OpenApiParameter(name="pickup_location_ids[]", type=str, many=True),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -237,14 +297,14 @@ class BreadCapacityPickupStationViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         year = self.request.query_params.get("year")
         week = self.request.query_params.get("week")
-        pickup_station_ids = self.request.query_params.getlist("pickup_station_ids[]")
+        pickup_location_ids = self.request.query_params.getlist("pickup_location_ids[]")
 
         if year:
             queryset = queryset.filter(year=year)
         if week:
             queryset = queryset.filter(delivery_week=week)
-        if pickup_station_ids:
-            queryset = queryset.filter(pickup_station_day__id__in=pickup_station_ids)
+        if pickup_location_ids:
+            queryset = queryset.filter(pickup_location_day__id__in=pickup_location_ids)
 
         return queryset
 
@@ -261,7 +321,7 @@ class BreadCapacityPickupStationViewSet(viewsets.ModelViewSet):
                         "items": {
                             "type": "object",
                             "properties": {
-                                "pickup_station_day": {"type": "string"},
+                                "pickup_location_day": {"type": "string"},
                                 "bread": {"type": "string"},
                                 "capacity": {"type": "integer", "nullable": True},
                             },
@@ -290,24 +350,24 @@ class BreadCapacityPickupStationViewSet(viewsets.ModelViewSet):
             )
 
         for update in updates:
-            pickup_station_day_id = update.get("pickup_station_day")
+            pickup_location_day_id = update.get("pickup_location_day")
             bread_id = update.get("bread")
             capacity = update.get("capacity")
 
             if capacity is None:
                 # Delete
-                BreadCapacityPickupStation.objects.filter(
+                BreadCapacityPickupLocation.objects.filter(
                     year=year,
                     delivery_week=week,
-                    pickup_station_day_id=pickup_station_day_id,
+                    pickup_location_day_id=pickup_location_day_id,
                     bread_id=bread_id,
                 ).delete()
             else:
                 # Create or update
-                BreadCapacityPickupStation.objects.update_or_create(
+                BreadCapacityPickupLocation.objects.update_or_create(
                     year=year,
                     delivery_week=week,
-                    pickup_station_day_id=pickup_station_day_id,
+                    pickup_location_day_id=pickup_location_day_id,
                     bread_id=bread_id,
                     defaults={"capacity": capacity},
                 )

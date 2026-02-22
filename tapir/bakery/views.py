@@ -127,23 +127,3 @@ class AvailableBreadsForDeliveryListView(APIView):
             )
 
 
-class ActiveSubscriptionsView(APIView):
-    def get(self, request):
-        member_id = request.query_params.get("memberId")
-        year = request.query_params.get("year")
-        week = request.query_params.get("week")
-
-        active_bread_subscriptions = Subscription.objects.exclude(
-            product__product_type__delivery_cycle="NO_DELIVERY"
-        ).filter(member_id=member_id)
-        if year and week:
-            active_bread_subscriptions = active_bread_subscriptions.filter(
-                Q(start_year__lt=year) | Q(start_year=year, start_week__lte=week)
-            ).filter(
-                Q(end_year__gt=year)
-                | Q(end_year=year, end_week__gte=week)
-                | Q(end_year__isnull=True)
-            )
-        active_bread_subscriptions = active_bread_subscriptions.annotate()
-        serializer = SubscriptionSerializer(active_bread_suscriptions, many=True)
-        return Response(serializer.data)

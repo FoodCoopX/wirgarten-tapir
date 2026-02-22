@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { EggFried, Plus, Dash, CheckCircleFill } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
-import { BrownCircleButton } from '../BrownCircleButton';
-import type { BreadList, BreadContent, Subscription, BreadDelivery, PickupLocation } from '../../../api-client/models';
+import type { BreadList, BreadContent, BreadDelivery, PickupLocation } from '../../../api-client/models';
 import { YearWeekSelectorCard } from './YearWeekSelectorCard';
+import { BreadSelectionModal } from '../modals/BreadSelectionModal';
 import dayjs from 'dayjs';
 import isoWeek from "dayjs/plugin/isoWeek";
 
@@ -14,13 +13,6 @@ interface ChooseBreadsCardProps {
   memberId: string;
   csrfToken: string;
   chooseStationPerBread: boolean;
-}
-
-interface BreadSelection {
-  id: string;
-  breadId: string | null;
-  pickupLocationId: string | null;
-  deliveryId?: string;
 }
 
 const currentWeek = dayjs().isoWeek();
@@ -36,12 +28,13 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [contentsMap, setContentsMap] = useState<{ [breadId: string]: BreadContent[] }>({});
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
-  const [selections, setSelections] = useState<BreadSelection[]>([]);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [deliveries, setDeliveries] = useState<BreadDelivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(currentWeek);
   const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [modalOpen, setModalOpen] = useState<string | null>(null);
+  const [editingLocation, setEditingLocation] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -51,11 +44,9 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load breads
       const allBreads = await bakeryApi.bakeryBreadsListList({ isActive: true });
       setBreads(allBreads);
 
-      // Load bread contents
       const contentsResults = await Promise.all(
         allBreads.map(async (bread) => {
           try {
@@ -73,63 +64,21 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       });
       setContentsMap(map);
 
-      // Load pickup locations
-      const locations = await bakeryApi.pickupLocationsApiDeliveryDaysRetrieve();
-      // TODO: Replace with actual pickup locations
-      setPickupLocations([]);
+      // const locations = await bakeryApi.pickupLocationsApiListList();
+      const locations = [];
+      setPickupLocations(locations);
 
-      // Load current week's deliveries
-      const deliveries = await bakeryApi.bakeryBreadDeliveriesList({
+      const breadDeliveries = await bakeryApi.bakeryBreadDeliveriesList({
         memberId,
         year: selectedYear,
         deliveryWeek: selectedWeek,
       });
 
-      if (deliveries.length > 0) {
-        setSubscription(deliveries[0].subscription as Subscription);
-        const loaded: BreadSelection[] = deliveries.map((d, idx) => ({
-          id: `slot-${idx}`,
-          breadId: d.bread || null,
-          pickupLocationId: d.pickupLocation || null,
-          deliveryId: d.id,
-        }));
-        setSelections(loaded);
-      } else {
-        // Try to load from previous week for pre-selection
-        const prevWeek = selectedWeek === 1 ? 52 : selectedWeek - 1;
-        const prevYear = selectedWeek === 1 ? selectedYear - 1 : selectedYear;
-        
-        const prevDeliveries = await bakeryApi.bakeryBreadDeliveriesList({
-          memberId,
-          year: prevYear,
-          deliveryWeek: prevWeek,
-        });
+      const sortedDeliveries = [...breadDeliveries].sort((a, b) => 
+        (a.slotNumber || 0) - (b.slotNumber || 0)
+      );
 
-        if (prevDeliveries.length > 0) {
-          setSubscription(prevDeliveries[0].subscription as Subscription);
-          const quantity = (prevDeliveries[0].subscription as Subscription).quantity || 0;
-          const preselected: BreadSelection[] = Array.from({ length: quantity }, (_, idx) => {
-            const prev = prevDeliveries[idx];
-            return {
-              id: `slot-${idx}`,
-              breadId: prev ? prev.bread : null,
-              pickupLocationId: prev ? prev.pickupLocation : (prevDeliveries[0].subscription as Subscription).pickupLocation || null,
-            };
-          });
-          setSelections(preselected);
-        } else {
-          // Load subscription without deliveries
-          // TODO: Load subscription from API
-          const quantity = 3;
-          const empty: BreadSelection[] = Array.from({ length: quantity }, (_, idx) => ({
-            id: `slot-${idx}`,
-            breadId: null,
-            pickupLocationId: null,
-          }));
-          setSelections(empty);
-        }
-      }
-
+      setDeliveries(sortedDeliveries);
       setLoading(false);
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -137,117 +86,92 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     }
   };
 
-  const maxBreads = subscription?.quantity || selections.length;
+  const handlePickupLocationChange = async (deliveryId: string, pickupLocationId: string | null) => {
+    if (!pickupLocationId) return;
 
-  const saveSlot = async (slotId: string, breadId: string | null, pickupLocationId: string | null) => {
-    const slot = selections.find(s => s.id === slotId);
-    if (!slot || !subscription) return;
-
-    if (!breadId || !pickupLocationId) return;
-
-    setSaving(slotId);
+    setSaving(deliveryId);
     try {
-      if (slot.deliveryId) {
+      if (chooseStationPerBread) {
         await bakeryApi.bakeryBreadDeliveriesPartialUpdate({
-          id: slot.deliveryId,
+          id: deliveryId,
           patchedBreadDeliveryRequest: {
-            bread: breadId,
             pickupLocation: pickupLocationId,
-          },
-        });
-      } else {
-        const created = await bakeryApi.bakeryBreadDeliveriesCreate({
-          breadDeliveryRequest: {
-            subscription: subscription.id!,
-            bread: breadId,
-            pickupLocation: pickupLocationId,
-            year: selectedYear,
-            deliveryWeek: selectedWeek,
-            slotNumber: selections.indexOf(slot) + 1,
           },
         });
 
-        const updated = selections.map(s => 
-          s.id === slotId ? { ...s, deliveryId: created.id } : s
+        setDeliveries(deliveries.map(d => 
+          d.id === deliveryId ? { ...d, pickupLocation: pickupLocationId } : d
+        ));
+      } else {
+        await Promise.all(
+          deliveries.map(delivery =>
+            bakeryApi.bakeryBreadDeliveriesPartialUpdate({
+              id: delivery.id!,
+              patchedBreadDeliveryRequest: {
+                pickupLocation: pickupLocationId,
+              },
+            })
+          )
         );
-        setSelections(updated);
+
+        setDeliveries(deliveries.map(d => ({ ...d, pickupLocation: pickupLocationId })));
       }
+      setEditingLocation(null);
     } catch (error) {
-      console.error('Failed to save slot:', error);
-      alert('Speichern fehlgeschlagen');
+      console.error('Failed to save pickup location:', error);
+      alert('Speichern der Abholstation fehlgeschlagen');
     } finally {
       setSaving(null);
     }
   };
 
-  const handleAddBread = async (breadId: string) => {
-    const emptySlot = selections.find(s => !s.breadId);
-    if (!emptySlot) return;
+  const handleBreadSelected = async (deliveryId: string, breadId: string) => {
+    const delivery = deliveries.find(d => d.id === deliveryId);
+    if (!delivery || !delivery.pickupLocation) return;
 
-    // Get default pickup location: first existing selection for this bread, or subscription default
-    const existingSelection = selections.find(s => s.breadId === breadId && s.pickupLocationId);
-    const defaultPickupLocation = existingSelection?.pickupLocationId || subscription?.pickupLocation || null;
+    setSaving(deliveryId);
+    try {
+      await bakeryApi.bakeryBreadDeliveriesPartialUpdate({
+        id: deliveryId,
+        patchedBreadDeliveryRequest: {
+          bread: breadId,
+        },
+      });
 
-    // Update locally
-    const updated = selections.map(s => 
-      s.id === emptySlot.id ? { ...s, breadId, pickupLocationId: defaultPickupLocation } : s
-    );
-    setSelections(updated);
-
-    // Auto-save
-    await saveSlot(emptySlot.id, breadId, defaultPickupLocation);
+      setModalOpen(null);
+      await loadData();
+    } catch (error) {
+      console.error('Failed to save bread selection:', error);
+      alert('Speichern des Brotes fehlgeschlagen');
+    } finally {
+      setSaving(null);
+    }
   };
 
-  const handleRemoveBread = async (breadId: string) => {
-    const slot = selections.find(s => s.breadId === breadId);
-    if (!slot) return;
-
-    setSaving(slot.id);
+  const handleRemoveBread = async (deliveryId: string) => {
+    setSaving(deliveryId);
     try {
-      if (slot.deliveryId) {
-        await bakeryApi.bakeryBreadDeliveriesDestroy({ id: slot.deliveryId });
-      }
+      await bakeryApi.bakeryBreadDeliveriesPartialUpdate({
+        id: deliveryId,
+        patchedBreadDeliveryRequest: {
+          bread: null,
+        },
+      });
 
-      const updated = selections.map(s => 
-        s.id === slot.id ? { ...s, breadId: null, pickupLocationId: null, deliveryId: undefined } : s
-      );
-      setSelections(updated);
+      setDeliveries(deliveries.map(d => 
+        d.id === deliveryId ? { ...d, bread: null, breadName: undefined } : d
+      ));
     } catch (error) {
       console.error('Failed to remove bread:', error);
-      alert('Löschen fehlgeschlagen');
+      alert('Löschen des Brotes fehlgeschlagen');
     } finally {
       setSaving(null);
     }
   };
 
-  const handlePickupLocationChange = async (slotId: string, pickupLocationId: string | null) => {
-    const slot = selections.find(s => s.id === slotId);
-    if (!slot) return;
 
-    const updated = selections.map(s => 
-      s.id === slotId ? { ...s, pickupLocationId } : s
-    );
-    setSelections(updated);
 
-    await saveSlot(slotId, slot.breadId, pickupLocationId);
-  };
-
-  const getSelectionsForBread = (breadId: string): BreadSelection[] => {
-    return selections.filter(s => s.breadId === breadId);
-  };
-
-  const getFilledSlots = () => {
-    return selections.filter(s => s.breadId && s.pickupLocationId).length;
-  };
-
-  if (loading) {
-    return (
-      <div className="text-center py-5">
-        <div className="spinner-border" style={{ color: '#D4A574' }} />
-        <p className="mt-2 text-muted">Lade Daten...</p>
-      </div>
-    );
-  }
+  const maxBreads = deliveries.length;
 
   return (
     <div>
@@ -259,159 +183,150 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       />
 
       {/* Instructions */}
-      <div className="alert alert-info mb-3">
-        <strong>Du darfst {maxBreads} Brote auswählen.</strong>
+      <div className="alert alert-info mb-3 mt-3">
+          <strong>Du hast {maxBreads} Brot-Anteil{maxBreads !== 1 ? 'e' : ''} für diese Woche.</strong>
         <br />
         <small>
-          Aktuell ausgewählt: {getFilledSlots()} / {maxBreads}
+          {chooseStationPerBread ? (
+            <>
+              Hier kannst du für jeden Anteil den Abholort ändern (falls gewünscht) und eine verfügbare Brotsorte auswählen.
+            </>
+          ) : (
+            <>
+              Wähle den Abholort für alle deine Brote und anschließend die gewünschten Brotsorten.
+            </>
+          )}
         </small>
       </div>
 
-      {/* Bread Cards */}
-      <div className="d-flex flex-wrap gap-3">
-        {breads.map(bread => {
-          const breadSelections = getSelectionsForBread(bread.id!);
-          const qty = breadSelections.length;
-          const contents = contentsMap[bread.id!] || [];
-          const hasEmptySlot = selections.some(s => !s.breadId);
-
+      {/* Bread Delivery Slots */}
+      <div className="row g-3">
+        {deliveries.map((delivery, index) => {
+          const selectedLocation = pickupLocations.find(l => l.id === delivery.pickupLocation);
+          const isFirstSlot = index === 0;
+          const canChangeLocation = chooseStationPerBread || isFirstSlot;
+          const isEditingThisLocation = editingLocation === delivery.id;
+          
           return (
-            <div key={bread.id} style={{ width: '280px', flex: '0 0 280px' }}>
-              <div
-                className="card h-100 shadow-sm"
-                style={{
-                  border: qty > 0 ? '2px solid #8B4513' : '1px solid #dee2e6',
-                  opacity: !hasEmptySlot && qty === 0 ? 0.6 : 1,
-                }}
-              >
-                {bread.picture ? (
-                  <img
-                    src={bread.picture}
-                    alt={bread.name}
-                    className="card-img-top"
-                    style={{ height: '180px', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <div
-                    className="d-flex align-items-center justify-content-center"
-                    style={{ height: '180px', backgroundColor: '#F5E6D3' }}
-                  >
-                    <EggFried size={48} style={{ color: '#D4A574' }} />
-                  </div>
-                )}
-
-                <div className="card-body d-flex flex-column">
-                  <h6 className="card-title mb-0" style={{ color: '#8B4513' }}>
-                    {bread.name}
-                  </h6>
-
-                  {bread.weight && (
-                    <small className="text-muted mb-2">{Number(bread.weight).toFixed(0)}g</small>
-                  )}
-
-                  {bread.labels && bread.labels.length > 0 && (
-                    <div className="mb-2">
-                      {bread.labels.map(label => (
-                        <span
-                          key={label.id}
-                          className="badge me-1"
-                          style={{ backgroundColor: '#F5E6D3', color: '#8B4513', fontSize: '0.7rem' }}
+            <div key={delivery.id} className="col-12">
+              <div className="card">
+                <div 
+                  className="card-header"
+                  style={{ backgroundColor: '#D4A574', color: 'white' }}
+                >
+                  <h6 className="mb-0">Brotanteil {index + 1}</h6>
+                </div>
+                <div className="card-body">
+                  {/* Pickup Location Row */}
+                  <div className="mb-3">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="flex-grow-1">
+                        <strong>Abholort:</strong>{' '}
+                        {isEditingThisLocation ? (
+                        <select
+                          className="form-select form-select-sm d-inline-block w-auto ms-2"
+                          value={delivery.pickupLocation || ''}
+                          onChange={(e) => handlePickupLocationChange(delivery.id!, e.target.value || null)}
+                          disabled={saving === delivery.id}
+                          autoFocus
                         >
-                          {label.name}
+                          <option value="">-- Station wählen --</option>
+                          {pickupLocations.map(location => (
+                            <option key={location.id} value={location.id}>
+                              {location.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="text-muted">
+                          {delivery.pickupLocationName || selectedLocation?.name || 'Noch nicht gewählt'}
                         </span>
-                      ))}
+                      )}
+                        {!chooseStationPerBread && !isFirstSlot && (
+                          <small className="text-muted ms-2">(wird mit Brotanteil 1 synchronisiert)</small>
+                        )}
+                      </div>
+                      {canChangeLocation && !isEditingThisLocation && (
+                        <button
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => setEditingLocation(delivery.id!)}
+                          disabled={saving === delivery.id}
+                        >
+                          {delivery.pickupLocation ? 'Ändern' : 'Auswählen'}
+                        </button>
+                      )}
+                      {isEditingThisLocation && (
+                        <button
+                          className="btn btn-sm btn-outline-secondary ms-2"
+                          onClick={() => setEditingLocation(null)}
+                        >
+                          Abbrechen
+                        </button>
+                      )}
+                      {saving === delivery.id && (
+                        <span className="spinner-border spinner-border-sm ms-2" />
+                      )}
                     </div>
-                  )}
+                  </div>
 
-                  {bread.description && (
-                    <p className="card-text text-muted small mb-2">{bread.description}</p>
-                  )}
+                  <hr />
 
-                  {contents.length > 0 && (
-                    <div className="mb-2" style={{ flex: 1 }}>
-                      <small className="fw-bold" style={{ color: '#C4A882', fontSize: '0.7rem' }}>
-                        ZUTATEN:
-                      </small>
-                      <br />
-                      <small style={{ color: '#B8A99A', fontSize: '0.75rem' }}>
-                        {contents.map(c => c.ingredientName).join(', ')}
-                      </small>
-                    </div>
-                  )}
-
-                  {/* Pickup Location Selects */}
-                  {chooseStationPerBread &&  breadSelections.length > 0 && (
-                    <div className="mb-2">
-                      {breadSelections.map((selection, idx) => (
-                        <div key={selection.id} className="mb-1">
-                          <small className="text-muted d-block mb-1" style={{ fontSize: '0.7rem' }}>
-                            Abholstation #{idx + 1}
-                          </small>
-                          <select
-                            className="form-select form-select-sm"
-                            value={selection.pickupLocationId || ''}
-                            onChange={(e) => handlePickupLocationChange(selection.id, e.target.value || null)}
-                            disabled={saving === selection.id}
-                            style={{ fontSize: '0.85rem' }}
+                  {/* Bread Selection Row */}
+                  <div>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="flex-grow-1">
+                        <strong>Brotsorte:</strong>{' '}
+                        <span className="text-muted">
+                          {delivery.breadName || 'Noch nicht gewählt'}
+                        </span>
+                      </div>
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-sm"
+                          style={{ backgroundColor: '#8B4513', color: 'white' }}
+                          onClick={() => setModalOpen(delivery.id!)}
+                          disabled={!delivery.pickupLocation || saving === delivery.id}
+                        >
+                          {delivery.bread ? 'Ändern' : 'Auswählen'}
+                        </button>
+                        {delivery.bread && (
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleRemoveBread(delivery.id!)}
+                            disabled={saving === delivery.id}
                           >
-                            <option value="">-- Station wählen --</option>
-                            {pickupLocations.map(location => (
-                              <option key={location.id} value={location.id}>
-                                {location.name}
-                              </option>
-                            ))}
-                          </select>
-                          {saving === selection.id && (
-                            <div className="text-center mt-1">
-                              <span className="spinner-border spinner-border-sm" style={{ color: '#8B4513' }} />
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            Entfernen
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  )}
-
-                  <div className="d-flex align-items-center justify-content-center gap-2 mt-auto">
-                    <BrownCircleButton
-                      active={qty > 0}
-                      onClick={() => handleRemoveBread(bread.id!)}
-                      disabled={qty === 0 || saving !== null}
-                    >
-                      <Dash size={18} />
-                    </BrownCircleButton>
-
-                    <span
-                      className="fw-bold text-center"
-                      style={{ minWidth: '32px', fontSize: '1.1rem', color: qty > 0 ? '#8B4513' : '#adb5bd' }}
-                    >
-                      {qty}
-                    </span>
-
-                    <button
-                      className="btn btn-sm rounded-circle"
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        backgroundColor: '#8B4513',
-                        color: 'white',
-                      }}
-                      onClick={() => handleAddBread(bread.id!)}
-                      disabled={!hasEmptySlot || saving !== null}
-                    >
-                      <Plus size={18} />
-                    </button>
+                    {!delivery.pickupLocation && (
+                      <div className="alert alert-warning mt-2 mb-0 py-2">
+                        <small>
+                          {isFirstSlot || chooseStationPerBread 
+                            ? '⚠️ Bitte zuerst eine Abholstation auswählen' 
+                            : '⚠️ Bitte eine Station bei Brotanteil 1 auswählen'}
+                        </small>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {qty > 0 && (
-                  <div
-                    className="card-footer text-center py-1"
-                    style={{ backgroundColor: '#8B4513', color: 'white', fontSize: '0.8rem' }}
-                  >
-                    {qty}× ausgewählt
-                  </div>
-                )}
               </div>
+
+              {/* Bread Selection Modal */}
+              {modalOpen === delivery.id && delivery.pickupLocation && (
+                <BreadSelectionModal
+                  breads={breads}
+                  contentsMap={contentsMap}
+                  pickupLocationId={delivery.pickupLocation}
+                  pickupLocationName={delivery.pickupLocationName || selectedLocation?.name || ''}
+                  selectedWeek={selectedWeek}
+                  selectedYear={selectedYear}
+                  onSelect={(breadId) => handleBreadSelected(delivery.id!, breadId)}
+                  onClose={() => setModalOpen(null)}
+                  csrfToken={csrfToken}
+                />
+              )}
             </div>
           );
         })}
