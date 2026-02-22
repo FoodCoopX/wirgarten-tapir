@@ -13,19 +13,21 @@ dayjs.extend(isoWeek);
 interface ChooseBreadsCardProps {
   memberId: string;
   csrfToken: string;
+  chooseStationPerBread: boolean;
 }
 
 interface BreadSelection {
-  id: string; // unique ID for this selection slot
+  id: string;
   breadId: string | null;
   pickupLocationId: string | null;
-  deliveryId?: string; // ID of existing BreadDelivery object
+  deliveryId?: string;
 }
 
 const currentWeek = dayjs().isoWeek();
 const currentYear = dayjs().year();
 
 export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
+  chooseStationPerBread,
   memberId,
   csrfToken,
 }) => {
@@ -37,7 +39,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   const [selections, setSelections] = useState<BreadSelection[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState<string | null>(null); // ID of slot being saved
+  const [saving, setSaving] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(currentWeek);
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
@@ -73,8 +75,8 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
       // Load pickup locations
       const locations = await bakeryApi.pickupLocationsApiDeliveryDaysRetrieve();
-      // TODO: Adjust this once you have proper API endpoint for pickup locations
-      setPickupLocations([]); // Replace with actual pickup locations from API
+      // TODO: Replace with actual pickup locations
+      setPickupLocations([]);
 
       // Load current week's deliveries
       const deliveries = await bakeryApi.bakeryBreadDeliveriesList({
@@ -84,7 +86,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       });
 
       if (deliveries.length > 0) {
-        // Load from current week
         setSubscription(deliveries[0].subscription as Subscription);
         const loaded: BreadSelection[] = deliveries.map((d, idx) => ({
           id: `slot-${idx}`,
@@ -105,7 +106,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
         });
 
         if (prevDeliveries.length > 0) {
-          // Pre-fill from previous week
           setSubscription(prevDeliveries[0].subscription as Subscription);
           const quantity = (prevDeliveries[0].subscription as Subscription).quantity || 0;
           const preselected: BreadSelection[] = Array.from({ length: quantity }, (_, idx) => {
@@ -120,12 +120,11 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
         } else {
           // Load subscription without deliveries
           // TODO: Load subscription from API
-          // For now, create empty slots
-          const quantity = 3; // Default, replace with actual subscription.quantity
+          const quantity = 3;
           const empty: BreadSelection[] = Array.from({ length: quantity }, (_, idx) => ({
             id: `slot-${idx}`,
             breadId: null,
-            pickupLocationId: null, // Pre-fill from subscription.pickup_location if available
+            pickupLocationId: null,
           }));
           setSelections(empty);
         }
@@ -140,45 +139,15 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
   const maxBreads = subscription?.quantity || selections.length;
 
-  const handleBreadChange = async (slotId: string, breadId: string | null) => {
-    const slot = selections.find(s => s.id === slotId);
-    if (!slot) return;
-
-    // Update locally
-    const updated = selections.map(s => 
-      s.id === slotId ? { ...s, breadId } : s
-    );
-    setSelections(updated);
-
-    // Auto-save
-    await saveSlot(slotId, breadId, slot.pickupLocationId);
-  };
-
-  const handlePickupLocationChange = async (slotId: string, pickupLocationId: string | null) => {
-    const slot = selections.find(s => s.id === slotId);
-    if (!slot) return;
-
-    // Update locally
-    const updated = selections.map(s => 
-      s.id === slotId ? { ...s, pickupLocationId } : s
-    );
-    setSelections(updated);
-
-    // Auto-save
-    await saveSlot(slotId, slot.breadId, pickupLocationId);
-  };
-
   const saveSlot = async (slotId: string, breadId: string | null, pickupLocationId: string | null) => {
     const slot = selections.find(s => s.id === slotId);
     if (!slot || !subscription) return;
 
-    // Only save if both bread and pickup location are selected
     if (!breadId || !pickupLocationId) return;
 
     setSaving(slotId);
     try {
       if (slot.deliveryId) {
-        // Update existing delivery
         await bakeryApi.bakeryBreadDeliveriesPartialUpdate({
           id: slot.deliveryId,
           patchedBreadDeliveryRequest: {
@@ -187,7 +156,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
           },
         });
       } else {
-        // Create new delivery
         const created = await bakeryApi.bakeryBreadDeliveriesCreate({
           breadDeliveryRequest: {
             subscription: subscription.id!,
@@ -199,7 +167,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
           },
         });
 
-        // Update slot with deliveryId
         const updated = selections.map(s => 
           s.id === slotId ? { ...s, deliveryId: created.id } : s
         );
@@ -213,29 +180,36 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     }
   };
 
-  const handleAddBread = (breadId: string) => {
-    // Find first empty slot
+  const handleAddBread = async (breadId: string) => {
     const emptySlot = selections.find(s => !s.breadId);
-    if (emptySlot) {
-      handleBreadChange(emptySlot.id, breadId);
-    }
+    if (!emptySlot) return;
+
+    // Get default pickup location: first existing selection for this bread, or subscription default
+    const existingSelection = selections.find(s => s.breadId === breadId && s.pickupLocationId);
+    const defaultPickupLocation = existingSelection?.pickupLocationId || subscription?.pickupLocation || null;
+
+    // Update locally
+    const updated = selections.map(s => 
+      s.id === emptySlot.id ? { ...s, breadId, pickupLocationId: defaultPickupLocation } : s
+    );
+    setSelections(updated);
+
+    // Auto-save
+    await saveSlot(emptySlot.id, breadId, defaultPickupLocation);
   };
 
   const handleRemoveBread = async (breadId: string) => {
-    // Find first slot with this bread
     const slot = selections.find(s => s.breadId === breadId);
     if (!slot) return;
 
     setSaving(slot.id);
     try {
-      // Delete from backend if it exists
       if (slot.deliveryId) {
         await bakeryApi.bakeryBreadDeliveriesDestroy({ id: slot.deliveryId });
       }
 
-      // Clear locally
       const updated = selections.map(s => 
-        s.id === slot.id ? { ...s, breadId: null, deliveryId: undefined } : s
+        s.id === slot.id ? { ...s, breadId: null, pickupLocationId: null, deliveryId: undefined } : s
       );
       setSelections(updated);
     } catch (error) {
@@ -246,8 +220,20 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     }
   };
 
-  const getQuantityForBread = (breadId: string) => {
-    return selections.filter(s => s.breadId === breadId).length;
+  const handlePickupLocationChange = async (slotId: string, pickupLocationId: string | null) => {
+    const slot = selections.find(s => s.id === slotId);
+    if (!slot) return;
+
+    const updated = selections.map(s => 
+      s.id === slotId ? { ...s, pickupLocationId } : s
+    );
+    setSelections(updated);
+
+    await saveSlot(slotId, slot.breadId, pickupLocationId);
+  };
+
+  const getSelectionsForBread = (breadId: string): BreadSelection[] => {
+    return selections.filter(s => s.breadId === breadId);
   };
 
   const getFilledSlots = () => {
@@ -281,65 +267,11 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
         </small>
       </div>
 
-      {/* Selection Slots */}
-      <div className="card mb-4">
-        <div className="card-header" style={{ backgroundColor: '#D4A574', color: 'white' }}>
-          <h6 className="mb-0">Deine Brot-Auswahl</h6>
-        </div>
-        <div className="card-body">
-          {selections.map((slot, index) => (
-            <div key={slot.id} className="row mb-3 align-items-center">
-              <div className="col-auto">
-                <strong style={{ color: '#8B4513' }}>#{index + 1}</strong>
-              </div>
-              <div className="col">
-                <label className="form-label small mb-1">Brotsorte</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={slot.breadId || ''}
-                  onChange={(e) => handleBreadChange(slot.id, e.target.value || null)}
-                  disabled={saving === slot.id}
-                >
-                  <option value="">-- Brotsorte wählen --</option>
-                  {breads.map(bread => (
-                    <option key={bread.id} value={bread.id}>
-                      {bread.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col">
-                <label className="form-label small mb-1">Abholstation</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={slot.pickupLocationId || ''}
-                  onChange={(e) => handlePickupLocationChange(slot.id, e.target.value || null)}
-                  disabled={saving === slot.id || !slot.breadId}
-                >
-                  <option value="">-- Station wählen --</option>
-                  {pickupLocations.map(location => (
-                    <option key={location.id} value={location.id}>
-                      {location.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-auto">
-                {saving === slot.id ? (
-                  <span className="spinner-border spinner-border-sm" style={{ color: '#8B4513' }} />
-                ) : slot.breadId && slot.pickupLocationId ? (
-                  <CheckCircleFill size={20} style={{ color: '#28a745' }} />
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Bread Cards for Quick Selection */}
+      {/* Bread Cards */}
       <div className="d-flex flex-wrap gap-3">
         {breads.map(bread => {
-          const qty = getQuantityForBread(bread.id!);
+          const breadSelections = getSelectionsForBread(bread.id!);
+          const qty = breadSelections.length;
           const contents = contentsMap[bread.id!] || [];
           const hasEmptySlot = selections.some(s => !s.breadId);
 
@@ -404,6 +336,38 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                       <small style={{ color: '#B8A99A', fontSize: '0.75rem' }}>
                         {contents.map(c => c.ingredientName).join(', ')}
                       </small>
+                    </div>
+                  )}
+
+                  {/* Pickup Location Selects */}
+                  {chooseStationPerBread &&  breadSelections.length > 0 && (
+                    <div className="mb-2">
+                      {breadSelections.map((selection, idx) => (
+                        <div key={selection.id} className="mb-1">
+                          <small className="text-muted d-block mb-1" style={{ fontSize: '0.7rem' }}>
+                            Abholstation #{idx + 1}
+                          </small>
+                          <select
+                            className="form-select form-select-sm"
+                            value={selection.pickupLocationId || ''}
+                            onChange={(e) => handlePickupLocationChange(selection.id, e.target.value || null)}
+                            disabled={saving === selection.id}
+                            style={{ fontSize: '0.85rem' }}
+                          >
+                            <option value="">-- Station wählen --</option>
+                            {pickupLocations.map(location => (
+                              <option key={location.id} value={location.id}>
+                                {location.name}
+                              </option>
+                            ))}
+                          </select>
+                          {saving === selection.id && (
+                            <div className="text-center mt-1">
+                              <span className="spinner-border spinner-border-sm" style={{ color: '#8B4513' }} />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
 

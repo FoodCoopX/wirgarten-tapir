@@ -6,9 +6,10 @@ import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
   interface ChooseBreadsProps {
     memberId: string;
     csrfToken: string;
+    chooseStationPerBread: boolean;
   }
 
-  export const ChooseBreads: React.FC<ChooseBreadsProps> = ({ memberId, csrfToken }) => {
+  export const ChooseBreads: React.FC<ChooseBreadsProps> = ({ memberId, csrfToken, chooseStationPerBread }) => {
     return (
       <div className="container-fluid mt-4 px-5">
         
@@ -22,7 +23,7 @@ import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
          
       <div className="row">
           <div className="col-md-12 mb-4">
-            <ChooseBreadsCard csrfToken={csrfToken} memberId={memberId} />
+            <ChooseBreadsCard chooseStationPerBread={chooseStationPerBread} csrfToken={csrfToken} memberId={memberId} />
           </div>
         </div>
         
