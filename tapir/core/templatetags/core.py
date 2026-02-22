@@ -14,6 +14,7 @@ from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :
 from tapir.wirgarten.models import (
     WaitingListEntry,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import is_debug_instance
 
 register = template.Library()
@@ -155,11 +156,13 @@ def add_admin_links(groups, request, cache: dict):
         groups.append(members_group)
 
     try:
-        is_bakery = TapirParameter.objects.get(key="is_bakery").get_value()
+        bakery_enabled = TapirParameter.objects.get(
+            key=ParameterKeys.BAKERY_ENABLED
+        ).get_value()
     except TapirParameter.DoesNotExist:
-        is_bakery = False
+        bakery_enabled = False
 
-    if is_bakery:
+    if bakery_enabled:
         bakery_group = SidebarLinkGroup(name=_("Bäckerei"))
 
         bakery_group.add_link(

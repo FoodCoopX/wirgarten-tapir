@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import OuterRef, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import (
@@ -499,6 +500,8 @@ class PickupStationsByDeliveryDayView(APIView):
     )
     def get(self, request):
         """Get pickup stations filtered by delivery day"""
+        from django.db.models import Min
+
         day_of_week: str | None = request.query_params.get("day_of_week", None)
 
         if not day_of_week:
@@ -515,10 +518,28 @@ class PickupStationsByDeliveryDayView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        all_records = PickupLocationOpeningTime.objects.all()
-        filtered_records = PickupLocationOpeningTime.objects.filter(day_of_week=day_int)
+        # Get the earliest day_of_week per pickup location
+        earliest_days_subquery = (
+            PickupLocationOpeningTime.objects.filter(
+                pickup_location=OuterRef("pickup_location")
+            )
+            .values("pickup_location")
+            .annotate(min_day=Min("day_of_week"))
+            .values("min_day")
+        )
+
+        # Filter for records where the given day is the earliest day for that pickup location
+        filtered_records = (
+            PickupLocationOpeningTime.objects.annotate(
+                earliest_day=Subquery(earliest_days_subquery)
+            )
+            .filter(day_of_week=day_int, earliest_day=day_int)
+            .select_related("pickup_location")
+            .order_by("pickup_location__name")
+        )
 
         if not filtered_records.exists():
+            all_records = PickupLocationOpeningTime.objects.all()
             return Response(
                 {
                     "error": f"No pickup locations found for day {day_int}",
@@ -529,18 +550,12 @@ class PickupStationsByDeliveryDayView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        stations: List[Dict[str, Any]] = list(
-            filtered_records.values(
-                "id", "pickup_location__id", "pickup_location__name"
-            ).order_by("pickup_location__name")
-        )
-
         result: List[Dict[str, Any]] = [
             {
-                "id": station["id"],
-                "name": station["pickup_location__name"],
+                "id": record.id,  # PickupLocationOpeningTime.id
+                "name": record.pickup_location.name,  # PickupLocation.name
             }
-            for station in stations
+            for record in filtered_records
         ]
 
         return Response({"pickup_stations": result})

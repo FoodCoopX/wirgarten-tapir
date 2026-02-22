@@ -32,6 +32,24 @@
                         </p>
                     </div>
                 {% endif %}
+                
+                {% if bakery_enabled %}
+    <div class="mb-3">
+        <a href="{% url 'bakery:choose-breads' %}?member_id={{ object.pk }}" 
+           class="btn btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
+           style="background-color: #D4A574; color: white; border: none; padding: 1rem; transition: all 0.3s ease;"
+           onmouseover="this.style.backgroundColor='#6F5835'"
+           onmouseout="this.style.backgroundColor='#D4A574'">
+            <div class="d-flex flex-column align-items-start">
+                <strong style="font-size: 1.1rem;">Brotbestellung</strong>
+                <small style="opacity: 0.9;">Wähle deine Brote aus</small>
+            </div>
+        </a>
+    </div>
+{% endif %}
+               
+      
+                                
                 <div id="member-contracts">
                     {% if show_coop_shares %}<div id="coop_shares_card" data-member-id="{{ object.id }}"></div>{% endif %}
                     <div id="contract-tiles"

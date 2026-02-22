@@ -7,6 +7,7 @@ from tapir.bakery.models import (
     BreadDelivery,
     BreadLabel,
     Ingredient,
+    PreferredLabel,
 )
 from tapir.bakery.utils import can_delete_instance
 
@@ -98,36 +99,17 @@ class BreadCapacityPickupStationSerializer(serializers.ModelSerializer):
 
 
 class BreadDeliverySerializer(serializers.ModelSerializer):
+    bread_name = serializers.CharField(source="bread.name", read_only=True)
+    pickup_location_name = serializers.CharField(
+        source="pickup_location.name", read_only=True
+    )
+    delivery_day = serializers.IntegerField(
+        source="pickup_location.delivery_day", read_only=True
+    )
+
     class Meta:
         model = BreadDelivery
-        fields = [
-            "id",
-            "year",
-            "delivery_week",
-            "delivery_day",
-            "subscription",
-            "bread",
-        ]
-
-    def validate(self, data):
-        # Check total count for this week/day/subscription
-        total = BreadDelivery.objects.filter(
-            year=data["year"],
-            delivery_week=data["delivery_week"],
-            delivery_day=data["delivery_day"],
-            subscription=data["subscription"],
-        ).count()
-
-        if self.instance:
-            # Editing existing — don't count itself
-            total -= 1
-
-        if total >= data["subscription"].quantity:
-            raise serializers.ValidationError(
-                f"Maximum {data['subscription'].quantity} bread(s) allowed"
-            )
-
-        return data
+        fields = "__all__"
 
 
 class AvailableBreadsForDeliveryListResponseSerializer(serializers.Serializer):
@@ -150,3 +132,21 @@ class ToggleBreadResponseSerializer(serializers.Serializer):
     created = serializers.BooleanField(required=False)
     deleted = serializers.BooleanField(required=False)
     bread_id = serializers.CharField()
+
+
+class PreferredLabelSerializer(serializers.ModelSerializer):
+    member_id = serializers.CharField(source="member.id", read_only=True)
+    labels = serializers.PrimaryKeyRelatedField(
+        queryset=BreadLabel.objects.all(), many=True
+    )
+
+    class Meta:
+        model = PreferredLabel
+        fields = ["id", "member_id", "labels"]
+
+
+class PreferredLabelBulkUpdateSerializer(serializers.Serializer):
+    labels = serializers.ListField(
+        child=serializers.CharField(),
+        help_text="List of BreadLabel IDs to set as preferred for the member.",
+    )

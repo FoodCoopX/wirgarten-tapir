@@ -121,6 +121,20 @@ class PickupLocation(TapirModel):
 
         return smallest_offset if smallest_offset is not None else 0
 
+    @property
+    def delivery_day(self):
+        """
+        Returns the first day of the week (as integer) from the pickup location's opening times.
+        Returns None if no opening times are configured.
+        """
+        opening_time = (
+            PickupLocationOpeningTime.objects.filter(pickup_location_id=self.id)
+            .order_by("day_of_week")
+            .first()
+        )
+
+        return opening_time.day_of_week if opening_time else None
+
 
 class PickupLocationOpeningTime(TapirModel):
     pickup_location = models.ForeignKey(
@@ -371,6 +385,7 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
     is_student = models.BooleanField(_("Student*in"), default=False)
+    pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
 
     @property
     def pickup_location(self):

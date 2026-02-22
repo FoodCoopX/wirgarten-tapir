@@ -35,10 +35,10 @@ from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
     get_active_product_types,
     get_active_subscriptions,
     get_available_product_types,
-    get_active_and_future_subscriptions,
     get_next_growing_period,
 )
 from tapir.wirgarten.utils import format_date, get_today
@@ -63,6 +63,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["object"] = self.object
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object, today, include_future_subscriptions=True, cache=cache
+        )
+        context["bakery_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_ENABLED, cache=cache
         )
         next_growing_period = get_next_growing_period()
         for subscriptions in context["subscriptions"].values():
@@ -196,7 +199,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
         if future_rhythm is not None:
             context["payment_rhythm"] = (
-                f"Aktuell: {context["payment_rhythm"]}. ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
+                f"Aktuell: {context['payment_rhythm']}. ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
             )
 
         context["show_mail_category_content"] = MailCategory.objects.exists()

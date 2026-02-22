@@ -29,5 +29,6 @@
 {% block content %}
     {% csrf_token %}
     <div id="choose-breads-root" 
-         data-csrf-token="{{ csrf_token }}"></div>
+         data-csrf-token="{{ csrf_token }}"
+         data-member-id="{{ request.user.member.id }}"></div>
 {% endblock %}

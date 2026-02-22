@@ -214,6 +214,12 @@ export interface Member {
      * @memberof Member
      */
     isStudent?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof Member
+     */
+    pseudonym?: string;
 }
 
 
@@ -270,6 +276,7 @@ export function MemberFromJSONTyped(json: any, ignoreDiscriminator: boolean): Me
         'createdAt': (new Date(json['created_at'])),
         'memberNo': json['member_no'] == null ? undefined : json['member_no'],
         'isStudent': json['is_student'] == null ? undefined : json['is_student'],
+        'pseudonym': json['pseudonym'] == null ? undefined : json['pseudonym'],
     };
 }
 
@@ -313,6 +320,7 @@ export function MemberFromJSONTyped(json: any, ignoreDiscriminator: boolean): Me
         'privacy_consent': value['privacyConsent'] == null ? undefined : ((value['privacyConsent'] as any).toISOString()),
         'member_no': value['memberNo'],
         'is_student': value['isStudent'],
+        'pseudonym': value['pseudonym'],
     };
 }
 

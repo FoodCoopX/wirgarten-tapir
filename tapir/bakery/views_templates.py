@@ -1,5 +1,8 @@
 from django.views.generic import TemplateView
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.parameter_keys import ParameterKeys
+
 
 class IngredientsLabelsBreadsView(TemplateView):
     template_name = "bakery/ingredients_labels_breads.html"
@@ -34,4 +37,6 @@ class ChooseBreadsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["member_id"] = self.request.GET.get("member_id", self.request.user.pk)
+        context["bakery_enabled"] = get_parameter_value(ParameterKeys.BAKERY_ENABLED)
+
         return context

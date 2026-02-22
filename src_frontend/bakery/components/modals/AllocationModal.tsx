@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { InfoCircle, ExclamationTriangle, Save, XLg, ArrowRepeat } from 'react-bootstrap-icons';
-import { BakeryApi, PickupLocationsApi } from '../../../api-client';
+import { InfoCircle, ExclamationTriangle, ArrowRepeat } from 'react-bootstrap-icons';
+import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import type { BreadList, BreadCapacityPickupStation } from '../../../api-client/models';
 
@@ -15,12 +15,12 @@ interface AllocationModalProps {
 }
 
 interface PickupStation {
-  id: number;
+  id: string;  // Changed back to string
   name: string;
 }
 
 interface AllocationData {
-  [stationId: string]: {
+  [stationId: string]: {  // Changed back to string
     [breadId: string]: string;
   };
 }
@@ -35,7 +35,6 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
   csrfToken,
 }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
-  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
 
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
@@ -53,23 +52,27 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
   const loadData = async () => {
     setLoading(true);
     try {
-      const dayOfWeek = day + 1;
+      const dayOfWeek = day;
 
       const [breadsResponse, stationsResponse] = await Promise.all([
         bakeryApi.bakeryBreadsListList({ isActive: true }),
-        bakeryApi.pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({dayOfWeek}),
+        bakeryApi.pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({ dayOfWeek }),
       ]);
 
+      console.log('Loaded breads:', breadsResponse);
+      console.log('Loaded pickup stations:', stationsResponse);
+
+      // Use the PickupLocationOpeningTime.id from the response (it's a string)
       const filteredStations: PickupStation[] = stationsResponse.pickupStations.map(s => ({
-      id: s.id,
-      name: s.name,
-    }));
+        id: s.id,  // String ID from PickupLocationOpeningTime
+        name: s.name,  // pickup_location.name
+      }));
 
       setBreads(breadsResponse);
       setPickupStations(filteredStations);
 
       // Load existing capacities
-      const stationIds = filteredStations.map(s => s.id);
+      const stationIds = filteredStations.map(s => s.id);  // Already strings
       let capacities: BreadCapacityPickupStation[] = [];
       if (stationIds.length > 0) {
         capacities = await bakeryApi.bakeryBreadCapacityPickupStationList({
@@ -84,11 +87,11 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       filteredStations.forEach(station => {
         initial[station.id] = {};
         breadsResponse.forEach(bread => {
-          const existingCapacity = (capacities as any[]).find(
-            (c: any) => c.pickupStationDay === station.id && c.bread === bread.id
+          const existingCapacity = capacities.find(
+            (c) => c.pickupStationDay === station.id && c.bread === bread.id
           );
           initial[station.id][bread.id!] =
-            existingCapacity ? existingCapacity.capacity.toString() : '';
+            existingCapacity ? String(existingCapacity.capacity) : '';
         });
       });
 
@@ -121,7 +124,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     setSaving(true);
     try {
       const updates: Array<{
-        pickup_station_day: number;
+        pickupStationDay: string;  // Keep as string
         bread: string;
         capacity: number | null;
       }> = [];
@@ -130,31 +133,27 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
         Object.entries(breadAllocs).forEach(([breadId, value]) => {
           const initialValue = initialAllocations[stationId]?.[breadId] || '';
 
+          // Only save if value changed
           if (value !== initialValue) {
-            if (value === '' || value === 'x') {
-              updates.push({
-                pickup_station_day: Number(stationId),
-                bread: breadId,
-                capacity: null,
-              });
-            } else {
-              updates.push({
-                pickup_station_day: Number(stationId),
-                bread: breadId,
-                capacity: Number(value),
-              });
-            }
+            const capacityValue = value === '' || value === 'x' ? null : Number(value);
+            
+            updates.push({
+              pickupStationDay: stationId,  // Already a string
+              bread: breadId,
+              capacity: capacityValue,
+            });
           }
         });
       });
 
       if (updates.length > 0) {
+        console.log('Sending updates:', { year, week, updates });
         await bakeryApi.bakeryBreadCapacityPickupStationBulkUpdateCreate({
-          body: {
+          bakeryBreadCapacityPickupStationBulkUpdateCreateRequest: {
             year,
             week,
             updates,
-          } as any,
+          },
         });
       }
 
@@ -259,7 +258,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                           type="text"
                                           className="form-control form-control-sm text-center"
                                           value={allocations[station.id]?.[bread.id!] || ''}
-                                          onChange={(e) => handleCellChange(String(station.id), bread.id!, e.target.value)}
+                                          onChange={(e) => handleCellChange(station.id, bread.id!, e.target.value)}
                                           placeholder="-"
                                           style={{
                                             minWidth: '60px',
@@ -334,7 +333,6 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                 onClick={onClose}
                 disabled={saving}
               >
-                <XLg size={14} />
                 Abbrechen
               </button>
               <button
@@ -351,7 +349,6 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <Save size={14} />
                     Speichern & Schließen
                   </>
                 )}

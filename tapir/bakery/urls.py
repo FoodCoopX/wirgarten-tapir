@@ -13,9 +13,11 @@ from tapir.bakery.views_templates import (
 from tapir.bakery.viewsets import (
     BreadCapacityPickupStationViewSet,
     BreadContentViewSet,
+    BreadDeliveryViewSet,
     BreadLabelViewSet,
     BreadViewSet,
     IngredientViewSet,
+    PreferredLabelViewSet,
 )
 
 app_name = "bakery"
@@ -65,6 +67,16 @@ router.register(
     r"bread-capacity-pickup-station",
     BreadCapacityPickupStationViewSet,
     basename="bread_capacity_pickup_station",
+)
+router.register(
+    r"preferred-labels",
+    PreferredLabelViewSet,
+    basename="preferred-labels",
+)
+router.register(
+    r"bread-deliveries",
+    BreadDeliveryViewSet,
+    basename="bread-deliveries",
 )
 
 

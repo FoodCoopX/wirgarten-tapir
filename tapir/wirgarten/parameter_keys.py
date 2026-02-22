@@ -235,4 +235,23 @@ class ParameterKeys:
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
     )
-    BAKERY = "is_bakery"
+    BAKERY_ENABLED = f"{PREFIX}.bakery.enabled"
+    BAKERY_PSEUDONYM_ENABLED = f"{PREFIX}.bakery.pseudonym_enabled"
+    BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY = (
+        f"{PREFIX}.bakery.baking_day_before_delivery_day"
+    )
+    BAKERY_LAST_CHOOSING_DAY_BEFORE_BAKING_DAY = (
+        f"{PREFIX}.bakery.last_choosing_day_before_baking_day"
+    )
+    BAKERY_DAYS_BEFORE_DELIVERY_DAY_TO_CHANGE_PSEUDONYM = (
+        f"{PREFIX}.bakery.days_before_delivery_day_to_change_pseudonym"
+    )
+    BAKERY_MEMBERS_CAN_REDUCES_BREAD_SHARES = (
+        f"{PREFIX}.bakery.members_can_reduce_bread_shares"
+    )
+    BAKERY_PICKUP_LOCATIONS_CAN_BE_CHOSEN_PER_SHARE = (
+        f"{PREFIX}.bakery.pickup_locations_can_be_chosen_per_share"
+    )
+    BAKERY_PICKUP_LOCATIONS_CAN_BE_ORDERED_BY_DAYS_IN_BESTELL_WIZARD = (
+        f"{PREFIX}.bakery.pickup_locations_can_be_ordered_by_days_in_bestell_wizard"
+    )

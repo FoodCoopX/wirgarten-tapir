@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { InfoCircle } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
 import { BakeryApi } from '../../../api-client';
-import { Plus, Pencil, Trash, Check, X, ToggleOn, ToggleOff } from 'react-bootstrap-icons';
-import type { BreadLabel, BreadLabelRequest } from '../../../api-client/models';
+import type { BreadLabel } from '../../../api-client/models';
 
 interface PreferredLabelsCardProps {
   memberId: string;
   csrfToken: string;
 }
-// ...existing code...
+
 export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ memberId, csrfToken }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
 
@@ -17,26 +16,31 @@ export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ member
   const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
+  console.log('Loading PreferredLabelCard with memberId:', memberId);
+
   useEffect(() => {
-    const loadLabels = async () => {
+    if (!memberId) return;
+
+    const loadLabelsAndPreferred = async () => {
       try {
         const allLabels = await bakeryApi.bakeryLabelsList();
-        setLabels(allLabels.filter(l => l.isActive));
+      setLabels(allLabels.filter(l => l.isActive));
 
-        // // Load user's preferred labels
-        // const profile = await bakeryApi.bakeryProfileRetrieve(memberId);
-        // if (profile.preferred_bread_labels) {
-        //   setSelectedLabelIds(new Set(profile.preferred_bread_labels));
-        // }
+      // Send memberId as query param
+      const preferred = await bakeryApi.bakeryPreferredLabelsList({ memberId: memberId });
+      if (preferred.length > 0 && preferred[0].labels) {
+        setSelectedLabelIds(new Set(preferred[0].labels));
+      }
+
 
         setLoading(false);
       } catch (error) {
-        console.error('Failed to load labels:', error);
+        console.error('Failed to load labels or preferred labels:', error);
         setLoading(false);
       }
     };
-    loadLabels();
-  }, [memberId, bakeryApi]);
+    loadLabelsAndPreferred();
+  }, [memberId]);
 
   const toggleLabel = async (labelId: string) => {
     const newSelected = new Set(selectedLabelIds);
@@ -48,13 +52,18 @@ export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ member
     }
 
     setSelectedLabelIds(newSelected);
+    console.log(memberId, 'toggled label', labelId, 'new selection:', Array.from(newSelected));
 
-    // Save to backend
     try {
-      await profileApi.profileUpdatePreferredLabels({ preferred_bread_labels: Array.from(newSelected) }, memberId);
+      await bakeryApi.bakeryPreferredLabelsBulkUpdateCreate({
+        id: memberId,
+        preferredLabelBulkUpdateRequest: {
+          labels: Array.from(newSelected),
+        },
+      });
     } catch (error) {
       console.error('Failed to save preferred labels:', error);
-      // Revert on error
+      // Rollback on error
       setSelectedLabelIds(selectedLabelIds);
     }
   };
@@ -74,7 +83,7 @@ export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ member
       <div className="card-body">
         {loading ? (
           <div className="text-center py-3">
-            <div className="spinner-border spinner-border-sm">
+            <div className="spinner-border spinner-border-sm" style={{ color: '#D4A574' }}>
               <span className="visually-hidden">Loading...</span>
             </div>
           </div>
@@ -88,17 +97,17 @@ export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ member
             </p>
             <div className="d-flex flex-wrap gap-2">
               {labels.map((label) => {
-                const isSelected = selectedLabelIds.has(label.id);
+                const isSelected = selectedLabelIds.has(label.id!);
                 return (
                   <button
                     key={label.id}
                     type="button"
                     className={`btn btn-sm ${isSelected ? 'btn-success' : 'btn-outline-secondary'}`}
-                    onClick={() => toggleLabel(label.id)}
+                    onClick={() => toggleLabel(label.id!)}
                     style={{
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      padding: '0.2rem 0.6rem',
+                      padding: '0.4rem 0.8rem',
                       fontSize: '0.85rem',
                     }}
                   >
@@ -111,10 +120,9 @@ export const PreferredLabelsCard: React.FC<PreferredLabelsCardProps> = ({ member
           </>
         )}
       </div>
-      <div className="card-footer text-muted">
+      <div className="card-footer text-muted" style={{ backgroundColor: '#F5E6D3' }}>
         <small>
-          <InfoCircle size={14} className="me-1" style={{ verticalAlign: 'middle' }} />
-          Änderungen werden automatisch gespeichert
+        
         </small>
       </div>
     </div>

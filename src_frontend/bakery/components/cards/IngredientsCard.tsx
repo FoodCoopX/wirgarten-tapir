@@ -54,7 +54,7 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
     try {
       if (editingIngredient) {
         await bakeryApi.bakeryIngredientsPartialUpdate({
-          id: editingIngredient.id,
+          id: editingIngredient.id!,
           patchedIngredientRequest: ingredient
         });
       } else {

@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -12,6 +11,7 @@ from tapir.bakery.models import (
     BreadDelivery,
     BreadLabel,
     Ingredient,
+    PreferredLabel,
 )
 from tapir.bakery.serializers import (
     BreadCapacityPickupStationSerializer,
@@ -21,6 +21,8 @@ from tapir.bakery.serializers import (
     BreadLabelSerializer,
     BreadListSerializer,
     IngredientSerializer,
+    PreferredLabelBulkUpdateSerializer,
+    PreferredLabelSerializer,
 )
 from tapir.bakery.utils import str_to_bool
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -34,7 +36,7 @@ class BreadLabelViewSet(viewsets.ModelViewSet):
 
     queryset = BreadLabel.objects.all()
     serializer_class = BreadLabelSerializer
-    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    permission_classes = [permissions.IsAuthenticated]
 
 
 @extend_schema(tags=["bakery"])
@@ -81,7 +83,7 @@ class BreadViewSet(viewsets.ModelViewSet):
     """
 
     queryset = Bread.objects.prefetch_related("labels", "contents__ingredient").all()
-    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         summary="Get all ingredients for a specific bread",
@@ -185,7 +187,7 @@ class BreadContentViewSet(viewsets.ModelViewSet):
 
     queryset = BreadContent.objects.select_related("bread", "ingredient").all()
     serializer_class = BreadContentSerializer
-    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         parameters=[
@@ -318,19 +320,12 @@ class BreadDeliveryViewSet(viewsets.ModelViewSet):
     queryset = BreadDelivery.objects.all()
     serializer_class = BreadDeliverySerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = [
-        "subscription",
-        "year",
-        "delivery_week",
-        "delivery_day",
-        "bread",
-    ]
 
     @extend_schema(
         parameters=[
-            OpenApiParameter(
-                name="member", type=str, description="Filter by member ID"
-            ),
+            OpenApiParameter(name="member_id", type=str),
+            OpenApiParameter(name="year", type=int),
+            OpenApiParameter(name="delivery_week", type=int),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -340,116 +335,63 @@ class BreadDeliveryViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         # Optional: filter by member
-        member_id = self.request.query_params.get("member", None)
-        if member_id:
+        member_id = self.request.query_params.get("member_id", None)
+        year = self.request.query_params.get("year", None)
+        delivery_week = self.request.query_params.get("delivery_week", None)
+        if member_id is not None:
             queryset = queryset.filter(subscription__member__id=member_id)
+        if year is not None:
+            queryset = queryset.filter(year=year)
+        if delivery_week is not None:
+            queryset = queryset.filter(delivery_week=delivery_week)
 
-        return queryset.select_related("subscription", "bread")
+        return queryset.select_related("bread", "pickup_location")
 
-    def perform_create(self, serializer):
-        # Additional validation on create
-        subscription = serializer.validated_data["subscription"]
-        year = serializer.validated_data["year"]
-        delivery_week = serializer.validated_data["delivery_week"]
-        delivery_day = serializer.validated_data["delivery_day"]
 
-        # Count existing deliveries for this week
-        existing_count = BreadDelivery.objects.filter(
-            subscription=subscription,
-            year=year,
-            delivery_week=delivery_week,
-            delivery_day=delivery_day,
-        ).count()
-
-        if existing_count >= subscription.quantity:
-            raise ValidationError(
-                f"Maximum {subscription.quantity} bread(s) allowed per week"
-            )
-
-        serializer.save()
+@extend_schema(
+    tags=["Bakery"],
+    description="Manage preferred bread labels for a member.",
+    request=PreferredLabelSerializer,
+    responses={200: PreferredLabelSerializer},
+)
+class PreferredLabelViewSet(viewsets.ModelViewSet):
+    queryset = PreferredLabel.objects.all()
+    serializer_class = PreferredLabelSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        summary="Replace all bread selections for a given week/day/subscription",
-        request={
-            "application/json": {
-                "type": "object",
-                "properties": {
-                    "subscription": {"type": "string"},
-                    "year": {"type": "integer"},
-                    "delivery_week": {"type": "integer"},
-                    "delivery_day": {"type": "integer"},
-                    "breads": {"type": "array", "items": {"type": "string"}},
-                },
-                "required": [
-                    "subscription",
-                    "year",
-                    "delivery_week",
-                    "delivery_day",
-                    "breads",
-                ],
-            }
-        },
-        responses={
-            200: BreadDeliverySerializer(many=True),
-            400: OpenApiResponse(description="Bad request"),
-            404: OpenApiResponse(description="Subscription not found"),
-        },
+        parameters=[
+            OpenApiParameter(
+                name="member_id",
+                type=str,
+                description="Filter by member ID",
+                required=False,
+            ),
+        ]
     )
-    @action(detail=False, methods=["post"], url_path="bulk-update")
-    def bulk_update(self, request):
-        """
-        Replace all bread selections for a given week/day/subscription.
-        Payload: {
-            "subscription": "id",
-            "year": 2025,
-            "delivery_week": 10,
-            "delivery_day": 2,
-            "breads": ["bread_id_1", "bread_id_2", "bread_id_1"]  // can have duplicates
-        }
-        """
-        from tapir.wirgarten.models import Subscription
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
-        subscription_id = request.data.get("subscription")
-        year = request.data.get("year")
-        delivery_week = request.data.get("delivery_week")
-        delivery_day = request.data.get("delivery_day")
-        bread_ids = request.data.get("breads", [])
+    def get_queryset(self):
+        # Optionally filter by member
+        member_id = self.request.query_params.get("member_id")
+        if member_id:
+            return self.queryset.filter(member__id=member_id)
+        return self.queryset
 
-        try:
-            subscription = Subscription.objects.get(id=subscription_id)
-        except Subscription.DoesNotExist:
-            return Response({"error": "Subscription not found"}, status=404)
+    @extend_schema(
+        request=PreferredLabelBulkUpdateSerializer,
+        responses={200: PreferredLabelBulkUpdateSerializer},
+        description="Bulk update preferred bread labels for a member. Replaces all labels for the member with the provided list.",
+        tags=["bakery"],
+    )
+    @action(detail=True, methods=["post"], url_path="bulk-update")
+    def bulk_update(self, request, pk=None):
+        serializer = PreferredLabelBulkUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        labels = serializer.validated_data["labels"]
+        preferred, _ = PreferredLabel.objects.get_or_create(member_id=pk)
 
-        # Validate quantity
-        if len(bread_ids) > subscription.quantity:
-            return Response(
-                {"error": f"Maximum {subscription.quantity} bread(s) allowed"},
-                status=400,
-            )
-
-        # Delete existing selections
-        BreadDelivery.objects.filter(
-            subscription=subscription,
-            year=year,
-            delivery_week=delivery_week,
-            delivery_day=delivery_day,
-        ).delete()
-
-        # Create new selections
-        deliveries = []
-        for bread_id in bread_ids:
-            try:
-                bread = Bread.objects.get(id=bread_id)
-                delivery = BreadDelivery.objects.create(
-                    subscription=subscription,
-                    year=year,
-                    delivery_week=delivery_week,
-                    delivery_day=delivery_day,
-                    bread=bread,
-                )
-                deliveries.append(delivery)
-            except Bread.DoesNotExist:
-                pass
-
-        serializer = self.get_serializer(deliveries, many=True)
+        preferred.labels.set(labels)
+        preferred.save()
         return Response(serializer.data)

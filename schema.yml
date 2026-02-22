@@ -276,6 +276,172 @@ paths:
           description: '{"status": "success"}'
         '400':
           description: Bad request
+  /bakery/bread-deliveries/:
+    get:
+      operationId: bakery_bread_deliveries_list
+      parameters:
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadDelivery'
+          description: ''
+    post:
+      operationId: bakery_bread_deliveries_create
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadDeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadDeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadDeliveryRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadDelivery'
+          description: ''
+  /bakery/bread-deliveries/{id}/:
+    get:
+      operationId: bakery_bread_deliveries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread delivery identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadDelivery'
+          description: ''
+    put:
+      operationId: bakery_bread_deliveries_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread delivery identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadDeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadDeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadDeliveryRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadDelivery'
+          description: ''
+    patch:
+      operationId: bakery_bread_deliveries_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread delivery identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadDeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadDeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadDeliveryRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadDelivery'
+          description: ''
+    delete:
+      operationId: bakery_bread_deliveries_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread delivery identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
   /bakery/breadcontents/:
     get:
       operationId: bakery_breadcontents_list
@@ -1039,6 +1205,212 @@ paths:
       responses:
         '204':
           description: No response body
+  /bakery/preferred-labels/:
+    get:
+      operationId: bakery_preferred_labels_list
+      description: Manage preferred bread labels for a member.
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+        description: Filter by member ID
+      tags:
+      - Bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PreferredLabel'
+          description: ''
+    post:
+      operationId: bakery_preferred_labels_create
+      description: Manage preferred bread labels for a member.
+      tags:
+      - Bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredLabel'
+          description: ''
+  /bakery/preferred-labels/{id}/:
+    get:
+      operationId: bakery_preferred_labels_retrieve
+      description: Manage preferred bread labels for a member.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred label identifiziert.
+        required: true
+      tags:
+      - Bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredLabel'
+          description: ''
+    put:
+      operationId: bakery_preferred_labels_update
+      description: Manage preferred bread labels for a member.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred label identifiziert.
+        required: true
+      tags:
+      - Bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredLabel'
+          description: ''
+    patch:
+      operationId: bakery_preferred_labels_partial_update
+      description: Manage preferred bread labels for a member.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred label identifiziert.
+        required: true
+      tags:
+      - Bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferredLabelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferredLabelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferredLabelRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredLabel'
+          description: ''
+    delete:
+      operationId: bakery_preferred_labels_destroy
+      description: Manage preferred bread labels for a member.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred label identifiziert.
+        required: true
+      tags:
+      - Bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredLabel'
+          description: ''
+  /bakery/preferred-labels/{id}/bulk-update/:
+    post:
+      operationId: bakery_preferred_labels_bulk_update_create
+      description: Bulk update preferred bread labels for a member. Replaces all labels
+        for the member with the provided list.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred label identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelBulkUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelBulkUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreferredLabelBulkUpdateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredLabelBulkUpdate'
+          description: ''
   /bestell_wizard/api/bestell_wizard_base_data:
     get:
       operationId: bestell_wizard_api_bestell_wizard_base_data_retrieve
@@ -6123,7 +6495,7 @@ components:
         breads:
           type: array
           items:
-            $ref: '#/components/schemas/Bread'
+            $ref: '#/components/schemas/BreadList'
       required:
       - breads
       - day
@@ -6601,16 +6973,6 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
-    Bread:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-      required:
-      - id
-      - name
     BreadCapacityPickupStation:
       type: object
       properties:
@@ -6751,6 +7113,84 @@ components:
       - amount
       - bread
       - ingredient
+    BreadDelivery:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        bread_name:
+          type: string
+          readOnly: true
+        pickup_location_name:
+          type: string
+          readOnly: true
+        delivery_day:
+          type: integer
+          readOnly: true
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        slot_number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        subscription:
+          type: string
+        pickup_location:
+          type: string
+          nullable: true
+        bread:
+          type: string
+      required:
+      - bread
+      - bread_name
+      - delivery_day
+      - delivery_week
+      - pickup_location_name
+      - slot_number
+      - subscription
+      - year
+    BreadDeliveryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        slot_number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        subscription:
+          type: string
+          minLength: 1
+        pickup_location:
+          type: string
+          minLength: 1
+          nullable: true
+        bread:
+          type: string
+          minLength: 1
+      required:
+      - bread
+      - delivery_week
+      - slot_number
+      - subscription
+      - year
     BreadDetail:
       type: object
       description: Serializer for bread detail view (includes ingredients)
@@ -9047,6 +9487,9 @@ components:
         is_student:
           type: boolean
           title: Student*in
+        pseudonym:
+          type: string
+          maxLength: 150
       required:
       - created_at
       - first_name
@@ -9606,6 +10049,35 @@ components:
         ingredient:
           type: string
           minLength: 1
+    PatchedBreadDeliveryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        slot_number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        subscription:
+          type: string
+          minLength: 1
+        pickup_location:
+          type: string
+          minLength: 1
+          nullable: true
+        bread:
+          type: string
+          minLength: 1
     PatchedBreadLabelRequest:
       type: object
       description: Serializer for bread labels/categories
@@ -9960,6 +10432,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationCapacityByShareRequest'
+    PatchedPreferredLabelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        labels:
+          type: array
+          items:
+            type: string
+            minLength: 1
     PatchedSaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -10520,6 +11004,57 @@ components:
             $ref: '#/components/schemas/PickupStationDeliveryDay'
       required:
       - pickup_stations
+    PreferredLabel:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        member_id:
+          type: string
+          readOnly: true
+        labels:
+          type: array
+          items:
+            type: string
+      required:
+      - labels
+      - member_id
+    PreferredLabelBulkUpdate:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+          description: List of BreadLabel IDs to set as preferred for the member.
+      required:
+      - labels
+    PreferredLabelBulkUpdateRequest:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          description: List of BreadLabel IDs to set as preferred for the member.
+      required:
+      - labels
+    PreferredLabelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        labels:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+      - labels
     PreferredLanguageEnum:
       enum:
       - de

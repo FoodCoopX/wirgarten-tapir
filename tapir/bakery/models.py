@@ -1,9 +1,13 @@
-from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
 from tapir.core.models import TapirModel
-from tapir.wirgarten.models import PickupLocationOpeningTime, Subscription
+from tapir.wirgarten.models import (
+    Member,
+    PickupLocation,
+    PickupLocationOpeningTime,
+    Subscription,
+)
 
 
 class BreadLabel(TapirModel):
@@ -163,31 +167,33 @@ class AvailableBreadsForDeliveryDay(TapirModel):
         unique_together = ("year", "delivery_week", "delivery_day", "bread")
 
 
+class PreferredLabel(TapirModel):
+    member = models.OneToOneField(
+        Member, on_delete=models.CASCADE, related_name="preferred_labels"
+    )
+    labels = models.ManyToManyField("BreadLabel", related_name="preferred_by_members")
+
+
 class BreadDelivery(TapirModel):
     year = models.PositiveIntegerField()
     delivery_week = models.PositiveIntegerField()
-    delivery_day = models.PositiveIntegerField(
-        help_text="Day of week for delivery (0=Monday, 6=Sunday)"
-    )
     subscription = models.ForeignKey(
-        Subscription,
+        Subscription, on_delete=models.CASCADE, related_name="pickup_locations"
+    )
+    slot_number = models.PositiveIntegerField(
+        default=1
+    )  # 1, 2, 3, ... up to subscription.quantity
+    pickup_location = models.ForeignKey(
+        PickupLocation,
         on_delete=models.CASCADE,
-        related_name="weekly_bread_selections",
+        related_name="subscription_pickup_locations",
+        blank=True,
+        null=True,
     )
     bread = models.ForeignKey(
-        "Bread", on_delete=models.CASCADE, related_name="weekly_selections"
+        Bread,
+        on_delete=models.CASCADE,
+        related_name="bread_delivery_slots",
+        blank=True,
+        null=True,
     )
-
-    def clean(self):
-        # Check that total breads for this week don't exceed subscription quantity
-        existing = BreadDelivery.objects.filter(
-            year=self.year,
-            delivery_week=self.delivery_week,
-            delivery_day=self.delivery_day,
-            subscription=self.subscription,
-        ).exclude(pk=self.pk)
-
-        if existing.count() >= self.subscription.quantity:
-            raise ValidationError(
-                f"Subscription allows max {self.subscription.quantity} bread(s) per week"
-            )

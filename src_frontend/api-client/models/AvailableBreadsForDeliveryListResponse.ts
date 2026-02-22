@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { Bread } from './Bread';
+import type { BreadList } from './BreadList';
 import {
-    BreadFromJSON,
-    BreadFromJSONTyped,
-    BreadToJSON,
-    BreadToJSONTyped,
-} from './Bread';
+    BreadListFromJSON,
+    BreadListFromJSONTyped,
+    BreadListToJSON,
+    BreadListToJSONTyped,
+} from './BreadList';
 
 /**
  * 
@@ -47,10 +47,10 @@ export interface AvailableBreadsForDeliveryListResponse {
     day: number;
     /**
      * 
-     * @type {Array<Bread>}
+     * @type {Array<BreadList>}
      * @memberof AvailableBreadsForDeliveryListResponse
      */
-    breads: Array<Bread>;
+    breads: Array<BreadList>;
 }
 
 /**
@@ -77,7 +77,7 @@ export function AvailableBreadsForDeliveryListResponseFromJSONTyped(json: any, i
         'year': json['year'],
         'week': json['week'],
         'day': json['day'],
-        'breads': ((json['breads'] as Array<any>).map(BreadFromJSON)),
+        'breads': ((json['breads'] as Array<any>).map(BreadListFromJSON)),
     };
 }
 
@@ -95,7 +95,7 @@ export function AvailableBreadsForDeliveryListResponseFromJSONTyped(json: any, i
         'year': value['year'],
         'week': value['week'],
         'day': value['day'],
-        'breads': ((value['breads'] as Array<any>).map(BreadToJSON)),
+        'breads': ((value['breads'] as Array<any>).map(BreadListToJSON)),
     };
 }
 

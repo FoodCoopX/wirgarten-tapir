@@ -28,11 +28,12 @@ models/BestellWizardImages.ts
 models/BestellWizardStrings.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts
-models/Bread.ts
 models/BreadCapacityPickupStation.ts
 models/BreadCapacityPickupStationRequest.ts
 models/BreadContent.ts
 models/BreadContentRequest.ts
+models/BreadDelivery.ts
+models/BreadDeliveryRequest.ts
 models/BreadDetail.ts
 models/BreadLabel.ts
 models/BreadLabelRequest.ts
@@ -130,6 +131,7 @@ models/PaginatedGroupedEmailDispatchList.ts
 models/PaginatedWaitingListEntryDetailsList.ts
 models/PatchedBreadCapacityPickupStationRequest.ts
 models/PatchedBreadContentRequest.ts
+models/PatchedBreadDeliveryRequest.ts
 models/PatchedBreadLabelRequest.ts
 models/PatchedBreadListRequest.ts
 models/PatchedBundledEmailConfigurationRequest.ts
@@ -144,6 +146,7 @@ models/PatchedIngredientRequest.ts
 models/PatchedMailCategoryRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedPickupLocationCapacitiesRequest.ts
+models/PatchedPreferredLabelRequest.ts
 models/PatchedSaveExtendedProductTypeRequest.ts
 models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
@@ -168,6 +171,10 @@ models/PickupLocationCapacityEvolution.ts
 models/PickupLocationOpeningTime.ts
 models/PickupStationDeliveryDay.ts
 models/PickupStationsByDeliveryDayResponse.ts
+models/PreferredLabel.ts
+models/PreferredLabelBulkUpdate.ts
+models/PreferredLabelBulkUpdateRequest.ts
+models/PreferredLabelRequest.ts
 models/PreferredLanguageEnum.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts
