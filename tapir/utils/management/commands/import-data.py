@@ -80,6 +80,13 @@ class Command(BaseCommand):
             except (TypeError, ValueError):
                 return default
 
+        def _safe_bool(v):
+            v = _normalize_cell(v)
+            if v == "":
+                return None
+            s = str(v).strip().lower()
+            return s in ("1", "true", "yes", "ja", "j", "y", "x")
+
         def _to_date(v):
             v = _normalize_cell(v)
             if not v:
@@ -473,6 +480,11 @@ class Command(BaseCommand):
                         ) or _to_datetime_from_date(row.get("cancellation.ts"))
                     else:
                         ts_cancel = None
+
+                    # parse optional trial fields
+                    trial_disabled_val = _safe_bool(row.get("trial_disabled"))
+                    trial_end_date_override = _to_date(row.get("trial_end_date_override"))
+
                     try:
                         if dry_run:
                             created += 1
@@ -499,6 +511,8 @@ class Command(BaseCommand):
                                     or _to_datetime_from_date(
                                         row.get("consent_widerruf")
                                     ),
+                                    trial_disabled=(trial_disabled_val if trial_disabled_val is not None else False),
+                                    trial_end_date_override=trial_end_date_override,
                                 )
                             created += 1
                         # print("Subscription object successfully created.")
