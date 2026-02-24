@@ -108,6 +108,7 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
           <img
             src={product.urlOfImageInBestellwizard}
             style={{
+              maxWidth: "40dvw",
               maxHeight: "30dvh",
               objectFit: "contain",
               filter: showCapacityWarning(

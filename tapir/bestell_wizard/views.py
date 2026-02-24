@@ -608,14 +608,18 @@ class BestellWizardBaseDataApiView(APIView):
         ids = []
 
         for product_type in TapirCache.get_product_types_in_standard_order(cache=cache):
+            products = TapirCache.get_products_with_product_type(
+                cache=cache, product_type_id=product_type.id
+            )
+            if len(products) == 0:
+                continue
+
             lowest_free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
                 product_type=product_type,
                 reference_date=contract_start_date,
                 cache=cache,
             )
-            products = TapirCache.get_products_with_product_type(
-                cache=cache, product_type_id=product_type.id
-            )
+
             smallest_size = min(
                 [
                     get_product_price(
