@@ -120,7 +120,7 @@ class BestellWizardMobileView(TemplateView):
         )
         if background_image_url:
             context_data["body_style"] = (
-                f"background-image: url({background_image_url}); background-repeat: repeat"
+                f"background-image: url({background_image_url}); background-repeat: repeat; background-position: center;"
             )
 
         context_data["cache"] = cache
