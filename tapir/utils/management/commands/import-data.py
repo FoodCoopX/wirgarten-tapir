@@ -483,7 +483,9 @@ class Command(BaseCommand):
 
                     # parse optional trial fields
                     trial_disabled_val = _safe_bool(row.get("trial_disabled"))
-                    trial_end_date_override = _to_date(row.get("trial_end_date_override"))
+                    trial_end_date_override = _to_date(
+                        row.get("trial_end_date_override")
+                    )
 
                     try:
                         if dry_run:
@@ -511,7 +513,11 @@ class Command(BaseCommand):
                                     or _to_datetime_from_date(
                                         row.get("consent_widerruf")
                                     ),
-                                    trial_disabled=(trial_disabled_val if trial_disabled_val is not None else False),
+                                    trial_disabled=(
+                                        trial_disabled_val
+                                        if trial_disabled_val is not None
+                                        else False
+                                    ),
                                     trial_end_date_override=trial_end_date_override,
                                 )
                             created += 1
