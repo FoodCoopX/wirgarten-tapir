@@ -26,6 +26,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
+from tapir.accounts.models import EmailChangeRequest
 
 
 class Command(BaseCommand):
@@ -126,6 +127,7 @@ class Command(BaseCommand):
             QuestionaireCancellationReasonResponse.objects.all().delete()
             QuestionaireTrafficSourceResponse.objects.all().delete()
             WaitingListEntry.objects.all().delete()
+            EmailChangeRequest.objects.all().delete()
             Member.objects.all().delete()
             return
 
@@ -197,6 +199,7 @@ class Command(BaseCommand):
 
             if import_type == "members":
                 if delete_all:
+                    EmailChangeRequest.objects.all().delete()
                     Member.objects.all().delete()
                 for row in reader:
                     # skip empty lines
