@@ -200,8 +200,16 @@ class Command(BaseCommand):
 
             if import_type == "members":
                 if delete_all:
-                    EmailChangeRequest.objects.all().delete()
                     CoopShareTransaction.objects.all().delete()
+                    Subscription.objects.all().delete()
+                    Payment.objects.all().delete()
+                    MandateReference.objects.all().delete()
+                    MemberPickupLocation.objects.all().delete()
+                    LogEntry.objects.all().delete()
+                    QuestionaireCancellationReasonResponse.objects.all().delete()
+                    QuestionaireTrafficSourceResponse.objects.all().delete()
+                    WaitingListEntry.objects.all().delete()
+                    EmailChangeRequest.objects.all().delete()
                     Member.objects.all().delete()
                 for row in reader:
                     # skip empty lines
