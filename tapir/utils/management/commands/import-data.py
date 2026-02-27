@@ -24,6 +24,8 @@ from tapir.wirgarten.models import (
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceResponse,
     WaitingListEntry,
+    TransferCoopSharesLogEntry,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.accounts.models import EmailChangeRequest
@@ -119,6 +121,8 @@ class Command(BaseCommand):
             return dt
 
         if options["reset_all"]:
+            SubscriptionChangeLogEntry.objects.all().delete()
+            TransferCoopSharesLogEntry.objects.all().delete()
             CoopShareTransaction.objects.all().delete()
             Subscription.objects.all().delete()
             Payment.objects.all().delete()
@@ -200,6 +204,8 @@ class Command(BaseCommand):
 
             if import_type == "members":
                 if delete_all:
+                    SubscriptionChangeLogEntry.objects.all().delete()
+                    TransferCoopSharesLogEntry.objects.all().delete()
                     CoopShareTransaction.objects.all().delete()
                     Subscription.objects.all().delete()
                     Payment.objects.all().delete()
@@ -274,6 +280,7 @@ class Command(BaseCommand):
                         continue
             if import_type == "shares":
                 if delete_all:
+                    TransferCoopSharesLogEntry.objects.all().delete()
                     CoopShareTransaction.objects.all().delete()
                 for row in reader:
                     if not any(_normalize_cell(v) for v in row.values()):
@@ -349,7 +356,9 @@ class Command(BaseCommand):
                         skipped += 1
             if import_type == "subscriptions":
                 if delete_all:
+                    SubscriptionChangeLogEntry.objects.all().delete()
                     Subscription.objects.all().delete()
+                    Payment.objects.all().delete()
                     # identify current growing_period
                 # Growing Period handling
                 if options.get("growing_period_start"):
