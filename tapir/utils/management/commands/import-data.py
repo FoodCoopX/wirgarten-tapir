@@ -27,6 +27,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.accounts.models import EmailChangeRequest
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 
 
 class Command(BaseCommand):
@@ -200,6 +201,7 @@ class Command(BaseCommand):
             if import_type == "members":
                 if delete_all:
                     EmailChangeRequest.objects.all().delete()
+                    CoopShareTransaction.objects.all().delete()
                     Member.objects.all().delete()
                 for row in reader:
                     # skip empty lines
@@ -406,9 +408,15 @@ class Command(BaseCommand):
                     # identify MemberID, either via MemberNo or Email
                     try:
                         if _normalize_cell(row.get("Mitgliedernummer")) != "":
-                            m = Member.objects.get(
-                                member_no=_normalize_cell(row.get("Mitgliedernummer"))
-                            )
+                            member_no = _normalize_cell(row.get("Mitgliedernummer"))
+                            try:
+                                m = Member.objects.get(member_no=int(member_no))
+                            except ValueError:
+                                self.stderr.write(str(row))
+                                self.stderr.write(
+                                    f"Invalid member number: {member_no}. Skipping row."
+                                )
+                                continue
                         else:
                             if _normalize_cell(row.get("Email")) != "":
                                 m = Member.objects.get(
@@ -522,6 +530,12 @@ class Command(BaseCommand):
                                         else False
                                     ),
                                     trial_end_date_override=trial_end_date_override,
+                                    notice_period_duration=NoticePeriodManager.get_notice_period_duration(
+                                        prod.type, period, {}
+                                    ),
+                                    notice_period_unit=NoticePeriodManager.get_notice_period_unit(
+                                        prod.type, period, {}
+                                    ),
                                 )
                             created += 1
                         # print("Subscription object successfully created.")
