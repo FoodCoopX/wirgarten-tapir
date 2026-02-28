@@ -7,7 +7,9 @@ from tapir.bakery.models import (
     BreadDelivery,
     BreadLabel,
     Ingredient,
+    PreferredBread,
     PreferredLabel,
+    StoveSession,
 )
 from tapir.bakery.utils import can_delete_instance
 
@@ -74,16 +76,12 @@ class BreadDetailSerializer(serializers.ModelSerializer):
             "label_names",
             "contents",
             "is_active",
-            "created_at",
-            "updated_at",
             "capacity",
             "delivery_count",
             "available_capacity",
         ]
         read_only_fields = [
             "id",
-            "created_at",
-            "updated_at",
             "capacity",
             "delivery_count",
             "available_capacity",
@@ -94,14 +92,11 @@ class BreadDetailSerializer(serializers.ModelSerializer):
 
 
 class BreadCapacityPickupLocationSerializer(serializers.ModelSerializer):
-    pickup_location = serializers.CharField(
-        source="pickup_location_day.pickup_location.id", read_only=True
-    )
     pickup_location_name = serializers.CharField(
         source="pickup_location_day.pickup_location.name", read_only=True
     )
     delivery_day = serializers.IntegerField(
-        source="pickup_location_day.day_of_week", read_only=True
+        source="pickup_location.delivery_day", read_only=True
     )
 
     bread_name = serializers.CharField(source="bread.name", read_only=True)
@@ -158,8 +153,112 @@ class PreferredLabelSerializer(serializers.ModelSerializer):
         fields = ["id", "member_id", "labels"]
 
 
+class PreferredBreadSerializer(serializers.ModelSerializer):
+    member_id = serializers.CharField(source="member.id", read_only=True)
+    breads = serializers.PrimaryKeyRelatedField(queryset=Bread.objects.all(), many=True)
+
+    class Meta:
+        model = PreferredBread
+        fields = ["id", "member_id", "breads"]
+
+
 class PreferredLabelBulkUpdateSerializer(serializers.Serializer):
     labels = serializers.ListField(
         child=serializers.CharField(),
         help_text="List of BreadLabel IDs to set as preferred for the member.",
     )
+
+
+class PreferredBreadsBulkUpdateSerializer(serializers.Serializer):
+    breads = serializers.ListField(
+        child=serializers.CharField(),
+        help_text="List of Bread IDs to set as preferred for the member.",
+    )
+
+
+class AbhollisteEntrySerializer(serializers.Serializer):
+    """
+    Serializer for a single member's entry in the Abholliste
+    """
+
+    member_id = serializers.UUIDField()
+    display_name = serializers.CharField()
+    total_breads = serializers.IntegerField()
+    breads = serializers.ListField(
+        child=serializers.DictField(child=serializers.CharField(allow_null=True))
+    )
+
+
+class BreadCapacityUpdateItemSerializer(serializers.Serializer):
+    pickup_location = serializers.CharField(required=True)
+    bread = serializers.CharField(required=True)
+    capacity = serializers.IntegerField(required=False, allow_null=True)
+
+
+class BreadCapacityBulkUpdateSerializer(serializers.Serializer):
+    year = serializers.IntegerField(required=True)
+    week = serializers.IntegerField(required=True)
+    updates = BreadCapacityUpdateItemSerializer(many=True, required=True)
+
+
+###---------------- Serializers for solver results and requests ------------------ ##
+
+
+class StoveLayerSerializer(serializers.Serializer):
+    layer = serializers.IntegerField()
+    bread_id = serializers.CharField(allow_null=True, required=False)
+    bread_name = serializers.CharField(allow_null=True, required=False)
+    bread = serializers.CharField(allow_null=True, required=False)  # For empty layers
+    quantity = serializers.IntegerField()
+
+
+class StoveSessionSerializer(serializers.Serializer):
+    session = serializers.IntegerField()
+    layers = StoveLayerSerializer(many=True)
+
+
+class BreadQuantitySerializer(serializers.Serializer):
+    bread_id = serializers.CharField()
+    bread_name = serializers.CharField()
+    total = serializers.IntegerField(help_text="Total pieces to bake")
+    deliveries = serializers.IntegerField(help_text="Pieces for member deliveries")
+    remaining = serializers.IntegerField(
+        help_text="Extra pieces beyond deliveries (e.g., for external sale)"
+    )
+
+
+class BreadDistributionSerializer(serializers.Serializer):
+    bread_id = serializers.CharField()
+    bread_name = serializers.CharField()
+    pickup_location_id = serializers.CharField()
+    count = serializers.IntegerField()
+
+
+class RunSolverRequestSerializer(serializers.Serializer):
+    year = serializers.IntegerField(min_value=2020, max_value=2100)
+    delivery_week = serializers.IntegerField(min_value=1, max_value=53)
+    delivery_day = serializers.IntegerField(min_value=0, max_value=6, required=False)
+
+
+class RunSolverResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    total_deliveries = serializers.IntegerField()
+    sessions_used = serializers.IntegerField(
+        help_text="Number of baking sessions needed"
+    )
+
+    quantities = BreadQuantitySerializer(many=True)
+    stove_sessions = StoveSessionSerializer(many=True)
+    distribution = BreadDistributionSerializer(many=True)
+
+
+class RunSolverErrorSerializer(serializers.Serializer):
+    error = serializers.CharField()
+
+
+class StoveSerializer(serializers.ModelSerializer):
+    bread_name = serializers.CharField(source="bread.name", read_only=True)
+
+    class Meta:
+        model = StoveSession
+        fields = "__all__"

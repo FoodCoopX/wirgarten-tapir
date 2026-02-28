@@ -37,15 +37,11 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
         bakeryApi.bakeryLabelsList()
       ]);
 
-      console.log('breadData.labels:', JSON.stringify(breadData.labels));
-      console.log('labelsData:', JSON.stringify(labelsData.map(l => ({ id: l.id, name: l.name }))));
-
       // Extract label IDs — handle both string[] and object[] formats
       const labelIds: string[] = Array.isArray(breadData.labels) 
         ? breadData.labels.map((label: any) => typeof label === 'object' ? label.id : String(label))
         : [];
       
-      console.log('Extracted labelIds:', labelIds);
 
       const activeLabels = labelsData.filter(label => label.isActive !== false);
       

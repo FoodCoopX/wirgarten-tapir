@@ -41,5 +41,8 @@ class ChooseBreadsView(TemplateView):
         context["choose_station_per_bread"] = get_parameter_value(
             ParameterKeys.BAKERY_PICKUP_LOCATIONS_CAN_BE_CHOSEN_PER_SHARE
         )
+        context["members_can_choose_bread_sorts"] = get_parameter_value(
+            ParameterKeys.BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS
+        )
 
         return context

@@ -40,6 +40,8 @@ class PickupLocationCapacityEvolutionSerializer(serializers.Serializer):
 
 
 class PublicPickupLocationSerializer(serializers.ModelSerializer):
+    delivery_day = serializers.SerializerMethodField()
+
     class Meta:
         model = PickupLocation
         fields = [
@@ -52,6 +54,7 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             "postcode",
             "city",
             "opening_times",
+            "delivery_day",
         ]
 
     opening_times = serializers.SerializerMethodField()
@@ -62,6 +65,9 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             PickupLocationOpeningTime.objects.filter(pickup_location=pickup_location),
             many=True,
         ).data
+
+    def get_delivery_day(self, obj):
+        return int(obj.delivery_day)
 
 
 class PickupLocationCapacityCheckResponseSerializer(serializers.Serializer):
@@ -74,13 +80,13 @@ class PickupLocationCapacityCheckRequestSerializer(serializers.Serializer):
     growing_period_id = serializers.CharField(allow_null=True)
 
 
-class PickupStationDeliveryDaySerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+class PickupLocationDeliveryDaySerializer(serializers.Serializer):
+    id = serializers.CharField()
     name = serializers.CharField()
 
 
-class PickupStationsByDeliveryDayResponseSerializer(serializers.Serializer):
-    pickup_stations = PickupStationDeliveryDaySerializer(many=True)
+class PickupLocationsByDeliveryDayResponseSerializer(serializers.Serializer):
+    pickup_locations = PickupLocationDeliveryDaySerializer(many=True)
 
 
 class DeliveryDaysResponseSerializer(serializers.Serializer):

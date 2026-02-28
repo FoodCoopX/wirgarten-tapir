@@ -41,8 +41,7 @@ const years = Array.from({ length: (currentYear + 1) - 2026 + 1 }, (_, i) => 202
               ))}
             </select>
           </div>
-          <div className="col-md-1">
-          
+          <div className="col-md-2" style={{ flex: '0 0 10%' }}>          
             <select
               className="form-select"
               value={selectedWeek}

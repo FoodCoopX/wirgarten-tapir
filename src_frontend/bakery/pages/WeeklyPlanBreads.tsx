@@ -44,7 +44,7 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
   const [days, setDays] = useState<DayConfig[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<{ day: number; label: string } | null>(null);
+  const [selectedDay, setSelectedDay] = useState<{ day: number; label: string, activeBreads: BreadList[] } | null>(null);
 
   const getDateForDay = (dayNumber: number): string => {
     const date = dayjs()
@@ -129,73 +129,50 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
     }
   };
 
-// ...existing code...
 
 const toggleBread = async (dayIndex: number, breadId: string) => {
-  console.log("==================== TOGGLE BREAD DEBUG ====================");
-  console.log("CSRF Token:", csrfToken);
-  console.log("CSRF Token length:", csrfToken?.length);
-  console.log("CSRF Token type:", typeof csrfToken);
-  console.log("Day index:", dayIndex);
-  console.log("Bread ID:", breadId);
-  console.log("Day config:", days[dayIndex]);
-  
   const newDays = [...days];
-  const newState = !newDays[dayIndex].breads[breadId];
-  newDays[dayIndex].breads[breadId] = newState;
-  setDays(newDays);
+  const currentState = newDays[dayIndex].breads[breadId] ?? false;
+  const newState = !currentState;
 
-  const payload = {
-    year: year,
-    week: week,
-    day: newDays[dayIndex].day,
-    breadId: breadId,
-    isActive: newState,
+  // Optimistic update
+  newDays[dayIndex] = {
+    ...newDays[dayIndex],
+    breads: { ...newDays[dayIndex].breads, [breadId]: newState },
   };
-  
-  console.log("Payload to send:", payload);
+  setDays(newDays);
 
   setSaving(true);
   try {
-    console.log("Calling bakeryApi.bakeryAvailableBreadsForDeliveryCreate...");
-    
-    const result = await bakeryApi.bakeryAvailableBreadsForDeliveryCreate({
-      toggleBreadRequestRequest: payload
+    await bakeryApi.bakeryAvailableBreadsForDeliveryCreate({
+      toggleBreadRequestRequest: {
+        year,
+        week,
+        day: newDays[dayIndex].day,
+        breadId,
+        isActive: newState,
+      },
     });
-    
-    console.log("✅ SUCCESS! Result:", result);
-    console.log("===========================================================");
   } catch (error) {
-    console.error("❌ FAILED! Error details:");
-    console.error("Error:", error);
-    console.error("Error type:", typeof error);
-    console.error("Error constructor:", error?.constructor?.name);
-    
-    if (error instanceof Response) {
-      console.error("Response status:", error.status);
-      console.error("Response statusText:", error.statusText);
-      try {
-        const errorText = await error.text();
-        console.error("Response body:", errorText);
-      } catch (e) {
-        console.error("Could not read response body");
-      }
-    }
-    
-    console.log("===========================================================");
-    
-    newDays[dayIndex].breads[breadId] = !newState;
-    setDays(newDays);
+    console.error('Failed to toggle bread:', error);
+    // Revert optimistic update
+    newDays[dayIndex] = {
+      ...newDays[dayIndex],
+      breads: { ...newDays[dayIndex].breads, [breadId]: currentState },
+    };
+    setDays([...newDays]);
     alert('Fehler beim Speichern');
   } finally {
     setSaving(false);
   }
 };
 
-// ...existing code...
-
   const handleOpenModal = (day: number, label: string) => {
-    setSelectedDay({ day, label });
+    // Get only active breads for this day
+    const dayConfig = days.find(d => d.day === day);
+    const activeBreads = allBreads.filter(bread => dayConfig?.breads[bread.id!] === true);
+    
+    setSelectedDay({ day, label, activeBreads });
     setIsModalOpen(true);
   };
 
@@ -340,6 +317,8 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
           week={week}
           day={selectedDay.day}
           dayLabel={selectedDay.label}
+          activeBreads={selectedDay.activeBreads}
+
           csrfToken={csrfToken}
         />
       )}

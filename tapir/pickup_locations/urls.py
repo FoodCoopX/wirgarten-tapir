@@ -37,7 +37,7 @@ urlpatterns = [
     ),
     path(
         "api/pickup_locations_by_delivery_day",
-        views.PickupStationsByDeliveryDayView.as_view(),
+        views.PickupLocationsByDeliveryDayView.as_view(),
         name="pickup_locations_by_delivery_day",
     ),
 ]

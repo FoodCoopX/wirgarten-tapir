@@ -67,6 +67,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["bakery_enabled"] = get_parameter_value(
             ParameterKeys.BAKERY_ENABLED, cache=cache
         )
+        context["bakery_pseudonym_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_PSEUDONYM_ENABLED, cache={}
+        )
         next_growing_period = get_next_growing_period()
         for subscriptions in context["subscriptions"].values():
             for subscription in subscriptions:

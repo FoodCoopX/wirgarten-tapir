@@ -85,6 +85,12 @@ export interface PersonalDataRequest {
      * @memberof PersonalDataRequest
      */
     iban: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonalDataRequest
+     */
+    pseudonym?: string;
 }
 
 /**
@@ -126,6 +132,7 @@ export function PersonalDataRequestFromJSONTyped(json: any, ignoreDiscriminator:
         'country': json['country'],
         'accountOwner': json['account_owner'],
         'iban': json['iban'],
+        'pseudonym': json['pseudonym'] == null ? undefined : json['pseudonym'],
     };
 }
 
@@ -151,6 +158,7 @@ export function PersonalDataRequestFromJSONTyped(json: any, ignoreDiscriminator:
         'country': value['country'],
         'account_owner': value['accountOwner'],
         'iban': value['iban'],
+        'pseudonym': value['pseudonym'],
     };
 }
 

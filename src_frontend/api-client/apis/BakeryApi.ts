@@ -15,8 +15,9 @@
 
 import * as runtime from '../runtime';
 import type {
+  AbhollisteEntry,
   AvailableBreadsForDeliveryListResponse,
-  BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest,
+  BreadCapacityBulkUpdateRequest,
   BreadCapacityPickupLocation,
   BreadCapacityPickupLocationRequest,
   BreadContent,
@@ -37,20 +38,31 @@ import type {
   PatchedBreadLabelRequest,
   PatchedBreadListRequest,
   PatchedIngredientRequest,
+  PatchedPreferredBreadRequest,
   PatchedPreferredLabelRequest,
-  PickupStationsByDeliveryDayResponse,
+  PickupLocationsByDeliveryDayResponse,
+  PreferredBread,
+  PreferredBreadRequest,
+  PreferredBreadsBulkUpdate,
+  PreferredBreadsBulkUpdateRequest,
   PreferredLabel,
   PreferredLabelBulkUpdate,
   PreferredLabelBulkUpdateRequest,
   PreferredLabelRequest,
+  RunSolverError,
+  RunSolverRequestRequest,
+  RunSolverResponse,
+  StoveSession,
   ToggleBreadRequestRequest,
   ToggleBreadResponse,
 } from '../models/index';
 import {
+    AbhollisteEntryFromJSON,
+    AbhollisteEntryToJSON,
     AvailableBreadsForDeliveryListResponseFromJSON,
     AvailableBreadsForDeliveryListResponseToJSON,
-    BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestFromJSON,
-    BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestToJSON,
+    BreadCapacityBulkUpdateRequestFromJSON,
+    BreadCapacityBulkUpdateRequestToJSON,
     BreadCapacityPickupLocationFromJSON,
     BreadCapacityPickupLocationToJSON,
     BreadCapacityPickupLocationRequestFromJSON,
@@ -91,10 +103,20 @@ import {
     PatchedBreadListRequestToJSON,
     PatchedIngredientRequestFromJSON,
     PatchedIngredientRequestToJSON,
+    PatchedPreferredBreadRequestFromJSON,
+    PatchedPreferredBreadRequestToJSON,
     PatchedPreferredLabelRequestFromJSON,
     PatchedPreferredLabelRequestToJSON,
-    PickupStationsByDeliveryDayResponseFromJSON,
-    PickupStationsByDeliveryDayResponseToJSON,
+    PickupLocationsByDeliveryDayResponseFromJSON,
+    PickupLocationsByDeliveryDayResponseToJSON,
+    PreferredBreadFromJSON,
+    PreferredBreadToJSON,
+    PreferredBreadRequestFromJSON,
+    PreferredBreadRequestToJSON,
+    PreferredBreadsBulkUpdateFromJSON,
+    PreferredBreadsBulkUpdateToJSON,
+    PreferredBreadsBulkUpdateRequestFromJSON,
+    PreferredBreadsBulkUpdateRequestToJSON,
     PreferredLabelFromJSON,
     PreferredLabelToJSON,
     PreferredLabelBulkUpdateFromJSON,
@@ -103,11 +125,25 @@ import {
     PreferredLabelBulkUpdateRequestToJSON,
     PreferredLabelRequestFromJSON,
     PreferredLabelRequestToJSON,
+    RunSolverErrorFromJSON,
+    RunSolverErrorToJSON,
+    RunSolverRequestRequestFromJSON,
+    RunSolverRequestRequestToJSON,
+    RunSolverResponseFromJSON,
+    RunSolverResponseToJSON,
+    StoveSessionFromJSON,
+    StoveSessionToJSON,
     ToggleBreadRequestRequestFromJSON,
     ToggleBreadRequestRequestToJSON,
     ToggleBreadResponseFromJSON,
     ToggleBreadResponseToJSON,
 } from '../models/index';
+
+export interface BakeryAbhollisteListRequest {
+    pickupLocationId: string;
+    week: number;
+    year: number;
+}
 
 export interface BakeryAvailableBreadsForDeliveryCreateRequest {
     toggleBreadRequestRequest: ToggleBreadRequestRequest;
@@ -119,8 +155,8 @@ export interface BakeryAvailableBreadsForDeliveryRetrieveRequest {
     year: number;
 }
 
-export interface BakeryBreadCapacityPickupLocationBulkUpdateCreateOperationRequest {
-    bakeryBreadCapacityPickupLocationBulkUpdateCreateRequest?: BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest;
+export interface BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest {
+    breadCapacityBulkUpdateRequest: BreadCapacityBulkUpdateRequest;
 }
 
 export interface BakeryBreadCapacityPickupLocationCreateRequest {
@@ -298,6 +334,37 @@ export interface BakeryLabelsUpdateRequest {
     breadLabelRequest: BreadLabelRequest;
 }
 
+export interface BakeryPreferredBreadsBulkUpdateCreateRequest {
+    id: string;
+    preferredBreadsBulkUpdateRequest: PreferredBreadsBulkUpdateRequest;
+}
+
+export interface BakeryPreferredBreadsCreateRequest {
+    preferredBreadRequest: PreferredBreadRequest;
+}
+
+export interface BakeryPreferredBreadsDestroyRequest {
+    id: string;
+}
+
+export interface BakeryPreferredBreadsListRequest {
+    memberId?: string;
+}
+
+export interface BakeryPreferredBreadsPartialUpdateRequest {
+    id: string;
+    patchedPreferredBreadRequest?: PatchedPreferredBreadRequest;
+}
+
+export interface BakeryPreferredBreadsRetrieveRequest {
+    id: string;
+}
+
+export interface BakeryPreferredBreadsUpdateRequest {
+    id: string;
+    preferredBreadRequest: PreferredBreadRequest;
+}
+
 export interface BakeryPreferredLabelsBulkUpdateCreateRequest {
     id: string;
     preferredLabelBulkUpdateRequest: PreferredLabelBulkUpdateRequest;
@@ -329,6 +396,20 @@ export interface BakeryPreferredLabelsUpdateRequest {
     preferredLabelRequest: PreferredLabelRequest;
 }
 
+export interface BakerySolverRunCreateRequest {
+    runSolverRequestRequest: RunSolverRequestRequest;
+}
+
+export interface BakeryStoveSessionsListRequest {
+    deliveryDay?: number;
+    deliveryWeek?: number;
+    year?: number;
+}
+
+export interface BakeryStoveSessionsRetrieveRequest {
+    id: string;
+}
+
 export interface PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest {
     dayOfWeek: number;
 }
@@ -337,6 +418,74 @@ export interface PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest {
  * 
  */
 export class BakeryApi extends runtime.BaseAPI {
+
+    /**
+     * Returns a list of members with their bread deliveries for a specific week, day, and pickup location. Members are sorted by display name (pseudonym or \'L., FirstName\' format).
+     * Get Abholliste for a specific pickup location
+     */
+    async bakeryAbhollisteListRaw(requestParameters: BakeryAbhollisteListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AbhollisteEntry>>> {
+        if (requestParameters['pickupLocationId'] == null) {
+            throw new runtime.RequiredError(
+                'pickupLocationId',
+                'Required parameter "pickupLocationId" was null or undefined when calling bakeryAbhollisteList().'
+            );
+        }
+
+        if (requestParameters['week'] == null) {
+            throw new runtime.RequiredError(
+                'week',
+                'Required parameter "week" was null or undefined when calling bakeryAbhollisteList().'
+            );
+        }
+
+        if (requestParameters['year'] == null) {
+            throw new runtime.RequiredError(
+                'year',
+                'Required parameter "year" was null or undefined when calling bakeryAbhollisteList().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['pickupLocationId'] != null) {
+            queryParameters['pickup_location_id'] = requestParameters['pickupLocationId'];
+        }
+
+        if (requestParameters['week'] != null) {
+            queryParameters['week'] = requestParameters['week'];
+        }
+
+        if (requestParameters['year'] != null) {
+            queryParameters['year'] = requestParameters['year'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/abholliste/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AbhollisteEntryFromJSON));
+    }
+
+    /**
+     * Returns a list of members with their bread deliveries for a specific week, day, and pickup location. Members are sorted by display name (pseudonym or \'L., FirstName\' format).
+     * Get Abholliste for a specific pickup location
+     */
+    async bakeryAbhollisteList(requestParameters: BakeryAbhollisteListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AbhollisteEntry>> {
+        const response = await this.bakeryAbhollisteListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Get or toggle breads for a specific year, week and day
@@ -455,7 +604,14 @@ export class BakeryApi extends runtime.BaseAPI {
      * Bulk create/update/delete capacities
      * Bulk create/update/delete bread capacities
      */
-    async bakeryBreadCapacityPickupLocationBulkUpdateCreateRaw(requestParameters: BakeryBreadCapacityPickupLocationBulkUpdateCreateOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async bakeryBreadCapacityPickupLocationBulkUpdateCreateRaw(requestParameters: BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['breadCapacityBulkUpdateRequest'] == null) {
+            throw new runtime.RequiredError(
+                'breadCapacityBulkUpdateRequest',
+                'Required parameter "breadCapacityBulkUpdateRequest" was null or undefined when calling bakeryBreadCapacityPickupLocationBulkUpdateCreate().'
+            );
+        }
+
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -474,7 +630,7 @@ export class BakeryApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestToJSON(requestParameters['bakeryBreadCapacityPickupLocationBulkUpdateCreateRequest']),
+            body: BreadCapacityBulkUpdateRequestToJSON(requestParameters['breadCapacityBulkUpdateRequest']),
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
@@ -484,7 +640,7 @@ export class BakeryApi extends runtime.BaseAPI {
      * Bulk create/update/delete capacities
      * Bulk create/update/delete bread capacities
      */
-    async bakeryBreadCapacityPickupLocationBulkUpdateCreate(requestParameters: BakeryBreadCapacityPickupLocationBulkUpdateCreateOperationRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+    async bakeryBreadCapacityPickupLocationBulkUpdateCreate(requestParameters: BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.bakeryBreadCapacityPickupLocationBulkUpdateCreateRaw(requestParameters, initOverrides);
     }
 
@@ -2153,6 +2309,309 @@ export class BakeryApi extends runtime.BaseAPI {
     }
 
     /**
+     * Bulk update preferred breads for a member. Replaces all breads for the member with the provided list.
+     */
+    async bakeryPreferredBreadsBulkUpdateCreateRaw(requestParameters: BakeryPreferredBreadsBulkUpdateCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PreferredBreadsBulkUpdate>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryPreferredBreadsBulkUpdateCreate().'
+            );
+        }
+
+        if (requestParameters['preferredBreadsBulkUpdateRequest'] == null) {
+            throw new runtime.RequiredError(
+                'preferredBreadsBulkUpdateRequest',
+                'Required parameter "preferredBreadsBulkUpdateRequest" was null or undefined when calling bakeryPreferredBreadsBulkUpdateCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/preferred-breads/{id}/bulk-update/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PreferredBreadsBulkUpdateRequestToJSON(requestParameters['preferredBreadsBulkUpdateRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PreferredBreadsBulkUpdateFromJSON(jsonValue));
+    }
+
+    /**
+     * Bulk update preferred breads for a member. Replaces all breads for the member with the provided list.
+     */
+    async bakeryPreferredBreadsBulkUpdateCreate(requestParameters: BakeryPreferredBreadsBulkUpdateCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PreferredBreadsBulkUpdate> {
+        const response = await this.bakeryPreferredBreadsBulkUpdateCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsCreateRaw(requestParameters: BakeryPreferredBreadsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PreferredBread>> {
+        if (requestParameters['preferredBreadRequest'] == null) {
+            throw new runtime.RequiredError(
+                'preferredBreadRequest',
+                'Required parameter "preferredBreadRequest" was null or undefined when calling bakeryPreferredBreadsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/preferred-breads/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PreferredBreadRequestToJSON(requestParameters['preferredBreadRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PreferredBreadFromJSON(jsonValue));
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsCreate(requestParameters: BakeryPreferredBreadsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PreferredBread> {
+        const response = await this.bakeryPreferredBreadsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsDestroyRaw(requestParameters: BakeryPreferredBreadsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PreferredBread>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryPreferredBreadsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/preferred-breads/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PreferredBreadFromJSON(jsonValue));
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsDestroy(requestParameters: BakeryPreferredBreadsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PreferredBread> {
+        const response = await this.bakeryPreferredBreadsDestroyRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsListRaw(requestParameters: BakeryPreferredBreadsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PreferredBread>>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['memberId'] != null) {
+            queryParameters['member_id'] = requestParameters['memberId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/preferred-breads/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PreferredBreadFromJSON));
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsList(requestParameters: BakeryPreferredBreadsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PreferredBread>> {
+        const response = await this.bakeryPreferredBreadsListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsPartialUpdateRaw(requestParameters: BakeryPreferredBreadsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PreferredBread>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryPreferredBreadsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/preferred-breads/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedPreferredBreadRequestToJSON(requestParameters['patchedPreferredBreadRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PreferredBreadFromJSON(jsonValue));
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsPartialUpdate(requestParameters: BakeryPreferredBreadsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PreferredBread> {
+        const response = await this.bakeryPreferredBreadsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsRetrieveRaw(requestParameters: BakeryPreferredBreadsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PreferredBread>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryPreferredBreadsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/preferred-breads/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PreferredBreadFromJSON(jsonValue));
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsRetrieve(requestParameters: BakeryPreferredBreadsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PreferredBread> {
+        const response = await this.bakeryPreferredBreadsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsUpdateRaw(requestParameters: BakeryPreferredBreadsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PreferredBread>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryPreferredBreadsUpdate().'
+            );
+        }
+
+        if (requestParameters['preferredBreadRequest'] == null) {
+            throw new runtime.RequiredError(
+                'preferredBreadRequest',
+                'Required parameter "preferredBreadRequest" was null or undefined when calling bakeryPreferredBreadsUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/preferred-breads/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PreferredBreadRequestToJSON(requestParameters['preferredBreadRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PreferredBreadFromJSON(jsonValue));
+    }
+
+    /**
+     * Manage preferred breads for a member.
+     */
+    async bakeryPreferredBreadsUpdate(requestParameters: BakeryPreferredBreadsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PreferredBread> {
+        const response = await this.bakeryPreferredBreadsUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Bulk update preferred bread labels for a member. Replaces all labels for the member with the provided list.
      */
     async bakeryPreferredLabelsBulkUpdateCreateRaw(requestParameters: BakeryPreferredLabelsBulkUpdateCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PreferredLabelBulkUpdate>> {
@@ -2456,6 +2915,136 @@ export class BakeryApi extends runtime.BaseAPI {
     }
 
     /**
+     * Runs the constraint solver to optimize bread production, assignment, and distribution for a specific week. This will: - Assign breads to unassigned delivery slots (maximizing member preferences) - Create an optimal stove baking plan - Calculate bread distribution per pickup location - Update the database with the results
+     * Run the bread baking optimizer
+     */
+    async bakerySolverRunCreateRaw(requestParameters: BakerySolverRunCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RunSolverResponse>> {
+        if (requestParameters['runSolverRequestRequest'] == null) {
+            throw new runtime.RequiredError(
+                'runSolverRequestRequest',
+                'Required parameter "runSolverRequestRequest" was null or undefined when calling bakerySolverRunCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/solver/run/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: RunSolverRequestRequestToJSON(requestParameters['runSolverRequestRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => RunSolverResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Runs the constraint solver to optimize bread production, assignment, and distribution for a specific week. This will: - Assign breads to unassigned delivery slots (maximizing member preferences) - Create an optimal stove baking plan - Calculate bread distribution per pickup location - Update the database with the results
+     * Run the bread baking optimizer
+     */
+    async bakerySolverRunCreate(requestParameters: BakerySolverRunCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RunSolverResponse> {
+        const response = await this.bakerySolverRunCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get all stove sessions, optionally filtered by year/week/day
+     */
+    async bakeryStoveSessionsListRaw(requestParameters: BakeryStoveSessionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<StoveSession>>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['deliveryDay'] != null) {
+            queryParameters['delivery_day'] = requestParameters['deliveryDay'];
+        }
+
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
+        }
+
+        if (requestParameters['year'] != null) {
+            queryParameters['year'] = requestParameters['year'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/stove-sessions/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(StoveSessionFromJSON));
+    }
+
+    /**
+     * Get all stove sessions, optionally filtered by year/week/day
+     */
+    async bakeryStoveSessionsList(requestParameters: BakeryStoveSessionsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<StoveSession>> {
+        const response = await this.bakeryStoveSessionsListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ViewSet for viewing stove sessions (baking plan). Read-only - sessions are created by the solver.
+     */
+    async bakeryStoveSessionsRetrieveRaw(requestParameters: BakeryStoveSessionsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<StoveSession>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryStoveSessionsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/stove-sessions/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => StoveSessionFromJSON(jsonValue));
+    }
+
+    /**
+     * ViewSet for viewing stove sessions (baking plan). Read-only - sessions are created by the solver.
+     */
+    async bakeryStoveSessionsRetrieve(requestParameters: BakeryStoveSessionsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<StoveSession> {
+        const response = await this.bakeryStoveSessionsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Returns the earliest delivery day per pickup location
      * Get distinct list of delivery days
      */
@@ -2491,10 +3080,10 @@ export class BakeryApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get pickup stations filtered by delivery day
-     * Get pickup stations filtered by delivery day
+     * Get pickup locations filtered by delivery day
+     * Get pickup locations filtered by delivery day
      */
-    async pickupLocationsApiPickupLocationsByDeliveryDayRetrieveRaw(requestParameters: PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PickupStationsByDeliveryDayResponse>> {
+    async pickupLocationsApiPickupLocationsByDeliveryDayRetrieveRaw(requestParameters: PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PickupLocationsByDeliveryDayResponse>> {
         if (requestParameters['dayOfWeek'] == null) {
             throw new runtime.RequiredError(
                 'dayOfWeek',
@@ -2524,14 +3113,14 @@ export class BakeryApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => PickupStationsByDeliveryDayResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => PickupLocationsByDeliveryDayResponseFromJSON(jsonValue));
     }
 
     /**
-     * Get pickup stations filtered by delivery day
-     * Get pickup stations filtered by delivery day
+     * Get pickup locations filtered by delivery day
+     * Get pickup locations filtered by delivery day
      */
-    async pickupLocationsApiPickupLocationsByDeliveryDayRetrieve(requestParameters: PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PickupStationsByDeliveryDayResponse> {
+    async pickupLocationsApiPickupLocationsByDeliveryDayRetrieve(requestParameters: PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PickupLocationsByDeliveryDayResponse> {
         const response = await this.pickupLocationsApiPickupLocationsByDeliveryDayRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }

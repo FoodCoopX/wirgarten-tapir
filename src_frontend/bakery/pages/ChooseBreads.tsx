@@ -1,32 +1,37 @@
-  import React from 'react';
-  import { PreferredLabelsCard } from '../components/cards/PreferredLabelsCard';
-  import { ChooseBreadsCard } from '../components/cards/ChooseBreadsCard';
-import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
+import React from 'react';
+import { ChooseBreadsCard } from '../components/cards/ChooseBreadsCard';
+import { ChoosePreferredBreadsCard } from '../components/cards/ChoosePreferredBreadsCard';
+import { RunSolverCard } from '../components/cards/RunSolverCard';
 
-  interface ChooseBreadsProps {
-    memberId: string;
-    csrfToken: string;
-    chooseStationPerBread: boolean;
-  }
+interface ChooseBreadsProps {
+  memberId: string;
+  csrfToken: string;
+  chooseStationPerBread: boolean;
+  membersCanChooseBreadSorts: boolean;
+}
 
-  export const ChooseBreads: React.FC<ChooseBreadsProps> = ({ memberId, csrfToken, chooseStationPerBread }) => {
-    return (
-      <div className="container-fluid mt-4 px-5">
-        
-        
-        <div className="row">
-          <div className="col-md-6 mb-4">
-            <PreferredLabelsCard csrfToken={csrfToken} memberId={memberId} />
-          </div>
-        </div>
-      
-         
+export const ChooseBreads: React.FC<ChooseBreadsProps> = ({ 
+  memberId, 
+  csrfToken, 
+  chooseStationPerBread, 
+  membersCanChooseBreadSorts 
+}) => {
+  return (
+    <div className="container-fluid mt-4 px-5">
       <div className="row">
-          <div className="col-md-12 mb-4">
-            <ChooseBreadsCard chooseStationPerBread={chooseStationPerBread} csrfToken={csrfToken} memberId={memberId} />
-          </div>
+        <div className="col-md-12 mb-4">
+          <ChoosePreferredBreadsCard memberId={memberId} csrfToken={csrfToken} />
         </div>
-        
+        <div className="col-md-12 mb-4">
+          <ChooseBreadsCard 
+            chooseStationPerBread={chooseStationPerBread} 
+            membersCanChooseBreadSorts={membersCanChooseBreadSorts} 
+            csrfToken={csrfToken} 
+            memberId={memberId} 
+          />
+        </div>
+       
       </div>
-    );
-  };
+    </div>
+  );
+};

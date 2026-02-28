@@ -43,6 +43,7 @@ interface BestellWizardPersonalDataProps {
   waitingListEntryDetails?: WaitingListEntryDetails;
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
+  pseudonymEnabled?: boolean;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -64,6 +65,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   waitingListEntryDetails,
   settings,
   shoppingCart,
+  pseudonymEnabled = false,
 }) => {
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
@@ -155,6 +157,29 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
+        {pseudonymEnabled && (
+      <Row className={"mt-2"}>
+        <Col>
+          <Form.Group>
+            <Form.Label>
+              Pseudonym (optional)
+            </Form.Label>
+            <Form.Control
+              value={personalData.pseudonym || ""}
+              onChange={(event) => {
+                personalData.pseudonym = event.target.value;
+                updatePersonalData();
+              }}
+              placeholder={"Pseudonym"}
+              disabled={waitingListLinkConfirmationModeEnabled}
+            />
+            <Form.Text className="text-muted" style={{ fontSize: '0.85rem' }}>
+              Dieser Name erscheint auf der Abholliste anstelle deines echten Namens.
+            </Form.Text>
+          </Form.Group>
+        </Col>
+        <Col />
+      </Row>)}
       <Row className={"mt-2"}>
         <Col>
           <Form.Group>

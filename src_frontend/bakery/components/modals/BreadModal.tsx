@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
-import { PlusLg, XLg, Trash } from 'react-bootstrap-icons';
+import { PlusLg, XLg, Trash, ChevronDown, ChevronUp } from 'react-bootstrap-icons';
 import type { BreadLabel, BreadList, BreadListRequest } from '../../../api-client/models';
 
 interface BreadModalProps {
@@ -20,10 +20,17 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
     weight: '500',
     isActive: true,
     labels: [] as string[],
-    
+    piecesPerStoveLayer: [],
+    oneBatchCanBeBakedInMoreThanOneStove: false,
+    minPieces: undefined,
+    maxPieces: undefined,
+    minRemainingPieces: undefined,
   });
   const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // For pieces per stove layer input
+  const [piecesInput, setPiecesInput] = useState('');
 
   useEffect(() => {
     loadLabels();
@@ -38,7 +45,14 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
         weight: String(bread.weight),
         isActive: bread.isActive,
         labels: labelIds,
+        piecesPerStoveLayer: bread.piecesPerStoveLayer || [],
+        oneBatchCanBeBakedInMoreThanOneStove: bread.oneBatchCanBeBakedInMoreThanOneStove || false,
+        minPieces: bread.minPieces,
+        maxPieces: bread.maxPieces,
+        minRemainingPieces: bread.minRemainingPieces,
       });
+      
+      
     }
   }, [bread]);
 
@@ -63,14 +77,32 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
   const toggleLabel = (labelId: string) => {
     setFormData(prev => ({
       ...prev,
-      labels: prev.labels.includes(labelId)
-        ? prev.labels.filter(id => id !== labelId)
-        : [...prev.labels, labelId]
+      labels: prev.labels!.includes(labelId)
+        ? prev.labels!.filter(id => id !== labelId)
+        : [...prev.labels!, labelId]
     }));
   };
 
-  const assignedLabels = availableLabels.filter(label => formData.labels.includes(label.id));
-  const unassignedLabels = availableLabels.filter(label => !formData.labels.includes(label.id));
+  const addPiecesPerLayer = () => {
+    const value = parseInt(piecesInput);
+    if (!isNaN(value) && value > 0 && !formData.piecesPerStoveLayer?.includes(value)) {
+      setFormData(prev => ({
+        ...prev,
+        piecesPerStoveLayer: [...(prev.piecesPerStoveLayer || []), value].sort((a, b) => a - b)
+      }));
+      setPiecesInput('');
+    }
+  };
+
+  const removePiecesPerLayer = (value: number) => {
+    setFormData(prev => ({
+      ...prev,
+      piecesPerStoveLayer: (prev.piecesPerStoveLayer || []).filter(v => v !== value)
+    }));
+  };
+
+  const assignedLabels = availableLabels.filter(label => formData.labels!.includes(label.id!));
+  const unassignedLabels = availableLabels.filter(label => !formData.labels!.includes(label.id!));
 
   return (
     <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -139,8 +171,8 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
               <div className="mb-3">
                 <label className="form-label fw-bold">
                   Labels
-                  {formData.labels.length > 0 && (
-                    <span className="badge bg-success ms-2">{formData.labels.length}</span>
+                  {formData.labels!.length > 0 && (
+                    <span className="badge bg-success ms-2">{formData.labels!.length}</span>
                   )}
                 </label>
                 
@@ -166,7 +198,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                                 fontSize: '0.75rem',
                                 padding: '0.25rem 0.5rem'
                               }}
-                              onClick={() => toggleLabel(label.id)}
+                              onClick={() => toggleLabel(label.id!)}
                               title="Klicken zum Entfernen"
                             >
                               {label.name} <XLg size={10} />
@@ -190,7 +222,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                                 fontSize: '0.75rem',
                                 padding: '0.25rem 0.5rem'
                               }}
-                              onClick={() => toggleLabel(label.id)}
+                              onClick={() => toggleLabel(label.id!)}
                               title="Klicken zum Hinzufügen"
                             >
                               {label.name} <PlusLg size={10} />
@@ -208,7 +240,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                 )}
               </div>
 
-              <div className="form-check form-switch">
+              <div className="form-check form-switch mb-3">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -223,6 +255,152 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                 <label className="form-check-label" htmlFor="isActive">
                   aktiv
                 </label>
+              </div>
+
+              {/* Baking Details Section */}
+              <div className="border rounded p-3" style={{ backgroundColor: '#F8F9FA' }}>
+                
+                  <h6 className="mb-0" style={{ color: '#8B4513' }}>
+                    Back-Details 
+                  </h6>
+                
+                  <div className="mt-3">
+                    {/* Pieces per stove layer */}
+                    <div className="mb-3">
+                      <label className="form-label fw-bold small">
+                        Stücke pro Etage
+                      </label>
+                        <span className="text-muted d-block" style={{ fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                        Mögliche Anzahl Brote, die pro Etage gebacken werden können. <br/>Um mehrere Zahlen einzugeben bzw. um zu speichern, bitte auf "+" klicken oder "Enter" drücken.
+                      </span>
+                      <div className="input-group input-group-sm mb-2">
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={piecesInput}
+                          onChange={(e) => setPiecesInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addPiecesPerLayer();
+                            }
+                          }}
+                          placeholder="Anzahl eingeben..."
+                          min="1"
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={addPiecesPerLayer}
+                        >
+                          <PlusLg size={14} />
+                        </button>
+                      </div>
+                      <div className="d-flex flex-wrap gap-2">
+                        {(formData.piecesPerStoveLayer || []).map((value) => (
+                          <span
+                            key={value}
+                            className="badge bg-secondary"
+                            style={{ fontSize: '0.85rem', cursor: 'pointer' }}
+                            onClick={() => removePiecesPerLayer(value)}
+                            title="Klicken zum Entfernen"
+                          >
+                            {value} <Trash size={12} className="ms-1" />
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Can be baked in multiple stoves */}
+                    <div className="form-check form-switch mb-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="oneBatchCanBeBakedInMoreThanOneStove"
+                        checked={formData.oneBatchCanBeBakedInMoreThanOneStove}
+                        onChange={(e) => setFormData({ ...formData, oneBatchCanBeBakedInMoreThanOneStove: e.target.checked })}
+                      />
+                      <label className="form-check-label small" htmlFor="oneBatchCanBeBakedInMoreThanOneStove">
+                        Ein Teig kann in mehreren Ofengängen gebacken werden
+                        <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>
+                          (z.B. wenn der Teig zwischendurch gekühlt werden kann)
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Min/Max pieces */}
+                    <div className="row">
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label htmlFor="minPieces" className="form-label fw-bold small">
+                            Min. Stücke
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            id="minPieces"
+                            value={formData.minPieces || ''}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              minPieces: e.target.value ? parseInt(e.target.value) : undefined 
+                            })}
+                            min="0"
+                            placeholder="z.B. 10"
+                          />
+                          <small className="text-muted">
+                            Mindestanzahl pro Backtag
+                          </small>
+                        </div>
+                      </div>
+
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label htmlFor="maxPieces" className="form-label fw-bold small">
+                            Max. Stücke
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            id="maxPieces"
+                            value={formData.maxPieces || ''}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              maxPieces: e.target.value ? parseInt(e.target.value) : undefined 
+                            })}
+                            min="0"
+                            placeholder="z.B. 50"
+                          />
+                          <small className="text-muted">
+                            Maximalanzahl pro Backtag
+                          </small>
+                        </div>
+                      </div>
+
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label htmlFor="minRemainingPieces" className="form-label fw-bold small">
+                            Min. Übrig
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            id="minRemainingPieces"
+                            value={formData.minRemainingPieces || ''}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              minRemainingPieces: e.target.value ? parseInt(e.target.value) : undefined 
+                            })}
+                            min="0"
+                            placeholder="z.B. 5"
+                          />
+                          <small className="text-muted">
+                            Für Laufkundschaft
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                
               </div>
             </div>
             

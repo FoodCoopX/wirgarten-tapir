@@ -5,7 +5,7 @@ import { useApi } from '../../../hooks/useApi';
 import type { 
   BreadList, 
   BreadCapacityPickupLocation, 
-  PickupStationsByDeliveryDayResponse 
+  PickupLocationsByDeliveryDayResponse 
 } from '../../../api-client/models';
 
 interface AllocationModalProps {
@@ -15,6 +15,7 @@ interface AllocationModalProps {
   week: number;
   day: number;
   dayLabel: string;
+  activeBreads: BreadList[];
   csrfToken: string;
 }
 
@@ -31,12 +32,13 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
   week,
   day,
   dayLabel,
+  activeBreads,
   csrfToken,
 }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
 
-  const [breads, setBreads] = useState<BreadList[]>([]);
-  const [pickupStations, setPickupStations] = useState<PickupStationsByDeliveryDayResponse['pickupStations']>([]);
+  const [breads, setBreads] = useState<BreadList[]>(activeBreads);
+  const [pickupLocations, setPickupLocations] = useState<PickupLocationsByDeliveryDayResponse['pickupLocations']>([]);
   const [loading, setLoading] = useState(true);
   const [allocations, setAllocations] = useState<AllocationData>({});
   const [saving, setSaving] = useState(false);
@@ -48,41 +50,56 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     }
   }, [isOpen, year, week, day]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !saving) {
+        e.preventDefault();
+        handleSaveAndClose();
+      }
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, saving, allocations, initialAllocations]);
+
   const loadData = async () => {
     setLoading(true);
     try {
       const dayOfWeek = day;
 
-      const [breadsResponse, stationsResponse] = await Promise.all([
-        bakeryApi.bakeryBreadsListList({ isActive: true }),
-        bakeryApi.pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({ dayOfWeek }),
-      ]);
+      const locationsResponse = await bakeryApi.pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({ dayOfWeek });
 
-      setBreads(breadsResponse);
-      setPickupStations(stationsResponse.pickupStations);
+      setPickupLocations(locationsResponse.pickupLocations);
 
-      // Load existing capacities for these pickup stations
-      const stationIds = stationsResponse.pickupStations.map(s => s.id);
+      // Load existing capacities for these pickup locations
+      const locationIds = locationsResponse.pickupLocations.map(s => s.id);
       let capacities: BreadCapacityPickupLocation[] = [];
       
-      if (stationIds.length > 0) {
+      if (locationIds.length > 0) {
         capacities = await bakeryApi.bakeryBreadCapacityPickupLocationList({
           year,
           week,
-          pickupLocationIds: stationIds,
+          pickupLocationIds: locationIds,
         });
       }
 
-      // Initialize allocations (stations × breads)
+      // Initialize allocations (locations × breads)
       const initial: AllocationData = {};
-      stationsResponse.pickupStations.forEach(station => {
-        initial[station.id] = {};
-        breadsResponse.forEach(bread => {
-          // Find existing capacity for this station + bread combination
+      locationsResponse.pickupLocations.forEach(location => {
+        initial[location.id] = {};
+        activeBreads.forEach(bread => {  // ✅ use activeBreads
           const existingCapacity = capacities.find(
-            (c) => c.pickupLocationDay === station.id && c.bread === bread.id
+            (c) => c.pickupLocation === location.id && c.bread === bread.id
           );
-          initial[station.id][bread.id!] =
+          initial[location.id][bread.id!] =
             existingCapacity ? String(existingCapacity.capacity) : '';
         });
       });
@@ -117,7 +134,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     setSaving(true);
     try {
       const updates: Array<{
-        pickupLocationDay: string;
+        pickupLocation: string;  
         bread: string;
         capacity: number | null;
       }> = [];
@@ -129,11 +146,10 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
           // Only save if value changed
           if (value !== initialValue) {
-            // Convert 'x' or empty to null, otherwise to number
             const capacityValue = value === '' || value === 'x' ? null : Number(value);
             
             updates.push({
-              pickupLocationDay: stationId,
+              pickupLocation: stationId,  
               bread: breadId,
               capacity: capacityValue,
             });
@@ -143,7 +159,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
       if (updates.length > 0) {
         await bakeryApi.bakeryBreadCapacityPickupLocationBulkUpdateCreate({
-          bakeryBreadCapacityPickupLocationBulkUpdateCreateRequest: {
+          breadCapacityBulkUpdateRequest: {
             year,
             week,
             updates,
@@ -162,6 +178,20 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
   if (!isOpen) return null;
 
+  const getModalClass = () => {
+    const count = activeBreads.length;
+    if (count <= 2) return 'modal-lg';      // ~992px
+    if (count <= 4) return 'modal-xl';      // ~1140px
+    return '';                               // full width with custom style
+  };
+
+  const getModalStyle = () => {
+    if (activeBreads.length > 4) {
+      return { maxWidth: '95vw' };          // 95% viewport width for many breads
+    }
+    return {};
+  };
+
   return (
     <>
       <div
@@ -174,7 +204,10 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
         tabIndex={-1}
         style={{ zIndex: 1050 }}
       >
-        <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div 
+          className={`modal-dialog ${getModalClass()} modal-dialog-centered modal-dialog-scrollable`}
+          style={getModalStyle()}
+        >
           <div className="modal-content">
             <div
               className="modal-header"
@@ -204,12 +237,12 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                 </div>
               ) : (
                 <>
-                  {breads.length === 0 ? (
+                  {activeBreads.length === 0 ? (
                     <div className="alert alert-info d-flex align-items-center" role="alert">
                       <InfoCircle size={20} className="me-2" />
                       Keine Brote für diesen Tag verfügbar. Aktiviere zuerst Brote im Wochenplan.
                     </div>
-                  ) : pickupStations.length === 0 ? (
+                  ) : pickupLocations.length === 0 ? (
                     <div className="alert alert-warning d-flex align-items-center" role="alert">
                       <ExclamationTriangle size={20} className="me-2" />
                       Keine Abholorte für {dayLabel} konfiguriert.
@@ -222,7 +255,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                             <thead style={{ backgroundColor: '#F5E6D3', position: 'sticky', top: 0, zIndex: 10 }}>
                               <tr>
                                 <th style={{ minWidth: '150px' }}>Abholort</th>
-                                {breads.map(bread => (
+                                {activeBreads.map(bread => (
                                   <th key={bread.id} className="text-center" style={{ minWidth: '120px' }}>
                                     {bread.name}
                                   </th>
@@ -233,26 +266,26 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                               </tr>
                             </thead>
                             <tbody>
-                              {pickupStations.map(station => {
-                                const rowSum = breads.reduce((sum, bread) => {
-                                  const val = allocations[station.id]?.[bread.id!] || '';
+                              {pickupLocations.map(location => {
+                                const rowSum = activeBreads.reduce((sum, bread) => {
+                                  const val = allocations[location.id]?.[bread.id!] || '';
                                   if (val === 'x') return Infinity;
                                   if (val === '' || isNaN(Number(val))) return sum;
                                   return sum + Number(val);
                                 }, 0);
 
                                 return (
-                                  <tr key={station.id}>
+                                  <tr key={location.id}>
                                     <td className="fw-bold align-middle">
-                                      {station.name}
+                                      {location.name}
                                     </td>
-                                    {breads.map(bread => (
+                                    {activeBreads.map(bread => (
                                       <td key={bread.id} className="p-1">
                                         <input
                                           type="text"
                                           className="form-control form-control-sm text-center"
-                                          value={allocations[station.id]?.[bread.id!] || ''}
-                                          onChange={(e) => handleCellChange(station.id, bread.id!, e.target.value)}
+                                          value={allocations[location.id]?.[bread.id!] || ''}
+                                          onChange={(e) => handleCellChange(location.id, bread.id!, e.target.value)}
                                           placeholder="-"
                                           style={{
                                             minWidth: '60px',
@@ -275,9 +308,9 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                             <tfoot>
                               <tr style={{ backgroundColor: '#EDE0D0' }}>
                                 <td className="fw-bold" style={{ backgroundColor: '#EDE0D0' }}>Σ Gesamt</td>
-                                {breads.map(bread => {
-                                  const colSum = pickupStations.reduce((sum, station) => {
-                                    const val = allocations[station.id]?.[bread.id!] || '';
+                                {activeBreads.map(bread => {
+                                  const colSum = pickupLocations.reduce((sum, location) => {
+                                    const val = allocations[location.id]?.[bread.id!] || '';
                                     if (val === 'x') return Infinity;
                                     if (val === '' || isNaN(Number(val))) return sum;
                                     return sum + Number(val);
@@ -298,9 +331,9 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                   style={{ backgroundColor: '#D4A574', color: 'white', fontFamily: 'monospace', fontSize: '14px' }}
                                 >
                                   {(() => {
-                                    const totalSum = pickupStations.reduce((total, station) => {
+                                    const totalSum = pickupLocations.reduce((total, location) => {
                                       return breads.reduce((sum, bread) => {
-                                        const val = allocations[station.id]?.[bread.id!] || '';
+                                        const val = allocations[location.id]?.[bread.id!] || '';
                                         if (val === 'x') return Infinity;
                                         if (val === '' || isNaN(Number(val))) return sum;
                                         return sum + Number(val);

@@ -50,6 +50,36 @@ export interface BreadListRequest {
      */
     weight: string;
     /**
+     * List of possible pieces per stove layer (e.g., [10, 11, 12] or [22, 24])
+     * @type {any}
+     * @memberof BreadListRequest
+     */
+    piecesPerStoveLayer?: any | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BreadListRequest
+     */
+    oneBatchCanBeBakedInMoreThanOneStove?: boolean;
+    /**
+     * Minimum number of pieces that should be baked for this bread on a baking day (e.g., to ensure that there are enough pieces for walk-in customers)
+     * @type {number}
+     * @memberof BreadListRequest
+     */
+    minPieces?: number | null;
+    /**
+     * Maximum number of pieces that should be baked for this bread on a baking day (e.g., to limit the amount of bread that can be ordered for this bread)
+     * @type {number}
+     * @memberof BreadListRequest
+     */
+    maxPieces?: number | null;
+    /**
+     * Minimum amount of breads that should remain available for this bread on a baking day (e.g., for walk-in customers)
+     * @type {number}
+     * @memberof BreadListRequest
+     */
+    minRemainingPieces?: number | null;
+    /**
      * 
      * @type {boolean}
      * @memberof BreadListRequest
@@ -87,6 +117,11 @@ export function BreadListRequestFromJSONTyped(json: any, ignoreDiscriminator: bo
         'picture': json['picture'] == null ? undefined : json['picture'],
         'description': json['description'] == null ? undefined : json['description'],
         'weight': json['weight'],
+        'piecesPerStoveLayer': json['pieces_per_stove_layer'] == null ? undefined : json['pieces_per_stove_layer'],
+        'oneBatchCanBeBakedInMoreThanOneStove': json['one_batch_can_be_baked_in_more_than_one_stove'] == null ? undefined : json['one_batch_can_be_baked_in_more_than_one_stove'],
+        'minPieces': json['min_pieces'] == null ? undefined : json['min_pieces'],
+        'maxPieces': json['max_pieces'] == null ? undefined : json['max_pieces'],
+        'minRemainingPieces': json['min_remaining_pieces'] == null ? undefined : json['min_remaining_pieces'],
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
         'labels': json['labels'] == null ? undefined : json['labels'],
     };
@@ -108,6 +143,11 @@ export function BreadListRequestFromJSONTyped(json: any, ignoreDiscriminator: bo
         'picture': value['picture'],
         'description': value['description'],
         'weight': value['weight'],
+        'pieces_per_stove_layer': value['piecesPerStoveLayer'],
+        'one_batch_can_be_baked_in_more_than_one_stove': value['oneBatchCanBeBakedInMoreThanOneStove'],
+        'min_pieces': value['minPieces'],
+        'max_pieces': value['maxPieces'],
+        'min_remaining_pieces': value['minRemainingPieces'],
         'is_active': value['isActive'],
         'labels': value['labels'],
     };

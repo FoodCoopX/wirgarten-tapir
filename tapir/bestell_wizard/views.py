@@ -1,24 +1,24 @@
 import datetime
 
 from django.conf import settings
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from django.views.generic import TemplateView
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.bestell_wizard.serializers import (
-    BestellWizardConfirmOrderRequestSerializer,
-    BestellWizardCapacityCheckResponseSerializer,
-    BestellWizardCapacityCheckRequestSerializer,
     BestellWizardBaseDataResponseSerializer,
-    BestellWizardDeliveryDatesForOrderResponseSerializer,
+    BestellWizardCapacityCheckRequestSerializer,
+    BestellWizardCapacityCheckResponseSerializer,
+    BestellWizardConfirmOrderRequestSerializer,
     BestellWizardDeliveryDatesForOrderRequestSerializer,
+    BestellWizardDeliveryDatesForOrderResponseSerializer,
     PublicProductPricesResponseSerializer,
 )
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
@@ -76,12 +76,12 @@ from tapir.waiting_list.services.waiting_list_entry_validator import (
 )
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
-    ProductType,
-    WaitingListEntry,
+    GrowingPeriod,
     Member,
     PickupLocation,
-    GrowingPeriod,
     Product,
+    ProductType,
+    WaitingListEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
@@ -90,14 +90,24 @@ from tapir.wirgarten.service.products import (
     get_product_price,
 )
 from tapir.wirgarten.utils import (
+    check_permission_or_self,
     get_today,
     legal_status_is_cooperative,
-    check_permission_or_self,
 )
 
 
 class BestellWizardView(TemplateView):
     template_name = "bestell_wizard/bestell_wizard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Add bakery pseudonym parameter
+        context["bakery_pseudonym_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_PSEUDONYM_ENABLED
+        )
+
+        return context
 
 
 class BestellWizardMobileView(TemplateView):

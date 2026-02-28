@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { EggFried } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
-import type { BreadList, BreadContent } from '../../../api-client/models';
+import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
+import { SingleBreadCard } from '../cards/SingleBreadCard';
 
 interface BreadSelectionModalProps {
   breads: BreadList[];
@@ -11,6 +11,7 @@ interface BreadSelectionModalProps {
   pickupLocationName: string;
   selectedWeek: number;
   selectedYear: number;
+  currentBreadId?: string | null;
   onSelect: (breadId: string) => void;
   onClose: () => void;
   csrfToken: string;
@@ -23,23 +24,23 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
   pickupLocationName,
   selectedWeek,
   selectedYear,
+  currentBreadId,
   onSelect,
   onClose,
   csrfToken,
 }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
   const [availableBreads, setAvailableBreads] = useState<BreadList[]>([]);
+  const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadAvailableBreads();
-    // eslint-disable-next-line
+    loadData();
   }, [pickupLocationId, selectedWeek, selectedYear]);
 
-  const loadAvailableBreads = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      // Fetch breads with capacity filtering
       const breadsWithCapacity = await bakeryApi.bakeryBreadsListList({
         isActive: true,
         pickupLocationId,
@@ -47,9 +48,19 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
         week: selectedWeek,
       });
       
+      const labels = await bakeryApi.bakeryLabelsList();
+      
+      const labelMapping = labels.reduce((acc, label) => {
+        if (label.id) {
+          acc[label.id] = label;
+        }
+        return acc;
+      }, {} as { [labelId: string]: BreadLabel });
+      
+      setLabelsMap(labelMapping);
       setAvailableBreads(breadsWithCapacity);
     } catch (error) {
-      console.error('Failed to load available breads:', error);
+      console.error('Failed to load data:', error);
       setAvailableBreads([]);
     } finally {
       setLoading(false);
@@ -58,14 +69,12 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
 
   return (
     <>
-      {/* Modal Backdrop */}
       <div 
         className="modal-backdrop fade show" 
         onClick={onClose}
         style={{ zIndex: 1050 }}
       />
 
-      {/* Modal */}
       <div 
         className="modal fade show d-block" 
         tabIndex={-1}
@@ -113,86 +122,20 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
                     <div className="d-flex flex-wrap gap-3">
                       {availableBreads.map(bread => {
                         const contents = contentsMap[bread.id!] || [];
+                        const breadLabels = (bread.labels || [])
+                          .map(labelId => labelsMap[labelId])
+                          .filter(Boolean);
+                        const isSelected = bread.id === currentBreadId;
 
                         return (
-                          <div key={bread.id} style={{ width: '280px', flex: '0 0 280px' }}>
-                            <div
-                              className="card h-100 shadow-sm"
-                              style={{
-                                border: '1px solid #dee2e6',
-                                cursor: 'pointer',
-                              }}
-                              onClick={() => onSelect(bread.id!)}
-                            >
-                              {bread.picture ? (
-                                <img
-                                  src={bread.picture}
-                                  alt={bread.name}
-                                  className="card-img-top"
-                                  style={{ height: '180px', objectFit: 'cover' }}
-                                />
-                              ) : (
-                                <div
-                                  className="d-flex align-items-center justify-content-center"
-                                  style={{ height: '180px', backgroundColor: '#F5E6D3' }}
-                                >
-                                  <EggFried size={48} style={{ color: '#D4A574' }} />
-                                </div>
-                              )}
-
-                              <div className="card-body d-flex flex-column">
-                                <h6 className="card-title mb-0" style={{ color: '#8B4513' }}>
-                                  {bread.name}
-                                </h6>
-
-                                {bread.weight && (
-                                  <small className="text-muted mb-2">{Number(bread.weight).toFixed(0)}g</small>
-                                )}
-
-                                {bread.labels && bread.labels.length > 0 && (
-                                  <div className="mb-2">
-                                    {bread.labels.map(label => (
-                                      <span
-                                        key={label.id}
-                                        className="badge me-1"
-                                        style={{ backgroundColor: '#F5E6D3', color: '#8B4513', fontSize: '0.7rem' }}
-                                      >
-                                        {label.name}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {bread.description && (
-                                  <p className="card-text text-muted small mb-2">{bread.description}</p>
-                                )}
-
-                                {contents.length > 0 && (
-                                  <div className="mb-2" style={{ flex: 1 }}>
-                                    <small className="fw-bold" style={{ color: '#C4A882', fontSize: '0.7rem' }}>
-                                      ZUTATEN:
-                                    </small>
-                                    <br />
-                                    <small style={{ color: '#B8A99A', fontSize: '0.75rem' }}>
-                                      {contents.map(c => c.ingredientName).join(', ')}
-                                    </small>
-                                  </div>
-                                )}
-
-                                {bread.availableCapacity !== undefined && bread.availableCapacity !== null && (
-                                  <div className="mb-2">
-                                    <small className="text-muted">
-                                      Verfügbar: {bread.availableCapacity}
-                                    </small>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="card-footer text-center py-2" style={{ backgroundColor: '#8B4513', color: 'white' }}>
-                                Auswählen
-                              </div>
-                            </div>
-                          </div>
+                          <SingleBreadCard
+                            key={bread.id}
+                            bread={bread}
+                            contents={contents}
+                            labels={breadLabels}
+                            isSelected={isSelected}
+                            onClick={() => onSelect(bread.id!)}
+                          />
                         );
                       })}
                     </div>

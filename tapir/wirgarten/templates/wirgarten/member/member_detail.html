@@ -155,6 +155,18 @@
                                 {% endif %}
                             </div>
                         </div>
+                        {% if bakery_pseudonym_enabled %}
+                            <div class="row m-1">
+                                <div class="col-4 fw-bold text-end">{% translate "Pseudonym" %}:</div>
+                                <div class="col-8" id="tapir_user_pseudonym">
+                                    {% if object.pseudonym %}
+                                        {{ object.pseudonym }}
+                                    {% else %}
+                                        <span class="text-muted">{% translate "nicht gesetzt" %}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
                         {% if object.pk == request.user.pk %}
                             <div>
                                 <hr />

@@ -27,7 +27,7 @@
         <div class="container-fluid">
             <main id="main-content" role="main">
                 {% csrf_token %}
-                <span id="bestell_wizard"></span>
+                <span id="bestell_wizard" data-pseudonym-enabled="{{ bakery_pseudonym_enabled }}""></span>
             </main>
         </div>
     </body>

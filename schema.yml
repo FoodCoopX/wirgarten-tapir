@@ -3,6 +3,44 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /bakery/abholliste/:
+    get:
+      operationId: bakery_abholliste_list
+      description: Returns a list of members with their bread deliveries for a specific
+        week, day, and pickup location. Members are sorted by display name (pseudonym
+        or 'L., FirstName' format).
+      summary: Get Abholliste for a specific pickup location
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: week
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbhollisteEntry'
+          description: ''
   /bakery/available-breads-for-delivery/:
     get:
       operationId: bakery_available_breads_for_delivery_retrieve
@@ -245,28 +283,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                year:
-                  type: integer
-                week:
-                  type: integer
-                updates:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      pickup_location_day:
-                        type: string
-                      bread:
-                        type: string
-                      capacity:
-                        type: integer
-                        nullable: true
-              required:
-              - year
-              - week
-              - updates
+              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -275,7 +299,7 @@ paths:
         '200':
           description: '{"status": "success"}'
         '400':
-          description: Bad request
+          description: Validation errors
   /bakery/bread-deliveries/:
     get:
       operationId: bakery_bread_deliveries_list
@@ -1220,6 +1244,211 @@ paths:
       responses:
         '204':
           description: No response body
+  /bakery/preferred-breads/:
+    get:
+      operationId: bakery_preferred_breads_list
+      description: Manage preferred breads for a member.
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - Bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PreferredBread'
+          description: ''
+    post:
+      operationId: bakery_preferred_breads_create
+      description: Manage preferred breads for a member.
+      tags:
+      - Bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredBread'
+          description: ''
+  /bakery/preferred-breads/{id}/:
+    get:
+      operationId: bakery_preferred_breads_retrieve
+      description: Manage preferred breads for a member.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred bread identifiziert.
+        required: true
+      tags:
+      - Bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredBread'
+          description: ''
+    put:
+      operationId: bakery_preferred_breads_update
+      description: Manage preferred breads for a member.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred bread identifiziert.
+        required: true
+      tags:
+      - Bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredBread'
+          description: ''
+    patch:
+      operationId: bakery_preferred_breads_partial_update
+      description: Manage preferred breads for a member.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred bread identifiziert.
+        required: true
+      tags:
+      - Bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferredBreadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferredBreadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferredBreadRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredBread'
+          description: ''
+    delete:
+      operationId: bakery_preferred_breads_destroy
+      description: Manage preferred breads for a member.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred bread identifiziert.
+        required: true
+      tags:
+      - Bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredBread'
+          description: ''
+  /bakery/preferred-breads/{id}/bulk-update/:
+    post:
+      operationId: bakery_preferred_breads_bulk_update_create
+      description: Bulk update preferred breads for a member. Replaces all breads
+        for the member with the provided list.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der preferred bread identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadsBulkUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadsBulkUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreferredBreadsBulkUpdateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferredBreadsBulkUpdate'
+          description: ''
   /bakery/preferred-labels/:
     get:
       operationId: bakery_preferred_labels_list
@@ -1425,6 +1654,111 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreferredLabelBulkUpdate'
+          description: ''
+  /bakery/solver/run/:
+    post:
+      operationId: bakery_solver_run_create
+      description: |-
+        Runs the constraint solver to optimize bread production, assignment, and distribution for a specific week. This will:
+        - Assign breads to unassigned delivery slots (maximizing member preferences)
+        - Create an optimal stove baking plan
+        - Calculate bread distribution per pickup location
+        - Update the database with the results
+      summary: Run the bread baking optimizer
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunSolverRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RunSolverRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RunSolverRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunSolverResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunSolverError'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunSolverError'
+          description: ''
+  /bakery/stove-sessions/:
+    get:
+      operationId: bakery_stove_sessions_list
+      description: Get all stove sessions, optionally filtered by year/week/day
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StoveSession'
+          description: ''
+  /bakery/stove-sessions/{id}/:
+    get:
+      operationId: bakery_stove_sessions_retrieve
+      description: |-
+        ViewSet for viewing stove sessions (baking plan).
+        Read-only - sessions are created by the solver.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der stove session identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoveSession'
           description: ''
   /bestell_wizard/api/bestell_wizard_base_data:
     get:
@@ -2939,8 +3273,8 @@ paths:
   /pickup_locations/api/pickup_locations_by_delivery_day:
     get:
       operationId: pickup_locations_api_pickup_locations_by_delivery_day_retrieve
-      description: Get pickup stations filtered by delivery day
-      summary: Get pickup stations filtered by delivery day
+      description: Get pickup locations filtered by delivery day
+      summary: Get pickup locations filtered by delivery day
       parameters:
       - in: query
         name: day_of_week
@@ -2959,7 +3293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PickupStationsByDeliveryDayResponse'
+                $ref: '#/components/schemas/PickupLocationsByDeliveryDayResponse'
           description: ''
   /pickup_locations/pickup_locations/:
     get:
@@ -6484,6 +6818,29 @@ paths:
           description: No response body
 components:
   schemas:
+    AbhollisteEntry:
+      type: object
+      description: Serializer for a single member's entry in the Abholliste
+      properties:
+        member_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        total_breads:
+          type: integer
+        breads:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+              nullable: true
+      required:
+      - breads
+      - display_name
+      - member_id
+      - total_breads
     AutomatedExportCycleEnum:
       enum:
       - yearly
@@ -6988,15 +7345,27 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
+    BreadCapacityBulkUpdateRequest:
+      type: object
+      properties:
+        year:
+          type: integer
+        week:
+          type: integer
+        updates:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreadCapacityUpdateItemRequest'
+      required:
+      - updates
+      - week
+      - year
     BreadCapacityPickupLocation:
       type: object
       properties:
         id:
           type: string
           maxLength: 10
-        pickup_location:
-          type: string
-          readOnly: true
         pickup_location_name:
           type: string
           readOnly: true
@@ -7022,9 +7391,11 @@ components:
           minimum: 0
           description: Maximum number of breads of this label that can be delivered
             to this pickup location on this delivery day
-        pickup_location_day:
+        pickup_location:
           type: string
-          description: The pickup location and day this capacity applies to
+          nullable: true
+          description: The pickup location this capacity applies to (redundant but
+            useful for queries)
         bread:
           type: string
       required:
@@ -7033,8 +7404,6 @@ components:
       - capacity
       - delivery_day
       - delivery_week
-      - pickup_location
-      - pickup_location_day
       - pickup_location_name
       - year
     BreadCapacityPickupLocationRequest:
@@ -7060,10 +7429,12 @@ components:
           minimum: 0
           description: Maximum number of breads of this label that can be delivered
             to this pickup location on this delivery day
-        pickup_location_day:
+        pickup_location:
           type: string
           minLength: 1
-          description: The pickup location and day this capacity applies to
+          nullable: true
+          description: The pickup location this capacity applies to (redundant but
+            useful for queries)
         bread:
           type: string
           minLength: 1
@@ -7071,8 +7442,22 @@ components:
       - bread
       - capacity
       - delivery_week
-      - pickup_location_day
       - year
+    BreadCapacityUpdateItemRequest:
+      type: object
+      properties:
+        pickup_location:
+          type: string
+          minLength: 1
+        bread:
+          type: string
+          minLength: 1
+        capacity:
+          type: integer
+          nullable: true
+      required:
+      - bread
+      - pickup_location
     BreadContent:
       type: object
       description: Serializer for bread content (ingredient amounts)
@@ -7155,7 +7540,6 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
-          default: 1
         subscription:
           type: string
         pickup_location:
@@ -7190,7 +7574,6 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
-          default: 1
         subscription:
           type: string
           minLength: 1
@@ -7246,14 +7629,6 @@ components:
           readOnly: true
         is_active:
           type: boolean
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
         capacity:
           type: integer
           readOnly: true
@@ -7267,14 +7642,28 @@ components:
       - available_capacity
       - capacity
       - contents
-      - created_at
       - delivery_count
       - id
       - label_names
       - labels
       - name
-      - updated_at
       - weight
+    BreadDistribution:
+      type: object
+      properties:
+        bread_id:
+          type: string
+        bread_name:
+          type: string
+        pickup_location_id:
+          type: string
+        count:
+          type: integer
+      required:
+      - bread_id
+      - bread_name
+      - count
+      - pickup_location_id
     BreadLabel:
       type: object
       description: Serializer for bread labels/categories
@@ -7328,24 +7717,43 @@ components:
           format: decimal
           pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
           description: Weight in grams
+        pieces_per_stove_layer:
+          nullable: true
+          description: List of possible pieces per stove layer (e.g., [10, 11, 12]
+            or [22, 24])
+        one_batch_can_be_baked_in_more_than_one_stove:
+          type: boolean
+        min_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum number of pieces that should be baked for this bread
+            on a baking day (e.g., to ensure that there are enough pieces for walk-in
+            customers)
+        max_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Maximum number of pieces that should be baked for this bread
+            on a baking day (e.g., to limit the amount of bread that can be ordered
+            for this bread)
+        min_remaining_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum amount of breads that should remain available for this
+            bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
         labels:
           type: array
           items:
             type: string
       required:
-      - created_at
       - name
-      - updated_at
       - weight
     BreadListRequest:
       type: object
@@ -7372,6 +7780,35 @@ components:
           format: decimal
           pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
           description: Weight in grams
+        pieces_per_stove_layer:
+          nullable: true
+          description: List of possible pieces per stove layer (e.g., [10, 11, 12]
+            or [22, 24])
+        one_batch_can_be_baked_in_more_than_one_stove:
+          type: boolean
+        min_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum number of pieces that should be baked for this bread
+            on a baking day (e.g., to ensure that there are enough pieces for walk-in
+            customers)
+        max_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Maximum number of pieces that should be baked for this bread
+            on a baking day (e.g., to limit the amount of bread that can be ordered
+            for this bread)
+        min_remaining_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum amount of breads that should remain available for this
+            bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
         labels:
@@ -7382,6 +7819,28 @@ components:
       required:
       - name
       - weight
+    BreadQuantity:
+      type: object
+      properties:
+        bread_id:
+          type: string
+        bread_name:
+          type: string
+        total:
+          type: integer
+          description: Total pieces to bake
+        deliveries:
+          type: integer
+          description: Pieces for member deliveries
+        remaining:
+          type: integer
+          description: Extra pieces beyond deliveries (e.g., for external sale)
+      required:
+      - bread_id
+      - bread_name
+      - deliveries
+      - remaining
+      - total
     BuildCsvExportResponse:
       type: object
       properties:
@@ -10046,10 +10505,12 @@ components:
           minimum: 0
           description: Maximum number of breads of this label that can be delivered
             to this pickup location on this delivery day
-        pickup_location_day:
+        pickup_location:
           type: string
           minLength: 1
-          description: The pickup location and day this capacity applies to
+          nullable: true
+          description: The pickup location this capacity applies to (redundant but
+            useful for queries)
         bread:
           type: string
           minLength: 1
@@ -10095,7 +10556,6 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
-          default: 1
         subscription:
           type: string
           minLength: 1
@@ -10146,6 +10606,35 @@ components:
           format: decimal
           pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
           description: Weight in grams
+        pieces_per_stove_layer:
+          nullable: true
+          description: List of possible pieces per stove layer (e.g., [10, 11, 12]
+            or [22, 24])
+        one_batch_can_be_baked_in_more_than_one_stove:
+          type: boolean
+        min_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum number of pieces that should be baked for this bread
+            on a baking day (e.g., to ensure that there are enough pieces for walk-in
+            customers)
+        max_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Maximum number of pieces that should be baked for this bread
+            on a baking day (e.g., to limit the amount of bread that can be ordered
+            for this bread)
+        min_remaining_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum amount of breads that should remain available for this
+            bread on a baking day (e.g., for walk-in customers)
         is_active:
           type: boolean
         labels:
@@ -10461,6 +10950,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationCapacityByShareRequest'
+    PatchedPreferredBreadRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        breads:
+          type: array
+          items:
+            type: string
+            minLength: 1
     PatchedPreferredLabelRequest:
       type: object
       properties:
@@ -10816,6 +11317,8 @@ components:
           type: string
         iban:
           type: string
+        pseudonym:
+          type: string
       required:
       - account_owner
       - city
@@ -10873,9 +11376,6 @@ components:
           type: string
           title: Additional info
           maxLength: 1024
-        access_code:
-          type: string
-          maxLength: 20
         messenger_group_link:
           type: string
           maxLength: 150
@@ -10886,10 +11386,18 @@ components:
         photo_link:
           type: string
           maxLength: 512
+        access_code:
+          type: string
+          maxLength: 20
+        delivery_day:
+          type: integer
+          nullable: true
+          readOnly: true
       required:
       - city
       - coords_lat
       - coords_lon
+      - delivery_day
       - name
       - postcode
       - street
@@ -10986,6 +11494,16 @@ components:
       required:
       - data_points
       - table_headers
+    PickupLocationDeliveryDay:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+      - id
+      - name
     PickupLocationOpeningTime:
       type: object
       properties:
@@ -11014,25 +11532,66 @@ components:
       - day_of_week_string
       - open_time
       - pickup_location
-    PickupStationDeliveryDay:
+    PickupLocationsByDeliveryDayResponse:
+      type: object
+      properties:
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationDeliveryDay'
+      required:
+      - pickup_locations
+    PreferredBread:
       type: object
       properties:
         id:
-          type: integer
-        name:
           type: string
-      required:
-      - id
-      - name
-    PickupStationsByDeliveryDayResponse:
-      type: object
-      properties:
-        pickup_stations:
+          maxLength: 10
+        member_id:
+          type: string
+          readOnly: true
+        breads:
           type: array
           items:
-            $ref: '#/components/schemas/PickupStationDeliveryDay'
+            type: string
       required:
-      - pickup_stations
+      - breads
+      - member_id
+    PreferredBreadRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        breads:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+      - breads
+    PreferredBreadsBulkUpdate:
+      type: object
+      properties:
+        breads:
+          type: array
+          items:
+            type: string
+          description: List of Bread IDs to set as preferred for the member.
+      required:
+      - breads
+    PreferredBreadsBulkUpdateRequest:
+      type: object
+      properties:
+        breads:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          description: List of Bread IDs to set as preferred for the member.
+      required:
+      - breads
     PreferredLabel:
       type: object
       properties:
@@ -11375,10 +11934,14 @@ components:
           items:
             $ref: '#/components/schemas/PickupLocationOpeningTime'
           readOnly: true
+        delivery_day:
+          type: string
+          readOnly: true
       required:
       - city
       - coords_lat
       - coords_lon
+      - delivery_day
       - name
       - opening_times
       - postcode
@@ -11677,6 +12240,60 @@ components:
         * `quarterly` - Vierteljährlich
         * `semiannually` - Halbjährlich
         * `yearly` - Jährlich
+    RunSolverError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    RunSolverRequestRequest:
+      type: object
+      properties:
+        year:
+          type: integer
+          maximum: 2100
+          minimum: 2020
+        delivery_week:
+          type: integer
+          maximum: 53
+          minimum: 1
+        delivery_day:
+          type: integer
+          maximum: 6
+          minimum: 0
+      required:
+      - delivery_week
+      - year
+    RunSolverResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        total_deliveries:
+          type: integer
+        sessions_used:
+          type: integer
+          description: Number of baking sessions needed
+        quantities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreadQuantity'
+        stove_sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoveSession'
+        distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreadDistribution'
+      required:
+      - distribution
+      - quantities
+      - sessions_used
+      - stove_sessions
+      - success
+      - total_deliveries
     SaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -11950,6 +12567,37 @@ components:
       - file_name
       - upload_id
       - uploaded
+    StoveLayer:
+      type: object
+      properties:
+        layer:
+          type: integer
+        bread_id:
+          type: string
+          nullable: true
+        bread_name:
+          type: string
+          nullable: true
+        bread:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+      required:
+      - layer
+      - quantity
+    StoveSession:
+      type: object
+      properties:
+        session:
+          type: integer
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoveLayer'
+      required:
+      - layers
+      - session
     Subscription:
       type: object
       properties:

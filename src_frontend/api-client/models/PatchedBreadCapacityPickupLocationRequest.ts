@@ -44,11 +44,11 @@ export interface PatchedBreadCapacityPickupLocationRequest {
      */
     capacity?: number;
     /**
-     * The pickup location and day this capacity applies to
+     * The pickup location this capacity applies to (redundant but useful for queries)
      * @type {string}
      * @memberof PatchedBreadCapacityPickupLocationRequest
      */
-    pickupLocationDay?: string;
+    pickupLocation?: string | null;
     /**
      * 
      * @type {string}
@@ -78,7 +78,7 @@ export function PatchedBreadCapacityPickupLocationRequestFromJSONTyped(json: any
         'year': json['year'] == null ? undefined : json['year'],
         'deliveryWeek': json['delivery_week'] == null ? undefined : json['delivery_week'],
         'capacity': json['capacity'] == null ? undefined : json['capacity'],
-        'pickupLocationDay': json['pickup_location_day'] == null ? undefined : json['pickup_location_day'],
+        'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
         'bread': json['bread'] == null ? undefined : json['bread'],
     };
 }
@@ -98,7 +98,7 @@ export function PatchedBreadCapacityPickupLocationRequestFromJSONTyped(json: any
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'capacity': value['capacity'],
-        'pickup_location_day': value['pickupLocationDay'],
+        'pickup_location': value['pickupLocation'],
         'bread': value['bread'],
     };
 }

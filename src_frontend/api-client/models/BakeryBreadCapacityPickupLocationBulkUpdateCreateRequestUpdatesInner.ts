@@ -24,7 +24,7 @@ export interface BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestUpdates
      * @type {string}
      * @memberof BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestUpdatesInner
      */
-    pickupLocationDay?: string;
+    pickupLocation?: string;
     /**
      * 
      * @type {string}
@@ -56,7 +56,7 @@ export function BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestUpdatesI
     }
     return {
         
-        'pickupLocationDay': json['pickup_location_day'] == null ? undefined : json['pickup_location_day'],
+        'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
         'bread': json['bread'] == null ? undefined : json['bread'],
         'capacity': json['capacity'] == null ? undefined : json['capacity'],
     };
@@ -73,7 +73,7 @@ export function BakeryBreadCapacityPickupLocationBulkUpdateCreateRequestUpdatesI
 
     return {
         
-        'pickup_location_day': value['pickupLocationDay'],
+        'pickup_location': value['pickupLocation'],
         'bread': value['bread'],
         'capacity': value['capacity'],
     };

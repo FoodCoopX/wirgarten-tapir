@@ -78,12 +78,6 @@ export interface PickupLocation {
      * @type {string}
      * @memberof PickupLocation
      */
-    accessCode?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PickupLocation
-     */
     messengerGroupLink?: string;
     /**
      * 
@@ -97,6 +91,18 @@ export interface PickupLocation {
      * @memberof PickupLocation
      */
     photoLink?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PickupLocation
+     */
+    accessCode?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof PickupLocation
+     */
+    readonly deliveryDay: number | null;
 }
 
 /**
@@ -109,6 +115,7 @@ export function instanceOfPickupLocation(value: object): value is PickupLocation
     if (!('street' in value) || value['street'] === undefined) return false;
     if (!('postcode' in value) || value['postcode'] === undefined) return false;
     if (!('city' in value) || value['city'] === undefined) return false;
+    if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     return true;
 }
 
@@ -131,10 +138,11 @@ export function PickupLocationFromJSONTyped(json: any, ignoreDiscriminator: bool
         'postcode': json['postcode'],
         'city': json['city'],
         'info': json['info'] == null ? undefined : json['info'],
-        'accessCode': json['access_code'] == null ? undefined : json['access_code'],
         'messengerGroupLink': json['messenger_group_link'] == null ? undefined : json['messenger_group_link'],
         'contactName': json['contact_name'] == null ? undefined : json['contact_name'],
         'photoLink': json['photo_link'] == null ? undefined : json['photo_link'],
+        'accessCode': json['access_code'] == null ? undefined : json['access_code'],
+        'deliveryDay': json['delivery_day'],
     };
 }
 
@@ -142,7 +150,7 @@ export function PickupLocationFromJSONTyped(json: any, ignoreDiscriminator: bool
       return PickupLocationToJSONTyped(json, false);
   }
 
-  export function PickupLocationToJSONTyped(value?: PickupLocation | null, ignoreDiscriminator: boolean = false): any {
+  export function PickupLocationToJSONTyped(value?: Omit<PickupLocation, 'delivery_day'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -158,10 +166,10 @@ export function PickupLocationFromJSONTyped(json: any, ignoreDiscriminator: bool
         'postcode': value['postcode'],
         'city': value['city'],
         'info': value['info'],
-        'access_code': value['accessCode'],
         'messenger_group_link': value['messengerGroupLink'],
         'contact_name': value['contactName'],
         'photo_link': value['photoLink'],
+        'access_code': value['accessCode'],
     };
 }
 

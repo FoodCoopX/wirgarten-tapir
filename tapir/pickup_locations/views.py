@@ -25,7 +25,7 @@ from tapir.pickup_locations.serializers import (
     PickupLocationCapacityCheckRequestSerializer,
     PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityEvolutionSerializer,
-    PickupStationsByDeliveryDayResponseSerializer,
+    PickupLocationsByDeliveryDayResponseSerializer,
     PublicPickupLocationSerializer,
 )
 from tapir.pickup_locations.services.member_pickup_location_service import (
@@ -479,13 +479,13 @@ class DeliveryDaysView(APIView):
 
 
 @extend_schema(tags=["bakery"])
-class PickupStationsByDeliveryDayView(APIView):
+class PickupLocationsByDeliveryDayView(APIView):
     """
-    Get pickup stations filtered by delivery day
+    Get pickup locations filtered by delivery day
     """
 
     @extend_schema(
-        summary="Get pickup stations filtered by delivery day",
+        summary="Get pickup locations filtered by delivery day",
         parameters=[
             OpenApiParameter(
                 name="day_of_week",
@@ -495,11 +495,11 @@ class PickupStationsByDeliveryDayView(APIView):
             )
         ],
         responses={
-            200: PickupStationsByDeliveryDayResponseSerializer,
+            200: PickupLocationsByDeliveryDayResponseSerializer,
         },
     )
     def get(self, request):
-        """Get pickup stations filtered by delivery day"""
+        """Get pickup locations filtered by delivery day"""
         from django.db.models import Min
 
         day_of_week: str | None = request.query_params.get("day_of_week", None)
@@ -529,13 +529,15 @@ class PickupStationsByDeliveryDayView(APIView):
         )
 
         # Filter for records where the given day is the earliest day for that pickup location
+        # IMPORTANT: order_by must start with the same field as distinct()
         filtered_records = (
             PickupLocationOpeningTime.objects.annotate(
                 earliest_day=Subquery(earliest_days_subquery)
             )
             .filter(day_of_week=day_int, earliest_day=day_int)
             .select_related("pickup_location")
-            .order_by("pickup_location__name")
+            .order_by("pickup_location__id", "pickup_location__name")
+            .distinct("pickup_location__id")
         )
 
         if not filtered_records.exists():
@@ -552,10 +554,10 @@ class PickupStationsByDeliveryDayView(APIView):
 
         result: List[Dict[str, Any]] = [
             {
-                "id": record.id,  # PickupLocationOpeningTime.id
-                "name": record.pickup_location.name,  # PickupLocation.name
+                "id": record.pickup_location.id,
+                "name": record.pickup_location.name,
             }
             for record in filtered_records
         ]
 
-        return Response({"pickup_stations": result})
+        return Response({"pickup_locations": result})

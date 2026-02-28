@@ -30,12 +30,6 @@ export interface BreadCapacityPickupLocation {
      * @type {string}
      * @memberof BreadCapacityPickupLocation
      */
-    readonly pickupLocation: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BreadCapacityPickupLocation
-     */
     readonly pickupLocationName: string;
     /**
      * 
@@ -68,11 +62,11 @@ export interface BreadCapacityPickupLocation {
      */
     capacity: number;
     /**
-     * The pickup location and day this capacity applies to
+     * The pickup location this capacity applies to (redundant but useful for queries)
      * @type {string}
      * @memberof BreadCapacityPickupLocation
      */
-    pickupLocationDay: string;
+    pickupLocation?: string | null;
     /**
      * 
      * @type {string}
@@ -85,14 +79,12 @@ export interface BreadCapacityPickupLocation {
  * Check if a given object implements the BreadCapacityPickupLocation interface.
  */
 export function instanceOfBreadCapacityPickupLocation(value: object): value is BreadCapacityPickupLocation {
-    if (!('pickupLocation' in value) || value['pickupLocation'] === undefined) return false;
     if (!('pickupLocationName' in value) || value['pickupLocationName'] === undefined) return false;
     if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     if (!('breadName' in value) || value['breadName'] === undefined) return false;
     if (!('year' in value) || value['year'] === undefined) return false;
     if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
     if (!('capacity' in value) || value['capacity'] === undefined) return false;
-    if (!('pickupLocationDay' in value) || value['pickupLocationDay'] === undefined) return false;
     if (!('bread' in value) || value['bread'] === undefined) return false;
     return true;
 }
@@ -108,14 +100,13 @@ export function BreadCapacityPickupLocationFromJSONTyped(json: any, ignoreDiscri
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
-        'pickupLocation': json['pickup_location'],
         'pickupLocationName': json['pickup_location_name'],
         'deliveryDay': json['delivery_day'],
         'breadName': json['bread_name'],
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
         'capacity': json['capacity'],
-        'pickupLocationDay': json['pickup_location_day'],
+        'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
         'bread': json['bread'],
     };
 }
@@ -124,7 +115,7 @@ export function BreadCapacityPickupLocationFromJSONTyped(json: any, ignoreDiscri
       return BreadCapacityPickupLocationToJSONTyped(json, false);
   }
 
-  export function BreadCapacityPickupLocationToJSONTyped(value?: Omit<BreadCapacityPickupLocation, 'pickup_location'|'pickup_location_name'|'delivery_day'|'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadCapacityPickupLocationToJSONTyped(value?: Omit<BreadCapacityPickupLocation, 'pickup_location_name'|'delivery_day'|'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -135,7 +126,7 @@ export function BreadCapacityPickupLocationFromJSONTyped(json: any, ignoreDiscri
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'capacity': value['capacity'],
-        'pickup_location_day': value['pickupLocationDay'],
+        'pickup_location': value['pickupLocation'],
         'bread': value['bread'],
     };
 }

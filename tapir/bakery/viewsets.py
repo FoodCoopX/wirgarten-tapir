@@ -12,9 +12,12 @@ from tapir.bakery.models import (
     BreadDelivery,
     BreadLabel,
     Ingredient,
+    PreferredBread,
     PreferredLabel,
+    StoveSession,
 )
 from tapir.bakery.serializers import (
+    BreadCapacityBulkUpdateSerializer,
     BreadCapacityPickupLocationSerializer,
     BreadContentSerializer,
     BreadDeliverySerializer,
@@ -22,8 +25,11 @@ from tapir.bakery.serializers import (
     BreadLabelSerializer,
     BreadListSerializer,
     IngredientSerializer,
+    PreferredBreadsBulkUpdateSerializer,
+    PreferredBreadSerializer,
     PreferredLabelBulkUpdateSerializer,
     PreferredLabelSerializer,
+    StoveSessionSerializer,
 )
 from tapir.bakery.utils import str_to_bool
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -185,7 +191,7 @@ class BreadViewSet(viewsets.ModelViewSet):
             # Annotate queryset with capacity and delivery count
             queryset = (
                 queryset.filter(
-                    capacity_entries__pickup_location_day__pickup_location_id=pickup_location_id,
+                    capacity_entries__pickup_location_id=pickup_location_id,
                     capacity_entries__year=year,
                     capacity_entries__delivery_week=week,
                 )
@@ -206,6 +212,8 @@ class BreadViewSet(viewsets.ModelViewSet):
                 .filter(available_capacity__gt=0)
                 .distinct()
             )
+
+        queryset = queryset.order_by("name")
 
         return queryset
 
@@ -304,36 +312,16 @@ class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
         if week:
             queryset = queryset.filter(delivery_week=week)
         if pickup_location_ids:
-            queryset = queryset.filter(pickup_location_day__id__in=pickup_location_ids)
+            queryset = queryset.filter(pickup_location__id__in=pickup_location_ids)
 
         return queryset
 
     @extend_schema(
         summary="Bulk create/update/delete bread capacities",
-        request={
-            "application/json": {
-                "type": "object",
-                "properties": {
-                    "year": {"type": "integer"},
-                    "week": {"type": "integer"},
-                    "updates": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "pickup_location_day": {"type": "string"},
-                                "bread": {"type": "string"},
-                                "capacity": {"type": "integer", "nullable": True},
-                            },
-                        },
-                    },
-                },
-                "required": ["year", "week", "updates"],
-            }
-        },
+        request=BreadCapacityBulkUpdateSerializer,
         responses={
             200: OpenApiResponse(description='{"status": "success"}'),
-            400: OpenApiResponse(description="Bad request"),
+            400: OpenApiResponse(description="Validation errors"),
         },
     )
     @action(detail=False, methods=["post"], url_path="bulk-update")
@@ -350,7 +338,7 @@ class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
             )
 
         for update in updates:
-            pickup_location_day_id = update.get("pickup_location_day")
+            pickup_location_id = update.get("pickup_location")
             bread_id = update.get("bread")
             capacity = update.get("capacity")
 
@@ -359,7 +347,7 @@ class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
                 BreadCapacityPickupLocation.objects.filter(
                     year=year,
                     delivery_week=week,
-                    pickup_location_day_id=pickup_location_day_id,
+                    pickup_location_id=pickup_location_id,
                     bread_id=bread_id,
                 ).delete()
             else:
@@ -367,7 +355,7 @@ class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
                 BreadCapacityPickupLocation.objects.update_or_create(
                     year=year,
                     delivery_week=week,
-                    pickup_location_day_id=pickup_location_day_id,
+                    pickup_location_id=pickup_location_id,
                     bread_id=bread_id,
                     defaults={"capacity": capacity},
                 )
@@ -455,3 +443,104 @@ class PreferredLabelViewSet(viewsets.ModelViewSet):
         preferred.labels.set(labels)
         preferred.save()
         return Response(serializer.data)
+
+
+@extend_schema(
+    tags=["Bakery"],
+    description="Manage preferred breads for a member.",
+    request=PreferredBreadSerializer,
+    responses={200: PreferredBreadSerializer},
+)
+class PreferredBreadViewSet(viewsets.ModelViewSet):
+    queryset = PreferredBread.objects.all()
+    serializer_class = PreferredBreadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="member_id",
+                type=str,
+                required=False,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        # Optionally filter by member
+        member_id = self.request.query_params.get("member_id")
+        if member_id:
+            return self.queryset.filter(member__id=member_id)
+        return self.queryset
+
+    @extend_schema(
+        request=PreferredBreadsBulkUpdateSerializer,
+        responses={200: PreferredBreadsBulkUpdateSerializer},
+        description="Bulk update preferred breads for a member. Replaces all breads for the member with the provided list.",
+        tags=["bakery"],
+    )
+    @action(detail=True, methods=["post"], url_path="bulk-update")
+    def bulk_update(self, request, pk=None):
+        serializer = PreferredBreadsBulkUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        breads = serializer.validated_data["breads"]
+        preferred, _ = PreferredBread.objects.get_or_create(member_id=pk)
+
+        preferred.breads.set(breads)
+        preferred.save()
+        return Response(serializer.data)
+
+
+@extend_schema(tags=["bakery"])
+class StoveSessionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for viewing stove sessions (baking plan).
+    Read-only - sessions are created by the solver.
+    """
+
+    queryset = StoveSession.objects.select_related("bread").all()
+    serializer_class = StoveSessionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="year",
+                type=int,
+                required=False,
+            ),
+            OpenApiParameter(
+                name="delivery_week",
+                type=int,
+                required=False,
+            ),
+            OpenApiParameter(
+                name="delivery_day",
+                type=int,
+                required=False,
+            ),
+        ],
+        responses={200: StoveSessionSerializer(many=True)},
+    )
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        """Get all stove sessions, optionally filtered by year/week/day"""
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        """Filter by year, week, and day if provided"""
+        queryset = super().get_queryset()
+
+        year = self.request.query_params.get("year")
+        delivery_week = self.request.query_params.get("delivery_week")
+        delivery_day = self.request.query_params.get("delivery_day")
+
+        if year is not None:
+            queryset = queryset.filter(year=year)
+        if delivery_week is not None:
+            queryset = queryset.filter(delivery_week=delivery_week)
+        if delivery_day is not None:
+            queryset = queryset.filter(delivery_day=delivery_day)
+
+        return queryset.order_by("session_number", "layer_number")

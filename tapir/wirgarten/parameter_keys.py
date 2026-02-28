@@ -255,3 +255,6 @@ class ParameterKeys:
     BAKERY_PICKUP_LOCATIONS_CAN_BE_ORDERED_BY_DAYS_IN_BESTELL_WIZARD = (
         f"{PREFIX}.bakery.pickup_locations_can_be_ordered_by_days_in_bestell_wizard"
     )
+    BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS = (
+        f"{PREFIX}.bakery.members_can_choose_bread_sorts"
+    )

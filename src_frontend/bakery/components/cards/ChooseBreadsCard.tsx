@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
-import type { BreadList, BreadContent, BreadDelivery, PickupLocation } from '../../../api-client/models';
+import type { BreadList, BreadContent, BreadDelivery, BreadLabel } from '../../../api-client/models';
 import { YearWeekSelectorCard } from './YearWeekSelectorCard';
 import { BreadSelectionModal } from '../modals/BreadSelectionModal';
+import PickupLocationChangeModal from '../../../member_profile/deliveries_and_jokers/PickupLocationChangeModal';
+import { CompactBreadCard } from './CompactBreadCard';
 import dayjs from 'dayjs';
 import isoWeek from "dayjs/plugin/isoWeek";
 
@@ -13,6 +15,7 @@ interface ChooseBreadsCardProps {
   memberId: string;
   csrfToken: string;
   chooseStationPerBread: boolean;
+  membersCanChooseBreadSorts: boolean;
 }
 
 const currentWeek = dayjs().isoWeek();
@@ -20,6 +23,7 @@ const currentYear = dayjs().year();
 
 export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   chooseStationPerBread,
+  membersCanChooseBreadSorts,
   memberId,
   csrfToken,
 }) => {
@@ -27,14 +31,15 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [contentsMap, setContentsMap] = useState<{ [breadId: string]: BreadContent[] }>({});
-  const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [deliveries, setDeliveries] = useState<BreadDelivery[]>([]);
+  const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(currentWeek);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [modalOpen, setModalOpen] = useState<string | null>(null);
   const [editingLocation, setEditingLocation] = useState<string | null>(null);
+  const [toastDatas, setToastDatas] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
@@ -46,6 +51,16 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     try {
       const allBreads = await bakeryApi.bakeryBreadsListList({ isActive: true });
       setBreads(allBreads);
+
+      // Load labels
+      const labels = await bakeryApi.bakeryLabelsList();
+      const labelMapping = labels.reduce((acc, label) => {
+        if (label.id) {
+          acc[label.id] = label;
+        }
+        return acc;
+      }, {} as { [labelId: string]: BreadLabel });
+      setLabelsMap(labelMapping);
 
       const contentsResults = await Promise.all(
         allBreads.map(async (bread) => {
@@ -63,10 +78,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
         map[breadId!] = [...contents].sort((a, b) => Number(b.amount) - Number(a.amount));
       });
       setContentsMap(map);
-
-      // const locations = await bakeryApi.pickupLocationsApiListList();
-      const locations = [];
-      setPickupLocations(locations);
 
       const breadDeliveries = await bakeryApi.bakeryBreadDeliveriesList({
         memberId,
@@ -86,44 +97,12 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     }
   };
 
-  const handlePickupLocationChange = async (deliveryId: string, pickupLocationId: string | null) => {
-    if (!pickupLocationId) return;
-
-    setSaving(deliveryId);
-    try {
-      if (chooseStationPerBread) {
-        await bakeryApi.bakeryBreadDeliveriesPartialUpdate({
-          id: deliveryId,
-          patchedBreadDeliveryRequest: {
-            pickupLocation: pickupLocationId,
-          },
-        });
-
-        setDeliveries(deliveries.map(d => 
-          d.id === deliveryId ? { ...d, pickupLocation: pickupLocationId } : d
-        ));
-      } else {
-        await Promise.all(
-          deliveries.map(delivery =>
-            bakeryApi.bakeryBreadDeliveriesPartialUpdate({
-              id: delivery.id!,
-              patchedBreadDeliveryRequest: {
-                pickupLocation: pickupLocationId,
-              },
-            })
-          )
-        );
-
-        setDeliveries(deliveries.map(d => ({ ...d, pickupLocation: pickupLocationId })));
-      }
-      setEditingLocation(null);
-    } catch (error) {
-      console.error('Failed to save pickup location:', error);
-      alert('Speichern der Abholstation fehlgeschlagen');
-    } finally {
-      setSaving(null);
-    }
+  const handlePickupLocationChanged = async () => {
+    setEditingLocation(null);
+    await loadData();
   };
+
+
 
   const handleBreadSelected = async (deliveryId: string, breadId: string) => {
     const delivery = deliveries.find(d => d.id === deliveryId);
@@ -158,9 +137,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
         },
       });
 
-      setDeliveries(deliveries.map(d => 
-        d.id === deliveryId ? { ...d, bread: null, breadName: undefined } : d
-      ));
+      await loadData();
     } catch (error) {
       console.error('Failed to remove bread:', error);
       alert('Löschen des Brotes fehlgeschlagen');
@@ -169,7 +146,10 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     }
   };
 
-
+  const getBreadDetails = (breadId: string | null) => {
+    if (!breadId) return null;
+    return breads.find(b => b.id === breadId);
+  };
 
   const maxBreads = deliveries.length;
 
@@ -184,7 +164,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
       {/* Instructions */}
       <div className="alert alert-info mb-3 mt-3">
-          <strong>Du hast {maxBreads} Brot-Anteil{maxBreads !== 1 ? 'e' : ''} für diese Woche.</strong>
+        <strong>Du hast {maxBreads} Brot-Anteil{maxBreads !== 1 ? 'e' : ''} für diese Woche.</strong>
         <br />
         <small>
           {chooseStationPerBread ? (
@@ -202,10 +182,15 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       {/* Bread Delivery Slots */}
       <div className="row g-3">
         {deliveries.map((delivery, index) => {
-          const selectedLocation = pickupLocations.find(l => l.id === delivery.pickupLocation);
           const isFirstSlot = index === 0;
           const canChangeLocation = chooseStationPerBread || isFirstSlot;
-          const isEditingThisLocation = editingLocation === delivery.id;
+          const selectedBread = getBreadDetails(delivery.bread || null);
+          const breadLabels = selectedBread
+            ? (selectedBread.labels || [])
+                .map(labelId => labelsMap[labelId])
+                .filter(Boolean)
+            : [];
+          const contents = selectedBread ? (contentsMap[selectedBread.id!] || []) : [];
           
           return (
             <div key={delivery.id} className="col-12">
@@ -221,46 +206,21 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                   <div className="mb-3">
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="flex-grow-1">
-                        <strong>Abholort:</strong>{' '}
-                        {isEditingThisLocation ? (
-                        <select
-                          className="form-select form-select-sm d-inline-block w-auto ms-2"
-                          value={delivery.pickupLocation || ''}
-                          onChange={(e) => handlePickupLocationChange(delivery.id!, e.target.value || null)}
-                          disabled={saving === delivery.id}
-                          autoFocus
-                        >
-                          <option value="">-- Station wählen --</option>
-                          {pickupLocations.map(location => (
-                            <option key={location.id} value={location.id}>
-                              {location.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
+                        <strong>Gewählter Abholort:</strong>{' '}
                         <span className="text-muted">
-                          {delivery.pickupLocationName || selectedLocation?.name || 'Noch nicht gewählt'}
+                          {delivery.pickupLocationName || 'Noch nicht gewählt'}
                         </span>
-                      )}
                         {!chooseStationPerBread && !isFirstSlot && (
                           <small className="text-muted ms-2">(wird mit Brotanteil 1 synchronisiert)</small>
                         )}
                       </div>
-                      {canChangeLocation && !isEditingThisLocation && (
+                      {canChangeLocation && (
                         <button
                           className="btn btn-sm btn-outline-secondary"
                           onClick={() => setEditingLocation(delivery.id!)}
                           disabled={saving === delivery.id}
                         >
                           {delivery.pickupLocation ? 'Ändern' : 'Auswählen'}
-                        </button>
-                      )}
-                      {isEditingThisLocation && (
-                        <button
-                          className="btn btn-sm btn-outline-secondary ms-2"
-                          onClick={() => setEditingLocation(null)}
-                        >
-                          Abbrechen
                         </button>
                       )}
                       {saving === delivery.id && (
@@ -271,42 +231,38 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
                   <hr />
 
-                  {/* Bread Selection Row */}
+                  {/* Bread Selection Section */}
                   <div>
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div className="flex-grow-1">
-                        <strong>Brotsorte:</strong>{' '}
-                        <span className="text-muted">
-                          {delivery.breadName || 'Noch nicht gewählt'}
-                        </span>
-                      </div>
-                      <div className="d-flex gap-2">
-                        <button
-                          className="btn btn-sm"
-                          style={{ backgroundColor: '#8B4513', color: 'white' }}
-                          onClick={() => setModalOpen(delivery.id!)}
-                          disabled={!delivery.pickupLocation || saving === delivery.id}
-                        >
-                          {delivery.bread ? 'Ändern' : 'Auswählen'}
-                        </button>
-                        {delivery.bread && (
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleRemoveBread(delivery.id!)}
-                            disabled={saving === delivery.id}
-                          >
-                            Entfernen
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    {!delivery.pickupLocation && (
+                    <strong className="mb-2 d-block">Gewählte Brotsorte:</strong>
+
+                    {!delivery.pickupLocation ? (
                       <div className="alert alert-warning mt-2 mb-0 py-2">
                         <small>
                           {isFirstSlot || chooseStationPerBread 
                             ? '⚠️ Bitte zuerst eine Abholstation auswählen' 
                             : '⚠️ Bitte eine Station bei Brotanteil 1 auswählen'}
                         </small>
+                      </div>
+                    ) : selectedBread ? (
+                      <CompactBreadCard
+                        bread={selectedBread}
+                        contents={contents}
+                        labels={breadLabels}
+                        onEdit={() => setModalOpen(delivery.id!)}
+                        onRemove={() => handleRemoveBread(delivery.id!)}
+                        disabled={saving === delivery.id}
+                      />
+                    ) : (
+                      <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
+                        <span className="text-muted">Noch nicht gewählt</span>
+                        <button
+                          className="btn btn-sm"
+                          style={{ backgroundColor: '#8B4513', color: 'white' }}
+                          onClick={() => setModalOpen(delivery.id!)}
+                          disabled={!delivery.pickupLocation || saving === delivery.id}
+                        >
+                          Auswählen
+                        </button>
                       </div>
                     )}
                   </div>
@@ -319,9 +275,10 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                   breads={breads}
                   contentsMap={contentsMap}
                   pickupLocationId={delivery.pickupLocation}
-                  pickupLocationName={delivery.pickupLocationName || selectedLocation?.name || ''}
+                  pickupLocationName={delivery.pickupLocationName || ''}
                   selectedWeek={selectedWeek}
                   selectedYear={selectedYear}
+                  currentBreadId={delivery.bread || null}
                   onSelect={(breadId) => handleBreadSelected(delivery.id!, breadId)}
                   onClose={() => setModalOpen(null)}
                   csrfToken={csrfToken}
@@ -331,6 +288,16 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
           );
         })}
       </div>
+
+      {/* Pickup Location Change Modal */}
+      <PickupLocationChangeModal
+        show={editingLocation !== null}
+        onHide={() => setEditingLocation(null)}
+        csrfToken={csrfToken}
+        memberId={memberId}
+        reloadDeliveries={handlePickupLocationChanged}
+        setToastDatas={setToastDatas}
+      />
     </div>
   );
 };

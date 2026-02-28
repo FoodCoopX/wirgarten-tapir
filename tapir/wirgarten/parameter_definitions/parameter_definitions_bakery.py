@@ -90,3 +90,12 @@ class ParameterDefinitionsBakery:
             category=ParameterCategory.BAKERY,
             meta=ParameterMeta(),
         )
+        importer.parameter_definition(
+            key=ParameterKeys.BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS,
+            label="Mitglieder können Brotsorten wählen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Gibt an, ob Mitglieder ihre Brotsorten wählen können.",
+            category=ParameterCategory.BAKERY,
+            meta=ParameterMeta(),
+        )

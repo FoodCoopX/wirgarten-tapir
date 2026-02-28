@@ -4,20 +4,20 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.db import transaction
-from django.db.models import F, Sum, Q
+from django.db.models import F, Q, Sum
 from django.forms import (
     BooleanField,
     CharField,
     CheckboxSelectMultiple,
     ChoiceField,
     DateField,
+    DateInput,
     DecimalField,
     Form,
     IntegerField,
     ModelForm,
     ModelMultipleChoiceField,
     MultipleChoiceField,
-    DateInput,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -44,8 +44,8 @@ from tapir.wirgarten.service.member import (
     send_product_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
-    get_available_product_types,
     get_active_and_future_subscriptions,
+    get_available_product_types,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -58,8 +58,16 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
         can_edit_email = kwargs.pop("can_edit_email", True)
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
+
+        pseudonym_enabled = get_parameter_value(
+            ParameterKeys.BAKERY_PSEUDONYM_ENABLED, cache={}
+        )
+        optional_fields = ["street_2", "is_student", "birthdate"]
+        if pseudonym_enabled:
+            optional_fields.append("pseudonym")
+
         for k, v in self.fields.items():
-            if k not in ["street_2", "is_student", "birthdate"]:
+            if k not in optional_fields:
                 v.required = True
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
@@ -75,6 +83,16 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
         self.fields["country"].label = _("Land")
         self.fields["birthdate"].label = _("Geburtsdatum")
 
+        if pseudonym_enabled:
+            self.fields["pseudonym"].label = _("Pseudonym (optional)")
+            self.fields["pseudonym"].help_text = _(
+                "Dieser Name erscheint auf der Abholliste anstelle deines echten Namens."
+            )
+            self.fields["pseudonym"].required = False
+        else:
+            if "pseudonym" in self.fields:
+                del self.fields["pseudonym"]
+
         if self.request and not self.request.user.has_perm(Permission.Accounts.MANAGE):
             self.fields["is_student"].disabled = True
         self.fields["is_student"].label = get_parameter_value(
@@ -86,6 +104,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
         fields = [
             "first_name",
             "last_name",
+            "pseudonym",
             "email",
             "phone_number",
             "street",

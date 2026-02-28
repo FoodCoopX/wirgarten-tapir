@@ -90,18 +90,6 @@ export interface BreadDetail {
     isActive?: boolean;
     /**
      * 
-     * @type {Date}
-     * @memberof BreadDetail
-     */
-    readonly createdAt: Date;
-    /**
-     * 
-     * @type {Date}
-     * @memberof BreadDetail
-     */
-    readonly updatedAt: Date;
-    /**
-     * 
      * @type {number}
      * @memberof BreadDetail
      */
@@ -130,8 +118,6 @@ export function instanceOfBreadDetail(value: object): value is BreadDetail {
     if (!('labels' in value) || value['labels'] === undefined) return false;
     if (!('labelNames' in value) || value['labelNames'] === undefined) return false;
     if (!('contents' in value) || value['contents'] === undefined) return false;
-    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
-    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('capacity' in value) || value['capacity'] === undefined) return false;
     if (!('deliveryCount' in value) || value['deliveryCount'] === undefined) return false;
     if (!('availableCapacity' in value) || value['availableCapacity'] === undefined) return false;
@@ -157,8 +143,6 @@ export function BreadDetailFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'labelNames': json['label_names'],
         'contents': ((json['contents'] as Array<any>).map(BreadContentFromJSON)),
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
-        'createdAt': (new Date(json['created_at'])),
-        'updatedAt': (new Date(json['updated_at'])),
         'capacity': json['capacity'],
         'deliveryCount': json['delivery_count'],
         'availableCapacity': json['available_capacity'],
@@ -169,7 +153,7 @@ export function BreadDetailFromJSONTyped(json: any, ignoreDiscriminator: boolean
       return BreadDetailToJSONTyped(json, false);
   }
 
-  export function BreadDetailToJSONTyped(value?: Omit<BreadDetail, 'id'|'labels'|'label_names'|'contents'|'created_at'|'updated_at'|'capacity'|'delivery_count'|'available_capacity'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadDetailToJSONTyped(value?: Omit<BreadDetail, 'id'|'labels'|'label_names'|'contents'|'capacity'|'delivery_count'|'available_capacity'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

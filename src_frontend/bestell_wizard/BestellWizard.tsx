@@ -76,11 +76,13 @@ import { areAllOrderedProductsInWaitingList } from "./utils/areAllOrderedProduct
 interface BestellWizardProps {
   csrfToken: string;
   waitingListEntryDetails?: WaitingListEntryDetails;
+  pseudonymEnabled?: boolean;
 }
 
 const BestellWizard: React.FC<BestellWizardProps> = ({
   csrfToken,
   waitingListEntryDetails,
+  pseudonymEnabled = false,
 }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
   const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
@@ -564,6 +566,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListEntryDetails={waitingListEntryDetails}
             settings={settings}
             shoppingCart={shoppingCart}
+            pseudonymEnabled={pseudonymEnabled}
           />
         );
       case "summary":
@@ -666,6 +669,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             postcode: personalData.postcode,
             street: personalData.street,
             street2: personalData.street2,
+            pseudonym: personalData.pseudonym,
           },
           sepaAllowed: sepaAllowed,
           contractAccepted: contractAccepted,

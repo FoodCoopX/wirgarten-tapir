@@ -2,7 +2,9 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from tapir.bakery.views import (
+    AbhollisteView,
     AvailableBreadsForDeliveryListView,
+    RunSolverView,
 )
 from tapir.bakery.views_templates import (
     ChooseBreadsView,
@@ -17,7 +19,9 @@ from tapir.bakery.viewsets import (
     BreadLabelViewSet,
     BreadViewSet,
     IngredientViewSet,
+    PreferredBreadViewSet,
     PreferredLabelViewSet,
+    StoveSessionViewSet,
 )
 
 app_name = "bakery"
@@ -28,6 +32,7 @@ urlpatterns = [
         AvailableBreadsForDeliveryListView.as_view(),
         name="breads-for-delivery-list",
     ),
+    path("abholliste/", AbhollisteView.as_view(), name="abholliste"),
     path(
         "ingredients-labels-breads/",
         IngredientsLabelsBreadsView.as_view(),
@@ -40,6 +45,7 @@ urlpatterns = [
     ),
     path("choose-breads/", ChooseBreadsView.as_view(), name="choose-breads"),
     path("reports/", ReportsView.as_view(), name="reports"),
+    path("solver/run/", RunSolverView.as_view(), name="bakery-solver-run"),
 ]
 
 router = DefaultRouter()
@@ -73,10 +79,16 @@ router.register(
     PreferredLabelViewSet,
     basename="preferred-labels",
 )
+router.register(r"preferred-breads", PreferredBreadViewSet, basename="preferred-breads")
 router.register(
     r"bread-deliveries",
     BreadDeliveryViewSet,
     basename="bread-deliveries",
+)
+router.register(
+    r"stove-sessions",
+    StoveSessionViewSet,
+    basename="stove-sessions",
 )
 
 

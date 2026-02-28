@@ -81,6 +81,12 @@ export interface PublicPickupLocation {
      * @memberof PublicPickupLocation
      */
     readonly openingTimes: Array<PickupLocationOpeningTime>;
+    /**
+     * 
+     * @type {string}
+     * @memberof PublicPickupLocation
+     */
+    readonly deliveryDay: string;
 }
 
 /**
@@ -94,6 +100,7 @@ export function instanceOfPublicPickupLocation(value: object): value is PublicPi
     if (!('postcode' in value) || value['postcode'] === undefined) return false;
     if (!('city' in value) || value['city'] === undefined) return false;
     if (!('openingTimes' in value) || value['openingTimes'] === undefined) return false;
+    if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     return true;
 }
 
@@ -116,6 +123,7 @@ export function PublicPickupLocationFromJSONTyped(json: any, ignoreDiscriminator
         'postcode': json['postcode'],
         'city': json['city'],
         'openingTimes': ((json['opening_times'] as Array<any>).map(PickupLocationOpeningTimeFromJSON)),
+        'deliveryDay': json['delivery_day'],
     };
 }
 
@@ -123,7 +131,7 @@ export function PublicPickupLocationFromJSONTyped(json: any, ignoreDiscriminator
       return PublicPickupLocationToJSONTyped(json, false);
   }
 
-  export function PublicPickupLocationToJSONTyped(value?: Omit<PublicPickupLocation, 'opening_times'> | null, ignoreDiscriminator: boolean = false): any {
+  export function PublicPickupLocationToJSONTyped(value?: Omit<PublicPickupLocation, 'opening_times'|'delivery_day'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -113,17 +113,6 @@ useEffect(() => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Brot wirklich löschen?')) return;
-
-    try {
-      await bakeryApi.bakeryBreadsListDestroy({ id });
-      await loadBreads();
-    } catch (error) {
-      console.error('Failed to delete bread:', error);
-      alert('Fehler beim Löschen des Brots');
-    }
-  };
 
   return (
     <>

@@ -50,23 +50,41 @@ export interface BreadList {
      */
     weight: string;
     /**
+     * List of possible pieces per stove layer (e.g., [10, 11, 12] or [22, 24])
+     * @type {any}
+     * @memberof BreadList
+     */
+    piecesPerStoveLayer?: any | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BreadList
+     */
+    oneBatchCanBeBakedInMoreThanOneStove?: boolean;
+    /**
+     * Minimum number of pieces that should be baked for this bread on a baking day (e.g., to ensure that there are enough pieces for walk-in customers)
+     * @type {number}
+     * @memberof BreadList
+     */
+    minPieces?: number | null;
+    /**
+     * Maximum number of pieces that should be baked for this bread on a baking day (e.g., to limit the amount of bread that can be ordered for this bread)
+     * @type {number}
+     * @memberof BreadList
+     */
+    maxPieces?: number | null;
+    /**
+     * Minimum amount of breads that should remain available for this bread on a baking day (e.g., for walk-in customers)
+     * @type {number}
+     * @memberof BreadList
+     */
+    minRemainingPieces?: number | null;
+    /**
      * 
      * @type {boolean}
      * @memberof BreadList
      */
     isActive?: boolean;
-    /**
-     * 
-     * @type {Date}
-     * @memberof BreadList
-     */
-    readonly createdAt: Date;
-    /**
-     * 
-     * @type {Date}
-     * @memberof BreadList
-     */
-    readonly updatedAt: Date;
     /**
      * 
      * @type {Array<string>}
@@ -81,8 +99,6 @@ export interface BreadList {
 export function instanceOfBreadList(value: object): value is BreadList {
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('weight' in value) || value['weight'] === undefined) return false;
-    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
-    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     return true;
 }
 
@@ -101,9 +117,12 @@ export function BreadListFromJSONTyped(json: any, ignoreDiscriminator: boolean):
         'picture': json['picture'] == null ? undefined : json['picture'],
         'description': json['description'] == null ? undefined : json['description'],
         'weight': json['weight'],
+        'piecesPerStoveLayer': json['pieces_per_stove_layer'] == null ? undefined : json['pieces_per_stove_layer'],
+        'oneBatchCanBeBakedInMoreThanOneStove': json['one_batch_can_be_baked_in_more_than_one_stove'] == null ? undefined : json['one_batch_can_be_baked_in_more_than_one_stove'],
+        'minPieces': json['min_pieces'] == null ? undefined : json['min_pieces'],
+        'maxPieces': json['max_pieces'] == null ? undefined : json['max_pieces'],
+        'minRemainingPieces': json['min_remaining_pieces'] == null ? undefined : json['min_remaining_pieces'],
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
-        'createdAt': (new Date(json['created_at'])),
-        'updatedAt': (new Date(json['updated_at'])),
         'labels': json['labels'] == null ? undefined : json['labels'],
     };
 }
@@ -112,7 +131,7 @@ export function BreadListFromJSONTyped(json: any, ignoreDiscriminator: boolean):
       return BreadListToJSONTyped(json, false);
   }
 
-  export function BreadListToJSONTyped(value?: Omit<BreadList, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadListToJSONTyped(value?: BreadList | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -124,6 +143,11 @@ export function BreadListFromJSONTyped(json: any, ignoreDiscriminator: boolean):
         'picture': value['picture'],
         'description': value['description'],
         'weight': value['weight'],
+        'pieces_per_stove_layer': value['piecesPerStoveLayer'],
+        'one_batch_can_be_baked_in_more_than_one_stove': value['oneBatchCanBeBakedInMoreThanOneStove'],
+        'min_pieces': value['minPieces'],
+        'max_pieces': value['maxPieces'],
+        'min_remaining_pieces': value['minRemainingPieces'],
         'is_active': value['isActive'],
         'labels': value['labels'],
     };
