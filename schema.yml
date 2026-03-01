@@ -915,6 +915,66 @@ paths:
           description: ''
         '400':
           description: Invalid label IDs
+  /bakery/breads-per-pickup-location-per-week/:
+    get:
+      operationId: bakery_breads_per_pickup_location_per_week_list
+      description: Get all breads per pickup location per week, optionally filtered
+        by year/week/day
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadsPerPickupLocationPerWeek'
+          description: ''
+  /bakery/breads-per-pickup-location-per-week/{id}/:
+    get:
+      operationId: bakery_breads_per_pickup_location_per_week_retrieve
+      description: |-
+        ViewSet for viewing breads per pickup location per week.
+        Read-only - data is created by the solver.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der breads per pickup location per week
+          identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadsPerPickupLocationPerWeek'
+          description: ''
   /bakery/ingredients/:
     get:
       operationId: bakery_ingredients_list
@@ -1244,6 +1304,39 @@ paths:
       responses:
         '204':
           description: No response body
+  /bakery/metrics/satisfaction/:
+    get:
+      operationId: bakery_metrics_satisfaction_retrieve
+      description: 'Calculate preference satisfaction metrics for a given week. Simulates
+        pickup: members choose their first available favorite bread.'
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferenceSatisfactionResponse'
+          description: ''
   /bakery/preferred-breads/:
     get:
       operationId: bakery_preferred_breads_list
@@ -7345,6 +7438,22 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
+    BreadBreakdown:
+      type: object
+      properties:
+        bread_id:
+          type: string
+        bread_name:
+          type: string
+        count:
+          type: integer
+        directly_chosen:
+          type: integer
+      required:
+      - bread_id
+      - bread_name
+      - count
+      - directly_chosen
     BreadCapacityBulkUpdateRequest:
       type: object
       properties:
@@ -7841,6 +7950,45 @@ components:
       - deliveries
       - remaining
       - total
+    BreadsPerPickupLocationPerWeek:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        bread_name:
+          type: string
+          readOnly: true
+        pickup_location_name:
+          type: string
+          readOnly: true
+        delivery_day:
+          type: integer
+          readOnly: true
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        pickup_location:
+          type: string
+        bread:
+          type: string
+      required:
+      - bread
+      - bread_name
+      - delivery_day
+      - delivery_week
+      - pickup_location
+      - pickup_location_name
+      - year
     BuildCsvExportResponse:
       type: object
       properties:
@@ -9795,6 +9943,46 @@ components:
       description: |-
         * `de_DE.utf-8` - Deutsch (DE)
         * `en_US.utf-8` - English (US)
+    LocationMetrics:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+        pickup_location_name:
+          type: string
+        delivery_day:
+          type: integer
+        total_deliveries:
+          type: integer
+        directly_chosen:
+          type: integer
+        no_favorites:
+          type: integer
+        got_favorite:
+          type: integer
+        satisfied:
+          type: integer
+        satisfied_percentage:
+          type: number
+          format: double
+        no_match:
+          type: integer
+        bread_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreadBreakdown'
+      required:
+      - bread_breakdown
+      - delivery_day
+      - directly_chosen
+      - got_favorite
+      - no_favorites
+      - no_match
+      - pickup_location_id
+      - pickup_location_name
+      - satisfied
+      - satisfied_percentage
+      - total_deliveries
     MailCategory:
       type: object
       properties:
@@ -11541,6 +11729,15 @@ components:
             $ref: '#/components/schemas/PickupLocationDeliveryDay'
       required:
       - pickup_locations
+    PreferenceSatisfactionResponse:
+      type: object
+      properties:
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocationMetrics'
+      required:
+      - locations
     PreferredBread:
       type: object
       properties:
@@ -12282,7 +12479,7 @@ components:
         stove_sessions:
           type: array
           items:
-            $ref: '#/components/schemas/StoveSession'
+            $ref: '#/components/schemas/SolverStoveSession'
         distribution:
           type: array
           items:
@@ -12415,6 +12612,18 @@ components:
       - end_date
       - member
       - start_date
+    SolverStoveSession:
+      type: object
+      properties:
+        session:
+          type: integer
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoveLayer'
+      required:
+      - layers
+      - session
     StaticSegment:
       type: object
       properties:
@@ -12589,15 +12798,46 @@ components:
     StoveSession:
       type: object
       properties:
-        session:
+        id:
+          type: string
+          maxLength: 10
+        bread_name:
+          type: string
+          readOnly: true
+        year:
           type: integer
-        layers:
-          type: array
-          items:
-            $ref: '#/components/schemas/StoveLayer'
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_day:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        session_number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        layer_number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        bread:
+          type: string
+          nullable: true
       required:
-      - layers
-      - session
+      - bread_name
+      - delivery_day
+      - delivery_week
+      - layer_number
+      - session_number
+      - year
     Subscription:
       type: object
       properties:

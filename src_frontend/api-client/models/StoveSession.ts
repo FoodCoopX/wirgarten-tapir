@@ -13,14 +13,6 @@
  */
 
 import { mapValues } from '../runtime';
-import type { StoveLayer } from './StoveLayer';
-import {
-    StoveLayerFromJSON,
-    StoveLayerFromJSONTyped,
-    StoveLayerToJSON,
-    StoveLayerToJSONTyped,
-} from './StoveLayer';
-
 /**
  * 
  * @export
@@ -29,24 +21,70 @@ import {
 export interface StoveSession {
     /**
      * 
+     * @type {string}
+     * @memberof StoveSession
+     */
+    id?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof StoveSession
+     */
+    readonly breadName: string;
+    /**
+     * 
      * @type {number}
      * @memberof StoveSession
      */
-    session: number;
+    year: number;
     /**
      * 
-     * @type {Array<StoveLayer>}
+     * @type {number}
      * @memberof StoveSession
      */
-    layers: Array<StoveLayer>;
+    deliveryWeek: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof StoveSession
+     */
+    deliveryDay: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof StoveSession
+     */
+    sessionNumber: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof StoveSession
+     */
+    layerNumber: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof StoveSession
+     */
+    quantity?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof StoveSession
+     */
+    bread?: string | null;
 }
 
 /**
  * Check if a given object implements the StoveSession interface.
  */
 export function instanceOfStoveSession(value: object): value is StoveSession {
-    if (!('session' in value) || value['session'] === undefined) return false;
-    if (!('layers' in value) || value['layers'] === undefined) return false;
+    if (!('breadName' in value) || value['breadName'] === undefined) return false;
+    if (!('year' in value) || value['year'] === undefined) return false;
+    if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
+    if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
+    if (!('sessionNumber' in value) || value['sessionNumber'] === undefined) return false;
+    if (!('layerNumber' in value) || value['layerNumber'] === undefined) return false;
     return true;
 }
 
@@ -60,8 +98,15 @@ export function StoveSessionFromJSONTyped(json: any, ignoreDiscriminator: boolea
     }
     return {
         
-        'session': json['session'],
-        'layers': ((json['layers'] as Array<any>).map(StoveLayerFromJSON)),
+        'id': json['id'] == null ? undefined : json['id'],
+        'breadName': json['bread_name'],
+        'year': json['year'],
+        'deliveryWeek': json['delivery_week'],
+        'deliveryDay': json['delivery_day'],
+        'sessionNumber': json['session_number'],
+        'layerNumber': json['layer_number'],
+        'quantity': json['quantity'] == null ? undefined : json['quantity'],
+        'bread': json['bread'] == null ? undefined : json['bread'],
     };
 }
 
@@ -69,15 +114,21 @@ export function StoveSessionFromJSONTyped(json: any, ignoreDiscriminator: boolea
       return StoveSessionToJSONTyped(json, false);
   }
 
-  export function StoveSessionToJSONTyped(value?: StoveSession | null, ignoreDiscriminator: boolean = false): any {
+  export function StoveSessionToJSONTyped(value?: Omit<StoveSession, 'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'session': value['session'],
-        'layers': ((value['layers'] as Array<any>).map(StoveLayerToJSON)),
+        'id': value['id'],
+        'year': value['year'],
+        'delivery_week': value['deliveryWeek'],
+        'delivery_day': value['deliveryDay'],
+        'session_number': value['sessionNumber'],
+        'layer_number': value['layerNumber'],
+        'quantity': value['quantity'],
+        'bread': value['bread'],
     };
 }
 

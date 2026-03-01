@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -14,6 +16,7 @@ from tapir.bakery.models import (
 from tapir.bakery.serializers import (
     AbhollisteEntrySerializer,
     AvailableBreadsForDeliveryListResponseSerializer,
+    PreferenceSatisfactionResponseSerializer,
     RunSolverErrorSerializer,
     RunSolverRequestSerializer,
     RunSolverResponseSerializer,
@@ -351,3 +354,220 @@ class RunSolverView(APIView):
         serializer = RunSolverResponseSerializer(data=response_data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
+
+
+@extend_schema(tags=["bakery"])
+class PreferenceSatisfactionMetricsView(APIView):
+    """
+    Calculate preference satisfaction metrics from existing data.
+
+    For each pickup location, counts how many deliveries can be "satisfied":
+    - Directly chosen bread (hard constraint in solver) → satisfied
+    - Member has no favorites set → satisfied (everything is fine for them)
+    - Member has favorites → simulate pickup: first available favorite gets picked
+
+    The remaining deliveries are "no match" (member has favorites but none available).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="year", type=int, required=True),
+            OpenApiParameter(name="delivery_week", type=int, required=True),
+            OpenApiParameter(name="delivery_day", type=int, required=False),
+        ],
+        responses={200: PreferenceSatisfactionResponseSerializer},
+        description="Calculate preference satisfaction metrics for a given week. "
+        "Simulates pickup: members choose their first available favorite bread.",
+    )
+    def get(self, request: Request) -> Response:
+        from tapir.bakery.models import (
+            Bread,
+            BreadDelivery,
+            BreadsPerPickupLocationPerWeek,
+            PreferredBread,
+        )
+
+        year = request.query_params.get("year")
+        delivery_week = request.query_params.get("delivery_week")
+        delivery_day_param = request.query_params.get("delivery_day")
+
+        try:
+            year = int(year)
+            delivery_week = int(delivery_week)
+            delivery_day = int(delivery_day_param) if delivery_day_param else None
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Invalid parameter format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        deliveries_qs = BreadDelivery.objects.filter(
+            year=year,
+            delivery_week=delivery_week,
+        ).select_related(
+            "pickup_location",
+            "bread",
+            "subscription__member",
+        )
+
+        deliveries = list(deliveries_qs)
+
+        if delivery_day is not None:
+            deliveries = [
+                d for d in deliveries if d.pickup_location.delivery_day == delivery_day
+            ]
+
+        if not deliveries:
+            return Response({"locations": []})
+
+        location_ids = list(set(d.pickup_location_id for d in deliveries))
+
+        distribution_qs = BreadsPerPickupLocationPerWeek.objects.filter(
+            year=year,
+            delivery_week=delivery_week,
+            pickup_location_id__in=location_ids,
+        ).select_related("bread", "pickup_location")
+
+        distributed_breads_lookup = {
+            (d.bread_id, d.pickup_location_id): d.count for d in distribution_qs
+        }
+
+        bread_map = {b.id: b for b in Bread.objects.all()}
+
+        member_ids = [d.subscription.member_id for d in deliveries]
+        preferred_breads_qs = PreferredBread.objects.filter(
+            member_id__in=member_ids
+        ).prefetch_related("breads")
+
+        # member_id -> list of favorite bread ids (ordered)
+        # Members NOT in this dict have no PreferredBread entry at all
+        member_favorites = {}
+        for pref in preferred_breads_qs:
+            member_favorites[pref.member_id] = list(
+                pref.breads.values_list("id", flat=True)
+            )
+
+        deliveries_by_location = defaultdict(list)
+        for delivery in deliveries:
+            deliveries_by_location[delivery.pickup_location_id].append(delivery)
+
+        location_metrics = []
+
+        for location_id, location_deliveries in deliveries_by_location.items():
+            pickup_location = location_deliveries[0].pickup_location
+
+            # Available breads at this location (from solver)
+            available_breads_count = {}
+            bread_breakdown = defaultdict(lambda: {"count": 0, "directly_chosen": 0})
+
+            for (bread_id, loc_id), count in distributed_breads_lookup.items():
+                if loc_id == location_id:
+                    available_breads_count[bread_id] = count
+                    bread_breakdown[bread_id]["count"] = count
+
+            total_deliveries = len(location_deliveries)
+            directly_chosen_count = 0
+            no_favorites_count = 0
+            got_favorite_count = 0
+            no_match_count = 0
+
+            # 1) Process directly chosen breads first
+            for delivery in location_deliveries:
+                if delivery.bread_id:
+                    directly_chosen_count += 1
+
+                    if delivery.bread_id in available_breads_count:
+                        available_breads_count[delivery.bread_id] = max(
+                            0, available_breads_count[delivery.bread_id] - 1
+                        )
+
+                    if delivery.bread_id in bread_breakdown:
+                        bread_breakdown[delivery.bread_id]["directly_chosen"] += 1
+
+            # 2) Process unassigned deliveries
+            unassigned_deliveries = [d for d in location_deliveries if not d.bread_id]
+            unassigned_deliveries.sort(
+                key=lambda d: (
+                    d.subscription.member.last_name or "",
+                    d.subscription.member.first_name or "",
+                )
+            )
+
+            for delivery in unassigned_deliveries:
+                member = delivery.subscription.member
+
+                # Member has no favorites set → everything is fine for them
+                if member.id not in member_favorites:
+                    no_favorites_count += 1
+                    continue
+
+                favorite_bread_ids = member_favorites[member.id]
+
+                # Member has empty favorites list → same as no favorites
+                if not favorite_bread_ids:
+                    no_favorites_count += 1
+                    continue
+
+                # Try to assign first available favorite
+                assigned = False
+                for bread_id in favorite_bread_ids:
+                    if (
+                        bread_id in available_breads_count
+                        and available_breads_count[bread_id] > 0
+                    ):
+                        got_favorite_count += 1
+                        available_breads_count[bread_id] -= 1
+                        assigned = True
+                        break
+
+                if not assigned:
+                    no_match_count += 1
+
+            # "Satisfied" = directly chosen + no favorites (happy with anything) + got a favorite
+            satisfied_count = (
+                directly_chosen_count + no_favorites_count + got_favorite_count
+            )
+            satisfied_percentage = (
+                (satisfied_count / total_deliveries * 100)
+                if total_deliveries > 0
+                else 0.0
+            )
+
+            # Bread breakdown list (just count + directly_chosen now)
+            bread_breakdown_list = []
+            for bread_id, bd_data in bread_breakdown.items():
+                if bd_data["count"] > 0:
+                    bread_breakdown_list.append(
+                        {
+                            "bread_id": bread_id,
+                            "bread_name": bread_map[bread_id].name
+                            if bread_id in bread_map
+                            else "Unknown",
+                            "count": bd_data["count"],
+                            "directly_chosen": bd_data["directly_chosen"],
+                        }
+                    )
+
+            bread_breakdown_list.sort(key=lambda x: x["bread_name"])
+
+            location_metrics.append(
+                {
+                    "pickup_location_id": str(location_id),
+                    "pickup_location_name": pickup_location.name,
+                    "delivery_day": pickup_location.delivery_day,
+                    "total_deliveries": total_deliveries,
+                    "directly_chosen": directly_chosen_count,
+                    "no_favorites": no_favorites_count,
+                    "got_favorite": got_favorite_count,
+                    "satisfied": satisfied_count,
+                    "satisfied_percentage": round(satisfied_percentage, 1),
+                    "no_match": no_match_count,
+                    "bread_breakdown": bread_breakdown_list,
+                }
+            )
+
+        location_metrics.sort(key=lambda x: x["pickup_location_name"])
+
+        return Response({"locations": location_metrics})

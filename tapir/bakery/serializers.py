@@ -6,6 +6,7 @@ from tapir.bakery.models import (
     BreadContent,
     BreadDelivery,
     BreadLabel,
+    BreadsPerPickupLocationPerWeek,
     Ingredient,
     PreferredBread,
     PreferredLabel,
@@ -212,7 +213,7 @@ class StoveLayerSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
 
 
-class StoveSessionSerializer(serializers.Serializer):
+class SolverStoveSessionSerializer(serializers.Serializer):
     session = serializers.IntegerField()
     layers = StoveLayerSerializer(many=True)
 
@@ -248,7 +249,7 @@ class RunSolverResponseSerializer(serializers.Serializer):
     )
 
     quantities = BreadQuantitySerializer(many=True)
-    stove_sessions = StoveSessionSerializer(many=True)
+    stove_sessions = SolverStoveSessionSerializer(many=True)
     distribution = BreadDistributionSerializer(many=True)
 
 
@@ -256,9 +257,48 @@ class RunSolverErrorSerializer(serializers.Serializer):
     error = serializers.CharField()
 
 
-class StoveSerializer(serializers.ModelSerializer):
+class StoveSessionSerializer(serializers.ModelSerializer):
     bread_name = serializers.CharField(source="bread.name", read_only=True)
 
     class Meta:
         model = StoveSession
         fields = "__all__"
+
+
+class BreadsPerPickupLocationPerWeekSerializer(serializers.ModelSerializer):
+    bread_name = serializers.CharField(source="bread.name", read_only=True)
+    pickup_location_name = serializers.CharField(
+        source="pickup_location_day.pickup_location.name", read_only=True
+    )
+    delivery_day = serializers.IntegerField(
+        source="pickup_location_day.delivery_day", read_only=True
+    )
+
+    class Meta:
+        model = BreadsPerPickupLocationPerWeek
+        fields = "__all__"
+
+
+class BreadBreakdownSerializer(serializers.Serializer):
+    bread_id = serializers.CharField()
+    bread_name = serializers.CharField()
+    count = serializers.IntegerField()
+    directly_chosen = serializers.IntegerField()
+
+
+class LocationMetricsSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField()
+    pickup_location_name = serializers.CharField()
+    delivery_day = serializers.IntegerField()
+    total_deliveries = serializers.IntegerField()
+    directly_chosen = serializers.IntegerField()
+    no_favorites = serializers.IntegerField()
+    got_favorite = serializers.IntegerField()
+    satisfied = serializers.IntegerField()
+    satisfied_percentage = serializers.FloatField()
+    no_match = serializers.IntegerField()
+    bread_breakdown = BreadBreakdownSerializer(many=True)
+
+
+class PreferenceSatisfactionResponseSerializer(serializers.Serializer):
+    locations = LocationMetricsSerializer(many=True)

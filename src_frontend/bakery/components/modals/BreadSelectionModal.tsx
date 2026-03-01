@@ -115,7 +115,7 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
                     <div className="alert alert-warning">
                       <strong>Keine Brote verfügbar</strong>
                       <p className="mb-0">
-                        Für diese Abholstation und Woche sind keine Brote mit verfügbarer Kapazität vorhanden.
+                        Für diese Abholstation und Woche sind noch keine Brote mit verfügbarer Kapazität vorhanden.
                       </p>
                     </div>
                   ) : (

@@ -29,6 +29,7 @@ import type {
   BreadLabelRequest,
   BreadList,
   BreadListRequest,
+  BreadsPerPickupLocationPerWeek,
   DeliveryDaysResponse,
   Ingredient,
   IngredientRequest,
@@ -41,6 +42,7 @@ import type {
   PatchedPreferredBreadRequest,
   PatchedPreferredLabelRequest,
   PickupLocationsByDeliveryDayResponse,
+  PreferenceSatisfactionResponse,
   PreferredBread,
   PreferredBreadRequest,
   PreferredBreadsBulkUpdate,
@@ -85,6 +87,8 @@ import {
     BreadListToJSON,
     BreadListRequestFromJSON,
     BreadListRequestToJSON,
+    BreadsPerPickupLocationPerWeekFromJSON,
+    BreadsPerPickupLocationPerWeekToJSON,
     DeliveryDaysResponseFromJSON,
     DeliveryDaysResponseToJSON,
     IngredientFromJSON,
@@ -109,6 +113,8 @@ import {
     PatchedPreferredLabelRequestToJSON,
     PickupLocationsByDeliveryDayResponseFromJSON,
     PickupLocationsByDeliveryDayResponseToJSON,
+    PreferenceSatisfactionResponseFromJSON,
+    PreferenceSatisfactionResponseToJSON,
     PreferredBreadFromJSON,
     PreferredBreadToJSON,
     PreferredBreadRequestFromJSON,
@@ -285,6 +291,16 @@ export interface BakeryBreadsListUpdateRequest {
     breadListRequest: BreadListRequest;
 }
 
+export interface BakeryBreadsPerPickupLocationPerWeekListRequest {
+    deliveryDay?: number;
+    deliveryWeek?: number;
+    year?: number;
+}
+
+export interface BakeryBreadsPerPickupLocationPerWeekRetrieveRequest {
+    id: string;
+}
+
 export interface BakeryIngredientsCreateRequest {
     ingredientRequest: IngredientRequest;
 }
@@ -332,6 +348,12 @@ export interface BakeryLabelsRetrieveRequest {
 export interface BakeryLabelsUpdateRequest {
     id: string;
     breadLabelRequest: BreadLabelRequest;
+}
+
+export interface BakeryMetricsSatisfactionRetrieveRequest {
+    deliveryWeek: number;
+    year: number;
+    deliveryDay?: number;
 }
 
 export interface BakeryPreferredBreadsBulkUpdateCreateRequest {
@@ -1805,6 +1827,91 @@ export class BakeryApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get all breads per pickup location per week, optionally filtered by year/week/day
+     */
+    async bakeryBreadsPerPickupLocationPerWeekListRaw(requestParameters: BakeryBreadsPerPickupLocationPerWeekListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BreadsPerPickupLocationPerWeek>>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['deliveryDay'] != null) {
+            queryParameters['delivery_day'] = requestParameters['deliveryDay'];
+        }
+
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
+        }
+
+        if (requestParameters['year'] != null) {
+            queryParameters['year'] = requestParameters['year'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/breads-per-pickup-location-per-week/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(BreadsPerPickupLocationPerWeekFromJSON));
+    }
+
+    /**
+     * Get all breads per pickup location per week, optionally filtered by year/week/day
+     */
+    async bakeryBreadsPerPickupLocationPerWeekList(requestParameters: BakeryBreadsPerPickupLocationPerWeekListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BreadsPerPickupLocationPerWeek>> {
+        const response = await this.bakeryBreadsPerPickupLocationPerWeekListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ViewSet for viewing breads per pickup location per week. Read-only - data is created by the solver.
+     */
+    async bakeryBreadsPerPickupLocationPerWeekRetrieveRaw(requestParameters: BakeryBreadsPerPickupLocationPerWeekRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadsPerPickupLocationPerWeek>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryBreadsPerPickupLocationPerWeekRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/breads-per-pickup-location-per-week/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadsPerPickupLocationPerWeekFromJSON(jsonValue));
+    }
+
+    /**
+     * ViewSet for viewing breads per pickup location per week. Read-only - data is created by the solver.
+     */
+    async bakeryBreadsPerPickupLocationPerWeekRetrieve(requestParameters: BakeryBreadsPerPickupLocationPerWeekRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadsPerPickupLocationPerWeek> {
+        const response = await this.bakeryBreadsPerPickupLocationPerWeekRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * ViewSet for managing ingredients
      */
     async bakeryIngredientsCreateRaw(requestParameters: BakeryIngredientsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Ingredient>> {
@@ -2305,6 +2412,65 @@ export class BakeryApi extends runtime.BaseAPI {
      */
     async bakeryLabelsUpdate(requestParameters: BakeryLabelsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadLabel> {
         const response = await this.bakeryLabelsUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Calculate preference satisfaction metrics for a given week. Simulates pickup: members choose their first available favorite bread.
+     */
+    async bakeryMetricsSatisfactionRetrieveRaw(requestParameters: BakeryMetricsSatisfactionRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PreferenceSatisfactionResponse>> {
+        if (requestParameters['deliveryWeek'] == null) {
+            throw new runtime.RequiredError(
+                'deliveryWeek',
+                'Required parameter "deliveryWeek" was null or undefined when calling bakeryMetricsSatisfactionRetrieve().'
+            );
+        }
+
+        if (requestParameters['year'] == null) {
+            throw new runtime.RequiredError(
+                'year',
+                'Required parameter "year" was null or undefined when calling bakeryMetricsSatisfactionRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['deliveryDay'] != null) {
+            queryParameters['delivery_day'] = requestParameters['deliveryDay'];
+        }
+
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
+        }
+
+        if (requestParameters['year'] != null) {
+            queryParameters['year'] = requestParameters['year'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/metrics/satisfaction/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PreferenceSatisfactionResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Calculate preference satisfaction metrics for a given week. Simulates pickup: members choose their first available favorite bread.
+     */
+    async bakeryMetricsSatisfactionRetrieve(requestParameters: BakeryMetricsSatisfactionRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PreferenceSatisfactionResponse> {
+        const response = await this.bakeryMetricsSatisfactionRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

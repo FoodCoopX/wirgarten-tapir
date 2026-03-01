@@ -20,13 +20,13 @@ import {
     BreadDistributionToJSON,
     BreadDistributionToJSONTyped,
 } from './BreadDistribution';
-import type { StoveSession } from './StoveSession';
+import type { SolverStoveSession } from './SolverStoveSession';
 import {
-    StoveSessionFromJSON,
-    StoveSessionFromJSONTyped,
-    StoveSessionToJSON,
-    StoveSessionToJSONTyped,
-} from './StoveSession';
+    SolverStoveSessionFromJSON,
+    SolverStoveSessionFromJSONTyped,
+    SolverStoveSessionToJSON,
+    SolverStoveSessionToJSONTyped,
+} from './SolverStoveSession';
 import type { BreadQuantity } from './BreadQuantity';
 import {
     BreadQuantityFromJSON,
@@ -67,10 +67,10 @@ export interface RunSolverResponse {
     quantities: Array<BreadQuantity>;
     /**
      * 
-     * @type {Array<StoveSession>}
+     * @type {Array<SolverStoveSession>}
      * @memberof RunSolverResponse
      */
-    stoveSessions: Array<StoveSession>;
+    stoveSessions: Array<SolverStoveSession>;
     /**
      * 
      * @type {Array<BreadDistribution>}
@@ -106,7 +106,7 @@ export function RunSolverResponseFromJSONTyped(json: any, ignoreDiscriminator: b
         'totalDeliveries': json['total_deliveries'],
         'sessionsUsed': json['sessions_used'],
         'quantities': ((json['quantities'] as Array<any>).map(BreadQuantityFromJSON)),
-        'stoveSessions': ((json['stove_sessions'] as Array<any>).map(StoveSessionFromJSON)),
+        'stoveSessions': ((json['stove_sessions'] as Array<any>).map(SolverStoveSessionFromJSON)),
         'distribution': ((json['distribution'] as Array<any>).map(BreadDistributionFromJSON)),
     };
 }
@@ -126,7 +126,7 @@ export function RunSolverResponseFromJSONTyped(json: any, ignoreDiscriminator: b
         'total_deliveries': value['totalDeliveries'],
         'sessions_used': value['sessionsUsed'],
         'quantities': ((value['quantities'] as Array<any>).map(BreadQuantityToJSON)),
-        'stove_sessions': ((value['stoveSessions'] as Array<any>).map(StoveSessionToJSON)),
+        'stove_sessions': ((value['stoveSessions'] as Array<any>).map(SolverStoveSessionToJSON)),
         'distribution': ((value['distribution'] as Array<any>).map(BreadDistributionToJSON)),
     };
 }

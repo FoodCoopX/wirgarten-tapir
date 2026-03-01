@@ -166,14 +166,25 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       <div className="alert alert-info mb-3 mt-3">
         <strong>Du hast {maxBreads} Brot-Anteil{maxBreads !== 1 ? 'e' : ''} für diese Woche.</strong>
         <br />
-        <small>
+       <small>
           {chooseStationPerBread ? (
             <>
-              Hier kannst du für jeden Anteil den Abholort ändern (falls gewünscht) und eine verfügbare Brotsorte auswählen.
+              Hier kannst du für jeden Anteil den Abholort ändern (falls gewünscht).
+              {membersCanChooseBreadSorts && (
+                <>
+                  <br/>
+                  Hier kannst du auch eine verfügbare Brotsorte direkt auswählen für diese Lieferung.
+                </>
+              )}
             </>
           ) : (
             <>
-              Wähle den Abholort für alle deine Brote und anschließend die gewünschten Brotsorten.
+              Wähle den Abholort für alle deine Brote.
+              {membersCanChooseBreadSorts && (
+                <>
+                  {' '}Anschließend kannst du die gewünschten Brotsorten wählen.
+                </>
+              )}
             </>
           )}
         </small>
@@ -232,6 +243,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                   <hr />
 
                   {/* Bread Selection Section */}
+                  {membersCanChooseBreadSorts && (
                   <div>
                     <strong className="mb-2 d-block">Gewählte Brotsorte:</strong>
 
@@ -265,7 +277,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                         </button>
                       </div>
                     )}
-                  </div>
+                  </div>)}
                 </div>
               </div>
 

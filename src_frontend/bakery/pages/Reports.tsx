@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
 import { BakeryApi, PickupLocationsApi } from '../../api-client';
 import { useApi } from '../../hooks/useApi';
-import type { AbhollisteEntry, BreadDelivery, PickupLocation } from '../../api-client/models';
+import type { AbhollisteEntry, PickupLocation, StoveSession } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import { RunSolverCard } from '../components/cards/RunSolverCard';
+import { ChevronDown, ChevronRight } from 'react-bootstrap-icons';
+import { MetricsCard } from '../components/cards/MetricsCard';
 
 dayjs.extend(isoWeek);
 
@@ -21,6 +23,19 @@ const DAY_LABELS: Record<number, string> = {
   5: 'Samstag',
   6: 'Sonntag',
 };
+
+interface BreadCount {
+  breadId: string;
+  breadName: string;
+  pickupLocationId: string;
+  pickupLocationName: string;
+  count: number;
+}
+
+interface StoveSessionGrouped {
+  session: number;
+  layers: { layer: number; breadName: string | null; quantity: number }[];
+}
 
 interface ReportsProps {
   csrfToken: string;
@@ -38,21 +53,43 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const [deliveryDays, setDeliveryDays] = useState<number[]>([]);
   const [allPickupLocations, setAllPickupLocations] = useState<PickupLocation[]>([]);
 
-  const [breadSummaryByDay, setBreadSummaryByDay] = useState<Record<number, Record<string, number>>>({});
-  const [distributionByDay, setDistributionByDay] = useState<Record<number, Record<string, Record<string, number>>>>({});
+  // Data from BreadsPerPickupLocationPerWeek
+  const [breadCountsByDay, setBreadCountsByDay] = useState<Record<number, BreadCount[]>>({});
+  // Stove sessions
+  const [stoveSessionsByDay, setStoveSessionsByDay] = useState<Record<number, StoveSessionGrouped[]>>({});
+
+  // Store Abholliste data for all locations by day
+  const [abhollisteByDayByLocation, setAbhollisteByDayByLocation] = useState<
+    Record<number, Record<string, AbhollisteEntry[]>>
+  >({});
 
   const [selectedPickupLocationByDay, setSelectedPickupLocationByDay] = useState<Record<number, string>>({});
-  const [abhollisteByDay, setAbhollisteByDay] = useState<Record<number, AbhollisteEntry[]>>({});
   const [abhollisteLoadingByDay, setAbhollisteLoadingByDay] = useState<Record<number, boolean>>({});
   const [checkedByDay, setCheckedByDay] = useState<Record<number, Record<string, boolean>>>({});
+
+  // Toggle state per section per day
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (key: string) => {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const isSectionOpen = (key: string) => openSections[key] ?? false;
 
   useEffect(() => {
     loadInitialData();
   }, []);
 
   useEffect(() => {
-    loadBreadDeliveries();
-  }, [year, week]);
+    loadSolverResults();
+  }, [year, week, deliveryDays, allPickupLocations]);
+
+  // Load Abholliste for all pickup locations when year/week/deliveryDays change
+  useEffect(() => {
+    if (deliveryDays.length > 0 && allPickupLocations.length > 0) {
+      loadAllAbhollisten();
+    }
+  }, [year, week, deliveryDays, allPickupLocations]);
 
   const loadInitialData = async () => {
     setLoading(true);
@@ -71,69 +108,113 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     }
   };
 
+  const loadSolverResults = async () => {
+    if (deliveryDays.length === 0 || allPickupLocations.length === 0) return;
+
+    try {
+      // Load BreadsPerPickupLocationPerWeek for all days
+      const allBreadCounts = await bakeryApi.bakeryBreadsPerPickupLocationPerWeekList({
+        year,
+        deliveryWeek: week,
+      });
+
+      // Group by delivery day (via pickup location)
+      const countsByDay: Record<number, BreadCount[]> = {};
+      for (const entry of allBreadCounts) {
+        const pl = allPickupLocations.find(p => p.id === String(entry.pickupLocation));
+        if (!pl) continue;
+        const day = pl.deliveryDay;
+        if (day == null) continue;
+        countsByDay[day] ??= [];
+        countsByDay[day].push({
+          breadId: String(entry.bread),
+          breadName: entry.breadName || 'Unbekannt',
+          pickupLocationId: String(entry.pickupLocation),
+          pickupLocationName: pl.name,
+          count: entry.count!,
+        });
+      }
+      setBreadCountsByDay(countsByDay);
+
+      // Load stove sessions per day
+      const sessionsByDay: Record<number, StoveSessionGrouped[]> = {};
+      for (const day of deliveryDays) {
+        try {
+          const sessions = await bakeryApi.bakeryStoveSessionsList({
+            year,
+            deliveryWeek: week,
+            deliveryDay: day,
+          });
+
+          // Group by session number
+          const grouped: Record<number, StoveSessionGrouped> = {};
+          for (const s of sessions) {
+            grouped[s.sessionNumber] ??= { session: s.sessionNumber, layers: [] };
+            grouped[s.sessionNumber].layers.push({
+              layer: s.layerNumber,
+              breadName: s.breadName || null,
+              quantity: s.quantity!,
+            });
+          }
+          const sorted = Object.values(grouped).sort((a, b) => a.session - b.session);
+          sorted.forEach(s => s.layers.sort((a, b) => a.layer - b.layer));
+          if (sorted.length > 0) {
+            sessionsByDay[day] = sorted;
+          }
+        } catch {
+          // No sessions for this day
+        }
+      }
+      setStoveSessionsByDay(sessionsByDay);
+    } catch (error) {
+      console.error('Failed to load solver results:', error);
+    }
+  };
+
+  // Load Abholliste for all pickup locations (for Verteilliste aggregation)
+  const loadAllAbhollisten = async () => {
+    setAbhollisteLoadingByDay(
+      deliveryDays.reduce((acc, day) => ({ ...acc, [day]: true }), {})
+    );
+
+    const dataByDayByLocation: Record<number, Record<string, AbhollisteEntry[]>> = {};
+
+    for (const day of deliveryDays) {
+      dataByDayByLocation[day] = {};
+      const dayLocations = getPickupLocationsForDay(day);
+
+      await Promise.all(
+        dayLocations.map(async (pl) => {
+          try {
+            const data = await bakeryApi.bakeryAbhollisteList({
+              year,
+              week,
+              pickupLocationId: pl.id!,
+            });
+            dataByDayByLocation[day][pl.id!] = data;
+          } catch (error) {
+            console.error(`Failed to load Abholliste for ${pl.name}:`, error);
+            dataByDayByLocation[day][pl.id!] = [];
+          }
+        })
+      );
+    }
+
+    setAbhollisteByDayByLocation(dataByDayByLocation);
+    setAbhollisteLoadingByDay(
+      deliveryDays.reduce((acc, day) => ({ ...acc, [day]: false }), {})
+    );
+  };
+
   const getPickupLocationsForDay = (day: number): PickupLocation[] =>
     allPickupLocations.filter(pl => pl.deliveryDay === day);
-
-  console.log("allPickupLocations", allPickupLocations);
 
   const getDateForDay = (day: number): string =>
     dayjs().year(year).isoWeek(week).isoWeekday(day).format('DD.MM.YYYY');
 
-  const loadBreadDeliveries = async () => {
-    try {
-      const data = await bakeryApi.bakeryBreadDeliveriesList({ year, deliveryWeek: week });
-
-      const summary: Record<number, Record<string, number>> = {};
-      const dist: Record<number, Record<string, Record<string, number>>> = {};
-
-      data.forEach(({ deliveryDay, breadName: bn, pickupLocationName: pln }) => {
-        if (deliveryDay == null) return;
-        const bread_name = bn || 'Unbekannt';
-        const location = pln || 'Unbekannt';
-
-        summary[deliveryDay] ??= {};
-        summary[deliveryDay][bread_name] = (summary[deliveryDay][bread_name] || 0) + 1;
-
-        dist[deliveryDay] ??= {};
-        dist[deliveryDay][location] ??= {};
-        dist[deliveryDay][location][bread_name] = (dist[deliveryDay][location][bread_name] || 0) + 1;
-      });
-
-      setBreadSummaryByDay(summary);
-      setDistributionByDay(dist);
-    } catch (error) {
-      console.error('Failed to load bread deliveries:', error);
-    }
-  };
-
-  const loadAbholliste = useCallback(async (day: number, pickupLocationId: string) => {
-    if (!pickupLocationId) {
-      setAbhollisteByDay(prev => ({ ...prev, [day]: [] }));
-      return;
-    }
-    setAbhollisteLoadingByDay(prev => ({ ...prev, [day]: true }));
-    try {
-      const data = await bakeryApi.bakeryAbhollisteList({ year, week, pickupLocationId });
-      setAbhollisteByDay(prev => ({ ...prev, [day]: data }));
-      setCheckedByDay(prev => ({ ...prev, [day]: {} }));
-    } catch (error) {
-      console.error('Failed to load Abholliste:', error);
-      setAbhollisteByDay(prev => ({ ...prev, [day]: [] }));
-    } finally {
-      setAbhollisteLoadingByDay(prev => ({ ...prev, [day]: false }));
-    }
-  }, [year, week]);
-
-  // Reload abholliste when year/week changes
-  useEffect(() => {
-    Object.entries(selectedPickupLocationByDay).forEach(([dayStr, locationId]) => {
-      if (locationId) loadAbholliste(parseInt(dayStr), locationId);
-    });
-  }, [year, week, loadAbholliste]);
-
   const handlePickupLocationChange = (day: number, pickupLocationId: string) => {
     setSelectedPickupLocationByDay(prev => ({ ...prev, [day]: pickupLocationId }));
-    loadAbholliste(day, pickupLocationId);
+    setCheckedByDay(prev => ({ ...prev, [day]: {} }));
   };
 
   const handleCheckToggle = (day: number, memberId: string) => {
@@ -186,6 +267,18 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     );
   };
 
+  const SectionToggle = ({ sectionKey, title, icon }: { sectionKey: string; title: string; icon: string }) => (
+    <h6
+      className="d-flex align-items-center mb-2"
+      style={{ cursor: 'pointer', userSelect: 'none' }}
+      onClick={() => toggleSection(sectionKey)}
+    >
+      {isSectionOpen(sectionKey) ? <ChevronDown size={16} className="me-1" /> : <ChevronRight size={16} className="me-1" />}
+      <span className="material-icons me-2" style={{ fontSize: '18px' }}>{icon}</span>
+      {title}
+    </h6>
+  );
+
   return (
     <div className="container-fluid mt-4 px-5">
       <h2 className="mb-4">Berichte & Listen</h2>
@@ -198,7 +291,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
           />
         </div>
       </div>
-     
 
       <div className="row">
         {loading ? (
@@ -212,17 +304,71 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
           </div>
         ) : (
           deliveryDays.map((day) => {
-            const daySummary = breadSummaryByDay[day] || {};
-            const totalBreads = Object.values(daySummary).reduce((s, c) => s + c, 0);
-            const dayDistribution = distributionByDay[day] || {};
+            const dayCounts = breadCountsByDay[day] || [];
+            const daySessions = stoveSessionsByDay[day] || [];
+
+            // Calculate deliveries from distribution
+            const breadDeliveries: Record<string, number> = {};
+            dayCounts.forEach(c => {
+              breadDeliveries[c.breadName] = (breadDeliveries[c.breadName] || 0) + c.count;
+            });
+
+            // Calculate total baked from stove sessions
+            const breadBaked: Record<string, number> = {};
+            daySessions.forEach(session => {
+              session.layers.forEach(layer => {
+                if (layer.breadName) {
+                  breadBaked[layer.breadName] = (breadBaked[layer.breadName] || 0) + layer.quantity;
+                }
+              });
+            });
+
+            // Combine all bread names
+            const allBreadNames = [...new Set([...Object.keys(breadDeliveries), ...Object.keys(breadBaked)])].sort();
+
+            // Calculate totals
+            const totalDeliveries = Object.values(breadDeliveries).reduce((s, c) => s + c, 0);
+            const totalBaked = Object.values(breadBaked).reduce((s, c) => s + c, 0);
+            const totalExtra = totalBaked - totalDeliveries;
+
+            // Verteilliste: Use solver results if available, otherwise aggregate from Abholliste
+            const locationBreads: Record<string, Record<string, number>> = {};
+            const hasSolverResults = dayCounts.length > 0;
+
+            if (hasSolverResults) {
+              // Use solver results
+              dayCounts.forEach(c => {
+                locationBreads[c.pickupLocationName] ??= {};
+                locationBreads[c.pickupLocationName][c.breadName] = 
+                  (locationBreads[c.pickupLocationName][c.breadName] || 0) + c.count;
+              });
+            } else {
+              // Aggregate from Abholliste data
+              const dayAbhollistenByLocation = abhollisteByDayByLocation[day] || {};
+              Object.entries(dayAbhollistenByLocation).forEach(([locationId, entries]) => {
+                const location = allPickupLocations.find(pl => pl.id === locationId);
+                if (!location) return;
+
+                locationBreads[location.name] = {};
+                entries.forEach(entry => {
+                  entry.breads.forEach(b => {
+                    const breadName = b.bread_name || 'Unbekannt';
+                    locationBreads[location.name][breadName] = 
+                      (locationBreads[location.name][breadName] || 0) + 1;
+                  });
+                });
+              });
+            }
 
             const distBreadNames = [...new Set(
-              Object.values(dayDistribution).flatMap(loc => Object.keys(loc))
+              Object.values(locationBreads).flatMap(breads => Object.keys(breads))
             )].sort();
 
             const dayPickupLocations = getPickupLocationsForDay(day);
             const selectedLocation = selectedPickupLocationByDay[day] || '';
-            const abholliste = abhollisteByDay[day] || [];
+            const abholliste = selectedLocation 
+              ? (abhollisteByDayByLocation[day]?.[selectedLocation] || [])
+              : [];
             const abhollisteLoading = abhollisteLoadingByDay[day] || false;
             const dayChecked = checkedByDay[day] || {};
 
@@ -230,7 +376,12 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
               abholliste.flatMap(e => e.breads.map(b => b.bread_name).filter(Boolean) as string[])
             )].sort();
 
+            const backlisteKey = `backliste-${day}`;
+            const ofenplanKey = `ofenplan-${day}`;
+            const verteillisteKey = `verteilliste-${day}`;
+            const abhollisteKey = `abholliste-${day}`;
 
+            const metricsKey = `metrics-${day}`;
 
             return (
               <div key={day} className="col-lg-4 mb-4">
@@ -243,198 +394,330 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       </div>
                       <small>KW {week}</small>
                     </div>
-                     <div className="mb-4">
-                      <RunSolverCard
-                        year={year}
-                        deliveryWeek={week}
-                        deliveryDay={day}
-                        csrfToken={csrfToken}
-                      />
-                    </div>
+                    <RunSolverCard
+                      year={year}
+                      deliveryWeek={week}
+                      deliveryDay={day}
+                      csrfToken={csrfToken}
+                      onSuccess={loadSolverResults}
+                    />
                   </div>
 
                   <div className="card-body">
                     {/* Backliste */}
-                    <div className="mb-4">
-                      <h6 className="d-flex align-items-center mb-2">
-                        <span className="material-icons me-2" style={{ fontSize: '18px' }}>bakery_dining</span>
-                        Backliste
-                      </h6>
-                      <p className="text-muted small mb-2">Liste aller zu backenden Brote</p>
+                    <div className="mb-3">
+                      <SectionToggle sectionKey={backlisteKey} title="Backliste" icon="bakery_dining" />
+                      <p className="text-muted small mb-2">Vergleich: Zuweisung vs. Ofenproduktion</p>
 
-                      {Object.keys(daySummary).length > 0 && (
-                        <div className="table-responsive mb-3">
-                          <table className="table table-sm table-striped">
-                            <thead style={{ backgroundColor: '#F5E6D3', fontSize: '0.85rem' }}>
-                              <tr><th>Brotsorte</th><th className="text-end">Anzahl</th></tr>
-                            </thead>
-                            <tbody style={{ fontSize: '0.9rem' }}>
-                              {Object.entries(daySummary).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => (
-                                <tr key={name}>
-                                  <td>{name}</td>
-                                  <td className="text-end"><strong style={{ color: '#8B4513' }}>{count}</strong></td>
-                                </tr>
-                              ))}
-                              <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
-                                <td>Gesamt</td><td className="text-end">{totalBreads}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
+                      {isSectionOpen(backlisteKey) && (
+                        <>
+                          {allBreadNames.length > 0 ? (<>
+                            <div className="table-responsive mb-3">
+                              <table className="table table-sm table-striped" style={{ fontSize: '0.8rem' }}>
+                                <thead style={{ backgroundColor: '#F5E6D3', fontSize: '0.8rem' }}>
+                                  <tr>
+                                    <th>Brotsorte</th>
+                                    <th className="text-end" title="Zuweisung zu Verteilstationen">
+                                      <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>local_shipping</span>
+                                    </th>
+                                    <th className="text-end" title="Extra (Reserve/Verkauf)">
+                                      <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>add_circle</span>
+                                    </th>
+                                    <th className="text-end" title="Gesamt im Ofen gebacken">
+                                      <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>local_fire_department</span>
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {allBreadNames.map((name) => {
+                                    const deliveries = breadDeliveries[name] || 0;
+                                    const baked = breadBaked[name] || 0;
+                                    const extra = baked - deliveries;
+                                    return (
+                                      <tr key={name}>
+                                        <td>{name}</td>
+                                        <td className="text-end">{deliveries}</td>
+                                        <td className="text-end" style={{ color: extra > 0 ? '#28a745' : '#6c757d' }}>
+                                          {extra > 0 ? `+${extra}` : extra}
+                                        </td>
+                                        <td className="text-end">
+                                          <strong style={{ color: '#8B4513' }}>{baked}</strong>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                  <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
+                                    <td>Gesamt</td>
+                                    <td className="text-end">{totalDeliveries}</td>
+                                    <td className="text-end" style={{ color: totalExtra > 0 ? '#28a745' : '#6c757d' }}>
+                                      {totalExtra > 0 ? `+${totalExtra}` : totalExtra}
+                                    </td>
+                                    <td className="text-end">{totalBaked}</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              <div className="text-muted small">
+                                <p className="mb-1">
+                                  <span className="material-icons" style={{ fontSize: '12px', verticalAlign: 'middle' }}>local_shipping</span> = Zuweisung zu Verteilstationen
+                                </p>
+                                <p className="mb-1">
+                                  <span className="material-icons" style={{ fontSize: '12px', verticalAlign: 'middle' }}>add_circle</span> = Extra (Reserve/Verkauf)
+                                </p>
+                                <p className="mb-0" >
+                                  <span className="material-icons" style={{ fontSize: '12px', verticalAlign: 'middle' }}>local_fire_department</span> = Gesamt im Ofen gebacken
+                                </p>
+                              </div>
+                            </div><ActionButtons reportType="backliste" day={day} label="Backliste" />
+                            </>
+                          ) : (
+                            <p className="text-muted small text-center py-2">
+                              Noch kein Backplan berechnet.
+                            </p>
+                          )}
+                          
+                        </>
                       )}
-                      <ActionButtons reportType="backliste" day={day} label="Backliste" />
+                    </div>
+
+                    <hr />
+                    {/* Metrics Section */}
+                    <div className="mb-3">
+                      <SectionToggle 
+                        sectionKey={metricsKey} 
+                        title="Präferenz-Zufriedenheit" 
+                        icon="favorite" 
+                      />
+                      <p className="text-muted small mb-2">
+                        Wie gut entspricht der Backplan den Mitgliederwünschen?
+                      </p>
+                      
+                       
+                      {isSectionOpen(metricsKey) && (
+                        
+                        <MetricsCard year={year} week={week} deliveryDay={day} csrfToken={csrfToken} />
+                      )}
+                    </div>
+
+                    <hr />
+
+
+                    {/* Ofenplan */}
+                    <div className="mb-3">
+                      <SectionToggle sectionKey={ofenplanKey} title="Ofenplan" icon="local_fire_department" />
+                      <p className="text-muted small mb-2">Belegung der Ofengänge</p>
+
+                      {isSectionOpen(ofenplanKey) && (
+                        <>
+                          {daySessions.length > 0 ? (
+                            <div className="d-flex flex-column gap-2 mb-3">
+                              {daySessions.map((session) => (
+                                <div key={session.session} className="card">
+                                  <div
+                                    className="card-header py-1"
+                                    style={{ backgroundColor: '#D4A574', color: 'white' }}
+                                  >
+                                    <small className="fw-bold">Ofengang {session.session}</small>
+                                  </div>
+                                  <ul className="list-group list-group-flush">
+                                    {session.layers.map((layer) => (
+                                      <li key={layer.layer} className="list-group-item py-1 small">
+                                        <span className="text-muted">Etage {layer.layer}:</span>{' '}
+                                        {layer.breadName ? (
+                                          <span>
+                                            {layer.breadName}{' '}
+                                            <span className="badge bg-secondary">×{layer.quantity}</span>
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted fst-italic">leer</span>
+                                        )}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-muted small text-center py-2">
+                              Noch kein Ofenplan berechnet.
+                            </p>
+                          )}
+                        </>
+                      )}
                     </div>
 
                     <hr />
 
                     {/* Verteilliste */}
-                    <div className="mb-4">
-                      <h6 className="d-flex align-items-center mb-2">
-                        <span className="material-icons me-2" style={{ fontSize: '18px' }}>warehouse</span>
-                        Verteilliste
-                      </h6>
-                      <p className="text-muted small mb-2">Brote pro Abholstation</p>
+                    <div className="mb-3">
+                      <SectionToggle sectionKey={verteillisteKey} title="Verteilliste" icon="warehouse" />
+                      <p className="text-muted small mb-2">
+                        {hasSolverResults 
+                          ? 'Brote pro Abholstation (lt. Backplan)' 
+                          : 'Brote pro Abholstation (lt. Mitgliederbestellungen)'}
+                      </p>
 
-                      {Object.keys(dayDistribution).length > 0 && (
-                        <div className="table-responsive mb-3">
-                          <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
-                            <thead style={{ backgroundColor: '#F5E6D3' }}>
-                              <tr>
-                                <th>Station</th>
-                                {distBreadNames.map(name => (
-                                  <th key={name} className="text-center" style={{
-                                    writingMode: 'vertical-rl', transform: 'rotate(180deg)',
-                                    minWidth: '30px', maxWidth: '30px', padding: '8px 4px', fontSize: '0.75rem',
-                                  }}>{name}</th>
-                                ))}
-                                <th className="text-center">Σ</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Object.entries(dayDistribution).sort(([a], [b]) => a.localeCompare(b)).map(([loc, breads]) => {
-                                const total = Object.values(breads).reduce((s, c) => s + c, 0);
-                                return (
-                                  <tr key={loc}>
-                                    <td style={{ fontSize: '0.75rem' }}>{loc}</td>
-                                    {distBreadNames.map(name => (
-                                      <td key={name} className="text-center">{breads[name] || '-'}</td>
-                                    ))}
-                                    <td className="text-center" style={{ fontWeight: 'bold', backgroundColor: '#F5E6D3' }}>{total}</td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
+                      {isSectionOpen(verteillisteKey) && (
+                        <>
+                          {abhollisteLoading ? (
+                            <div className="text-center py-3">
+                              <div className="spinner-border spinner-border-sm" style={{ color: '#D4A574' }} />
+                              <p className="mt-1 text-muted small">Lade Daten...</p>
+                            </div>
+                          ) : Object.keys(locationBreads).length > 0 ? (
+                            <>
+                              {!hasSolverResults && (
+                                <div className="alert alert-info alert-sm mb-2" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
+                                  <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>info</span>
+                                  {' '}Basierend auf Mitgliederbestellungen (noch kein Backplan)
+                                </div>
+                              )}
+                              <div className="table-responsive mb-3">
+                                <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
+                                  <thead style={{ backgroundColor: '#F5E6D3' }}>
+                                    <tr>
+                                      <th>Station</th>
+                                      {distBreadNames.map(name => (
+                                        <th key={name} className="text-center" style={{
+                                          writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+                                          minWidth: '30px', maxWidth: '30px', padding: '8px 4px', fontSize: '0.75rem',
+                                        }}>{name}</th>
+                                      ))}
+                                      <th className="text-center">Σ</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {Object.entries(locationBreads).sort(([a], [b]) => a.localeCompare(b)).map(([loc, breads]) => {
+                                      const total = Object.values(breads).reduce((s, c) => s + c, 0);
+                                      return (
+                                        <tr key={loc}>
+                                          <td style={{ fontSize: '0.75rem' }}>{loc}</td>
+                                          {distBreadNames.map(name => (
+                                            <td key={name} className="text-center">{breads[name] || '-'}</td>
+                                          ))}
+                                          <td className="text-center" style={{ fontWeight: 'bold', backgroundColor: '#F5E6D3' }}>{total}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </>
+                          ) : (
+                            <p className="text-muted small text-center py-2">
+                              Keine Daten verfügbar.
+                            </p>
+                          )}
+                          <ActionButtons reportType="verteilungsliste" day={day} label="Verteilliste" />
+                        </>
                       )}
-                      <ActionButtons reportType="verteilungsliste" day={day} label="Verteilliste" />
                     </div>
 
                     <hr />
 
                     {/* Abholliste */}
                     <div>
-                      <h6 className="d-flex align-items-center mb-2">
-                        <span className="material-icons me-2" style={{ fontSize: '18px' }}>local_shipping</span>
-                        Abholliste
-                      </h6>
+                      <SectionToggle sectionKey={abhollisteKey} title="Abholliste" icon="local_shipping" />
                       <p className="text-muted small mb-2">Brote pro Mitglied am Abholort</p>
 
-                      <div className="mb-3">
-                        <select
-                          className="form-select form-select-sm"
-                          value={selectedLocation}
-                          onChange={(e) => handlePickupLocationChange(day, e.target.value)}
-                        >
-                          <option value="">Abholort auswählen...</option>
-                          {dayPickupLocations.map(pl => (
-                            <option key={pl.id} value={pl.id}>{pl.name}</option>
-                          ))}
-                        </select>
-                      </div>
+                      {isSectionOpen(abhollisteKey) && (
+                        <>
+                          <div className="mb-3">
+                            <select
+                              className="form-select form-select-sm"
+                              value={selectedLocation}
+                              onChange={(e) => handlePickupLocationChange(day, e.target.value)}
+                            >
+                              <option value="">Abholort auswählen...</option>
+                              {dayPickupLocations.map(pl => (
+                                <option key={pl.id} value={pl.id}>{pl.name}</option>
+                              ))}
+                            </select>
+                          </div>
 
-                      {abhollisteLoading ? (
-                        <div className="text-center py-3">
-                          <div className="spinner-border spinner-border-sm" style={{ color: '#D4A574' }} />
-                          <p className="mt-1 text-muted small">Lade Abholliste...</p>
-                        </div>
-                      ) : selectedLocation && abholliste.length > 0 ? (
-                        <div className="table-responsive mb-3">
-                          <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
-                            <thead style={{ backgroundColor: '#F5E6D3' }}>
-                              <tr>
-                                <th className="text-center" style={{ width: '30px' }}>#</th>
-                                <th>Name</th>
-                                <th className="text-center" style={{ width: '40px' }}>Σ</th>
-                                <th className="text-center" style={{ width: '30px' }}>
-                                  <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
-                                </th>
-                                {abhollisteBreadNames.map(name => (
-                                  <th key={name} className="text-center" style={{
-                                    writingMode: 'vertical-rl', transform: 'rotate(180deg)',
-                                    minWidth: '28px', maxWidth: '28px', padding: '8px 2px', fontSize: '0.7rem',
-                                  }}>{name}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {abholliste.map((entry, index) => {
-                                const breadCounts: Record<string, number> = {};
-                                entry.breads.forEach(b => {
-                                  if (b.bread_name) breadCounts[b.bread_name] = (breadCounts[b.bread_name] || 0) + 1;
-                                });
-                                const isChecked = dayChecked[entry.memberId] || false;
-
-                                return (
-                                  <tr key={entry.memberId} style={{
-                                    backgroundColor: isChecked ? '#d4edda' : undefined,
-                                    textDecoration: isChecked ? 'line-through' : undefined,
-                                    opacity: isChecked ? 0.7 : 1,
-                                  }}>
-                                    <td className="text-center text-muted">{index + 1}</td>
-                                    <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{entry.displayName}</td>
-                                    <td className="text-center">
-                                      <strong style={{ color: '#8B4513' }}>{entry.totalBreads}</strong>
-                                    </td>
-                                    <td className="text-center">
-                                      <input
-                                        type="checkbox" className="form-check-input"
-                                        checked={isChecked}
-                                        onChange={() => handleCheckToggle(day, entry.memberId)}
-                                        style={{ cursor: 'pointer' }}
-                                      />
-                                    </td>
+                          {abhollisteLoading ? (
+                            <div className="text-center py-3">
+                              <div className="spinner-border spinner-border-sm" style={{ color: '#D4A574' }} />
+                              <p className="mt-1 text-muted small">Lade Abholliste...</p>
+                            </div>
+                          ) : selectedLocation && abholliste.length > 0 ? (
+                            <div className="table-responsive mb-3">
+                              <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
+                                <thead style={{ backgroundColor: '#F5E6D3' }}>
+                                  <tr>
+                                    <th className="text-center" style={{ width: '30px' }}>#</th>
+                                    <th>Name</th>
+                                    <th className="text-center" style={{ width: '40px' }}>Σ</th>
+                                    <th className="text-center" style={{ width: '30px' }}>
+                                      <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
+                                    </th>
                                     {abhollisteBreadNames.map(name => (
-                                      <td key={name} className="text-center">{breadCounts[name] || '-'}</td>
+                                      <th key={name} className="text-center" style={{
+                                        writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+                                        minWidth: '28px', maxWidth: '28px', padding: '8px 2px', fontSize: '0.7rem',
+                                      }}>{name}</th>
                                     ))}
                                   </tr>
-                                );
-                              })}
-                              <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
-                                <td />
-                                <td>Gesamt</td>
-                                <td className="text-center">
-                                  {abholliste.reduce((sum, e) => sum + e.totalBreads, 0)}
-                                </td>
-                                <td className="text-center">
-                                  {Object.values(dayChecked).filter(Boolean).length}/{abholliste.length}
-                                </td>
-                                {abhollisteBreadNames.map(name => {
-                                  const total = abholliste.reduce((sum, e) =>
-                                    sum + e.breads.filter(b => b.bread_name === name).length, 0);
-                                  return <td key={name} className="text-center">{total}</td>;
-                                })}
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      ) : selectedLocation ? (
-                        <p className="text-muted small text-center py-2">
-                          Keine Brotbestellungen für diesen Abholort.
-                        </p>
-                      ) : null}
+                                </thead>
+                                <tbody>
+                                  {abholliste.map((entry, index) => {
+                                    const breadCounts: Record<string, number> = {};
+                                    entry.breads.forEach(b => {
+                                      if (b.bread_name) breadCounts[b.bread_name] = (breadCounts[b.bread_name] || 0) + 1;
+                                    });
+                                    const isChecked = dayChecked[entry.memberId] || false;
 
-                      <ActionButtons reportType="abholliste" day={day} label="Abholliste" />
+                                    return (
+                                      <tr key={entry.memberId} style={{
+                                        backgroundColor: isChecked ? '#d4edda' : undefined,
+                                        textDecoration: isChecked ? 'line-through' : undefined,
+                                        opacity: isChecked ? 0.7 : 1,
+                                      }}>
+                                        <td className="text-center text-muted">{index + 1}</td>
+                                        <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{entry.displayName}</td>
+                                        <td className="text-center">
+                                          <strong style={{ color: '#8B4513' }}>{entry.totalBreads}</strong>
+                                        </td>
+                                        <td className="text-center">
+                                          <input
+                                            type="checkbox" className="form-check-input"
+                                            checked={isChecked}
+                                            onChange={() => handleCheckToggle(day, entry.memberId)}
+                                            style={{ cursor: 'pointer' }}
+                                          />
+                                        </td>
+                                        {abhollisteBreadNames.map(name => (
+                                          <td key={name} className="text-center">{breadCounts[name] || '-'}</td>
+                                        ))}
+                                      </tr>
+                                    );
+                                  })}
+                                  <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
+                                    <td />
+                                    <td>Gesamt</td>
+                                    <td className="text-center">
+                                      {abholliste.reduce((sum, e) => sum + e.totalBreads, 0)}
+                                    </td>
+                                    <td className="text-center">
+                                      {Object.values(dayChecked).filter(Boolean).length}/{abholliste.length}
+                                    </td>
+                                    {abhollisteBreadNames.map(name => {
+                                      const total = abholliste.reduce((sum, e) =>
+                                        sum + e.breads.filter(b => b.bread_name === name).length, 0);
+                                      return <td key={name} className="text-center">{total}</td>;
+                                    })}
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : selectedLocation ? (
+                            <p className="text-muted small text-center py-2">
+                              Keine Brotbestellungen für diesen Abholort.
+                            </p>
+                          ) : null}
+
+                          <ActionButtons reportType="abholliste" day={day} label="Abholliste" />
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

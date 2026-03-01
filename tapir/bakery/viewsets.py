@@ -11,6 +11,7 @@ from tapir.bakery.models import (
     BreadContent,
     BreadDelivery,
     BreadLabel,
+    BreadsPerPickupLocationPerWeek,
     Ingredient,
     PreferredBread,
     PreferredLabel,
@@ -24,6 +25,7 @@ from tapir.bakery.serializers import (
     BreadDetailSerializer,
     BreadLabelSerializer,
     BreadListSerializer,
+    BreadsPerPickupLocationPerWeekSerializer,
     IngredientSerializer,
     PreferredBreadsBulkUpdateSerializer,
     PreferredBreadSerializer,
@@ -544,3 +546,67 @@ class StoveSessionViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(delivery_day=delivery_day)
 
         return queryset.order_by("session_number", "layer_number")
+
+
+@extend_schema(tags=["bakery"])
+class BreadsPerPickupLocationPerWeekViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for viewing breads per pickup location per week.
+    Read-only - data is created by the solver.
+    """
+
+    queryset = BreadsPerPickupLocationPerWeek.objects.select_related(
+        "bread", "pickup_location"
+    ).all()
+    serializer_class = BreadsPerPickupLocationPerWeekSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="year",
+                type=int,
+                required=False,
+            ),
+            OpenApiParameter(
+                name="delivery_week",
+                type=int,
+                required=False,
+            ),
+            OpenApiParameter(
+                name="delivery_day",
+                type=int,
+                required=False,
+            ),
+        ],
+        responses={200: BreadsPerPickupLocationPerWeekSerializer(many=True)},
+    )
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        """Get all breads per pickup location per week, optionally filtered by year/week/day"""
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        """Filter by year, week, and day if provided"""
+        queryset = super().get_queryset()
+
+        year = self.request.query_params.get("year")
+        delivery_week = self.request.query_params.get("delivery_week")
+        delivery_day = self.request.query_params.get("delivery_day")
+
+        if year is not None:
+            queryset = queryset.filter(year=year)
+        if delivery_week is not None:
+            queryset = queryset.filter(delivery_week=delivery_week)
+        if delivery_day is not None:
+            delivery_day_int = int(delivery_day)
+            # Get all pickup location IDs that match this delivery day
+            from tapir.bakery.models import PickupLocation
+
+            pickup_location_ids = [
+                pl.id
+                for pl in PickupLocation.objects.all()
+                if pl.delivery_day == delivery_day_int
+            ]
+            queryset = queryset.filter(pickup_location_id__in=pickup_location_ids)
+
+        return queryset.order_by("bread__name")

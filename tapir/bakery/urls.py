@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from tapir.bakery.views import (
     AbhollisteView,
     AvailableBreadsForDeliveryListView,
+    PreferenceSatisfactionMetricsView,
     RunSolverView,
 )
 from tapir.bakery.views_templates import (
@@ -17,6 +18,7 @@ from tapir.bakery.viewsets import (
     BreadContentViewSet,
     BreadDeliveryViewSet,
     BreadLabelViewSet,
+    BreadsPerPickupLocationPerWeekViewSet,
     BreadViewSet,
     IngredientViewSet,
     PreferredBreadViewSet,
@@ -46,6 +48,11 @@ urlpatterns = [
     path("choose-breads/", ChooseBreadsView.as_view(), name="choose-breads"),
     path("reports/", ReportsView.as_view(), name="reports"),
     path("solver/run/", RunSolverView.as_view(), name="bakery-solver-run"),
+    path(
+        "metrics/satisfaction/",
+        PreferenceSatisfactionMetricsView.as_view(),
+        name="metrics-preference-satisfaction",
+    ),
 ]
 
 router = DefaultRouter()
@@ -89,6 +96,11 @@ router.register(
     r"stove-sessions",
     StoveSessionViewSet,
     basename="stove-sessions",
+)
+router.register(
+    r"breads-per-pickup-location-per-week",
+    BreadsPerPickupLocationPerWeekViewSet,
+    basename="breads-per-pickup-location-per-week",
 )
 
 

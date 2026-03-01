@@ -286,20 +286,20 @@ def solve_bread_planning(
                 >= distribution_vars[b_id, loc.location_id]
             )
 
-    # C9: Enforce minimum variety at each location
-    for loc in pickup_locations:
-        if loc.total_deliveries >= len(bread_ids):
-            # Ensure at least some of each bread at locations with enough demand
-            target_per_bread = loc.total_deliveries // len(bread_ids)
-            min_per_bread = max(1, target_per_bread // 2)
+    # # C9: Enforce minimum variety at each location
+    # for loc in pickup_locations:
+    #     if loc.total_deliveries >= len(bread_ids):
+    #         # Ensure at least some of each bread at locations with enough demand
+    #         target_per_bread = loc.total_deliveries // len(bread_ids)
+    #         min_per_bread = max(1, target_per_bread // 2)
 
-            for b_id in bread_ids:
-                cap = capacities.get((b_id, loc.location_id), 0)
-                if cap >= min_per_bread:
-                    model.add(distribution_vars[b_id, loc.location_id] >= min_per_bread)
-                    print(
-                        f"  Variety: {bread_map[b_id].name} at {loc.name} >= {min_per_bread}"
-                    )
+    #         for b_id in bread_ids:
+    #             cap = capacities.get((b_id, loc.location_id), 0)
+    #             if cap >= min_per_bread:
+    #                 model.add(distribution_vars[b_id, loc.location_id] >= min_per_bread)
+    #                 print(
+    #                     f"  Variety: {bread_map[b_id].name} at {loc.name} >= {min_per_bread}"
+    #                 )
 
     # C10: Track session span for breads that CAN span sessions
     for b_id in bread_ids:
@@ -329,7 +329,7 @@ def solve_bread_planning(
 
     VARIETY_WEIGHT = 1000
     SESSION_SPAN_WEIGHT = 50
-    REMAINING_WEIGHT = 10
+    REMAINING_WEIGHT = 1000
     SESSION_WEIGHT = 1
 
     remaining_penalty = sum(remaining[b_id] for b_id in bread_ids)
@@ -568,26 +568,32 @@ def solve_and_save(
         capacities=capacities,
     )
 
-    if result is None:
-        print("ERROR: Solver returned no solution!")
-        return None
-
-    # 6. Save to BreadsPerPickupLocationPerWeek
+    # 6. Clean up old data and save new results (if any)
     with transaction.atomic():
-        # Delete old records
-        delete_qs = BreadsPerPickupLocationPerWeek.objects.filter(
+        # Always delete old records first (even if solver failed)
+        delete_distribution_qs = BreadsPerPickupLocationPerWeek.objects.filter(
             year=year, delivery_week=delivery_week
         )
-        if delivery_day is not None:
-            location_ids = [loc.location_id for loc in pickup_locations]
-            delete_qs = delete_qs.filter(pickup_location_id__in=location_ids)
-        delete_qs.delete()
-
-        StoveSession.objects.filter(
+        delete_sessions_qs = StoveSession.objects.filter(
             year=year,
             delivery_week=delivery_week,
-            delivery_day=delivery_day,
-        ).delete()
+        )
+
+        if delivery_day is not None:
+            location_ids = [loc.location_id for loc in pickup_locations]
+            delete_distribution_qs = delete_distribution_qs.filter(
+                pickup_location_id__in=location_ids
+            )
+            delete_sessions_qs = delete_sessions_qs.filter(delivery_day=delivery_day)
+
+        deleted_dist = delete_distribution_qs.delete()
+        deleted_sessions = delete_sessions_qs.delete()
+        print(f"\nDeleted {deleted_dist[0]} old distribution records")
+        print(f"Deleted {deleted_sessions[0]} old stove session records")
+
+        if result is None:
+            print("ERROR: Solver returned no solution! Old data has been cleared.")
+            return None
 
         # Create new records for distribution
         bulk_objects = []
@@ -605,6 +611,7 @@ def solve_and_save(
 
         if bulk_objects:
             BreadsPerPickupLocationPerWeek.objects.bulk_create(bulk_objects)
+            print(f"Created {len(bulk_objects)} new distribution records")
 
         # Create new stove session records
         session_objects = []
@@ -639,6 +646,7 @@ def solve_and_save(
 
         if session_objects:
             StoveSession.objects.bulk_create(session_objects)
+            print(f"Created {len(session_objects)} new stove session records")
 
     print("\nSUCCESS: Solution saved to database (distribution + stove sessions)")
     return result

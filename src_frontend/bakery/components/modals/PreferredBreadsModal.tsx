@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { InfoCircle, StarFill } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
 import { BakeryApi } from '../../../api-client';
-import type { BreadList, BreadLabel } from '../../../api-client/models';
+import type { BreadList, BreadLabel, BreadContent } from '../../../api-client/models';
 import { SingleBreadCard } from '../cards/SingleBreadCard';
 
 interface PreferredBreadsModalProps {
@@ -24,6 +24,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
 
   const [breads, setBreads] = useState<BreadList[]>([]);
   const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>({});
+  const [contentsMap, setContentsMap] = useState<{ [breadId: string]: BreadContent[] }>({});
   const [selectedBreadIds, setSelectedBreadIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,10 +58,12 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
   const loadData = async () => {
     setLoading(true);
     try {
-      const [breadsData, preferredData, labels] = await Promise.all([
+      const [breadsData, preferredData, labels, contents] = await Promise.all([
         bakeryApi.bakeryBreadsListList({}),
         bakeryApi.bakeryPreferredBreadsList({ memberId }),
         bakeryApi.bakeryLabelsList(),
+        bakeryApi.bakeryBreadcontentsList(),
+
       ]);
 
       setBreads(breadsData.filter(b => b.isActive !== false));
@@ -72,6 +75,19 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
         return acc;
       }, {} as { [labelId: string]: BreadLabel });
       setLabelsMap(labelMapping);
+
+      const contentMapping = contents.reduce((acc, content) => {
+        const breadId = content.bread;
+        if (breadId) {
+          if (!acc[breadId]) {
+            acc[breadId] = [];
+          }
+          acc[breadId].push(content);
+        }
+        return acc;
+      }, {} as { [breadId: string]: BreadContent[] });
+      setContentsMap(contentMapping);
+
 
       if (preferredData.length > 0 && preferredData[0].breads) {
         setSelectedBreadIds(new Set(preferredData[0].breads));
@@ -180,10 +196,14 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
                         .map(labelId => labelsMap[labelId])
                         .filter(Boolean);
 
+                      const breadContents = contentsMap[bread.id!] || [];
+
+
                       return (
                         <SingleBreadCard
                           key={bread.id}
                           bread={bread}
+                          contents={breadContents}
                           labels={breadLabels}
                           isPreferred={isSelected}
                           onClick={() => toggleBread(bread.id!)}

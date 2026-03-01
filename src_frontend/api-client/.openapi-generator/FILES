@@ -27,6 +27,7 @@ models/BestellWizardImages.ts
 models/BestellWizardStrings.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts
+models/BreadBreakdown.ts
 models/BreadCapacityBulkUpdateRequest.ts
 models/BreadCapacityPickupLocation.ts
 models/BreadCapacityPickupLocationRequest.ts
@@ -42,6 +43,7 @@ models/BreadLabelRequest.ts
 models/BreadList.ts
 models/BreadListRequest.ts
 models/BreadQuantity.ts
+models/BreadsPerPickupLocationPerWeek.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
@@ -100,6 +102,7 @@ models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
 models/LegalStatusEnum.ts
 models/LocaleEnum.ts
+models/LocationMetrics.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/Member.ts
@@ -175,6 +178,7 @@ models/PickupLocationCapacityEvolution.ts
 models/PickupLocationDeliveryDay.ts
 models/PickupLocationOpeningTime.ts
 models/PickupLocationsByDeliveryDayResponse.ts
+models/PreferenceSatisfactionResponse.ts
 models/PreferredBread.ts
 models/PreferredBreadRequest.ts
 models/PreferredBreadsBulkUpdate.ts
@@ -214,6 +218,7 @@ models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
 models/SoliSerializerRequest.ts
 models/SolidarityContribution.ts
+models/SolverStoveSession.ts
 models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
 models/StaticSegmentRecipientRequest.ts
