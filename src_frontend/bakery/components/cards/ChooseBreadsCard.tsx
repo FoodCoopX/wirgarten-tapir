@@ -6,6 +6,7 @@ import { YearWeekSelectorCard } from './YearWeekSelectorCard';
 import { BreadSelectionModal } from '../modals/BreadSelectionModal';
 import PickupLocationChangeModal from '../../../member_profile/deliveries_and_jokers/PickupLocationChangeModal';
 import { CompactBreadCard } from './CompactBreadCard';
+import { CompactPickupLocationCard } from './CompactPickupLocationCard';
 import dayjs from 'dayjs';
 import isoWeek from "dayjs/plugin/isoWeek";
 
@@ -204,8 +205,8 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
           const contents = selectedBread ? (contentsMap[selectedBread.id!] || []) : [];
           
           return (
-            <div key={delivery.id} className="col-12">
-              <div className="card">
+            <div key={delivery.id} className="col-12 col-md-6 col-lg-4">
+              <div className="card h-100">
                 <div 
                   className="card-header"
                   style={{ backgroundColor: '#D4A574', color: 'white' }}
@@ -215,29 +216,36 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                 <div className="card-body">
                   {/* Pickup Location Row */}
                   <div className="mb-3">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div className="flex-grow-1">
-                        <strong>Gewählter Abholort:</strong>{' '}
-                        <span className="text-muted">
-                          {delivery.pickupLocationName || 'Noch nicht gewählt'}
-                        </span>
-                        {!chooseStationPerBread && !isFirstSlot && (
-                          <small className="text-muted ms-2">(wird mit Brotanteil 1 synchronisiert)</small>
+                    <strong className="mb-2 d-block">Gewählter Abholort:</strong>
+                    
+                    {!chooseStationPerBread && !isFirstSlot && (
+                      <div className="alert alert-info mb-2 py-2">
+                        <small>Wird mit Brotanteil 1 synchronisiert</small>
+                      </div>
+                    )}
+
+                    {delivery.pickupLocation ? (
+                      <CompactPickupLocationCard
+                        name={delivery.pickupLocationName || 'Unbekannt'}
+                        address={delivery.pickupLocationAddress}
+                        deliveryDay={delivery.deliveryDay}
+                        onEdit={canChangeLocation ? () => setEditingLocation(delivery.id!) : undefined}
+                        disabled={saving === delivery.id}
+                      />
+                    ) : (
+                      <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
+                        <span className="text-muted">Noch nicht gewählt</span>
+                        {canChangeLocation && (
+                          <button
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => setEditingLocation(delivery.id!)}
+                            disabled={saving === delivery.id}
+                          >
+                            Auswählen
+                          </button>
                         )}
                       </div>
-                      {canChangeLocation && (
-                        <button
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => setEditingLocation(delivery.id!)}
-                          disabled={saving === delivery.id}
-                        >
-                          {delivery.pickupLocation ? 'Ändern' : 'Auswählen'}
-                        </button>
-                      )}
-                      {saving === delivery.id && (
-                        <span className="spinner-border spinner-border-sm ms-2" />
-                      )}
-                    </div>
+                    )}
                   </div>
 
                   <hr />

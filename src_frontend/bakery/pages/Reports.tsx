@@ -480,7 +480,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                     </div>
 
                     <hr />
-                    {/* Metrics Section */}
+                     {/* Metrics Section */}
                     <div className="mb-3">
                       <SectionToggle 
                         sectionKey={metricsKey} 
@@ -493,8 +493,15 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       
                        
                       {isSectionOpen(metricsKey) && (
-                        
-                        <MetricsCard year={year} week={week} deliveryDay={day} csrfToken={csrfToken} />
+                        <>
+                          {daySessions.length > 0 ? (
+                            <MetricsCard year={year} week={week} deliveryDay={day} csrfToken={csrfToken} />
+                          ) : (
+                            <p className="text-muted small text-center py-2">
+                              Noch kein Backplan berechnet.
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
 

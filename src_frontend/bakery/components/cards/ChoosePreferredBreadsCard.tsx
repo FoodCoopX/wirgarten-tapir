@@ -133,7 +133,7 @@ export const ChoosePreferredBreadsCard: React.FC<ChoosePreferredBreadsCardProps>
                 const contents = contentsMap[bread.id!] || [];
 
                 return (
-                  <div key={bread.id} className="col-12 col-md-6 col-lg-4">
+                  <div key={bread.id} className="col-12 col-md-6 col-lg-4 d-flex">
                     <CompactBreadCard
                       bread={bread}
                       contents={contents}

@@ -184,7 +184,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
                     <div>
                       <strong>Wähle bis zu {MAX_PREFERRED_BREADS} Lieblingsbrote aus</strong>
                       <p className="mb-0 small text-muted">
-                        Diese Brote werden dir als Vorschläge angezeigt und erleichtern dir die Auswahl bei der Bestellung.
+                        Wir versuchen die Abhol-Orte so mit möglichst vielen Lieblingsbroten zu bestücken.
                       </p>
                     </div>
                   </div>

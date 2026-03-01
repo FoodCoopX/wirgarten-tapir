@@ -23,7 +23,7 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
 }) => {
   return (
     <div 
-      className="card" 
+      className="card w-100" 
       style={{ 
         borderLeft: '4px solid #8B4513',
         backgroundColor: '#FAF8F5' 
