@@ -30,6 +30,8 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.accounts.models import EmailChangeRequest
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.wirgarten.utils import get_today
 
 
 class Command(BaseCommand):
@@ -42,11 +44,6 @@ class Command(BaseCommand):
         parser.add_argument("--file", nargs=1)
         parser.add_argument("--delete-all", action="store_true")
         parser.add_argument("--reset-all", action="store_true")
-        parser.add_argument(
-            "--growing-period-start",
-            type=str,
-            help="Start date of the growing period to use for subscriptions (format: YYYY-MM-DD)",
-        )
         parser.add_argument(
             "--verify-csv",
             action="store_true",
@@ -121,6 +118,8 @@ class Command(BaseCommand):
             return dt
 
         if options["reset_all"]:
+            from tapir.solidarity_contribution.models import SolidarityContribution
+            SolidarityContribution.objects.all().delete()
             SubscriptionChangeLogEntry.objects.all().delete()
             TransferCoopSharesLogEntry.objects.all().delete()
             CoopShareTransaction.objects.all().delete()
@@ -204,6 +203,8 @@ class Command(BaseCommand):
 
             if import_type == "members":
                 if delete_all:
+                    from tapir.solidarity_contribution.models import SolidarityContribution
+                    SolidarityContribution.objects.all().delete()
                     SubscriptionChangeLogEntry.objects.all().delete()
                     TransferCoopSharesLogEntry.objects.all().delete()
                     CoopShareTransaction.objects.all().delete()
@@ -264,6 +265,7 @@ class Command(BaseCommand):
                         pickup_location=picloc,
                         valid_from=_to_date(row.get("AO_gueltig_ab")),
                     )
+                    soli_val = _safe_float(row.get("Solidarbeitrag"))
                     # Persists member and pickup location transactionally; handles errors
                     try:
                         if dry_run:
@@ -273,6 +275,21 @@ class Command(BaseCommand):
                                 m.save(bypass_keycloak=True)
                                 if picloc is not None:
                                     mp.save()
+                                if soli_val > 0:
+                                    # Create solidarity contribution if present
+                                    SolidarityContribution.objects.create(
+                                        member=m,
+                                        amount=soli_val,
+                                        start_date=m.created_at.date()
+                                        if m.created_at
+                                        else get_today(),
+                                        end_date=GrowingPeriod.objects.filter(
+                                            start_date__lte=get_today()
+                                        )
+                                        .order_by("-start_date")
+                                        .first()
+                                        .end_date,  # Fallback logic for end date
+                                    )
                             created += 1
                     except Exception as e:
                         self.stderr.write(str(e))
@@ -356,67 +373,12 @@ class Command(BaseCommand):
                         skipped += 1
             if import_type == "subscriptions":
                 if delete_all:
+                    from tapir.solidarity_contribution.models import SolidarityContribution
+                    SolidarityContribution.objects.all().delete()
                     SubscriptionChangeLogEntry.objects.all().delete()
                     Subscription.objects.all().delete()
                     Payment.objects.all().delete()
-                    # identify current growing_period
-                # Growing Period handling
-                if options.get("growing_period_start"):
-                    start_date_str = options["growing_period_start"]
-
-                    # Validiere Datumsformat
-                    try:
-                        datetime.datetime.strptime(start_date_str, "%Y-%m-%d")
-                    except ValueError:
-                        self.stdout.write(
-                            self.style.ERROR(
-                                f"Invalid date format '{start_date_str}'. Please use YYYY-MM-DD format (e.g., 2023-01-01)."
-                            )
-                        )
-                        return
-
-                    try:
-                        period = GrowingPeriod.objects.get(start_date=start_date_str)
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f"Using GrowingPeriod: ID={period.id}, Start={period.start_date}"
-                            )
-                        )
-                    except GrowingPeriod.DoesNotExist:
-                        self.stdout.write(
-                            self.style.ERROR(
-                                f"GrowingPeriod with start_date='{options['growing_period_start']}' does not exist!"
-                            )
-                        )
-                        self.stdout.write("Available GrowingPeriods:")
-                        for gp in GrowingPeriod.objects.all():
-                            self.stdout.write(
-                                f"  - ID: {gp.id}, Start: {gp.start_date}, End: {gp.end_date}"
-                            )
-                        return
-                    except ValueError as e:
-                        self.stdout.write(
-                            self.style.ERROR(
-                                f"Invalid date format '{options['growing_period_start']}'. Use YYYY-MM-DD format."
-                            )
-                        )
-                        return
-                else:
-                    # Fallback: Ersten verfügbaren GrowingPeriod verwenden
-                    period = GrowingPeriod.objects.first()
-                    if not period:
-                        self.stdout.write(
-                            self.style.ERROR(
-                                "No GrowingPeriod exists! Please create one first or specify --growing-period-start."
-                            )
-                        )
-                        return
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"No --growing-period-start specified. Using first available: "
-                            f"ID={period.id}, Start={period.start_date}"
-                        )
-                    )
+                # for row in reader:
                 for row in reader:
                     if not any(_normalize_cell(v) for v in row.values()):
                         continue
@@ -424,6 +386,32 @@ class Command(BaseCommand):
                     # print(row)
                     # identify MemberID, either via MemberNo or Email
                     try:
+                        start_date = _to_date(row.get("Vertragsbeginn"))
+                        if not start_date:
+                            self.stderr.write(str(row))
+                            self.stderr.write("No start_date (Vertragsbeginn) found. Skipping row.")
+                            continue
+
+                        # identify GrowingPeriod from start_date
+                        period = GrowingPeriod.objects.filter(
+                            start_date__lte=start_date, end_date__gte=start_date
+                        ).first()
+
+                        if not period:
+                            # Fallback: find the next possible growing period
+                            period = (
+                                GrowingPeriod.objects.filter(start_date__gte=start_date)
+                                .order_by("start_date")
+                                .first()
+                            )
+
+                        if not period:
+                            self.stderr.write(str(row))
+                            self.stderr.write(
+                                f"No GrowingPeriod found for start_date {start_date}. Skipping row."
+                            )
+                            continue
+
                         if _normalize_cell(row.get("Mitgliedernummer")) != "":
                             member_no = _normalize_cell(row.get("Mitgliedernummer"))
                             try:
