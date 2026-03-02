@@ -96,7 +96,9 @@ class Command(BaseCommand):
             member_nos -= parse_member_numbers(exclude_specs)
 
         if not member_nos:
-            self.stdout.write(self.style.WARNING("Keine Mitgliedsnummern nach Parsing übrig."))
+            self.stdout.write(
+                self.style.WARNING("Keine Mitgliedsnummern nach Parsing übrig.")
+            )
             return
 
         members_qs = Member.objects.filter(member_no__in=member_nos)
@@ -121,7 +123,9 @@ class Command(BaseCommand):
 
         # Detailübersicht (optional): Anzahl Subscriptions pro Mitglied
         per_member = (
-            subs_qs.values_list("member__member_no").order_by("member__member_no").distinct()
+            subs_qs.values_list("member__member_no")
+            .order_by("member__member_no")
+            .distinct()
         )
         details = []
         for (member_no,) in per_member:
@@ -132,7 +136,11 @@ class Command(BaseCommand):
             self.stdout.write("Details:\n" + "\n".join(lines))
 
         if not confirm:
-            self.stdout.write(self.style.WARNING("Dry-Run: Es wurden keine Daten gelöscht. Führen Sie den Befehl mit --yes aus, um zu löschen."))
+            self.stdout.write(
+                self.style.WARNING(
+                    "Dry-Run: Es wurden keine Daten gelöscht. Führen Sie den Befehl mit --yes aus, um zu löschen."
+                )
+            )
             return
 
         with transaction.atomic():
@@ -142,7 +150,14 @@ class Command(BaseCommand):
                 deleted_map[mn] = cnt
             deleted_count, _ = subs_qs.delete()
 
-        self.stdout.write(self.style.SUCCESS(f"Löschung abgeschlossen. Gelöschte Objekte (gesamt): {deleted_count}"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Löschung abgeschlossen. Gelöschte Objekte (gesamt): {deleted_count}"
+            )
+        )
         if deleted_map:
-            lines = [f"  Mitglied {mn}: {cnt} Subscriptions gelöscht" for mn, cnt in deleted_map.items()]
+            lines = [
+                f"  Mitglied {mn}: {cnt} Subscriptions gelöscht"
+                for mn, cnt in deleted_map.items()
+            ]
             self.stdout.write("Details:\n" + "\n".join(lines))

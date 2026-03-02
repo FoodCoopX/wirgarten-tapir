@@ -119,6 +119,7 @@ class Command(BaseCommand):
 
         if options["reset_all"]:
             from tapir.solidarity_contribution.models import SolidarityContribution
+
             SolidarityContribution.objects.all().delete()
             SubscriptionChangeLogEntry.objects.all().delete()
             TransferCoopSharesLogEntry.objects.all().delete()
@@ -203,7 +204,10 @@ class Command(BaseCommand):
 
             if import_type == "members":
                 if delete_all:
-                    from tapir.solidarity_contribution.models import SolidarityContribution
+                    from tapir.solidarity_contribution.models import (
+                        SolidarityContribution,
+                    )
+
                     SolidarityContribution.objects.all().delete()
                     SubscriptionChangeLogEntry.objects.all().delete()
                     TransferCoopSharesLogEntry.objects.all().delete()
@@ -280,9 +284,11 @@ class Command(BaseCommand):
                                     SolidarityContribution.objects.create(
                                         member=m,
                                         amount=soli_val,
-                                        start_date=m.created_at.date()
-                                        if m.created_at
-                                        else get_today(),
+                                        start_date=(
+                                            m.created_at.date()
+                                            if m.created_at
+                                            else get_today()
+                                        ),
                                         end_date=GrowingPeriod.objects.filter(
                                             start_date__lte=get_today()
                                         )
@@ -373,7 +379,10 @@ class Command(BaseCommand):
                         skipped += 1
             if import_type == "subscriptions":
                 if delete_all:
-                    from tapir.solidarity_contribution.models import SolidarityContribution
+                    from tapir.solidarity_contribution.models import (
+                        SolidarityContribution,
+                    )
+
                     SolidarityContribution.objects.all().delete()
                     SubscriptionChangeLogEntry.objects.all().delete()
                     Subscription.objects.all().delete()
@@ -389,7 +398,9 @@ class Command(BaseCommand):
                         start_date = _to_date(row.get("Vertragsbeginn"))
                         if not start_date:
                             self.stderr.write(str(row))
-                            self.stderr.write("No start_date (Vertragsbeginn) found. Skipping row.")
+                            self.stderr.write(
+                                "No start_date (Vertragsbeginn) found. Skipping row."
+                            )
                             continue
 
                         # identify GrowingPeriod from start_date
