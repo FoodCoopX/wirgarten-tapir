@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from django.core.cache import cache
 from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -17,13 +18,15 @@ from tapir.bakery.serializers import (
     AbhollisteEntrySerializer,
     AvailableBreadsForDeliveryListResponseSerializer,
     PreferenceSatisfactionResponseSerializer,
-    RunSolverErrorSerializer,
-    RunSolverRequestSerializer,
-    RunSolverResponseSerializer,
+    SolverApplyRequestSerializer,
+    SolverApplyResponseSerializer,
+    SolverErrorSerializer,
+    SolverPreviewDetailResponseSerializer,
+    SolverPreviewRequestSerializer,
+    SolverPreviewResponseSerializer,
     ToggleBreadRequestSerializer,
     ToggleBreadResponseSerializer,
 )
-from tapir.bakery.solver import solve_and_save
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.wirgarten.models import PickupLocation
 
@@ -173,35 +176,27 @@ class AbhollisteView(APIView):
         week = int(request.query_params.get("week"))
         pickup_location_id = request.query_params.get("pickup_location_id")
 
-        # Get the day of week from the pickup location opening times
-        # day parameter is 0=Monday to 6=Sunday (ISO weekday - 1)
-        # We need to find deliveries that match this pickup location and would be delivered on that day
-
         deliveries = BreadDelivery.objects.filter(
             year=year,
             delivery_week=week,
             pickup_location_id=pickup_location_id,
         ).select_related(
-            "subscription__member",  # Access member through subscription
+            "subscription__member",
             "bread",
             "pickup_location",
         )
 
-        # Group by member
         members_data = {}
         for delivery in deliveries:
             member = delivery.subscription.member
             member_id = str(member.id)
 
             if member_id not in members_data:
-                # Determine display name
-                # Check if member has pseudonym (assuming it's on the Member model)
                 pseudonym = getattr(member, "pseudonym", None)
 
                 if pseudonym:
                     display_name = pseudonym
                 else:
-                    # Use "L., FirstName" format
                     last_name = member.last_name if hasattr(member, "last_name") else ""
                     first_name = (
                         member.first_name if hasattr(member, "first_name") else ""
@@ -227,101 +222,184 @@ class AbhollisteView(APIView):
                 }
             )
 
-        # Sort by display name
         result = sorted(members_data.values(), key=lambda x: x["display_name"].lower())
 
-        # Use serializer for consistent output
         serializer = AbhollisteEntrySerializer(result, many=True)
         return Response(serializer.data)
 
 
-class RunSolverView(APIView):
-    permission_classes = [IsAuthenticated]
+class SolverPreviewView(APIView):
+    """Run the solver once and cache all solutions. Returns summaries."""
+
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
-        summary="Run the bread baking optimizer",
-        description="Runs the constraint solver to optimize bread production, assignment, and distribution for a specific week. "
-        "This will:\n"
-        "- Assign breads to unassigned delivery slots (maximizing member preferences)\n"
-        "- Create an optimal stove baking plan\n"
-        "- Calculate bread distribution per pickup location\n"
-        "- Update the database with the results",
-        request=RunSolverRequestSerializer,
+        summary="Run solver and preview multiple solutions",
+        description=(
+            "Runs the constraint solver once with multiple solution collection. "
+            "Solutions are cached for 1 hour. Nothing is saved to the database yet."
+        ),
+        request=SolverPreviewRequestSerializer,
         responses={
-            200: RunSolverResponseSerializer,
-            400: RunSolverErrorSerializer,
-            422: RunSolverErrorSerializer,
+            200: SolverPreviewResponseSerializer,
+            400: SolverErrorSerializer,
+            422: SolverErrorSerializer,
         },
         tags=["bakery"],
     )
     def post(self, request: Request) -> Response:
-        serializer = RunSolverRequestSerializer(data=request.data)
+        from tapir.bakery.solver import collect_solver_input, solve_bread_planning_all
+
+        serializer = SolverPreviewRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
         year = data["year"]
         delivery_week = data["delivery_week"]
-        delivery_day = data["delivery_day"]
+        delivery_day = data.get("delivery_day")
+        max_solutions = min(data.get("max_solutions", 3), 20)
 
-        pickup_location_ids = [
-            pl.id
-            for pl in PickupLocation.objects.all()
-            if pl.delivery_day == delivery_day
-        ]
-
-        assignments_to_clear = BreadsPerPickupLocationPerWeek.objects.filter(
-            year=year,
-            delivery_week=delivery_week,
-            pickup_location__in=pickup_location_ids,
-        )
-        assignments_to_clear.delete()
-
-        result = solve_and_save(
-            year=year, delivery_week=delivery_week, delivery_day=delivery_day
-        )
-
-        if result is None:
+        solver_input = collect_solver_input(year, delivery_week, delivery_day)
+        if solver_input is None:
             return Response(
                 {
-                    "error": "Keine Lösung gefunden. Bitte Daten prüfen (verfügbare Brote, Kapazitäten, Lieferungen)."
+                    "error": "Keine Daten gefunden (keine Brote, Lieferungen oder Abholstationen)."
                 },
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
-        # Build bread name map for response
-        bread_names = dict(
-            Bread.objects.filter(id__in=result.bread_quantities.keys()).values_list(
-                "id", "name"
-            )
+        results = solve_bread_planning_all(
+            **solver_input,
+            max_solutions=max_solutions,
         )
 
-        # Format stove sessions for response
-        stove_sessions = []
-        for i, session in enumerate(result.stove_sessions):
-            layers = []
-            for j, layer_info in enumerate(session):
-                if layer_info is None:
-                    layers.append({"layer": j + 1, "bread": None, "quantity": 0})
-                else:
-                    b_id, qty = layer_info
-                    layers.append(
+        if not results:
+            return Response(
+                {"error": "Keine Lösung gefunden. Bitte Daten prüfen."},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        # Cache all solutions
+        cache_key = f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
+        cache.set(cache_key, results, timeout=3600)
+
+        # Build bread name map
+        all_bread_ids: set = set()
+        for r in results:
+            all_bread_ids.update(r["bread_quantities"].keys())
+
+        bread_names = dict(
+            Bread.objects.filter(id__in=all_bread_ids).values_list("id", "name")
+        )
+
+        # Build summaries
+        summaries = []
+        for i, result in enumerate(results):
+            quantities = []
+            for b_id, qty in result["bread_quantities"].items():
+                if qty > 0:
+                    rem = result["remaining_quantities"].get(b_id, 0)
+                    quantities.append(
                         {
-                            "layer": j + 1,
-                            "bread_id": b_id,
+                            "bread_id": str(b_id),
                             "bread_name": bread_names.get(b_id, "?"),
-                            "quantity": qty,
+                            "total": qty,
+                            "deliveries": qty - rem,
+                            "remaining": rem,
                         }
                     )
-            stove_sessions.append({"session": i + 1, "layers": layers})
+
+            summaries.append(
+                {
+                    "index": i,
+                    "total_baked": sum(result["bread_quantities"].values()),
+                    "total_remaining": sum(result["remaining_quantities"].values()),
+                    "sessions_used": len(result["stove_sessions"]),
+                    "quantities": quantities,
+                }
+            )
+
+        response_data = {
+            "total_solutions": len(results),
+            "solutions": summaries,
+        }
+
+        response_serializer = SolverPreviewResponseSerializer(data=response_data)
+        response_serializer.is_valid(raise_exception=True)
+        return Response(response_serializer.data)
+
+
+class SolverPreviewDetailView(APIView):
+    """Return full details of a cached solution (stove plan, distribution)."""
+
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        summary="Get full details of a cached solver solution",
+        parameters=[
+            OpenApiParameter(name="year", type=OpenApiTypes.INT, required=True),
+            OpenApiParameter(
+                name="delivery_week", type=OpenApiTypes.INT, required=True
+            ),
+            OpenApiParameter(
+                name="delivery_day", type=OpenApiTypes.INT, required=False
+            ),
+            OpenApiParameter(
+                name="solution_index", type=OpenApiTypes.INT, required=False
+            ),
+        ],
+        responses={
+            200: SolverPreviewDetailResponseSerializer,
+            404: SolverErrorSerializer,
+        },
+        tags=["bakery"],
+    )
+    def get(self, request: Request) -> Response:
+        try:
+            year = int(request.query_params["year"])
+            delivery_week = int(request.query_params["delivery_week"])
+            delivery_day_param = request.query_params.get("delivery_day")
+            delivery_day = (
+                int(delivery_day_param) if delivery_day_param is not None else None
+            )
+            solution_index = int(request.query_params.get("solution_index", 0))
+        except (ValueError, TypeError, KeyError) as e:
+            return Response(
+                {"error": f"Ungültiges Parameterformat: {e}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cache_key = f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
+        results = cache.get(cache_key)
+
+        if not results:
+            return Response(
+                {"error": "Keine gecachten Lösungen. Bitte Solver neu starten."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        solution_index = min(solution_index, len(results) - 1)
+        result = results[solution_index]
+
+        # Build bread name map
+        all_bread_ids: set = set(result["bread_quantities"].keys())
+        for key in result["distribution"]:
+            if isinstance(key, tuple):
+                all_bread_ids.add(key[0])
+
+        bread_names = dict(
+            Bread.objects.filter(id__in=all_bread_ids).values_list("id", "name")
+        )
+        location_names = dict(PickupLocation.objects.values_list("id", "name"))
 
         # Format quantities
         quantities = []
-        for b_id, qty in result.bread_quantities.items():
+        for b_id, qty in result["bread_quantities"].items():
             if qty > 0:
-                rem = result.remaining_quantities.get(b_id, 0)
+                rem = result["remaining_quantities"].get(b_id, 0)
                 quantities.append(
                     {
-                        "bread_id": b_id,
+                        "bread_id": str(b_id),
                         "bread_name": bread_names.get(b_id, "?"),
                         "total": qty,
                         "deliveries": qty - rem,
@@ -329,31 +407,113 @@ class RunSolverView(APIView):
                     }
                 )
 
+        # Format stove sessions
+        stove_sessions = []
+        for i, session in enumerate(result["stove_sessions"]):
+            layers = []
+            for j, layer_info in enumerate(session):
+                if layer_info is None:
+                    layers.append({"layer": j + 1, "bread_name": None, "quantity": 0})
+                else:
+                    b_id, qty = layer_info
+                    layers.append(
+                        {
+                            "layer": j + 1,
+                            "bread_id": str(b_id),
+                            "bread_name": bread_names.get(b_id, "?"),
+                            "quantity": qty,
+                        }
+                    )
+            stove_sessions.append({"session": i + 1, "layers": layers})
+
         # Format distribution
         distribution = []
-        for (b_id, p_id), count in result.distribution.items():
+        for key, count in result["distribution"].items():
             if count > 0:
+                if isinstance(key, tuple):
+                    b_id, loc_id = key
+                else:
+                    b_id, loc_id = str(key).split(",")
                 distribution.append(
                     {
-                        "bread_id": b_id,
-                        "bread_name": bread_names.get(b_id, "?"),
-                        "pickup_location_id": p_id,
+                        "bread_id": str(b_id),
+                        "bread_name": bread_names.get(
+                            b_id, bread_names.get(str(b_id), "?")
+                        ),
+                        "pickup_location_id": str(loc_id),
+                        "pickup_location_name": location_names.get(
+                            loc_id, location_names.get(str(loc_id), "?")
+                        ),
                         "count": count,
                     }
                 )
 
         response_data = {
-            "success": True,
-            "total_deliveries": result.total_deliveries,
-            "sessions_used": result.sessions_used,
+            "solution_index": solution_index,
+            "total_solutions": len(results),
             "quantities": quantities,
             "stove_sessions": stove_sessions,
             "distribution": distribution,
         }
 
-        serializer = RunSolverResponseSerializer(data=response_data)
+        response_serializer = SolverPreviewDetailResponseSerializer(data=response_data)
+        response_serializer.is_valid(raise_exception=True)
+        return Response(response_serializer.data)
+
+
+class SolverApplyView(APIView):
+    """Save a specific cached solution to the database."""
+
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        summary="Apply a cached solver solution to the database",
+        description=(
+            "Takes a cached solution (from /solver/preview/) and saves it to the database. "
+            "This replaces any existing distribution and stove session data for the given week/day."
+        ),
+        request=SolverApplyRequestSerializer,
+        responses={
+            200: SolverApplyResponseSerializer,
+            404: SolverErrorSerializer,
+        },
+        tags=["bakery"],
+    )
+    def post(self, request: Request) -> Response:
+        from tapir.bakery.solver import save_solution_to_db
+
+        serializer = SolverApplyRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
+        data = serializer.validated_data
+
+        year = data["year"]
+        delivery_week = data["delivery_week"]
+        delivery_day = data.get("delivery_day")
+        solution_index = data.get("solution_index", 0)
+
+        cache_key = f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
+        results = cache.get(cache_key)
+
+        if not results:
+            return Response(
+                {"error": "Keine gecachten Lösungen. Bitte Solver neu starten."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        solution_index = min(solution_index, len(results) - 1)
+        chosen = results[solution_index]
+
+        save_solution_to_db(year, delivery_week, delivery_day, chosen)
+
+        response_data = {
+            "success": True,
+            "solution_index": solution_index,
+            "message": f"Lösung {solution_index + 1} von {len(results)} wurde gespeichert.",
+        }
+
+        response_serializer = SolverApplyResponseSerializer(data=response_data)
+        response_serializer.is_valid(raise_exception=True)
+        return Response(response_serializer.data)
 
 
 @extend_schema(tags=["bakery"])
@@ -385,7 +545,6 @@ class PreferenceSatisfactionMetricsView(APIView):
         from tapir.bakery.models import (
             Bread,
             BreadDelivery,
-            BreadsPerPickupLocationPerWeek,
             PreferredBread,
         )
 

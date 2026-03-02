@@ -3,7 +3,8 @@ import { GeoAlt, Calendar } from 'react-bootstrap-icons';
 
 interface CompactPickupLocationCardProps {
   name: string;
-  address?: string;
+  street?: string;
+  city?: string;
   deliveryDay?: number;
   onEdit?: () => void;
   disabled?: boolean;
@@ -21,7 +22,8 @@ const DAY_LABELS: Record<number, string> = {
 
 export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps> = ({
   name,
-  address,
+  street,
+  city,
   deliveryDay,
   onEdit,
   disabled = false,
@@ -44,9 +46,9 @@ export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps>
               </h6>
             </div>
 
-            {address && (
+            {street && city && (
               <p className="text-muted small mb-1" style={{ fontSize: '0.85rem', marginLeft: '26px' }}>
-                {address}
+                {street}, {city}
               </p>
             )}
 
@@ -62,13 +64,9 @@ export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps>
 
           {onEdit && (
             <button
-              className="btn btn-sm"
-              style={{ 
-                backgroundColor: '#8B4513', 
-                color: 'white',
-                fontSize: '0.75rem',
-                padding: '0.25rem 0.5rem'
-              }}
+            className="btn btn-sm btn-outline-secondary dark-brown-button"
+
+             
               onClick={onEdit}
               disabled={disabled}
             >

@@ -96,8 +96,7 @@ export const ChoosePreferredBreadsCard: React.FC<ChoosePreferredBreadsCardProps>
               Deine Lieblingsbrote
             </h5>
             <button
-              className="btn btn-sm"
-              style={{ backgroundColor: '#8B6F47', color: 'white' }}
+              className="btn btn-sm dark-brown-button"
               onClick={() => setIsModalOpen(true)}
               disabled={loading}
             >

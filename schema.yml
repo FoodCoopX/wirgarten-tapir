@@ -41,6 +41,130 @@ paths:
                 items:
                   $ref: '#/components/schemas/AbhollisteEntry'
           description: ''
+  /bakery/api/bakery/solver/apply/:
+    post:
+      operationId: bakery_api_bakery_solver_apply_create
+      description: Takes a cached solution (from /solver/preview/) and saves it to
+        the database. This replaces any existing distribution and stove session data
+        for the given week/day.
+      summary: Apply a cached solver solution to the database
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolverApplyRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SolverApplyRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SolverApplyRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolverApplyResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolverError'
+          description: ''
+  /bakery/api/bakery/solver/preview/:
+    post:
+      operationId: bakery_api_bakery_solver_preview_create
+      description: Runs the constraint solver once with multiple solution collection.
+        Solutions are cached for 1 hour. Nothing is saved to the database yet.
+      summary: Run solver and preview multiple solutions
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolverPreviewRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SolverPreviewRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SolverPreviewRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolverPreviewResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolverError'
+          description: ''
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolverError'
+          description: ''
+  /bakery/api/bakery/solver/preview/detail/:
+    get:
+      operationId: bakery_api_bakery_solver_preview_detail_retrieve
+      description: Return full details of a cached solution (stove plan, distribution).
+      summary: Get full details of a cached solver solution
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: solution_index
+        schema:
+          type: integer
+      - in: query
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolverPreviewDetailResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolverError'
+          description: ''
   /bakery/available-breads-for-delivery/:
     get:
       operationId: bakery_available_breads_for_delivery_retrieve
@@ -1747,53 +1871,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreferredLabelBulkUpdate'
-          description: ''
-  /bakery/solver/run/:
-    post:
-      operationId: bakery_solver_run_create
-      description: |-
-        Runs the constraint solver to optimize bread production, assignment, and distribution for a specific week. This will:
-        - Assign breads to unassigned delivery slots (maximizing member preferences)
-        - Create an optimal stove baking plan
-        - Calculate bread distribution per pickup location
-        - Update the database with the results
-      summary: Run the bread baking optimizer
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RunSolverRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/RunSolverRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/RunSolverRequestRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RunSolverResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RunSolverError'
-          description: ''
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RunSolverError'
           description: ''
   /bakery/stove-sessions/:
     get:
@@ -7634,6 +7711,15 @@ components:
         pickup_location_name:
           type: string
           readOnly: true
+        pickup_location_street:
+          type: string
+          readOnly: true
+        pickup_location_post_code:
+          type: string
+          readOnly: true
+        pickup_location_city:
+          type: string
+          readOnly: true
         delivery_day:
           type: integer
           readOnly: true
@@ -7661,7 +7747,10 @@ components:
       - bread_name
       - delivery_day
       - delivery_week
+      - pickup_location_city
       - pickup_location_name
+      - pickup_location_post_code
+      - pickup_location_street
       - subscription
       - year
     BreadDeliveryRequest:
@@ -7757,22 +7846,6 @@ components:
       - labels
       - name
       - weight
-    BreadDistribution:
-      type: object
-      properties:
-        bread_id:
-          type: string
-        bread_name:
-          type: string
-        pickup_location_id:
-          type: string
-        count:
-          type: integer
-      required:
-      - bread_id
-      - bread_name
-      - count
-      - pickup_location_id
     BreadLabel:
       type: object
       description: Serializer for bread labels/categories
@@ -7928,28 +8001,6 @@ components:
       required:
       - name
       - weight
-    BreadQuantity:
-      type: object
-      properties:
-        bread_id:
-          type: string
-        bread_name:
-          type: string
-        total:
-          type: integer
-          description: Total pieces to bake
-        deliveries:
-          type: integer
-          description: Pieces for member deliveries
-        remaining:
-          type: integer
-          description: Extra pieces beyond deliveries (e.g., for external sale)
-      required:
-      - bread_id
-      - bread_name
-      - deliveries
-      - remaining
-      - total
     BreadsPerPickupLocationPerWeek:
       type: object
       properties:
@@ -12437,60 +12488,6 @@ components:
         * `quarterly` - Vierteljährlich
         * `semiannually` - Halbjährlich
         * `yearly` - Jährlich
-    RunSolverError:
-      type: object
-      properties:
-        error:
-          type: string
-      required:
-      - error
-    RunSolverRequestRequest:
-      type: object
-      properties:
-        year:
-          type: integer
-          maximum: 2100
-          minimum: 2020
-        delivery_week:
-          type: integer
-          maximum: 53
-          minimum: 1
-        delivery_day:
-          type: integer
-          maximum: 6
-          minimum: 0
-      required:
-      - delivery_week
-      - year
-    RunSolverResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-        total_deliveries:
-          type: integer
-        sessions_used:
-          type: integer
-          description: Number of baking sessions needed
-        quantities:
-          type: array
-          items:
-            $ref: '#/components/schemas/BreadQuantity'
-        stove_sessions:
-          type: array
-          items:
-            $ref: '#/components/schemas/SolverStoveSession'
-        distribution:
-          type: array
-          items:
-            $ref: '#/components/schemas/BreadDistribution'
-      required:
-      - distribution
-      - quantities
-      - sessions_used
-      - stove_sessions
-      - success
-      - total_deliveries
     SaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -12612,7 +12609,122 @@ components:
       - end_date
       - member
       - start_date
-    SolverStoveSession:
+    SolverApplyRequestRequest:
+      type: object
+      properties:
+        year:
+          type: integer
+        delivery_week:
+          type: integer
+        delivery_day:
+          type: integer
+          nullable: true
+        solution_index:
+          type: integer
+          default: 0
+      required:
+      - delivery_week
+      - year
+    SolverApplyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        solution_index:
+          type: integer
+        message:
+          type: string
+      required:
+      - message
+      - solution_index
+      - success
+    SolverError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    SolverPreviewBreadQuantity:
+      type: object
+      properties:
+        bread_id:
+          type: string
+        bread_name:
+          type: string
+        total:
+          type: integer
+        deliveries:
+          type: integer
+        remaining:
+          type: integer
+      required:
+      - bread_id
+      - bread_name
+      - deliveries
+      - remaining
+      - total
+    SolverPreviewDetailDistribution:
+      type: object
+      properties:
+        bread_id:
+          type: string
+        bread_name:
+          type: string
+        pickup_location_id:
+          type: string
+        pickup_location_name:
+          type: string
+        count:
+          type: integer
+      required:
+      - bread_id
+      - bread_name
+      - count
+      - pickup_location_id
+      - pickup_location_name
+    SolverPreviewDetailResponse:
+      type: object
+      properties:
+        solution_index:
+          type: integer
+        total_solutions:
+          type: integer
+        quantities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolverPreviewBreadQuantity'
+        stove_sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolverPreviewDetailStoveSession'
+        distribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolverPreviewDetailDistribution'
+      required:
+      - distribution
+      - quantities
+      - solution_index
+      - stove_sessions
+      - total_solutions
+    SolverPreviewDetailStoveLayer:
+      type: object
+      properties:
+        layer:
+          type: integer
+        bread_id:
+          type: string
+          nullable: true
+        bread_name:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+      required:
+      - layer
+      - quantity
+    SolverPreviewDetailStoveSession:
       type: object
       properties:
         session:
@@ -12620,10 +12732,59 @@ components:
         layers:
           type: array
           items:
-            $ref: '#/components/schemas/StoveLayer'
+            $ref: '#/components/schemas/SolverPreviewDetailStoveLayer'
       required:
       - layers
       - session
+    SolverPreviewRequestRequest:
+      type: object
+      properties:
+        year:
+          type: integer
+        delivery_week:
+          type: integer
+        delivery_day:
+          type: integer
+          nullable: true
+        max_solutions:
+          type: integer
+          default: 5
+      required:
+      - delivery_week
+      - year
+    SolverPreviewResponse:
+      type: object
+      properties:
+        total_solutions:
+          type: integer
+        solutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolverPreviewSolutionSummary'
+      required:
+      - solutions
+      - total_solutions
+    SolverPreviewSolutionSummary:
+      type: object
+      properties:
+        index:
+          type: integer
+        total_baked:
+          type: integer
+        total_remaining:
+          type: integer
+        sessions_used:
+          type: integer
+        quantities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolverPreviewBreadQuantity'
+      required:
+      - index
+      - quantities
+      - sessions_used
+      - total_baked
+      - total_remaining
     StaticSegment:
       type: object
       properties:
@@ -12776,25 +12937,6 @@ components:
       - file_name
       - upload_id
       - uploaded
-    StoveLayer:
-      type: object
-      properties:
-        layer:
-          type: integer
-        bread_id:
-          type: string
-          nullable: true
-        bread_name:
-          type: string
-          nullable: true
-        bread:
-          type: string
-          nullable: true
-        quantity:
-          type: integer
-      required:
-      - layer
-      - quantity
     StoveSession:
       type: object
       properties:

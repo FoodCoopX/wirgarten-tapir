@@ -5,7 +5,9 @@ from tapir.bakery.views import (
     AbhollisteView,
     AvailableBreadsForDeliveryListView,
     PreferenceSatisfactionMetricsView,
-    RunSolverView,
+    SolverApplyView,
+    SolverPreviewDetailView,
+    SolverPreviewView,
 )
 from tapir.bakery.views_templates import (
     ChooseBreadsView,
@@ -47,7 +49,15 @@ urlpatterns = [
     ),
     path("choose-breads/", ChooseBreadsView.as_view(), name="choose-breads"),
     path("reports/", ReportsView.as_view(), name="reports"),
-    path("solver/run/", RunSolverView.as_view(), name="bakery-solver-run"),
+    path(
+        "api/bakery/solver/preview/", SolverPreviewView.as_view(), name="solver-preview"
+    ),
+    path(
+        "api/bakery/solver/preview/detail/",
+        SolverPreviewDetailView.as_view(),
+        name="solver-preview-detail",
+    ),
+    path("api/bakery/solver/apply/", SolverApplyView.as_view(), name="solver-apply"),
     path(
         "metrics/satisfaction/",
         PreferenceSatisfactionMetricsView.as_view(),

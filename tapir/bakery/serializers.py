@@ -112,6 +112,12 @@ class BreadDeliverySerializer(serializers.ModelSerializer):
     pickup_location_name = serializers.CharField(
         source="pickup_location.name", read_only=True
     )
+    pickup_location_street = serializers.CharField(
+        source="pickup_location.street", read_only=True
+    )
+    pickup_location_city = serializers.CharField(
+        source="pickup_location.city", read_only=True
+    )
     delivery_day = serializers.IntegerField(
         source="pickup_location.delivery_day", read_only=True
     )
@@ -235,26 +241,77 @@ class BreadDistributionSerializer(serializers.Serializer):
     count = serializers.IntegerField()
 
 
-class RunSolverRequestSerializer(serializers.Serializer):
-    year = serializers.IntegerField(min_value=2020, max_value=2100)
-    delivery_week = serializers.IntegerField(min_value=1, max_value=53)
-    delivery_day = serializers.IntegerField(min_value=0, max_value=6, required=False)
-
-
-class RunSolverResponseSerializer(serializers.Serializer):
-    success = serializers.BooleanField()
-    total_deliveries = serializers.IntegerField()
-    sessions_used = serializers.IntegerField(
-        help_text="Number of baking sessions needed"
-    )
-
-    quantities = BreadQuantitySerializer(many=True)
-    stove_sessions = SolverStoveSessionSerializer(many=True)
-    distribution = BreadDistributionSerializer(many=True)
-
-
-class RunSolverErrorSerializer(serializers.Serializer):
+class SolverErrorSerializer(serializers.Serializer):
     error = serializers.CharField()
+
+
+class SolverPreviewRequestSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    delivery_week = serializers.IntegerField()
+    delivery_day = serializers.IntegerField(required=False, allow_null=True)
+    max_solutions = serializers.IntegerField(default=5, required=False)
+
+
+class SolverPreviewBreadQuantitySerializer(serializers.Serializer):
+    bread_id = serializers.CharField()
+    bread_name = serializers.CharField()
+    total = serializers.IntegerField()
+    deliveries = serializers.IntegerField()
+    remaining = serializers.IntegerField()
+
+
+class SolverPreviewSolutionSummarySerializer(serializers.Serializer):
+    index = serializers.IntegerField()
+    total_baked = serializers.IntegerField()
+    total_remaining = serializers.IntegerField()
+    sessions_used = serializers.IntegerField()
+    quantities = SolverPreviewBreadQuantitySerializer(many=True)
+
+
+class SolverPreviewResponseSerializer(serializers.Serializer):
+    total_solutions = serializers.IntegerField()
+    solutions = SolverPreviewSolutionSummarySerializer(many=True)
+
+
+class SolverPreviewDetailStoveLayerSerializer(serializers.Serializer):
+    layer = serializers.IntegerField()
+    bread_id = serializers.CharField(required=False, allow_null=True)
+    bread_name = serializers.CharField(required=False, allow_null=True)
+    quantity = serializers.IntegerField()
+
+
+class SolverPreviewDetailStoveSessionSerializer(serializers.Serializer):
+    session = serializers.IntegerField()
+    layers = SolverPreviewDetailStoveLayerSerializer(many=True)
+
+
+class SolverPreviewDetailDistributionSerializer(serializers.Serializer):
+    bread_id = serializers.CharField()
+    bread_name = serializers.CharField()
+    pickup_location_id = serializers.CharField()
+    pickup_location_name = serializers.CharField()
+    count = serializers.IntegerField()
+
+
+class SolverPreviewDetailResponseSerializer(serializers.Serializer):
+    solution_index = serializers.IntegerField()
+    total_solutions = serializers.IntegerField()
+    quantities = SolverPreviewBreadQuantitySerializer(many=True)
+    stove_sessions = SolverPreviewDetailStoveSessionSerializer(many=True)
+    distribution = SolverPreviewDetailDistributionSerializer(many=True)
+
+
+class SolverApplyRequestSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    delivery_week = serializers.IntegerField()
+    delivery_day = serializers.IntegerField(required=False, allow_null=True)
+    solution_index = serializers.IntegerField(default=0)
+
+
+class SolverApplyResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    solution_index = serializers.IntegerField()
+    message = serializers.CharField()
 
 
 class StoveSessionSerializer(serializers.ModelSerializer):

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
 import { BakeryApi, PickupLocationsApi } from '../../api-client';
 import { useApi } from '../../hooks/useApi';
-import type { AbhollisteEntry, PickupLocation, StoveSession } from '../../api-client/models';
+import type { AbhollisteEntry, PickupLocation, StoveSession, SolverPreviewDetailResponse } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import { RunSolverCard } from '../components/cards/RunSolverCard';
@@ -49,6 +49,8 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const [week, setWeek] = useState(currentWeek);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+
 
   const [deliveryDays, setDeliveryDays] = useState<number[]>([]);
   const [allPickupLocations, setAllPickupLocations] = useState<PickupLocation[]>([]);
@@ -57,6 +59,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const [breadCountsByDay, setBreadCountsByDay] = useState<Record<number, BreadCount[]>>({});
   // Stove sessions
   const [stoveSessionsByDay, setStoveSessionsByDay] = useState<Record<number, StoveSessionGrouped[]>>({});
+  const [previewByDay, setPreviewByDay] = useState<Record<number, SolverPreviewDetailResponse>>({});
 
   // Store Abholliste data for all locations by day
   const [abhollisteByDayByLocation, setAbhollisteByDayByLocation] = useState<
@@ -76,9 +79,35 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
   const isSectionOpen = (key: string) => openSections[key] ?? false;
 
+    const handlePreviewDetail = (day: number, detail: SolverPreviewDetailResponse) => {
+    setPreviewByDay(prev => ({ ...prev, [day]: detail }));
+  };
+
+  const handleApplied = () => {
+    // Reload saved data from DB after applying
+    loadSolverResults();
+  };
+
+
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // When year/week changes, clear preview and reload week-specific data
+  useEffect(() => {
+    if (!initialDataLoaded) return;
+
+    // Clear previous week's preview data
+    setPreviewByDay({});
+    setBreadCountsByDay({});
+    setStoveSessionsByDay({});
+    setAbhollisteByDayByLocation({});
+    setSelectedPickupLocationByDay({});
+    setCheckedByDay({});
+
+    loadSolverResults();
+    loadAllAbhollisten();
+  }, [year, week, initialDataLoaded]);
 
   useEffect(() => {
     loadSolverResults();
@@ -100,6 +129,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       ]);
       setDeliveryDays(deliveryDaysData.days);
       setAllPickupLocations(pickupLocations);
+      setInitialDataLoaded(true);
     } catch (error) {
       console.error('Failed to load initial data:', error);
       alert('Fehler beim Laden der Daten');
@@ -304,24 +334,34 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
           </div>
         ) : (
           deliveryDays.map((day) => {
+            const preview = previewByDay[day];
+
             const dayCounts = breadCountsByDay[day] || [];
             const daySessions = stoveSessionsByDay[day] || [];
 
-            // Calculate deliveries from distribution
+            // Use preview data if available, otherwise fall back to saved DB data
             const breadDeliveries: Record<string, number> = {};
-            dayCounts.forEach(c => {
-              breadDeliveries[c.breadName] = (breadDeliveries[c.breadName] || 0) + c.count;
-            });
-
-            // Calculate total baked from stove sessions
             const breadBaked: Record<string, number> = {};
-            daySessions.forEach(session => {
-              session.layers.forEach(layer => {
-                if (layer.breadName) {
-                  breadBaked[layer.breadName] = (breadBaked[layer.breadName] || 0) + layer.quantity;
-                }
+
+            if (preview) {
+              // From preview detail: quantities
+              preview.quantities.forEach(q => {
+                breadBaked[q.breadName] = (breadBaked[q.breadName] || 0) + q.total;
+                breadDeliveries[q.breadName] = (breadDeliveries[q.breadName] || 0) + q.deliveries;
               });
-            });
+            } else {
+              // From saved DB data
+              dayCounts.forEach(c => {
+                breadDeliveries[c.breadName] = (breadDeliveries[c.breadName] || 0) + c.count;
+              });
+              daySessions.forEach(session => {
+                session.layers.forEach(layer => {
+                  if (layer.breadName) {
+                    breadBaked[layer.breadName] = (breadBaked[layer.breadName] || 0) + layer.quantity;
+                  }
+                });
+              });
+            }
 
             // Combine all bread names
             const allBreadNames = [...new Set([...Object.keys(breadDeliveries), ...Object.keys(breadBaked)])].sort();
@@ -331,15 +371,34 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
             const totalBaked = Object.values(breadBaked).reduce((s, c) => s + c, 0);
             const totalExtra = totalBaked - totalDeliveries;
 
-            // Verteilliste: Use solver results if available, otherwise aggregate from Abholliste
-            const locationBreads: Record<string, Record<string, number>> = {};
-            const hasSolverResults = dayCounts.length > 0;
+            // Build stove sessions display from preview or saved data
+            const displaySessions: StoveSessionGrouped[] = preview
+              ? preview.stoveSessions.map(s => ({
+                  session: s.session,
+                  layers: s.layers.map(l => ({
+                    layer: l.layer,
+                    breadName: l.breadName || null,
+                    quantity: l.quantity,
+                  })),
+                }))
+              : daySessions;
 
-            if (hasSolverResults) {
-              // Use solver results
+            // Verteilliste: Use preview, solver results, or aggregate from Abholliste
+            const locationBreads: Record<string, Record<string, number>> = {};
+            const hasSolverResults = !!preview || dayCounts.length > 0;
+
+            if (preview) {
+              // From preview distribution
+              preview.distribution.forEach(d => {
+                locationBreads[d.pickupLocationName] ??= {};
+                locationBreads[d.pickupLocationName][d.breadName] =
+                  (locationBreads[d.pickupLocationName][d.breadName] || 0) + d.count;
+              });
+            } else if (dayCounts.length > 0) {
+              // From saved DB data
               dayCounts.forEach(c => {
                 locationBreads[c.pickupLocationName] ??= {};
-                locationBreads[c.pickupLocationName][c.breadName] = 
+                locationBreads[c.pickupLocationName][c.breadName] =
                   (locationBreads[c.pickupLocationName][c.breadName] || 0) + c.count;
               });
             } else {
@@ -353,7 +412,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                 entries.forEach(entry => {
                   entry.breads.forEach(b => {
                     const breadName = b.bread_name || 'Unbekannt';
-                    locationBreads[location.name][breadName] = 
+                    locationBreads[location.name][breadName] =
                       (locationBreads[location.name][breadName] || 0) + 1;
                   });
                 });
@@ -366,7 +425,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
             const dayPickupLocations = getPickupLocationsForDay(day);
             const selectedLocation = selectedPickupLocationByDay[day] || '';
-            const abholliste = selectedLocation 
+            const abholliste = selectedLocation
               ? (abhollisteByDayByLocation[day]?.[selectedLocation] || [])
               : [];
             const abhollisteLoading = abhollisteLoadingByDay[day] || false;
@@ -380,7 +439,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
             const ofenplanKey = `ofenplan-${day}`;
             const verteillisteKey = `verteilliste-${day}`;
             const abhollisteKey = `abholliste-${day}`;
-
             const metricsKey = `metrics-${day}`;
 
             return (
@@ -394,20 +452,22 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       </div>
                       <small>KW {week}</small>
                     </div>
-                    <RunSolverCard
+                   <RunSolverCard
                       year={year}
                       deliveryWeek={week}
                       deliveryDay={day}
                       csrfToken={csrfToken}
-                      onSuccess={loadSolverResults}
+                      hasSavedPlan={daySessions.length > 0 || dayCounts.length > 0}
+                      onPreviewDetail={(detail) => handlePreviewDetail(day, detail)}
+                      onApplied={handleApplied}
                     />
+                    
                   </div>
 
                   <div className="card-body">
                     {/* Backliste */}
                     <div className="mb-3">
                       <SectionToggle sectionKey={backlisteKey} title="Backliste" icon="bakery_dining" />
-                      <p className="text-muted small mb-2">Vergleich: Zuweisung vs. Ofenproduktion</p>
 
                       {isSectionOpen(backlisteKey) && (
                         <>
@@ -463,38 +523,37 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                                 <p className="mb-1">
                                   <span className="material-icons" style={{ fontSize: '12px', verticalAlign: 'middle' }}>add_circle</span> = Extra (Reserve/Verkauf)
                                 </p>
-                                <p className="mb-0" >
+                                <p className="mb-0">
                                   <span className="material-icons" style={{ fontSize: '12px', verticalAlign: 'middle' }}>local_fire_department</span> = Gesamt im Ofen gebacken
                                 </p>
                               </div>
-                            </div><ActionButtons reportType="backliste" day={day} label="Backliste" />
-                            </>
-                          ) : (
+                            </div>
+                            <ActionButtons reportType="backliste" day={day} label="Backliste" />
+                          </>) : (
                             <p className="text-muted small text-center py-2">
                               Noch kein Backplan berechnet.
                             </p>
                           )}
-                          
                         </>
                       )}
                     </div>
 
                     <hr />
-                     {/* Metrics Section */}
+
+                    {/* Metrics Section */}
                     <div className="mb-3">
-                      <SectionToggle 
-                        sectionKey={metricsKey} 
-                        title="Präferenz-Zufriedenheit" 
-                        icon="favorite" 
+                      <SectionToggle
+                        sectionKey={metricsKey}
+                        title="Präferenz-Zufriedenheit"
+                        icon="favorite"
                       />
                       <p className="text-muted small mb-2">
                         Wie gut entspricht der Backplan den Mitgliederwünschen?
                       </p>
-                      
-                       
+
                       {isSectionOpen(metricsKey) && (
                         <>
-                          {daySessions.length > 0 ? (
+                          {displaySessions.length > 0 ? (
                             <MetricsCard year={year} week={week} deliveryDay={day} csrfToken={csrfToken} />
                           ) : (
                             <p className="text-muted small text-center py-2">
@@ -507,7 +566,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
                     <hr />
 
-
                     {/* Ofenplan */}
                     <div className="mb-3">
                       <SectionToggle sectionKey={ofenplanKey} title="Ofenplan" icon="local_fire_department" />
@@ -515,9 +573,9 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
                       {isSectionOpen(ofenplanKey) && (
                         <>
-                          {daySessions.length > 0 ? (
+                          {displaySessions.length > 0 ? (
                             <div className="d-flex flex-column gap-2 mb-3">
-                              {daySessions.map((session) => (
+                              {displaySessions.map((session) => (
                                 <div key={session.session} className="card">
                                   <div
                                     className="card-header py-1"
@@ -558,9 +616,11 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                     <div className="mb-3">
                       <SectionToggle sectionKey={verteillisteKey} title="Verteilliste" icon="warehouse" />
                       <p className="text-muted small mb-2">
-                        {hasSolverResults 
-                          ? 'Brote pro Abholstation (lt. Backplan)' 
-                          : 'Brote pro Abholstation (lt. Mitgliederbestellungen)'}
+                        {preview
+                          ? 'Brote pro Abholstation (Vorschau)'
+                          : hasSolverResults
+                            ? 'Brote pro Abholstation (lt. Backplan)'
+                            : 'Brote pro Abholstation (lt. Mitgliederbestellungen)'}
                       </p>
 
                       {isSectionOpen(verteillisteKey) && (
@@ -576,6 +636,12 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                                 <div className="alert alert-info alert-sm mb-2" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
                                   <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>info</span>
                                   {' '}Basierend auf Mitgliederbestellungen (noch kein Backplan)
+                                </div>
+                              )}
+                              {preview && (
+                                <div className="alert alert-warning alert-sm mb-2" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
+                                  <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>preview</span>
+                                  {' '}Vorschau – noch nicht gespeichert
                                 </div>
                               )}
                               <div className="table-responsive mb-3">

@@ -117,7 +117,7 @@ useEffect(() => {
   return (
     <>
       <div className="card h-100 shadow-sm">
-        <div className="card-header border-0" 
+        <div className="card-header border-0 header-darkbrown-on-sahara" 
              style={{ backgroundColor: '#F5E6D3', color: '#8B4513' }}>
           <div className="d-flex justify-content-between align-items-center gap-2">
             <h5 className="mb-0">Brote</h5>

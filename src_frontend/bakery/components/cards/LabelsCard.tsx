@@ -132,8 +132,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
             />
             <button 
               type="submit" 
-              className="btn" 
-              style={{ backgroundColor: '#2E7D32', color: 'white' }}
+              className="btn white-on-green" 
               disabled={!newLabelName.trim()}
             >
               <Plus size={16} />
@@ -143,7 +142,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
 
         {loading ? (
           <div className="text-center py-4">
-            <div className="spinner-border" style={{ color: '#2E7D32' }} role="status">
+            <div className="spinner-border white-on-green" role="status">
               <span className="visually-hidden">Lädt...</span>
             </div>
           </div>

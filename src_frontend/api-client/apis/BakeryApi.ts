@@ -51,9 +51,12 @@ import type {
   PreferredLabelBulkUpdate,
   PreferredLabelBulkUpdateRequest,
   PreferredLabelRequest,
-  RunSolverError,
-  RunSolverRequestRequest,
-  RunSolverResponse,
+  SolverApplyRequestRequest,
+  SolverApplyResponse,
+  SolverError,
+  SolverPreviewDetailResponse,
+  SolverPreviewRequestRequest,
+  SolverPreviewResponse,
   StoveSession,
   ToggleBreadRequestRequest,
   ToggleBreadResponse,
@@ -131,12 +134,18 @@ import {
     PreferredLabelBulkUpdateRequestToJSON,
     PreferredLabelRequestFromJSON,
     PreferredLabelRequestToJSON,
-    RunSolverErrorFromJSON,
-    RunSolverErrorToJSON,
-    RunSolverRequestRequestFromJSON,
-    RunSolverRequestRequestToJSON,
-    RunSolverResponseFromJSON,
-    RunSolverResponseToJSON,
+    SolverApplyRequestRequestFromJSON,
+    SolverApplyRequestRequestToJSON,
+    SolverApplyResponseFromJSON,
+    SolverApplyResponseToJSON,
+    SolverErrorFromJSON,
+    SolverErrorToJSON,
+    SolverPreviewDetailResponseFromJSON,
+    SolverPreviewDetailResponseToJSON,
+    SolverPreviewRequestRequestFromJSON,
+    SolverPreviewRequestRequestToJSON,
+    SolverPreviewResponseFromJSON,
+    SolverPreviewResponseToJSON,
     StoveSessionFromJSON,
     StoveSessionToJSON,
     ToggleBreadRequestRequestFromJSON,
@@ -149,6 +158,21 @@ export interface BakeryAbhollisteListRequest {
     pickupLocationId: string;
     week: number;
     year: number;
+}
+
+export interface BakeryApiBakerySolverApplyCreateRequest {
+    solverApplyRequestRequest: SolverApplyRequestRequest;
+}
+
+export interface BakeryApiBakerySolverPreviewCreateRequest {
+    solverPreviewRequestRequest: SolverPreviewRequestRequest;
+}
+
+export interface BakeryApiBakerySolverPreviewDetailRetrieveRequest {
+    deliveryWeek: number;
+    year: number;
+    deliveryDay?: number;
+    solutionIndex?: number;
 }
 
 export interface BakeryAvailableBreadsForDeliveryCreateRequest {
@@ -418,10 +442,6 @@ export interface BakeryPreferredLabelsUpdateRequest {
     preferredLabelRequest: PreferredLabelRequest;
 }
 
-export interface BakerySolverRunCreateRequest {
-    runSolverRequestRequest: RunSolverRequestRequest;
-}
-
 export interface BakeryStoveSessionsListRequest {
     deliveryDay?: number;
     deliveryWeek?: number;
@@ -506,6 +526,161 @@ export class BakeryApi extends runtime.BaseAPI {
      */
     async bakeryAbhollisteList(requestParameters: BakeryAbhollisteListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AbhollisteEntry>> {
         const response = await this.bakeryAbhollisteListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Takes a cached solution (from /solver/preview/) and saves it to the database. This replaces any existing distribution and stove session data for the given week/day.
+     * Apply a cached solver solution to the database
+     */
+    async bakeryApiBakerySolverApplyCreateRaw(requestParameters: BakeryApiBakerySolverApplyCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SolverApplyResponse>> {
+        if (requestParameters['solverApplyRequestRequest'] == null) {
+            throw new runtime.RequiredError(
+                'solverApplyRequestRequest',
+                'Required parameter "solverApplyRequestRequest" was null or undefined when calling bakeryApiBakerySolverApplyCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/api/bakery/solver/apply/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SolverApplyRequestRequestToJSON(requestParameters['solverApplyRequestRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => SolverApplyResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Takes a cached solution (from /solver/preview/) and saves it to the database. This replaces any existing distribution and stove session data for the given week/day.
+     * Apply a cached solver solution to the database
+     */
+    async bakeryApiBakerySolverApplyCreate(requestParameters: BakeryApiBakerySolverApplyCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SolverApplyResponse> {
+        const response = await this.bakeryApiBakerySolverApplyCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Runs the constraint solver once with multiple solution collection. Solutions are cached for 1 hour. Nothing is saved to the database yet.
+     * Run solver and preview multiple solutions
+     */
+    async bakeryApiBakerySolverPreviewCreateRaw(requestParameters: BakeryApiBakerySolverPreviewCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SolverPreviewResponse>> {
+        if (requestParameters['solverPreviewRequestRequest'] == null) {
+            throw new runtime.RequiredError(
+                'solverPreviewRequestRequest',
+                'Required parameter "solverPreviewRequestRequest" was null or undefined when calling bakeryApiBakerySolverPreviewCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/api/bakery/solver/preview/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SolverPreviewRequestRequestToJSON(requestParameters['solverPreviewRequestRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => SolverPreviewResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Runs the constraint solver once with multiple solution collection. Solutions are cached for 1 hour. Nothing is saved to the database yet.
+     * Run solver and preview multiple solutions
+     */
+    async bakeryApiBakerySolverPreviewCreate(requestParameters: BakeryApiBakerySolverPreviewCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SolverPreviewResponse> {
+        const response = await this.bakeryApiBakerySolverPreviewCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Return full details of a cached solution (stove plan, distribution).
+     * Get full details of a cached solver solution
+     */
+    async bakeryApiBakerySolverPreviewDetailRetrieveRaw(requestParameters: BakeryApiBakerySolverPreviewDetailRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SolverPreviewDetailResponse>> {
+        if (requestParameters['deliveryWeek'] == null) {
+            throw new runtime.RequiredError(
+                'deliveryWeek',
+                'Required parameter "deliveryWeek" was null or undefined when calling bakeryApiBakerySolverPreviewDetailRetrieve().'
+            );
+        }
+
+        if (requestParameters['year'] == null) {
+            throw new runtime.RequiredError(
+                'year',
+                'Required parameter "year" was null or undefined when calling bakeryApiBakerySolverPreviewDetailRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['deliveryDay'] != null) {
+            queryParameters['delivery_day'] = requestParameters['deliveryDay'];
+        }
+
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
+        }
+
+        if (requestParameters['solutionIndex'] != null) {
+            queryParameters['solution_index'] = requestParameters['solutionIndex'];
+        }
+
+        if (requestParameters['year'] != null) {
+            queryParameters['year'] = requestParameters['year'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/api/bakery/solver/preview/detail/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => SolverPreviewDetailResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Return full details of a cached solution (stove plan, distribution).
+     * Get full details of a cached solver solution
+     */
+    async bakeryApiBakerySolverPreviewDetailRetrieve(requestParameters: BakeryApiBakerySolverPreviewDetailRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SolverPreviewDetailResponse> {
+        const response = await this.bakeryApiBakerySolverPreviewDetailRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -3077,51 +3252,6 @@ export class BakeryApi extends runtime.BaseAPI {
      */
     async bakeryPreferredLabelsUpdate(requestParameters: BakeryPreferredLabelsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PreferredLabel> {
         const response = await this.bakeryPreferredLabelsUpdateRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Runs the constraint solver to optimize bread production, assignment, and distribution for a specific week. This will: - Assign breads to unassigned delivery slots (maximizing member preferences) - Create an optimal stove baking plan - Calculate bread distribution per pickup location - Update the database with the results
-     * Run the bread baking optimizer
-     */
-    async bakerySolverRunCreateRaw(requestParameters: BakerySolverRunCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RunSolverResponse>> {
-        if (requestParameters['runSolverRequestRequest'] == null) {
-            throw new runtime.RequiredError(
-                'runSolverRequestRequest',
-                'Required parameter "runSolverRequestRequest" was null or undefined when calling bakerySolverRunCreate().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-        if (this.configuration && this.configuration.apiKey) {
-            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-        }
-
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
-        const response = await this.request({
-            path: `/bakery/solver/run/`,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: RunSolverRequestRequestToJSON(requestParameters['runSolverRequestRequest']),
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => RunSolverResponseFromJSON(jsonValue));
-    }
-
-    /**
-     * Runs the constraint solver to optimize bread production, assignment, and distribution for a specific week. This will: - Assign breads to unassigned delivery slots (maximizing member preferences) - Create an optimal stove baking plan - Calculate bread distribution per pickup location - Update the database with the results
-     * Run the bread baking optimizer
-     */
-    async bakerySolverRunCreate(requestParameters: BakerySolverRunCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RunSolverResponse> {
-        const response = await this.bakerySolverRunCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

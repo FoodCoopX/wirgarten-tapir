@@ -9,7 +9,7 @@ import { CompactBreadCard } from './CompactBreadCard';
 import { CompactPickupLocationCard } from './CompactPickupLocationCard';
 import dayjs from 'dayjs';
 import isoWeek from "dayjs/plugin/isoWeek";
-
+import '../../styles/bakery_styles.css';
 dayjs.extend(isoWeek);
 
 interface ChooseBreadsCardProps {
@@ -164,7 +164,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       />
 
       {/* Instructions */}
-      <div className="alert alert-info mb-3 mt-3">
+      <div className="alert alert-info white-on-green mb-3 mt-3">
         <strong>Du hast {maxBreads} Brot-Anteil{maxBreads !== 1 ? 'e' : ''} für diese Woche.</strong>
         <br />
        <small>
@@ -227,7 +227,8 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                     {delivery.pickupLocation ? (
                       <CompactPickupLocationCard
                         name={delivery.pickupLocationName || 'Unbekannt'}
-                        address={delivery.pickupLocationAddress}
+                        street={delivery.pickupLocationStreet || 'Unbekannt'}
+                        city={delivery.pickupLocationCity || 'Unbekannt'}
                         deliveryDay={delivery.deliveryDay}
                         onEdit={canChangeLocation ? () => setEditingLocation(delivery.id!) : undefined}
                         disabled={saving === delivery.id}
@@ -237,7 +238,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                         <span className="text-muted">Noch nicht gewählt</span>
                         {canChangeLocation && (
                           <button
-                            className="btn btn-sm btn-outline-secondary"
+                            className="btn btn-sm btn-outline-secondary dark-brown-button"
                             onClick={() => setEditingLocation(delivery.id!)}
                             disabled={saving === delivery.id}
                           >
@@ -276,8 +277,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                       <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
                         <span className="text-muted">Noch nicht gewählt</span>
                         <button
-                          className="btn btn-sm"
-                          style={{ backgroundColor: '#8B4513', color: 'white' }}
+                          className="btn btn-sm btn-outline-secondary dark-brown-button"
                           onClick={() => setModalOpen(delivery.id!)}
                           disabled={!delivery.pickupLocation || saving === delivery.id}
                         >
