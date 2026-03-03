@@ -10,8 +10,8 @@ from tapir.deliveries.services.joker_management_service import JokerManagementSe
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_opening_times_manager import (
     PickupLocationOpeningTimesManager,
@@ -90,7 +90,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
     )
     @patch.object(PickupLocationOpeningTime, "objects")
     @patch.object(
-        MemberPickupLocationService, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
     )
     def test_buildDeliveryObject_default_returnsCorrectPickupLocationData(
         self,

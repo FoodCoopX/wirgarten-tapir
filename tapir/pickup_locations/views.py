@@ -21,8 +21,11 @@ from tapir.pickup_locations.serializers import (
     PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityCheckRequestSerializer,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
@@ -328,7 +331,7 @@ class GetMemberPickupLocationApiView(APIView):
                 cache=self.cache,
             )
 
-        pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
+        pickup_location_id = MemberPickupLocationGetter.get_member_pickup_location_id(
             member=member, reference_date=reference_date
         )
 
@@ -377,7 +380,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             )
 
         with transaction.atomic():
-            MemberPickupLocationService.link_member_to_pickup_location(
+            MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=new_pickup_location_id,
                 member=member,
                 valid_from=calculate_pickup_location_change_date(cache=self.cache),
@@ -393,7 +396,7 @@ class ChangeMemberPickupLocationApiView(APIView):
 
     def validate(self, member: Member, new_pickup_location: PickupLocation):
         old_pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id(
+            MemberPickupLocationGetter.get_member_pickup_location_id(
                 member=member, reference_date=get_today(cache=self.cache)
             )
         )

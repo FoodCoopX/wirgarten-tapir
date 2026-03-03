@@ -24,8 +24,8 @@ from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.coop.services.token_builder_coop_entry import TokenBuilderCoopEntry
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.shortcuts import get_from_cache_or_compute
@@ -44,9 +44,7 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import (
-    get_next_delivery_date,
-)
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
@@ -372,7 +370,7 @@ def send_product_order_confirmation(
         at_least_one_product_with_delivery = True
         next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
             reference_date=subscription.start_date,
-            pickup_location_id=MemberPickupLocationService.get_member_pickup_location_id(
+            pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id(
                 member, subscription.start_date
             ),
             delivery_cycle=subscription.product.type.delivery_cycle,

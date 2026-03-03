@@ -7,15 +7,15 @@ from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalcu
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
 class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
     @patch.object(
-        MemberPickupLocationService, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
     )
     @patch.object(
         DeliveryDateCalculator,
@@ -123,7 +123,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         )
 
     @patch.object(
-        MemberPickupLocationService, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
     )
     @patch.object(
         DeliveryDateCalculator,
@@ -171,7 +171,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         )
 
     @patch.object(
-        MemberPickupLocationService, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
     )
     @patch.object(
         DeliveryDateCalculator,
@@ -219,7 +219,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         )
 
     @patch.object(
-        MemberPickupLocationService, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
     )
     @patch.object(
         DeliveryDateCalculator,

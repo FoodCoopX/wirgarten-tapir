@@ -16,8 +16,8 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.coop.models import CoopSharesRevokedLogEntry
 from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.subscriptions.models import SubscriptionsRevokedLogEntry
 from tapir.subscriptions.serializers import (
@@ -151,7 +151,7 @@ class MemberDataToConfirmApiView(APIView):
         cache: dict,
     ) -> dict:
         pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                 member.id, reference_date=get_today(cache=cache), cache=cache
             )
         )

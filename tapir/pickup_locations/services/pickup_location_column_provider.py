@@ -1,8 +1,8 @@
 import datetime
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.wirgarten.models import PickupLocation, Member
 
@@ -40,7 +40,7 @@ class PickupLocationColumnProvider:
         cls, location: PickupLocation, reference_datetime: datetime.datetime, _
     ):
 
-        members_annotated_with_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
+        members_annotated_with_pickup_location = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_id_at_date(
             Member.objects.all(), reference_datetime.date()
         )
 
@@ -55,7 +55,7 @@ class PickupLocationColumnProvider:
         cls, location: PickupLocation, reference_datetime: datetime.datetime, _
     ):
 
-        members_annotated_with_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
+        members_annotated_with_pickup_location = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_id_at_date(
             Member.objects.all(), reference_datetime.date()
         )
 

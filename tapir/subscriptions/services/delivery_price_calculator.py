@@ -11,7 +11,7 @@ from tapir.wirgarten.constants import (
     EVERY_FOUR_WEEKS,
 )
 from tapir.wirgarten.models import Member, Subscription, GrowingPeriod
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import get_active_subscriptions, get_product_price
 
 

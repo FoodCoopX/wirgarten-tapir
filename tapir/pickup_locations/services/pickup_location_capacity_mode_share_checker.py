@@ -1,8 +1,8 @@
 import datetime
 from typing import Dict
 
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
@@ -130,7 +130,7 @@ class PickupLocationCapacityModeShareChecker:
         cache: Dict,
     ):
         member_ids_at_pickup_location = (
-            MemberPickupLocationService.get_members_ids_at_pickup_location(
+            MemberPickupLocationGetter.get_members_ids_at_pickup_location(
                 pickup_location,
                 reference_date,
                 cache,

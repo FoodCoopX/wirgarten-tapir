@@ -6,11 +6,8 @@ from typing_extensions import deprecated
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
-from tapir.deliveries.services.delivery_day_adjustment_service import (
-    DeliveryDayAdjustmentService,
-)
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
@@ -20,6 +17,7 @@ from tapir.wirgarten.models import (
     PickupLocationCapability,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import (
     get_active_product_types,
@@ -42,32 +40,6 @@ def get_active_pickup_location_capabilities(
     return PickupLocationCapability.objects.filter(
         product_type__in=get_active_product_types(next_month, cache=cache)
     ).order_by(*product_type_order_by("product_type__id", "product_type__name"))
-
-
-def get_next_delivery_date(
-    reference_date: date = None, delivery_weekday: int = None, cache: Dict = None
-):
-    """
-    Calculates the next delivery date based on the reference date and the delivery weekday.
-    """
-
-    if reference_date is None:
-        reference_date = get_today(cache=cache)
-
-    if delivery_weekday is None:
-        delivery_weekday = DeliveryDayAdjustmentService.get_adjusted_delivery_weekday(
-            reference_date, cache=cache
-        )
-
-    if reference_date.weekday() > delivery_weekday:
-        next_delivery = reference_date + relativedelta(
-            days=(7 - reference_date.weekday() % 7) + delivery_weekday
-        )
-    else:
-        next_delivery = reference_date + relativedelta(
-            days=delivery_weekday - reference_date.weekday()
-        )
-    return next_delivery
 
 
 @deprecated(
@@ -114,7 +86,7 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = 
 
         if len(active_subs) > 0:
             pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=member.id, reference_date=next_delivery_date, cache=cache
                 )
             )

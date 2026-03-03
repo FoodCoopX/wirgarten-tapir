@@ -1,8 +1,8 @@
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.subscriptions.types import TapirOrder
 from tapir.wirgarten.models import (
@@ -150,7 +150,7 @@ class WaitingListEntryCreator:
             cache=cache,
         )
         current_pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id(
+            MemberPickupLocationGetter.get_member_pickup_location_id(
                 member=member, reference_date=contract_start_date
             )
         )

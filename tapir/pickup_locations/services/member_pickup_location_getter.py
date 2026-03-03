@@ -2,22 +2,13 @@ import datetime
 from typing import Dict, Set, List
 
 from django.db.models import QuerySet, OuterRef, Subquery
-from tapir_mail.triggers.transactional_trigger import (
-    TransactionalTrigger,
-    TransactionalTriggerData,
-)
 
-from tapir.accounts.models import TapirUser
-from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.pickup_locations.models import PickupLocationChangedLogEntry
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute
-from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, MemberPickupLocation, PickupLocation
-from tapir.wirgarten.utils import get_today, format_date
 
 
-class MemberPickupLocationService:
+class MemberPickupLocationGetter:
     ANNOTATION_CURRENT_PICKUP_LOCATION_ID = "current_pickup_location_id"
     ANNOTATION_CURRENT_PICKUP_LOCATION_NAME = "current_pickup_location_name"
 
@@ -159,56 +150,3 @@ class MemberPickupLocationService:
                 return member_pickup_location_object.pickup_location_id
 
         return None
-
-    @staticmethod
-    def link_member_to_pickup_location(
-        pickup_location_id,
-        member: Member,
-        valid_from: datetime.date,
-        actor: TapirUser,
-        cache: dict,
-    ):
-        old_pickup_location = MemberPickupLocationService.get_member_pickup_location(
-            member=member, reference_date=valid_from, cache=cache
-        )
-        if old_pickup_location is None:
-            valid_from = get_today(cache=cache)
-
-        MemberPickupLocation.objects.filter(
-            member=member, valid_from__gte=valid_from
-        ).delete()
-        member_pickup_location = MemberPickupLocation.objects.create(
-            member_id=member.id,
-            pickup_location_id=pickup_location_id,
-            valid_from=valid_from,
-        )
-        PickupLocationChangedLogEntry().populate_pickup_location(
-            actor=actor,
-            member_pickup_location=member_pickup_location,
-            old_pickup_location=old_pickup_location,
-            user=member,
-        ).save()
-
-        date_of_first_delivery = (
-            DeliveryDateCalculator.get_next_delivery_date_any_product(
-                reference_date=valid_from,
-                pickup_location_id=pickup_location_id,
-                cache=cache,
-            )
-        )
-
-        if old_pickup_location is not None:
-            TransactionalTrigger.fire_action(
-                TransactionalTriggerData(
-                    key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
-                    recipient_id_in_base_queryset=member.id,
-                    token_data={
-                        "pickup_location": TapirCache.get_pickup_location_by_id(
-                            cache=cache, pickup_location_id=pickup_location_id
-                        ).name,
-                        "pickup_location_start_date": format_date(
-                            date_of_first_delivery
-                        ),
-                    },
-                ),
-            )

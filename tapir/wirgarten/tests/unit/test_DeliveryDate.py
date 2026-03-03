@@ -2,7 +2,7 @@ from datetime import date
 
 from django.test import TestCase
 
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 
 
 class DeliveryDateTestCase(TestCase):

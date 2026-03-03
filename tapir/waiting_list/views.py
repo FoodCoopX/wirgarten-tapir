@@ -27,8 +27,8 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
@@ -209,7 +209,7 @@ class WaitingListApiView(APIView):
             return entries
 
         pickup_location = get_object_or_404(PickupLocation, id=pickup_location_id)
-        member_ids = MemberPickupLocationService.get_members_ids_at_pickup_location(
+        member_ids = MemberPickupLocationGetter.get_members_ids_at_pickup_location(
             pickup_location=pickup_location,
             reference_date=get_today(cache=self.cache),
             cache=self.cache,
@@ -278,7 +278,7 @@ class WaitingListApiView(APIView):
                 MembershipCancellationManager.get_coop_entry_date(entry.member)
             )
             pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     entry.member.id, reference_date=get_today(cache=cache), cache=cache
                 )
             )

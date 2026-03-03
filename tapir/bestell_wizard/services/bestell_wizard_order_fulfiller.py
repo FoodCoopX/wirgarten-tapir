@@ -11,8 +11,8 @@ from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHan
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -90,7 +90,7 @@ class BestellWizardOrderFulfiller:
         )
 
         if OrderValidator.does_order_need_a_pickup_location(order=order, cache=cache):
-            MemberPickupLocationService.link_member_to_pickup_location(
+            MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=pickup_location.id,
                 member=member,
                 valid_from=contract_start_date,

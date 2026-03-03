@@ -9,8 +9,8 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
@@ -30,8 +30,8 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
-    get_next_delivery_date,
 )
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_product_price,
@@ -134,7 +134,7 @@ def pickup_location_to_dict(
         "capabilities": capabilities_for_pickup_location,
         "members": get_active_subscriptions(next_delivery_date, cache)
         .filter(
-            member_id__in=MemberPickupLocationService.get_members_ids_at_pickup_location(
+            member_id__in=MemberPickupLocationGetter.get_members_ids_at_pickup_location(
                 pickup_location=pickup_location,
                 reference_date=next_delivery_date,
                 cache=cache,

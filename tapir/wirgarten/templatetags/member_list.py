@@ -1,7 +1,7 @@
 from django import template
 
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
@@ -13,7 +13,7 @@ register = template.Library()
 @register.inclusion_tag("wirgarten/template_tags/pickup_location_warning.html")
 def pickup_location_warning(member: Member, cache: dict):
     context = {"show_warning": False, "member_id": member.id}
-    pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
+    pickup_location_id = MemberPickupLocationGetter.get_member_pickup_location_id(
         member=member, reference_date=get_today(cache=cache)
     )
     if pickup_location_id is None:

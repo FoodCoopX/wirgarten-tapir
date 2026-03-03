@@ -23,8 +23,8 @@ from tapir.core.services.newsletter_management_link_provider import (
     NewsletterManagementLinkProvider,
 )
 from tapir.generic_exports.services.member_segment_provider import MemberSegmentProvider
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_mail_token_service import (
     PickupLocationMailTokenService,
@@ -121,13 +121,13 @@ def _register_segments():
 
 
 def get_queryset_for_pickup_location(pickup_location: PickupLocation, cache: dict):
-    queryset = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
+    queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_id_at_date(
         queryset=Member.objects.all(), reference_date=get_today(cache)
     )
 
     return queryset.filter(
         **{
-            MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
+            MemberPickupLocationGetter.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
         }
     )
 

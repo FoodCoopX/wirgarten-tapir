@@ -4,7 +4,7 @@ from typing import Dict
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 
 
 class DateLimitForDeliveryChangeCalculator:

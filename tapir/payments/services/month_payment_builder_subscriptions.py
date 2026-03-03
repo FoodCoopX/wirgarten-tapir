@@ -10,8 +10,8 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -242,7 +242,7 @@ class MonthPaymentBuilderSubscriptions:
         while current_date <= last_of_month:
             current_date = DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
                 reference_date=current_date,
-                pickup_location_id=MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=subscription.member_id,
                     reference_date=current_date,
                     cache=cache,

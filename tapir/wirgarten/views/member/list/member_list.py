@@ -19,8 +19,8 @@ from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -259,10 +259,10 @@ class MemberListView(PermissionRequiredMixin, FilterView):
         )
         today = get_today(cache=self.cache)
         queryset = annotate_member_queryset_with_monthly_payment(queryset, today)
-        queryset = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
+        queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_id_at_date(
             queryset, today
         )
-        queryset = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_name_at_date(
+        queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_name_at_date(
             queryset, today
         )
         queryset = MemberSolidarityContributionService.annotate_member_queryset_with_current_contribution(

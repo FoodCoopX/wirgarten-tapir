@@ -3,8 +3,8 @@ import datetime
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.config import DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.subscriptions.services.subscription_delivered_in_week_checked import (
     SubscriptionDeliveredInWeekChecker,
@@ -201,7 +201,7 @@ class PickListBuilder:
                 return None
         else:
             pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=member.id, reference_date=reference_date, cache=cache
                 )
             )

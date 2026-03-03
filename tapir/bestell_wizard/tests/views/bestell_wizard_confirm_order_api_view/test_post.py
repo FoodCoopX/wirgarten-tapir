@@ -19,8 +19,8 @@ from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.config import (
@@ -945,7 +945,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
         self.assertEqual(
             self.pickup_location_1.id,
-            MemberPickupLocationService.get_member_pickup_location_id(
+            MemberPickupLocationGetter.get_member_pickup_location_id(
                 member=member, reference_date=self.now.date()
             ),
         )

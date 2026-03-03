@@ -9,8 +9,8 @@ from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -187,7 +187,7 @@ class WaitingListEntryConfirmationApplier:
         if pickup_location_wish is None:
             return
 
-        MemberPickupLocationService.link_member_to_pickup_location(
+        MemberPickupLocationSetter.link_member_to_pickup_location(
             pickup_location_wish.pickup_location_id,
             member=member,
             valid_from=pickup_location_change_valid_from,

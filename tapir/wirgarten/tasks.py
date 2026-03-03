@@ -16,8 +16,8 @@ from tapir.wirgarten.models import (
     ScheduledTask,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.file_export import export_file
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,

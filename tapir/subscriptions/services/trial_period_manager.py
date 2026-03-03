@@ -10,7 +10,7 @@ from tapir.deliveries.services.date_limit_for_delivery_change_calculator import 
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.wirgarten.models import Subscription, Product, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_active_subscriptions,

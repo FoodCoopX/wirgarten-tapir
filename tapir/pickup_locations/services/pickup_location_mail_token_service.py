@@ -1,7 +1,7 @@
 from tapir_mail.models import StaticSegmentRecipient
 
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
@@ -21,7 +21,7 @@ class PickupLocationMailTokenService:
             return None
 
         pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                 member_id=recipient.id,
                 reference_date=get_today(cache=cache),
                 cache=cache,

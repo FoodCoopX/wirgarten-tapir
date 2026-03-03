@@ -7,8 +7,8 @@ from tapir.deliveries.services.joker_management_service import JokerManagementSe
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_opening_times_manager import (
     PickupLocationOpeningTimesManager,
@@ -22,7 +22,7 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
 )
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 
 
 class GetDeliveriesService:
@@ -65,7 +65,7 @@ class GetDeliveriesService:
 
         pickup_location = TapirCache.get_pickup_location_by_id(
             cache=cache,
-            pickup_location_id=MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+            pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                 member_id=member.id, reference_date=delivery_date, cache=cache
             ),
         )

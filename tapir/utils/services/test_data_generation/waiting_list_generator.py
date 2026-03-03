@@ -5,8 +5,8 @@ from typing import Dict
 
 from faker import Faker
 
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
@@ -114,10 +114,12 @@ class WaitingListGenerator:
 
             member_pickup_location_id = None
             if entry.member:
-                member_pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id_from_cache(
-                    member_id=entry.member.id,
-                    reference_date=get_today(cache=cache),
-                    cache=cache,
+                member_pickup_location_id = (
+                    MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                        member_id=entry.member.id,
+                        reference_date=get_today(cache=cache),
+                        cache=cache,
+                    )
                 )
             if (
                 cls.CHANGE_PICKUP_LOCATION in desired_changes
@@ -152,7 +154,7 @@ class WaitingListGenerator:
         possible_pickup_locations = set(all_pickup_locations)
         if entry.member is not None:
             member_pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=entry.member.id,
                     reference_date=get_today(cache=cache),
                     cache=cache,

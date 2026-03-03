@@ -22,8 +22,11 @@ from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
@@ -260,7 +263,7 @@ class UpdateSubscriptionsApiView(APIView):
             return None
 
         current_pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id(
+            MemberPickupLocationGetter.get_member_pickup_location_id(
                 member=member, reference_date=contract_start_date
             )
         )
@@ -338,10 +341,10 @@ class UpdateSubscriptionsApiView(APIView):
     ):
         if validated_data.get(
             "pickup_location_id", None
-        ) != MemberPickupLocationService.get_member_pickup_location_id(
+        ) != MemberPickupLocationGetter.get_member_pickup_location_id(
             member=member, reference_date=contract_start_date
         ):
-            MemberPickupLocationService.link_member_to_pickup_location(
+            MemberPickupLocationSetter.link_member_to_pickup_location(
                 member=member,
                 valid_from=contract_start_date,
                 pickup_location_id=validated_data["pickup_location_id"],
@@ -467,7 +470,7 @@ class MemberProfileCapacityCheckApiView(APIView):
         )
 
         if len(ids_of_product_types_over_capacity) == 0:
-            pickup_location = MemberPickupLocationService.get_member_pickup_location(
+            pickup_location = MemberPickupLocationGetter.get_member_pickup_location(
                 member=member, reference_date=subscription_start_date, cache=self.cache
             )
             if (

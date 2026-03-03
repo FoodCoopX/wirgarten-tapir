@@ -1,8 +1,8 @@
 import datetime
 from typing import Dict
 
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
@@ -26,7 +26,7 @@ class PickupLocationCapacityGeneralChecker:
     ) -> bool:
         if (
             already_registered_member
-            and MemberPickupLocationService.get_member_pickup_location_id(
+            and MemberPickupLocationGetter.get_member_pickup_location_id(
                 already_registered_member, subscription_start
             )
             != pickup_location.id
