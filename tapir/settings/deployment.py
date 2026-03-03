@@ -86,7 +86,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "automatic_confirmation": {
         "task": "tapir.subscriptions.tasks.automatic_confirmation_subscriptions_and_share_purchases",
-        "schedule": celery.schedules.crontab(hour="0", minute="30"),
+        "schedule": celery.schedules.crontab(hour="9", minute="30"),
     },
     "create_payments_for_this_month": {
         "task": "tapir.payments.tasks.create_payments_for_this_month",
