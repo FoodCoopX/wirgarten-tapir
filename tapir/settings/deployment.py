@@ -142,14 +142,18 @@ SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
-KEYCLOAK_ADMIN_CONFIG = dict(
-    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
-    PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
-    CLIENT_ID=env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
-    FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
-    REALM_NAME=env.str("KEYCLOAK_REALM_NAME", default="tapir"),
-    CLIENT_SECRET_KEY=env.str("KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"),
-)
+KEYCLOAK_ADMIN_CONFIG = {
+    "SERVER_URL": env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
+    "PUBLIC_URL": env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
+    "CLIENT_ID": env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
+    "FRONTEND_CLIENT_ID": env.str(
+        "KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"
+    ),
+    "REALM_NAME": env.str("KEYCLOAK_REALM_NAME", default="tapir"),
+    "CLIENT_SECRET_KEY": env.str(
+        "KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"
+    ),
+}
 
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 
