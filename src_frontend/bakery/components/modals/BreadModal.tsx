@@ -3,6 +3,7 @@ import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import { PlusLg, XLg, Trash, ChevronDown, ChevronUp } from 'react-bootstrap-icons';
 import type { BreadLabel, BreadList, BreadListRequest } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface BreadModalProps {
   bread: BreadList | null;
@@ -108,7 +109,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
     <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className="modal-dialog modal-lg">
         <div className="modal-content">
-          <div className="modal-header" style={{ backgroundColor: '#F5E6D3', color: '#8B4513' }}>
+          <div className="modal-header header-darkbrown-on-sahara">
             <h5 className="modal-title">
               {bread ? 'Brot bearbeiten' : 'Neues Brot'}
             </h5>
@@ -242,15 +243,12 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
 
               <div className="form-check form-switch mb-3">
                 <input
-                  className="form-check-input"
+                  className="form-check-input form-switch-bakery"
                   type="checkbox"
                   id="isActive"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  style={{
-                    backgroundColor: formData.isActive ? '#2E7D32' : '',
-                    borderColor: '#2E7D32',
-                  }}
+                  
                 />
                 <label className="form-check-label" htmlFor="isActive">
                   aktiv
@@ -314,7 +312,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                     {/* Can be baked in multiple stoves */}
                     <div className="form-check form-switch mb-3">
                       <input
-                        className="form-check-input"
+                        className="form-check-input form-switch-bakery"
                         type="checkbox"
                         id="oneBatchCanBeBakedInMoreThanOneStove"
                         checked={formData.oneBatchCanBeBakedInMoreThanOneStove}
@@ -408,8 +406,8 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
               <button type="button" className="btn btn-secondary" onClick={onClose}>
                 Abbrechen
               </button>
-              <button type="submit" className="btn" style={{ backgroundColor: '#8B4513', color: 'white' }}>
-                Speichern
+              <button type="submit" className="btn dark-brown-button">
+                Speichern & Schließen
               </button>
             </div>
           </form>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Ingredient, IngredientRequest } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface IngredientModalProps {
   ingredient: Ingredient | null;
@@ -77,34 +78,26 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                 />
               </div>
 
+              
               <div className="form-check form-switch mb-3">
                 <input
-                  className="form-check-input"
+                  className="form-check-input form-switch-bakery"
                   type="checkbox"
                   id="is_organic"
                   checked={formData.isOrganic}
-                  style={{
-                    backgroundColor: formData.isOrganic ? '#2E7D32' : '',
-                    borderColor: '#2E7D32',
-                  }}
                   onChange={(e) => setFormData({ ...formData, isOrganic: e.target.checked })}
                 />
                 <label className="form-check-label" htmlFor="is_organic">
-                  <span className="badge" style={{ backgroundColor: '#81C784', color: 'white' }}>Bio</span>
+                  <span className="badge badge-bio">Bio</span>
                   {' '}
                 </label>
               </div>
-
-              <div className="form-check form-switch">
+               <div className="form-check form-switch">
                 <input
-                  className="form-check-input"
+                  className="form-check-input form-switch-bakery"
                   type="checkbox"
                   id="isActive"
                   checked={formData.isActive}
-                  style={{
-                    backgroundColor: formData.isActive ? '#2E7D32' : '',
-                    borderColor: '#2E7D32',
-                  }}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 />
                 <label className="form-check-label" htmlFor="isActive">
@@ -118,7 +111,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                 Abbrechen
               </button>
               <button type="submit" className="btn" style={{ backgroundColor: '#5D7A4A', color: 'white' }}>
-                Speichern
+                Speichern & Schließen
               </button>
             </div>
           </form>

@@ -230,8 +230,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
               </button>
               <button
                 type="button"
-                className="btn"
-                style={{ backgroundColor: '#8B6F47', color: 'white' }}
+                className="btn dark-brown-button"
                 onClick={handleSave}
                 disabled={saving}
               >

@@ -1,7 +1,7 @@
 :root {
   /* Bakery color palette */
   --bakery-primary: #D4A574;
-  --bakery-primary-dark: #8B6F47;
+  --bakery-primary-dark: #9c5e07ce;
   --bakery-primary-darker: #8B4513;
   --bakery-table-header: #F5E6D3;
   --bakery-success: #28a745;
@@ -11,61 +11,12 @@
   --bakery-white: #ffffff;
 }
 
-/* === Background Colors === */
-.bg-bakery-primary {
-  background-color: var(--bakery-primary) !important;
-  color: var(--bakery-white) !important;
+.text-bakery-success-dark {
+  color: var(--bakery-success-dark) !important;
 }
 
-.bg-bakery-primary-dark {
-  background-color: var(--bakery-primary-dark) !important;
-  color: var(--bakery-white) !important;
-}
-
-.bg-bakery-table-header {
-  background-color: var(--bakery-table-header) !important;
-}
-
-.bg-bakery-checked {
-  background-color: var(--bakery-checked-row) !important;
-}
-
-/* === Text Colors === */
-.text-bakery-primary {
-  color: var(--bakery-primary) !important;
-}
-
-.text-bakery-dark {
-  color: var(--bakery-primary-dark) !important;
-}
-
-.text-bakery-darker {
-  color: var(--bakery-primary-darker) !important;
-}
-
-.text-bakery-success {
-  color: var(--bakery-success) !important;
-}
-
-.text-bakery-muted {
-  color: var(--bakery-muted) !important;
-}
-
-/* === Buttons === */
-.btn-bakery-primary {
-  background-color: var(--bakery-primary-dark);
-  color: var(--bakery-white);
-  border: none;
-}
-
-.btn-bakery-primary:hover {
-  background-color: var(--bakery-hover-dark);
-  color: var(--bakery-white);
-}
-
-.btn-bakery-primary:disabled {
-  background-color: var(--bakery-primary-dark);
-  opacity: 0.65;
+.text-bakery-muted-light {
+  color: var(--bakery-muted-light) !important;
 }
 
 .dark-brown-button {
@@ -78,123 +29,31 @@
   color: var(--bakery-white);
 }
 
-/* === Spinner === */
-.spinner-bakery {
-  color: var(--bakery-primary) !important;
-}
-
-/* === Card Header === */
-.card-header-bakery {
-  background-color: var(--bakery-primary);
-  color: var(--bakery-white);
-}
-
-.card-header-bakery-sub {
-  background-color: var(--bakery-primary);
-  color: var(--bakery-white);
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-}
-
 .header-darkbrown-on-sahara {
   background-color: var(--bakery-table-header);
   color: var(--bakery-primary-darker);
 }
-
-/* === Table === */
-.table-bakery {
-  font-size: 0.8rem;
+.header-white-on-middle-brown {
+  background-color: var(--bakery-primary);
+  color: var(--bakery-white);
 }
 
-.table-bakery thead {
-  background-color: var(--bakery-table-header);
-}
-
-.table-bakery .summary-row {
-  background-color: var(--bakery-table-header);
-  font-weight: bold;
-}
-
-.table-bakery-summary {
-  background-color: var(--bakery-table-header) !important;
-  font-weight: bold;
-}
-
-/* === Checked Row State === */
-.row-checked {
-  background-color: var(--bakery-checked-row) !important;
-  text-decoration: line-through;
-  opacity: 0.7;
-}
-
-/* === Vertical Table Header (for bread names) === */
-.th-vertical {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  min-width: 30px;
-  max-width: 30px;
-  padding: 8px 4px;
-  font-size: 0.75rem;
-}
-
-.th-vertical-sm {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  min-width: 28px;
-  max-width: 28px;
-  padding: 8px 2px;
-  font-size: 0.7rem;
-}
-
-/* === Alert Styles === */
 .white-on-green {
   background-color: var(--bakery-success-dark) !important;
   color: var(--bakery-white) !important;
 }
 
-/* === Section Toggle === */
-.section-toggle {
-  cursor: pointer;
-  user-select: none;
+.form-switch-bakery.form-check-input:checked {
+  background-color: var(--bakery-success-dark);
+  border-color: var(--bakery-success-dark);
 }
 
-/* === Material Icon Sizes === */
-.icon-xs {
-  font-size: 12px;
-  vertical-align: middle;
+.form-switch-bakery.form-check-input {
+  border-color: var(--bakery-success-dark);
 }
 
-.icon-sm {
-  font-size: 14px;
-  vertical-align: middle;
-}
-
-.icon-md {
-  font-size: 16px;
-  vertical-align: middle;
-}
-
-.icon-section {
-  font-size: 18px;
-}
-
-/* === Alert Compact === */
-.alert-compact {
-  font-size: 0.75rem;
-  padding: 0.5rem;
-}
-
-/* === Table Cell Utilities === */
-.td-summary {
-  font-weight: bold;
-  background-color: var(--bakery-table-header);
-}
-
-.td-nowrap {
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.td-location {
-  font-size: 0.75rem;
+/* === Badges === */
+.badge-bio {
+  background-color: #81C784;
+  color: var(--bakery-white);
 }

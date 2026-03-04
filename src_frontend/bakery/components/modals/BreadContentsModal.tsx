@@ -129,8 +129,8 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
         }}
       >
         <div 
-          className="p-3 d-flex justify-content-between align-items-center" 
-          style={{ backgroundColor: '#F5E6D3', color: '#8B4513', borderRadius: '8px 8px 0 0' }}
+          className="p-3 d-flex justify-content-between align-items-center header-darkbrown-on-sahara" 
+          style={{ borderRadius: '8px 8px 0 0' }}
         >
           <h5 className="mb-0">
             Inhaltsstoffe: {bread.name}
@@ -141,7 +141,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
         <div className="p-4">
           {loading ? (
             <div className="text-center py-4">
-              <div className="spinner-border" style={{ color: '#8B4513' }} role="status">
+              <div className="spinner-border text-bakery-primary-dark" role="status">
                 <span className="visually-hidden">Lädt...</span>
               </div>
             </div>
@@ -233,8 +233,8 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
         </div>
 
         <div className="p-3 border-top d-flex justify-content-end" style={{ borderRadius: '0 0 8px 8px' }}>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Schließen
+          <button type="button" className="btn btn-secondary dark-brown-button" onClick={onClose}>
+            Speichern & Schließen
           </button>
         </div>
       </div>

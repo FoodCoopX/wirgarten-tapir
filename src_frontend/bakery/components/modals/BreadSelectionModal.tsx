@@ -83,16 +83,14 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
         <div className="modal-dialog modal-xl modal-dialog-scrollable">
           <div className="modal-content">
             <div 
-              className="modal-header" 
-              style={{ backgroundColor: '#D4A574', color: 'white' }}
+              className="modal-header header-darkbrown-on-sahara" 
             >
               <h5 className="modal-title">
-                <span className="material-icons align-middle me-2">bakery_dining</span>
                 Brot auswählen für {pickupLocationName}
               </h5>
               <button 
                 type="button" 
-                className="btn-close btn-close-white" 
+                className="btn-close" 
                 onClick={onClose}
               />
             </div>
@@ -100,7 +98,7 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
             <div className="modal-body" style={{ backgroundColor: '#FAF8F5' }}>
               {loading ? (
                 <div className="text-center py-5">
-                  <div className="spinner-border" style={{ color: '#D4A574' }} />
+                  <div className="spinner-border text-bakery-primary-dark" />
                   <p className="mt-2 text-muted">Lade verfügbare Brote...</p>
                 </div>
               ) : (

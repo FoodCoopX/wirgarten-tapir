@@ -220,7 +220,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                     
                     {!chooseStationPerBread && !isFirstSlot && (
                       <div className="alert alert-info mb-2 py-2">
-                        <small>Wird mit Brotanteil 1 synchronisiert</small>
+                        <small>Wird mit den anderen Brotanteilen synchronisiert</small>
                       </div>
                     )}
 

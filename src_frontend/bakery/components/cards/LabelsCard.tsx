@@ -3,6 +3,7 @@ import { BakeryApi } from '../../../api-client';
 import { Plus, Pencil, Trash, Check, X, ToggleOn, ToggleOff } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
 import type { BreadLabel, BreadLabelRequest } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface LabelsCardProps {
   csrfToken: string;
@@ -194,9 +195,8 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
                     </div>
                     <div className="btn-group btn-group-sm">
                       <button
-                        className="btn border-0"
+                        className={`btn border-0 ${label.isActive ? 'text-bakery-success-dark' : 'text-bakery-muted-light'}`}
                         title={label.isActive ? 'Deaktivieren' : 'Aktivieren'}
-                        style={{ color: label.isActive ? '#2E7D32' : '#9E9E9E' }}
                         onClick={() => handleToggleActive(label)}
                       >
                         {label.isActive ? <ToggleOn size={16} /> : <ToggleOff size={16} />}

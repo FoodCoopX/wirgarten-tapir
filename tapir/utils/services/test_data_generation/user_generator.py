@@ -23,16 +23,16 @@ from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
+from tapir.utils.shortcuts import get_from_cache_or_compute, get_timezone_aware_datetime
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
-    Member,
-    GrowingPeriod,
-    Subscription,
-    PickupLocation,
-    MemberPickupLocation,
-    Product,
     CoopShareTransaction,
+    GrowingPeriod,
+    Member,
+    MemberPickupLocation,
+    PickupLocation,
+    Product,
+    Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -113,7 +113,7 @@ class UserGenerator:
 
         for index, parsed_user in enumerate(parsed_users[:user_count]):
             if (index + 1) % 20 == 0:
-                print(f"\t{index+1}/{user_count}...")
+                print(f"\t{index + 1}/{user_count}...")
             cls.generate_user(
                 parsed_user=parsed_user,
                 cache=cache,
@@ -442,6 +442,19 @@ class UserGenerator:
             )
 
         MemberPickupLocation.objects.bulk_create(member_pickup_locations)
+
+        # Update BreadDelivery pickup locations since bulk_create skips signals
+        from tapir.bakery.models import BreadDelivery
+
+        print("Updating BreadDelivery pickup locations...")
+        updated_count = 0
+        for mpl in member_pickup_locations:
+            count = BreadDelivery.objects.filter(
+                subscription__member=mpl.member,
+                pickup_location__isnull=True,
+            ).update(pickup_location=mpl.pickup_location)
+            updated_count += count
+        print(f"Updated {updated_count} BreadDelivery records with pickup locations")
 
     @classmethod
     def get_confirmation_datetime(cls, reference_date: datetime.date, cache: dict):

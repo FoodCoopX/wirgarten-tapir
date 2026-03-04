@@ -117,13 +117,13 @@ useEffect(() => {
   return (
     <>
       <div className="card h-100 shadow-sm">
-        <div className="card-header border-0 header-darkbrown-on-sahara" 
-             style={{ backgroundColor: '#F5E6D3', color: '#8B4513' }}>
+        <div className="card-header border-0 header-darkbrown-on-sahara" >
+            
           <div className="d-flex justify-content-between align-items-center gap-2">
             <h5 className="mb-0">Brote</h5>
             <div className="input-group input-group-sm mx-3" style={{ maxWidth: '300px' }}>
               <span className="input-group-text bg-white border-end-0">
-                <Search size={14} style={{ color: '#8B4513' }} />
+                <Search size={14} style={{ color: 'var(--bakery-primary-darker)' }} />
               </span>
               <input
                 type="text"
@@ -137,7 +137,7 @@ useEffect(() => {
                   className="btn btn-sm"
                   type="button"
                   onClick={() => setSearchTerm('')}
-                  style={{ color: '#8B4513' }}
+                  style={{ color: 'var(--bakery-primary-darker)' }}
                 >
                   <XLg size={14} />
                 </button>
@@ -151,8 +151,8 @@ useEffect(() => {
                 checked={showOnlyActive}
                 onChange={(e) => setShowOnlyActive(e.target.checked)}
                 style={{
-                  backgroundColor: showOnlyActive ? '#8B4513' : 'transparent',
-                  borderColor: '#8B4513'
+                  backgroundColor: showOnlyActive ? 'var(--bakery-primary-darker)' : 'transparent',
+                  borderColor: 'var(--bakery-primary-darker)'
                 }}
               />
               <label className="form-check-label" htmlFor="showOnlyActive" style={{ fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
@@ -160,8 +160,7 @@ useEffect(() => {
               </label>
             </div>
             <button 
-              className="btn btn-sm py-0 d-inline-flex align-items-center gap-1" 
-              style={{ backgroundColor: '#8B4513', color: 'white' }}
+              className="btn btn-sm py-0 d-inline-flex align-items-center gap-1 dark-brown-button" 
               onClick={handleCreate}
             >
               <Plus size={16} /> neu
@@ -172,7 +171,7 @@ useEffect(() => {
         <div className="card-body" style={{ backgroundColor: '#FBF8F3' }}>
           {loading ? (
             <div className="text-center py-4">
-              <div className="spinner-border" style={{ color: '#8B4513' }} role="status">
+              <div className="spinner-border" style={{ color: 'var(--bakery-primary-darker)' }} role="status">
                 <span className="visually-hidden">Lädt...</span>
               </div>
             </div>

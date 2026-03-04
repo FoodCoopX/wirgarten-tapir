@@ -122,11 +122,11 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
         }}
       >
         <div 
-          className="p-3 d-flex justify-content-between align-items-center" 
-          style={{ backgroundColor: '#F5E6D3', color: '#8B4513', borderRadius: '8px 8px 0 0' }}
+          className="p-3 d-flex justify-content-between align-items-center header-darkbrown-on-sahara" 
+          style={{ borderRadius: '8px 8px 0 0' }}
         >
           <h5 className="mb-0 d-inline-flex align-items-center gap-2">
-            <Tag size={20} />
+            
             Labels: {bread.name}
           </h5>
           <button type="button" className="btn-close" onClick={onClose}></button>
@@ -135,7 +135,7 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
         <div className="p-4">
           {loading ? (
             <div className="text-center py-4">
-              <div className="spinner-border" style={{ color: '#8B4513' }} role="status">
+              <div className="spinner-border text-bakery-primary-dark" role="status">
                 <span className="visually-hidden">Lädt...</span>
               </div>
             </div>
@@ -155,7 +155,7 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
                         className="list-group-item d-flex justify-content-between align-items-center"
                         style={{ 
                           cursor: 'pointer',
-                          backgroundColor: isAssigned ? '#F5E6D3' : 'white'
+                          backgroundColor: isAssigned ? 'var(--bakery-table-header)' : 'white'
                         }}
                         onClick={() => handleToggleLabel(label.id!)}
                       >
@@ -171,8 +171,8 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
                             onChange={() => handleToggleLabel(label.id!)}
                             onClick={(e) => e.stopPropagation()}
                             style={{
-                              backgroundColor: isAssigned ? '#8B6F47' : '',
-                              borderColor: isAssigned ? '#8B6F47' : '',
+                              backgroundColor: isAssigned ? 'var(--bakery-primary-dark)' : '',
+                              borderColor: isAssigned ? 'var(--bakery-primary-dark)' : '',
                               cursor: 'pointer',
                             }}
                           />
@@ -193,8 +193,8 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
         </div>
 
         <div className="p-3 border-top d-flex justify-content-end" style={{ borderRadius: '0 0 8px 8px' }}>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Schließen
+          <button type="button" className="btn btn-secondary dark-brown-button" onClick={onClose}>
+            Speichern & Schließen
           </button>
         </div>
       </div>

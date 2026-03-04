@@ -54,7 +54,7 @@ export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps>
 
             {deliveryDay !== undefined && deliveryDay !== null && (
               <div className="d-flex align-items-center text-muted small" style={{ marginLeft: '26px' }}>
-                <Calendar size={14} className="me-1" />
+                
                 <span style={{ fontSize: '0.85rem' }}>
                   Lieferung: {DAY_LABELS[deliveryDay] || `Tag ${deliveryDay}`}
                 </span>

@@ -29,6 +29,7 @@ ERROR_LOG_DIR = env.str("ERROR_LOG_DIR", default="error_logs")
 
 ENABLE_SILK_PROFILING = False
 
+
 # Application definition
 INSTALLED_APPS = [
     # Must come before contrib.auth to let the custom templates be discovered for auth views
@@ -210,7 +211,13 @@ CORS_ALLOW_CREDENTIALS = True
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },

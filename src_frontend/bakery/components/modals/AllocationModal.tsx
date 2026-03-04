@@ -7,6 +7,7 @@ import type {
   BreadCapacityPickupLocation, 
   PickupLocationsByDeliveryDayResponse 
 } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface AllocationModalProps {
   isOpen: boolean;
@@ -210,8 +211,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
         >
           <div className="modal-content">
             <div
-              className="modal-header"
-              style={{ backgroundColor: '#D4A574', color: 'white' }}
+              className="modal-header header-white-on-middle-brown"
             >
               <h5 className="modal-title">
                 Mengen zuweisen - {dayLabel}, KW {week}/{year}
@@ -364,8 +364,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
               </button>
               <button
                 type="button"
-                className="btn d-inline-flex align-items-center gap-1"
-                style={{ backgroundColor: '#8B6F47', color: 'white' }}
+                className="btn d-inline-flex align-items-center gap-1 dark-brown-button"
                 onClick={handleSaveAndClose}
                 disabled={saving}
               >
