@@ -370,8 +370,14 @@ class ChangeMemberPickupLocationApiView(APIView):
             PickupLocation, id=new_pickup_location_id
         )
 
+        valid_from = calculate_pickup_location_change_date(cache=self.cache)
+
         try:
-            self.validate(member=member, new_pickup_location=new_pickup_location)
+            self.validate(
+                member=member,
+                new_pickup_location=new_pickup_location,
+                valid_from=valid_from,
+            )
         except ValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
@@ -383,7 +389,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=new_pickup_location_id,
                 member=member,
-                valid_from=calculate_pickup_location_change_date(cache=self.cache),
+                valid_from=valid_from,
                 actor=request.user,
                 cache=self.cache,
             )
@@ -394,10 +400,15 @@ class ChangeMemberPickupLocationApiView(APIView):
             ).data
         )
 
-    def validate(self, member: Member, new_pickup_location: PickupLocation):
+    def validate(
+        self,
+        member: Member,
+        new_pickup_location: PickupLocation,
+        valid_from: datetime.date,
+    ):
         old_pickup_location_id = (
             MemberPickupLocationGetter.get_member_pickup_location_id(
-                member=member, reference_date=get_today(cache=self.cache)
+                member=member, reference_date=valid_from
             )
         )
         if old_pickup_location_id == new_pickup_location.id:
