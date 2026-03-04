@@ -2,6 +2,7 @@ import datetime
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.types import TapirOrder
@@ -181,6 +182,7 @@ class ApplyTapirOrderManager:
         new_subscriptions: list[Subscription],
         cache: dict,
         from_waiting_list: bool,
+        solidarity_contribution: SolidarityContribution | None,
     ):
         if subscriptions_existed_before_changes:
             send_contract_change_confirmation(
@@ -193,4 +195,5 @@ class ApplyTapirOrderManager:
                 cache=cache,
                 from_waiting_list=from_waiting_list,
                 coop_share_transaction=None,
+                solidarity_contribution=solidarity_contribution,
             )

@@ -278,6 +278,8 @@ def _register_triggers():
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
+            "Solidarbeitrag - Betrag": "solidarity_contribution_amount",
+            "Solidarbeitrag - Startdatum": "solidarity_contribution_start_date",
         }
         | TOKENS_COOP_ENTRY,
         required=True,
@@ -402,6 +404,8 @@ def _register_triggers():
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
+            "Solidarbeitrag - Betrag": "solidarity_contribution_amount",
+            "Solidarbeitrag - Startdatum": "solidarity_contribution_start_date",
         }
         | TOKENS_COOP_ENTRY,
         required=True,

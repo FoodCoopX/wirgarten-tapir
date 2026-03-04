@@ -812,6 +812,7 @@ class AdditionalProductForm(forms.Form):
                 cache=self.cache,
                 from_waiting_list=False,
                 coop_share_transaction=None,
+                solidarity_contribution=None,
             )
 
     def has_shares_selected(self):

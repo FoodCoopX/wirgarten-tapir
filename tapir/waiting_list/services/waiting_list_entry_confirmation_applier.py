@@ -78,13 +78,16 @@ class WaitingListEntryConfirmationApplier:
             cache=cache,
         )
 
+        solidarity_contribution = None
         if not waiting_list_entry.member:
-            MemberSolidarityContributionService.assign_contribution_to_member(
-                member=member,
-                change_date=contract_start_date,
-                actor=actor,
-                cache=cache,
-                amount=validated_data["solidarity_contribution"],
+            solidarity_contribution = (
+                MemberSolidarityContributionService.assign_contribution_to_member(
+                    member=member,
+                    change_date=contract_start_date,
+                    actor=actor,
+                    cache=cache,
+                    amount=validated_data["solidarity_contribution"],
+                )
             )
 
         subscriptions_existed_before_changes, new_subscriptions = (
@@ -106,6 +109,7 @@ class WaitingListEntryConfirmationApplier:
                 new_subscriptions=new_subscriptions,
                 cache=cache,
                 from_waiting_list=True,
+                solidarity_contribution=solidarity_contribution,
             )
 
         if is_new_member:

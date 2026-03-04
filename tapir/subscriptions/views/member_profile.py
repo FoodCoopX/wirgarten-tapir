@@ -373,6 +373,7 @@ class UpdateSubscriptionsApiView(APIView):
             new_subscriptions=new_subscriptions,
             cache=self.cache,
             from_waiting_list=False,
+            solidarity_contribution=None,
         )
 
         self.change_payment_rhythm_if_necessary(

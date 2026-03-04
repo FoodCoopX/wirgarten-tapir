@@ -102,6 +102,7 @@ def renew_contract_same_conditions(request, **kwargs):
         cache=cache,
         from_waiting_list=False,
         coop_share_transaction=None,
+        solidarity_contribution=None,
     )
 
     return HttpResponseRedirect(member_detail_url(member_id))

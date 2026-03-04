@@ -59,6 +59,7 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
+    format_currency,
 )
 
 
@@ -358,6 +359,7 @@ def send_product_order_confirmation(
     cache: dict,
     from_waiting_list: bool,
     coop_share_transaction: CoopShareTransaction | None,
+    solidarity_contribution: SolidarityContribution | None,
 ):
     min_contract_start_date = min([subscription.start_date for subscription in subs])
     min_contract_end_date = min([subscription.end_date for subscription in subs])
@@ -396,6 +398,14 @@ def send_product_order_confirmation(
                     else "Keine Lieferung"
                 ),
                 "contract_list": format_subscription_list_html(list(subs)),
+                "solidarity_contribution_amount": format_currency(
+                    solidarity_contribution.amount if solidarity_contribution else 0
+                ),
+                "solidarity_contribution_start_date": (
+                    format_date(solidarity_contribution.start_date)
+                    if solidarity_contribution
+                    else "Kein Datum"
+                ),
             }
             | TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
                 coop_share_transaction
@@ -418,7 +428,7 @@ def annotate_member_queryset_with_coop_shares_total_value(
             Subquery(
                 CoopShareTransaction.objects.filter(
                     member_id=OuterRef(outer_ref),
-                    valid_at__lte=get_today(cache=cache),
+                    valid_at__lte=reference_date,
                 )
                 .values("member_id")
                 .annotate(total_value=Sum(F("quantity") * F("share_price")))

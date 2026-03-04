@@ -112,7 +112,7 @@ class BestellWizardOrderFulfiller:
         if len(subscriptions) == 0 and coop_share_transaction is not None:
             solidarity_contribution_start_date = coop_share_transaction.valid_at
 
-        cls.create_solidarity_contribution(
+        solidarity_contribution = cls.create_solidarity_contribution(
             member=member,
             contribution=validated_serializer_data["solidarity_contribution"],
             contract_start_date=solidarity_contribution_start_date,
@@ -131,11 +131,12 @@ class BestellWizardOrderFulfiller:
             )
         else:
             send_product_order_confirmation(
-                member,
-                subscriptions,
+                member=member,
+                subs=subscriptions,
                 cache=cache,
                 from_waiting_list=False,
                 coop_share_transaction=coop_share_transaction,
+                solidarity_contribution=solidarity_contribution,
             )
 
         return member
@@ -240,9 +241,9 @@ class BestellWizardOrderFulfiller:
         actor: TapirUser,
     ):
         if contribution == 0:
-            return
+            return None
 
-        MemberSolidarityContributionService.assign_contribution_to_member(
+        return MemberSolidarityContributionService.assign_contribution_to_member(
             member=member,
             change_date=contract_start_date,
             cache=cache,

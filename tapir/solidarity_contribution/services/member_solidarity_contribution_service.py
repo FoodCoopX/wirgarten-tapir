@@ -59,7 +59,7 @@ class MemberSolidarityContributionService:
                 old_contribution=last_contribution,
                 new_contribution=None,
             )
-            return
+            return None
 
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=change_date, cache=cache
@@ -85,6 +85,8 @@ class MemberSolidarityContributionService:
             old_contribution=last_contribution,
             new_contribution=new_contribution,
         )
+
+        return new_contribution
 
     @classmethod
     def create_log_entry_if_necessary(
