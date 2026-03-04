@@ -282,9 +282,9 @@ def _register_triggers():
         | TOKENS_COOP_ENTRY,
         required=True,
     )
-    TransactionalTrigger.register_action(
-        "BestellWizard: Nur Geno-Mitgliedschaft",
-        Events.REGISTER_MEMBERSHIP_ONLY,
+    register_transactional_trigger(
+        name="BestellWizard: Nur Geno-Mitgliedschaft",
+        key=Events.REGISTER_MEMBERSHIP_ONLY,
         tokens=TOKENS_COOP_ENTRY,
         required=lambda: legal_status_is_cooperative(cache={}),
     )
