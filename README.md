@@ -1,11 +1,10 @@
-# Tapir Member & Subscription Management System
+# Tapir Member & Subscription & Logistics & Communication Management System for CSAs in Germany, Switzerland and Austria
 
-Tapir is a member and subscription management system to be used by [WirGarten e.V](https://www.wirgarten.com/).
+Tapir is a member & subscription & logistics & communication management system to be used by CSAs in all legal forms (Cooperative - eG, associactions - eV or non membership legal forms).
 
-Tapir [has a trunk](https://www.youtube.com/watch?v=JgwBecM_E6Q), but not quite such a beautiful one as
-[Mme. l'élephan](https://github.com/elefan-grenoble/gestion-compte). Tapir is badass,
-[but not quite as badass as the other
-animals](https://www.youtube.com/watch?v=zJm6nDnR2SE). Let's teach Tapir some tricks!
+Tapir is currently used by 20+ CSAa across Germany and Austria and growing rapidly. 
+
+It is currently getting modifiedfor the use in community-supported bakeries. 
 
 ## Getting started
 
