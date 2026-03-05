@@ -4,7 +4,11 @@ from decimal import Decimal
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.solidarity_contribution.models import (
+    SolidarityContribution,
+    SolidarityContributionChangedLogEntry,
+)
+from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, GrowingPeriodFactory, NOW
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -64,10 +68,13 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertEqual(1, SolidarityContribution.objects.count())
         contribution = SolidarityContribution.objects.get()
-        self.assertEqual(member.id, contribution.member_id)
-        self.assertEqual(Decimal("10.65"), contribution.amount)
-        self.assertEqual(self.CONTRACT_START_DATE, contribution.start_date)
-        self.assertEqual(self.growing_period.end_date, contribution.end_date)
+        self.assert_contribution_is_correct(
+            contribution=contribution,
+            member_id=member.id,
+            amount=Decimal("10.65"),
+            start_date=self.CONTRACT_START_DATE,
+            end_date=self.growing_period.end_date,
+        )
 
     def test_post_normalMemberSendsValueLowerThanCurrent_returns400(self):
         member = MemberFactory.create(is_superuser=False)
@@ -260,3 +267,80 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
         self.assertEqual(amount, contribution.amount)
         self.assertEqual(start_date, contribution.start_date)
         self.assertEqual(end_date, contribution.end_date)
+
+    def test_post_onlyFutureContributionExistsAndStartContributionNow_futureContributionDeletedAndNewContributionStartsNow(
+        self,
+    ):
+        target = MemberFactory.create(is_superuser=False)
+        user = MemberFactory.create(is_superuser=True)
+        self.client.force_login(user)
+
+        SolidarityContribution.objects.create(
+            member=target,
+            amount=15,
+            start_date=self.growing_period.start_date.replace(
+                year=self.growing_period.start_date.year + 1
+            ),
+            end_date=self.growing_period.end_date.replace(
+                year=self.growing_period.end_date.year + 1
+            ),
+        )
+
+        response = self.client.post(
+            reverse("solidarity_contribution:update_member_contribution"),
+            data={"amount": -1, "member_id": target.id, "start_contribution_now": True},
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        new_contribution = SolidarityContribution.objects.get()
+
+        self.assert_contribution_is_correct(
+            contribution=new_contribution,
+            member_id=target.id,
+            amount=Decimal("-1"),
+            start_date=self.CONTRACT_START_DATE,
+            end_date=self.growing_period.end_date,
+        )
+
+    def test_post_onlyFutureContributionExistsAndDontStartContributionNow_futureContributionDeletedAndNewContributionStartsAtDateOfPreviousContribution(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+
+        SolidarityContributionFactory.create(
+            member=member,
+            amount=15,
+            start_date=datetime.date(year=2023, month=6, day=22),
+        )
+
+        response = self.client.post(
+            reverse("solidarity_contribution:update_member_contribution"),
+            data={
+                "amount": 17,
+                "member_id": member.id,
+                "start_contribution_now": False,
+            },
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        new_contribution = SolidarityContribution.objects.get()
+
+        self.assert_contribution_is_correct(
+            contribution=new_contribution,
+            member_id=member.id,
+            amount=Decimal("17"),
+            start_date=datetime.date(year=2023, month=6, day=22),
+            end_date=self.growing_period.end_date,
+        )
+
+        self.assertEqual(1, SolidarityContributionChangedLogEntry.objects.count())
+        log_entry = SolidarityContributionChangedLogEntry.objects.get()
+        self.assertEqual(member.email, log_entry.user.email)
+        self.assertEqual(member.email, log_entry.actor.email)
+        self.assertEqual(Decimal(15), log_entry.old_contribution_amount)
+        self.assertEqual(Decimal(17), log_entry.new_contribution_amount)

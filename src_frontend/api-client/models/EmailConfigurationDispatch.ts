@@ -53,6 +53,12 @@ export interface EmailConfigurationDispatch {
     overrideRecipients: any | null;
     /**
      * 
+     * @type {string}
+     * @memberof EmailConfigurationDispatch
+     */
+    readonly overrideRecipientsDisplay: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof EmailConfigurationDispatch
      */
@@ -85,6 +91,7 @@ export function instanceOfEmailConfigurationDispatch(value: object): value is Em
     if (!('emailConfigurationVersion' in value) || value['emailConfigurationVersion'] === undefined) return false;
     if (!('scheduledTime' in value) || value['scheduledTime'] === undefined) return false;
     if (!('overrideRecipients' in value) || value['overrideRecipients'] === undefined) return false;
+    if (!('overrideRecipientsDisplay' in value) || value['overrideRecipientsDisplay'] === undefined) return false;
     if (!('sentCount' in value) || value['sentCount'] === undefined) return false;
     if (!('openedCount' in value) || value['openedCount'] === undefined) return false;
     if (!('deliveredCount' in value) || value['deliveredCount'] === undefined) return false;
@@ -106,6 +113,7 @@ export function EmailConfigurationDispatchFromJSONTyped(json: any, ignoreDiscrim
         'emailConfigurationVersion': EmailConfigurationVersionFromJSON(json['email_configuration_version']),
         'scheduledTime': (new Date(json['scheduled_time'])),
         'overrideRecipients': json['override_recipients'],
+        'overrideRecipientsDisplay': json['override_recipients_display'],
         'sentCount': json['sent_count'],
         'openedCount': json['opened_count'],
         'deliveredCount': json['delivered_count'],
@@ -117,7 +125,7 @@ export function EmailConfigurationDispatchFromJSONTyped(json: any, ignoreDiscrim
       return EmailConfigurationDispatchToJSONTyped(json, false);
   }
 
-  export function EmailConfigurationDispatchToJSONTyped(value?: Omit<EmailConfigurationDispatch, 'sent_count'|'opened_count'|'delivered_count'|'error_count'> | null, ignoreDiscriminator: boolean = false): any {
+  export function EmailConfigurationDispatchToJSONTyped(value?: Omit<EmailConfigurationDispatch, 'override_recipients_display'|'sent_count'|'opened_count'|'delivered_count'|'error_count'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

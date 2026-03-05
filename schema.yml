@@ -6503,6 +6503,10 @@ components:
           type: string
           format: date-time
         override_recipients: {}
+        override_recipients_display:
+          type: string
+          nullable: true
+          readOnly: true
         sent_count:
           type: integer
           readOnly: true
@@ -6522,6 +6526,7 @@ components:
       - id
       - opened_count
       - override_recipients
+      - override_recipients_display
       - scheduled_time
       - sent_count
     EmailConfigurationDispatchRequest:
@@ -10562,9 +10567,12 @@ components:
         member_id:
           type: string
           minLength: 1
+        start_contribution_now:
+          type: boolean
       required:
       - amount
       - member_id
+      - start_contribution_now
     subscription_date_changeRequest:
       type: object
       properties:

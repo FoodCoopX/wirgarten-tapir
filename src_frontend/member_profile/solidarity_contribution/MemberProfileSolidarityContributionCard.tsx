@@ -26,13 +26,13 @@ const MemberProfileSolidarityContributionCard: React.FC<
     SolidarityContribution[]
   >([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [newContributionAsString, setNewContributionAsStringAsString] =
-    useState("0");
+  const [newContributionAsString, setNewContributionAsString] = useState("0");
   const [showValidation, setShowValidation] = useState(false);
   const [changeValidFrom, setChangeValidFrom] = useState(new Date());
   const [userCanSetLowerValue, setUserCanSetLowerValue] = useState(false);
   const [userCanUpdateContribution, setUserCanUpdateContribution] =
     useState(false);
+  const [startContributionNow, setStartContributionNow] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -59,13 +59,11 @@ const MemberProfileSolidarityContributionCard: React.FC<
   useEffect(() => {
     const current = getCurrentContribution();
     if (current) {
-      setNewContributionAsStringAsString(current.amount);
+      setNewContributionAsString(current.amount);
     } else if (solidarityContributions.length > 0) {
-      setNewContributionAsStringAsString(
-        solidarityContributions[solidarityContributions.length - 1].amount,
-      );
+      setNewContributionAsString(solidarityContributions.at(-1)!.amount);
     } else {
-      setNewContributionAsStringAsString("0");
+      setNewContributionAsString("0");
     }
   }, [solidarityContributions]);
 
@@ -86,7 +84,9 @@ const MemberProfileSolidarityContributionCard: React.FC<
       .solidarityContributionApiUpdateMemberContributionCreate({
         soliSerializerRequest: {
           memberId: memberId,
-          amount: parseFloat(newContributionAsString),
+          amount: Number.parseFloat(newContributionAsString),
+          startContributionNow:
+            !shouldAskIfStartsNowOrLater() || startContributionNow,
         },
       })
       .then((contributions) => {
@@ -107,15 +107,15 @@ const MemberProfileSolidarityContributionCard: React.FC<
       return false;
     }
 
-    const newContributionAsFloat = parseFloat(newContributionAsString);
-    if (isNaN(newContributionAsFloat)) {
+    const newContributionAsFloat = Number.parseFloat(newContributionAsString);
+    if (Number.isNaN(newContributionAsFloat)) {
       return false;
     }
 
     let currentContributionAsFloat = 0;
     const current = getCurrentContribution();
     if (current) {
-      currentContributionAsFloat = parseFloat(current.amount);
+      currentContributionAsFloat = Number.parseFloat(current.amount);
     }
 
     return newContributionAsFloat < currentContributionAsFloat;
@@ -133,7 +133,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
   function buildCurrentContribution() {
     const contribution = getCurrentContribution();
     const amount = contribution
-      ? formatCurrency(parseFloat(contribution.amount))
+      ? formatCurrency(Number.parseFloat(contribution.amount))
       : "Kein Beitrag";
 
     return "Aktueller Beitrag: " + amount;
@@ -154,19 +154,37 @@ const MemberProfileSolidarityContributionCard: React.FC<
         <br />
         <span>
           Ab dem {formatDateNumeric(contribution.startDate)}:{" "}
-          {formatCurrency(parseFloat(contribution.amount))}
+          {formatCurrency(Number.parseFloat(contribution.amount))}
         </span>
       </span>
     ));
   }
 
   function newValueIsValid() {
-    const newContributionAsFloat = parseFloat(newContributionAsString);
-    if (isNaN(newContributionAsFloat)) {
+    const newContributionAsFloat = Number.parseFloat(newContributionAsString);
+    if (Number.isNaN(newContributionAsFloat)) {
       return false;
     }
 
     return !shouldShowWarningLowerValue();
+  }
+
+  function shouldAskIfStartsNowOrLater() {
+    if (solidarityContributions.length === 0) {
+      return false;
+    }
+
+    return solidarityContributions[0].startDate > changeValidFrom;
+  }
+
+  function getValidFromDate() {
+    if (!shouldAskIfStartsNowOrLater()) {
+      return changeValidFrom;
+    }
+
+    return startContributionNow
+      ? changeValidFrom
+      : solidarityContributions[0].startDate;
   }
 
   function buildContent() {
@@ -214,6 +232,25 @@ const MemberProfileSolidarityContributionCard: React.FC<
             Solidarbeitrag anpassen
           </Modal.Header>
           <Modal.Body>
+            {shouldAskIfStartsNowOrLater() && (
+              <Form.Group className={"mb-2"}>
+                <Form.Check
+                  id={"solidarity_contribution_now_or_later"}
+                  label={"Beitrag sofort starten"}
+                  onChange={(event) =>
+                    setStartContributionNow(event.target.checked)
+                  }
+                  checked={startContributionNow}
+                />
+                <Form.Text>
+                  Deiner aktueller Solidarbeitrag startet am{" "}
+                  {formatDateNumeric(solidarityContributions[0].startDate)}.
+                  Wenn du den ändern willst, kannst du entscheiden ob der neuer
+                  Beitrag so bald wie möglich starten soll oder erst zum
+                  geplantem Start-Datum.
+                </Form.Text>
+              </Form.Group>
+            )}
             <Form.Group>
               <Form.Label>Neuer Beitrag (€)</Form.Label>
               <Form.Control
@@ -221,19 +258,20 @@ const MemberProfileSolidarityContributionCard: React.FC<
                 step={0.01}
                 value={newContributionAsString}
                 onChange={(event) =>
-                  setNewContributionAsStringAsString(event.target.value)
+                  setNewContributionAsString(event.target.value)
                 }
                 isInvalid={showValidation && !newValueIsValid()}
                 isValid={showValidation && newValueIsValid()}
               />
-              {showValidation && isNaN(parseFloat(newContributionAsString)) && (
-                <>
-                  <Form.Text className={"text-danger"}>
-                    Ungültiger Zahl
-                  </Form.Text>
-                  <br />
-                </>
-              )}
+              {showValidation &&
+                Number.isNaN(Number.parseFloat(newContributionAsString)) && (
+                  <>
+                    <Form.Text className={"text-danger"}>
+                      Ungültiger Zahl
+                    </Form.Text>
+                    <br />
+                  </>
+                )}
               {showValidation && shouldShowWarningLowerValue() && (
                 <>
                   <Form.Text className={"text-danger"}>
@@ -244,7 +282,8 @@ const MemberProfileSolidarityContributionCard: React.FC<
                 </>
               )}
               <Form.Text>
-                Neuer Beitrag gültig ab dem {formatDateNumeric(changeValidFrom)}
+                Neuer Beitrag gültig ab dem{" "}
+                {formatDateNumeric(getValidFromDate())}
               </Form.Text>
             </Form.Group>
           </Modal.Body>
