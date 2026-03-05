@@ -214,13 +214,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/existing_member_purchases_extra_shares_serializerRequest'
+              $ref: '#/components/schemas/ExistingMemberPurchasesSharesRequestRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/existing_member_purchases_extra_shares_serializerRequest'
+              $ref: '#/components/schemas/ExistingMemberPurchasesSharesRequestRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/existing_member_purchases_extra_shares_serializerRequest'
+              $ref: '#/components/schemas/ExistingMemberPurchasesSharesRequestRequest'
         required: true
       security:
       - tokenAuth: []
@@ -6929,6 +6929,29 @@ components:
       required:
       - content
       - name
+    ExistingMemberPurchasesSharesRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        number_of_shares_to_add:
+          type: integer
+        iban:
+          type: string
+          minLength: 1
+        account_owner:
+          type: string
+          minLength: 1
+        as_admin:
+          type: boolean
+        start_date:
+          type: string
+          format: date
+      required:
+      - as_admin
+      - member_id
+      - number_of_shares_to_add
     ExportSegment:
       type: object
       properties:
@@ -10522,27 +10545,6 @@ components:
           minLength: 1
       required:
       - entry_id
-    existing_member_purchases_extra_shares_serializerRequest:
-      type: object
-      properties:
-        member_id:
-          type: string
-          minLength: 1
-        number_of_shares_to_add:
-          type: integer
-        iban:
-          type: string
-          nullable: true
-          minLength: 1
-        account_owner:
-          type: string
-          nullable: true
-          minLength: 1
-      required:
-      - account_owner
-      - iban
-      - member_id
-      - number_of_shares_to_add
     member_mail_category_data:
       type: object
       properties:

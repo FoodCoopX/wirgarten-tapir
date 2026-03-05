@@ -7,20 +7,24 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import CoopSharesAdminModal from "./CoopSharesAdminModal.tsx";
 
 interface CoopSharesCardProps {
   memberId: string;
   csrfToken: string;
+  adminVersion: boolean;
 }
 
 const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
   memberId,
   csrfToken,
+  adminVersion,
 }) => {
   const coopApi = useApi(CoopApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<CoopShareTransaction[]>([]);
   const [bestellWizardUrl, setBestellWizardUrl] = useState("");
+  const [showAdminModal, setShowAdminModal] = useState(false);
 
   useEffect(() => {
     loadShareData();
@@ -79,64 +83,83 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
   }
 
   return (
-    <Card style={{ marginBottom: "1rem", textAlign: "center" }}>
-      <Card.Body>
-        {loading ? (
-          <Spinner />
-        ) : (
-          <>
-            <div className="contract-tile-number">
-              <strong>{getCurrentNumberOfShares()}</strong> ×
-            </div>
-            <strong>Genossenschaftsanteile</strong>
-            <hr />
-            <small>
-              <table style={{ width: "100%" }}>
-                <tbody>
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id}>
-                      <td>
-                        <span
-                          className="material-icons"
-                          style={{ fontSize: "1em" }}
-                        >
-                          {getTransactionIcon(transaction)}
-                        </span>
-                      </td>
-                      <td>{formatDateNumeric(transaction.validAt)}</td>
-                      <td style={{ textAlign: "right" }}>
-                        {formatCurrency(
-                          Number.parseInt(transaction.sharePrice) *
-                            transaction.quantity,
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </small>
-          </>
-        )}
-      </Card.Body>
-      <Card.Footer>
-        <div className={"d-flex justify-content-end"} style={{ width: "100%" }}>
-          <TapirButton
-            variant={"outline-primary"}
-            icon={"add"}
-            onClick={() => {
-              if (!canBuyMoreShares()) {
-                alert(
-                  "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist.",
-                );
-                return;
-              }
-              location.assign(bestellWizardUrl);
-            }}
-            loading={loading}
-          />
-        </div>
-      </Card.Footer>
-    </Card>
+    <>
+      <Card style={{ marginBottom: "1rem", textAlign: "center" }}>
+        <Card.Body>
+          {loading ? (
+            <Spinner />
+          ) : (
+            <>
+              <div className="contract-tile-number">
+                <strong>{getCurrentNumberOfShares()}</strong> ×
+              </div>
+              <strong>Genossenschaftsanteile</strong>
+              <hr />
+              <small>
+                <table style={{ width: "100%" }}>
+                  <tbody>
+                    {transactions.map((transaction) => (
+                      <tr key={transaction.id}>
+                        <td>
+                          <span
+                            className="material-icons"
+                            style={{ fontSize: "1em" }}
+                          >
+                            {getTransactionIcon(transaction)}
+                          </span>
+                        </td>
+                        <td>{formatDateNumeric(transaction.validAt)}</td>
+                        <td style={{ textAlign: "right" }}>
+                          {formatCurrency(
+                            Number.parseInt(transaction.sharePrice) *
+                              transaction.quantity,
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </small>
+            </>
+          )}
+        </Card.Body>
+        <Card.Footer>
+          <div
+            className={"d-flex justify-content-end"}
+            style={{ width: "100%" }}
+          >
+            <TapirButton
+              variant={"outline-primary"}
+              icon={"add"}
+              onClick={() => {
+                if (adminVersion) {
+                  setShowAdminModal(true);
+                  return;
+                }
+
+                if (!canBuyMoreShares()) {
+                  alert(
+                    "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist.",
+                  );
+                  return;
+                }
+                location.assign(bestellWizardUrl);
+              }}
+              loading={loading}
+            />
+          </div>
+        </Card.Footer>
+      </Card>
+      {adminVersion && (
+        <CoopSharesAdminModal
+          memberId={memberId}
+          csrfToken={csrfToken}
+          show={showAdminModal}
+          onHide={() => setShowAdminModal(false)}
+          bestellWizardUrl={bestellWizardUrl}
+        />
+      )}
+    </>
   );
 };
 

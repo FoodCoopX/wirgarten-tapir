@@ -105,11 +105,12 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
 
     coopApi
       .coopApiExistingMemberPurchasesSharesCreate({
-        existingMemberPurchasesExtraSharesSerializerRequest: {
+        existingMemberPurchasesSharesRequestRequest: {
           memberId: memberId,
           numberOfSharesToAdd: selectedNumberOfCoopShares,
           iban: personalData.iban,
           accountOwner: personalData.accountOwner,
+          asAdmin: false,
         },
       })
       .then((redirectUrl) => location.assign(redirectUrl))

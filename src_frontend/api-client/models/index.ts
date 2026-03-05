@@ -47,7 +47,7 @@ export * from './EmailDispatchRequest';
 export * from './EmailDispatchWithRetries';
 export * from './EmailTemplate';
 export * from './EmailTemplateRequest';
-export * from './ExistingMemberPurchasesExtraSharesSerializerRequest';
+export * from './ExistingMemberPurchasesSharesRequestRequest';
 export * from './ExportSegment';
 export * from './ExportSegmentColumn';
 export * from './ExtendedMemberCredit';

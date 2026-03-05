@@ -2,9 +2,9 @@ from django.core.exceptions import BadRequest
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
-from rest_framework import status, viewsets, permissions, serializers
-from rest_framework.exceptions import ValidationError
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import status, viewsets, permissions
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.models import EmailConfigurationDispatch
@@ -13,6 +13,7 @@ from tapir.accounts.models import EmailChangeRequest
 from tapir.coop.serializers import (
     MinimumNumberOfSharesResponseSerializer,
     GetCoopShareTransactionsResponseSerializer,
+    ExistingMemberPurchasesSharesRequestSerializer,
 )
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.member_needs_banking_data_checker import (
@@ -34,6 +35,7 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Member,
     CoopShareTransaction,
@@ -97,33 +99,34 @@ class ExistingMemberPurchasesSharesApiView(APIView):
 
     @extend_schema(
         responses={200: str},
-        request=inline_serializer(
-            name="existing_member_purchases_extra_shares_serializer",
-            fields={
-                "member_id": serializers.CharField(),
-                "number_of_shares_to_add": serializers.IntegerField(),
-                "iban": serializers.CharField(allow_null=True),
-                "account_owner": serializers.CharField(allow_null=True),
-            },
-        ),
+        request=ExistingMemberPurchasesSharesRequestSerializer,
     )
     def post(self, request):
-        member_id = request.data.get("member_id")
+        serializer = ExistingMemberPurchasesSharesRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member_id = serializer.validated_data["member_id"]
         member = get_object_or_404(Member, id=member_id)
         check_permission_or_self(pk=member_id, request=request)
 
-        number_of_shares_to_add = int(request.data.get("number_of_shares_to_add"))
+        as_admin = serializer.validated_data["as_admin"]
+        if serializer.validated_data["as_admin"] and not request.user.has_perm(
+            Permission.Coop.MANAGE
+        ):
+            raise PermissionDenied("Du hast hast die nötige Berechtigung nicht.")
+
+        number_of_shares_to_add = serializer.validated_data["number_of_shares_to_add"]
         if number_of_shares_to_add <= 0:
             raise ValidationError("Number of coop shares must be positive")
 
-        if not member.is_student:
+        if not member.is_student and not as_admin:
             self.validate_number_of_shares(
                 number_of_shares_to_add=number_of_shares_to_add,
                 cache=self.cache,
                 member=member,
             )
 
-        if MembershipCancellationManager.is_in_coop_trial(member):
+        if MembershipCancellationManager.is_in_coop_trial(member) and not as_admin:
             raise ValidationError(
                 "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
             )
@@ -131,20 +134,25 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         needs_banking_data = (
             MemberNeedsBankingDataChecker.does_member_need_banking_data(member)
         )
-        iban = request.data.get("iban", None)
-        account_owner = request.data.get("account_owner", None)
+        iban = serializer.validated_data.get("iban", None)
+        account_owner = serializer.validated_data.get("account_owner", None)
         if needs_banking_data and (iban is None or account_owner is None):
             raise ValidationError("Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)")
+
+        if as_admin:
+            shares_valid_at = serializer.validated_data["start_date"]
+        else:
+            shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=self.cache),
+                apply_buffer_time=True,
+                cache=self.cache,
+            )
 
         with transaction.atomic():
             CoopSharePurchaseHandler.buy_cooperative_shares(
                 quantity=number_of_shares_to_add,
                 member=member,
-                shares_valid_at=ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=get_today(cache=self.cache),
-                    apply_buffer_time=True,
-                    cache=self.cache,
-                ),
+                shares_valid_at=shares_valid_at,
                 cache=self.cache,
                 actor=request.user,
             )

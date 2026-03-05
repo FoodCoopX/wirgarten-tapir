@@ -15,14 +15,14 @@
 
 import * as runtime from '../runtime';
 import type {
-  ExistingMemberPurchasesExtraSharesSerializerRequest,
+  ExistingMemberPurchasesSharesRequestRequest,
   GetCoopShareTransactionsResponse,
   Member,
   MinimumNumberOfSharesResponse,
 } from '../models/index';
 import {
-    ExistingMemberPurchasesExtraSharesSerializerRequestFromJSON,
-    ExistingMemberPurchasesExtraSharesSerializerRequestToJSON,
+    ExistingMemberPurchasesSharesRequestRequestFromJSON,
+    ExistingMemberPurchasesSharesRequestRequestToJSON,
     GetCoopShareTransactionsResponseFromJSON,
     GetCoopShareTransactionsResponseToJSON,
     MemberFromJSON,
@@ -36,7 +36,7 @@ export interface CoopApiDeleteMemberDestroyRequest {
 }
 
 export interface CoopApiExistingMemberPurchasesSharesCreateRequest {
-    existingMemberPurchasesExtraSharesSerializerRequest: ExistingMemberPurchasesExtraSharesSerializerRequest;
+    existingMemberPurchasesSharesRequestRequest: ExistingMemberPurchasesSharesRequestRequest;
 }
 
 export interface CoopApiGetCoopShareTransactionsRetrieveRequest {
@@ -99,10 +99,10 @@ export class CoopApi extends runtime.BaseAPI {
     /**
      */
     async coopApiExistingMemberPurchasesSharesCreateRaw(requestParameters: CoopApiExistingMemberPurchasesSharesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
-        if (requestParameters['existingMemberPurchasesExtraSharesSerializerRequest'] == null) {
+        if (requestParameters['existingMemberPurchasesSharesRequestRequest'] == null) {
             throw new runtime.RequiredError(
-                'existingMemberPurchasesExtraSharesSerializerRequest',
-                'Required parameter "existingMemberPurchasesExtraSharesSerializerRequest" was null or undefined when calling coopApiExistingMemberPurchasesSharesCreate().'
+                'existingMemberPurchasesSharesRequestRequest',
+                'Required parameter "existingMemberPurchasesSharesRequestRequest" was null or undefined when calling coopApiExistingMemberPurchasesSharesCreate().'
             );
         }
 
@@ -124,7 +124,7 @@ export class CoopApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: ExistingMemberPurchasesExtraSharesSerializerRequestToJSON(requestParameters['existingMemberPurchasesExtraSharesSerializerRequest']),
+            body: ExistingMemberPurchasesSharesRequestRequestToJSON(requestParameters['existingMemberPurchasesSharesRequestRequest']),
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {

@@ -154,3 +154,53 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
             response.json(),
         )
         self.assertEqual(1, CoopShareTransaction.objects.count())
+
+    def test_post_normalMemberTriesToActAsAdmin_returns403AndDontPurchaseAnything(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+
+        url = reverse("coop:existing_member_purchases_shares")
+        data = {"member_id": member.id, "number_of_shares_to_add": 3, "as_admin": True}
+        response = self.client.post(url, data)
+
+        self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(CoopShareTransaction.objects.exists())
+        self.assertEqual(
+            {"detail": "Du hast hast die nötige Berechtigung nicht."},
+            response.json(),
+        )
+
+    def test_post_sendingLessThanTheMinimumShareAsAdmin_dontValidateMinimumNumberOfShares(
+        self,
+    ):
+        GrowingPeriodFactory.create(
+            start_date=get_today() - datetime.timedelta(days=100)
+        )
+        admin = MemberFactory.create(is_superuser=True)
+        other_member = MemberFactory.create(
+            is_superuser=False,
+            iban="test_iban",
+            account_owner="test_owner",
+            sepa_consent=timezone.now(),
+        )
+        self.client.force_login(admin)
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_MIN_SHARES).update(value=5)
+
+        data = {
+            "member_id": other_member.id,
+            "number_of_shares_to_add": 1,
+            "as_admin": True,
+            "start_date": datetime.date(year=2021, month=7, day=8),
+        }
+        response = self.client.post(
+            reverse("coop:existing_member_purchases_shares"), data
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        self.assertEqual(1, CoopShareTransaction.objects.count())
+        transaction = CoopShareTransaction.objects.get()
+        self.assertEqual(1, transaction.quantity)
+        self.assertEqual(datetime.date(year=2021, month=7, day=8), transaction.valid_at)

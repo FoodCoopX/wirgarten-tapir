@@ -59,7 +59,7 @@ models/EmailDispatchRequest.ts
 models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
-models/ExistingMemberPurchasesExtraSharesSerializerRequest.ts
+models/ExistingMemberPurchasesSharesRequestRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
 models/ExtendedMemberCredit.ts

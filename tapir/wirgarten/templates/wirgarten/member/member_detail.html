@@ -33,7 +33,11 @@
                     </div>
                 {% endif %}
                 <div id="member-contracts">
-                    {% if show_coop_shares %}<div id="coop_shares_card" data-member-id="{{ object.id }}"></div>{% endif %}
+                    {% if show_coop_shares %}
+                        <div id="coop_shares_card"
+                             data-member-id="{{ object.id }}"
+                             data-user-is-admin="{{ perms.accounts.manage }}"></div>
+                    {% endif %}
                     <div id="contract-tiles"
                          data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
                          data-member-id="{{ object.pk }}"

@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, Ref } from "react";
 import { Button, Spinner } from "react-bootstrap";
 
 interface TapirButtonProps {
@@ -16,6 +16,7 @@ interface TapirButtonProps {
   iconPosition?: "left" | "right";
   rotateIcon?: string;
   className?: string;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
@@ -72,6 +73,7 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       type={props.type ?? "button"}
       title={props.tooltip}
       className={props.className}
+      ref={props.ref}
     >
       {(props.iconPosition === "left" || !props.iconPosition) && buildIcon()}
       {props.text &&

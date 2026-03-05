@@ -125,6 +125,7 @@ if (domNodeCoopSharesCard) {
     <CoopSharesCard
       memberId={domNodeCoopSharesCard.dataset.memberId!}
       csrfToken={getCsrfToken()}
+      adminVersion={domNodeCoopSharesCard.dataset.userIsAdmin === "True"}
     />,
   );
 }
