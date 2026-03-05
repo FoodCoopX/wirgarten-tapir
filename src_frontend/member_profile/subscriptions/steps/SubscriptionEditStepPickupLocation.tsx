@@ -3,8 +3,7 @@ import { Modal } from "react-bootstrap";
 import PickupLocationSelector from "../../../bestell_wizard/components/PickupLocationSelector";
 import { PublicPickupLocation } from "../../../api-client";
 import TapirButton from "../../../components/TapirButton.tsx";
-import PickupLocationWaitingListSelector
-  from "../../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
+import PickupLocationWaitingListSelector from "../../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
 
 interface SubscriptionEditStepPickupLocationProps {
   pickupLocations: PublicPickupLocation[];
@@ -44,7 +43,6 @@ const SubscriptionEditStepPickupLocation: React.FC<
           pickupLocations={pickupLocations}
           selectedPickupLocations={selectedPickupLocations}
           setSelectedPickupLocations={setSelectedPickupLocations}
-          waitingListModeEnabled={waitingListModeEnabled}
           pickupLocationsWithCapacityCheckLoading={
             pickupLocationsWithCapacityCheckLoading
           }

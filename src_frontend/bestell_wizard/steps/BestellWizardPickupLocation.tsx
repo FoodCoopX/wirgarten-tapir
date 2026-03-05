@@ -91,7 +91,6 @@ const BestellWizardPickupLocation: React.FC<
         pickupLocations={settings.pickupLocations}
         selectedPickupLocations={selectedPickupLocations}
         setSelectedPickupLocations={setSelectedPickupLocations}
-        waitingListModeEnabled={waitingListModeEnabled}
         pickupLocationsWithCapacityCheckLoading={
           pickupLocationsWithCapacityCheckLoading
         }

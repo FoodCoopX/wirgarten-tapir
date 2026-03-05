@@ -13,20 +13,20 @@ interface PickupLocationSelectorProps {
   pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
-  waitingListModeEnabled: boolean;
   pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   waitingListLinkConfirmationModeEnabled: boolean;
+  disabledLocationIds?: string[];
 }
 
 const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
   pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
-  waitingListModeEnabled,
   pickupLocationsWithCapacityCheckLoading,
   pickupLocationsWithCapacityFull,
   waitingListLinkConfirmationModeEnabled,
+  disabledLocationIds,
 }) => {
   const [map, setMap] = useState<MapRef>(null);
 
@@ -37,8 +37,8 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
 
     map.setView(
       {
-        lat: parseFloat(selectedPickupLocations[0].coordsLon),
-        lng: parseFloat(selectedPickupLocations[0].coordsLat),
+        lat: Number.parseFloat(selectedPickupLocations[0].coordsLon),
+        lng: Number.parseFloat(selectedPickupLocations[0].coordsLat),
       },
       12,
       { animate: true },
@@ -93,6 +93,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
                 setSelectedPickupLocations([pickupLocation]);
               }}
               className={getClassForPickupLocationListItem(pickupLocation)}
+              disabled={disabledLocationIds?.includes(pickupLocation.id!)}
             >
               <strong>{pickupLocation.name}</strong>{" "}
               {buildCapacityIndicator(pickupLocation)}
@@ -114,8 +115,8 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
       <Col>
         <MapContainer
           center={[
-            parseFloat(pickupLocations[0].coordsLon),
-            parseFloat(pickupLocations[0].coordsLat),
+            Number.parseFloat(pickupLocations[0].coordsLon),
+            Number.parseFloat(pickupLocations[0].coordsLat),
           ]}
           zoom={13}
           scrollWheelZoom={false}
@@ -128,8 +129,8 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
           {pickupLocations.map((pickupLocation) => (
             <Marker
               position={[
-                parseFloat(pickupLocation.coordsLon),
-                parseFloat(pickupLocation.coordsLat),
+                Number.parseFloat(pickupLocation.coordsLon),
+                Number.parseFloat(pickupLocation.coordsLat),
               ]}
               icon={L.icon({
                 iconUrl: "/static/subscriptions/marker-icon.png",

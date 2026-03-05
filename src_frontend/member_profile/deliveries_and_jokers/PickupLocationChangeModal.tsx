@@ -60,6 +60,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     setShowWaitingListConfirmationModal,
   ] = useState(false);
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
+  const [currentPickupLocationId, setCurrentPickupLocationId] = useState("");
 
   useEffect(() => {
     pickupLocationsApi
@@ -77,6 +78,19 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         handleRequestError(
           error,
           "Fehler beim Laden der Verteilstationen",
+          setToastDatas,
+        ),
+      );
+
+    pickupLocationsApi
+      .pickupLocationsApiGetMemberPickupLocationRetrieve({ memberId: memberId })
+      .then((result) => {
+        setCurrentPickupLocationId(result.location?.id ?? "");
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der aktueller Verteilstation",
           setToastDatas,
         ),
       );
@@ -287,12 +301,12 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               pickupLocations={pickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
-              waitingListModeEnabled={waitingListModeEnabled}
               pickupLocationsWithCapacityCheckLoading={
                 pickupLocationsWithCapacityCheckLoading
               }
               pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
               waitingListLinkConfirmationModeEnabled={false}
+              disabledLocationIds={[currentPickupLocationId]}
             />
           )}
         </Modal.Body>
