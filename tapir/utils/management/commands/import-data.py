@@ -121,8 +121,6 @@ class Command(BaseCommand):
             return dt
 
         if options["reset_all"]:
-            from tapir.solidarity_contribution.models import SolidarityContribution
-
             SolidarityContribution.objects.all().delete()
             SubscriptionChangeLogEntry.objects.all().delete()
             TransferCoopSharesLogEntry.objects.all().delete()
@@ -208,10 +206,6 @@ class Command(BaseCommand):
 
             if import_type == "members":
                 if delete_all:
-                    from tapir.solidarity_contribution.models import (
-                        SolidarityContribution,
-                    )
-
                     SolidarityContribution.objects.all().delete()
                     SubscriptionChangeLogEntry.objects.all().delete()
                     TransferCoopSharesLogEntry.objects.all().delete()
@@ -613,10 +607,6 @@ class Command(BaseCommand):
                         skipped += 1
             if import_type == "subscriptions":
                 if delete_all:
-                    from tapir.solidarity_contribution.models import (
-                        SolidarityContribution,
-                    )
-
                     SolidarityContribution.objects.all().delete()
                     SubscriptionChangeLogEntry.objects.all().delete()
                     Subscription.objects.all().delete()
