@@ -170,7 +170,7 @@ const Step7SolidarityContribution: React.FC<
         {selectedValue === "custom" && (
           <Form.Group className={"d-flex flex-column gap-2 align-items-center"}>
             <Form.Text>
-              Bitte ein Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
+              Bitte eine Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
               beizutragen, oder '-10' um 10€ weniger zu zahlen.
             </Form.Text>
             <Form.Control
