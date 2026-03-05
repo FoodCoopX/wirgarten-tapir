@@ -239,12 +239,26 @@ const MemberProfileSolidarityContributionCard: React.FC<
             {shouldAskIfStartsNowOrLater() && (
               <Form.Group className={"mb-2"}>
                 <Form.Check
-                  id={"solidarity_contribution_now_or_later"}
-                  label={"Beitrag sofort starten"}
-                  onChange={(event) =>
-                    setStartContributionNow(event.target.checked)
+                  id={"solidarity_contribution_now"}
+                  name={"solidarity_contribution_now_or_later"}
+                  label={
+                    "Neuer Beitrag gültig ab nächstmöglichem Zeitpunkt: " +
+                    formatDateNumeric(changeValidFrom)
                   }
+                  onChange={() => setStartContributionNow(true)}
                   checked={startContributionNow}
+                  type={"radio"}
+                />
+                <Form.Check
+                  id={"solidarity_contribution_later"}
+                  name={"solidarity_contribution_now_or_later"}
+                  label={
+                    "Neuer Beitrag gültig ab Vertragsstart: " +
+                    formatDateNumeric(solidarityContributions[0].startDate)
+                  }
+                  onChange={() => setStartContributionNow(false)}
+                  checked={!startContributionNow}
+                  type={"radio"}
                 />
                 <Form.Text>
                   Deiner aktueller Solidarbeitrag startet am{" "}
