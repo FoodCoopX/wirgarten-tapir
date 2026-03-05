@@ -51,8 +51,15 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             data={"amount": -10, "member_id": member.id},
         )
 
-        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertFalse(SolidarityContribution.objects.exists())
+
+        response_content = response.json()
+        self.assertFalse(response_content["updated"])
+        self.assertEqual(
+            "Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Kontaktiere dazu deine Solawi an admin@example.com",
+            response_content["error"],
+        )
 
     def test_post_normalMemberSendsPositiveValueWithoutPreviousContribution_createsContribution(
         self,
@@ -91,7 +98,15 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             data={"amount": 9, "member_id": member.id},
         )
 
-        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        response_content = response.json()
+        self.assertFalse(response_content["updated"])
+        self.assertEqual(
+            "Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Kontaktiere dazu deine Solawi an admin@example.com",
+            response_content["error"],
+        )
+
         self.assertEqual(1, SolidarityContribution.objects.count())
         self.assert_contribution_is_correct(
             contribution=SolidarityContribution.objects.get(),

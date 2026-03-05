@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,9 +14,9 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.solidarity_contribution.serializers import (
-    SolidarityContributionSerializer,
     MemberSolidarityContributionsResponseSerializer,
     UpdateMemberSolidarityContributionRequestSerializer,
+    UpdateMemberSolidarityContributionResponseSerializer,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -69,7 +68,7 @@ class UpdateMemberSolidarityContributionApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        responses={200: SolidarityContributionSerializer(many=True)},
+        responses={200: UpdateMemberSolidarityContributionResponseSerializer},
         request=UpdateMemberSolidarityContributionRequestSerializer,
     )
     def post(self, request):
@@ -86,8 +85,9 @@ class UpdateMemberSolidarityContributionApiView(APIView):
         try:
             amount = Decimal(request_serializer.validated_data["amount"])
         except decimal.InvalidOperation:
-            raise ValidationError(
-                "Ungültige Zahl " + request_serializer.validated_data["amount"]
+            return self.build_response(
+                member_id=member_id,
+                error="Ungültige Zahl " + request_serializer.validated_data["amount"],
             )
 
         cache = {}
@@ -106,9 +106,10 @@ class UpdateMemberSolidarityContributionApiView(APIView):
             new_amount=amount,
             cache=cache,
         ):
-            raise ValidationError(
-                "Nur Admins können den Solidarbeitrag nach Unten anpassen. Kontaktiere bitte "
-                + get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)
+            return self.build_response(
+                member_id=member_id,
+                error="Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Kontaktiere dazu deine Solawi an "
+                + get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache),
             )
 
         MemberSolidarityContributionService.assign_contribution_to_member(
@@ -128,11 +129,23 @@ class UpdateMemberSolidarityContributionApiView(APIView):
             cache=cache,
         )
 
+        return self.build_response(member_id=member_id, error=None)
+
+    @classmethod
+    def build_response(cls, member_id: str, error: str | None):
         contributions = SolidarityContribution.objects.filter(
             member_id=member_id
         ).order_by("start_date")
 
-        return Response(SolidarityContributionSerializer(contributions, many=True).data)
+        return Response(
+            UpdateMemberSolidarityContributionResponseSerializer(
+                {
+                    "contributions": contributions,
+                    "updated": error is None,
+                    "error": error,
+                }
+            ).data
+        )
 
     @classmethod
     def get_change_date(cls, start_contribution_now: bool, member: Member, cache: dict):

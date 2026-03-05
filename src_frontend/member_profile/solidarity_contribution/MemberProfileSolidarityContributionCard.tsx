@@ -82,16 +82,20 @@ const MemberProfileSolidarityContributionCard: React.FC<
 
     api
       .solidarityContributionApiUpdateMemberContributionCreate({
-        soliSerializerRequest: {
+        updateMemberSolidarityContributionRequestRequest: {
           memberId: memberId,
           amount: Number.parseFloat(newContributionAsString),
           startContributionNow:
             !shouldAskIfStartsNowOrLater() || startContributionNow,
         },
       })
-      .then((contributions) => {
-        setSolidarityContributions(contributions);
-        setModalOpen(false);
+      .then((result) => {
+        if (result.updated) {
+          setModalOpen(false);
+        } else {
+          alert(result.error);
+        }
+        setSolidarityContributions(result.contributions);
       })
       .catch(async (error) => {
         await handleRequestError(
@@ -124,7 +128,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
   function getCurrentContribution() {
     for (const contribution of solidarityContributions) {
       const today = new Date();
-      if (contribution.startDate < today && today < contribution.endDate) {
+      if (contribution.startDate <= today && today <= contribution.endDate) {
         return contribution;
       }
     }

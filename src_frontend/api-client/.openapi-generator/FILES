@@ -170,7 +170,6 @@ models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
-models/SoliSerializerRequest.ts
 models/SolidarityContribution.ts
 models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
@@ -192,6 +191,8 @@ models/TriggerData.ts
 models/TriggerDataRequest.ts
 models/TriggerDefinition.ts
 models/TriggerFieldDefinition.ts
+models/UpdateMemberSolidarityContributionRequestRequest.ts
+models/UpdateMemberSolidarityContributionResponse.ts
 models/UpdateSubscriptionsRequestRequest.ts
 models/UploadTypeEnum.ts
 models/UsedJokerInGrowingPeriod.ts

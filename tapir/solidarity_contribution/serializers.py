@@ -20,3 +20,9 @@ class UpdateMemberSolidarityContributionRequestSerializer(serializers.Serializer
     amount = serializers.FloatField()
     member_id = serializers.CharField()
     start_contribution_now = serializers.BooleanField()
+
+
+class UpdateMemberSolidarityContributionResponseSerializer(serializers.Serializer):
+    contributions = SolidarityContributionSerializer(many=True)
+    updated = serializers.BooleanField()
+    error = serializers.CharField()

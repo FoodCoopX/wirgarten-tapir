@@ -1712,13 +1712,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/soli_serializerRequest'
+              $ref: '#/components/schemas/UpdateMemberSolidarityContributionRequestRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/soli_serializerRequest'
+              $ref: '#/components/schemas/UpdateMemberSolidarityContributionRequestRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/soli_serializerRequest'
+              $ref: '#/components/schemas/UpdateMemberSolidarityContributionRequestRequest'
         required: true
       security:
       - tokenAuth: []
@@ -1729,9 +1729,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SolidarityContribution'
+                $ref: '#/components/schemas/UpdateMemberSolidarityContributionResponse'
           description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
@@ -10059,6 +10057,36 @@ components:
       - field_name
       - label
       - type
+    UpdateMemberSolidarityContributionRequestRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+        member_id:
+          type: string
+          minLength: 1
+        start_contribution_now:
+          type: boolean
+      required:
+      - amount
+      - member_id
+      - start_contribution_now
+    UpdateMemberSolidarityContributionResponse:
+      type: object
+      properties:
+        contributions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolidarityContribution'
+        updated:
+          type: boolean
+        error:
+          type: string
+      required:
+      - contributions
+      - error
+      - updated
     UpdateSubscriptionsRequestRequest:
       type: object
       properties:
@@ -10558,21 +10586,6 @@ components:
           minLength: 1
       required:
       - entry_id
-    soli_serializerRequest:
-      type: object
-      properties:
-        amount:
-          type: number
-          format: double
-        member_id:
-          type: string
-          minLength: 1
-        start_contribution_now:
-          type: boolean
-      required:
-      - amount
-      - member_id
-      - start_contribution_now
     subscription_date_changeRequest:
       type: object
       properties:

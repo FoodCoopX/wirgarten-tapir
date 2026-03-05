@@ -49,11 +49,13 @@ class MemberSolidarityContributionService:
             .order_by("start_date")
             .last()
         )
-        member_contributions.filter(start_date__gte=change_date).delete()
         member_contributions.filter(end_date__gte=change_date).update(
             end_date=change_date - datetime.timedelta(days=1),
             cancellation_ts=get_now(cache=cache),
         )
+        if last_contribution:
+            last_contribution.refresh_from_db()
+        member_contributions.filter(start_date__gte=change_date).delete()
 
         if amount == 0:
             cls.create_log_entry_if_necessary(
