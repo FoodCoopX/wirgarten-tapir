@@ -57,3 +57,8 @@
   background-color: #81C784;
   color: var(--bakery-white);
 }
+.total-row-brown,
+.total-row-brown th,
+.total-row-brown td {
+  background-color: #F5E6D3 !important;
+}

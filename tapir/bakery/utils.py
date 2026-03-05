@@ -133,3 +133,20 @@ def _get_related_manager(instance: Model, related_object: Any) -> Optional[Any]:
         return getattr(instance, related_object.get_accessor_name())
     except AttributeError:
         return None
+
+
+def parse_week_params(query_params) -> tuple[int, int, int | None]:
+    """Parse year, delivery_week, and optional delivery_day from query params.
+    Raises ValueError if required params are missing or invalid."""
+    year = query_params.get("year")
+    delivery_week = query_params.get("delivery_week")
+    delivery_day_param = query_params.get("delivery_day")
+
+    if not year or not delivery_week:
+        raise ValueError("Missing required parameters: year, delivery_week")
+
+    return (
+        int(year),
+        int(delivery_week),
+        int(delivery_day_param) if delivery_day_param else None,
+    )

@@ -120,6 +120,7 @@ class BreadSolutionCollector(cp_model.CpSolverSolutionCallback):
 
 def _solution_fingerprint(sol: dict) -> str:
     """Create a fingerprint to detect duplicate solutions."""
+    # Stove sessions
     parts = []
     for sess in sol.get("stove_sessions", []):
         layer_parts = []
@@ -130,7 +131,14 @@ def _solution_fingerprint(sol: dict) -> str:
                 b_id, qty = layer_info
                 layer_parts.append(f"{b_id}:{qty}")
         parts.append("|".join(layer_parts))
-    return "||".join(sorted(parts))
+    stove_fp = "||".join(sorted(parts))
+
+    # Distribution
+    dist = sol.get("distribution", {})
+    dist_parts = sorted(f"{k}={v}" for k, v in dist.items() if v > 0)
+    dist_fp = ",".join(dist_parts)
+
+    return f"{stove_fp}###{dist_fp}"
 
 
 # ...existing code...
@@ -463,7 +471,7 @@ def solve_bread_planning(
     pickup_locations: list[PickupLocationInfo],
     capacities: dict[tuple[int, int], int],
     max_sessions: int = 10,
-    time_limit_seconds: int = 60,
+    time_limit_seconds: int = 120,
     max_solutions: int = 1,
     solution_index: int = 0,
 ) -> BakingPlanResult | None:
@@ -589,7 +597,7 @@ def solve_bread_planning_all(
     capacities: dict[tuple[int, int], int],
     max_sessions: int = 10,
     time_limit_seconds: int = 60,
-    max_solutions: int = 5,
+    max_solutions: int = 10,
 ) -> list[dict] | None:
     """
     Run the solver and return ALL collected solutions as a list of dicts.

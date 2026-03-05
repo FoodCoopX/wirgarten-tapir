@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
-import { PlusLg, XLg, Trash, ChevronDown, ChevronUp } from 'react-bootstrap-icons';
+import { PlusLg, XLg, Trash } from 'react-bootstrap-icons';
 import type { BreadLabel, BreadList, BreadListRequest } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
 
@@ -36,9 +36,8 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
   useEffect(() => {
     loadLabels();
     if (bread) {
-      const labelIds = Array.isArray(bread.labels)
-        ? bread.labels.map(label => typeof label === 'object' ? label.id : String(label))
-        : [];
+      const labelIds = (bread.labels || [])
+        .map(label => typeof label === 'object' ? (label as any).id : label);
 
       setFormData({
         name: bread.name,

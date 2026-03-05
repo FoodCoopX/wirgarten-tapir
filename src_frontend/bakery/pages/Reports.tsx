@@ -2,12 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
 import { BakeryApi, PickupLocationsApi } from '../../api-client';
 import { useApi } from '../../hooks/useApi';
-import type { AbhollisteEntry, PickupLocation, StoveSession, SolverPreviewDetailResponse } from '../../api-client/models';
+import type { AbhollisteResponse, PickupLocation, StoveSession, SolverPreviewDetailResponse } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import { RunSolverCard } from '../components/cards/RunSolverCard';
 import { ChevronDown, ChevronRight } from 'react-bootstrap-icons';
 import { MetricsCard } from '../components/cards/MetricsCard';
+import { PreferredBreadStatisticsCard } from '../components/cards/PreferredBreadStatisticsCard';
+import '../styles/bakery_styles.css';
+
 
 dayjs.extend(isoWeek);
 
@@ -63,7 +66,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
   // Store Abholliste data for all locations by day
   const [abhollisteByDayByLocation, setAbhollisteByDayByLocation] = useState<
-    Record<number, Record<string, AbhollisteEntry[]>>
+    Record<number, Record<string, AbhollisteResponse>>
   >({});
 
   const [selectedPickupLocationByDay, setSelectedPickupLocationByDay] = useState<Record<number, string>>({});
@@ -84,8 +87,10 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   };
 
   const handleApplied = () => {
-    // Reload saved data from DB after applying
+    // Reload all data from DB after applying solver results
+    setPreviewByDay({});
     loadSolverResults();
+    loadAllAbhollisten();
   };
 
 
@@ -207,7 +212,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       deliveryDays.reduce((acc, day) => ({ ...acc, [day]: true }), {})
     );
 
-    const dataByDayByLocation: Record<number, Record<string, AbhollisteEntry[]>> = {};
+    const dataByDayByLocation: Record<number, Record<string, AbhollisteResponse>> = {};
 
     for (const day of deliveryDays) {
       dataByDayByLocation[day] = {};
@@ -216,15 +221,15 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       await Promise.all(
         dayLocations.map(async (pl) => {
           try {
-            const data = await bakeryApi.bakeryAbhollisteList({
+            const data = await bakeryApi.bakeryAbhollisteRetrieve({
               year,
-              week,
+              deliveryWeek: week,
               pickupLocationId: pl.id!,
             });
             dataByDayByLocation[day][pl.id!] = data;
           } catch (error) {
             console.error(`Failed to load Abholliste for ${pl.name}:`, error);
-            dataByDayByLocation[day][pl.id!] = [];
+            dataByDayByLocation[day][pl.id!] = null as any;
           }
         })
       );
@@ -235,7 +240,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       deliveryDays.reduce((acc, day) => ({ ...acc, [day]: false }), {})
     );
   };
-
   const getPickupLocationsForDay = (day: number): PickupLocation[] =>
     allPickupLocations.filter(pl => pl.deliveryDay === day);
 
@@ -254,15 +258,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     }));
   };
 
-  const handleDownload = async (reportType: string, day: number) => {
-    setDownloading(`${reportType}-${day}`);
-    try {
-      alert(`${reportType} für KW ${week}/${year} wird heruntergeladen...`);
-    } finally {
-      setDownloading(null);
-    }
-  };
-
   const handleEmail = async (reportType: string, day: number) => {
     setDownloading(`${reportType}-${day}`);
     try {
@@ -272,30 +267,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     }
   };
 
-  const ActionButtons = ({ reportType, day, label }: { reportType: string; day: number; label: string }) => {
-    const key = `${reportType}-${day}`;
-    return (
-      <div className="d-grid gap-2">
-        <button
-          className="btn btn-sm"
-          style={{ backgroundColor: '#8B6F47', color: 'white' }}
-          onClick={() => handleDownload(reportType, day)}
-          disabled={downloading === key}
-        >
-          <span className="material-icons me-2" style={{ fontSize: '16px', verticalAlign: 'middle' }}>download</span>
-          {label} als PDF herunterladen
-        </button>
-        <button
-          className="btn btn-sm btn-outline-secondary"
-          onClick={() => handleEmail(reportType, day)}
-          disabled={downloading === key}
-        >
-          <span className="material-icons me-2" style={{ fontSize: '16px', verticalAlign: 'middle' }}>email</span>
-          {label} per E-Mail senden
-        </button>
-      </div>
-    );
-  };
 
   const SectionToggle = ({ sectionKey, title, icon }: { sectionKey: string; title: string; icon: string }) => (
     <h6
@@ -308,6 +279,60 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       {title}
     </h6>
   );
+
+  const ActionButtons = ({ reportType, day, label }: { reportType: string; day: number; label: string }) => {
+    const key = `${reportType}-${day}`;
+
+    let pdfUrl: string | null = null;
+    if (reportType === 'backliste') {
+      pdfUrl = `/bakery/pdf/backliste/${year}/${week}/${day}/`;
+    } else if (reportType === 'verteilungsliste') {
+      pdfUrl = `/bakery/pdf/verteilliste/${year}/${week}/${day}/`;
+    } else if (reportType === 'abholliste') {
+      const selectedLoc = selectedPickupLocationByDay[day];
+      if (selectedLoc) {
+        pdfUrl = `/bakery/pdf/abholliste/${year}/${week}/${day}/${selectedLoc}/`;
+      }
+    }
+
+    const hasPreview = !!previewByDay[day];
+
+    return (
+      <div className="d-grid gap-2">
+        {hasPreview && (
+          <div className="alert alert-warning py-1 px-2 mb-1" style={{ fontSize: '0.75rem' }}>
+            <span className="material-icons me-1" style={{ fontSize: '12px', verticalAlign: 'middle' }}>warning</span>
+            Vorschau aktiv — PDF wird aus gespeicherten Daten erstellt.
+            Erst „Anwenden", dann PDF herunterladen.
+          </div>
+        )}
+        {pdfUrl ? (
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-sm dark-brown-button text-decoration-none"
+          >
+            <span className="material-icons me-2" style={{ fontSize: '16px', verticalAlign: 'middle' }}>download</span>
+            {label} als PDF herunterladen
+          </a>
+        ) : (
+          <button className="btn btn-sm dark-brown-button" disabled>
+            <span className="material-icons me-2" style={{ fontSize: '16px', verticalAlign: 'middle' }}>download</span>
+            {label} als PDF herunterladen
+          </button>
+        )}
+        <button
+          className="btn btn-sm btn-outline-secondary"
+          onClick={() => handleEmail(reportType, day)}
+          disabled={downloading === key}
+        >
+          <span className="material-icons me-2" style={{ fontSize: '16px', verticalAlign: 'middle' }}>email</span>
+          {label} per E-Mail senden
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div className="container-fluid mt-4 px-5">
@@ -401,21 +426,20 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                 locationBreads[c.pickupLocationName][c.breadName] =
                   (locationBreads[c.pickupLocationName][c.breadName] || 0) + c.count;
               });
-            } else {
-              // Aggregate from Abholliste data
+              } else {
+              // Aggregate from Abholliste data — no solver results yet
               const dayAbhollistenByLocation = abhollisteByDayByLocation[day] || {};
-              Object.entries(dayAbhollistenByLocation).forEach(([locationId, entries]) => {
+              Object.entries(dayAbhollistenByLocation).forEach(([locationId, abhollisteData]) => {
+                if (!abhollisteData) return;
                 const location = allPickupLocations.find(pl => pl.id === locationId);
                 if (!location) return;
 
-                locationBreads[location.name] = {};
-                entries.forEach(entry => {
-                  entry.breads.forEach(b => {
-                    const breadName = b.bread_name || 'Unbekannt';
-                    locationBreads[location.name][breadName] =
-                      (locationBreads[location.name][breadName] || 0) + 1;
-                  });
-                });
+                // Use grandTotal from the API response directly
+                const locationTotal = abhollisteData.grandTotal ?? 0;
+                console.log(`Verteilliste fallback: ${location.name} = ${locationTotal}`, abhollisteData);
+                if (locationTotal > 0) {
+                  locationBreads[location.name] = { __total: locationTotal };
+                }
               });
             }
 
@@ -425,21 +449,17 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
             const dayPickupLocations = getPickupLocationsForDay(day);
             const selectedLocation = selectedPickupLocationByDay[day] || '';
-            const abholliste = selectedLocation
-              ? (abhollisteByDayByLocation[day]?.[selectedLocation] || [])
-              : [];
+         
             const abhollisteLoading = abhollisteLoadingByDay[day] || false;
             const dayChecked = checkedByDay[day] || {};
 
-            const abhollisteBreadNames = [...new Set(
-              abholliste.flatMap(e => e.breads.map(b => b.bread_name).filter(Boolean) as string[])
-            )].sort();
-
+  
             const backlisteKey = `backliste-${day}`;
             const ofenplanKey = `ofenplan-${day}`;
             const verteillisteKey = `verteilliste-${day}`;
             const abhollisteKey = `abholliste-${day}`;
             const metricsKey = `metrics-${day}`;
+            const statisticKey = `statistic-${day}`;
 
             return (
               <div key={day} className="col-lg-4 mb-4">
@@ -473,9 +493,9 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                         <>
                           {allBreadNames.length > 0 ? (<>
                             <div className="table-responsive mb-3">
-                              <table className="table table-sm table-striped" style={{ fontSize: '0.8rem' }}>
+                             <table className="table table-sm" style={{ fontSize: '0.8rem' }}>
                                 <thead style={{ backgroundColor: '#F5E6D3', fontSize: '0.8rem' }}>
-                                  <tr>
+                                  <tr className="total-row-brown">
                                     <th>Brotsorte</th>
                                     <th className="text-end" title="Zuweisung zu Verteilstationen">
                                       <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>local_shipping</span>
@@ -623,7 +643,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                             : 'Brote pro Abholstation (lt. Mitgliederbestellungen)'}
                       </p>
 
-                      {isSectionOpen(verteillisteKey) && (
+                        {isSectionOpen(verteillisteKey) && (
                         <>
                           {abhollisteLoading ? (
                             <div className="text-center py-3">
@@ -645,34 +665,60 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                                 </div>
                               )}
                               <div className="table-responsive mb-3">
-                                <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
-                                  <thead style={{ backgroundColor: '#F5E6D3' }}>
-                                    <tr>
-                                      <th>Station</th>
-                                      {distBreadNames.map(name => (
-                                        <th key={name} className="text-center" style={{
-                                          writingMode: 'vertical-rl', transform: 'rotate(180deg)',
-                                          minWidth: '30px', maxWidth: '30px', padding: '8px 4px', fontSize: '0.75rem',
-                                        }}>{name}</th>
-                                      ))}
-                                      <th className="text-center">Σ</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {Object.entries(locationBreads).sort(([a], [b]) => a.localeCompare(b)).map(([loc, breads]) => {
-                                      const total = Object.values(breads).reduce((s, c) => s + c, 0);
-                                      return (
+                                {hasSolverResults ? (
+                                  <table className="table table-sm" style={{ fontSize: '0.8rem' }}>
+                                <thead>
+                                  <tr className="total-row-brown">
+                                        <th>Station</th>
+                                        {distBreadNames.map(name => (
+                                          <th key={name} className="text-center" style={{
+                                            minWidth: '30px', maxWidth: '60px', padding: '8px 4px', fontSize: '0.6rem',
+                                          }}>{name}</th>
+                                        ))}
+                                        <th className="text-center">Σ</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Object.entries(locationBreads).sort(([a], [b]) => a.localeCompare(b)).map(([loc, breads]) => {
+                                        const total = Object.values(breads).reduce((s, c) => s + c, 0);
+                                        return (
+                                          <tr key={loc}>
+                                            <td style={{ fontSize: '0.75rem' }}>{loc}</td>
+                                            {distBreadNames.map(name => (
+                                              <td key={name} className="text-center">{breads[name] || '-'}</td>
+                                            ))}
+                                            <td className="text-center" style={{ fontWeight: 'bold', backgroundColor: '#F5E6D3' }}>{total}</td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                ) : (
+                                  <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
+                                    <thead style={{ backgroundColor: '#F5E6D3' }}>
+                                      <tr>
+                                        <th>Station</th>
+                                        <th className="text-center">Brote</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Object.entries(locationBreads).sort(([a], [b]) => a.localeCompare(b)).map(([loc, breads]) => (
                                         <tr key={loc}>
                                           <td style={{ fontSize: '0.75rem' }}>{loc}</td>
-                                          {distBreadNames.map(name => (
-                                            <td key={name} className="text-center">{breads[name] || '-'}</td>
-                                          ))}
-                                          <td className="text-center" style={{ fontWeight: 'bold', backgroundColor: '#F5E6D3' }}>{total}</td>
+                                          <td className="text-center" style={{ fontWeight: 'bold', color: '#8B4513' }}>
+                                            {breads.__total || 0}
+                                          </td>
                                         </tr>
-                                      );
-                                    })}
-                                  </tbody>
-                                </table>
+                                      ))}
+                                      <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
+                                        <td>Gesamt</td>
+                                        <td className="text-center">
+                                          {Object.values(locationBreads).reduce((s, b) => s + (b.__total || 0), 0)}
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                )}
                               </div>
                             </>
                           ) : (
@@ -706,99 +752,170 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                               ))}
                             </select>
                           </div>
+                           <ActionButtons reportType="abholliste" day={day} label="Abholliste" />
+                            <div className="mt-2">
+                            <a
+                              href={`/bakery/pdf/abholliste-alle/${year}/${week}/${day}/`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-sm dark-brown-button w-100 text-decoration-none"
+                            >
+                              <span className="material-icons me-2" style={{ fontSize: '16px', verticalAlign: 'middle' }}>picture_as_pdf</span>
+                              Alle Abhollisten als ein PDF
+                            </a>
+                          </div>
 
                           {abhollisteLoading ? (
                             <div className="text-center py-3">
                               <div className="spinner-border spinner-border-sm" style={{ color: '#D4A574' }} />
                               <p className="mt-1 text-muted small">Lade Abholliste...</p>
                             </div>
-                          ) : selectedLocation && abholliste.length > 0 ? (
-                            <div className="table-responsive mb-3">
-                              <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
-                                <thead style={{ backgroundColor: '#F5E6D3' }}>
-                                  <tr>
-                                    <th className="text-center" style={{ width: '30px' }}>#</th>
-                                    <th>Name</th>
-                                    <th className="text-center" style={{ width: '40px' }}>Σ</th>
-                                    <th className="text-center" style={{ width: '30px' }}>
-                                      <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
-                                    </th>
-                                    {abhollisteBreadNames.map(name => (
-                                      <th key={name} className="text-center" style={{
-                                        writingMode: 'vertical-rl', transform: 'rotate(180deg)',
-                                        minWidth: '28px', maxWidth: '28px', padding: '8px 2px', fontSize: '0.7rem',
-                                      }}>{name}</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {abholliste.map((entry, index) => {
-                                    const breadCounts: Record<string, number> = {};
-                                    entry.breads.forEach(b => {
-                                      if (b.bread_name) breadCounts[b.bread_name] = (breadCounts[b.bread_name] || 0) + 1;
-                                    });
-                                    const isChecked = dayChecked[entry.memberId] || false;
+                          ) : selectedLocation && (() => {
+                            const abhollisteData = abhollisteByDayByLocation[day]?.[selectedLocation];
+                            if (!abhollisteData || !abhollisteData.entries || abhollisteData.entries.length === 0) {
+                              return (
+                                <p className="text-muted small text-center py-2">
+                                  Keine Brotbestellungen für diesen Abholort.
+                                </p>
+                              );
+                            }
 
-                                    return (
-                                      <tr key={entry.memberId} style={{
-                                        backgroundColor: isChecked ? '#d4edda' : undefined,
-                                        textDecoration: isChecked ? 'line-through' : undefined,
-                                        opacity: isChecked ? 0.7 : 1,
-                                      }}>
-                                        <td className="text-center text-muted">{index + 1}</td>
-                                        <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{entry.displayName}</td>
-                                        <td className="text-center">
-                                          <strong style={{ color: '#8B4513' }}>{entry.totalBreads}</strong>
-                                        </td>
-                                        <td className="text-center">
-                                          <input
-                                            type="checkbox" className="form-check-input"
-                                            checked={isChecked}
-                                            onChange={() => handleCheckToggle(day, entry.memberId)}
-                                            style={{ cursor: 'pointer' }}
-                                          />
-                                        </td>
-                                        {abhollisteBreadNames.map(name => (
-                                          <td key={name} className="text-center">{breadCounts[name] || '-'}</td>
+                            const entries = abhollisteData.entries;
+                            const breadNames: string[] = abhollisteData.breadNames;
+                            const breadTotals: Record<string, number> = abhollisteData.breadTotals as unknown as Record<string, number>;
+                            const grandTotal: number = abhollisteData.grandTotal;
+                            return (
+                              <>
+                                <div className="table-responsive mb-3">
+                                  <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
+                                    <thead style={{ backgroundColor: '#F5E6D3' }}>
+                                      <tr>
+                                        <th className="text-center" style={{ width: '30px' }}>#</th>
+                                        <th>Name</th>
+                                        <th className="text-center" style={{ width: '40px' }}>Σ</th>
+                                        <th className="text-center" style={{ width: '30px' }}>
+                                          <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
+                                        </th>
+                                        {breadNames.map(name => (
+                                          <th key={name} className="text-center" style={{
+                                            writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+                                            minWidth: '28px', maxWidth: '28px', padding: '8px 2px', fontSize: '0.7rem',
+                                          }}>{name}</th>
                                         ))}
                                       </tr>
-                                    );
-                                  })}
-                                  <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
-                                    <td />
-                                    <td>Gesamt</td>
-                                    <td className="text-center">
-                                      {abholliste.reduce((sum, e) => sum + e.totalBreads, 0)}
-                                    </td>
-                                    <td className="text-center">
-                                      {Object.values(dayChecked).filter(Boolean).length}/{abholliste.length}
-                                    </td>
-                                    {abhollisteBreadNames.map(name => {
-                                      const total = abholliste.reduce((sum, e) =>
-                                        sum + e.breads.filter(b => b.bread_name === name).length, 0);
-                                      return <td key={name} className="text-center">{total}</td>;
-                                    })}
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : selectedLocation ? (
-                            <p className="text-muted small text-center py-2">
-                              Keine Brotbestellungen für diesen Abholort.
-                            </p>
-                          ) : null}
+                                    </thead>
+                                    <tbody>
+                                      {entries.map((entry: any, index: number) => {
+                                        const memberId = entry.memberId || entry.member_id;
+                                        const displayName = entry.displayName || entry.display_name;
+                                        const totalBreads = entry.totalBreads || entry.total_breads || 0;
+                                        const breadCounts: Record<string, number> = entry.breadCounts || entry.bread_counts || {};
+                                        const breadPreferred: Record<string, boolean> = entry.breadPreferred || entry.bread_preferred || {};
+                                        const isChecked = dayChecked[memberId] || false;
 
-                          <ActionButtons reportType="abholliste" day={day} label="Abholliste" />
+                                        return (
+                                          <tr key={memberId} style={{
+                                            backgroundColor: isChecked ? '#d4edda' : undefined,
+                                            textDecoration: isChecked ? 'line-through' : undefined,
+                                            opacity: isChecked ? 0.7 : 1,
+                                          }}>
+                                            <td className="text-center text-muted">{index + 1}</td>
+                                            <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{displayName}</td>
+                                            <td className="text-center">
+                                              <strong style={{ color: '#8B4513' }}>{totalBreads}</strong>
+                                            </td>
+                                            <td className="text-center">
+                                              <input
+                                                type="checkbox" className="form-check-input"
+                                                checked={isChecked}
+                                                onChange={() => handleCheckToggle(day, memberId)}
+                                                style={{ cursor: 'pointer' }}
+                                              />
+                                            </td>
+                                            {breadNames.map(name => {
+                                              const count = breadCounts[name] || 0;
+                                              const preferred = breadPreferred[name] || false;
+                                              return (
+                                                <td
+                                                  key={name}
+                                                  className="text-center"
+                                                  style={{
+                                                    backgroundColor: preferred ? '#d4edda' : undefined,
+                                                    color: count > 0 ? '#212529' : '#ccc',
+                                                  }}
+                                                >
+                                                  {count > 0 ? count : preferred ? '' : '—'}
+                                                </td>
+                                              );
+                                            })}
+                                          </tr>
+                                        );
+                                      })}
+                                      <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
+                                        <td />
+                                        <td>Gesamt</td>
+                                        <td className="text-center">{grandTotal}</td>
+                                        <td className="text-center">
+                                        </td>
+                                        {breadNames.map(name => (
+                                          <td key={name} className="text-center">{breadTotals[name] || 0}</td>
+                                        ))}
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                                <div className="d-flex align-items-center gap-2 mb-2" style={{ fontSize: '0.75rem' }}>
+                                  <span style={{
+                                    display: 'inline-block', width: '14px', height: '14px',
+                                    backgroundColor: '#d4edda', border: '1px solid #c3e6cb',
+                                  }} />
+                                  <span className="text-muted">= als Lieblingsbrot angegeben</span>
+                                </div>
+                              </>
+                            );
+                          })()}
+
+                         
                         </>
+                      )}
+                    </div>
+                       <hr />
+
+                    {/* Statistik Lieblingsbrote — INSIDE card-body */}
+                    <div className="mb-3">
+                      <SectionToggle
+                        sectionKey={statisticKey}
+                        title="Statistik Lieblingsbrote"
+                        icon="favorite"
+                      />
+
+                      {isSectionOpen(statisticKey) && (
+                        <div className="mt-3">
+                          <h6 className="d-flex align-items-center mb-2" style={{ fontSize: '0.85rem' }}>
+                            <span className="material-icons me-2" style={{ fontSize: '16px', color: '#D4A574' }}>bar_chart</span>
+                            Lieblingsbrote
+                          </h6>
+                          <PreferredBreadStatisticsCard
+                            year={year}
+                            week={week}
+                            deliveryDay={day}
+                            csrfToken={csrfToken}
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
+                    
+
               </div>
+              
             );
           })
         )}
       </div>
+
+      
     </div>
   );
 };

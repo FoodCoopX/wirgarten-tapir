@@ -5,21 +5,20 @@ info:
 paths:
   /bakery/abholliste/:
     get:
-      operationId: bakery_abholliste_list
+      operationId: bakery_abholliste_retrieve
       description: Returns a list of members with their bread deliveries for a specific
-        week, day, and pickup location. Members are sorted by display name (pseudonym
-        or 'L., FirstName' format).
+        week and pickup location. Includes delivery counts and preferred bread indicators.
       summary: Get Abholliste for a specific pickup location
       parameters:
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+        required: true
       - in: query
         name: pickup_location_id
         schema:
           type: string
-        required: true
-      - in: query
-        name: week
-        schema:
-          type: integer
         required: true
       - in: query
         name: year
@@ -37,9 +36,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AbhollisteEntry'
+                $ref: '#/components/schemas/AbhollisteResponse'
           description: ''
   /bakery/api/bakery/solver/apply/:
     post:
@@ -165,6 +162,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/SolverError'
           description: ''
+  /bakery/api/preferred-bread-statistics/:
+    get:
+      operationId: bakery_api_preferred_bread_statistics_retrieve
+      description: Count preferred breads among members with active deliveries for
+        the given week.
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /bakery/available-breads-for-delivery/:
     get:
       operationId: bakery_available_breads_for_delivery_retrieve
@@ -172,12 +203,12 @@ paths:
       summary: Get breads for a delivery day
       parameters:
       - in: query
-        name: day
+        name: delivery_day
         schema:
           type: integer
         required: true
       - in: query
-        name: week
+        name: delivery_week
         schema:
           type: integer
         required: true
@@ -6990,15 +7021,21 @@ components:
   schemas:
     AbhollisteEntry:
       type: object
-      description: Serializer for a single member's entry in the Abholliste
       properties:
         member_id:
           type: string
-          format: uuid
         display_name:
           type: string
         total_breads:
           type: integer
+        bread_counts:
+          type: object
+          additionalProperties:
+            type: integer
+        bread_preferred:
+          type: object
+          additionalProperties:
+            type: boolean
         breads:
           type: array
           items:
@@ -7007,10 +7044,34 @@ components:
               type: string
               nullable: true
       required:
+      - bread_counts
+      - bread_preferred
       - breads
       - display_name
       - member_id
       - total_breads
+    AbhollisteResponse:
+      type: object
+      properties:
+        bread_names:
+          type: array
+          items:
+            type: string
+        bread_totals:
+          type: object
+          additionalProperties:
+            type: integer
+        grand_total:
+          type: integer
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AbhollisteEntry'
+      required:
+      - bread_names
+      - bread_totals
+      - entries
+      - grand_total
     AutomatedExportCycleEnum:
       enum:
       - yearly
@@ -7714,9 +7775,6 @@ components:
         pickup_location_street:
           type: string
           readOnly: true
-        pickup_location_post_code:
-          type: string
-          readOnly: true
         pickup_location_city:
           type: string
           readOnly: true
@@ -7749,7 +7807,6 @@ components:
       - delivery_week
       - pickup_location_city
       - pickup_location_name
-      - pickup_location_post_code
       - pickup_location_street
       - subscription
       - year

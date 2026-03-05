@@ -48,12 +48,6 @@ export interface BreadDelivery {
      * @type {string}
      * @memberof BreadDelivery
      */
-    readonly pickupLocationPostCode: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BreadDelivery
-     */
     readonly pickupLocationCity: string;
     /**
      * 
@@ -106,7 +100,6 @@ export function instanceOfBreadDelivery(value: object): value is BreadDelivery {
     if (!('breadName' in value) || value['breadName'] === undefined) return false;
     if (!('pickupLocationName' in value) || value['pickupLocationName'] === undefined) return false;
     if (!('pickupLocationStreet' in value) || value['pickupLocationStreet'] === undefined) return false;
-    if (!('pickupLocationPostCode' in value) || value['pickupLocationPostCode'] === undefined) return false;
     if (!('pickupLocationCity' in value) || value['pickupLocationCity'] === undefined) return false;
     if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     if (!('year' in value) || value['year'] === undefined) return false;
@@ -129,7 +122,6 @@ export function BreadDeliveryFromJSONTyped(json: any, ignoreDiscriminator: boole
         'breadName': json['bread_name'],
         'pickupLocationName': json['pickup_location_name'],
         'pickupLocationStreet': json['pickup_location_street'],
-        'pickupLocationPostCode': json['pickup_location_post_code'],
         'pickupLocationCity': json['pickup_location_city'],
         'deliveryDay': json['delivery_day'],
         'year': json['year'],
@@ -145,7 +137,7 @@ export function BreadDeliveryFromJSONTyped(json: any, ignoreDiscriminator: boole
       return BreadDeliveryToJSONTyped(json, false);
   }
 
-  export function BreadDeliveryToJSONTyped(value?: Omit<BreadDelivery, 'bread_name'|'pickup_location_name'|'pickup_location_street'|'pickup_location_post_code'|'pickup_location_city'|'delivery_day'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadDeliveryToJSONTyped(value?: Omit<BreadDelivery, 'bread_name'|'pickup_location_name'|'pickup_location_street'|'pickup_location_city'|'delivery_day'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

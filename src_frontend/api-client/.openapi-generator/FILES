@@ -14,6 +14,7 @@ apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AbhollisteEntry.ts
+models/AbhollisteResponse.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts

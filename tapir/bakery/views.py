@@ -13,9 +13,10 @@ from tapir.bakery.models import (
     Bread,
     BreadDelivery,
     BreadsPerPickupLocationPerWeek,
+    PreferredBread,
 )
 from tapir.bakery.serializers import (
-    AbhollisteEntrySerializer,
+    AbhollisteResponseSerializer,
     AvailableBreadsForDeliveryListResponseSerializer,
     PreferenceSatisfactionResponseSerializer,
     SolverApplyRequestSerializer,
@@ -27,6 +28,8 @@ from tapir.bakery.serializers import (
     ToggleBreadRequestSerializer,
     ToggleBreadResponseSerializer,
 )
+from tapir.bakery.services.abholliste_service import AbhollisteService
+from tapir.bakery.utils import parse_week_params
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.wirgarten.models import PickupLocation
 
@@ -42,37 +45,25 @@ class AvailableBreadsForDeliveryListView(APIView):
         summary="Get breads for a delivery day",
         parameters=[
             OpenApiParameter(name="year", type=int, required=True),
-            OpenApiParameter(name="week", type=int, required=True),
-            OpenApiParameter(name="day", type=int, required=True),
+            OpenApiParameter(name="delivery_week", type=int, required=True),
+            OpenApiParameter(name="delivery_day", type=int, required=True),
         ],
         responses={200: AvailableBreadsForDeliveryListResponseSerializer},
     )
     def get(self, request: Request) -> Response:
-        year = request.query_params.get("year")
-        week = request.query_params.get("week")
-        day = request.query_params.get("day")
-
-        if not all([year, week, day]):
-            return Response(
-                {"error": "Missing parameters. Required: year, week, day"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         try:
-            year_int = int(year)
-            week_int = int(week)
-            day_int = int(day)
-        except (ValueError, TypeError):
+            year, delivery_week, delivery_day = parse_week_params(request.query_params)
+        except ValueError as e:
             return Response(
-                {"error": "Invalid year, week or day format"},
+                {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         available_breads = (
             AvailableBreadsForDeliveryDay.objects.filter(
-                year=year_int,
-                delivery_week=week_int,
-                delivery_day=day_int,
+                year=year,
+                delivery_week=delivery_week,
+                delivery_day=delivery_day,
                 bread__is_active=True,
             )
             .select_related("bread")
@@ -85,7 +76,12 @@ class AvailableBreadsForDeliveryListView(APIView):
         ]
 
         return Response(
-            {"year": year_int, "week": week_int, "day": day_int, "breads": breads}
+            {
+                "year": year,
+                "delivery_week": delivery_week,
+                "delivery_day": delivery_day,
+                "breads": breads,
+            }
         )
 
     @extend_schema(
@@ -99,8 +95,8 @@ class AvailableBreadsForDeliveryListView(APIView):
         data = serializer.validated_data
 
         year = data["year"]
-        week = data["week"]
-        day = data["day"]
+        delivery_week = data["delivery_week"]
+        delivery_day = data["delivery_day"]
         bread_id = data["bread_id"]
         is_active = data["is_active"]
 
@@ -114,8 +110,8 @@ class AvailableBreadsForDeliveryListView(APIView):
         if is_active:
             entry, created = AvailableBreadsForDeliveryDay.objects.get_or_create(
                 year=year,
-                delivery_week=week,
-                delivery_day=day,
+                delivery_week=delivery_week,
+                delivery_day=delivery_day,
                 bread=bread,
             )
             return Response(
@@ -128,8 +124,8 @@ class AvailableBreadsForDeliveryListView(APIView):
         else:
             deleted_count, _ = AvailableBreadsForDeliveryDay.objects.filter(
                 year=year,
-                delivery_week=week,
-                delivery_day=day,
+                delivery_week=delivery_week,
+                delivery_day=delivery_day,
                 bread=bread,
             ).delete()
             return Response(
@@ -146,8 +142,8 @@ class AbhollisteView(APIView):
 
     @extend_schema(
         summary="Get Abholliste for a specific pickup location",
-        description="Returns a list of members with their bread deliveries for a specific week, day, and pickup location. "
-        "Members are sorted by display name (pseudonym or 'L., FirstName' format).",
+        description="Returns a list of members with their bread deliveries for a specific week and pickup location. "
+        "Includes delivery counts and preferred bread indicators.",
         parameters=[
             OpenApiParameter(
                 name="year",
@@ -155,7 +151,7 @@ class AbhollisteView(APIView):
                 required=True,
             ),
             OpenApiParameter(
-                name="week",
+                name="delivery_week",
                 type=OpenApiTypes.INT,
                 required=True,
             ),
@@ -165,66 +161,40 @@ class AbhollisteView(APIView):
                 required=True,
             ),
         ],
-        responses={
-            200: AbhollisteEntrySerializer(many=True),
-        },
+        responses={200: AbhollisteResponseSerializer},
         tags=["bakery"],
     )
     def get(self, request):
-
-        year = int(request.query_params.get("year"))
-        week = int(request.query_params.get("week"))
-        pickup_location_id = request.query_params.get("pickup_location_id")
-
-        deliveries = BreadDelivery.objects.filter(
-            year=year,
-            delivery_week=week,
-            pickup_location_id=pickup_location_id,
-        ).select_related(
-            "subscription__member",
-            "bread",
-            "pickup_location",
-        )
-
-        members_data = {}
-        for delivery in deliveries:
-            member = delivery.subscription.member
-            member_id = str(member.id)
-
-            if member_id not in members_data:
-                pseudonym = getattr(member, "pseudonym", None)
-
-                if pseudonym:
-                    display_name = pseudonym
-                else:
-                    last_name = member.last_name if hasattr(member, "last_name") else ""
-                    first_name = (
-                        member.first_name if hasattr(member, "first_name") else ""
-                    )
-
-                    if last_name:
-                        display_name = f"{last_name[0]}., {first_name}"
-                    else:
-                        display_name = first_name or "Unbekannt"
-
-                members_data[member_id] = {
-                    "member_id": member_id,
-                    "display_name": display_name,
-                    "total_breads": 0,
-                    "breads": [],
-                }
-
-            members_data[member_id]["total_breads"] += 1
-            members_data[member_id]["breads"].append(
-                {
-                    "delivery_id": str(delivery.id),
-                    "bread_name": delivery.bread.name if delivery.bread else None,
-                }
+        try:
+            year, delivery_week, delivery_day = parse_week_params(request.query_params)
+        except ValueError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        result = sorted(members_data.values(), key=lambda x: x["display_name"].lower())
+        pickup_location_id = request.query_params.get("pickup_location_id")
 
-        serializer = AbhollisteEntrySerializer(result, many=True)
+        data = AbhollisteService.get_abholliste(year, delivery_week, pickup_location_id)
+
+        result = {
+            "bread_names": data["bread_names"],
+            "bread_totals": data["bread_totals"],
+            "grand_total": data["grand_total"],
+            "entries": [
+                {
+                    "member_id": entry["member_id"],
+                    "display_name": entry["member_name"],
+                    "total_breads": entry["total"],
+                    "bread_counts": entry["bread_counts"],
+                    "bread_preferred": entry["bread_preferred"],
+                    "breads": entry["breads"],
+                }
+                for entry in data["entries"]
+            ],
+        }
+
+        serializer = AbhollisteResponseSerializer(result)
         return Response(serializer.data)
 
 
@@ -257,7 +227,7 @@ class SolverPreviewView(APIView):
         year = data["year"]
         delivery_week = data["delivery_week"]
         delivery_day = data.get("delivery_day")
-        max_solutions = min(data.get("max_solutions", 3), 20)
+        max_solutions = min(data.get("max_solutions", 5), 20)
 
         solver_input = collect_solver_input(year, delivery_week, delivery_day)
         if solver_input is None:
@@ -356,18 +326,14 @@ class SolverPreviewDetailView(APIView):
     )
     def get(self, request: Request) -> Response:
         try:
-            year = int(request.query_params["year"])
-            delivery_week = int(request.query_params["delivery_week"])
-            delivery_day_param = request.query_params.get("delivery_day")
-            delivery_day = (
-                int(delivery_day_param) if delivery_day_param is not None else None
-            )
-            solution_index = int(request.query_params.get("solution_index", 0))
-        except (ValueError, TypeError, KeyError) as e:
+            year, delivery_week, delivery_day = parse_week_params(request.query_params)
+        except ValueError as e:
             return Response(
-                {"error": f"Ungültiges Parameterformat: {e}"},
+                {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        solution_index = int(request.query_params.get("solution_index", 0))
 
         cache_key = f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
         results = cache.get(cache_key)
@@ -542,20 +508,9 @@ class PreferenceSatisfactionMetricsView(APIView):
         "Simulates pickup: members choose their first available favorite bread.",
     )
     def get(self, request: Request) -> Response:
-        from tapir.bakery.models import (
-            Bread,
-            BreadDelivery,
-            PreferredBread,
-        )
-
-        year = request.query_params.get("year")
-        delivery_week = request.query_params.get("delivery_week")
-        delivery_day_param = request.query_params.get("delivery_day")
 
         try:
-            year = int(year)
-            delivery_week = int(delivery_week)
-            delivery_day = int(delivery_day_param) if delivery_day_param else None
+            year, delivery_week, delivery_day = parse_week_params(request.query_params)
         except (ValueError, TypeError):
             return Response(
                 {"error": "Invalid parameter format"},
@@ -730,3 +685,100 @@ class PreferenceSatisfactionMetricsView(APIView):
         location_metrics.sort(key=lambda x: x["pickup_location_name"])
 
         return Response({"locations": location_metrics})
+
+
+@extend_schema(tags=["bakery"])
+class PreferredBreadStatisticsView(APIView):
+    """
+    Count how many members (with active BreadDelivery) prefer each bread type.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="year", type=int, required=True),
+            OpenApiParameter(name="delivery_week", type=int, required=True),
+            OpenApiParameter(name="delivery_day", type=int, required=False),
+        ],
+        responses={200: dict},
+        description="Count preferred breads among members with active deliveries for the given week.",
+    )
+    def get(self, request: Request) -> Response:
+
+        try:
+            year, delivery_week, delivery_day = parse_week_params(request.query_params)
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Invalid parameter format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Get all members with deliveries this week
+        deliveries_qs = BreadDelivery.objects.filter(
+            year=year,
+            delivery_week=delivery_week,
+        ).select_related("pickup_location", "subscription__member")
+
+        deliveries = list(deliveries_qs)
+
+        if delivery_day is not None:
+            deliveries = [
+                d
+                for d in deliveries
+                if d.pickup_location and d.pickup_location.delivery_day == delivery_day
+            ]
+
+        # Unique members with deliveries
+        member_ids = list(set(d.subscription.member_id for d in deliveries))
+        total_members = len(member_ids)
+
+        # Get preferred breads for these members
+        preferred_qs = PreferredBread.objects.filter(
+            member_id__in=member_ids
+        ).prefetch_related("breads")
+
+        members_with_preferences = 0
+        members_without_preferences = 0
+        bread_counts: dict[str, int] = {}
+        bread_ids_to_names: dict = {}
+
+        for pref in preferred_qs:
+            bread_list = list(pref.breads.all())
+            if bread_list:
+                members_with_preferences += 1
+                for bread in bread_list:
+                    bread_ids_to_names[bread.id] = bread.name
+                    bread_counts[bread.name] = bread_counts.get(bread.name, 0) + 1
+            else:
+                members_without_preferences += 1
+
+        # Members with no PreferredBread entry at all
+        members_with_pref_entry = set(p.member_id for p in preferred_qs)
+        members_without_preferences += sum(
+            1 for m_id in member_ids if m_id not in members_with_pref_entry
+        )
+
+        # Sort by count descending
+        bread_statistics = sorted(
+            [
+                {
+                    "bread_name": name,
+                    "count": count,
+                    "percentage": round(count / total_members * 100, 1)
+                    if total_members > 0
+                    else 0,
+                }
+                for name, count in bread_counts.items()
+            ],
+            key=lambda x: x["count"],
+            reverse=True,
+        )
+
+        return Response(
+            {
+                "total_members": total_members,
+                "members_with_preferences": members_with_preferences,
+                "members_without_preferences": members_without_preferences,
+                "breads": bread_statistics,
+            }
+        )

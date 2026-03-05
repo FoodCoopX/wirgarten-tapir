@@ -14,7 +14,7 @@
 
 import { mapValues } from '../runtime';
 /**
- * Serializer for a single member's entry in the Abholliste
+ * 
  * @export
  * @interface AbhollisteEntry
  */
@@ -39,6 +39,18 @@ export interface AbhollisteEntry {
     totalBreads: number;
     /**
      * 
+     * @type {{ [key: string]: number; }}
+     * @memberof AbhollisteEntry
+     */
+    breadCounts: { [key: string]: number; };
+    /**
+     * 
+     * @type {{ [key: string]: boolean; }}
+     * @memberof AbhollisteEntry
+     */
+    breadPreferred: { [key: string]: boolean; };
+    /**
+     * 
      * @type {Array<{ [key: string]: string | null; }>}
      * @memberof AbhollisteEntry
      */
@@ -52,6 +64,8 @@ export function instanceOfAbhollisteEntry(value: object): value is AbhollisteEnt
     if (!('memberId' in value) || value['memberId'] === undefined) return false;
     if (!('displayName' in value) || value['displayName'] === undefined) return false;
     if (!('totalBreads' in value) || value['totalBreads'] === undefined) return false;
+    if (!('breadCounts' in value) || value['breadCounts'] === undefined) return false;
+    if (!('breadPreferred' in value) || value['breadPreferred'] === undefined) return false;
     if (!('breads' in value) || value['breads'] === undefined) return false;
     return true;
 }
@@ -69,6 +83,8 @@ export function AbhollisteEntryFromJSONTyped(json: any, ignoreDiscriminator: boo
         'memberId': json['member_id'],
         'displayName': json['display_name'],
         'totalBreads': json['total_breads'],
+        'breadCounts': json['bread_counts'],
+        'breadPreferred': json['bread_preferred'],
         'breads': json['breads'],
     };
 }
@@ -87,6 +103,8 @@ export function AbhollisteEntryFromJSONTyped(json: any, ignoreDiscriminator: boo
         'member_id': value['memberId'],
         'display_name': value['displayName'],
         'total_breads': value['totalBreads'],
+        'bread_counts': value['breadCounts'],
+        'bread_preferred': value['breadPreferred'],
         'breads': value['breads'],
     };
 }

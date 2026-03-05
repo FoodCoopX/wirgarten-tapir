@@ -184,16 +184,21 @@ class PreferredBreadsBulkUpdateSerializer(serializers.Serializer):
 
 
 class AbhollisteEntrySerializer(serializers.Serializer):
-    """
-    Serializer for a single member's entry in the Abholliste
-    """
-
-    member_id = serializers.UUIDField()
+    member_id = serializers.CharField()
     display_name = serializers.CharField()
     total_breads = serializers.IntegerField()
+    bread_counts = serializers.DictField(child=serializers.IntegerField())
+    bread_preferred = serializers.DictField(child=serializers.BooleanField())
     breads = serializers.ListField(
         child=serializers.DictField(child=serializers.CharField(allow_null=True))
     )
+
+
+class AbhollisteResponseSerializer(serializers.Serializer):
+    bread_names = serializers.ListField(child=serializers.CharField())
+    bread_totals = serializers.DictField(child=serializers.IntegerField())
+    grand_total = serializers.IntegerField()
+    entries = AbhollisteEntrySerializer(many=True)
 
 
 class BreadCapacityUpdateItemSerializer(serializers.Serializer):

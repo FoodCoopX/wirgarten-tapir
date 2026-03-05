@@ -49,7 +49,7 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
           year,
           deliveryWeek,
           deliveryDay,
-          maxSolutions: 3,
+          maxSolutions: 10,
         },
       });
       setPreviewResponse(response);
@@ -137,7 +137,7 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
                 style={{ minWidth: '32px', padding: '2px 6px', fontSize: '0.75rem' }}
                 onClick={() => loadDetail(i)}
                 disabled={running}
-                title={`Lösung ${i + 1}: ${sol.totalBreads} Brote, ${sol.sessionsUsed} Ofengänge`}
+                title={`Lösung ${i + 1}: ${sol.totalBaked} Brote, ${sol.sessionsUsed} Ofengänge`}
               >
                 {i + 1}
               </button>

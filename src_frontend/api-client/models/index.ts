@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AbhollisteEntry';
+export * from './AbhollisteResponse';
 export * from './AutomatedExportCycleEnum';
 export * from './AvailableBreadsForDeliveryListResponse';
 export * from './AvailableSegmentsResponse';

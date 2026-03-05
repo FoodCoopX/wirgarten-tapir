@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm 18mm;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 9pt;
+      color: #333;
+      line-height: 1.4;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1, h2 {
+      color: #8B4513;
+      margin: 0 0 3mm 0;
+    }
+
+    h1 { font-size: 14pt; }
+    h2 { font-size: 11pt; }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1.5px solid #D4A574;
+      padding-bottom: 3mm;
+      margin-bottom: 5mm;
+    }
+
+    .report-header .meta {
+      font-size: 9pt;
+      color: #888;
+    }
+
+    .section-title {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #8B4513;
+      background-color: #F5E6D3;
+      padding: 2mm 4mm;
+      border-radius: 1mm;
+      margin-bottom: 3mm;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+      margin-bottom: 3mm;
+    }
+
+    th, td {
+      padding: 1.5mm 2.5mm;
+      border: 0.5px solid #ddd;
+    }
+
+    thead th {
+      background-color: #F5E6D3;
+      color: #5a3e1b;
+      font-weight: 600;
+      font-size: 9pt;
+      text-align: center;
+      vertical-align: bottom;
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #faf6f1;
+    }
+
+    .total-row {
+      background-color: #F5E6D3 !important;
+      font-weight: bold;
+    }
+
+    .total-row td {
+      border-top: 1.5px solid #D4A574;
+    }
+
+    .text-center { text-align: center; }
+    .text-end { text-align: right; }
+
+    .brown { color: #8B4513; font-weight: bold; }
+    .grey { color: #ccc; }
+
+    .preferred {
+      background-color: #d4edda !important;
+    }
+
+    .row-num {
+      color: #aaa;
+      font-size: 7pt;
+    }
+
+    .member-name {
+      white-space: nowrap;
+      font-size: 9pt;
+    }
+
+    .counter {
+      font-size: 9pt;
+      color: #888;
+      white-space: nowrap;
+    }
+
+    .bread-col {
+      text-align: center;
+      font-size: 9pt;
+      min-width: 20px;
+      padding: 2mm 1.5mm;
+      white-space: nowrap;
+      
+    }
+    .checkbox {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border: 1px solid #999;
+      border-radius: 1px;
+    }
+      .stove-card {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+  }
+  .stove-header {
+    background: #D4A574;
+    color: white;
+    padding: 6px;
+    border-radius: 4px 4px 0 0;
+    font-size: 10pt;
+    font-weight: bold;
+  }
+  .stove-layer {
+    display: flex;
+    padding: 6px;
+    border-bottom: 0.5px solid #dee2e6;
+    font-size: 10pt;
+  }
+  .stove-layer:last-child { border-bottom: none; }
+  .stove-label { color: #6c757d; width: 70px; }
+  .stove-empty { font-style: italic; color: #6c757d; }
+
+    .legend {
+      margin-top: 2mm;
+      font-size: 7pt;
+      color: #888;
+    }
+
+    .legend-swatch {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      background-color: #d4edda;
+      border: 0.5px solid #c3e6cb;
+      vertical-align: middle;
+      margin-right: 1.5mm;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 8mm;
+      color: #999;
+      font-style: italic;
+    }
+
+    .abholliste-block {
+      margin-bottom: 5mm;
+    }
+
+    {% block extra_styles %}{% endblock %}
+  </style>
+</head>
+<body>
+  {% block header %}
+  <div class="report-header">
+    <h1>{{ report_title }} - KW {{ week }} - {{ day_label }}, {{ date_string }}</h1>
+    
+  </div>
+  {% endblock %}
+
+  {% block content %}{% endblock %}
+  <div class="legend" style="text-align: end; margin-top: 2mm;">
+      erstellt am {{ today }}
+    </div>
+</body>
+</html>

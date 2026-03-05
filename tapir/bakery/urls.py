@@ -5,9 +5,16 @@ from tapir.bakery.views import (
     AbhollisteView,
     AvailableBreadsForDeliveryListView,
     PreferenceSatisfactionMetricsView,
+    PreferredBreadStatisticsView,
     SolverApplyView,
     SolverPreviewDetailView,
     SolverPreviewView,
+)
+from tapir.bakery.views_pdfs import (
+    abholliste_pdf,
+    abhollisten_all_pdf,
+    backliste_pdf,
+    verteilliste_pdf,
 )
 from tapir.bakery.views_templates import (
     ChooseBreadsView,
@@ -62,6 +69,32 @@ urlpatterns = [
         "metrics/satisfaction/",
         PreferenceSatisfactionMetricsView.as_view(),
         name="metrics-preference-satisfaction",
+    ),
+    # PDF exports
+    path(
+        "pdf/backliste/<int:year>/<int:week>/<int:day>/",
+        backliste_pdf,
+        name="backliste_pdf",
+    ),
+    path(
+        "pdf/verteilliste/<int:year>/<int:week>/<int:day>/",
+        verteilliste_pdf,
+        name="verteilliste_pdf",
+    ),
+    path(
+        "pdf/abholliste/<int:year>/<int:week>/<int:day>/<str:pickup_location_id>/",
+        abholliste_pdf,
+        name="abholliste_pdf",
+    ),
+    path(
+        "pdf/abholliste-alle/<int:year>/<int:week>/<int:day>/",
+        abhollisten_all_pdf,
+        name="pdf_abhollisten_all",
+    ),
+    path(
+        "api/preferred-bread-statistics/",
+        PreferredBreadStatisticsView.as_view(),
+        name="preferred-bread-statistics",
     ),
 ]
 

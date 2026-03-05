@@ -15,7 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
-  AbhollisteEntry,
+  AbhollisteResponse,
   AvailableBreadsForDeliveryListResponse,
   BreadCapacityBulkUpdateRequest,
   BreadCapacityPickupLocation,
@@ -62,8 +62,8 @@ import type {
   ToggleBreadResponse,
 } from '../models/index';
 import {
-    AbhollisteEntryFromJSON,
-    AbhollisteEntryToJSON,
+    AbhollisteResponseFromJSON,
+    AbhollisteResponseToJSON,
     AvailableBreadsForDeliveryListResponseFromJSON,
     AvailableBreadsForDeliveryListResponseToJSON,
     BreadCapacityBulkUpdateRequestFromJSON,
@@ -154,9 +154,9 @@ import {
     ToggleBreadResponseToJSON,
 } from '../models/index';
 
-export interface BakeryAbhollisteListRequest {
+export interface BakeryAbhollisteRetrieveRequest {
+    deliveryWeek: number;
     pickupLocationId: string;
-    week: number;
     year: number;
 }
 
@@ -175,13 +175,19 @@ export interface BakeryApiBakerySolverPreviewDetailRetrieveRequest {
     solutionIndex?: number;
 }
 
+export interface BakeryApiPreferredBreadStatisticsRetrieveRequest {
+    deliveryWeek: number;
+    year: number;
+    deliveryDay?: number;
+}
+
 export interface BakeryAvailableBreadsForDeliveryCreateRequest {
     toggleBreadRequestRequest: ToggleBreadRequestRequest;
 }
 
 export interface BakeryAvailableBreadsForDeliveryRetrieveRequest {
-    day: number;
-    week: number;
+    deliveryDay: number;
+    deliveryWeek: number;
     year: number;
 }
 
@@ -462,39 +468,39 @@ export interface PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest {
 export class BakeryApi extends runtime.BaseAPI {
 
     /**
-     * Returns a list of members with their bread deliveries for a specific week, day, and pickup location. Members are sorted by display name (pseudonym or \'L., FirstName\' format).
+     * Returns a list of members with their bread deliveries for a specific week and pickup location. Includes delivery counts and preferred bread indicators.
      * Get Abholliste for a specific pickup location
      */
-    async bakeryAbhollisteListRaw(requestParameters: BakeryAbhollisteListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AbhollisteEntry>>> {
-        if (requestParameters['pickupLocationId'] == null) {
+    async bakeryAbhollisteRetrieveRaw(requestParameters: BakeryAbhollisteRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AbhollisteResponse>> {
+        if (requestParameters['deliveryWeek'] == null) {
             throw new runtime.RequiredError(
-                'pickupLocationId',
-                'Required parameter "pickupLocationId" was null or undefined when calling bakeryAbhollisteList().'
+                'deliveryWeek',
+                'Required parameter "deliveryWeek" was null or undefined when calling bakeryAbhollisteRetrieve().'
             );
         }
 
-        if (requestParameters['week'] == null) {
+        if (requestParameters['pickupLocationId'] == null) {
             throw new runtime.RequiredError(
-                'week',
-                'Required parameter "week" was null or undefined when calling bakeryAbhollisteList().'
+                'pickupLocationId',
+                'Required parameter "pickupLocationId" was null or undefined when calling bakeryAbhollisteRetrieve().'
             );
         }
 
         if (requestParameters['year'] == null) {
             throw new runtime.RequiredError(
                 'year',
-                'Required parameter "year" was null or undefined when calling bakeryAbhollisteList().'
+                'Required parameter "year" was null or undefined when calling bakeryAbhollisteRetrieve().'
             );
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['pickupLocationId'] != null) {
-            queryParameters['pickup_location_id'] = requestParameters['pickupLocationId'];
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
         }
 
-        if (requestParameters['week'] != null) {
-            queryParameters['week'] = requestParameters['week'];
+        if (requestParameters['pickupLocationId'] != null) {
+            queryParameters['pickup_location_id'] = requestParameters['pickupLocationId'];
         }
 
         if (requestParameters['year'] != null) {
@@ -517,15 +523,15 @@ export class BakeryApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AbhollisteEntryFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => AbhollisteResponseFromJSON(jsonValue));
     }
 
     /**
-     * Returns a list of members with their bread deliveries for a specific week, day, and pickup location. Members are sorted by display name (pseudonym or \'L., FirstName\' format).
+     * Returns a list of members with their bread deliveries for a specific week and pickup location. Includes delivery counts and preferred bread indicators.
      * Get Abholliste for a specific pickup location
      */
-    async bakeryAbhollisteList(requestParameters: BakeryAbhollisteListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AbhollisteEntry>> {
-        const response = await this.bakeryAbhollisteListRaw(requestParameters, initOverrides);
+    async bakeryAbhollisteRetrieve(requestParameters: BakeryAbhollisteRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AbhollisteResponse> {
+        const response = await this.bakeryAbhollisteRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -685,6 +691,65 @@ export class BakeryApi extends runtime.BaseAPI {
     }
 
     /**
+     * Count preferred breads among members with active deliveries for the given week.
+     */
+    async bakeryApiPreferredBreadStatisticsRetrieveRaw(requestParameters: BakeryApiPreferredBreadStatisticsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: any; }>> {
+        if (requestParameters['deliveryWeek'] == null) {
+            throw new runtime.RequiredError(
+                'deliveryWeek',
+                'Required parameter "deliveryWeek" was null or undefined when calling bakeryApiPreferredBreadStatisticsRetrieve().'
+            );
+        }
+
+        if (requestParameters['year'] == null) {
+            throw new runtime.RequiredError(
+                'year',
+                'Required parameter "year" was null or undefined when calling bakeryApiPreferredBreadStatisticsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['deliveryDay'] != null) {
+            queryParameters['delivery_day'] = requestParameters['deliveryDay'];
+        }
+
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
+        }
+
+        if (requestParameters['year'] != null) {
+            queryParameters['year'] = requestParameters['year'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/api/preferred-bread-statistics/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     * Count preferred breads among members with active deliveries for the given week.
+     */
+    async bakeryApiPreferredBreadStatisticsRetrieve(requestParameters: BakeryApiPreferredBreadStatisticsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: any; }> {
+        const response = await this.bakeryApiPreferredBreadStatisticsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Get or toggle breads for a specific year, week and day
      * Toggle bread availability for a delivery day
      */
@@ -734,17 +799,17 @@ export class BakeryApi extends runtime.BaseAPI {
      * Get breads for a delivery day
      */
     async bakeryAvailableBreadsForDeliveryRetrieveRaw(requestParameters: BakeryAvailableBreadsForDeliveryRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AvailableBreadsForDeliveryListResponse>> {
-        if (requestParameters['day'] == null) {
+        if (requestParameters['deliveryDay'] == null) {
             throw new runtime.RequiredError(
-                'day',
-                'Required parameter "day" was null or undefined when calling bakeryAvailableBreadsForDeliveryRetrieve().'
+                'deliveryDay',
+                'Required parameter "deliveryDay" was null or undefined when calling bakeryAvailableBreadsForDeliveryRetrieve().'
             );
         }
 
-        if (requestParameters['week'] == null) {
+        if (requestParameters['deliveryWeek'] == null) {
             throw new runtime.RequiredError(
-                'week',
-                'Required parameter "week" was null or undefined when calling bakeryAvailableBreadsForDeliveryRetrieve().'
+                'deliveryWeek',
+                'Required parameter "deliveryWeek" was null or undefined when calling bakeryAvailableBreadsForDeliveryRetrieve().'
             );
         }
 
@@ -757,12 +822,12 @@ export class BakeryApi extends runtime.BaseAPI {
 
         const queryParameters: any = {};
 
-        if (requestParameters['day'] != null) {
-            queryParameters['day'] = requestParameters['day'];
+        if (requestParameters['deliveryDay'] != null) {
+            queryParameters['delivery_day'] = requestParameters['deliveryDay'];
         }
 
-        if (requestParameters['week'] != null) {
-            queryParameters['week'] = requestParameters['week'];
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
         }
 
         if (requestParameters['year'] != null) {

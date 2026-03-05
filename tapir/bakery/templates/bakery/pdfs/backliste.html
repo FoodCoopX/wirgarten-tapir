@@ -1,0 +1,66 @@
+{% extends "bakery/pdfs/base_pdf.html" %}
+
+{% block content %}
+
+{% if breads %}
+  <div class="section-title">Backmengen</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Brotsorte</th>
+        <th class="text-end">Verteilung</th>
+        <th class="text-end">Extra</th>
+        <th class="text-end">Backen</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bread in breads %}
+      <tr>
+        <td>{{ bread.name }}</td>
+        <td class="text-end">{{ bread.deliveries }}</td>
+        <td class="text-end {% if bread.extra > 0 %}green{% else %}grey{% endif %}">
+          {% if bread.extra > 0 %}+{% endif %}{{ bread.extra }}
+        </td>
+        <td class="text-end brown">{{ bread.baked }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="total-row">
+        <td>Gesamt</td>
+        <td class="text-end">{{ total_deliveries }}</td>
+        <td class="text-end {% if total_extra > 0 %}green{% else %}grey{% endif %}">
+          {% if total_extra > 0 %}+{% endif %}{{ total_extra }}
+        </td>
+        <td class="text-end brown">{{ total_baked }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="legend" style="margin-top: 12px; margin-bottom: 20px;">
+    Verteilung = Zuweisung zu Verteilstationen &nbsp;&nbsp;|&nbsp;&nbsp;
+    Extra = Reserve / Verkauf &nbsp;&nbsp;|&nbsp;&nbsp;
+    Backen = Gesamt im Ofen
+  </div>
+{% else %}
+  <div class="no-data">Noch kein Backplan berechnet.</div>
+{% endif %}
+
+{% if stove_sessions %}
+  <div class="section-title">Ofenplan</div>
+  {% for session in stove_sessions %}
+  <div class="stove-card">
+    <div class="stove-header">Ofengang {{ session.session }}</div>
+    {% for layer in session.layers %}
+    <div class="stove-layer">
+      <span class="stove-label">Etage {{ layer.layer }}:</span>
+      {% if layer.bread_name %}
+        <span>{{ layer.bread_name }} <span class="stove-qty">&times;{{ layer.quantity }}</span></span>
+      {% else %}
+        <span class="stove-empty">leer</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+{% endif %}
+
+{% endblock %}

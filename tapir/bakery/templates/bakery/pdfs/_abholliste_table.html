@@ -1,0 +1,60 @@
+{% load bakery_pdf_tags %}
+
+<div class="abholliste-block">
+  
+
+  {% if entries %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 12px; text-align: center;">#</th>
+          <th>Mitglied</th>
+          <th  style="width: 36px; text-align: center;">Brote</th>
+          <th style="width: 28px; text-align: center;">✓</th>
+          {% for bread_name in bread_names %}
+          <th class="bread-col">{{ bread_name }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr>
+          <td class="text-center row-num">{{ forloop.counter }}</td>
+          <td class="member-name">{{ entry.member_name }}</td>
+          <td class="text-end brown">{{ entry.total }}</td>
+          <td class="text-center"><span class="checkbox"></span></td>
+          {% for bread_name in bread_names %}
+          {% with count=entry.bread_counts|get_item:bread_name preferred=entry.bread_preferred|get_item:bread_name %}
+          <td class="text-center {% if preferred %}preferred{% elif not count %}grey{% endif %}">
+            {% if count %}{{ count }}{% elif preferred %}{% else %}—{% endif %}
+          </td>
+          {% endwith %}
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td></td>
+          <td>Gesamt</td>
+          <td class="text-end">{{ grand_total }}</td>
+          <td class="text-center counter"></td>
+          {% for bread_name in bread_names %}
+          <td class="text-center"></td>
+          {% endfor %}
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="legend">
+      <span class="legend-swatch"></span>
+      = Lieblingsbrot
+    </div>
+    <div class="legend" style="text-align: end; margin-top: 2mm;">
+    
+    erstellt am {{ today }}
+  </div>
+  {% else %}
+    <div class="no-data">Keine Abholungen für diese Station.</div>
+  {% endif %}
+</div>

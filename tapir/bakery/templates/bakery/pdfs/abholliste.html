@@ -1,0 +1,14 @@
+{% extends "bakery/pdfs/base_pdf.html" %}
+
+{% block header %}
+<div class="report-header">
+  <h1>{{ pickup_location_name }}</h1>
+  <h1>Abhol-Liste - KW {{ week }}</h1>
+  <h2>{{ day_label }}, {{ date_string }}</h2>
+  
+</div>
+{% endblock %}
+
+{% block content %}
+{% include "bakery/pdfs/_abholliste_table.html" %}
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "bakery/pdfs/base_pdf.html" %}
+{% load bakery_pdf_tags %}
+
+{% block content %}
+
+{% if not has_solver_results %}
+  <div class="info-box">
+    Basierend auf Mitgliederbestellungen (noch kein Backplan berechnet)
+  </div>
+{% endif %}
+
+{% if locations %}
+  <div class="section-title">Brote pro Abholstation</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Abholstation</th>
+        {% for bread_name in bread_names %}
+        <th class="text-center">{{ bread_name }}</th>
+        {% endfor %}
+        <th class="text-end">Gesamt</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for loc in locations %}
+      <tr>
+        <td>{{ loc.name }}</td>
+        {% for bread_name in bread_names %}
+        <td class="text-center {% if loc.breads|get_item:bread_name %}{% else %}grey{% endif %}">
+          {{ loc.breads|get_item:bread_name|default:"—" }}
+        </td>
+        {% endfor %}
+        <td class="text-end brown">{{ loc.total }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="total-row">
+        <td>Gesamt</td>
+        {% for bread_name in bread_names %}
+        <td class="text-center">{{ bread_totals|get_item:bread_name|default:"0" }}</td>
+        {% endfor %}
+        <td class="text-end">{{ grand_total }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+{% else %}
+  <div class="no-data">Keine Verteilungsdaten vorhanden.</div>
+{% endif %}
+
+{% endblock %}

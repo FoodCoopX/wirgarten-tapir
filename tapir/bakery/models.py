@@ -465,3 +465,19 @@ class StoveSession(TapirModel):
             "session_number",
             "layer_number",
         ]
+
+
+class PreferenceSatisfactionLogging(TapirModel):
+    year = models.PositiveIntegerField()
+    delivery_week = models.PositiveIntegerField()
+    delivery_day = models.PositiveIntegerField()
+    pickup_location = models.ForeignKey(
+        PickupLocation,
+        on_delete=models.CASCADE,
+        related_name="preference_satisfaction_logs",
+    )
+    percentage_satisfied = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        help_text="Percentage of deliveries that matched at least one preferred bread label",
+    )

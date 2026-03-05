@@ -98,8 +98,8 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
           try {
             const response = await bakeryApi.bakeryAvailableBreadsForDeliveryRetrieve({
               year,
-              week,
-              day: dayConfig.day,
+              deliveryWeek: week,
+              deliveryDay: dayConfig.day,
             } as any);
 
             const availableBreadIds = new Set((response as any).breads.map((b: any) => b.id));
