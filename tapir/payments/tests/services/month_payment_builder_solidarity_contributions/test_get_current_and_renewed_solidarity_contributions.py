@@ -17,7 +17,8 @@ from tapir.utils.services.tapir_cache import TapirCache
 class TestGetCurrentAndRenewedSolidarityContributions(SimpleTestCase):
 
     def setUp(self):
-        start_date = datetime.date(year=1991, month=1, day=1)
+        # The contribution for january should be included even if it starts not on the 1st of the month, see #893 https://github.com/FoodCoopX/wirgarten-tapir/issues/893#issuecomment-3977453120
+        start_date = datetime.date(year=1991, month=1, day=5)
         self.existing_contribution_in_trial = SolidarityContributionFactory.build(
             start_date=start_date
         )
@@ -149,7 +150,7 @@ class TestGetCurrentAndRenewedSolidarityContributions(SimpleTestCase):
         )
 
         cache = Mock()
-        first_of_month = datetime.date(year=1991, month=2, day=15)
+        first_of_month = datetime.date(year=1991, month=1, day=1)
 
         result = MonthPaymentBuilderSolidarityContributions.get_current_and_renewed_solidarity_contributions(
             cache=cache, first_of_month=first_of_month, is_in_trial=True

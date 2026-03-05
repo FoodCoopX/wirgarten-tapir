@@ -127,7 +127,9 @@ class MonthPaymentBuilderSolidarityContributions:
             for contribution in existing_contributions.union(
                 planned_renewed_contributions
             )
-            if contribution.start_date <= first_of_month <= contribution.end_date
+            if contribution.start_date.replace(day=1)
+            <= first_of_month
+            <= contribution.end_date
             and TrialPeriodManager.is_contract_in_trial(
                 contract=contribution, reference_date=first_of_month, cache=cache
             )

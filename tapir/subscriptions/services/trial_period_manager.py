@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
@@ -19,7 +18,7 @@ from tapir.wirgarten.utils import get_today
 class TrialPeriodManager:
     @classmethod
     def get_last_day_of_trial_period(
-        cls, obj: Subscription | SolidarityContribution, cache: Dict
+        cls, obj: Subscription | SolidarityContribution, cache: dict
     ):
         if obj.trial_disabled or not get_parameter_value(
             ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
@@ -33,7 +32,7 @@ class TrialPeriodManager:
 
     @classmethod
     def get_last_day_of_trial_period_by_weeks(
-        cls, obj: Subscription | SolidarityContribution, cache: Dict
+        cls, obj: Subscription | SolidarityContribution, cache: dict
     ):
         return (
             obj.start_date
@@ -50,7 +49,7 @@ class TrialPeriodManager:
         cls,
         contract: Subscription | SolidarityContribution,
         reference_date: datetime.date = None,
-        cache: Dict = None,
+        cache: dict = None,
     ) -> bool:
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
             return False
@@ -69,7 +68,7 @@ class TrialPeriodManager:
         cls,
         subscription: Subscription,
         reference_date: datetime.date | None = None,
-        cache: Dict = None,
+        cache: dict = None,
     ) -> datetime.date:
         if not get_parameter_value(
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
@@ -93,7 +92,7 @@ class TrialPeriodManager:
         cls,
         product: Product,
         member: Member,
-        cache: Dict,
+        cache: dict,
         reference_date: datetime.date | None = None,
     ) -> bool:
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
@@ -114,7 +113,7 @@ class TrialPeriodManager:
 
     @classmethod
     def get_subscriptions_in_trial_period(
-        cls, member_id: str, reference_date: datetime.date = None, cache: Dict = None
+        cls, member_id: str, reference_date: datetime.date = None, cache: dict = None
     ) -> list[Subscription]:
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
             return []
