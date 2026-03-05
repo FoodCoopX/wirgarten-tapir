@@ -89,7 +89,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
         Number.parseFloat(pickupLocation.coordsLat),
       ]),
     );
-    mapRef.fitBounds(bounds);
+    mapRef.fitBounds(bounds, { padding: [50, 50] });
   }
 
   function updateSelection(pickupLocation: PublicPickupLocation) {
