@@ -49,9 +49,9 @@ class PersonalDataValidator:
             if not phonenumbers.is_possible_number(
                 phone_number
             ) or not phonenumbers.is_valid_number(phone_number):
-                raise ValidationError("Ungültiges Telefonnummer")
+                raise ValidationError("Ungültige Telefonnummer")
         except phonenumbers.phonenumberutil.NumberParseException:
-            raise ValidationError("Ungültiges Telefonnummer")
+            raise ValidationError("Ungültige Telefonnummer")
 
     @classmethod
     def validate_email_address_not_in_use(
