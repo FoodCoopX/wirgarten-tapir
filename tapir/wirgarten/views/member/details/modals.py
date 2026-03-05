@@ -161,6 +161,13 @@ def get_member_payment_data_edit_form(request, **kwargs):
             old_model=orig, new_model=member, user=member, actor=request.user
         ).save()
 
+        TransactionalTrigger.fire_action(
+            TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_DATA,
+                recipient_id_in_base_queryset=member.id,
+            ),
+        )
+
         member.save()
         return member
 
