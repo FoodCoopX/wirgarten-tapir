@@ -954,7 +954,7 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
             suffix = f"empfangen von {self.transfer_member}"
         else:
             suffix = f"Unknown transaction type ({self.transaction_type})"
-        return f"{prefix} {suffix} - Valid at:{self.valid_at} - Member:{self.member.id}"
+        return f"{prefix} {suffix} - Valid at:{self.valid_at} - Member:{self.member}"
 
 
 class Deliveries(TapirModel):
