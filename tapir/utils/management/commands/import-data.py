@@ -54,9 +54,11 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
-            "--dry-run",
-            action="store_true",
-            help="Validate and simulate the import without writing to the database.",
+            "--update",
+            nargs=1,
+            choices=["yes", "no"],
+            default=["no"],
+            help="Update existing records if differences are found (yes/no). Default: no.",
         )
 
     def handle(self, *args, **options):
@@ -152,6 +154,7 @@ class Command(BaseCommand):
         import_type = options["type"][0]
         delete_all = options["delete_all"]
         dry_run = options.get("dry_run", False)
+        update_existing = options.get("update")[0] == "yes"
 
         # Open with utf-8-sig so a potential BOM (U+FEFF) is discarded automatically
         # Normalize/clean header names to remove invisible/odd whitespace
@@ -241,6 +244,187 @@ class Command(BaseCommand):
                             "Pickup Location not found - record is skipped!"
                         )
                         continue
+                    member_no = _normalize_cell(row.get("Nr"))
+                    m = None
+                    if member_no:
+                        try:
+                            m = Member.objects.get(member_no=member_no)
+                        except Member.DoesNotExist:
+                            pass
+
+                    if m:
+                        if not update_existing:
+                            skipped += 1
+                            continue
+
+                        # Update logic
+                        updated_fields = []
+
+                        def _update_if_diff(obj, field, new_val):
+                            old_val = getattr(obj, field)
+                            if new_val != old_val:
+                                setattr(obj, field, new_val)
+                                return True
+                            return False
+
+                        if _update_if_diff(
+                            m, "first_name", _normalize_cell(row.get("Vorname"))
+                        ):
+                            updated_fields.append("first_name")
+                        if _update_if_diff(
+                            m, "last_name", _normalize_cell(row.get("Nachname"))
+                        ):
+                            updated_fields.append("last_name")
+                        if _update_if_diff(
+                            m,
+                            "birthdate",
+                            _to_date(row.get("Geburtstag/Gründungsdatum")),
+                        ):
+                            updated_fields.append("birthdate")
+                        if _update_if_diff(
+                            m, "form_of_address", _normalize_cell(row.get("Anrede"))
+                        ):
+                            updated_fields.append("form_of_address")
+
+                        new_street = " ".join(
+                            s.rstrip()
+                            for s in [
+                                _normalize_cell(row.get("Straße")),
+                                _normalize_cell(row.get("Hausnr.")),
+                            ]
+                            if s and s.rstrip() != ""
+                        )
+                        if _update_if_diff(m, "street", new_street):
+                            updated_fields.append("street")
+
+                        if _update_if_diff(
+                            m, "postcode", _normalize_cell(row.get("PLZ"))
+                        ):
+                            updated_fields.append("postcode")
+                        if _update_if_diff(m, "city", _normalize_cell(row.get("Ort"))):
+                            updated_fields.append("city")
+                        if _update_if_diff(
+                            m, "email", _normalize_cell(row.get("Mailadresse"))
+                        ):
+                            updated_fields.append("email")
+                        if _update_if_diff(
+                            m, "phone_number", _normalize_cell(row.get("Telefon"))
+                        ):
+                            updated_fields.append("phone_number")
+                        if _update_if_diff(
+                            m,
+                            "phone_number_landline",
+                            _normalize_cell(row.get("Telefon 2")),
+                        ):
+                            updated_fields.append("phone_number_landline")
+                        if _update_if_diff(m, "iban", _normalize_cell(row.get("IBAN"))):
+                            updated_fields.append("iban")
+                        if _update_if_diff(
+                            m, "account_owner", _normalize_cell(row.get("Kontoinhaber"))
+                        ):
+                            updated_fields.append("account_owner")
+                        if _update_if_diff(
+                            m, "sepa_consent", _to_datetime(row.get("consent_sepa"))
+                        ):
+                            updated_fields.append("sepa_consent")
+                        if _update_if_diff(
+                            m,
+                            "privacy_consent",
+                            _to_datetime(row.get("privacy_consent")),
+                        ):
+                            updated_fields.append("privacy_consent")
+
+                        # Handle MemberPickupLocation update
+                        mp = MemberPickupLocation.objects.filter(member=m).first()
+                        mp_updated = False
+                        if mp:
+                            if _update_if_diff(mp, "pickup_location", picloc):
+                                mp_updated = True
+                            if _update_if_diff(
+                                mp, "valid_from", _to_date(row.get("AO_gueltig_ab"))
+                            ):
+                                mp_updated = True
+                        elif picloc:
+                            mp = MemberPickupLocation(
+                                member=m,
+                                pickup_location=picloc,
+                                valid_from=_to_date(row.get("AO_gueltig_ab")),
+                            )
+                            mp_updated = True
+
+                        soli_val = _safe_float(row.get("Absoluter Betrag"))
+                        soli_start_date = _to_date(row.get("Startdatum"))
+                        soli_end_date = _to_date(row.get("Endedatum"))
+
+                        # SolidarityContribution update
+                        soli_contribution = SolidarityContribution.objects.filter(
+                            member=m
+                        ).first()
+                        soli_updated = False
+                        if soli_contribution:
+                            if soli_val > 0:
+                                if _update_if_diff(
+                                    soli_contribution, "amount", soli_val
+                                ):
+                                    soli_updated = True
+                                if (
+                                    _update_if_diff(
+                                        soli_contribution, "start_date", soli_start_date
+                                    )
+                                    and soli_start_date
+                                ):
+                                    soli_updated = True
+                                if (
+                                    _update_if_diff(
+                                        soli_contribution, "end_date", soli_end_date
+                                    )
+                                    and soli_end_date
+                                ):
+                                    soli_updated = True
+                            else:
+                                # If amount is 0, we should probably delete it or leave it?
+                                # Requirement: "Wenn der Solidarbetrag 0€ oder leer ist, soll kein entsprechendes Objekt erstellt werden."
+                                # For update, maybe delete if it exists? The requirement is about creation.
+                                # Let's stick to update only if soli_val > 0.
+                                pass
+                        elif soli_val > 0:
+                            soli_contribution = SolidarityContribution(
+                                member=m,
+                                amount=soli_val,
+                                start_date=soli_start_date
+                                or (
+                                    m.created_at.date() if m.created_at else get_today()
+                                ),
+                                end_date=soli_end_date
+                                or GrowingPeriod.objects.filter(
+                                    start_date__lte=get_today()
+                                )
+                                .order_by("-start_date")
+                                .first()
+                                .end_date,
+                            )
+                            soli_updated = True
+
+                        try:
+                            if not dry_run:
+                                with transaction.atomic():
+                                    if updated_fields:
+                                        m.save(bypass_keycloak=True)
+                                    if mp_updated:
+                                        mp.save()
+                                    if soli_updated:
+                                        soli_contribution.save()
+
+                            if updated_fields or mp_updated or soli_updated:
+                                updated += 1
+                            else:
+                                skipped += 1
+                        except Exception as e:
+                            self.stderr.write(f"Error updating member {member_no}: {e}")
+                            skipped += 1
+                        continue
+
+                    # If member doesn't exist, create it
                     m = Member(
                         first_name=_normalize_cell(row.get("Vorname")),
                         last_name=_normalize_cell(row.get("Nachname")),
@@ -259,7 +443,7 @@ class Command(BaseCommand):
                         email=_normalize_cell(row.get("Mailadresse")),
                         phone_number=_normalize_cell(row.get("Telefon")),
                         phone_number_landline=_normalize_cell(row.get("Telefon 2")),
-                        member_no=_normalize_cell(row.get("Nr")),
+                        member_no=member_no,
                         iban=_normalize_cell(row.get("IBAN")),
                         account_owner=_normalize_cell(row.get("Kontoinhaber")),
                         sepa_consent=_to_datetime(row.get("consent_sepa")),
@@ -270,7 +454,10 @@ class Command(BaseCommand):
                         pickup_location=picloc,
                         valid_from=_to_date(row.get("AO_gueltig_ab")),
                     )
-                    soli_val = _safe_float(row.get("Solidarbeitrag"))
+                    soli_val = _safe_float(row.get("Absoluter Betrag"))
+                    soli_start_date = _to_date(row.get("Startdatum"))
+                    soli_end_date = _to_date(row.get("Endedatum"))
+
                     # Persists member and pickup location transactionally; handles errors
                     try:
                         if dry_run:
@@ -288,12 +475,14 @@ class Command(BaseCommand):
                                     SolidarityContribution.objects.create(
                                         member=m,
                                         amount=soli_val,
-                                        start_date=(
+                                        start_date=soli_start_date
+                                        or (
                                             m.created_at.date()
                                             if m.created_at
                                             else get_today()
                                         ),
-                                        end_date=GrowingPeriod.objects.filter(
+                                        end_date=soli_end_date
+                                        or GrowingPeriod.objects.filter(
                                             start_date__lte=get_today()
                                         )
                                         .order_by("-start_date")
@@ -356,6 +545,49 @@ class Command(BaseCommand):
                             valid_date = _to_date(row.get("Wirkung Kündigung"))
                         case _:
                             raise ValueError("Unknown transaction type!")
+
+                    timestamp = _to_datetime_from_date(
+                        row.get("Datum"), hour=0, minute=0
+                    )
+
+                    # Check for existing transaction
+                    existing_trans = CoopShareTransaction.objects.filter(
+                        member=member,
+                        transaction_type=trans_type,
+                        timestamp=timestamp,
+                    ).first()
+
+                    if existing_trans:
+                        if not update_existing:
+                            skipped += 1
+                            continue
+
+                        # Update if different
+                        is_updated = False
+                        if existing_trans.transfer_member != transfer_member:
+                            existing_trans.transfer_member = transfer_member
+                            is_updated = True
+                        if existing_trans.quantity != qu:
+                            existing_trans.quantity = qu
+                            is_updated = True
+                        if existing_trans.valid_at != valid_date:
+                            existing_trans.valid_at = valid_date
+                            is_updated = True
+
+                        if is_updated:
+                            try:
+                                if not dry_run:
+                                    existing_trans.save()
+                                updated += 1
+                            except Exception as e:
+                                self.stderr.write(
+                                    f"Error updating share transaction: {e}"
+                                )
+                                skipped += 1
+                        else:
+                            skipped += 1
+                        continue
+
                     try:
                         if dry_run:
                             created += 1
@@ -364,9 +596,7 @@ class Command(BaseCommand):
                                 CoopShareTransaction.objects.create(
                                     member_id=member.id,
                                     transaction_type=trans_type,
-                                    timestamp=_to_datetime_from_date(
-                                        row.get("Datum"), hour=0, minute=0
-                                    ),
+                                    timestamp=timestamp,
                                     valid_at=valid_date,
                                     quantity=qu,
                                     share_price=50,
@@ -395,7 +625,7 @@ class Command(BaseCommand):
                 for row in reader:
                     if not any(_normalize_cell(v) for v in row.values()):
                         continue
-                    # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,Richtpreis,Solidarpreis in Prozent,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
+                    # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
                     # print(row)
                     # identify MemberID, either via MemberNo or Email
                     try:
@@ -518,6 +748,81 @@ class Command(BaseCommand):
                         row.get("trial_end_date_override")
                     )
 
+                    quantity = _safe_float(row.get("Quantity"))
+                    v_start_date = _to_date(row.get("Vertragsbeginn"))
+                    v_end_date = _to_date(row.get("Vertragsende"))
+                    consent_ts = _to_datetime(
+                        row.get("consent_vertragsgrundsätze")
+                    ) or _to_datetime_from_date(row.get("consent_vertragsgrundsätze"))
+                    withdrawal_consent_ts = _to_datetime(
+                        row.get("consent_widerruf")
+                    ) or _to_datetime_from_date(row.get("consent_widerruf"))
+
+                    # Check for existing subscription
+                    filter_criteria = {
+                        "member": m,
+                        "product": prod,
+                        "period": period,
+                        "start_date": v_start_date,
+                    }
+                    if product_type_name:
+                        filter_criteria["product__type"] = prod.type
+
+                    existing_sub = Subscription.objects.filter(
+                        **filter_criteria
+                    ).first()
+
+                    if existing_sub:
+                        if not update_existing:
+                            skipped += 1
+                            continue
+
+                        # Update if different
+                        is_updated = False
+
+                        def _update_if_diff(obj, field, new_val):
+                            old_val = getattr(obj, field)
+                            if new_val != old_val:
+                                setattr(obj, field, new_val)
+                                return True
+                            return False
+
+                        if _update_if_diff(existing_sub, "quantity", quantity):
+                            is_updated = True
+                        if _update_if_diff(existing_sub, "end_date", v_end_date):
+                            is_updated = True
+                        if _update_if_diff(existing_sub, "cancellation_ts", ts_cancel):
+                            is_updated = True
+                        if _update_if_diff(existing_sub, "consent_ts", consent_ts):
+                            is_updated = True
+                        if _update_if_diff(
+                            existing_sub, "withdrawal_consent_ts", withdrawal_consent_ts
+                        ):
+                            is_updated = True
+                        if trial_disabled_val is not None:
+                            if _update_if_diff(
+                                existing_sub, "trial_disabled", trial_disabled_val
+                            ):
+                                is_updated = True
+                        if _update_if_diff(
+                            existing_sub,
+                            "trial_end_date_override",
+                            trial_end_date_override,
+                        ):
+                            is_updated = True
+
+                        if is_updated:
+                            try:
+                                if not dry_run:
+                                    existing_sub.save()
+                                updated += 1
+                            except Exception as e:
+                                self.stderr.write(f"Error updating subscription: {e}")
+                                skipped += 1
+                        else:
+                            skipped += 1
+                        continue
+
                     try:
                         if dry_run:
                             created += 1
@@ -525,25 +830,15 @@ class Command(BaseCommand):
                             with transaction.atomic():
                                 Subscription.objects.create(
                                     member_id=m.id,
-                                    quantity=_safe_float(row.get("Quantity")),
-                                    start_date=_to_date(row.get("Vertragsbeginn")),
-                                    end_date=_to_date(row.get("Vertragsende")),
+                                    quantity=quantity,
+                                    start_date=v_start_date,
+                                    end_date=v_end_date,
                                     cancellation_ts=ts_cancel,
                                     mandate_ref_id=mref.ref,
                                     period_id=period.id,
                                     product_id=prod.id,
-                                    consent_ts=_to_datetime(
-                                        row.get("consent_vertragsgrundsätze")
-                                    )
-                                    or _to_datetime_from_date(
-                                        row.get("consent_vertragsgrundsätze")
-                                    ),
-                                    withdrawal_consent_ts=_to_datetime(
-                                        row.get("consent_widerruf")
-                                    )
-                                    or _to_datetime_from_date(
-                                        row.get("consent_widerruf")
-                                    ),
+                                    consent_ts=consent_ts,
+                                    withdrawal_consent_ts=withdrawal_consent_ts,
                                     trial_disabled=(
                                         trial_disabled_val
                                         if trial_disabled_val is not None
