@@ -1,8 +1,6 @@
 import datetime
 from typing import Dict
 
-from dateutil.relativedelta import relativedelta
-
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
@@ -20,7 +18,7 @@ from tapir.wirgarten.utils import get_today
 
 class TrialPeriodManager:
     @classmethod
-    def get_end_of_trial_period(
+    def get_last_day_of_trial_period(
         cls, obj: Subscription | SolidarityContribution, cache: Dict
     ):
         if obj.trial_disabled or not get_parameter_value(
@@ -31,14 +29,20 @@ class TrialPeriodManager:
         if obj.trial_end_date_override is not None:
             return obj.trial_end_date_override
 
-        return cls.get_end_of_trial_period_by_weeks(obj, cache=cache)
+        return cls.get_last_day_of_trial_period_by_weeks(obj, cache=cache)
 
     @classmethod
-    def get_end_of_trial_period_by_weeks(
+    def get_last_day_of_trial_period_by_weeks(
         cls, obj: Subscription | SolidarityContribution, cache: Dict
     ):
-        return obj.start_date + relativedelta(
-            weeks=get_parameter_value(ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache)
+        return (
+            obj.start_date
+            + datetime.timedelta(
+                weeks=get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
+                )
+            )
+            - datetime.timedelta(days=1)
         )
 
     @classmethod
@@ -54,7 +58,7 @@ class TrialPeriodManager:
         if reference_date is None:
             reference_date = get_today(cache=cache)
 
-        end_of_trial_period = cls.get_end_of_trial_period(contract, cache=cache)
+        end_of_trial_period = cls.get_last_day_of_trial_period(contract, cache=cache)
         if end_of_trial_period is None:
             return False
 
@@ -70,7 +74,7 @@ class TrialPeriodManager:
         if not get_parameter_value(
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         ):
-            return cls.get_end_of_trial_period(subscription, cache=cache)
+            return cls.get_last_day_of_trial_period(subscription, cache=cache)
 
         if reference_date is None:
             reference_date = get_today(cache=cache)
@@ -140,7 +144,7 @@ class TrialPeriodManager:
             reference_date=reference_date, cache=cache
         ).filter(member_id=member_id, product__type_id=product_type_id)
         trial_end_dates = [
-            cls.get_end_of_trial_period(subscription, cache)
+            cls.get_last_day_of_trial_period(subscription, cache)
             for subscription in subscriptions
         ]
         if None in trial_end_dates:

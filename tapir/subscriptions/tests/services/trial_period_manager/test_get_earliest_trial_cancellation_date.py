@@ -119,17 +119,17 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
     @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
     @patch.object(
         TrialPeriodManager,
-        "get_end_of_trial_period",
+        "get_last_day_of_trial_period",
     )
     def test_getEarliestTrialCancellationDate_trialCannotBeCancelledEarly_returnsEndOfTrial(
         self,
-        mock_get_end_of_trial_period: Mock,
+        mock_get_last_day_of_trial_period: Mock,
         mock_get_parameter_value: Mock,
     ):
         subscription = Mock()
         mock_get_parameter_value.return_value = False
         end_of_trial_period = datetime.date(year=2027, month=6, day=11)
-        mock_get_end_of_trial_period.return_value = end_of_trial_period
+        mock_get_last_day_of_trial_period.return_value = end_of_trial_period
         cache = {}
 
         result = TrialPeriodManager.get_earliest_trial_cancellation_date(
@@ -137,7 +137,9 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
         )
 
         self.assertEqual(datetime.date(year=2027, month=6, day=11), result)
-        mock_get_end_of_trial_period.assert_called_once_with(subscription, cache=cache)
+        mock_get_last_day_of_trial_period.assert_called_once_with(
+            subscription, cache=cache
+        )
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         )

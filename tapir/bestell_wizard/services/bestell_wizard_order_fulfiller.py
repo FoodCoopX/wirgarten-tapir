@@ -184,13 +184,13 @@ class BestellWizardOrderFulfiller:
         at_least_one_trial_period_found = False
         if len(subscriptions) > 0:
             for subscription in subscriptions:
-                end_of_trial_period = TrialPeriodManager.get_end_of_trial_period(
+                end_of_trial_period = TrialPeriodManager.get_last_day_of_trial_period(
                     obj=subscription, cache=cache
                 )
                 if end_of_trial_period is not None:
                     shares_valid_at = min(
                         shares_valid_at,
-                        TrialPeriodManager.get_end_of_trial_period(
+                        TrialPeriodManager.get_last_day_of_trial_period(
                             obj=subscription, cache=cache
                         ),
                     )

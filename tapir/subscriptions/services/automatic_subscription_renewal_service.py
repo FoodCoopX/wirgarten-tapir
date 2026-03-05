@@ -100,7 +100,7 @@ class AutomaticSubscriptionRenewalService:
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
             return True, None
 
-        trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+        trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
             old_obj, cache=cache
         )
         if trial_end_date is not None and trial_end_date > old_obj.end_date:

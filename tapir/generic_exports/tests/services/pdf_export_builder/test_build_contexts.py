@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import patch, Mock, call, ANY
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
@@ -21,13 +22,13 @@ class TestBuildContexts(TapirIntegrationTest):
             export_segment_id="members.all",
             template="Test template {{member_last_name}} {{member_number}}",
         )
-        mock_datetime = Mock()
+        reference_datetime = datetime.datetime(year=2025, month=11, day=27)
         members = [
             MemberWithCoopSharesFactory.create(),
             MemberWithCoopSharesFactory.create(),
         ]
 
-        PdfExportBuilder.build_contexts(export, mock_datetime)
+        PdfExportBuilder.build_contexts(export, reference_datetime)
 
         self.assertEqual(2, mock_build_context_for_entry.call_count)
         mock_build_context_for_entry.assert_has_calls(
@@ -35,7 +36,7 @@ class TestBuildContexts(TapirIntegrationTest):
                 call(
                     member,
                     ExportSegmentManager.get_segment_by_id("members.all"),
-                    mock_datetime,
+                    reference_datetime,
                     ["member_last_name", "member_number"],
                     cache=ANY,
                 )

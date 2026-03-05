@@ -1001,7 +1001,7 @@ def cancel_or_delete_subscriptions(
             continue
 
         subscription.cancellation_ts = get_now(cache=cache)
-        existing_trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+        existing_trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
             subscription, cache=cache
         )
         subscription.save()

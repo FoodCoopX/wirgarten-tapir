@@ -129,7 +129,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             context["subscriptions_in_trial"].extend(subs_in_trial)
             next_trial_end_date = None
             for subscription in subs_in_trial:
-                trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+                trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
                     subscription, cache=cache
                 )
                 if next_trial_end_date is None or trial_end_date < next_trial_end_date:

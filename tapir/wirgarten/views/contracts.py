@@ -204,7 +204,7 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
             for subscription in self.object_list:
                 if TrialPeriodManager.is_contract_in_trial(subscription, cache=cache):
                     subscriptions_trial_end_dates[subscription.id] = (
-                        TrialPeriodManager.get_end_of_trial_period(
+                        TrialPeriodManager.get_last_day_of_trial_period(
                             subscription, cache=cache
                         )
                     )
