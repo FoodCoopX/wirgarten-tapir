@@ -1,15 +1,22 @@
 import csv
-import datetime
 import unicodedata
+from csv import DictReader
 
 import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.management import BaseCommand
 from django.db import transaction
-from django.utils import timezone
-from django.utils.dateparse import parse_date, parse_datetime
 
-from tapir.utils.models import MemberImportedLogEntry
+from tapir.accounts.models import EmailChangeRequest
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.utils.config import (
+    MEMBER_IMPORT_STATUS_SKIPPED,
+    MEMBER_IMPORT_STATUS_CREATED,
+    MEMBER_IMPORT_STATUS_UPDATED,
+)
+from tapir.utils.services.data_import_utils import DataImportUtils
+from tapir.utils.services.member_importer import MemberImporter
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -17,7 +24,6 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     Product,
     ProductType,
-    PickupLocation,
     MandateReference,
     MemberPickupLocation,
     Payment,
@@ -29,10 +35,6 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
-from tapir.accounts.models import EmailChangeRequest
-from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
-from tapir.solidarity_contribution.models import SolidarityContribution
-from tapir.wirgarten.utils import get_today
 
 
 class Command(BaseCommand):
@@ -63,62 +65,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Helper functions
-        def _normalize_cell(v):
-            if v is None:
-                return ""
-            if isinstance(v, str):
-                return v.strip()
-            return v
-
-        def _safe_int(v, default=0):
-            v = _normalize_cell(v)
-            try:
-                return int(v)
-            except (TypeError, ValueError):
-                return default
-
-        def _safe_float(v, default=0.0):
-            v = _normalize_cell(v)
-            try:
-                return float(v)
-            except (TypeError, ValueError):
-                return default
-
-        def _safe_bool(v):
-            v = _normalize_cell(v)
-            if v == "":
-                return None
-            s = str(v).strip().lower()
-            return s in ("1", "true", "yes", "ja", "j", "y", "x")
-
-        def _to_date(v):
-            v = _normalize_cell(v)
-            if not v:
-                return None
-            d = parse_date(v)
-            return d
-
-        def _to_datetime_from_date(v, hour=12, minute=0, tz=None):
-            # Interpret a date string as a datetime at given hour in the provided/current tz
-            d = _to_date(v)
-            if not d:
-                return None
-            tzinfo = tz or timezone.get_current_timezone()
-            return timezone.make_aware(
-                datetime.datetime(d.year, d.month, d.day, hour, minute), tzinfo
-            )
-
-        def _to_datetime(v):
-            v = _normalize_cell(v)
-            if not v:
-                return None
-            # Try parse full datetime first, then date-only
-            dt = parse_datetime(v)
-            if dt is None:
-                return _to_datetime_from_date(v)
-            if timezone.is_naive(dt):
-                dt = timezone.make_aware(dt, timezone.get_current_timezone())
-            return dt
 
         if options["reset_all"]:
             SolidarityContribution.objects.all().delete()
@@ -165,7 +111,7 @@ class Command(BaseCommand):
                 print("Provided CSV file is empty.")
                 return
 
-            def _clean_field_name(s: str) -> str:
+            def _clean_field_name(s: str) -> str | None:
                 if s is None:
                     return s
                 # Remove common invisible characters and normalize
@@ -220,305 +166,46 @@ class Command(BaseCommand):
                     WaitingListEntry.objects.all().delete()
                     EmailChangeRequest.objects.all().delete()
                     Member.objects.all().delete()
-                for row in reader:
-                    # skip empty lines
-                    if not any(_normalize_cell(v) for v in row.values()):
-                        continue
-                    # identify pickup location ID
-                    try:
-                        if _normalize_cell(row.get("Abholort")) != "":
-                            picloc = PickupLocation.objects.get(
-                                name=_normalize_cell(row.get("Abholort"))
-                            )
-                        else:
-                            picloc = None
-                    except ObjectDoesNotExist as e:
-                        self.stderr.write(str(row))
-                        self.stderr.write(
-                            "Pickup Location not found - record is skipped!"
-                        )
-                        continue
-                    member_no = _normalize_cell(row.get("Nr"))
-                    m = None
-                    if member_no:
-                        try:
-                            m = Member.objects.get(member_no=member_no)
-                        except Member.DoesNotExist:
-                            pass
-
-                    if m:
-                        if not update_existing:
-                            skipped += 1
-                            continue
-
-                        # Update logic
-                        updated_fields = []
-
-                        def _update_if_diff(obj, field, new_val):
-                            old_val = getattr(obj, field)
-                            if new_val != old_val:
-                                setattr(obj, field, new_val)
-                                return True
-                            return False
-
-                        if _update_if_diff(
-                            m, "first_name", _normalize_cell(row.get("Vorname"))
-                        ):
-                            updated_fields.append("first_name")
-                        if _update_if_diff(
-                            m, "last_name", _normalize_cell(row.get("Nachname"))
-                        ):
-                            updated_fields.append("last_name")
-                        if _update_if_diff(
-                            m,
-                            "birthdate",
-                            _to_date(row.get("Geburtstag/Gründungsdatum")),
-                        ):
-                            updated_fields.append("birthdate")
-                        if _update_if_diff(
-                            m, "form_of_address", _normalize_cell(row.get("Anrede"))
-                        ):
-                            updated_fields.append("form_of_address")
-
-                        new_street = " ".join(
-                            s.rstrip()
-                            for s in [
-                                _normalize_cell(row.get("Straße")),
-                                _normalize_cell(row.get("Hausnr.")),
-                            ]
-                            if s and s.rstrip() != ""
-                        )
-                        if _update_if_diff(m, "street", new_street):
-                            updated_fields.append("street")
-
-                        if _update_if_diff(
-                            m, "postcode", _normalize_cell(row.get("PLZ"))
-                        ):
-                            updated_fields.append("postcode")
-                        if _update_if_diff(m, "city", _normalize_cell(row.get("Ort"))):
-                            updated_fields.append("city")
-                        if _update_if_diff(
-                            m, "email", _normalize_cell(row.get("Mailadresse"))
-                        ):
-                            updated_fields.append("email")
-                        if _update_if_diff(
-                            m, "phone_number", _normalize_cell(row.get("Telefon"))
-                        ):
-                            updated_fields.append("phone_number")
-                        if _update_if_diff(
-                            m,
-                            "phone_number_landline",
-                            _normalize_cell(row.get("Telefon 2")),
-                        ):
-                            updated_fields.append("phone_number_landline")
-                        if _update_if_diff(m, "iban", _normalize_cell(row.get("IBAN"))):
-                            updated_fields.append("iban")
-                        if _update_if_diff(
-                            m, "account_owner", _normalize_cell(row.get("Kontoinhaber"))
-                        ):
-                            updated_fields.append("account_owner")
-                        if _update_if_diff(
-                            m, "sepa_consent", _to_datetime(row.get("consent_sepa"))
-                        ):
-                            updated_fields.append("sepa_consent")
-                        if _update_if_diff(
-                            m,
-                            "privacy_consent",
-                            _to_datetime(row.get("privacy_consent")),
-                        ):
-                            updated_fields.append("privacy_consent")
-
-                        # Handle MemberPickupLocation update
-                        mp = MemberPickupLocation.objects.filter(member=m).first()
-                        mp_updated = False
-                        if mp:
-                            if _update_if_diff(mp, "pickup_location", picloc):
-                                mp_updated = True
-                            if _update_if_diff(
-                                mp, "valid_from", _to_date(row.get("AO_gueltig_ab"))
-                            ):
-                                mp_updated = True
-                        elif picloc:
-                            mp = MemberPickupLocation(
-                                member=m,
-                                pickup_location=picloc,
-                                valid_from=_to_date(row.get("AO_gueltig_ab")),
-                            )
-                            mp_updated = True
-
-                        soli_val = _safe_float(row.get("Absoluter Betrag"))
-                        soli_start_date = _to_date(row.get("Startdatum"))
-                        soli_end_date = _to_date(row.get("Endedatum"))
-
-                        # SolidarityContribution update
-                        soli_contribution = SolidarityContribution.objects.filter(
-                            member=m
-                        ).first()
-                        soli_updated = False
-                        if soli_contribution:
-                            if soli_val > 0:
-                                if _update_if_diff(
-                                    soli_contribution, "amount", soli_val
-                                ):
-                                    soli_updated = True
-                                if (
-                                    _update_if_diff(
-                                        soli_contribution, "start_date", soli_start_date
-                                    )
-                                    and soli_start_date
-                                ):
-                                    soli_updated = True
-                                if (
-                                    _update_if_diff(
-                                        soli_contribution, "end_date", soli_end_date
-                                    )
-                                    and soli_end_date
-                                ):
-                                    soli_updated = True
-                            else:
-                                # If amount is 0, we should probably delete it or leave it?
-                                # Requirement: "Wenn der Solidarbetrag 0€ oder leer ist, soll kein entsprechendes Objekt erstellt werden."
-                                # For update, maybe delete if it exists? The requirement is about creation.
-                                # Let's stick to update only if soli_val > 0.
-                                pass
-                        elif soli_val > 0:
-                            soli_contribution = SolidarityContribution(
-                                member=m,
-                                amount=soli_val,
-                                start_date=soli_start_date
-                                or (
-                                    m.created_at.date() if m.created_at else get_today()
-                                ),
-                                end_date=soli_end_date
-                                or GrowingPeriod.objects.filter(
-                                    start_date__lte=get_today()
-                                )
-                                .order_by("-start_date")
-                                .first()
-                                .end_date,
-                            )
-                            soli_updated = True
-
-                        try:
-                            if not dry_run:
-                                with transaction.atomic():
-                                    if updated_fields:
-                                        m.save(bypass_keycloak=True)
-                                    if mp_updated:
-                                        mp.save()
-                                    if soli_updated:
-                                        soli_contribution.save()
-
-                            if updated_fields or mp_updated or soli_updated:
-                                updated += 1
-                            else:
-                                skipped += 1
-                        except Exception as e:
-                            self.stderr.write(f"Error updating member {member_no}: {e}")
-                            skipped += 1
-                        continue
-
-                    # If member doesn't exist, create it
-                    m = Member(
-                        first_name=_normalize_cell(row.get("Vorname")),
-                        last_name=_normalize_cell(row.get("Nachname")),
-                        birthdate=_to_date(row.get("Geburtstag/Gründungsdatum")),
-                        form_of_address=_normalize_cell(row.get("Anrede")),
-                        street=" ".join(
-                            s.rstrip()
-                            for s in [
-                                _normalize_cell(row.get("Straße")),
-                                _normalize_cell(row.get("Hausnr.")),
-                            ]
-                            if s and s.rstrip() != ""
-                        ),
-                        postcode=_normalize_cell(row.get("PLZ")),
-                        city=_normalize_cell(row.get("Ort")),
-                        email=_normalize_cell(row.get("Mailadresse")),
-                        phone_number=_normalize_cell(row.get("Telefon")),
-                        phone_number_landline=_normalize_cell(row.get("Telefon 2")),
-                        member_no=member_no,
-                        iban=_normalize_cell(row.get("IBAN")),
-                        account_owner=_normalize_cell(row.get("Kontoinhaber")),
-                        sepa_consent=_to_datetime(row.get("consent_sepa")),
-                        privacy_consent=_to_datetime(row.get("privacy_consent")),
-                    )
-                    mp = MemberPickupLocation(
-                        member=m,
-                        pickup_location=picloc,
-                        valid_from=_to_date(row.get("AO_gueltig_ab")),
-                    )
-                    soli_val = _safe_float(row.get("Absoluter Betrag"))
-                    soli_start_date = _to_date(row.get("Startdatum"))
-                    soli_end_date = _to_date(row.get("Endedatum"))
-
-                    # Persists member and pickup location transactionally; handles errors
-                    try:
-                        if dry_run:
-                            created += 1
-                        else:
-                            with transaction.atomic():
-                                m.save(bypass_keycloak=True)
-                                MemberImportedLogEntry().populate(
-                                    actor=None, user=m, model=m
-                                ).save()
-                                if picloc is not None:
-                                    mp.save()
-                                if soli_val > 0:
-                                    # Create solidarity contribution if present
-                                    SolidarityContribution.objects.create(
-                                        member=m,
-                                        amount=soli_val,
-                                        start_date=soli_start_date
-                                        or (
-                                            m.created_at.date()
-                                            if m.created_at
-                                            else get_today()
-                                        ),
-                                        end_date=soli_end_date
-                                        or GrowingPeriod.objects.filter(
-                                            start_date__lte=get_today()
-                                        )
-                                        .order_by("-start_date")
-                                        .first()
-                                        .end_date,  # Fallback logic for end date
-                                    )
-                            created += 1
-                    except Exception as e:
-                        self.stderr.write(str(e))
-                        skipped += 1
-                        continue
+                created, skipped, updated = self.import_members(
+                    dry_run=dry_run, reader=reader, update_existing=update_existing
+                )
             if import_type == "shares":
                 if delete_all:
                     TransferCoopSharesLogEntry.objects.all().delete()
                     CoopShareTransaction.objects.all().delete()
                 for row in reader:
-                    if not any(_normalize_cell(v) for v in row.values()):
+                    if not any(DataImportUtils.normalize_cell(v) for v in row.values()):
                         continue
-                    # print(row)
                     # {'Mitgliedsnummer': '1', 'Bewegungsart (Z,Ü,K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
-                    qu = _safe_int(row.get("Anzahl Anteile"))
+                    qu = DataImportUtils.safe_int(row.get("Anzahl Anteile"))
                     transfer_member = None
-                    valid_date = _to_date(row.get("Datum"))
+                    valid_date = DataImportUtils.to_date(row.get("Datum"))
                     try:
-                        member_no = _normalize_cell(row.get("Mitgliedsnummer"))
+                        member_no = DataImportUtils.normalize_cell(
+                            row.get("Mitgliedsnummer")
+                        )
                         member = Member.objects.get(member_no=member_no)
-                    except ObjectDoesNotExist as e:
+                    except ObjectDoesNotExist:
                         self.stderr.write(str(row))
                         self.stderr.write("Database Error: Member not found")
                         continue
-                    if _normalize_cell(row.get("Übertragungspartner")) != "":
+                    if (
+                        DataImportUtils.normalize_cell(row.get("Übertragungspartner"))
+                        != ""
+                    ):
                         try:
                             transfer_member = Member.objects.get(
-                                member_no=_normalize_cell(
+                                member_no=DataImportUtils.normalize_cell(
                                     row.get("Übertragungspartner")
                                 )
                             )
-                        except ObjectDoesNotExist as e:
+                        except ObjectDoesNotExist:
                             self.stderr.write(str(row))
                             self.stderr.write("Transfer Member not found!")
                             continue
-                    match _normalize_cell(row.get("Bewegungsart (Z,Ü,K)")):
+                    match DataImportUtils.normalize_cell(
+                        row.get("Bewegungsart (Z,Ü,K)")
+                    ):
                         case "Z":
                             trans_type = (
                                 CoopShareTransaction.CoopShareTransactionType.PURCHASE
@@ -536,11 +223,13 @@ class Command(BaseCommand):
                             trans_type = (
                                 CoopShareTransaction.CoopShareTransactionType.CANCELLATION
                             )
-                            valid_date = _to_date(row.get("Wirkung Kündigung"))
+                            valid_date = DataImportUtils.to_date(
+                                row.get("Wirkung Kündigung")
+                            )
                         case _:
                             raise ValueError("Unknown transaction type!")
 
-                    timestamp = _to_datetime_from_date(
+                    timestamp = DataImportUtils.to_datetime_from_date(
                         row.get("Datum"), hour=0, minute=0
                     )
 
@@ -613,13 +302,13 @@ class Command(BaseCommand):
                     Payment.objects.all().delete()
                 # for row in reader:
                 for row in reader:
-                    if not any(_normalize_cell(v) for v in row.values()):
+                    if not any(DataImportUtils.normalize_cell(v) for v in row.values()):
                         continue
                     # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
                     # print(row)
                     # identify MemberID, either via MemberNo or Email
                     try:
-                        start_date = _to_date(row.get("Vertragsbeginn"))
+                        start_date = DataImportUtils.to_date(row.get("Vertragsbeginn"))
                         if not start_date:
                             self.stderr.write(str(row))
                             self.stderr.write(
@@ -647,8 +336,13 @@ class Command(BaseCommand):
                             )
                             continue
 
-                        if _normalize_cell(row.get("Mitgliedernummer")) != "":
-                            member_no = _normalize_cell(row.get("Mitgliedernummer"))
+                        if (
+                            DataImportUtils.normalize_cell(row.get("Mitgliedernummer"))
+                            != ""
+                        ):
+                            member_no = DataImportUtils.normalize_cell(
+                                row.get("Mitgliedernummer")
+                            )
                             try:
                                 m = Member.objects.get(member_no=int(member_no))
                             except ValueError:
@@ -658,16 +352,18 @@ class Command(BaseCommand):
                                 )
                                 continue
                         else:
-                            if _normalize_cell(row.get("Email")) != "":
+                            if DataImportUtils.normalize_cell(row.get("Email")) != "":
                                 m = Member.objects.get(
-                                    email=_normalize_cell(row.get("Email"))
+                                    email=DataImportUtils.normalize_cell(
+                                        row.get("Email")
+                                    )
                                 )
                             else:
                                 self.stderr.write(str(row))
                                 self.stderr.write(
                                     f"No data to identify Member in subscription for {row.get('Mitgliedernummer')} {row.get('Email')}"
                                 )
-                    except django.core.exceptions.ObjectDoesNotExist as e:
+                    except django.core.exceptions.ObjectDoesNotExist:
                         self.stderr.write(str(row))
                         self.stderr.write("Database Error: Member not found")
                         continue
@@ -685,8 +381,12 @@ class Command(BaseCommand):
                     mref = get_or_create_mandate_ref(m)
                     # identify product
                     try:
-                        product_name = _normalize_cell(row.get("product"))
-                        product_type_name = _normalize_cell(row.get("product_type"))
+                        product_name = DataImportUtils.normalize_cell(
+                            row.get("product")
+                        )
+                        product_type_name = DataImportUtils.normalize_cell(
+                            row.get("product_type")
+                        )
 
                         if product_name:
                             filter_kwargs = {"name": product_name}
@@ -725,28 +425,36 @@ class Command(BaseCommand):
                         self.stderr.write(f"Error finding product: {e}")
                         continue
                     # prepare cancellation value
-                    if _normalize_cell(row.get("cancellation.ts")) != "":
-                        ts_cancel = _to_datetime(
+                    if DataImportUtils.normalize_cell(row.get("cancellation.ts")) != "":
+                        ts_cancel = DataImportUtils.to_datetime(
                             row.get("cancellation.ts")
-                        ) or _to_datetime_from_date(row.get("cancellation.ts"))
+                        ) or DataImportUtils.to_datetime_from_date(
+                            row.get("cancellation.ts")
+                        )
                     else:
                         ts_cancel = None
 
                     # parse optional trial fields
-                    trial_disabled_val = _safe_bool(row.get("trial_disabled"))
-                    trial_end_date_override = _to_date(
+                    trial_disabled_val = DataImportUtils.safe_bool(
+                        row.get("trial_disabled")
+                    )
+                    trial_end_date_override = DataImportUtils.to_date(
                         row.get("trial_end_date_override")
                     )
 
-                    quantity = _safe_float(row.get("Quantity"))
-                    v_start_date = _to_date(row.get("Vertragsbeginn"))
-                    v_end_date = _to_date(row.get("Vertragsende"))
-                    consent_ts = _to_datetime(
+                    quantity = DataImportUtils.safe_float(row.get("Quantity"))
+                    v_start_date = DataImportUtils.to_date(row.get("Vertragsbeginn"))
+                    v_end_date = DataImportUtils.to_date(row.get("Vertragsende"))
+                    consent_ts = DataImportUtils.to_datetime(
                         row.get("consent_vertragsgrundsätze")
-                    ) or _to_datetime_from_date(row.get("consent_vertragsgrundsätze"))
-                    withdrawal_consent_ts = _to_datetime(
+                    ) or DataImportUtils.to_datetime_from_date(
+                        row.get("consent_vertragsgrundsätze")
+                    )
+                    withdrawal_consent_ts = DataImportUtils.to_datetime(
                         row.get("consent_widerruf")
-                    ) or _to_datetime_from_date(row.get("consent_widerruf"))
+                    ) or DataImportUtils.to_datetime_from_date(
+                        row.get("consent_widerruf")
+                    )
 
                     # Check for existing subscription
                     filter_criteria = {
@@ -872,3 +580,61 @@ class Command(BaseCommand):
                     f"Done. Created: {created}, Updated: {updated}, Skipped: {skipped}"
                 )
             )
+
+    def import_members(
+        self, dry_run: bool, reader: DictReader[str], update_existing: bool
+    ):
+        skipped = 0
+        created = 0
+        updated = 0
+
+        for row_index, row in enumerate(reader):
+            try:
+                import_status = self.import_member(
+                    row=row, update_existing=update_existing, dry_run=dry_run
+                )
+
+                if import_status == MEMBER_IMPORT_STATUS_SKIPPED:
+                    skipped += 1
+                if import_status == MEMBER_IMPORT_STATUS_CREATED:
+                    created += 1
+                if import_status == MEMBER_IMPORT_STATUS_UPDATED:
+                    updated += 1
+
+            except Exception as e:
+                self.stderr.write(
+                    f"Error while importing row with internal index {row_index} (should be line {row_index+2} in the file): {e}"
+                )
+                skipped += 1
+                continue
+
+        return created, skipped, updated
+
+    @transaction.atomic
+    def import_member(self, row: dict[str, str], update_existing: bool, dry_run: bool):
+        # skip empty lines
+        if not any(DataImportUtils.normalize_cell(v) for v in row.values()):
+            return None
+
+        member_no = int(DataImportUtils.normalize_cell(row.get("Nr")))
+        member = Member.objects.filter(member_no=member_no).first()
+
+        if member:
+            if not update_existing:
+                return MEMBER_IMPORT_STATUS_SKIPPED
+
+            try:
+                return MemberImporter.update_existing_member_if_necessary(
+                    member=member, row=row, dry_run=dry_run
+                )
+            except Exception as e:
+                self.stderr.write(f"Error updating member {member_no}: {e}")
+                return MEMBER_IMPORT_STATUS_SKIPPED
+
+        try:
+            return MemberImporter.create_new_member(
+                member_no=member_no, row=row, dry_run=dry_run
+            )
+        except Exception as e:
+            self.stderr.write(f"Error creating member {member_no}: {e}")
+            return MEMBER_IMPORT_STATUS_SKIPPED
