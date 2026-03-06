@@ -188,10 +188,10 @@ class MemberImporter:
     ):
         target_amount = DataImportUtils.safe_float(row.get("Solidarpreis in EUR"))
 
-        target_start_date = DataImportUtils.to_date(row.get("Startdatum"))
+        target_start_date = DataImportUtils.to_date(row.get("Solidarpreis Start_Date"))
         target_start_date = target_start_date or member.created_at.date()
 
-        target_end_date = DataImportUtils.to_date(row.get("Endedatum"))
+        target_end_date = DataImportUtils.to_date(row.get("Solidarpreis End_Date"))
         target_end_date = (
             target_end_date
             or TapirCache.get_growing_period_at_date(
