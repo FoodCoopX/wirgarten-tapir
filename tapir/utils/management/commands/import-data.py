@@ -435,11 +435,11 @@ class Command(BaseCommand):
                         ts_cancel = None
 
                     # parse optional trial fields
-                    trial_disabled_val = DataImportUtils.safe_bool(
-                        row.get("trial_disabled")
+                    trial_period_is_enabled = DataImportUtils.safe_bool(
+                        row.get("Probezeit")
                     )
                     trial_end_date_override = DataImportUtils.to_date(
-                        row.get("trial_end_date_override")
+                        row.get("Ende Probezeit (Sonntag)")
                     )
 
                     quantity = DataImportUtils.safe_float(row.get("Quantity"))
@@ -497,9 +497,11 @@ class Command(BaseCommand):
                             existing_sub, "withdrawal_consent_ts", withdrawal_consent_ts
                         ):
                             is_updated = True
-                        if trial_disabled_val is not None:
+                        if trial_period_is_enabled is not None:
                             if _update_if_diff(
-                                existing_sub, "trial_disabled", trial_disabled_val
+                                existing_sub,
+                                "trial_disabled",
+                                not trial_period_is_enabled,
                             ):
                                 is_updated = True
                         if _update_if_diff(
@@ -538,8 +540,8 @@ class Command(BaseCommand):
                                     consent_ts=consent_ts,
                                     withdrawal_consent_ts=withdrawal_consent_ts,
                                     trial_disabled=(
-                                        trial_disabled_val
-                                        if trial_disabled_val is not None
+                                        not trial_period_is_enabled
+                                        if trial_period_is_enabled is not None
                                         else False
                                     ),
                                     trial_end_date_override=trial_end_date_override,
