@@ -346,13 +346,13 @@ class CoopShareCancelForm(Form):
             label=_("Kündigungsdatum"),
             initial=today,
             required=True,
-            widget=DatePickerInput,
+            widget=DateInput,
         )
         self.fields["valid_at"] = DateField(
             label=_("Kündigung gültig zum"),
             initial=valid_at,
             required=True,
-            widget=DatePickerInput,
+            widget=DateInput,
         )
         self.fields["quantity"] = IntegerField(
             label=_(
