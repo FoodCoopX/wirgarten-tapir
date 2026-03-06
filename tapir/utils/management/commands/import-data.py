@@ -1,6 +1,7 @@
 import csv
 import unicodedata
 from csv import DictReader
+from decimal import Decimal
 
 import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -8,6 +9,7 @@ from django.core.management import BaseCommand
 from django.db import transaction
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.config import (
@@ -34,6 +36,7 @@ from tapir.wirgarten.models import (
     TransferCoopSharesLogEntry,
     SubscriptionChangeLogEntry,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 
@@ -256,6 +259,14 @@ class Command(BaseCommand):
                         if existing_trans.valid_at != valid_date:
                             existing_trans.valid_at = valid_date
                             is_updated = True
+                        share_price = Decimal(
+                            get_parameter_value(
+                                key=ParameterKeys.COOP_SHARE_PRICE, cache={}
+                            )
+                        )
+                        if existing_trans.share_price != share_price:
+                            existing_trans.share_price = share_price
+                            is_updated = True
 
                         if is_updated:
                             try:
@@ -282,7 +293,9 @@ class Command(BaseCommand):
                                     timestamp=timestamp,
                                     valid_at=valid_date,
                                     quantity=qu,
-                                    share_price=50,
+                                    share_price=get_parameter_value(
+                                        key=ParameterKeys.COOP_SHARE_PRICE, cache={}
+                                    ),
                                     transfer_member=transfer_member,
                                 )
                             created += 1
