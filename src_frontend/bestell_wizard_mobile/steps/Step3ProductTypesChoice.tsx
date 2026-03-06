@@ -35,6 +35,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
 }) => {
   const [productTypeForModal, setProductTypeForModal] =
     useState<PublicProductType>();
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (investingMembership) {
@@ -54,6 +55,10 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       setInvestingMembership(false);
     }
   }, [selectedProductTypes]);
+
+  useEffect(() => {
+    setShowError(false);
+  }, [selectedProductTypes, investingMembership]);
 
   function getModalText() {
     if (productTypeForModal === undefined) {
@@ -84,6 +89,14 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       selection = selectedProductTypes.filter((pt) => productType.id !== pt.id);
     }
     setSelectedProductTypes(sortProductTypes(selection));
+  }
+
+  function validate() {
+    if (selectedProductTypes.length === 0 && !investingMembership) {
+      setShowError(true);
+    } else {
+      goToNextStep();
+    }
   }
 
   return (
@@ -157,8 +170,16 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
             </div>
           </label>
         </div>
+        {showError && (
+          <>
+            <hr />
+            <div className={"text-danger text-center"}>
+              Wähle mindestens eine Option.
+            </div>
+          </>
+        )}
       </div>
-      <NextStepButton onClick={goToNextStep} />
+      <NextStepButton onClick={validate} />
       <Modal
         show={productTypeForModal !== undefined}
         fullscreen={"md-down"}
