@@ -5128,6 +5128,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublicGrowingPeriod'
+        solidarity_step_position:
+          $ref: '#/components/schemas/SolidarityStepPositionEnum'
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
         images:
@@ -5161,6 +5163,7 @@ components:
       - solidarity_contribution_choices
       - solidarity_contribution_default
       - solidarity_contribution_minimum
+      - solidarity_step_position
       - strings
       - student_status_allowed
       - theme
@@ -9662,6 +9665,14 @@ components:
       - end_date
       - member
       - start_date
+    SolidarityStepPositionEnum:
+      enum:
+      - before_pickup_location
+      - before_personal_data
+      type: string
+      description: |-
+        * `before_pickup_location` - Vor der Verteilstation-Seite
+        * `before_personal_data` - Vor der persönliche Daten-Seite
     StaticSegment:
       type: object
       properties:

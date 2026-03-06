@@ -4,6 +4,9 @@ from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
 )
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
+from tapir.solidarity_contribution.config import (
+    OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
+)
 from tapir.subscriptions.serializers import PublicProductTypeSerializer
 
 
@@ -154,6 +157,9 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     solidarity_contribution_default = serializers.FloatField()
     feedback_step_enabled = serializers.BooleanField()
     growing_period_choices = PublicGrowingPeriodSerializer(many=True)
+    solidarity_step_position = serializers.ChoiceField(
+        choices=OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION
+    )
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
     debug = serializers.BooleanField()

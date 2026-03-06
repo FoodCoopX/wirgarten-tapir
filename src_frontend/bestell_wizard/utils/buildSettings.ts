@@ -35,6 +35,7 @@ export function buildSettings(
     solidarityContributionDefault: baseData.solidarityContributionDefault,
     feedbackStepEnabled: baseData.feedbackStepEnabled,
     growingPeriodChoices: baseData.growingPeriodChoices,
+    solidarityStepPosition: baseData.solidarityStepPosition,
     strings: baseData.strings,
     images: baseData.images,
     debug: baseData.debug,

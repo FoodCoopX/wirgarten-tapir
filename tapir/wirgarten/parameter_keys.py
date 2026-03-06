@@ -118,6 +118,9 @@ class ParameterKeys:
     BESTELLWIZARD_FORCE_WAITING_LIST = f"{PREFIX}.bestellwizard.force_waiting_list"
     BESTELLWIZARD_SHOW_INTRO = f"{PREFIX}.bestellwizard.show_intro"
     BESTELLWIZARD_INTRO_TEXT = f"{PREFIX}.bestellwizard.intro_text"
+    BESTELL_WIZARD_SOLIDARITY_STEP_POSITION = (
+        f"{PREFIX}.bestellwizard.solidarity_step_position"
+    )
     BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT = (
         f"{PREFIX}.bestellwizard.sepa_mandat_checkbox_text"
     )

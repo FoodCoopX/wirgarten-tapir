@@ -508,6 +508,7 @@ class BestellWizardBaseDataApiView(APIView):
             "contact_mail_address": ParameterKeys.SITE_EMAIL,
             "solidarity_contribution_default": ParameterKeys.SOLIDARITY_DEFAULT,
             "feedback_step_enabled": ParameterKeys.BESTELLWIZARD_STEP13_ENABLED,
+            "solidarity_step_position": ParameterKeys.BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
         }
         return cls.build_dictionary_from_config_parameters(
             serializer_key_to_parameter_key_map, cache

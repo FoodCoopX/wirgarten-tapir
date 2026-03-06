@@ -171,6 +171,7 @@ models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
 models/SolidarityContribution.ts
+models/SolidarityStepPositionEnum.ts
 models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
 models/StaticSegmentRecipientRequest.ts

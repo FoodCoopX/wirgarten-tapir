@@ -28,6 +28,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     solidarityContributionDefault: 0,
     feedbackStepEnabled: false,
     growingPeriodChoices: [],
+    solidarityStepPosition: "before_personal_data",
     strings: {
       step1aTitle: "",
       step1aText: "",

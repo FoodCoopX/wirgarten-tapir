@@ -47,6 +47,13 @@ export function buildSteps(
   }
 
   if (
+    shouldShowStepSolidarityContribution(waitingListEntryDetails) &&
+    settings.solidarityStepPosition === "before_pickup_location"
+  ) {
+    newSteps.push("7_solidarity_contribution");
+  }
+
+  if (
     shouldIncludeStepsPickupLocations(
       settings,
       waitingListEntryDetails,
@@ -89,7 +96,10 @@ export function buildSteps(
     }
   }
 
-  if (shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+  if (
+    shouldShowStepSolidarityContribution(waitingListEntryDetails) &&
+    settings.solidarityStepPosition === "before_personal_data"
+  ) {
     newSteps.push("7_solidarity_contribution");
   }
 
