@@ -10,7 +10,7 @@ from django.core.management import BaseCommand
 from django.db import transaction
 from icecream import ic
 
-from tapir.accounts.models import EmailChangeRequest, TapirUser
+from tapir.accounts.models import EmailChangeRequest
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_SKIPPED,
@@ -151,14 +151,12 @@ class Command(BaseCommand):
                             WaitingListEntry.objects.all().delete()
                             EmailChangeRequest.objects.all().delete()
                             Member.objects.all().delete()
-                            TapirUser.objects.all().delete()
 
                         if import_type == "shares":
                             TransferCoopSharesLogEntry.objects.all().delete()
                             CoopShareTransaction.objects.all().delete()
 
                         if import_type == "subscriptions":
-                            SolidarityContribution.objects.all().delete()
                             SubscriptionChangeLogEntry.objects.all().delete()
                             Subscription.objects.all().delete()
                             Payment.objects.all().delete()
