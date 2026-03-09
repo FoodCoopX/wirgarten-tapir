@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.db import transaction
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.models import (
@@ -12,6 +13,7 @@ from tapir.wirgarten.models import (
     PaymentTransaction,
     MandateReference,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
 from tapir.wirgarten.utils import format_date, get_now
 
@@ -160,9 +162,7 @@ class PaymentExportBuilder:
 
         payment_type_display = cls.get_payment_type_display(contract_payments)
         for payment in payments:
-            verwendungszweck = (
-                f"{payment.mandate_ref.member.last_name} {payment_type_display}"
-            )
+            verwendungszweck = f"{get_parameter_value(key=ParameterKeys.SITE_NAME)}, {payment.mandate_ref.member.last_name}, {payment_type_display}"
 
             writer.writerow(
                 {
