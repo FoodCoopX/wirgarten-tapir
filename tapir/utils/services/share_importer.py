@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.core.exceptions import ObjectDoesNotExist
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_SKIPPED,
     MEMBER_IMPORT_STATUS_CREATED,
@@ -13,6 +14,8 @@ from tapir.utils.exceptions import TapirDataImportException
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.member import get_or_create_mandate_ref
+from tapir.wirgarten.utils import get_today
 
 
 class ShareImporter:
@@ -55,6 +58,7 @@ class ShareImporter:
             member=member,
             transaction_type=transaction_type,
             valid_at=transaction_valid_at,
+            transfer_member=transfer_member,
         ).first()
 
         if existing_transaction:
@@ -68,7 +72,7 @@ class ShareImporter:
                 valid_date=transaction_valid_at,
             )
 
-        CoopShareTransaction.objects.create(
+        transaction = CoopShareTransaction.objects.create(
             member_id=member.id,
             transaction_type=transaction_type,
             valid_at=transaction_valid_at,
@@ -77,7 +81,10 @@ class ShareImporter:
                 key=ParameterKeys.COOP_SHARE_PRICE, cache={}
             ),
             transfer_member=transfer_member,
+            mandate_ref=get_or_create_mandate_ref(member),
         )
+
+        cls.create_or_update_payment_if_necessary(transaction)
 
         return MEMBER_IMPORT_STATUS_CREATED
 
@@ -128,15 +135,17 @@ class ShareImporter:
         valid_date: datetime.date,
     ) -> str:
         is_updated = False
-        if DataImportUtils.update_if_diff(
-            existing_transaction, "transfer_member", transfer_member
-        ):
-            is_updated = True
+
         if DataImportUtils.update_if_diff(
             existing_transaction, "quantity", number_of_shares
         ):
             is_updated = True
         if DataImportUtils.update_if_diff(existing_transaction, "valid_at", valid_date):
+            is_updated = True
+        mandate_ref = get_or_create_mandate_ref(existing_transaction.member)
+        if DataImportUtils.update_if_diff(
+            existing_transaction, "mandate_ref", mandate_ref
+        ):
             is_updated = True
 
         share_price = Decimal(
@@ -145,6 +154,9 @@ class ShareImporter:
         if DataImportUtils.update_if_diff(
             existing_transaction, "share_price", share_price
         ):
+            is_updated = True
+
+        if cls.create_or_update_payment_if_necessary(existing_transaction):
             is_updated = True
 
         if not is_updated:
@@ -157,3 +169,53 @@ class ShareImporter:
             raise TapirDataImportException(
                 f"Error updating share transaction (member: {existing_transaction.member}): {e}"
             )
+
+    @classmethod
+    def create_or_update_payment_if_necessary(cls, transaction: CoopShareTransaction):
+        if (
+            transaction.transaction_type
+            != CoopShareTransaction.CoopShareTransactionType.PURCHASE
+        ):
+            return False
+
+        should_have_a_payment = transaction.valid_at >= get_today()
+
+        if not should_have_a_payment:
+            if transaction.payment is None:
+                return False
+
+            cls.delete_payment(transaction)
+            return True
+
+        if transaction.payment is None:
+            payment = CoopSharePurchaseHandler.create_or_update_payment(
+                shares_valid_at=transaction.valid_at,
+                mandate_ref=transaction.mandate_ref,
+                quantity=transaction.quantity,
+                cache={},
+            )
+            transaction.payment = payment
+            transaction.save()
+            return True
+
+        payment = transaction.payment
+        updated = False
+
+        due_date = CoopSharePurchaseHandler.get_payment_due_date(
+            shares_valid_at=transaction.valid_at, cache={}
+        )
+        if DataImportUtils.update_if_diff(payment, "due_date", due_date):
+            updated = True
+
+        amount = transaction.share_price * transaction.quantity
+        if DataImportUtils.update_if_diff(payment, "amount", amount):
+            updated = True
+
+        return updated
+
+    @classmethod
+    def delete_payment(cls, transaction: CoopShareTransaction):
+        payment = transaction.payment
+        transaction.payment = None
+        transaction.save()
+        payment.delete()
