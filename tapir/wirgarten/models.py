@@ -786,6 +786,9 @@ class ExportedFile(TapirModel):
     type = models.CharField(max_length=8, choices=FileType.choices, null=False)
     file = models.BinaryField(null=False)
 
+    def __str__(self):
+        return f"{self.type}, {self.created_at}"
+
 
 class PaymentTransaction(TapirModel):
     """
