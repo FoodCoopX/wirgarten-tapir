@@ -224,3 +224,23 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual(
             "Gutschrift 2 genutzte Joker in Vertragsjahr 01.01.2025-03.01.2025", result
         )
+
+    def test_getValueMemberShareQuantityCancelledInPreviousYear_default_returnsMemberShareQuantityCancelledInPreviousYear(
+        self,
+    ):
+        member = self.createTerminatedMemberWithShareHistory()
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2023, 12, 1), {}
+        )
+        self.assertEqual(0, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2024, 12, 31), {}
+        )
+        self.assertEqual(0, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2025, 1, 1), {}
+        )
+        self.assertEqual(42, result)
