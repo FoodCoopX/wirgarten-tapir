@@ -256,7 +256,6 @@ class EmailChangeRequest(TapirModel):
     secret = models.CharField(
         _("Secret"), max_length=36, default=partial(generate_random_secret)
     )
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
 
 
 class UpdateTapirUserLogEntry(UpdateModelLogEntry):

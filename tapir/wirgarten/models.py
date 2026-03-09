@@ -685,7 +685,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
-    created_at = models.DateTimeField(default=partial(timezone.now), null=False)
     consent_ts = models.DateTimeField(null=True)
     withdrawal_consent_ts = models.DateTimeField(null=True)
     trial_disabled = models.BooleanField(default=False)
@@ -786,7 +785,6 @@ class ExportedFile(TapirModel):
     name = models.CharField(max_length=256, null=False)
     type = models.CharField(max_length=8, choices=FileType.choices, null=False)
     file = models.BinaryField(null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
 
 
 class PaymentTransaction(TapirModel):
@@ -795,7 +793,6 @@ class PaymentTransaction(TapirModel):
     The relevant payments must reference the transaction in the same step.
     """
 
-    created_at = models.DateTimeField()
     file = models.ForeignKey(ExportedFile, on_delete=models.PROTECT)
     type = models.CharField(max_length=100)
 
@@ -1104,7 +1101,6 @@ class WaitingListEntry(TapirModel):
     postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
     city = models.CharField(_("City"), max_length=50, blank=True)
     country = CountryField(_("Country"), blank=True, default="DE")
-    created_at = models.DateTimeField(auto_now_add=True)
     privacy_consent = models.DateTimeField()
     number_of_coop_shares = models.PositiveSmallIntegerField()
     # if desired_start_date is null, the wish is "as soon as possible"
@@ -1193,8 +1189,6 @@ class ScheduledTask(TapirModel):
         max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
     )
     error_message = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def execute(self):
         from importlib import import_module

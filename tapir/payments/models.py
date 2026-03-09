@@ -67,7 +67,6 @@ class MemberCredit(TapirModel):
     due_date = models.DateField()
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     amount = models.DecimalField(decimal_places=2, max_digits=8)
-    created_at = models.DateTimeField(auto_now_add=True)
     purpose = models.CharField(max_length=1024)
     comment = models.TextField()
 
