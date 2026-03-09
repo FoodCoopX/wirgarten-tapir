@@ -75,3 +75,7 @@ class DataImportUtils:
             return False
         setattr(obj, field, new_val)
         return True
+
+    @staticmethod
+    def is_row_empty(row: dict):
+        return not any(DataImportUtils.normalize_cell(v) for v in row.values())
