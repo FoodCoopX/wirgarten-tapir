@@ -14,7 +14,7 @@
     {% vite_asset 'subscription_list/subscription_list_entry.tsx' %}
 {% endblock head %}
 {% block card_header %}
-    <h4>{{ total_contracts|default:0 }} {% translate 'Verträge' %}</h4>
+    <h4 class="mb-0">{{ number_of_contracts }} {% translate 'Verträge' %}, {{ quantity_sum }} Anteile</h4>
     <span style="display: flex; flex-direction:row;">
         <span id="subscription_change_dates_button" class="mx-1 p-0"></span>
         {% if perms.accounts.manage %}
