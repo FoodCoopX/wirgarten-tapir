@@ -68,7 +68,6 @@ class ShareImporter:
             return cls.update_existing_transaction(
                 existing_transaction=existing_transaction,
                 number_of_shares=number_of_shares,
-                transfer_member=transfer_member,
                 valid_date=transaction_valid_at,
             )
 
@@ -131,7 +130,6 @@ class ShareImporter:
         cls,
         existing_transaction: CoopShareTransaction,
         number_of_shares: int,
-        transfer_member: Member | None,
         valid_date: datetime.date,
     ) -> str:
         is_updated = False
