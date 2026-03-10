@@ -16,7 +16,7 @@ Don't hesitate to contact Théo if you're interested in contributing or FoodCoop
 The backend code is written with Python and Django, the frontend code is a mix of Django templates and React.
 
 > [!WARNING]
-> The master branch is currently not in use, check the `biotop-dev` branch for the current version.
+> The master branch is currently not in use, check the `biotop-dev` branch for the current version. You'll find a better README there.
 > We'll go back to using master soon, promise!
 
 > [!NOTE]
