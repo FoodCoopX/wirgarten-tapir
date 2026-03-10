@@ -120,7 +120,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
           Angaben in Anteilsgröße (M-Anteil-Equivalent). <br />
           0: Kistengröße kann nicht in der Verteilstation geliefert werden.
           <br />
-          Feld leer: unbegrenzt
+          Feld leer: unbegrenzt.
         </Form.Text>
         {capacitiesByShare.map((capacity) => {
           return (
