@@ -48,7 +48,7 @@ class FuturePaymentsResponseSerializer(serializers.Serializer):
 class MemberPaymentRhythmSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberPaymentRhythm
-        fields = "__all__"
+        exclude = ["updated_at", "created_at"]
 
 
 class MemberPaymentRhythmDataSerializer(serializers.Serializer):

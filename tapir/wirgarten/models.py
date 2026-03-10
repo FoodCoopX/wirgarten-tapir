@@ -827,19 +827,13 @@ class Payment(TapirModel):
     subscription_payment_range_end = models.DateField(null=True)
 
     class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=["mandate_ref", "due_date", "type"],
-                name="unique_mandate_ref_date",
-            )
-        ]
         indexes = [
             Index(fields=["mandate_ref"], name="idx_payment_mandate_ref"),
             Index(fields=["due_date"], name="idx_payment_due_date"),
         ]
 
     def __str__(self):
-        return f"[{self.due_date}] {format_currency(self.amount)} €, edited={self.edited}, transaction={self.transaction}, type={self.type}, {self.mandate_ref.ref}"
+        return f"{format_currency(self.amount)} €, due_date:{self.due_date}, type:{self.type}, range:{self.subscription_payment_range_start} to {self.subscription_payment_range_end}, member:{self.mandate_ref.member}"
 
 
 class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):

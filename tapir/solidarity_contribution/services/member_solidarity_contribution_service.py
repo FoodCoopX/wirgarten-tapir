@@ -8,6 +8,7 @@ from tapir.solidarity_contribution.models import (
     SolidarityContribution,
     SolidarityContributionChangedLogEntry,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
@@ -77,11 +78,20 @@ class MemberSolidarityContributionService:
         else:
             end_date = growing_period.end_date
 
+        trial_disabled, trial_end_date_override = cls.get_trial_parameters(
+            member_contributions.filter(start_date__lte=change_date)
+            .order_by("start_date")
+            .last(),
+            cache,
+        )
+
         new_contribution = SolidarityContribution.objects.create(
             member_id=member.id,
             amount=amount,
             start_date=change_date,
             end_date=end_date,
+            trial_disabled=trial_disabled,
+            trial_end_date_override=trial_end_date_override,
         )
 
         cls.create_log_entry_if_necessary(
@@ -92,6 +102,21 @@ class MemberSolidarityContributionService:
         )
 
         return new_contribution
+
+    @classmethod
+    def get_trial_parameters(
+        cls, contribution: SolidarityContribution | None, cache: dict
+    ) -> tuple[bool, datetime.date | None]:
+        if contribution is None:
+            return False, None
+
+        previous_trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
+            obj=contribution, cache=cache
+        )
+        if previous_trial_end_date is None:
+            return True, None
+
+        return False, previous_trial_end_date
 
     @classmethod
     def create_log_entry_if_necessary(

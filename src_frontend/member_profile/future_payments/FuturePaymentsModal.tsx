@@ -96,6 +96,21 @@ function partialMonthText(extendedPayment: ExtendedPayment) {
   return "";
 }
 
+function trialPeriodText(extendedPayment: ExtendedPayment) {
+  if (!extendedPayment.payment.subscriptionPaymentRangeEnd) {
+    return "";
+  }
+
+  if (
+    extendedPayment.payment.dueDate >
+    extendedPayment.payment.subscriptionPaymentRangeEnd
+  ) {
+    return " (Probezeit)";
+  }
+
+  return "";
+}
+
 const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   onHide,
   show,
@@ -106,13 +121,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
 
   function buildExtendedPayment(extendedPayment: ExtendedPayment) {
     return (
-      <div
-        key={
-          extendedPayment.payment.dueDate.getTime() +
-          "_" +
-          extendedPayment.payment.type
-        }
-      >
+      <div key={extendedPayment.payment.id}>
         <div className={"d-flex flex-column align-items-center"}>
           <strong>{formatCurrency(extendedPayment.payment.amount)}</strong>
           <span>{extendedPayment.payment.mandateRef}</span>
@@ -120,6 +129,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
             <span key={subscription.id}>
               {formatSubscription(subscription)}
               {partialMonthText(extendedPayment)}
+              {trialPeriodText(extendedPayment)}
             </span>
           ))}
           {extendedPayment.coopShareTransactions.map((transaction) => (
@@ -129,7 +139,10 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
             </span>
           ))}
           {extendedPayment.solidarityContributions.length > 0 && (
-            <span>Solidarbeitrag{partialMonthText(extendedPayment)}</span>
+            <span>
+              Solidarbeitrag{partialMonthText(extendedPayment)}
+              {trialPeriodText(extendedPayment)}
+            </span>
           )}
           {(extendedPayment.subscriptions.length > 0 ||
             extendedPayment.solidarityContributions.length > 0) && (

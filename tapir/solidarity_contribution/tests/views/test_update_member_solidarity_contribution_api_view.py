@@ -4,11 +4,13 @@ from decimal import Decimal
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.configuration.models import TapirParameter
 from tapir.solidarity_contribution.models import (
     SolidarityContribution,
     SolidarityContributionChangedLogEntry,
 )
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, GrowingPeriodFactory, NOW
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -22,6 +24,12 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
         cls.growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2023, month=1, day=1)
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=True
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_DURATION).update(
+            value=4
         )
 
     def setUp(self) -> None:
@@ -81,6 +89,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("10.65"),
             start_date=self.CONTRACT_START_DATE,
             end_date=self.growing_period.end_date,
+            trial_disabled=False,
+            trial_end_date_override=None,
         )
 
     def test_post_normalMemberSendsValueLowerThanCurrent_returns400(self):
@@ -114,6 +124,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("10"),
             start_date=self.growing_period.start_date,
             end_date=self.growing_period.end_date,
+            trial_disabled=False,
+            trial_end_date_override=None,
         )
 
     def test_post_normalMemberSendsValueHigherThanCurrent_createsContribution(
@@ -144,6 +156,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("10"),
             start_date=self.growing_period.start_date,
             end_date=self.CONTRACT_START_DATE - datetime.timedelta(days=1),
+            trial_disabled=False,
+            trial_end_date_override=None,
         )
 
         self.assert_contribution_is_correct(
@@ -152,6 +166,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("12"),
             start_date=self.CONTRACT_START_DATE,
             end_date=self.growing_period.end_date,
+            trial_disabled=False,
+            trial_end_date_override=datetime.date(year=2023, month=1, day=28),
         )
 
     def test_post_adminUpdatesValueToLower_createsContribution(self):
@@ -183,6 +199,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("10"),
             start_date=self.growing_period.start_date,
             end_date=self.CONTRACT_START_DATE - datetime.timedelta(days=1),
+            trial_disabled=False,
+            trial_end_date_override=None,
         )
 
         self.assert_contribution_is_correct(
@@ -191,6 +209,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("-1"),
             start_date=self.CONTRACT_START_DATE,
             end_date=self.growing_period.end_date,
+            trial_disabled=False,
+            trial_end_date_override=datetime.date(year=2023, month=1, day=28),
         )
 
     def test_post_newValueIsZero_dontCreateANewContribution(self):
@@ -219,6 +239,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("-5"),
             start_date=self.growing_period.start_date,
             end_date=self.CONTRACT_START_DATE - datetime.timedelta(days=1),
+            trial_disabled=False,
+            trial_end_date_override=None,
         )
 
     def test_post_futureContributionExists_futureContributionDeleted(self):
@@ -260,6 +282,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("10"),
             start_date=self.growing_period.start_date,
             end_date=self.CONTRACT_START_DATE - datetime.timedelta(days=1),
+            trial_disabled=False,
+            trial_end_date_override=None,
         )
 
         self.assert_contribution_is_correct(
@@ -268,6 +292,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("-1"),
             start_date=self.CONTRACT_START_DATE,
             end_date=self.growing_period.end_date,
+            trial_disabled=False,
+            trial_end_date_override=datetime.date(year=2023, month=1, day=28),
         )
 
     def assert_contribution_is_correct(
@@ -277,11 +303,15 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
         amount: Decimal,
         start_date: datetime.date,
         end_date: datetime.date,
+        trial_disabled: bool,
+        trial_end_date_override: datetime.date | None,
     ):
         self.assertEqual(member_id, contribution.member_id)
         self.assertEqual(amount, contribution.amount)
         self.assertEqual(start_date, contribution.start_date)
         self.assertEqual(end_date, contribution.end_date)
+        self.assertEqual(trial_disabled, contribution.trial_disabled)
+        self.assertEqual(trial_end_date_override, contribution.trial_end_date_override)
 
     def test_post_onlyFutureContributionExistsAndStartContributionNow_futureContributionDeletedAndNewContributionStartsNow(
         self,
@@ -317,6 +347,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("-1"),
             start_date=self.CONTRACT_START_DATE,
             end_date=self.growing_period.end_date,
+            trial_disabled=False,
+            trial_end_date_override=None,
         )
 
     def test_post_onlyFutureContributionExistsAndDontStartContributionNow_futureContributionDeletedAndNewContributionStartsAtDateOfPreviousContribution(
@@ -351,6 +383,8 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             amount=Decimal("17"),
             start_date=datetime.date(year=2023, month=6, day=22),
             end_date=self.growing_period.end_date,
+            trial_disabled=False,
+            trial_end_date_override=None,
         )
 
         self.assertEqual(1, SolidarityContributionChangedLogEntry.objects.count())
