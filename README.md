@@ -11,7 +11,7 @@ Its features include:
 - And more
 
 It is developed mainly by [Théo](https://seriousdino.org/) for [FoodCoopX](https://foodcoopx.de/). 
-Don't hesitate to tontact Théo if you're interested in contributing or FoodCoopX if you'd like a demo. 
+Don't hesitate to contact Théo if you're interested in contributing or FoodCoopX if you'd like a demo. 
 
 The backend code is written with Python and Django, the frontend code is a mix of Django templates and React.
 
