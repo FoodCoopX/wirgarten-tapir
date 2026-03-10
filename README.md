@@ -23,3 +23,7 @@ The backend code is written with Python and Django, the frontend code is a mix o
 > While this repo is (and will stay) open, we haven't invested any time in making it welcoming for new developpers. We are aware that this is not ideal, sorry about that.
 > As the project becomes more stable, we hope to find time to make efforts in that direction.
 > If you're interested in contributing, Théo will be very happy to give you a tour and help you get started. 
+
+<img width="2558" height="1411" alt="image" src="https://github.com/user-attachments/assets/6b2b69bd-6621-40d8-91cb-e6af8cdf4142" />
+
+<img width="2558" height="1411" alt="image" src="https://github.com/user-attachments/assets/2a3114ec-7b47-4c8d-98cc-45478813536f" />
