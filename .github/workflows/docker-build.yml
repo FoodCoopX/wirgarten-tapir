@@ -38,7 +38,7 @@ jobs:
         run: docker compose run vite npm install && npm run build
 
       - name: Collect static files
-        run: docker compose run web poetry run python manage.py collectstatic --noinput
+        run: docker compose run web poetry run python manage.py collectstatic --noinput --clear
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
