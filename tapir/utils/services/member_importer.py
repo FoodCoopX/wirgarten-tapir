@@ -53,7 +53,11 @@ class MemberImporter:
 
     @classmethod
     def update_existing_member_if_necessary(cls, member: Member, row: dict[str, str]):
-        member_attributes_updated = cls.update_member_attributes(member=member, row=row)
+        member_attributes_updated = (
+            cls.update_member_attributes_and_save_member_without_keycloak(
+                member=member, row=row
+            )
+        )
         pickup_location_updated = cls.update_member_pickup_location(
             member=member, row=row
         )
@@ -64,7 +68,9 @@ class MemberImporter:
         return MEMBER_IMPORT_STATUS_SKIPPED
 
     @classmethod
-    def update_member_attributes(cls, member: Member, row: dict[str, str]):
+    def update_member_attributes_and_save_member_without_keycloak(
+        cls, member: Member, row: dict[str, str]
+    ):
         member_updated = False
         email_before = member.email
 
@@ -247,8 +253,9 @@ class MemberImporter:
         member = Member(
             member_no=member_no,
         )
-        cls.update_member_attributes(member=member, row=row)
-        member.save()
+        cls.update_member_attributes_and_save_member_without_keycloak(
+            member=member, row=row
+        )
 
         pickup_location = cls.get_pickup_location_by_name(
             name=DataImportUtils.normalize_cell(row.get("Abholort"))
