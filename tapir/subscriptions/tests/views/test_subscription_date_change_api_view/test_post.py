@@ -179,7 +179,7 @@ class TestPost(TapirIntegrationTest):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
-        now = mock_timezone(self, now=datetime.datetime(year=2025, month=7, day=12))
+        mock_timezone(self, now=datetime.datetime(year=2025, month=7, day=12))
 
         growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2025, month=1, day=1),

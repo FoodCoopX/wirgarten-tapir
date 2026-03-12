@@ -19,3 +19,16 @@ class ExistingMemberPurchasesSharesRequestSerializer(serializers.Serializer):
     account_owner = serializers.CharField(required=False)
     as_admin = serializers.BooleanField()
     start_date = serializers.DateField(required=False)
+
+
+class MemberBankDataResponseSerializer(serializers.Serializer):
+    iban = serializers.CharField()
+    account_owner = serializers.CharField()
+    organisation_name = serializers.CharField()
+
+
+class UpdateMemberBankDataRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    iban = serializers.CharField()
+    account_owner = serializers.CharField()
+    sepa_consent = serializers.BooleanField()

@@ -15,7 +15,6 @@ from tapir.wirgarten.forms.member import (
     SubscriptionRenewalForm,
     WaitingListForm,
 )
-from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
@@ -137,49 +136,6 @@ def get_renew_contracts_form(request, **kwargs):
         request=request,
         form_class=SubscriptionRenewalForm,
         handler=lambda x: save(x),
-        redirect_url_resolver=lambda _: member_detail_url(member_id),
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@csrf_protect
-@login_required
-def get_member_payment_data_edit_form(request, **kwargs):
-    member_id = kwargs.pop("pk")
-    check_permission_or_self(member_id, request)
-
-    instance = Member.objects.get(pk=member_id)
-
-    def update_payment_data(member: Member, account_owner: str, iban: str):
-        member.account_owner = account_owner
-        member.iban = iban
-        member.sepa_consent = get_now()
-
-        orig = Member.objects.get(id=member.id)
-        UpdateTapirUserLogEntry().populate(
-            old_model=orig, new_model=member, user=member, actor=request.user
-        ).save()
-
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.MEMBERAREA_CHANGE_DATA,
-                recipient_id_in_base_queryset=member.id,
-            ),
-        )
-
-        member.save()
-        return member
-
-    return get_form_modal(
-        request=request,
-        form_class=PaymentDataForm,
-        instance=instance,
-        handler=lambda x: update_payment_data(
-            member=instance,
-            account_owner=x.cleaned_data["account_owner"],
-            iban=x.cleaned_data["iban"],
-        ),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )

@@ -3,17 +3,25 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from localflavor.generic.validators import IBANValidator
 from rest_framework import status, viewsets, permissions
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.models import EmailConfigurationDispatch
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
-from tapir.accounts.models import EmailChangeRequest
+from tapir.accounts.models import EmailChangeRequest, UpdateTapirUserLogEntry
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.serializers import (
     MinimumNumberOfSharesResponseSerializer,
     GetCoopShareTransactionsResponseSerializer,
     ExistingMemberPurchasesSharesRequestSerializer,
+    UpdateMemberBankDataRequestSerializer,
+    MemberBankDataResponseSerializer,
 )
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.member_needs_banking_data_checker import (
@@ -28,6 +36,7 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.log.models import LogEntry
+from tapir.log.util import freeze_for_log
 from tapir.subscriptions.serializers import (
     MemberSerializer,
 )
@@ -36,6 +45,7 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     CoopShareTransaction,
@@ -49,6 +59,7 @@ from tapir.wirgarten.models import (
     QuestionaireCancellationReasonResponse,
     MandateReference,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import check_permission_or_self, get_today, get_now
 
 
@@ -271,3 +282,74 @@ class DeleteMemberApiView(APIView):
             member.delete()
 
         return Response("deleted")
+
+
+class MemberBankDataApiView(APIView):
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={200: MemberBankDataResponseSerializer},
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        return Response(
+            MemberBankDataResponseSerializer(
+                {
+                    "iban": member.iban,
+                    "account_owner": member.account_owner,
+                    "organisation_name": get_parameter_value(
+                        ParameterKeys.SITE_NAME, cache={}
+                    ),
+                }
+            ).data
+        )
+
+    @extend_schema(
+        responses={200: bool},
+        request=UpdateMemberBankDataRequestSerializer,
+    )
+    def patch(self, request):
+        serializer = UpdateMemberBankDataRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        iban = serializer.validated_data["iban"]
+        sepa_consent = serializer.validated_data["sepa_consent"]
+        self.validate(iban=iban, sepa_consent=sepa_consent)
+
+        member_before = freeze_for_log(member)
+
+        member.account_owner = serializer.validated_data["account_owner"]
+        member.iban = iban
+        member.sepa_consent = get_now(cache={})
+
+        with transaction.atomic():
+            UpdateTapirUserLogEntry().populate(
+                old_frozen=member_before,
+                new_model=member,
+                user=member,
+                actor=request.user,
+            ).save()
+
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.MEMBERAREA_CHANGE_DATA,
+                    recipient_id_in_base_queryset=member.id,
+                ),
+            )
+
+            member.save()
+
+        return Response(True)
+
+    @staticmethod
+    def validate(iban: str, sepa_consent: bool):
+        IBANValidator()(iban)
+
+        if not sepa_consent:
+            raise ValidationError("Zustimmung für SEPA fehlt")

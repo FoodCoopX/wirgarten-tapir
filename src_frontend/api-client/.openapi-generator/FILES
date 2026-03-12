@@ -82,6 +82,7 @@ models/LocaleEnum.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/Member.ts
+models/MemberBankDataResponse.ts
 models/MemberCountry.ts
 models/MemberCredit.ts
 models/MemberCreditCreateRequest.ts
@@ -127,6 +128,7 @@ models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
 models/PatchedStoredUploadRequest.ts
 models/PatchedTemporaryUploadRequest.ts
+models/PatchedUpdateMemberBankDataRequestRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/Payment.ts
 models/PaymentRhythmSerializerRequest.ts

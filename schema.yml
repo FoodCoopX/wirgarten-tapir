@@ -255,6 +255,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetCoopShareTransactionsResponse'
           description: ''
+  /coop/api/member_banking_data:
+    get:
+      operationId: coop_api_member_banking_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - coop
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberBankDataResponse'
+          description: ''
+    patch:
+      operationId: coop_api_member_banking_data_partial_update
+      tags:
+      - coop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateMemberBankDataRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateMemberBankDataRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateMemberBankDataRequestRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
   /coop/api/minimum_number_of_shares:
     get:
       operationId: coop_api_minimum_number_of_shares_retrieve
@@ -5617,7 +5664,6 @@ components:
       - cancel_coop_membership
       - cancel_solidarity_contribution
       - member_id
-      - product_ids
     CancelSubscriptionsViewResponse:
       type: object
       properties:
@@ -7666,6 +7712,19 @@ components:
       - last_name
       - password
       - username
+    MemberBankDataResponse:
+      type: object
+      properties:
+        iban:
+          type: string
+        account_owner:
+          type: string
+        organisation_name:
+          type: string
+      required:
+      - account_owner
+      - iban
+      - organisation_name
     MemberCredit:
       type: object
       properties:
@@ -8557,6 +8616,20 @@ components:
           type: string
           minLength: 1
           nullable: true
+    PatchedUpdateMemberBankDataRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        iban:
+          type: string
+          minLength: 1
+        account_owner:
+          type: string
+          minLength: 1
+        sepa_consent:
+          type: boolean
     PatchedWaitingListEntryRequest:
       type: object
       properties:
