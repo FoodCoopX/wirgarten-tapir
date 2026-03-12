@@ -27,6 +27,18 @@ export interface SolidarityContribution {
     id?: string;
     /**
      * 
+     * @type {Date}
+     * @memberof SolidarityContribution
+     */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof SolidarityContribution
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
      * @type {string}
      * @memberof SolidarityContribution
      */
@@ -73,6 +85,8 @@ export interface SolidarityContribution {
  * Check if a given object implements the SolidarityContribution interface.
  */
 export function instanceOfSolidarityContribution(value: object): value is SolidarityContribution {
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
     if (!('endDate' in value) || value['endDate'] === undefined) return false;
@@ -91,6 +105,8 @@ export function SolidarityContributionFromJSONTyped(json: any, ignoreDiscriminat
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'amount': json['amount'],
         'startDate': (new Date(json['start_date'])),
         'endDate': (new Date(json['end_date'])),
@@ -105,7 +121,7 @@ export function SolidarityContributionFromJSONTyped(json: any, ignoreDiscriminat
       return SolidarityContributionToJSONTyped(json, false);
   }
 
-  export function SolidarityContributionToJSONTyped(value?: SolidarityContribution | null, ignoreDiscriminator: boolean = false): any {
+  export function SolidarityContributionToJSONTyped(value?: Omit<SolidarityContribution, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

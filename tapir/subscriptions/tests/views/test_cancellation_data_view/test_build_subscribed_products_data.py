@@ -12,7 +12,8 @@ from tapir.subscriptions.views.cancellations import GetCancellationDataView
 
 class TestBuildSubscribedProductsData(SimpleTestCase):
     @patch.object(
-        SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
+        SubscriptionCancellationManager,
+        "get_earliest_possible_cancellation_date_for_product",
     )
     @patch.object(TrialPeriodManager, "is_product_in_trial")
     @patch.object(GetCancellationDataView, "get_subscribed_products")
@@ -20,13 +21,13 @@ class TestBuildSubscribedProductsData(SimpleTestCase):
         self,
         mock_get_subscribed_products: Mock,
         mock_is_product_in_trial: Mock,
-        mock_get_earliest_possible_cancellation_date: Mock,
+        mock_get_earliest_possible_cancellation_date_for_product: Mock,
     ):
         subscribed_products = [Mock(), Mock(), Mock()]
         mock_get_subscribed_products.return_value = subscribed_products
         member = Mock()
         mock_is_product_in_trial.side_effect = [False, True, False]
-        mock_get_earliest_possible_cancellation_date.side_effect = [
+        mock_get_earliest_possible_cancellation_date_for_product.side_effect = [
             datetime.date(year=2023, month=1, day=1),
             datetime.date(year=2023, month=1, day=2),
             datetime.date(year=2023, month=1, day=3),
@@ -62,8 +63,10 @@ class TestBuildSubscribedProductsData(SimpleTestCase):
         mock_is_product_in_trial.assert_has_calls(
             [call(product, member, cache=cache) for product in subscribed_products]
         )
-        self.assertEqual(3, mock_get_earliest_possible_cancellation_date.call_count)
-        mock_get_earliest_possible_cancellation_date.assert_has_calls(
+        self.assertEqual(
+            3, mock_get_earliest_possible_cancellation_date_for_product.call_count
+        )
+        mock_get_earliest_possible_cancellation_date_for_product.assert_has_calls(
             [
                 call(product=product, member=member, cache=cache)
                 for product in subscribed_products

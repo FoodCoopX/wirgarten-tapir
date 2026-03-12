@@ -33,11 +33,12 @@ class TestCancelSubscriptions(TapirIntegrationTest):
 
     @patch.object(TrialPeriodManager, "is_contract_in_trial")
     @patch.object(
-        SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
+        SubscriptionCancellationManager,
+        "get_earliest_possible_cancellation_date_for_product",
     )
     def test_cancelSubscriptions_default_cancelsSubscription(
         self,
-        mock_get_earliest_possible_cancellation_date: Mock,
+        mock_get_earliest_possible_cancellation_date_for_product: Mock,
         mock_is_contract_in_trial: Mock,
     ):
         member = MemberFactory.create()
@@ -52,7 +53,9 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         mock_is_contract_in_trial.return_value = False
 
         cancellation_date = datetime.date(year=2022, month=11, day=17)
-        mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
+        mock_get_earliest_possible_cancellation_date_for_product.return_value = (
+            cancellation_date
+        )
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
@@ -63,11 +66,12 @@ class TestCancelSubscriptions(TapirIntegrationTest):
 
     @patch.object(TrialPeriodManager, "is_contract_in_trial")
     @patch.object(
-        SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
+        SubscriptionCancellationManager,
+        "get_earliest_possible_cancellation_date_for_product",
     )
     def test_cancelSubscriptions_cancellationDateIsBeforeStartDate_deletesFutureSubscriptions(
         self,
-        mock_get_earliest_possible_cancellation_date: Mock,
+        mock_get_earliest_possible_cancellation_date_for_product: Mock,
         mock_is_contract_in_trial: Mock,
     ):
         member = MemberFactory.create()
@@ -88,7 +92,9 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         mock_is_contract_in_trial.return_value = False
 
         cancellation_date = datetime.date(year=2022, month=12, day=31)
-        mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
+        mock_get_earliest_possible_cancellation_date_for_product.return_value = (
+            cancellation_date
+        )
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
@@ -124,11 +130,12 @@ class TestCancelSubscriptions(TapirIntegrationTest):
 
     @patch.object(TrialPeriodManager, "is_contract_in_trial")
     @patch.object(
-        SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
+        SubscriptionCancellationManager,
+        "get_earliest_possible_cancellation_date_for_product",
     )
     def test_cancelSubscriptions_subscriptionIsInTrialAndAutoRenewIsOn_subscriptionCancelled(
         self,
-        mock_get_earliest_possible_cancellation_date: Mock,
+        mock_get_earliest_possible_cancellation_date_for_product: Mock,
         mock_is_contract_in_trial: Mock,
     ):
         member = MemberFactory.create()
@@ -143,7 +150,9 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         mock_is_contract_in_trial.return_value = True
 
         cancellation_date = datetime.date(year=2022, month=11, day=17)
-        mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
+        mock_get_earliest_possible_cancellation_date_for_product.return_value = (
+            cancellation_date
+        )
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
@@ -153,11 +162,12 @@ class TestCancelSubscriptions(TapirIntegrationTest):
 
     @patch.object(TrialPeriodManager, "is_contract_in_trial")
     @patch.object(
-        SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
+        SubscriptionCancellationManager,
+        "get_earliest_possible_cancellation_date_for_product",
     )
     def test_cancelSubscriptions_cancelDateIsSameAsStartDate_deletesSubscription(
         self,
-        mock_get_earliest_possible_cancellation_date: Mock,
+        mock_get_earliest_possible_cancellation_date_for_product: Mock,
         mock_is_contract_in_trial: Mock,
     ):
         member = MemberFactory.create()
@@ -175,7 +185,9 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         mock_is_contract_in_trial.return_value = True
 
         cancellation_date = datetime.date(year=2022, month=6, day=1)
-        mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
+        mock_get_earliest_possible_cancellation_date_for_product.return_value = (
+            cancellation_date
+        )
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
@@ -183,11 +195,12 @@ class TestCancelSubscriptions(TapirIntegrationTest):
 
     @patch.object(TrialPeriodManager, "is_contract_in_trial")
     @patch.object(
-        SubscriptionCancellationManager, "get_earliest_possible_cancellation_date"
+        SubscriptionCancellationManager,
+        "get_earliest_possible_cancellation_date_for_product",
     )
     def test_cancelSubscriptions_subscriptionIsRenewed_cancelsCurrentAndFutureSubscription(
         self,
-        mock_get_earliest_possible_cancellation_date: Mock,
+        mock_get_earliest_possible_cancellation_date_for_product: Mock,
         mock_is_contract_in_trial: Mock,
     ):
         member = MemberFactory.create()
@@ -209,7 +222,9 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         mock_is_contract_in_trial.return_value = False
 
         cancellation_date = datetime.date(year=2023, month=8, day=19)
-        mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
+        mock_get_earliest_possible_cancellation_date_for_product.return_value = (
+            cancellation_date
+        )
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 

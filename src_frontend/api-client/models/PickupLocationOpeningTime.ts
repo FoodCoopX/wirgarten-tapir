@@ -41,6 +41,18 @@ export interface PickupLocationOpeningTime {
     readonly dayOfWeekString: string;
     /**
      * 
+     * @type {Date}
+     * @memberof PickupLocationOpeningTime
+     */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof PickupLocationOpeningTime
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
      * @type {DayOfWeekEnum}
      * @memberof PickupLocationOpeningTime
      */
@@ -72,6 +84,8 @@ export interface PickupLocationOpeningTime {
  */
 export function instanceOfPickupLocationOpeningTime(value: object): value is PickupLocationOpeningTime {
     if (!('dayOfWeekString' in value) || value['dayOfWeekString'] === undefined) return false;
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('dayOfWeek' in value) || value['dayOfWeek'] === undefined) return false;
     if (!('openTime' in value) || value['openTime'] === undefined) return false;
     if (!('closeTime' in value) || value['closeTime'] === undefined) return false;
@@ -91,6 +105,8 @@ export function PickupLocationOpeningTimeFromJSONTyped(json: any, ignoreDiscrimi
         
         'id': json['id'] == null ? undefined : json['id'],
         'dayOfWeekString': json['day_of_week_string'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'dayOfWeek': DayOfWeekEnumFromJSON(json['day_of_week']),
         'openTime': json['open_time'],
         'closeTime': json['close_time'],
@@ -102,7 +118,7 @@ export function PickupLocationOpeningTimeFromJSONTyped(json: any, ignoreDiscrimi
       return PickupLocationOpeningTimeToJSONTyped(json, false);
   }
 
-  export function PickupLocationOpeningTimeToJSONTyped(value?: Omit<PickupLocationOpeningTime, 'day_of_week_string'> | null, ignoreDiscriminator: boolean = false): any {
+  export function PickupLocationOpeningTimeToJSONTyped(value?: Omit<PickupLocationOpeningTime, 'day_of_week_string'|'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

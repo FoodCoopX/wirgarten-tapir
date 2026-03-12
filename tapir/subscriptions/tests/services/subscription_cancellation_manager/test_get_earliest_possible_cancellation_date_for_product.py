@@ -21,7 +21,7 @@ class TestGetEarliestPossibleCancellationDate(TapirIntegrationTest):
     def setUp(self) -> None:
         mock_timezone(self, datetime.datetime(year=2022, month=6, day=7))
 
-    def test_getEarliestPossibleCancellationDate_earliestSubscriptionIsInTrial_returnsTrialCancellationDate(
+    def test_getEarliestPossibleCancellationDateForProduct_earliestSubscriptionIsInTrial_returnsTrialCancellationDate(
         self,
     ):
         member = MemberFactory.create()
@@ -44,15 +44,13 @@ class TestGetEarliestPossibleCancellationDate(TapirIntegrationTest):
             member=member, period=growing_period_2, product=product
         )
 
-        result = (
-            SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
-                product, member, cache={}
-            )
+        result = SubscriptionCancellationManager.get_earliest_possible_cancellation_date_for_product(
+            product, member, cache={}
         )
 
         self.assertEqual(datetime.date(year=2022, month=6, day=9), result)
 
-    def test_getEarliestPossibleCancellationDate_noSubscriptionInTrial_returnsBiggestSubscriptionEndDate(
+    def test_getEarliestPossibleCancellationDateForProduct_noSubscriptionInTrial_returnsBiggestSubscriptionEndDate(
         self,
     ):
         member = MemberFactory.create()
@@ -75,10 +73,8 @@ class TestGetEarliestPossibleCancellationDate(TapirIntegrationTest):
             member=member, period=growing_period_2, product=product
         )
 
-        result = (
-            SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
-                product, member, cache={}
-            )
+        result = SubscriptionCancellationManager.get_earliest_possible_cancellation_date_for_product(
+            product, member, cache={}
         )
 
         self.assertEqual(datetime.date(year=2023, month=12, day=31), result)

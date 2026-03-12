@@ -1,7 +1,10 @@
 import React, { Dispatch, SetStateAction } from "react";
 import { Form, Modal } from "react-bootstrap";
 import "dayjs/locale/de";
-import { ProductForCancellation } from "../../../api-client";
+import {
+  ProductForCancellation,
+  SolidarityContributionCancellationData,
+} from "../../../api-client";
 import TapirButton from "../../../components/TapirButton.tsx";
 import { formatDateText } from "../../../utils/formatDateText.ts";
 
@@ -15,6 +18,38 @@ interface CancellationStepSubscriptionsProps {
   cancelCoopMembershipSelected: boolean;
   setCancelCoopMembershipSelected: Dispatch<SetStateAction<boolean>>;
   goToNextStep: () => void;
+  solidarityContributionData?: SolidarityContributionCancellationData;
+  cancelSolidarityContribution: boolean;
+  setCancelSolidarityContribution: (cancel: boolean) => void;
+}
+
+function getCheckboxLabelProduct(subscribedProduct: ProductForCancellation) {
+  let result =
+    subscribedProduct.product.type.name +
+    " (" +
+    subscribedProduct.product.name +
+    ") zum " +
+    formatDateText(subscribedProduct.cancellationDate) +
+    " kündigen";
+  if (subscribedProduct.isInTrial) {
+    result += " (Probezeit)";
+  }
+  result += ".";
+  return result;
+}
+
+function getCheckboxLabelSolidarityContribution(
+  data: SolidarityContributionCancellationData,
+) {
+  let result =
+    "Solidarbeitrag zum " + formatDateText(data.cancellationDate) + " kündigen";
+
+  if (data.isInTrial) {
+    result += " (Probezeit)";
+  }
+  result += ".";
+
+  return result;
 }
 
 const CancellationStepSubscriptions: React.FC<
@@ -29,6 +64,9 @@ const CancellationStepSubscriptions: React.FC<
   cancelCoopMembershipSelected,
   setCancelCoopMembershipSelected,
   goToNextStep,
+  solidarityContributionData,
+  cancelSolidarityContribution,
+  setCancelSolidarityContribution,
 }) => {
   function changeSelection(product: ProductForCancellation, selected: boolean) {
     if (selected && !selectedProducts.includes(product)) {
@@ -38,21 +76,6 @@ const CancellationStepSubscriptions: React.FC<
         selectedProducts.filter((p: ProductForCancellation) => p !== product),
       );
     }
-  }
-
-  function getCheckboxLabel(subscribedProduct: ProductForCancellation) {
-    let result =
-      subscribedProduct.product.type.name +
-      " (" +
-      subscribedProduct.product.name +
-      ") zum " +
-      formatDateText(subscribedProduct.cancellationDate) +
-      " kündigen";
-    if (subscribedProduct.isInTrial) {
-      result += " (Probezeit)";
-    }
-    result += ".";
-    return result;
   }
 
   return (
@@ -88,11 +111,25 @@ const CancellationStepSubscriptions: React.FC<
                     }
                     required={false}
                     checked={selectedProducts.includes(subscribedProduct)}
-                    label={getCheckboxLabel(subscribedProduct)}
+                    label={getCheckboxLabelProduct(subscribedProduct)}
                   />
                 </Form.Group>
               );
             },
+          )}
+          {solidarityContributionData?._exists && (
+            <Form.Group controlId="cancelSolidarityContribution">
+              <Form.Check
+                onChange={(event) =>
+                  setCancelSolidarityContribution(event.target.checked)
+                }
+                required={false}
+                checked={cancelSolidarityContribution}
+                label={getCheckboxLabelSolidarityContribution(
+                  solidarityContributionData,
+                )}
+              />
+            </Form.Group>
           )}
           {canCancelCoopMembership && (
             <Form.Group controlId="cancelCoopMembership">
@@ -115,7 +152,9 @@ const CancellationStepSubscriptions: React.FC<
           text={"Weiter"}
           onClick={goToNextStep}
           disabled={
-            !cancelCoopMembershipSelected && selectedProducts.length === 0
+            !cancelCoopMembershipSelected &&
+            !cancelSolidarityContribution &&
+            selectedProducts.length === 0
           }
         />
       </Modal.Footer>

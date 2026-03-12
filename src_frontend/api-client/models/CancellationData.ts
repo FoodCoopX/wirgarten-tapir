@@ -20,6 +20,13 @@ import {
     LegalStatusEnumToJSON,
     LegalStatusEnumToJSONTyped,
 } from './LegalStatusEnum';
+import type { SolidarityContributionCancellationData } from './SolidarityContributionCancellationData';
+import {
+    SolidarityContributionCancellationDataFromJSON,
+    SolidarityContributionCancellationDataFromJSONTyped,
+    SolidarityContributionCancellationDataToJSON,
+    SolidarityContributionCancellationDataToJSONTyped,
+} from './SolidarityContributionCancellationData';
 import type { ProductForCancellation } from './ProductForCancellation';
 import {
     ProductForCancellationFromJSON,
@@ -48,6 +55,12 @@ export interface CancellationData {
     subscribedProducts: Array<ProductForCancellation>;
     /**
      * 
+     * @type {SolidarityContributionCancellationData}
+     * @memberof CancellationData
+     */
+    solidarityContributionData: SolidarityContributionCancellationData;
+    /**
+     * 
      * @type {LegalStatusEnum}
      * @memberof CancellationData
      */
@@ -68,6 +81,7 @@ export interface CancellationData {
 export function instanceOfCancellationData(value: object): value is CancellationData {
     if (!('canCancelCoopMembership' in value) || value['canCancelCoopMembership'] === undefined) return false;
     if (!('subscribedProducts' in value) || value['subscribedProducts'] === undefined) return false;
+    if (!('solidarityContributionData' in value) || value['solidarityContributionData'] === undefined) return false;
     if (!('legalStatus' in value) || value['legalStatus'] === undefined) return false;
     if (!('defaultCancellationReasons' in value) || value['defaultCancellationReasons'] === undefined) return false;
     return true;
@@ -85,6 +99,7 @@ export function CancellationDataFromJSONTyped(json: any, ignoreDiscriminator: bo
         
         'canCancelCoopMembership': json['can_cancel_coop_membership'],
         'subscribedProducts': ((json['subscribed_products'] as Array<any>).map(ProductForCancellationFromJSON)),
+        'solidarityContributionData': SolidarityContributionCancellationDataFromJSON(json['solidarity_contribution_data']),
         'legalStatus': LegalStatusEnumFromJSON(json['legal_status']),
         'defaultCancellationReasons': json['default_cancellation_reasons'],
     };
@@ -103,6 +118,7 @@ export function CancellationDataFromJSONTyped(json: any, ignoreDiscriminator: bo
         
         'can_cancel_coop_membership': value['canCancelCoopMembership'],
         'subscribed_products': ((value['subscribedProducts'] as Array<any>).map(ProductForCancellationToJSON)),
+        'solidarity_contribution_data': SolidarityContributionCancellationDataToJSON(value['solidarityContributionData']),
         'legal_status': LegalStatusEnumToJSON(value['legalStatus']),
         'default_cancellation_reasons': value['defaultCancellationReasons'],
     };

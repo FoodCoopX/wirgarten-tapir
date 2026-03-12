@@ -27,6 +27,18 @@ export interface PickupLocation {
     id?: string;
     /**
      * 
+     * @type {Date}
+     * @memberof PickupLocation
+     */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof PickupLocation
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
      * @type {string}
      * @memberof PickupLocation
      */
@@ -103,6 +115,8 @@ export interface PickupLocation {
  * Check if a given object implements the PickupLocation interface.
  */
 export function instanceOfPickupLocation(value: object): value is PickupLocation {
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('coordsLon' in value) || value['coordsLon'] === undefined) return false;
     if (!('coordsLat' in value) || value['coordsLat'] === undefined) return false;
@@ -123,6 +137,8 @@ export function PickupLocationFromJSONTyped(json: any, ignoreDiscriminator: bool
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'name': json['name'],
         'coordsLon': json['coords_lon'],
         'coordsLat': json['coords_lat'],
@@ -142,7 +158,7 @@ export function PickupLocationFromJSONTyped(json: any, ignoreDiscriminator: bool
       return PickupLocationToJSONTyped(json, false);
   }
 
-  export function PickupLocationToJSONTyped(value?: PickupLocation | null, ignoreDiscriminator: boolean = false): any {
+  export function PickupLocationToJSONTyped(value?: Omit<PickupLocation, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

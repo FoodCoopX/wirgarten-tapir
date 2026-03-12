@@ -36,13 +36,19 @@ export interface MemberCredit {
      * @type {Date}
      * @memberof MemberCredit
      */
-    dueDate: Date;
+    readonly createdAt: Date;
     /**
      * 
      * @type {Date}
      * @memberof MemberCredit
      */
-    readonly createdAt: Date;
+    readonly updatedAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof MemberCredit
+     */
+    dueDate: Date;
     /**
      * 
      * @type {string}
@@ -68,8 +74,9 @@ export interface MemberCredit {
  */
 export function instanceOfMemberCredit(value: object): value is MemberCredit {
     if (!('amount' in value) || value['amount'] === undefined) return false;
-    if (!('dueDate' in value) || value['dueDate'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
+    if (!('dueDate' in value) || value['dueDate'] === undefined) return false;
     if (!('purpose' in value) || value['purpose'] === undefined) return false;
     if (!('comment' in value) || value['comment'] === undefined) return false;
     if (!('member' in value) || value['member'] === undefined) return false;
@@ -88,8 +95,9 @@ export function MemberCreditFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'id': json['id'] == null ? undefined : json['id'],
         'amount': json['amount'],
-        'dueDate': (new Date(json['due_date'])),
         'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
+        'dueDate': (new Date(json['due_date'])),
         'purpose': json['purpose'],
         'comment': json['comment'],
         'member': json['member'],
@@ -100,7 +108,7 @@ export function MemberCreditFromJSONTyped(json: any, ignoreDiscriminator: boolea
       return MemberCreditToJSONTyped(json, false);
   }
 
-  export function MemberCreditToJSONTyped(value?: Omit<MemberCredit, 'created_at'> | null, ignoreDiscriminator: boolean = false): any {
+  export function MemberCreditToJSONTyped(value?: Omit<MemberCredit, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

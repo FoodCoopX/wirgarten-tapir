@@ -3,6 +3,7 @@ import { Modal, Spinner } from "react-bootstrap";
 import {
   LegalStatusEnum,
   ProductForCancellation,
+  SolidarityContributionCancellationData,
   SubscriptionsApi,
 } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
@@ -30,6 +31,10 @@ const SubscriptionCancellationModal: React.FC<
   const [subscribedProducts, setSubscribedProducts] = useState<
     ProductForCancellation[]
   >([]);
+  const [solidarityContributionData, setSolidarityContributionData] =
+    useState<SolidarityContributionCancellationData>();
+  const [cancelSolidarityContribution, setCancelSolidarityContribution] =
+    useState(false);
   const [canCancelCoopMembership, setCanCancelCoopMembership] = useState(false);
   const [legalStatus, setLegalStatus] = useState<LegalStatusEnum>();
   const [loading, setLoading] = useState(true);
@@ -69,6 +74,7 @@ const SubscriptionCancellationModal: React.FC<
         setCanCancelCoopMembership(data.canCancelCoopMembership);
         setLegalStatus(data.legalStatus);
         setDefaultCancellationReasons(data.defaultCancellationReasons);
+        setSolidarityContributionData(data.solidarityContributionData);
       })
       .catch((error) =>
         handleRequestError(
@@ -102,6 +108,7 @@ const SubscriptionCancellationModal: React.FC<
           cancelCoopMembership: cancelCoopMembershipSelected,
           cancellationReasons: selectedCancellationReasons,
           customCancellationReason: customCancellationReason,
+          cancelSolidarityContribution: cancelSolidarityContribution,
         },
       })
       .then((response) => {
@@ -151,6 +158,9 @@ const SubscriptionCancellationModal: React.FC<
               cancelCoopMembershipSelected={cancelCoopMembershipSelected}
               setCancelCoopMembershipSelected={setCancelCoopMembershipSelected}
               goToNextStep={() => setCurrentStep("reasons")}
+              solidarityContributionData={solidarityContributionData}
+              cancelSolidarityContribution={cancelSolidarityContribution}
+              setCancelSolidarityContribution={setCancelSolidarityContribution}
             />
           )}
           {currentStep === "reasons" && (

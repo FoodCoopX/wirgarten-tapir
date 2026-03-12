@@ -30,6 +30,18 @@ export interface GrowingPeriod {
      * @type {Date}
      * @memberof GrowingPeriod
      */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof GrowingPeriod
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof GrowingPeriod
+     */
     startDate: Date;
     /**
      * 
@@ -67,6 +79,8 @@ export interface GrowingPeriod {
  * Check if a given object implements the GrowingPeriod interface.
  */
 export function instanceOfGrowingPeriod(value: object): value is GrowingPeriod {
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
     if (!('endDate' in value) || value['endDate'] === undefined) return false;
     return true;
@@ -83,6 +97,8 @@ export function GrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator: boole
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'startDate': (new Date(json['start_date'])),
         'endDate': (new Date(json['end_date'])),
         'weeksWithoutDelivery': json['weeks_without_delivery'] == null ? undefined : json['weeks_without_delivery'],
@@ -96,7 +112,7 @@ export function GrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator: boole
       return GrowingPeriodToJSONTyped(json, false);
   }
 
-  export function GrowingPeriodToJSONTyped(value?: GrowingPeriod | null, ignoreDiscriminator: boolean = false): any {
+  export function GrowingPeriodToJSONTyped(value?: Omit<GrowingPeriod, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

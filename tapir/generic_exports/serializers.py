@@ -19,7 +19,7 @@ class ExportSegmentSerializer(serializers.Serializer):
 class CsvExportModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = CsvExport
-        fields = "__all__"
+        exclude = ["created_at", "updated_at"]
 
 
 class BuildCsvExportResponseSerializer(serializers.Serializer):

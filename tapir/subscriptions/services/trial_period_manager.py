@@ -66,14 +66,14 @@ class TrialPeriodManager:
     @classmethod
     def get_earliest_trial_cancellation_date(
         cls,
-        subscription: Subscription,
+        contract: Subscription | SolidarityContribution,
         reference_date: datetime.date | None = None,
         cache: dict = None,
     ) -> datetime.date:
         if not get_parameter_value(
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         ):
-            return cls.get_last_day_of_trial_period(subscription, cache=cache)
+            return cls.get_last_day_of_trial_period(contract, cache=cache)
 
         if reference_date is None:
             reference_date = get_today(cache=cache)

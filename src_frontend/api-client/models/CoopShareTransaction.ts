@@ -38,6 +38,18 @@ export interface CoopShareTransaction {
      * @type {Date}
      * @memberof CoopShareTransaction
      */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof CoopShareTransaction
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof CoopShareTransaction
+     */
     adminConfirmed?: Date | null;
     /**
      * 
@@ -107,6 +119,8 @@ export interface CoopShareTransaction {
  * Check if a given object implements the CoopShareTransaction interface.
  */
 export function instanceOfCoopShareTransaction(value: object): value is CoopShareTransaction {
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('transactionType' in value) || value['transactionType'] === undefined) return false;
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('sharePrice' in value) || value['sharePrice'] === undefined) return false;
@@ -126,6 +140,8 @@ export function CoopShareTransactionFromJSONTyped(json: any, ignoreDiscriminator
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'adminConfirmed': json['admin_confirmed'] == null ? undefined : (new Date(json['admin_confirmed'])),
         'autoConfirmed': json['auto_confirmed'] == null ? undefined : (new Date(json['auto_confirmed'])),
         'transactionType': TransactionTypeEnumFromJSON(json['transaction_type']),
@@ -144,7 +160,7 @@ export function CoopShareTransactionFromJSONTyped(json: any, ignoreDiscriminator
       return CoopShareTransactionToJSONTyped(json, false);
   }
 
-  export function CoopShareTransactionToJSONTyped(value?: CoopShareTransaction | null, ignoreDiscriminator: boolean = false): any {
+  export function CoopShareTransactionToJSONTyped(value?: Omit<CoopShareTransaction, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

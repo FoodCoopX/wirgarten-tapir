@@ -1,18 +1,19 @@
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Product, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
-from tapir.wirgarten.utils import get_now
+from tapir.wirgarten.utils import get_now, get_today
 
 
 class SubscriptionCancellationManager:
     @classmethod
-    def get_earliest_possible_cancellation_date(
+    def get_earliest_possible_cancellation_date_for_product(
         cls, product: Product, member: Member, cache: dict
     ):
         subscriptions_for_this_product = (
@@ -34,8 +35,40 @@ class SubscriptionCancellationManager:
         return subscriptions_for_this_product[-1].end_date
 
     @classmethod
+    def get_earliest_possible_cancellation_date_for_solidarity_contribution(
+        cls, member: Member, cache: dict
+    ):
+        today = get_today(cache=cache)
+        contributions = list(
+            cls.get_solidarity_contributions_that_could_be_cancelled(
+                member=member, cache=cache
+            )
+        )
+        trial_end_dates = [
+            TrialPeriodManager.get_earliest_trial_cancellation_date(
+                contract=contribution, reference_date=today, cache=cache
+            )
+            for contribution in contributions
+            if TrialPeriodManager.is_contract_in_trial(
+                contract=contribution, reference_date=today, cache=cache
+            )
+        ]
+        if len(trial_end_dates) == 0:
+            return contributions[-1].end_date
+
+        return min(trial_end_dates)
+
+    @classmethod
+    def get_solidarity_contributions_that_could_be_cancelled(
+        cls, member: Member, cache: dict
+    ):
+        return SolidarityContribution.objects.filter(
+            member=member, end_date__gte=get_today(cache=cache)
+        ).order_by("end_date")
+
+    @classmethod
     def cancel_subscriptions(cls, product: Product, member: Member, cache: dict):
-        cancellation_date = cls.get_earliest_possible_cancellation_date(
+        cancellation_date = cls.get_earliest_possible_cancellation_date_for_product(
             product=product, member=member, cache=cache
         )
 

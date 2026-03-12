@@ -51,6 +51,18 @@ export interface Subscription {
      * @type {Date}
      * @memberof Subscription
      */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof Subscription
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof Subscription
+     */
     adminConfirmed?: Date | null;
     /**
      * 
@@ -82,12 +94,6 @@ export interface Subscription {
      * @memberof Subscription
      */
     cancellationTs?: Date | null;
-    /**
-     * 
-     * @type {Date}
-     * @memberof Subscription
-     */
-    createdAt?: Date;
     /**
      * 
      * @type {Date}
@@ -163,6 +169,8 @@ export interface Subscription {
  */
 export function instanceOfSubscription(value: object): value is Subscription {
     if (!('product' in value) || value['product'] === undefined) return false;
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
     if (!('noticePeriodDuration' in value) || value['noticePeriodDuration'] === undefined) return false;
@@ -184,13 +192,14 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'id': json['id'] == null ? undefined : json['id'],
         'product': ProductFromJSON(json['product']),
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'adminConfirmed': json['admin_confirmed'] == null ? undefined : (new Date(json['admin_confirmed'])),
         'autoConfirmed': json['auto_confirmed'] == null ? undefined : (new Date(json['auto_confirmed'])),
         'quantity': json['quantity'],
         'startDate': (new Date(json['start_date'])),
         'endDate': json['end_date'] == null ? undefined : (new Date(json['end_date'])),
         'cancellationTs': json['cancellation_ts'] == null ? undefined : (new Date(json['cancellation_ts'])),
-        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
         'consentTs': json['consent_ts'] == null ? undefined : (new Date(json['consent_ts'])),
         'withdrawalConsentTs': json['withdrawal_consent_ts'] == null ? undefined : (new Date(json['withdrawal_consent_ts'])),
         'trialDisabled': json['trial_disabled'] == null ? undefined : json['trial_disabled'],
@@ -209,7 +218,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
       return SubscriptionToJSONTyped(json, false);
   }
 
-  export function SubscriptionToJSONTyped(value?: Subscription | null, ignoreDiscriminator: boolean = false): any {
+  export function SubscriptionToJSONTyped(value?: Omit<Subscription, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -224,7 +233,6 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'start_date': ((value['startDate']).toISOString().substring(0,10)),
         'end_date': value['endDate'] == null ? undefined : ((value['endDate'] as any).toISOString().substring(0,10)),
         'cancellation_ts': value['cancellationTs'] == null ? undefined : ((value['cancellationTs'] as any).toISOString()),
-        'created_at': value['createdAt'] == null ? undefined : ((value['createdAt']).toISOString()),
         'consent_ts': value['consentTs'] == null ? undefined : ((value['consentTs'] as any).toISOString()),
         'withdrawal_consent_ts': value['withdrawalConsentTs'] == null ? undefined : ((value['withdrawalConsentTs'] as any).toISOString()),
         'trial_disabled': value['trialDisabled'],

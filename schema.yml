@@ -5611,8 +5611,11 @@ components:
         custom_cancellation_reason:
           type: string
           minLength: 1
+        cancel_solidarity_contribution:
+          type: boolean
       required:
       - cancel_coop_membership
+      - cancel_solidarity_contribution
       - member_id
       - product_ids
     CancelSubscriptionsViewResponse:
@@ -5636,6 +5639,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductForCancellation'
+        solidarity_contribution_data:
+          $ref: '#/components/schemas/SolidarityContributionCancellationData'
         legal_status:
           $ref: '#/components/schemas/LegalStatusEnum'
         default_cancellation_reasons:
@@ -5646,6 +5651,7 @@ components:
       - can_cancel_coop_membership
       - default_cancellation_reasons
       - legal_status
+      - solidarity_contribution_data
       - subscribed_products
     ChangeTypeEnum:
       enum:
@@ -5665,6 +5671,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         admin_confirmed:
           type: string
           format: date-time
@@ -5701,10 +5715,12 @@ components:
           type: string
           nullable: true
       required:
+      - created_at
       - member
       - quantity
       - share_price
       - transaction_type
+      - updated_at
       - valid_at
     CountryEnum:
       enum:
@@ -6414,14 +6430,24 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         date:
           type: string
           format: date
         member:
           type: string
       required:
+      - created_at
       - date
       - member
+      - updated_at
     DeliveryDonationWithCancellationLimit:
       type: object
       properties:
@@ -7276,6 +7302,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         start_date:
           type: string
           format: date
@@ -7298,8 +7332,10 @@ components:
         is_available_in_bestell_wizard:
           type: boolean
       required:
+      - created_at
       - end_date
       - start_date
+      - updated_at
     GrowingPeriodRequest:
       type: object
       properties:
@@ -7376,14 +7412,24 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         date:
           type: string
           format: date
         member:
           type: string
       required:
+      - created_at
       - date
       - member
+      - updated_at
     JokerRestriction:
       type: object
       properties:
@@ -7629,13 +7675,17 @@ components:
         amount:
           type: number
           format: double
-        due_date:
-          type: string
-          format: date
         created_at:
           type: string
           format: date-time
           readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        due_date:
+          type: string
+          format: date
         purpose:
           type: string
           maxLength: 1024
@@ -7650,6 +7700,7 @@ components:
       - due_date
       - member
       - purpose
+      - updated_at
     MemberCreditCreateRequest:
       type: object
       properties:
@@ -8587,6 +8638,14 @@ components:
         amount:
           type: number
           format: double
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         due_date:
           type: string
           format: date
@@ -8612,9 +8671,11 @@ components:
           nullable: true
       required:
       - amount
+      - created_at
       - due_date
       - mandate_ref
       - type
+      - updated_at
     PaymentStatusEnum:
       enum:
       - PAID
@@ -8629,6 +8690,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         export_segment_id:
           type: string
           maxLength: 512
@@ -8663,11 +8732,13 @@ components:
       - automated_export_cycle
       - automated_export_day
       - automated_export_hour
+      - created_at
       - export_segment_id
       - file_name
       - generate_one_file_for_every_segment_entry
       - name
       - template
+      - updated_at
     PdfExportModelRequest:
       type: object
       properties:
@@ -8779,6 +8850,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         name:
           type: string
           maxLength: 150
@@ -8827,9 +8906,11 @@ components:
       - city
       - coords_lat
       - coords_lon
+      - created_at
       - name
       - postcode
       - street
+      - updated_at
     PickupLocationCapacities:
       type: object
       properties:
@@ -8932,6 +9013,14 @@ components:
         day_of_week_string:
           type: string
           readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         day_of_week:
           allOf:
           - $ref: '#/components/schemas/DayOfWeekEnum'
@@ -8947,10 +9036,12 @@ components:
           type: string
       required:
       - close_time
+      - created_at
       - day_of_week
       - day_of_week_string
       - open_time
       - pickup_location
+      - updated_at
     PreferredLanguageEnum:
       enum:
       - de
@@ -8966,6 +9057,14 @@ components:
           maxLength: 10
         type:
           $ref: '#/components/schemas/ProductType'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         name:
           type: string
           maxLength: 128
@@ -8990,8 +9089,10 @@ components:
           maximum: 2147483647
           minimum: -2147483648
       required:
+      - created_at
       - name
       - type
+      - updated_at
     ProductBasketSizeEquivalence:
       type: object
       properties:
@@ -9035,6 +9136,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         name:
           type: string
           title: Produkt Name
@@ -9095,7 +9204,9 @@ components:
           type: string
           maxLength: 512
       required:
+      - created_at
       - name
+      - updated_at
     ProductTypeAccordionInBestellWizard:
       type: object
       properties:
@@ -9638,6 +9749,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         amount:
           type: string
           format: decimal
@@ -9662,9 +9781,25 @@ components:
           type: string
       required:
       - amount
+      - created_at
       - end_date
       - member
       - start_date
+      - updated_at
+    SolidarityContributionCancellationData:
+      type: object
+      properties:
+        exists:
+          type: boolean
+        is_in_trial:
+          type: boolean
+        cancellation_date:
+          type: string
+          format: date
+      required:
+      - cancellation_date
+      - exists
+      - is_in_trial
     SolidarityStepPositionEnum:
       enum:
       - before_pickup_location
@@ -9833,6 +9968,14 @@ components:
           maxLength: 10
         product:
           $ref: '#/components/schemas/Product'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         admin_confirmed:
           type: string
           format: date-time
@@ -9856,9 +9999,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        created_at:
-          type: string
-          format: date-time
         consent_ts:
           type: string
           format: date-time
@@ -9896,6 +10036,7 @@ components:
         mandate_ref:
           type: string
       required:
+      - created_at
       - mandate_ref
       - member
       - notice_period_duration
@@ -9903,6 +10044,7 @@ components:
       - product
       - quantity
       - start_date
+      - updated_at
     SubscriptionChange:
       type: object
       properties:
@@ -10194,6 +10336,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         first_name:
           type: string
           maxLength: 256
@@ -10225,10 +10375,6 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
         privacy_consent:
           type: string
           format: date-time
@@ -10265,6 +10411,7 @@ components:
       - number_of_coop_shares
       - phone_number
       - privacy_consent
+      - updated_at
     WaitingListEntryDetails:
       type: object
       properties:

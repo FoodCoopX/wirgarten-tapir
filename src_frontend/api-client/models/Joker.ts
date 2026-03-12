@@ -30,6 +30,18 @@ export interface Joker {
      * @type {Date}
      * @memberof Joker
      */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof Joker
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof Joker
+     */
     date: Date;
     /**
      * 
@@ -43,6 +55,8 @@ export interface Joker {
  * Check if a given object implements the Joker interface.
  */
 export function instanceOfJoker(value: object): value is Joker {
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('date' in value) || value['date'] === undefined) return false;
     if (!('member' in value) || value['member'] === undefined) return false;
     return true;
@@ -59,6 +73,8 @@ export function JokerFromJSONTyped(json: any, ignoreDiscriminator: boolean): Jok
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'date': (new Date(json['date'])),
         'member': json['member'],
     };
@@ -68,7 +84,7 @@ export function JokerFromJSONTyped(json: any, ignoreDiscriminator: boolean): Jok
       return JokerToJSONTyped(json, false);
   }
 
-  export function JokerToJSONTyped(value?: Joker | null, ignoreDiscriminator: boolean = false): any {
+  export function JokerToJSONTyped(value?: Omit<Joker, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

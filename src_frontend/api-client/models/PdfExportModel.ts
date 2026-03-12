@@ -35,6 +35,18 @@ export interface PdfExportModel {
     id?: string;
     /**
      * 
+     * @type {Date}
+     * @memberof PdfExportModel
+     */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof PdfExportModel
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
      * @type {string}
      * @memberof PdfExportModel
      */
@@ -101,6 +113,8 @@ export interface PdfExportModel {
  * Check if a given object implements the PdfExportModel interface.
  */
 export function instanceOfPdfExportModel(value: object): value is PdfExportModel {
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('exportSegmentId' in value) || value['exportSegmentId'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('fileName' in value) || value['fileName'] === undefined) return false;
@@ -123,6 +137,8 @@ export function PdfExportModelFromJSONTyped(json: any, ignoreDiscriminator: bool
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'exportSegmentId': json['export_segment_id'],
         'name': json['name'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -140,7 +156,7 @@ export function PdfExportModelFromJSONTyped(json: any, ignoreDiscriminator: bool
       return PdfExportModelToJSONTyped(json, false);
   }
 
-  export function PdfExportModelToJSONTyped(value?: PdfExportModel | null, ignoreDiscriminator: boolean = false): any {
+  export function PdfExportModelToJSONTyped(value?: Omit<PdfExportModel, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -30,6 +30,18 @@ export interface DeliveryDonation {
      * @type {Date}
      * @memberof DeliveryDonation
      */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof DeliveryDonation
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof DeliveryDonation
+     */
     date: Date;
     /**
      * 
@@ -43,6 +55,8 @@ export interface DeliveryDonation {
  * Check if a given object implements the DeliveryDonation interface.
  */
 export function instanceOfDeliveryDonation(value: object): value is DeliveryDonation {
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('date' in value) || value['date'] === undefined) return false;
     if (!('member' in value) || value['member'] === undefined) return false;
     return true;
@@ -59,6 +73,8 @@ export function DeliveryDonationFromJSONTyped(json: any, ignoreDiscriminator: bo
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'date': (new Date(json['date'])),
         'member': json['member'],
     };
@@ -68,7 +84,7 @@ export function DeliveryDonationFromJSONTyped(json: any, ignoreDiscriminator: bo
       return DeliveryDonationToJSONTyped(json, false);
   }
 
-  export function DeliveryDonationToJSONTyped(value?: DeliveryDonation | null, ignoreDiscriminator: boolean = false): any {
+  export function DeliveryDonationToJSONTyped(value?: Omit<DeliveryDonation, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

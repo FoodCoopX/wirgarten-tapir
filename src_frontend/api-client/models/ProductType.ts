@@ -35,6 +35,18 @@ export interface ProductType {
     id?: string;
     /**
      * 
+     * @type {Date}
+     * @memberof ProductType
+     */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof ProductType
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
      * @type {string}
      * @memberof ProductType
      */
@@ -137,6 +149,8 @@ export interface ProductType {
  * Check if a given object implements the ProductType interface.
  */
 export function instanceOfProductType(value: object): value is ProductType {
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     return true;
 }
@@ -152,6 +166,8 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'name': json['name'],
         'deliveryCycle': json['delivery_cycle'] == null ? undefined : DeliveryCycleEnumFromJSON(json['delivery_cycle']),
         'contractLink': json['contract_link'] == null ? undefined : json['contract_link'],
@@ -175,7 +191,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
       return ProductTypeToJSONTyped(json, false);
   }
 
-  export function ProductTypeToJSONTyped(value?: ProductType | null, ignoreDiscriminator: boolean = false): any {
+  export function ProductTypeToJSONTyped(value?: Omit<ProductType, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

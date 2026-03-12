@@ -49,6 +49,12 @@ export interface CancelSubscriptionsRequestRequest {
      * @memberof CancelSubscriptionsRequestRequest
      */
     customCancellationReason?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CancelSubscriptionsRequestRequest
+     */
+    cancelSolidarityContribution: boolean;
 }
 
 /**
@@ -58,6 +64,7 @@ export function instanceOfCancelSubscriptionsRequestRequest(value: object): valu
     if (!('memberId' in value) || value['memberId'] === undefined) return false;
     if (!('productIds' in value) || value['productIds'] === undefined) return false;
     if (!('cancelCoopMembership' in value) || value['cancelCoopMembership'] === undefined) return false;
+    if (!('cancelSolidarityContribution' in value) || value['cancelSolidarityContribution'] === undefined) return false;
     return true;
 }
 
@@ -76,6 +83,7 @@ export function CancelSubscriptionsRequestRequestFromJSONTyped(json: any, ignore
         'cancelCoopMembership': json['cancel_coop_membership'],
         'cancellationReasons': json['cancellation_reasons'] == null ? undefined : json['cancellation_reasons'],
         'customCancellationReason': json['custom_cancellation_reason'] == null ? undefined : json['custom_cancellation_reason'],
+        'cancelSolidarityContribution': json['cancel_solidarity_contribution'],
     };
 }
 
@@ -95,6 +103,7 @@ export function CancelSubscriptionsRequestRequestFromJSONTyped(json: any, ignore
         'cancel_coop_membership': value['cancelCoopMembership'],
         'cancellation_reasons': value['cancellationReasons'],
         'custom_cancellation_reason': value['customCancellationReason'],
+        'cancel_solidarity_contribution': value['cancelSolidarityContribution'],
     };
 }
 

@@ -44,6 +44,18 @@ export interface Payment {
      * @type {Date}
      * @memberof Payment
      */
+    readonly createdAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof Payment
+     */
+    readonly updatedAt: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof Payment
+     */
     dueDate: Date;
     /**
      * 
@@ -96,6 +108,8 @@ export interface Payment {
  */
 export function instanceOfPayment(value: object): value is Payment {
     if (!('amount' in value) || value['amount'] === undefined) return false;
+    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('dueDate' in value) || value['dueDate'] === undefined) return false;
     if (!('type' in value) || value['type'] === undefined) return false;
     if (!('mandateRef' in value) || value['mandateRef'] === undefined) return false;
@@ -114,6 +128,8 @@ export function PaymentFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         
         'id': json['id'] == null ? undefined : json['id'],
         'amount': json['amount'],
+        'createdAt': (new Date(json['created_at'])),
+        'updatedAt': (new Date(json['updated_at'])),
         'dueDate': (new Date(json['due_date'])),
         'status': json['status'] == null ? undefined : PaymentStatusEnumFromJSON(json['status']),
         'edited': json['edited'] == null ? undefined : json['edited'],
@@ -129,7 +145,7 @@ export function PaymentFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
       return PaymentToJSONTyped(json, false);
   }
 
-  export function PaymentToJSONTyped(value?: Payment | null, ignoreDiscriminator: boolean = false): any {
+  export function PaymentToJSONTyped(value?: Omit<Payment, 'created_at'|'updated_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
