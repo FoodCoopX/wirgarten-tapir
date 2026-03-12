@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import Dict, Set
+from typing import Set
 
 from django.db import models
 
@@ -31,7 +31,7 @@ from tapir.wirgarten.utils import get_today
 
 class TapirCache:
     @classmethod
-    def get_all_subscriptions(cls, cache: Dict) -> Set[Subscription]:
+    def get_all_subscriptions(cls, cache: dict) -> Set[Subscription]:
         key = "all_subscriptions"
         TapirCacheManager.register_key_in_category(
             cache=cache, key=key, category="subscriptions"
@@ -48,7 +48,7 @@ class TapirCache:
 
     @classmethod
     def get_all_solidarity_contributions(
-        cls, cache: Dict
+        cls, cache: dict
     ) -> Set[SolidarityContribution]:
         return get_from_cache_or_compute(
             cache,
@@ -58,7 +58,7 @@ class TapirCache:
 
     @classmethod
     def get_subscriptions_active_at_date(
-        cls, reference_date: datetime.date, cache: Dict
+        cls, reference_date: datetime.date, cache: dict
     ):
         key = "subscriptions_by_date"
         TapirCacheManager.register_key_in_category(
@@ -82,7 +82,7 @@ class TapirCache:
 
     @classmethod
     def get_solidarity_contributions_active_at_date(
-        cls, reference_date: datetime.date, cache: Dict
+        cls, reference_date: datetime.date, cache: dict
     ) -> set[SolidarityContribution]:
         def compute():
             all_contributions = cls.get_all_solidarity_contributions(cache)
@@ -129,7 +129,7 @@ class TapirCache:
 
     @classmethod
     def get_subscriptions_by_delivery_cycle(
-        cls, cache: Dict, delivery_cycle
+        cls, cache: dict, delivery_cycle
     ) -> Set[Subscription]:
         key = "subscriptions_by_delivery_cycle"
         TapirCacheManager.register_key_in_category(
@@ -150,7 +150,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_subscriptions_affected_by_jokers(cls, cache: Dict):
+    def get_subscriptions_affected_by_jokers(cls, cache: dict):
         key = "subscriptions_affected_by_jokers"
         TapirCacheManager.register_key_in_category(
             cache=cache, key=key, category="subscriptions"
@@ -165,7 +165,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_product_type_by_id(cls, cache: Dict, product_type_id: str):
+    def get_product_type_by_id(cls, cache: dict, product_type_id: str):
         product_types_by_id = get_from_cache_or_compute(
             cache, "product_types_by_id", lambda: {}
         )
@@ -176,7 +176,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_products_with_product_type(cls, cache: Dict, product_type_id: str):
+    def get_products_with_product_type(cls, cache: dict, product_type_id: str):
         product_by_product_type_id = get_from_cache_or_compute(
             cache, "product_by_product_type_id", lambda: {}
         )
@@ -188,7 +188,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_product_prices_by_product_id(cls, cache: Dict, product_id: str):
+    def get_product_prices_by_product_id(cls, cache: dict, product_id: str):
         product_prices_by_product_id = get_from_cache_or_compute(
             cache, "product_prices_by_product_id", lambda: {}
         )
@@ -207,13 +207,13 @@ class TapirCache:
         )
 
     @classmethod
-    def get_all_products(cls, cache: Dict):
+    def get_all_products(cls, cache: dict):
         return get_from_cache_or_compute(
             cache, "all_products", lambda: set(Product.objects.order_by("id"))
         )
 
     @classmethod
-    def get_subscriptions_by_product_type(cls, cache: Dict):
+    def get_subscriptions_by_product_type(cls, cache: dict):
         key = "subscriptions_by_product_type"
         TapirCacheManager.register_key_in_category(
             cache=cache, key=key, category="subscriptions"
@@ -236,7 +236,7 @@ class TapirCache:
         return get_from_cache_or_compute(cache, key, compute)
 
     @classmethod
-    def get_product_by_name_iexact(cls, cache: Dict, product_name: str):
+    def get_product_by_name_iexact(cls, cache: dict, product_name: str):
         products = cls.get_all_products(cache)
 
         products_by_name_iexact = get_from_cache_or_compute(
@@ -253,7 +253,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_last_subscription(cls, cache: Dict):
+    def get_last_subscription(cls, cache: dict):
         key = "last_subscription"
         TapirCacheManager.register_key_in_category(
             cache=cache, key=key, category="subscriptions"
@@ -268,7 +268,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_product_types_in_standard_order(cls, cache: Dict):
+    def get_product_types_in_standard_order(cls, cache: dict):
         return get_from_cache_or_compute(
             cache,
             "product_types_in_standard_order",
@@ -276,7 +276,7 @@ class TapirCache:
         )
 
     @classmethod
-    def get_pickup_location_by_id(cls, cache: Dict, pickup_location_id):
+    def get_pickup_location_by_id(cls, cache: dict, pickup_location_id):
         if pickup_location_id is None:
             return None
 
@@ -292,7 +292,7 @@ class TapirCache:
         return pickup_location_by_id_cache.get(pickup_location_id, None)
 
     @classmethod
-    def get_product_by_id(cls, cache: Dict, product_id):
+    def get_product_by_id(cls, cache: dict, product_id):
         if product_id is None:
             return None
 
@@ -308,7 +308,7 @@ class TapirCache:
         return product_by_id_cache.get(product_id, None)
 
     @classmethod
-    def get_opening_times_by_pickup_location_id(cls, cache: Dict, pickup_location_id):
+    def get_opening_times_by_pickup_location_id(cls, cache: dict, pickup_location_id):
         opening_times_by_pickup_location_id_cache = get_from_cache_or_compute(
             cache, "opening_times_by_pickup_location_id", lambda: {}
         )
@@ -485,7 +485,7 @@ class TapirCache:
         cls,
         product_type: ProductType,
         growing_period: GrowingPeriod,
-        cache: Dict,
+        cache: dict,
     ):
         notice_period_by_product_type = get_from_cache_or_compute(
             cache=cache,

@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import List, Dict
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -144,7 +144,7 @@ def cancel_coop_shares(
     )
 
 
-def create_mandate_ref(member: str | Member, cache: Dict | None = None):
+def create_mandate_ref(member: str | Member, cache: dict | None = None):
     """
     Generates and persists a new mandate reference for a member.
 
@@ -167,7 +167,7 @@ le_sum = 0
 
 def get_or_create_mandate_ref(
     member: str | Member,
-    cache: Dict | None = None,
+    cache: dict | None = None,
 ) -> MandateReference:
     """
     Returns the existing mandate ref for a member of creates a new one if none exists.
@@ -251,7 +251,7 @@ def send_cancellation_confirmation_email(
     contract_end_date: datetime.date,
     subs_to_cancel: List[Subscription],
     revoke_coop_membership: bool = False,
-    cache: Dict = None,
+    cache: dict = None,
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
@@ -295,7 +295,7 @@ def send_cancellation_confirmation_email(
 
 
 def send_contract_change_confirmation(
-    member: Member, subs: List[Subscription], cache: Dict
+    member: Member, subs: List[Subscription], cache: dict
 ):
     if not len(subs):
         raise Exception(

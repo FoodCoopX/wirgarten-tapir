@@ -1,5 +1,3 @@
-from typing import Dict
-
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import PickupLocation, ProductType, PickupLocationCapability
@@ -8,7 +6,7 @@ from tapir.wirgarten.models import PickupLocation, ProductType, PickupLocationCa
 class SharesCapacityService:
     @classmethod
     def get_available_share_capacities_for_pickup_location_by_product_type(
-        cls, pickup_location: PickupLocation, cache: Dict = None
+        cls, pickup_location: PickupLocation, cache: dict = None
     ):
         def compute():
             capacities = {

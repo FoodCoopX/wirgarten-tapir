@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 
@@ -10,7 +9,7 @@ from tapir.wirgarten.utils import get_today
 
 
 def get_next_delivery_date(
-    reference_date: date = None, delivery_weekday: int = None, cache: Dict = None
+    reference_date: date = None, delivery_weekday: int = None, cache: dict = None
 ):
     """
     Calculates the next delivery date based on the reference date and the delivery weekday.

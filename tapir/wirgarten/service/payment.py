@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from datetime import date
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from nanoid import generate
@@ -40,7 +39,7 @@ def generate_mandate_ref(member_id: str):
     return f"""{prefix}{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix))}"""
 
 
-def get_next_payment_date(reference_date: date = None, cache: Dict = None):
+def get_next_payment_date(reference_date: date = None, cache: dict = None):
     """
     Get the next date on which payments are due.
 
@@ -62,7 +61,7 @@ def get_active_subscriptions_grouped_by_product_type(
     member: Member,
     reference_date: date = None,
     include_future_subscriptions: bool = False,
-    cache: Dict = None,
+    cache: dict = None,
 ) -> OrderedDict[str, list[Subscription]]:
     """
     Get all active subscriptions for a member grouped by product types.

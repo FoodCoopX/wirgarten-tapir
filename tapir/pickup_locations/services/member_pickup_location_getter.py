@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Set, List
+from typing import Set, List
 
 from django.db.models import QuerySet, OuterRef, Subquery
 
@@ -79,7 +79,7 @@ class MemberPickupLocationGetter:
         cls,
         pickup_location: PickupLocation,
         reference_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ) -> Set[str]:
         def build_if_cache_miss():
             members_at_pickup_location = set()
@@ -115,8 +115,8 @@ class MemberPickupLocationGetter:
 
     @classmethod
     def get_member_pickup_locations_objects_by_member_id(
-        cls, cache: Dict
-    ) -> Dict[str, List[MemberPickupLocation]]:
+        cls, cache: dict
+    ) -> dict[str, List[MemberPickupLocation]]:
         def build_if_cache_miss():
             member_pickup_locations = {}
             for member_pickup_location in MemberPickupLocation.objects.order_by(
@@ -135,7 +135,7 @@ class MemberPickupLocationGetter:
 
     @classmethod
     def get_member_pickup_location_id_from_cache(
-        cls, member_id: str, reference_date: datetime.date, cache: Dict
+        cls, member_id: str, reference_date: datetime.date, cache: dict
     ):
         temp = cls.get_member_pickup_locations_objects_by_member_id(cache)
         if member_id not in temp:

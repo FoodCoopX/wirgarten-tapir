@@ -1,7 +1,6 @@
 import datetime
 import re
 from collections.abc import Callable
-from typing import Dict
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
@@ -84,7 +83,7 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
     return meta_info.parameters[key]
 
 
-def get_parameter_value(key: str, cache: Dict | None = None):
+def get_parameter_value(key: str, cache: dict | None = None):
     parameters_by_key = get_from_cache_or_compute(
         cache,
         "parameters_by_key",

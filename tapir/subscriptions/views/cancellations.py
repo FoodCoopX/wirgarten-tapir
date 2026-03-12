@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -367,7 +365,7 @@ class CancelSubscriptionsView(APIView):
     def are_all_base_products_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
-        cache: Dict,
+        cache: dict,
     ):
         base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for subscribed_product in subscribed_products:
@@ -383,7 +381,7 @@ class CancelSubscriptionsView(APIView):
     def is_at_least_one_additional_product_not_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
-        cache: Dict,
+        cache: dict,
     ):
         base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for subscribed_product in subscribed_products:

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -28,7 +28,7 @@ def send_email(
     content: str,
     variables: dict = None,
     attachments: List[Attachment] = None,
-    cache: Dict = None,
+    cache: dict = None,
 ):
     """
     Send an email to a list of recipients. The email is sent as HTML using the email/email_base.html template.
@@ -86,13 +86,13 @@ def send_email(
 
 
 # all the vars stuff will be deprecated as soon as the mail module is going in production
-def get_default_vars(to_email, cache: Dict):
+def get_default_vars(to_email, cache: dict):
     variables = add_member_vars(to_email, cache=cache)
     variables.update(add_general_vars(cache=cache))
     return variables
 
 
-def add_general_vars(cache: Dict):
+def add_general_vars(cache: dict):
     today = get_today(cache=cache)
     return {
         "year_current": today.year,
@@ -108,7 +108,7 @@ def add_general_vars(cache: Dict):
     }
 
 
-def add_member_vars(to_email, cache: Dict):
+def add_member_vars(to_email, cache: dict):
     try:
         from tapir.wirgarten.models import Member
 

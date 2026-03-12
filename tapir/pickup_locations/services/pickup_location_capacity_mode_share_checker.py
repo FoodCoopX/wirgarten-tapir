@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -39,7 +38,7 @@ class PickupLocationCapacityModeShareChecker:
         order: TapirOrder,
         already_registered_member: Member | None,
         subscription_start: datetime.date,
-        cache: Dict,
+        cache: dict,
     ) -> bool:
         product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location=pickup_location, cache=cache
@@ -73,9 +72,9 @@ class PickupLocationCapacityModeShareChecker:
         member: Member | None,
         pickup_location: PickupLocation,
         subscription_start: datetime.date,
-        ordered_product_to_quantity_map: Dict[Product, int],
+        ordered_product_to_quantity_map: dict[Product, int],
         check_waiting_list_entries: bool,
-        cache: Dict,
+        cache: dict,
     ):
         capacity_used_by_the_order = (
             cls.calculate_capacity_used_by_the_ordered_products(
@@ -127,7 +126,7 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         product_type: ProductType,
         reference_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         member_ids_at_pickup_location = (
             MemberPickupLocationGetter.get_members_ids_at_pickup_location(
@@ -173,7 +172,7 @@ class PickupLocationCapacityModeShareChecker:
         member: Member | None,
         subscription_start: datetime.date,
         product_type: ProductType,
-        cache: Dict,
+        cache: dict,
     ):
         if member is None:
             return 0
@@ -194,10 +193,10 @@ class PickupLocationCapacityModeShareChecker:
 
     @staticmethod
     def calculate_capacity_used_by_the_ordered_products(
-        ordered_product_to_quantity_map: Dict[Product, int],
+        ordered_product_to_quantity_map: dict[Product, int],
         product_type: ProductType,
         reference_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         total = 0.0
         for ordered_product, quantity in ordered_product_to_quantity_map.items():
@@ -215,7 +214,7 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         product_type: ProductType,
         reference_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         return PickupLocationHighestUsageAfterDateService.get_highest_usage_after_date_generic(
             pickup_location=pickup_location,
@@ -237,7 +236,7 @@ class PickupLocationCapacityModeShareChecker:
         product_type: ProductType,
         pickup_location: PickupLocation,
         reference_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location=pickup_location, cache=cache

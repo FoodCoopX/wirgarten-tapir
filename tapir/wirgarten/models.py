@@ -2,7 +2,6 @@ import datetime
 import uuid
 from decimal import Decimal
 from functools import partial
-from typing import Dict
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -707,7 +706,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["member"]),
         ]
 
-    def total_price(self, reference_date=None, cache: Dict = None) -> Decimal:
+    def total_price(self, reference_date=None, cache: dict = None) -> Decimal:
         if self.price_override is not None:
             return self.price_override
 
@@ -743,7 +742,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
         return self._total_price_without_soli
 
-    def get_used_capacity(self, cache: Dict):
+    def get_used_capacity(self, cache: dict):
         today = get_today(cache=cache)
         if not hasattr(self, "_used_capacity"):
             from tapir.wirgarten.service.products import get_product_price

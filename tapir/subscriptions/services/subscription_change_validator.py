@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
@@ -31,7 +30,7 @@ class SubscriptionChangeValidator:
         form: Form,
         field_prefix: str,
         product_type_id: str,
-        cache: Dict,
+        cache: dict,
     ):
         if not cls.should_validate_cannot_reduce_size(
             logged_in_user_is_admin=logged_in_user_is_admin,
@@ -75,7 +74,7 @@ class SubscriptionChangeValidator:
         cls,
         logged_in_user_is_admin: bool,
         subscription_start_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         if logged_in_user_is_admin:
             return False
@@ -98,7 +97,7 @@ class SubscriptionChangeValidator:
         form: Form,
         return_capacity_in_euros: bool,
         field_prefix: str,
-        cache: Dict = None,
+        cache: dict = None,
     ):
         total = 0.0
         for key, quantity in form.cleaned_data.items():
@@ -121,7 +120,7 @@ class SubscriptionChangeValidator:
         product_type_id: str,
         member_id: str,
         subscription_start_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         current_subscriptions = get_active_subscriptions(
             subscription_start_date, cache=cache
@@ -141,7 +140,7 @@ class SubscriptionChangeValidator:
         product_type_id: str,
         member_id: str,
         subscription_start_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
             product_type=TapirCache.get_product_type_by_id(
@@ -185,7 +184,7 @@ class SubscriptionChangeValidator:
         field_prefix: str,
         subscription_start_date: datetime.date,
         member: Member,
-        cache: Dict,
+        cache: dict,
     ):
         ordered_products_to_quantity_map = {}
         for key, quantity in form.cleaned_data.items():
@@ -215,7 +214,7 @@ class SubscriptionChangeValidator:
         form: Form,
         field_prefix: str,
         product_type: ProductType,
-        cache: Dict,
+        cache: dict,
     ):
         if not product_type.must_be_subscribed_to:
             return
@@ -260,7 +259,7 @@ class SubscriptionChangeValidator:
         field_prefix: str,
         member_id: str,
         subscription_start_date: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         # This avoids ending a contract and creating a new one on the same growing period if there are no changes.
         subscribed_product_ids = set(

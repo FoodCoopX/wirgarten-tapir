@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import List, Dict
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ObjectDoesNotExist
@@ -28,7 +28,7 @@ from tapir.wirgarten.validators import (
 )
 
 
-def get_total_price_for_subs(subs: List[Payable], cache: Dict) -> float:
+def get_total_price_for_subs(subs: List[Payable], cache: dict) -> float:
     """
     Returns the total amount of one payment for the given list of subs.
 
@@ -42,7 +42,7 @@ def get_total_price_for_subs(subs: List[Payable], cache: Dict) -> float:
 
 
 def get_active_product_types(
-    reference_date: datetime.date = None, cache: Dict = None
+    reference_date: datetime.date = None, cache: dict = None
 ) -> iter:
     """
     Returns the product types which are active for the given reference date.
@@ -71,7 +71,7 @@ def get_active_product_types(
 
 
 def get_available_product_types(
-    reference_date: datetime.date = None, cache: Dict = None
+    reference_date: datetime.date = None, cache: dict = None
 ) -> list:
     if reference_date is None:
         reference_date = get_today(cache=cache)
@@ -85,7 +85,7 @@ def get_available_product_types(
 
 
 def get_next_growing_period(
-    reference_date: datetime.date = None, cache: Dict = None
+    reference_date: datetime.date = None, cache: dict = None
 ) -> GrowingPeriod | None:
     if reference_date is None:
         reference_date = get_today(cache=cache)
@@ -187,7 +187,7 @@ def delete_growing_period_with_capacities(growing_period_id: str) -> bool:
 
 
 def get_active_product_capacities(
-    reference_date: datetime.date = None, cache: Dict = None
+    reference_date: datetime.date = None, cache: dict = None
 ):
     """
     Gets the active product capacities for the given reference date.
@@ -214,7 +214,7 @@ def get_active_product_capacities(
 
 
 def get_active_and_future_subscriptions(
-    reference_date: datetime.date = None, cache: Dict | None = None
+    reference_date: datetime.date = None, cache: dict | None = None
 ):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
@@ -244,7 +244,7 @@ def get_active_and_future_subscriptions(
 
 
 def get_active_subscriptions(
-    reference_date: datetime.date = None, cache: Dict | None = None
+    reference_date: datetime.date = None, cache: dict | None = None
 ):
     """
     Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
@@ -302,7 +302,7 @@ def create_product(
 def get_product_price(
     product: str | Product,
     reference_date: datetime.date = None,
-    cache: Dict | None = None,
+    cache: dict | None = None,
 ) -> ProductPrice | None:
     """
     Returns the currently active product price.

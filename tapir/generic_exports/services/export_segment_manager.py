@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass
-from typing import Callable, List, Any, Dict
+from typing import Callable, List, Any
 
 from django.db.models import QuerySet
 
@@ -10,7 +10,7 @@ class ExportSegmentColumn:
     id: str
     display_name: str
     description: str
-    get_value: Callable[[Any, datetime.datetime, Dict], str]
+    get_value: Callable[[Any, datetime.datetime, dict], str]
 
 
 @dataclass
@@ -23,7 +23,7 @@ class ExportSegment:
 
 
 class ExportSegmentManager:
-    registered_export_segments: Dict[str, ExportSegment] = {}
+    registered_export_segments: dict[str, ExportSegment] = {}
 
     @classmethod
     def register_segment(cls, segment: ExportSegment):

@@ -1,7 +1,6 @@
 import datetime
 import logging
 from decimal import Decimal
-from typing import Dict
 from zoneinfo import ZoneInfo
 
 from django.core.exceptions import PermissionDenied
@@ -56,19 +55,19 @@ def check_permission_or_self(pk, request):
         raise PermissionDenied
 
 
-def get_today(cache: Dict | None = None) -> datetime.date:
+def get_today(cache: dict | None = None) -> datetime.date:
     if is_debug_instance():
         return get_debug_now(cache).date()
     return timezone.localdate()
 
 
-def get_now(cache: Dict | None = None) -> datetime.datetime:
+def get_now(cache: dict | None = None) -> datetime.datetime:
     if is_debug_instance():
         return get_debug_now(cache)
     return timezone.now()
 
 
-def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
+def get_debug_now(cache: dict | None = None) -> datetime.datetime:
     preset = get_parameter_value(ParameterKeys.TESTS_OVERRIDE_DATE_PRESET, cache=cache)
 
     if preset == TEST_DATE_OVERRIDE_DISABLED:

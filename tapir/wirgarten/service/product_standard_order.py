@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django.db.models import Case, When, Value, IntegerField
 
 from tapir.subscriptions.services.base_product_type_service import (
@@ -8,7 +6,7 @@ from tapir.subscriptions.services.base_product_type_service import (
 
 
 def product_type_order_by(
-    id_field: str = "id", name_field: str = "name", cache: Dict | None = None
+    id_field: str = "id", name_field: str = "name", cache: dict | None = None
 ):
     """
     The result of the function is meant to be passed to the order_by clause of QuerySets referencing

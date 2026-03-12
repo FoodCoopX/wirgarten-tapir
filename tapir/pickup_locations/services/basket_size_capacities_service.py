@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
@@ -22,7 +20,7 @@ class BasketSizeCapacitiesService:
 
     @classmethod
     def get_basket_sizes(
-        cls, basket_sizes_as_string: str | None = None, cache: Dict = None
+        cls, basket_sizes_as_string: str | None = None, cache: dict = None
     ):
         if basket_sizes_as_string is None:
             basket_sizes_as_string = get_parameter_value(
@@ -45,7 +43,7 @@ class BasketSizeCapacitiesService:
 
     @classmethod
     def get_basket_size_capacities_for_pickup_location(
-        cls, pickup_location: PickupLocation, cache: Dict
+        cls, pickup_location: PickupLocation, cache: dict
     ):
         def compute():
             capacities = {

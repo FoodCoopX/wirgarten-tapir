@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from datetime import date
 from math import floor, ceil
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -863,7 +862,7 @@ class AdditionalProductForm(forms.Form):
             .pickup_location
         )
 
-    def validate_pickup_location(self, cache: Dict):
+    def validate_pickup_location(self, cache: dict):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         has_shares_selected = self.has_shares_selected()
         if new_pickup_location or not has_shares_selected or not self.member_id:
@@ -881,7 +880,7 @@ class AdditionalProductForm(forms.Form):
             raise ValidationError(_("Bitte wähle einen Abholort aus!"))
 
     def validate_has_base_product_subscription_at_same_growing_period(
-        self, cache: Dict
+        self, cache: dict
     ):
         if not self.member_id or not self.has_shares_selected():
             return
@@ -965,7 +964,7 @@ def cancel_or_delete_subscriptions(
     start_date: date,
     product_type: ProductType,
     actor: TapirUser | None,
-    cache: Dict,
+    cache: dict,
 ) -> date | None:
     """
     Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.

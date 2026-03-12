@@ -1,6 +1,5 @@
 import datetime
 from decimal import Decimal
-from typing import Dict
 
 from tapir.accounts.models import TapirUser
 from tapir.coop.models import CoopSharesCancelledLogEntry
@@ -32,7 +31,7 @@ class MembershipCancellationManager:
         cls,
         member: Member,
         reference_date: datetime.date | None = None,
-        cache: Dict = None,
+        cache: dict = None,
     ):
         if reference_date is None:
             reference_date = get_today(cache)

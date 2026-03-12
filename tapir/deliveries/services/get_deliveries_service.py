@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Set
+from typing import Set
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
@@ -32,7 +32,7 @@ class GetDeliveriesService:
         member: Member,
         date_from: datetime.date,
         date_to: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         deliveries = []
 
@@ -124,7 +124,7 @@ class GetDeliveriesService:
 
     @classmethod
     def get_relevant_subscriptions(
-        cls, member: Member, reference_date: datetime.date, cache: Dict
+        cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> Set[Subscription]:
         accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
             date=reference_date, cache=cache

@@ -1,6 +1,5 @@
 import datetime
 from decimal import Decimal
-from typing import Dict
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.utils.shortcuts import get_monday
@@ -22,7 +21,7 @@ class DeliveryPriceCalculator:
         member: Member,
         reference_date: datetime.date,
         only_subscriptions_affected_by_jokers: bool,
-        cache: Dict,
+        cache: dict,
     ):
         subscriptions = cls.get_subscriptions_that_get_delivered_in_week(
             member, reference_date, cache=cache
@@ -43,7 +42,7 @@ class DeliveryPriceCalculator:
 
     @classmethod
     def get_subscriptions_that_get_delivered_in_week(
-        cls, member: Member, reference_date: datetime.date, cache: Dict
+        cls, member: Member, reference_date: datetime.date, cache: dict
     ):
         subscriptions = get_active_subscriptions(reference_date).filter(member=member)
         accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
@@ -75,7 +74,7 @@ class DeliveryPriceCalculator:
 
     @classmethod
     def get_number_of_deliveries_in_growing_period(
-        cls, growing_period: GrowingPeriod, delivery_cycle, cache: Dict
+        cls, growing_period: GrowingPeriod, delivery_cycle, cache: dict
     ) -> int:
         if delivery_cycle == NO_DELIVERY[0]:
             return 0

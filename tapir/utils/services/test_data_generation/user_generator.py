@@ -4,7 +4,7 @@ import os
 import pathlib
 import random
 from math import floor
-from typing import Dict, List, Set
+from typing import List, Set
 
 from faker import Faker
 from tapir_mail.service.shortcuts import make_timezone_aware
@@ -48,7 +48,7 @@ class UserGenerator:
     future_growing_period = None
 
     @classmethod
-    def get_past_growing_period(cls, cache: Dict):
+    def get_past_growing_period(cls, cache: dict):
         return get_from_cache_or_compute(
             cache,
             "past_growing_period",
@@ -232,7 +232,7 @@ class UserGenerator:
         cls,
         member: Member,
         create_subs_for_additional_products: bool,
-        cache: Dict,
+        cache: dict,
         products_from_base_type: List[Product],
         additional_products: List[Product],
     ):
@@ -364,7 +364,7 @@ class UserGenerator:
 
     @classmethod
     def create_subscription_to_required_products(
-        cls, member: Member, products: List[Product], cache: Dict
+        cls, member: Member, products: List[Product], cache: dict
     ):
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=get_today(cache=cache), cache=cache
@@ -390,7 +390,7 @@ class UserGenerator:
         )
 
     @classmethod
-    def create_coop_shares_for_user(cls, member: Member, min_shares: int, cache: Dict):
+    def create_coop_shares_for_user(cls, member: Member, min_shares: int, cache: dict):
         shares = min_shares
         if random.random() < 0.5:
             shares += random.randint(0, 10)

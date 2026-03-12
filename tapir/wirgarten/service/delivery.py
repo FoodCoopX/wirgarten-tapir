@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from typing_extensions import deprecated
@@ -27,7 +26,7 @@ from tapir.wirgarten.utils import get_today
 
 
 def get_active_pickup_location_capabilities(
-    reference_date: date = None, cache: Dict = None
+    reference_date: date = None, cache: dict = None
 ):
     """
     Get all pickup location capabilities for active product types for the next month.
@@ -45,7 +44,7 @@ def get_active_pickup_location_capabilities(
 @deprecated(
     "If possible, use tapir.deliveries.services.get_deliveries_service.GetDeliveriesService.get_deliveries instead"
 )
-def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = None):
+def generate_future_deliveries(member: Member, limit: int = None, cache: dict = None):
     """
     Generates a list of future deliveries for a given member.
     """
@@ -132,7 +131,7 @@ def calculate_pickup_location_change_date(
     reference_date=None,
     next_delivery_date=None,
     change_until_weekday=None,
-    cache: Dict = None,
+    cache: dict = None,
 ):
     """
     Calculates the date at which a member pickup location changes becomes effective.

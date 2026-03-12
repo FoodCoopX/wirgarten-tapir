@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 import weasyprint
 from django.template import engines
@@ -87,7 +86,7 @@ class PdfExportBuilder:
         segment: ExportSegment,
         reference_datetime: datetime.datetime,
         used_column_ids,
-        cache: Dict,
+        cache: dict,
     ):
         return {
             column.id: column.get_value(db_object, reference_datetime, cache)

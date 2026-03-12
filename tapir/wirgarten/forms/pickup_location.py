@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import List, Dict
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -40,7 +40,7 @@ from tapir.wirgarten.utils import get_today
 
 
 def get_pickup_locations_map_data(
-    pickup_locations, location_capabilities, cache: Dict = None
+    pickup_locations, location_capabilities, cache: dict = None
 ):
     return json.dumps(
         {
@@ -53,7 +53,7 @@ def get_pickup_locations_map_data(
 
 
 def build_capacity_dictionary_for_picking_mode_share(
-    capa, next_delivery_date: datetime.date, next_month: datetime.date, cache: Dict
+    capa, next_delivery_date: datetime.date, next_month: datetime.date, cache: dict
 ):
     max_capa = capa["max_capacity"]
     try:
@@ -101,7 +101,7 @@ def build_capacity_dictionary_for_picking_mode_share(
 
 
 def pickup_location_to_dict(
-    location_capabilities, pickup_location: PickupLocation, cache: Dict = None
+    location_capabilities, pickup_location: PickupLocation, cache: dict = None
 ):
     next_delivery_date = get_next_delivery_date(cache=cache)
     next_month = next_delivery_date + relativedelta(day=1, months=1)
@@ -156,7 +156,7 @@ class PickupLocationWidget(forms.Select):
         location_capabilities,
         selected_product_types,
         initial,
-        cache: Dict,
+        cache: dict,
         *args,
         **kwargs,
     ):

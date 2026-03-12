@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -19,7 +18,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 class DeliveryCycleService:
     @classmethod
     def is_cycle_delivered_in_week(
-        cls, cycle: str, date: datetime.date, cache: Dict
+        cls, cycle: str, date: datetime.date, cache: dict
     ) -> bool:
         if cycle == NO_DELIVERY[0]:
             return False
@@ -40,7 +39,7 @@ class DeliveryCycleService:
 
     @classmethod
     def is_week_delivered_in_four_week_rhythm(
-        cls, date: datetime.date, cache: Dict
+        cls, date: datetime.date, cache: dict
     ) -> bool:
         start_point = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
@@ -52,7 +51,7 @@ class DeliveryCycleService:
         return ((start_point - date).days / 7) % 4 == 0
 
     @classmethod
-    def get_cycles_delivered_in_week(cls, date: datetime.date, cache: Dict):
+    def get_cycles_delivered_in_week(cls, date: datetime.date, cache: dict):
         return [
             cycle[0]
             for cycle in DeliveryCycle

@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -116,7 +115,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         version: EmailConfigurationVersion,
         recipient: Member,
         trigger_data: OnboardingTriggerData,
-        cache: Dict,
+        cache: dict,
     ):
         first_subscription = recipient.subscription_set.order_by("start_date").first()
         if not first_subscription:
