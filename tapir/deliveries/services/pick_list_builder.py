@@ -172,7 +172,10 @@ class PickListBuilder:
 
         for subscription in subscriptions:
             pickup_location = cls.get_member_pickup_location_for_pick_list(
-                member=subscription.member, reference_date=delivery_date, cache=cache
+                member=subscription.member,
+                reference_date=delivery_date,
+                cache=cache,
+                product_type_is_affected_by_jokers=product_type.is_affected_by_jokers,
             )
             if pickup_location is None:
                 continue
@@ -188,10 +191,17 @@ class PickListBuilder:
 
     @classmethod
     def get_member_pickup_location_for_pick_list(
-        cls, member: Member, reference_date: datetime.date, cache: dict
+        cls,
+        member: Member,
+        reference_date: datetime.date,
+        cache: dict,
+        product_type_is_affected_by_jokers: bool,
     ) -> PickupLocation | None:
-        if DeliveryDonationManager.does_member_have_a_donation_in_week(
-            member=member, reference_date=reference_date, cache=cache
+        if (
+            DeliveryDonationManager.does_member_have_a_donation_in_week(
+                member=member, reference_date=reference_date, cache=cache
+            )
+            and product_type_is_affected_by_jokers
         ):
             pickup_location_id = get_parameter_value(
                 key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION,

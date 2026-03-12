@@ -22,6 +22,9 @@ class DeliveryDonation(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     date = models.DateField()
 
+    def __str__(self):
+        return f"{self.member} {self.date}"
+
 
 class DeliveryDayAdjustment(TapirModel):
     class Meta:

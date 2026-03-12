@@ -212,7 +212,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                       }
                       required={false}
                       checked={isAffectedByJokers}
-                      label={"Nimmt am Joker-Verfahren teil"}
+                      label={"Nimmt am Joker- und Spende-Verfahren teil"}
                     />
                   </Form.Group>
                 </Row>
