@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import "dayjs/locale/de";
-import { CoopApi } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import { ToastData } from "../../types/ToastData.ts";
-import { Form, Modal, Spinner } from "react-bootstrap";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
+import {CoopApi} from "../../api-client";
+import {useApi} from "../../hooks/useApi.ts";
+import {ToastData} from "../../types/ToastData.ts";
+import {Form, Modal, Spinner} from "react-bootstrap";
+import {handleRequestError} from "../../utils/handleRequestError.ts";
 import TapirButton from "../../components/TapirButton.tsx";
-import { isPersonalDataValidShort } from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
-import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
-import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
-import { addToast } from "../../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
+import {isPersonalDataValidShort} from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
+import {isPhoneNumberValid} from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
+import {isEmailValid} from "../../bestell_wizard/utils/isEmailValid.ts";
+import {addToast} from "../../utils/addToast.ts";
+import {v4 as uuidv4} from "uuid";
 
 interface MemberPersonalDataModalProps {
   memberId: string;
@@ -145,7 +145,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Bankverbindung ändern</h5>
+        <h5 className={"mb-0"}>Persönliche Daten ändern</h5>
       </Modal.Header>
       <Modal.Body>
         {loading ? (
