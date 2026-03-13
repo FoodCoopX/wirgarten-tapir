@@ -42,6 +42,10 @@ models/BreadLabel.ts
 models/BreadLabelRequest.ts
 models/BreadList.ts
 models/BreadListRequest.ts
+models/BreadSpecificsPerDeliveryDay.ts
+models/BreadSpecificsPerDeliveryDayBulkUpdateItemRequest.ts
+models/BreadSpecificsPerDeliveryDayBulkUpdateRequest.ts
+models/BreadSpecificsPerDeliveryDayRequest.ts
 models/BreadsPerPickupLocationPerWeek.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
@@ -139,6 +143,7 @@ models/PatchedBreadContentRequest.ts
 models/PatchedBreadDeliveryRequest.ts
 models/PatchedBreadLabelRequest.ts
 models/PatchedBreadListRequest.ts
+models/PatchedBreadSpecificsPerDeliveryDayRequest.ts
 models/PatchedBundledEmailConfigurationRequest.ts
 models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts

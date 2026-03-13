@@ -1,11 +1,13 @@
-from typing import Dict
+from datetime import date, timedelta
+from typing import Dict, Optional
 
 from dateutil.relativedelta import relativedelta
-from django.db.models import F, Sum
+from django.db.models import F, Q, Sum
 from django.views import generic
 from tapir_mail.models import MailCategory
 
-from tapir.accounts.models import EmailChangeRequest
+from tapir.accounts.models import EmailChangeRequest, UpdateTapirUserLogEntry
+from tapir.bakery.models import BreadDelivery
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
@@ -60,12 +62,18 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         today = kwargs.get("start_date", get_today(cache=cache))
         next_month = today + relativedelta(months=1, day=1)
 
+        valid_from = get_pseudonym_valid_from_delivery(self.object)
+        if valid_from:
+            _, iso_week, _ = valid_from.isocalendar()
+            context["pseudonym_valid_from_week"] = iso_week
+            context["pseudonym_valid_from_date"] = valid_from
+
         context["object"] = self.object
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object, today, include_future_subscriptions=True, cache=cache
         )
         context["bakery_enabled"] = get_parameter_value(
-            ParameterKeys.BAKERY_ENABLED, cache=cache
+            ParameterKeys.BAKERY_A_ENABLED, cache=cache
         )
         context["bakery_pseudonym_enabled"] = get_parameter_value(
             ParameterKeys.BAKERY_PSEUDONYM_ENABLED, cache={}
@@ -380,3 +388,72 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             next_period_end_date=format_date(next_growing_period.end_date),
             **kwargs,
         )
+
+
+def _week_to_monday(year: int, week: int) -> date:
+    """Convert ISO year + week to the Monday of that week."""
+    return date.fromisocalendar(year, week, 1)
+
+
+def get_pseudonym_valid_from_delivery(user) -> Optional[date]:
+    """
+    Determine from which delivery date a member's pseudonym becomes valid.
+
+    1. Find the latest pseudonym change date from the log.
+    2. Find the next upcoming deliveries for the member.
+    3. If the change happened before (next_delivery - DAYS_BEFORE parameter),
+       it's valid from that delivery.
+    4. Otherwise, it's valid from the following delivery.
+
+    Returns the Monday of the valid delivery week, or None if no pseudonym
+    change was logged or no upcoming deliveries exist.
+    """
+    pseudonym_changed_at = (
+        UpdateTapirUserLogEntry.objects.filter(
+            user=user,
+            new_values__has_key="pseudonym",
+        )
+        .order_by("-created_date")
+        .values_list("created_date", flat=True)
+        .first()
+    )
+
+    if pseudonym_changed_at is None:
+        return None
+
+    change_date = pseudonym_changed_at.date()
+    change_year, change_week, _ = change_date.isocalendar()
+
+    days_before = get_parameter_value(
+        ParameterKeys.BAKERY_DAYS_BEFORE_DELIVERY_DAY_TO_CHANGE_PSEUDONYM
+    )
+
+    upcoming_deliveries = list(
+        BreadDelivery.objects.filter(
+            subscription__member=user,
+        )
+        .filter(
+            # Same year, later week — or later year
+            Q(year=change_year, delivery_week__gte=change_week)
+            | Q(year__gt=change_year)
+        )
+        .order_by("year", "delivery_week")
+        .values_list("year", "delivery_week")
+        .distinct()[:2]
+    )
+
+    if not upcoming_deliveries:
+        return None
+
+    next_year, next_week = upcoming_deliveries[0]
+    next_delivery_date = _week_to_monday(next_year, next_week)
+    cutoff = next_delivery_date - timedelta(days=days_before)
+
+    if change_date <= cutoff:
+        return next_delivery_date
+
+    if len(upcoming_deliveries) > 1:
+        following_year, following_week = upcoming_deliveries[1]
+        return _week_to_monday(following_year, following_week)
+
+    return next_delivery_date

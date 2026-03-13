@@ -37,7 +37,7 @@ class ChooseBreadsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["member_id"] = self.request.GET.get("member_id", self.request.user.pk)
-        context["bakery_enabled"] = get_parameter_value(ParameterKeys.BAKERY_ENABLED)
+        context["bakery_enabled"] = get_parameter_value(ParameterKeys.BAKERY_A_ENABLED)
         context["choose_station_per_bread"] = get_parameter_value(
             ParameterKeys.BAKERY_PICKUP_LOCATIONS_CAN_BE_CHOSEN_PER_SHARE
         )

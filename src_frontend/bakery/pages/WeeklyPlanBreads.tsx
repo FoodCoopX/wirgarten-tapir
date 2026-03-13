@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
-import { AllocationModal } from '../components/modals/AllocationModal';
+import { YearWeekSelectorCard } from '../components/cards';
+import { AllocationModal, DailySettingsModal } from '../components/modals';
 import { InfoCircle } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../api-client';
 import { useApi } from '../../hooks/useApi';
@@ -147,8 +147,8 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
     await bakeryApi.bakeryAvailableBreadsForDeliveryCreate({
       toggleBreadRequestRequest: {
         year,
-        week,
-        day: newDays[dayIndex].day,
+        deliveryWeek: week,
+        deliveryDay: newDays[dayIndex].day,
         breadId,
         isActive: newState,
       },
@@ -300,15 +300,24 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
                     onClick={() => handleOpenModal(dayConfig.day, dayConfig.label)}
                     disabled={loading}
                   >
-                    Abholorten Mengen zuweisen
+                    Abholorten max. Mengen zuweisen
                   </button>
+                   
+                  <DailySettingsModal
+                    year={year}
+                    week={week}
+                    day={dayConfig.day}
+                    dayLabel={dayConfig.label}
+                    activeBreads={allBreads.filter(bread => dayConfig.breads[bread.id!] === true)}
+                    csrfToken={csrfToken}
+                  />
                 </div>
               </div>
             </div>
           ))
         )}
       </div>
-
+      
       {selectedDay && (
         <AllocationModal
           isOpen={isModalOpen}

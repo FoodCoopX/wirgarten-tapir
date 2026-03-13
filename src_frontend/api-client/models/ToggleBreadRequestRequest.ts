@@ -30,13 +30,13 @@ export interface ToggleBreadRequestRequest {
      * @type {number}
      * @memberof ToggleBreadRequestRequest
      */
-    week: number;
+    deliveryWeek: number;
     /**
      * 
      * @type {number}
      * @memberof ToggleBreadRequestRequest
      */
-    day: number;
+    deliveryDay: number;
     /**
      * 
      * @type {string}
@@ -56,8 +56,8 @@ export interface ToggleBreadRequestRequest {
  */
 export function instanceOfToggleBreadRequestRequest(value: object): value is ToggleBreadRequestRequest {
     if (!('year' in value) || value['year'] === undefined) return false;
-    if (!('week' in value) || value['week'] === undefined) return false;
-    if (!('day' in value) || value['day'] === undefined) return false;
+    if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
+    if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     if (!('breadId' in value) || value['breadId'] === undefined) return false;
     if (!('isActive' in value) || value['isActive'] === undefined) return false;
     return true;
@@ -74,8 +74,8 @@ export function ToggleBreadRequestRequestFromJSONTyped(json: any, ignoreDiscrimi
     return {
         
         'year': json['year'],
-        'week': json['week'],
-        'day': json['day'],
+        'deliveryWeek': json['delivery_week'],
+        'deliveryDay': json['delivery_day'],
         'breadId': json['bread_id'],
         'isActive': json['is_active'],
     };
@@ -93,8 +93,8 @@ export function ToggleBreadRequestRequestFromJSONTyped(json: any, ignoreDiscrimi
     return {
         
         'year': value['year'],
-        'week': value['week'],
-        'day': value['day'],
+        'delivery_week': value['deliveryWeek'],
+        'delivery_day': value['deliveryDay'],
         'bread_id': value['breadId'],
         'is_active': value['isActive'],
     };

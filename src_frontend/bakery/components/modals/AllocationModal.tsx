@@ -87,7 +87,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       if (locationIds.length > 0) {
         capacities = await bakeryApi.bakeryBreadCapacityPickupLocationList({
           year,
-          week,
+          deliveryWeek: week,
           pickupLocationIds: locationIds,
         });
       }
@@ -162,7 +162,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
         await bakeryApi.bakeryBreadCapacityPickupLocationBulkUpdateCreate({
           breadCapacityBulkUpdateRequest: {
             year,
-            week,
+            deliveryWeek: week,
             updates,
           },
         });
@@ -289,7 +289,6 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                           placeholder="-"
                                           style={{
                                             minWidth: '60px',
-                                            fontFamily: 'monospace',
                                             fontSize: '14px',
                                           }}
                                         />
@@ -297,7 +296,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                     ))}
                                     <td
                                       className="text-center align-middle fw-bold"
-                                      style={{ backgroundColor: '#F5E6D3', fontFamily: 'monospace', fontSize: '14px' }}
+                                      style={{ backgroundColor: '#F5E6D3', fontSize: '14px' }}
                                     >
                                       {rowSum === Infinity ? '∞' : rowSum === 0 ? '-' : rowSum}
                                     </td>
@@ -320,7 +319,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                     <td
                                       key={bread.id}
                                       className="text-center fw-bold align-middle"
-                                      style={{ fontFamily: 'monospace', fontSize: '14px', backgroundColor: '#EDE0D0' }}
+                                      style={{  fontSize: '14px', backgroundColor: '#EDE0D0' }}
                                     >
                                       {colSum === Infinity ? '∞' : colSum === 0 ? '-' : colSum}
                                     </td>
@@ -328,7 +327,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                 })}
                                 <td
                                   className="text-center fw-bold align-middle"
-                                  style={{ backgroundColor: '#D4A574', color: 'white', fontFamily: 'monospace', fontSize: '14px' }}
+                                  style={{ backgroundColor: '#D4A574', color: 'white',  fontSize: '14px' }}
                                 >
                                   {(() => {
                                     const totalSum = pickupLocations.reduce((total, location) => {

@@ -29,6 +29,9 @@ import type {
   BreadLabelRequest,
   BreadList,
   BreadListRequest,
+  BreadSpecificsPerDeliveryDay,
+  BreadSpecificsPerDeliveryDayBulkUpdateRequest,
+  BreadSpecificsPerDeliveryDayRequest,
   BreadsPerPickupLocationPerWeek,
   DeliveryDaysResponse,
   Ingredient,
@@ -38,6 +41,7 @@ import type {
   PatchedBreadDeliveryRequest,
   PatchedBreadLabelRequest,
   PatchedBreadListRequest,
+  PatchedBreadSpecificsPerDeliveryDayRequest,
   PatchedIngredientRequest,
   PatchedPreferredBreadRequest,
   PatchedPreferredLabelRequest,
@@ -90,6 +94,12 @@ import {
     BreadListToJSON,
     BreadListRequestFromJSON,
     BreadListRequestToJSON,
+    BreadSpecificsPerDeliveryDayFromJSON,
+    BreadSpecificsPerDeliveryDayToJSON,
+    BreadSpecificsPerDeliveryDayBulkUpdateRequestFromJSON,
+    BreadSpecificsPerDeliveryDayBulkUpdateRequestToJSON,
+    BreadSpecificsPerDeliveryDayRequestFromJSON,
+    BreadSpecificsPerDeliveryDayRequestToJSON,
     BreadsPerPickupLocationPerWeekFromJSON,
     BreadsPerPickupLocationPerWeekToJSON,
     DeliveryDaysResponseFromJSON,
@@ -108,6 +118,8 @@ import {
     PatchedBreadLabelRequestToJSON,
     PatchedBreadListRequestFromJSON,
     PatchedBreadListRequestToJSON,
+    PatchedBreadSpecificsPerDeliveryDayRequestFromJSON,
+    PatchedBreadSpecificsPerDeliveryDayRequestToJSON,
     PatchedIngredientRequestFromJSON,
     PatchedIngredientRequestToJSON,
     PatchedPreferredBreadRequestFromJSON,
@@ -204,8 +216,8 @@ export interface BakeryBreadCapacityPickupLocationDestroyRequest {
 }
 
 export interface BakeryBreadCapacityPickupLocationListRequest {
+    deliveryWeek?: number;
     pickupLocationIds?: Array<string>;
-    week?: number;
     year?: number;
 }
 
@@ -249,6 +261,39 @@ export interface BakeryBreadDeliveriesRetrieveRequest {
 export interface BakeryBreadDeliveriesUpdateRequest {
     id: string;
     breadDeliveryRequest: BreadDeliveryRequest;
+}
+
+export interface BakeryBreadSpecificsBulkUpdateCreateRequest {
+    breadSpecificsPerDeliveryDayBulkUpdateRequest: BreadSpecificsPerDeliveryDayBulkUpdateRequest;
+}
+
+export interface BakeryBreadSpecificsCreateRequest {
+    breadSpecificsPerDeliveryDayRequest: BreadSpecificsPerDeliveryDayRequest;
+}
+
+export interface BakeryBreadSpecificsDestroyRequest {
+    id: string;
+}
+
+export interface BakeryBreadSpecificsListRequest {
+    breadId?: string;
+    deliveryDay?: number;
+    deliveryWeek?: number;
+    year?: number;
+}
+
+export interface BakeryBreadSpecificsPartialUpdateRequest {
+    id: string;
+    patchedBreadSpecificsPerDeliveryDayRequest?: PatchedBreadSpecificsPerDeliveryDayRequest;
+}
+
+export interface BakeryBreadSpecificsRetrieveRequest {
+    id: string;
+}
+
+export interface BakeryBreadSpecificsUpdateRequest {
+    id: string;
+    breadSpecificsPerDeliveryDayRequest: BreadSpecificsPerDeliveryDayRequest;
 }
 
 export interface BakeryBreadcontentsCreateRequest {
@@ -300,10 +345,10 @@ export interface BakeryBreadsListDestroyRequest {
 }
 
 export interface BakeryBreadsListListRequest {
+    deliveryWeek?: number;
     isActive?: boolean;
     labelId?: string;
     pickupLocationId?: string;
-    week?: number;
     year?: number;
 }
 
@@ -989,12 +1034,12 @@ export class BakeryApi extends runtime.BaseAPI {
     async bakeryBreadCapacityPickupLocationListRaw(requestParameters: BakeryBreadCapacityPickupLocationListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BreadCapacityPickupLocation>>> {
         const queryParameters: any = {};
 
-        if (requestParameters['pickupLocationIds'] != null) {
-            queryParameters['pickup_location_ids[]'] = requestParameters['pickupLocationIds'];
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
         }
 
-        if (requestParameters['week'] != null) {
-            queryParameters['week'] = requestParameters['week'];
+        if (requestParameters['pickupLocationIds'] != null) {
+            queryParameters['pickup_location_ids[]'] = requestParameters['pickupLocationIds'];
         }
 
         if (requestParameters['year'] != null) {
@@ -1399,6 +1444,314 @@ export class BakeryApi extends runtime.BaseAPI {
      */
     async bakeryBreadDeliveriesUpdate(requestParameters: BakeryBreadDeliveriesUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadDelivery> {
         const response = await this.bakeryBreadDeliveriesUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     * Bulk create/update/delete bread specifics per delivery day
+     */
+    async bakeryBreadSpecificsBulkUpdateCreateRaw(requestParameters: BakeryBreadSpecificsBulkUpdateCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['breadSpecificsPerDeliveryDayBulkUpdateRequest'] == null) {
+            throw new runtime.RequiredError(
+                'breadSpecificsPerDeliveryDayBulkUpdateRequest',
+                'Required parameter "breadSpecificsPerDeliveryDayBulkUpdateRequest" was null or undefined when calling bakeryBreadSpecificsBulkUpdateCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/bread-specifics/bulk-update/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: BreadSpecificsPerDeliveryDayBulkUpdateRequestToJSON(requestParameters['breadSpecificsPerDeliveryDayBulkUpdateRequest']),
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     * Bulk create/update/delete bread specifics per delivery day
+     */
+    async bakeryBreadSpecificsBulkUpdateCreate(requestParameters: BakeryBreadSpecificsBulkUpdateCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.bakeryBreadSpecificsBulkUpdateCreateRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsCreateRaw(requestParameters: BakeryBreadSpecificsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadSpecificsPerDeliveryDay>> {
+        if (requestParameters['breadSpecificsPerDeliveryDayRequest'] == null) {
+            throw new runtime.RequiredError(
+                'breadSpecificsPerDeliveryDayRequest',
+                'Required parameter "breadSpecificsPerDeliveryDayRequest" was null or undefined when calling bakeryBreadSpecificsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/bread-specifics/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: BreadSpecificsPerDeliveryDayRequestToJSON(requestParameters['breadSpecificsPerDeliveryDayRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadSpecificsPerDeliveryDayFromJSON(jsonValue));
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsCreate(requestParameters: BakeryBreadSpecificsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadSpecificsPerDeliveryDay> {
+        const response = await this.bakeryBreadSpecificsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsDestroyRaw(requestParameters: BakeryBreadSpecificsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryBreadSpecificsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/bread-specifics/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsDestroy(requestParameters: BakeryBreadSpecificsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.bakeryBreadSpecificsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsListRaw(requestParameters: BakeryBreadSpecificsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BreadSpecificsPerDeliveryDay>>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['breadId'] != null) {
+            queryParameters['bread_id'] = requestParameters['breadId'];
+        }
+
+        if (requestParameters['deliveryDay'] != null) {
+            queryParameters['delivery_day'] = requestParameters['deliveryDay'];
+        }
+
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
+        }
+
+        if (requestParameters['year'] != null) {
+            queryParameters['year'] = requestParameters['year'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/bread-specifics/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(BreadSpecificsPerDeliveryDayFromJSON));
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsList(requestParameters: BakeryBreadSpecificsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BreadSpecificsPerDeliveryDay>> {
+        const response = await this.bakeryBreadSpecificsListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsPartialUpdateRaw(requestParameters: BakeryBreadSpecificsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadSpecificsPerDeliveryDay>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryBreadSpecificsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/bread-specifics/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedBreadSpecificsPerDeliveryDayRequestToJSON(requestParameters['patchedBreadSpecificsPerDeliveryDayRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadSpecificsPerDeliveryDayFromJSON(jsonValue));
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsPartialUpdate(requestParameters: BakeryBreadSpecificsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadSpecificsPerDeliveryDay> {
+        const response = await this.bakeryBreadSpecificsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsRetrieveRaw(requestParameters: BakeryBreadSpecificsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadSpecificsPerDeliveryDay>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryBreadSpecificsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/bread-specifics/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadSpecificsPerDeliveryDayFromJSON(jsonValue));
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsRetrieve(requestParameters: BakeryBreadSpecificsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadSpecificsPerDeliveryDay> {
+        const response = await this.bakeryBreadSpecificsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsUpdateRaw(requestParameters: BakeryBreadSpecificsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadSpecificsPerDeliveryDay>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bakeryBreadSpecificsUpdate().'
+            );
+        }
+
+        if (requestParameters['breadSpecificsPerDeliveryDayRequest'] == null) {
+            throw new runtime.RequiredError(
+                'breadSpecificsPerDeliveryDayRequest',
+                'Required parameter "breadSpecificsPerDeliveryDayRequest" was null or undefined when calling bakeryBreadSpecificsUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/bread-specifics/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: BreadSpecificsPerDeliveryDayRequestToJSON(requestParameters['breadSpecificsPerDeliveryDayRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BreadSpecificsPerDeliveryDayFromJSON(jsonValue));
+    }
+
+    /**
+     * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+     */
+    async bakeryBreadSpecificsUpdate(requestParameters: BakeryBreadSpecificsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadSpecificsPerDeliveryDay> {
+        const response = await this.bakeryBreadSpecificsUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -1886,6 +2239,10 @@ export class BakeryApi extends runtime.BaseAPI {
     async bakeryBreadsListListRaw(requestParameters: BakeryBreadsListListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BreadList>>> {
         const queryParameters: any = {};
 
+        if (requestParameters['deliveryWeek'] != null) {
+            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
+        }
+
         if (requestParameters['isActive'] != null) {
             queryParameters['is_active'] = requestParameters['isActive'];
         }
@@ -1896,10 +2253,6 @@ export class BakeryApi extends runtime.BaseAPI {
 
         if (requestParameters['pickupLocationId'] != null) {
             queryParameters['pickup_location_id'] = requestParameters['pickupLocationId'];
-        }
-
-        if (requestParameters['week'] != null) {
-            queryParameters['week'] = requestParameters['week'];
         }
 
         if (requestParameters['year'] != null) {

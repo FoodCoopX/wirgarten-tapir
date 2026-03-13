@@ -51,13 +51,11 @@ class AvailableBreadsForDeliveryListView(APIView):
         responses={200: AvailableBreadsForDeliveryListResponseSerializer},
     )
     def get(self, request: Request) -> Response:
-        try:
-            year, delivery_week, delivery_day = parse_week_params(request.query_params)
-        except ValueError as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        result = parse_week_params(request.query_params)
+        if isinstance(result, Response):
+            return result
+
+        year, delivery_week, delivery_day = result
 
         available_breads = (
             AvailableBreadsForDeliveryDay.objects.filter(
@@ -165,13 +163,11 @@ class AbhollisteView(APIView):
         tags=["bakery"],
     )
     def get(self, request):
-        try:
-            year, delivery_week, delivery_day = parse_week_params(request.query_params)
-        except ValueError as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        result = parse_week_params(request.query_params)
+        if isinstance(result, Response):
+            return result
+
+        year, delivery_week, delivery_day = result
 
         pickup_location_id = request.query_params.get("pickup_location_id")
 
@@ -325,13 +321,11 @@ class SolverPreviewDetailView(APIView):
         tags=["bakery"],
     )
     def get(self, request: Request) -> Response:
-        try:
-            year, delivery_week, delivery_day = parse_week_params(request.query_params)
-        except ValueError as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        result = parse_week_params(request.query_params)
+        if isinstance(result, Response):
+            return result
+
+        year, delivery_week, delivery_day = result
 
         solution_index = int(request.query_params.get("solution_index", 0))
 
@@ -509,13 +503,11 @@ class PreferenceSatisfactionMetricsView(APIView):
     )
     def get(self, request: Request) -> Response:
 
-        try:
-            year, delivery_week, delivery_day = parse_week_params(request.query_params)
-        except (ValueError, TypeError):
-            return Response(
-                {"error": "Invalid parameter format"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        result = parse_week_params(request.query_params)
+        if isinstance(result, Response):
+            return result
+
+        year, delivery_week, delivery_day = result
 
         deliveries_qs = BreadDelivery.objects.filter(
             year=year,
@@ -706,13 +698,12 @@ class PreferredBreadStatisticsView(APIView):
     )
     def get(self, request: Request) -> Response:
 
-        try:
-            year, delivery_week, delivery_day = parse_week_params(request.query_params)
-        except (ValueError, TypeError):
-            return Response(
-                {"error": "Invalid parameter format"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        result = parse_week_params(request.query_params)
+        if isinstance(result, Response):
+            return result
+
+        year, delivery_week, delivery_day = result
+
         # Get all members with deliveries this week
         deliveries_qs = BreadDelivery.objects.filter(
             year=year,

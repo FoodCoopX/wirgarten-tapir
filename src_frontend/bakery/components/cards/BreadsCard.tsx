@@ -284,7 +284,11 @@ useEffect(() => {
                       type="file"
                       accept="image/*"
                       style={{ display: 'none' }}
-                      ref={(el) => (fileInputRefs.current[bread.id!] = el)}
+                      ref={(el) => {
+                        if (el) {
+                          fileInputRefs.current[bread.id!] = el;
+                        }
+                      }}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {

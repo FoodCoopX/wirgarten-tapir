@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { YearWeekSelectorCard } from '../components/cards/YearWeekSelectorCard';
 import { BakeryApi, PickupLocationsApi } from '../../api-client';
 import { useApi } from '../../hooks/useApi';
-import type { AbhollisteResponse, PickupLocation, StoveSession, SolverPreviewDetailResponse } from '../../api-client/models';
+import type { AbhollisteResponse, PickupLocation, SolverPreviewDetailResponse } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
-import { RunSolverCard } from '../components/cards/RunSolverCard';
+import { RunSolverCard, MetricsCard, PreferredBreadStatisticsCard, YearWeekSelectorCard } from '../components/cards';
 import { ChevronDown, ChevronRight } from 'react-bootstrap-icons';
-import { MetricsCard } from '../components/cards/MetricsCard';
-import { PreferredBreadStatisticsCard } from '../components/cards/PreferredBreadStatisticsCard';
 import '../styles/bakery_styles.css';
 
 
@@ -472,6 +469,8 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       </div>
                       <small>KW {week}</small>
                     </div>
+                   
+                   
                    <RunSolverCard
                       year={year}
                       deliveryWeek={week}
@@ -485,6 +484,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                   </div>
 
                   <div className="card-body">
+
                     {/* Backliste */}
                     <div className="mb-3">
                       <SectionToggle sectionKey={backlisteKey} title="Backliste" icon="bakery_dining" />
@@ -879,9 +879,10 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                         </>
                       )}
                     </div>
-                       <hr />
+                    
+                    <hr />
 
-                    {/* Statistik Lieblingsbrote — INSIDE card-body */}
+                    {/* Statistik Lieblingsbrote */}
                     <div className="mb-3">
                       <SectionToggle
                         sectionKey={statisticKey}

@@ -11,6 +11,7 @@ from tapir.bakery.models import (
     BreadContent,
     BreadDelivery,
     BreadLabel,
+    BreadSpecificsPerDeliveryDay,
     BreadsPerPickupLocationPerWeek,
     Ingredient,
     PreferredBread,
@@ -25,6 +26,8 @@ from tapir.bakery.serializers import (
     BreadDetailSerializer,
     BreadLabelSerializer,
     BreadListSerializer,
+    BreadSpecificsPerDeliveryDayBulkUpdateSerializer,
+    BreadSpecificsPerDeliveryDaySerializer,
     BreadsPerPickupLocationPerWeekSerializer,
     IngredientSerializer,
     PreferredBreadsBulkUpdateSerializer,
@@ -330,7 +333,7 @@ class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
     def bulk_update(self, request: Request) -> Response:
         """Bulk create/update/delete capacities"""
         year = request.data.get("year")
-        week = request.data.get("week")
+        week = request.data.get("delivery_week")
         updates = request.data.get("updates", [])
 
         if not year or not week:
@@ -610,3 +613,95 @@ class BreadsPerPickupLocationPerWeekViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(pickup_location_id__in=pickup_location_ids)
 
         return queryset.order_by("bread__name")
+
+
+@extend_schema(tags=["bakery"])
+class BreadSpecificsPerDeliveryDayViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing bread-specific overrides per delivery day.
+    Only created when overrides to the bread defaults are needed.
+    """
+
+    queryset = BreadSpecificsPerDeliveryDay.objects.select_related("bread").all()
+    serializer_class = BreadSpecificsPerDeliveryDaySerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="year", type=int, required=False),
+            OpenApiParameter(name="delivery_week", type=int, required=False),
+            OpenApiParameter(name="delivery_day", type=int, required=False),
+            OpenApiParameter(name="bread_id", type=str, required=False),
+        ],
+        responses={200: BreadSpecificsPerDeliveryDaySerializer(many=True)},
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        year = self.request.query_params.get("year")
+        delivery_week = self.request.query_params.get("delivery_week")
+        delivery_day = self.request.query_params.get("delivery_day")
+        bread_id = self.request.query_params.get("bread_id")
+
+        if year is not None:
+            queryset = queryset.filter(year=year)
+        if delivery_week is not None:
+            queryset = queryset.filter(delivery_week=delivery_week)
+        if delivery_day is not None:
+            queryset = queryset.filter(delivery_day=delivery_day)
+        if bread_id is not None:
+            queryset = queryset.filter(bread_id=bread_id)
+
+        return queryset.order_by("delivery_day", "bread__name")
+
+    @extend_schema(
+        summary="Bulk create/update/delete bread specifics per delivery day",
+        request=BreadSpecificsPerDeliveryDayBulkUpdateSerializer,
+        responses={
+            200: OpenApiResponse(description='{"status": "success"}'),
+            400: OpenApiResponse(description="Validation errors"),
+        },
+    )
+    @action(detail=False, methods=["post"], url_path="bulk-update")
+    def bulk_update(self, request: Request) -> Response:
+        serializer = BreadSpecificsPerDeliveryDayBulkUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        year = data["year"]
+        delivery_week = data["delivery_week"]
+        delivery_day = data["delivery_day"]
+
+        for update in data["updates"]:
+            bread_id = update["bread"]
+            # if all fields are None, delete the entry
+            field_values = {
+                k: update.get(k)
+                for k in [
+                    "min_pieces",
+                    "max_pieces",
+                    "min_remaining_pieces",
+                    "fixed_pieces",
+                ]
+            }
+
+            if all(v is None for v in field_values.values()):
+                BreadSpecificsPerDeliveryDay.objects.filter(
+                    year=year,
+                    delivery_week=delivery_week,
+                    delivery_day=delivery_day,
+                    bread_id=bread_id,
+                ).delete()
+            else:
+                BreadSpecificsPerDeliveryDay.objects.update_or_create(
+                    year=year,
+                    delivery_week=delivery_week,
+                    delivery_day=delivery_day,
+                    bread_id=bread_id,
+                    defaults=field_values,
+                )
+
+        return Response({"status": "success"})

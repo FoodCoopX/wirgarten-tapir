@@ -157,7 +157,7 @@ def add_admin_links(groups, request, cache: dict):
 
     try:
         bakery_enabled = TapirParameter.objects.get(
-            key=ParameterKeys.BAKERY_ENABLED
+            key=ParameterKeys.BAKERY_A_ENABLED
         ).get_value()
     except TapirParameter.DoesNotExist:
         bakery_enabled = False

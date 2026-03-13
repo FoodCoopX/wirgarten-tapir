@@ -6,6 +6,7 @@ from tapir.bakery.models import (
     BreadContent,
     BreadDelivery,
     BreadLabel,
+    BreadSpecificsPerDeliveryDay,
     BreadsPerPickupLocationPerWeek,
     Ingredient,
     PreferredBread,
@@ -129,15 +130,15 @@ class BreadDeliverySerializer(serializers.ModelSerializer):
 
 class AvailableBreadsForDeliveryListResponseSerializer(serializers.Serializer):
     year = serializers.IntegerField()
-    week = serializers.IntegerField()
-    day = serializers.IntegerField()
+    delivery_week = serializers.IntegerField()
+    delivery_day = serializers.IntegerField()
     breads = BreadListSerializer(many=True)
 
 
 class ToggleBreadRequestSerializer(serializers.Serializer):
     year = serializers.IntegerField()
-    week = serializers.IntegerField()
-    day = serializers.IntegerField()
+    delivery_week = serializers.IntegerField()
+    delivery_day = serializers.IntegerField()
     bread_id = serializers.CharField()
     is_active = serializers.BooleanField()
 
@@ -209,7 +210,7 @@ class BreadCapacityUpdateItemSerializer(serializers.Serializer):
 
 class BreadCapacityBulkUpdateSerializer(serializers.Serializer):
     year = serializers.IntegerField(required=True)
-    week = serializers.IntegerField(required=True)
+    delivery_week = serializers.IntegerField(required=True)
     updates = BreadCapacityUpdateItemSerializer(many=True, required=True)
 
 
@@ -364,3 +365,26 @@ class LocationMetricsSerializer(serializers.Serializer):
 
 class PreferenceSatisfactionResponseSerializer(serializers.Serializer):
     locations = LocationMetricsSerializer(many=True)
+
+
+class BreadSpecificsPerDeliveryDaySerializer(serializers.ModelSerializer):
+    bread_name = serializers.CharField(source="bread.name", read_only=True)
+
+    class Meta:
+        model = BreadSpecificsPerDeliveryDay
+        fields = "__all__"
+
+
+class BreadSpecificsPerDeliveryDayBulkUpdateItemSerializer(serializers.Serializer):
+    bread = serializers.CharField()
+    min_pieces = serializers.IntegerField(required=False, allow_null=True)
+    max_pieces = serializers.IntegerField(required=False, allow_null=True)
+    min_remaining_pieces = serializers.IntegerField(required=False, allow_null=True)
+    fixed_pieces = serializers.IntegerField(required=False, allow_null=True)
+
+
+class BreadSpecificsPerDeliveryDayBulkUpdateSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    delivery_week = serializers.IntegerField()
+    delivery_day = serializers.IntegerField()
+    updates = BreadSpecificsPerDeliveryDayBulkUpdateItemSerializer(many=True)

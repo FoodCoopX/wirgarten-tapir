@@ -1,8 +1,8 @@
-import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Reports } from '../pages/Reports.tsx';
+import { Reports } from '../pages';
 
 const container = document.getElementById('reports-root');
+
 
 if (container) {
   const csrfToken = container.getAttribute('data-csrf-token') || '';

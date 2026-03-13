@@ -1,5 +1,7 @@
 import datetime
 
+from django.db.models.signals import post_save
+
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
@@ -9,8 +11,8 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
-    ProductType,
     Member,
+    ProductType,
     Subscription,
     SubscriptionChangeLogEntry,
 )
@@ -117,6 +119,13 @@ class ApplyTapirOrderManager:
             )
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
+
+        # Manually trigger post_save signal for each created subscription
+        if get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=cache):
+            for subscription in new_subscriptions:
+                post_save.send(
+                    sender=Subscription, instance=subscription, created=True, raw=False
+                )
         TapirCacheManager.clear_category(cache=cache, category="subscriptions")
         if len(new_subscriptions) > 0:
             OnboardingTrigger.on_subscription_updated(new_subscriptions[0])

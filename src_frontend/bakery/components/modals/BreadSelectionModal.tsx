@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
-import { SingleBreadCard } from '../cards/SingleBreadCard';
+import { SingleBreadCard } from '../cards';
 
 interface BreadSelectionModalProps {
   breads: BreadList[];

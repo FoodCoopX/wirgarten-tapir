@@ -21,14 +21,9 @@ DAY_LABELS = {
 }
 
 
-def _get_date_for_day(year: int, week: int, day: int) -> datetime.date:
-    jan4 = datetime.date(year, 1, 4)
-    start_of_week1 = jan4 - datetime.timedelta(days=jan4.weekday())
-    return start_of_week1 + datetime.timedelta(weeks=week - 1, days=day)
-
-
 def _build_base_context(year: int, week: int, day: int, report_title: str) -> dict:
-    date = _get_date_for_day(year, week, day)
+    iso_day = day + 1
+    date = datetime.date.fromisocalendar(year, week, iso_day)
     return {
         "year": year,
         "week": week,

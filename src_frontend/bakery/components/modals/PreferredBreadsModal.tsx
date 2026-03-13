@@ -3,7 +3,7 @@ import { InfoCircle, StarFill } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
 import { BakeryApi } from '../../../api-client';
 import type { BreadList, BreadLabel, BreadContent } from '../../../api-client/models';
-import { SingleBreadCard } from '../cards/SingleBreadCard';
+import { SingleBreadCard } from '../cards';
 
 interface PreferredBreadsModalProps {
   isOpen: boolean;

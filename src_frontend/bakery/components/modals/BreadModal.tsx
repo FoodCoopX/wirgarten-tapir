@@ -97,7 +97,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
   const removePiecesPerLayer = (value: number) => {
     setFormData(prev => ({
       ...prev,
-      piecesPerStoveLayer: (prev.piecesPerStoveLayer || []).filter(v => v !== value)
+      piecesPerStoveLayer: (prev.piecesPerStoveLayer || []).filter((v): v is number => typeof v === 'number' && v !== value)
     }));
   };
 
@@ -293,8 +293,10 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                           <PlusLg size={14} />
                         </button>
                       </div>
-                      <div className="d-flex flex-wrap gap-2">
-                        {(formData.piecesPerStoveLayer || []).map((value) => (
+                       <div className="d-flex flex-wrap gap-2">
+                        {(formData.piecesPerStoveLayer || [])
+                          .filter((v): v is number => typeof v === 'number')
+                          .map((value: number) => (
                           <span
                             key={value}
                             className="badge bg-secondary"

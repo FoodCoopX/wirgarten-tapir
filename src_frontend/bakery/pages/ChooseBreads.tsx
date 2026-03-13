@@ -1,7 +1,5 @@
 import React from 'react';
-import { ChooseBreadsCard } from '../components/cards/ChooseBreadsCard';
-import { ChoosePreferredBreadsCard } from '../components/cards/ChoosePreferredBreadsCard';
-import { RunSolverCard } from '../components/cards/RunSolverCard';
+import { ChooseBreadsCard, ChoosePreferredBreadsCard } from '../components/cards';
 
 interface ChooseBreadsProps {
   memberId: string;

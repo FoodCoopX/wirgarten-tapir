@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { ChooseBreads } from '../pages/ChooseBreads';
+import { ChooseBreads } from '../pages';
 
 const container = document.getElementById('choose-breads-root');
 

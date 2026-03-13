@@ -40,6 +40,7 @@ class ParameterMeta:
         textarea=False,
         vars_hint: list[str] = None,
         show_only_when: callable = None,
+        sort_order: int = 999,
     ):
         if validators is None:
             validators = []
@@ -53,6 +54,7 @@ class ParameterMeta:
         self.validators = validators
         self.textarea = textarea
         self.show_only_when = show_only_when
+        self.sort_order = sort_order
 
 
 class ParameterMetaInfo:
@@ -118,6 +120,10 @@ def parameter_definition(
     no_db_request=False,
 ):
     __validate_initial_value(datatype, initial_value, key, meta.validators)
+
+    # Use sort_order from meta if order_priority is not explicitly set
+    if order_priority == -1 and hasattr(meta, "sort_order"):
+        order_priority = meta.sort_order
 
     param = __create_or_update_parameter(
         category,

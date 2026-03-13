@@ -5,7 +5,7 @@ from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from localflavor.generic.validators import IBANValidator
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -29,10 +29,10 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
     PickupLocationCapacityGeneralChecker,
 )
 from tapir.subscriptions.serializers import (
-    UpdateSubscriptionsRequestSerializer,
-    OrderConfirmationResponseSerializer,
     MemberProfileCapacityCheckRequestSerializer,
     MemberSubscriptionDataSerializer,
+    OrderConfirmationResponseSerializer,
+    UpdateSubscriptionsRequestSerializer,
 )
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
@@ -50,7 +50,7 @@ from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import Member, PickupLocation, ProductType, GrowingPeriod
+from tapir.wirgarten.models import GrowingPeriod, Member, PickupLocation, ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
@@ -188,8 +188,14 @@ class UpdateSubscriptionsApiView(APIView):
             member=member,
         )
 
+        can_reduce_subscription_size = logged_in_user_is_admin or (
+            get_parameter_value(
+                ParameterKeys.BAKERY_MEMBERS_CAN_REDUCES_BREAD_SHARES, cache=self.cache
+            )
+            and get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=self.cache)
+        )
         OrderValidator.validate_cannot_reduce_size(
-            logged_in_user_is_admin=logged_in_user_is_admin,
+            logged_in_user_is_admin=can_reduce_subscription_size,
             contract_start_date=contract_start_date,
             member=member,
             order_for_a_single_product_type=order,
@@ -244,7 +250,7 @@ class UpdateSubscriptionsApiView(APIView):
             validated_data["payment_rhythm"], cache=self.cache
         ):
             raise ValidationError(
-                f"Diese Zahlungsintervall {validated_data["payment_rhythm"]} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
+                f"Diese Zahlungsintervall {validated_data['payment_rhythm']} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
             )
 
     def validate_pickup_location(

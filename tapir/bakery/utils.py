@@ -2,6 +2,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from django.db.models import Model
 from django.db.models.deletion import PROTECT
+from rest_framework import status
+from rest_framework.response import Response
 
 
 def str_to_bool(value: Optional[str]) -> Optional[bool]:
@@ -135,18 +137,34 @@ def _get_related_manager(instance: Model, related_object: Any) -> Optional[Any]:
         return None
 
 
-def parse_week_params(query_params) -> tuple[int, int, int | None]:
-    """Parse year, delivery_week, and optional delivery_day from query params.
-    Raises ValueError if required params are missing or invalid."""
+def parse_week_params(query_params) -> tuple[int, int, int | None] | Response:
+    """
+    Parse year, delivery_week, and optional delivery_day from query params.
+
+    Returns:
+        Tuple of (year, delivery_week, delivery_day) on success
+        Response object with error on failure
+    """
     year = query_params.get("year")
     delivery_week = query_params.get("delivery_week")
     delivery_day_param = query_params.get("delivery_day")
 
     if not year or not delivery_week:
-        raise ValueError("Missing required parameters: year, delivery_week")
+        return Response(
+            {"error": "Missing required parameters: year, delivery_week"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    return (
-        int(year),
-        int(delivery_week),
-        int(delivery_day_param) if delivery_day_param else None,
-    )
+    try:
+        return (
+            int(year),
+            int(delivery_week),
+            int(delivery_day_param) if delivery_day_param else None,
+        )
+    except (ValueError, TypeError):
+        return Response(
+            {
+                "error": "Invalid parameter format. Year and delivery_week must be integers."
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )

@@ -38,7 +38,7 @@ export interface BreadCapacityBulkUpdateRequest {
      * @type {number}
      * @memberof BreadCapacityBulkUpdateRequest
      */
-    week: number;
+    deliveryWeek: number;
     /**
      * 
      * @type {Array<BreadCapacityUpdateItemRequest>}
@@ -52,7 +52,7 @@ export interface BreadCapacityBulkUpdateRequest {
  */
 export function instanceOfBreadCapacityBulkUpdateRequest(value: object): value is BreadCapacityBulkUpdateRequest {
     if (!('year' in value) || value['year'] === undefined) return false;
-    if (!('week' in value) || value['week'] === undefined) return false;
+    if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
     if (!('updates' in value) || value['updates'] === undefined) return false;
     return true;
 }
@@ -68,7 +68,7 @@ export function BreadCapacityBulkUpdateRequestFromJSONTyped(json: any, ignoreDis
     return {
         
         'year': json['year'],
-        'week': json['week'],
+        'deliveryWeek': json['delivery_week'],
         'updates': ((json['updates'] as Array<any>).map(BreadCapacityUpdateItemRequestFromJSON)),
     };
 }
@@ -85,7 +85,7 @@ export function BreadCapacityBulkUpdateRequestFromJSONTyped(json: any, ignoreDis
     return {
         
         'year': value['year'],
-        'week': value['week'],
+        'delivery_week': value['deliveryWeek'],
         'updates': ((value['updates'] as Array<any>).map(BreadCapacityUpdateItemRequestToJSON)),
     };
 }

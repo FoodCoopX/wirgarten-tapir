@@ -34,19 +34,19 @@
                 {% endif %}
                 
                 {% if bakery_enabled %}
-    <div class="mb-3">
-        <a href="{% url 'bakery:choose-breads' %}?member_id={{ object.pk }}" 
-           class="btn btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
-           style="background-color: #8B4513; color: white; border: none; padding: 1rem; transition: all 0.3s ease;"
-           onmouseover="this.style.backgroundColor='#A0522D'"
-           onmouseout="this.style.backgroundColor='#8B4513'">
-            <div class="d-flex flex-column align-items-start">
-                <strong style="font-size: 1.1rem;">Zu den Broten</strong>
-                <small style="opacity: 0.9;">Wähle deine Lieblingsbrote aus.</small>
-            </div>
-        </a>
-    </div>
-{% endif %}
+                    <div class="mb-3">
+                        <a href="{% url 'bakery:choose-breads' %}?member_id={{ object.pk }}" 
+                        class="btn btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
+                        style="background-color: #8B4513; color: white; border: none; padding: 1rem; transition: all 0.3s ease;"
+                        onmouseover="this.style.backgroundColor='#A0522D'"
+                        onmouseout="this.style.backgroundColor='#8B4513'">
+                            <div class="d-flex flex-column align-items-start">
+                                <strong style="font-size: 1.1rem;">Zu den Broten</strong>
+                                <small style="opacity: 0.9;">Wähle deine Lieblingsbrote aus.</small>
+                            </div>
+                        </a>
+                    </div>
+                {% endif %}
                
       
                                 
@@ -161,6 +161,9 @@
                                 <div class="col-8" id="tapir_user_pseudonym">
                                     {% if object.pseudonym %}
                                         {{ object.pseudonym }}
+                                          {% if pseudonym_valid_from_week %}
+                                            <small class="text-muted">({% translate "gültig ab" %} Lieferung: {{ pseudonym_valid_from_date|date:"d.m.Y" }})</small>
+                                        {% endif %}
                                     {% else %}
                                         <span class="text-muted">{% translate "nicht gesetzt" %}</span>
                                     {% endif %}

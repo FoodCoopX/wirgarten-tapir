@@ -264,15 +264,15 @@ paths:
       operationId: bakery_bread_capacity_pickup_location_list
       parameters:
       - in: query
+        name: delivery_week
+        schema:
+          type: integer
+      - in: query
         name: pickup_location_ids[]
         schema:
           type: array
           items:
             type: string
-      - in: query
-        name: week
-        schema:
-          type: integer
       - in: query
         name: year
         schema:
@@ -621,6 +621,224 @@ paths:
       responses:
         '204':
           description: No response body
+  /bakery/bread-specifics/:
+    get:
+      operationId: bakery_bread_specifics_list
+      description: |-
+        ViewSet for managing bread-specific overrides per delivery day.
+        Only created when overrides to the bread defaults are needed.
+      parameters:
+      - in: query
+        name: bread_id
+        schema:
+          type: string
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreadSpecificsPerDeliveryDay'
+          description: ''
+    post:
+      operationId: bakery_bread_specifics_create
+      description: |-
+        ViewSet for managing bread-specific overrides per delivery day.
+        Only created when overrides to the bread defaults are needed.
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadSpecificsPerDeliveryDay'
+          description: ''
+  /bakery/bread-specifics/{id}/:
+    get:
+      operationId: bakery_bread_specifics_retrieve
+      description: |-
+        ViewSet for managing bread-specific overrides per delivery day.
+        Only created when overrides to the bread defaults are needed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread specifics per delivery day identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadSpecificsPerDeliveryDay'
+          description: ''
+    put:
+      operationId: bakery_bread_specifics_update
+      description: |-
+        ViewSet for managing bread-specific overrides per delivery day.
+        Only created when overrides to the bread defaults are needed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread specifics per delivery day identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadSpecificsPerDeliveryDay'
+          description: ''
+    patch:
+      operationId: bakery_bread_specifics_partial_update
+      description: |-
+        ViewSet for managing bread-specific overrides per delivery day.
+        Only created when overrides to the bread defaults are needed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread specifics per delivery day identifiziert.
+        required: true
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadSpecificsPerDeliveryDayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadSpecificsPerDeliveryDayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBreadSpecificsPerDeliveryDayRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadSpecificsPerDeliveryDay'
+          description: ''
+    delete:
+      operationId: bakery_bread_specifics_destroy
+      description: |-
+        ViewSet for managing bread-specific overrides per delivery day.
+        Only created when overrides to the bread defaults are needed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der bread specifics per delivery day identifiziert.
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
+  /bakery/bread-specifics/bulk-update/:
+    post:
+      operationId: bakery_bread_specifics_bulk_update_create
+      description: |-
+        ViewSet for managing bread-specific overrides per delivery day.
+        Only created when overrides to the bread defaults are needed.
+      summary: Bulk create/update/delete bread specifics per delivery day
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayBulkUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayBulkUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayBulkUpdateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          description: '{"status": "success"}'
+        '400':
+          description: Validation errors
   /bakery/breadcontents/:
     get:
       operationId: bakery_breadcontents_list
@@ -797,6 +1015,11 @@ paths:
       description: ViewSet for managing bread variants
       parameters:
       - in: query
+        name: delivery_week
+        schema:
+          type: integer
+        description: Filter by delivery week (requires pickup_location_id and year)
+      - in: query
         name: is_active
         schema:
           type: boolean
@@ -811,11 +1034,6 @@ paths:
         schema:
           type: string
         description: Filter by pickup location ID (requires year and week)
-      - in: query
-        name: week
-        schema:
-          type: integer
-        description: Filter by delivery week (requires pickup_location_id and year)
       - in: query
         name: year
         schema:
@@ -7091,9 +7309,9 @@ components:
       properties:
         year:
           type: integer
-        week:
+        delivery_week:
           type: integer
-        day:
+        delivery_day:
           type: integer
         breads:
           type: array
@@ -7101,8 +7319,8 @@ components:
             $ref: '#/components/schemas/BreadList'
       required:
       - breads
-      - day
-      - week
+      - delivery_day
+      - delivery_week
       - year
     AvailableSegmentsResponse:
       type: object
@@ -7597,15 +7815,15 @@ components:
       properties:
         year:
           type: integer
-        week:
+        delivery_week:
           type: integer
         updates:
           type: array
           items:
             $ref: '#/components/schemas/BreadCapacityUpdateItemRequest'
       required:
+      - delivery_week
       - updates
-      - week
       - year
     BreadCapacityPickupLocation:
       type: object
@@ -8058,6 +8276,160 @@ components:
       required:
       - name
       - weight
+    BreadSpecificsPerDeliveryDay:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        bread_name:
+          type: string
+          readOnly: true
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_day:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        min_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum number of pieces that should be baked for this bread
+            on this delivery day (e.g., to ensure that there are enough pieces for
+            walk-in customers)
+        max_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Maximum number of pieces that should be baked for this bread
+            on this delivery day (e.g., to limit the amount of bread that can be ordered
+            for this bread)
+        min_remaining_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum amount of breads that should remain available for this
+            bread on this delivery day (e.g., for walk-in customers)
+        fixed_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: If set, exactly this number of pieces should be baked for this
+            bread on this delivery day (overrides min/max)
+        bread:
+          type: string
+      required:
+      - bread
+      - bread_name
+      - delivery_day
+      - delivery_week
+      - year
+    BreadSpecificsPerDeliveryDayBulkUpdateItemRequest:
+      type: object
+      properties:
+        bread:
+          type: string
+          minLength: 1
+        min_pieces:
+          type: integer
+          nullable: true
+        max_pieces:
+          type: integer
+          nullable: true
+        min_remaining_pieces:
+          type: integer
+          nullable: true
+        fixed_pieces:
+          type: integer
+          nullable: true
+      required:
+      - bread
+    BreadSpecificsPerDeliveryDayBulkUpdateRequest:
+      type: object
+      properties:
+        year:
+          type: integer
+        delivery_week:
+          type: integer
+        delivery_day:
+          type: integer
+        updates:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreadSpecificsPerDeliveryDayBulkUpdateItemRequest'
+      required:
+      - delivery_day
+      - delivery_week
+      - updates
+      - year
+    BreadSpecificsPerDeliveryDayRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_day:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        min_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum number of pieces that should be baked for this bread
+            on this delivery day (e.g., to ensure that there are enough pieces for
+            walk-in customers)
+        max_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Maximum number of pieces that should be baked for this bread
+            on this delivery day (e.g., to limit the amount of bread that can be ordered
+            for this bread)
+        min_remaining_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum amount of breads that should remain available for this
+            bread on this delivery day (e.g., for walk-in customers)
+        fixed_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: If set, exactly this number of pieces should be baked for this
+            bread on this delivery day (overrides min/max)
+        bread:
+          type: string
+          minLength: 1
+      required:
+      - bread
+      - delivery_day
+      - delivery_week
+      - year
     BreadsPerPickupLocationPerWeek:
       type: object
       properties:
@@ -10938,6 +11310,58 @@ components:
           items:
             type: string
             minLength: 1
+    PatchedBreadSpecificsPerDeliveryDayRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_week:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        delivery_day:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        min_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum number of pieces that should be baked for this bread
+            on this delivery day (e.g., to ensure that there are enough pieces for
+            walk-in customers)
+        max_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Maximum number of pieces that should be baked for this bread
+            on this delivery day (e.g., to limit the amount of bread that can be ordered
+            for this bread)
+        min_remaining_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Minimum amount of breads that should remain available for this
+            bread on this delivery day (e.g., for walk-in customers)
+        fixed_pieces:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: If set, exactly this number of pieces should be baked for this
+            bread on this delivery day (overrides min/max)
+        bread:
+          type: string
+          minLength: 1
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:
@@ -13241,9 +13665,9 @@ components:
       properties:
         year:
           type: integer
-        week:
+        delivery_week:
           type: integer
-        day:
+        delivery_day:
           type: integer
         bread_id:
           type: string
@@ -13252,9 +13676,9 @@ components:
           type: boolean
       required:
       - bread_id
-      - day
+      - delivery_day
+      - delivery_week
       - is_active
-      - week
       - year
     ToggleBreadResponse:
       type: object

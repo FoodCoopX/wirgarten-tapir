@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { IngredientsLabelsBreads } from '../pages/IngredientsLabelsBreads.tsx';
+import { IngredientsLabelsBreads } from '../pages';
 
 const container = document.getElementById('ingredients-labels-breads-root');
 

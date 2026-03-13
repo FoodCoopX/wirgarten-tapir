@@ -235,7 +235,7 @@ class ParameterKeys:
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
     )
-    BAKERY_ENABLED = f"{PREFIX}.bakery.enabled"
+    BAKERY_A_ENABLED = f"{PREFIX}.bakery.enabled"
     BAKERY_PSEUDONYM_ENABLED = f"{PREFIX}.bakery.pseudonym_enabled"
     BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY = (
         f"{PREFIX}.bakery.baking_day_before_delivery_day"
@@ -258,3 +258,4 @@ class ParameterKeys:
     BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS = (
         f"{PREFIX}.bakery.members_can_choose_bread_sorts"
     )
+    BAKERY_STOVE_LAYERS = f"{PREFIX}.bakery.stove_layers"

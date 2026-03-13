@@ -38,13 +38,13 @@ export interface AvailableBreadsForDeliveryListResponse {
      * @type {number}
      * @memberof AvailableBreadsForDeliveryListResponse
      */
-    week: number;
+    deliveryWeek: number;
     /**
      * 
      * @type {number}
      * @memberof AvailableBreadsForDeliveryListResponse
      */
-    day: number;
+    deliveryDay: number;
     /**
      * 
      * @type {Array<BreadList>}
@@ -58,8 +58,8 @@ export interface AvailableBreadsForDeliveryListResponse {
  */
 export function instanceOfAvailableBreadsForDeliveryListResponse(value: object): value is AvailableBreadsForDeliveryListResponse {
     if (!('year' in value) || value['year'] === undefined) return false;
-    if (!('week' in value) || value['week'] === undefined) return false;
-    if (!('day' in value) || value['day'] === undefined) return false;
+    if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
+    if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     if (!('breads' in value) || value['breads'] === undefined) return false;
     return true;
 }
@@ -75,8 +75,8 @@ export function AvailableBreadsForDeliveryListResponseFromJSONTyped(json: any, i
     return {
         
         'year': json['year'],
-        'week': json['week'],
-        'day': json['day'],
+        'deliveryWeek': json['delivery_week'],
+        'deliveryDay': json['delivery_day'],
         'breads': ((json['breads'] as Array<any>).map(BreadListFromJSON)),
     };
 }
@@ -93,8 +93,8 @@ export function AvailableBreadsForDeliveryListResponseFromJSONTyped(json: any, i
     return {
         
         'year': value['year'],
-        'week': value['week'],
-        'day': value['day'],
+        'delivery_week': value['deliveryWeek'],
+        'delivery_day': value['deliveryDay'],
         'breads': ((value['breads'] as Array<any>).map(BreadListToJSON)),
     };
 }

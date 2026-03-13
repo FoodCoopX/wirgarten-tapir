@@ -143,6 +143,9 @@ class BreadCapacityPickupLocation(TapirModel):
 
     class Meta:
         unique_together = ("pickup_location", "year", "delivery_week", "bread")
+        indexes = [
+            models.Index(fields=["pickup_location", "year", "delivery_week"]),
+        ]
 
 
 class AvailableBreadsForDeliveryDay(TapirModel):
@@ -157,6 +160,9 @@ class AvailableBreadsForDeliveryDay(TapirModel):
 
     class Meta:
         unique_together = ("year", "delivery_week", "delivery_day", "bread")
+        indexes = [
+            models.Index(fields=["year", "delivery_week", "delivery_day"]),
+        ]
 
 
 class PreferredLabel(TapirModel):
@@ -174,7 +180,7 @@ class BreadDelivery(TapirModel):
         on_delete=models.CASCADE,
     )
     slot_number = models.PositiveIntegerField(
-        default=1
+        default=1, db_index=True
     )  # 1, 2, 3, ... up to subscription.quantity
     pickup_location = models.ForeignKey(
         PickupLocation,
@@ -191,6 +197,20 @@ class BreadDelivery(TapirModel):
 
     class Meta:
         ordering = ["year", "delivery_week", "slot_number"]
+        indexes = [
+            models.Index(
+                fields=["year", "delivery_week"]
+            ),  # Query all deliveries for a week
+            models.Index(
+                fields=["subscription", "year", "delivery_week"]
+            ),  # Query subscription deliveries for a week
+            models.Index(
+                fields=["pickup_location", "year", "delivery_week"]
+            ),  # Abholliste query
+            models.Index(
+                fields=["year", "delivery_week", "bread"]
+            ),  # Aggregate bread counts
+        ]
 
 
 def get_weeks_in_range(start_date, end_date):
@@ -439,6 +459,11 @@ class BreadsPerPickupLocationPerWeek(TapirModel):
     )
     count = models.PositiveIntegerField(default=0)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["pickup_location", "year", "delivery_week"]),
+        ]
+
 
 class StoveSession(TapirModel):
     """Stores the baking plan for oven sessions."""
@@ -481,3 +506,41 @@ class PreferenceSatisfactionLogging(TapirModel):
         decimal_places=2,
         help_text="Percentage of deliveries that matched at least one preferred bread label",
     )
+
+
+# this model is only field in case there are overrides to the defaults in the bread model
+# or if fixed_pieces or max_pieces need to be given for a specific delivery day
+class BreadSpecificsPerDeliveryDay(TapirModel):
+    year = models.PositiveIntegerField()
+    delivery_week = models.PositiveIntegerField()
+    delivery_day = models.PositiveIntegerField()
+    bread = models.ForeignKey(
+        "Bread",
+        on_delete=models.CASCADE,
+        related_name="specifics_per_delivery_day",
+    )
+    min_pieces = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="Minimum number of pieces that should be baked for this bread on this delivery day (e.g., to ensure that there are enough pieces for walk-in customers)",
+    )
+    max_pieces = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="Maximum number of pieces that should be baked for this bread on this delivery day (e.g., to limit the amount of bread that can be ordered for this bread)",
+    )
+    min_remaining_pieces = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="Minimum amount of breads that should remain available for this bread on this delivery day (e.g., for walk-in customers)",
+    )
+    fixed_pieces = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="If set, exactly this number of pieces should be baked for this bread on this delivery day (overrides min/max)",
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["year", "delivery_week", "delivery_day"]),
+        ]
