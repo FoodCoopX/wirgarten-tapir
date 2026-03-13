@@ -52,12 +52,12 @@ def assert_valid_solution(result, breads, slots, capacities):
 
     # -- Every unassigned slot got exactly one bread --
     for s in unassigned_slots:
-        assert s.slot_id in result.slot_assignments, (
-            f"Slot {s.slot_id} has no assignment"
-        )
-        assert result.slot_assignments[s.slot_id] in bread_map, (
-            f"Slot {s.slot_id} assigned to unknown bread {result.slot_assignments[s.slot_id]}"
-        )
+        assert (
+            s.slot_id in result.slot_assignments
+        ), f"Slot {s.slot_id} has no assignment"
+        assert (
+            result.slot_assignments[s.slot_id] in bread_map
+        ), f"Slot {s.slot_id} assigned to unknown bread {result.slot_assignments[s.slot_id]}"
 
     # -- No fixed slot was reassigned --
     for s in fixed_slots:
@@ -72,9 +72,9 @@ def assert_valid_solution(result, breads, slots, capacities):
         demand[b_id] = demand.get(b_id, 0) + 1
 
     for b_id, qty in result.bread_quantities.items():
-        assert qty == demand.get(b_id, 0), (
-            f"Bread {b_id}: baked {qty} but demand is {demand.get(b_id, 0)}"
-        )
+        assert qty == demand.get(
+            b_id, 0
+        ), f"Bread {b_id}: baked {qty} but demand is {demand.get(b_id, 0)}"
 
     # -- Pickup location capacities respected --
     dist = {}
@@ -88,9 +88,9 @@ def assert_valid_solution(result, breads, slots, capacities):
 
     for (b_id, p_id), count in dist.items():
         cap = capacities.get((b_id, p_id), 0)
-        assert count <= cap, (
-            f"Capacity exceeded: bread {b_id} at pickup {p_id}: {count} > {cap}"
-        )
+        assert (
+            count <= cap
+        ), f"Capacity exceeded: bread {b_id} at pickup {p_id}: {count} > {cap}"
 
     # -- Stove layer constraints --
     for session in result.stove_sessions:
@@ -100,9 +100,9 @@ def assert_valid_solution(result, breads, slots, capacities):
                 continue
             b_id, qty = layer_info
             bread = bread_map[b_id]
-            assert qty in bread.pieces_per_stove_layer, (
-                f"Bread {b_id}: qty {qty} not in {bread.pieces_per_stove_layer}"
-            )
+            assert (
+                qty in bread.pieces_per_stove_layer
+            ), f"Bread {b_id}: qty {qty} not in {bread.pieces_per_stove_layer}"
 
     # -- Stove total matches baked total --
     stove_totals = {}
@@ -114,9 +114,9 @@ def assert_valid_solution(result, breads, slots, capacities):
             stove_totals[b_id] = stove_totals.get(b_id, 0) + qty
 
     for b_id, qty in result.bread_quantities.items():
-        assert stove_totals.get(b_id, 0) == qty, (
-            f"Bread {b_id}: stove produces {stove_totals.get(b_id, 0)} but needs {qty}"
-        )
+        assert (
+            stove_totals.get(b_id, 0) == qty
+        ), f"Bread {b_id}: stove produces {stove_totals.get(b_id, 0)} but needs {qty}"
 
     # -- can_span_sessions=False → all layers in one session --
     for b_id, bread in bread_map.items():
@@ -126,9 +126,9 @@ def assert_valid_solution(result, breads, slots, capacities):
                 for i, session in enumerate(result.stove_sessions)
                 if any(l is not None and l[0] == b_id for l in session)
             ]
-            assert len(sessions_with_bread) <= 1, (
-                f"Bread {b_id} (can_span=False) appears in {len(sessions_with_bread)} sessions"
-            )
+            assert (
+                len(sessions_with_bread) <= 1
+            ), f"Bread {b_id} (can_span=False) appears in {len(sessions_with_bread)} sessions"
 
     # -- Preference hit count is accurate --
     actual_hits = sum(

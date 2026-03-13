@@ -648,9 +648,11 @@ class PreferenceSatisfactionMetricsView(APIView):
                     bread_breakdown_list.append(
                         {
                             "bread_id": bread_id,
-                            "bread_name": bread_map[bread_id].name
-                            if bread_id in bread_map
-                            else "Unknown",
+                            "bread_name": (
+                                bread_map[bread_id].name
+                                if bread_id in bread_map
+                                else "Unknown"
+                            ),
                             "count": bd_data["count"],
                             "directly_chosen": bd_data["directly_chosen"],
                         }
@@ -755,9 +757,11 @@ class PreferredBreadStatisticsView(APIView):
                 {
                     "bread_name": name,
                     "count": count,
-                    "percentage": round(count / total_members * 100, 1)
-                    if total_members > 0
-                    else 0,
+                    "percentage": (
+                        round(count / total_members * 100, 1)
+                        if total_members > 0
+                        else 0
+                    ),
                 }
                 for name, count in bread_counts.items()
             ],
