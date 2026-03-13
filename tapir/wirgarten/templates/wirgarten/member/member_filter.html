@@ -183,8 +183,8 @@
         }
 
         const handleAddMember = () => {
-            FormModal.load('{% url '
-                wirgarten: member_create ' %}', 'Neues Mitglied anlegen');
+            const url = "{% url 'wirgarten:member_create' %}";
+            FormModal.load(url, 'Neues Mitglied anlegen');
         }
 
         const handleShowMemberDetailsPage = () => {
