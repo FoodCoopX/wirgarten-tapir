@@ -132,7 +132,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         mock_fire_action.assert_called_once()
         trigger_data: TransactionalTriggerData = mock_fire_action.call_args_list[
             0
-        ].args[0]
+        ].kwargs["trigger_data"]
         self.assertEqual(Events.MEMBERAREA_CHANGE_DATA, trigger_data.key)
         self.assertEqual(user.id, trigger_data.recipient_id_in_base_queryset)
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
@@ -174,7 +174,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         mock_fire_action.assert_called_once()
         trigger_data: TransactionalTriggerData = mock_fire_action.call_args_list[
             0
-        ].args[0]
+        ].kwargs["trigger_data"]
         self.assertEqual(Events.MEMBERAREA_CHANGE_DATA, trigger_data.key)
         self.assertEqual(target.id, trigger_data.recipient_id_in_base_queryset)
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)

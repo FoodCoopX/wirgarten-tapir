@@ -302,6 +302,53 @@ paths:
               schema:
                 type: boolean
           description: ''
+  /coop/api/member_personal_data:
+    get:
+      operationId: coop_api_member_personal_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - coop
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberProfilePersonalDataResponse'
+          description: ''
+    patch:
+      operationId: coop_api_member_personal_data_partial_update
+      tags:
+      - coop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberProfilePersonalDataRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberProfilePersonalDataRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberProfilePersonalDataRequestRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /coop/api/minimum_number_of_shares:
     get:
       operationId: coop_api_minimum_number_of_shares_retrieve
@@ -7953,6 +8000,40 @@ components:
       required:
       - member_id
       - shopping_cart
+    MemberProfilePersonalDataResponse:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        is_student:
+          type: boolean
+        can_edit_student:
+          type: boolean
+      required:
+      - can_edit_student
+      - city
+      - email
+      - first_name
+      - last_name
+      - phone_number
+      - postcode
+      - street
+      - street_2
     MemberSolidarityContributionsResponse:
       type: object
       properties:
@@ -8465,6 +8546,38 @@ components:
         dynamic_segment_name:
           type: string
           maxLength: 100
+    PatchedMemberProfilePersonalDataRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        phone_number:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+        street_2:
+          type: string
+        postcode:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        is_student:
+          type: boolean
     PatchedPdfExportModelRequest:
       type: object
       properties:

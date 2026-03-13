@@ -11,6 +11,7 @@ import MemberProfileSolidarityContributionCard from "./solidarity_contribution/M
 import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
 import MemberExtraEmailsBase from "./extra_email_addresses/MemberExtraEmailsBase.tsx";
 import MemberBankingDataBase from "./banking_data/MemberBankingDataBase.tsx";
+import MemberPersonalDataBase from "./personal_data/MemberPersonalDataBase.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -154,6 +155,20 @@ if (domNodeMemberExtraAddresses) {
   root.render(
     <MemberExtraEmailsBase
       memberId={domNodeMemberExtraAddresses.dataset.memberId!}
+      csrfToken={getCsrfToken()}
+    />,
+  );
+}
+
+const domNodeMemberEditPersonalDataButton = document.getElementById(
+  "edit_personal_data_button",
+);
+if (domNodeMemberEditPersonalDataButton) {
+  const root = createRoot(domNodeMemberEditPersonalDataButton);
+
+  root.render(
+    <MemberPersonalDataBase
+      memberId={domNodeMemberEditPersonalDataButton.dataset.memberId!}
       csrfToken={getCsrfToken()}
     />,
   );

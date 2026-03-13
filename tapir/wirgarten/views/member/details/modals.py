@@ -2,20 +2,12 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from tapir_mail.triggers.transactional_trigger import (
-    TransactionalTrigger,
-    TransactionalTriggerData,
-)
 
-from tapir.accounts.models import UpdateTapirUserLogEntry
-from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
-    PersonalDataForm,
     SubscriptionRenewalForm,
     WaitingListForm,
 )
-from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     QuestionaireCancellationReasonResponse,
@@ -33,44 +25,6 @@ from tapir.wirgarten.utils import (
     member_detail_url,
 )
 from tapir.wirgarten.views.modal import get_form_modal
-
-
-@require_http_methods(["GET", "POST"])
-@csrf_protect
-@login_required
-def get_member_personal_data_edit_form(request, **kwargs):
-    pk = kwargs.pop("pk")
-
-    check_permission_or_self(pk, request)
-
-    kwargs["can_edit_name_and_birthdate"] = request.user.has_perm(
-        Permission.Accounts.MANAGE
-    )
-
-    @transaction.atomic
-    def save(member: Member):
-        orig = Member.objects.get(id=member.id)
-        UpdateTapirUserLogEntry().populate(
-            old_model=orig, new_model=member, user=member, actor=request.user
-        ).save()
-
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.MEMBERAREA_CHANGE_DATA,
-                recipient_id_in_base_queryset=member.id,
-            ),
-        )
-
-        member.save()
-
-    return get_form_modal(
-        request=request,
-        form_class=PersonalDataForm,
-        instance=Member.objects.get(pk=pk),
-        handler=lambda x: save(x.instance),
-        redirect_url_resolver=lambda _: member_detail_url(pk),
-        **kwargs,
-    )
 
 
 @require_http_methods(["GET", "POST"])

@@ -18,7 +18,10 @@ import type {
   GetCoopShareTransactionsResponse,
   Member,
   MemberBankDataResponse,
+  MemberProfilePersonalDataResponse,
   MinimumNumberOfSharesResponse,
+  OrderConfirmationResponse,
+  PatchedMemberProfilePersonalDataRequestRequest,
   PatchedUpdateMemberBankDataRequestRequest,
 } from "../models/index";
 import {
@@ -26,7 +29,10 @@ import {
   GetCoopShareTransactionsResponseFromJSON,
   MemberBankDataResponseFromJSON,
   MemberFromJSON,
+  MemberProfilePersonalDataResponseFromJSON,
   MinimumNumberOfSharesResponseFromJSON,
+  OrderConfirmationResponseFromJSON,
+  PatchedMemberProfilePersonalDataRequestRequestToJSON,
   PatchedUpdateMemberBankDataRequestRequestToJSON,
 } from "../models/index";
 
@@ -47,6 +53,14 @@ export interface CoopApiMemberBankingDataPartialUpdateRequest {
 }
 
 export interface CoopApiMemberBankingDataRetrieveRequest {
+  memberId?: string;
+}
+
+export interface CoopApiMemberPersonalDataPartialUpdateRequest {
+  patchedMemberProfilePersonalDataRequestRequest?: PatchedMemberProfilePersonalDataRequestRequest;
+}
+
+export interface CoopApiMemberPersonalDataRetrieveRequest {
   memberId?: string;
 }
 
@@ -361,6 +375,119 @@ export class CoopApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<MemberBankDataResponse> {
     const response = await this.coopApiMemberBankingDataRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coopApiMemberPersonalDataPartialUpdateRaw(
+    requestParameters: CoopApiMemberPersonalDataPartialUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/coop/api/member_personal_data`,
+        method: "PATCH",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PatchedMemberProfilePersonalDataRequestRequestToJSON(
+          requestParameters["patchedMemberProfilePersonalDataRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coopApiMemberPersonalDataPartialUpdate(
+    requestParameters: CoopApiMemberPersonalDataPartialUpdateRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response = await this.coopApiMemberPersonalDataPartialUpdateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coopApiMemberPersonalDataRetrieveRaw(
+    requestParameters: CoopApiMemberPersonalDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberProfilePersonalDataResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/coop/api/member_personal_data`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberProfilePersonalDataResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coopApiMemberPersonalDataRetrieve(
+    requestParameters: CoopApiMemberPersonalDataRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MemberProfilePersonalDataResponse> {
+    const response = await this.coopApiMemberPersonalDataRetrieveRaw(
       requestParameters,
       initOverrides,
     );

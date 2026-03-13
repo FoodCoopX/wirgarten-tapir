@@ -83,12 +83,7 @@
                             {% if extra_email_addresses_enabled %}
                                 <span id="extra_email_addresses" data-member-id="{{ object.id }}"></span>
                             {% endif %}
-                            <button class="btn tapir-btn btn-outline-primary"
-                                    onclick="FormModal.load(`{% url 'wirgarten:member_edit' object.pk %}`, 'Persönliche Daten ändern')"
-                                    id="tapir_user_edit_button">
-                                <span class="material-icons">edit</span>
-                                <h5 class="mb-0">{% translate 'Bearbeiten' %}</h5>
-                            </button>
+                            <span id="edit_personal_data_button" data-member-id="{{ object.id }}"></span>
                         </span>
                     </div>
                     <div class="card-body">

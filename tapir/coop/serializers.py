@@ -32,3 +32,29 @@ class UpdateMemberBankDataRequestSerializer(serializers.Serializer):
     iban = serializers.CharField()
     account_owner = serializers.CharField()
     sepa_consent = serializers.BooleanField()
+
+
+class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone_number = serializers.CharField()
+    street = serializers.CharField()
+    street_2 = serializers.CharField(allow_blank=True)
+    postcode = serializers.CharField()
+    city = serializers.CharField()
+    is_student = serializers.BooleanField(required=False)
+    can_edit_student = serializers.BooleanField()
+
+
+class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone_number = serializers.CharField()
+    street = serializers.CharField()
+    street_2 = serializers.CharField(allow_blank=True)
+    postcode = serializers.CharField()
+    city = serializers.CharField()
+    is_student = serializers.BooleanField(required=False)

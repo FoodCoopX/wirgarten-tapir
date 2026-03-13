@@ -30,6 +30,11 @@ urlpatterns = [
         views.MemberBankDataApiView.as_view(),
         name="member_banking_data",
     ),
+    path(
+        "api/member_personal_data",
+        views.MemberPersonalDataApiView.as_view(),
+        name="member_personal_data",
+    ),
 ]
 
 router = DefaultRouter()

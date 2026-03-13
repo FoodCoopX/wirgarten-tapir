@@ -48,7 +48,6 @@
         {% include 'wirgarten/generic/action-button.html' with onclick='handleShowDeliveries()' disabled=True title='Lieferreihe anzeigen' type='info' icon='local_shipping' class='needs-member' %}
         <div style="width: 1em"></div>
         {% if perms.accounts.manage %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleEditMemberDetails()' disabled=True title='Mitgliedsdaten ändern' type='primary' icon='manage_accounts' class='needs-member' %}
             {% if perms.coop.manage and show_cooperative_content %}
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleCancelCoopShares()' disabled=True title='Genossenschaftsanteile kündigen' type='primary' icon='free_cancellation' class='needs-member' %}
@@ -104,14 +103,15 @@
             <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
             <td class="text-end">
                 {% if not member.current_member_contribution and not member.future_member_contribution_amount %}
-                    <span> - </span>
+                    <span>-</span>
                 {% elif member.current_member_contribution and not member.future_member_contribution_amount %}
                     <span>{{ member.current_member_contribution|format_currency }} €</span>
                 {% elif not member.current_member_contribution and member.future_member_contribution_amount %}
-                    <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}: </small>{{ member.future_member_contribution_amount|format_currency }} €</span>
+                    <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}:</small>{{ member.future_member_contribution_amount|format_currency }} €</span>
                 {% elif member.current_member_contribution and member.future_member_contribution_amount %}
-                    <span><small>Aktuell: </small>{{ member.current_member_contribution|format_currency }} €</span><br />
-                    <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}: </small>{{ member.future_member_contribution_amount|format_currency }} €</span>
+                    <span><small>Aktuell:</small>{{ member.current_member_contribution|format_currency }} €</span>
+                    <br />
+                    <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}:</small>{{ member.future_member_contribution_amount|format_currency }} €</span>
                 {% endif %}
             </td>
             <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
@@ -121,140 +121,136 @@
 {% endblock %}
 {% block script %}
     <script>
-    const memberRows = document.getElementsByClassName('member-row');
-    const buttons = document.getElementsByClassName('needs-member');
-    const trialDependentButtons = document.getElementsByClassName('needs-trial-period');
+        const memberRows = document.getElementsByClassName('member-row');
+        const buttons = document.getElementsByClassName('needs-member');
+        const trialDependentButtons = document.getElementsByClassName('needs-trial-period');
 
-    const activateRow = () => {
-        const params = Tapir.getUrlParams();
+        const activateRow = () => {
+            const params = Tapir.getUrlParams();
 
-        if(params.member){
-            for(row of memberRows){
-                if(row.id === `member-${params.member}`){
-                    row.classList.add('table-active');
-                } else {
-                    row.classList.remove('table-active');
+            if (params.member) {
+                for (row of memberRows) {
+                    if (row.id === `member-${params.member}`) {
+                        row.classList.add('table-active');
+                    } else {
+                        row.classList.remove('table-active');
+                    }
                 }
-            }
 
-            for(btn of buttons){
-                btn.disabled = false;
-            }
+                for (btn of buttons) {
+                    btn.disabled = false;
+                }
 
-            for(btn of trialDependentButtons){
-                if(params.trial === "true"){
-                    btn.classList.add('btn-outline-warning')
-                    btn.classList.remove('btn-outline-danger')
-                } else {
-                    btn.classList.remove('btn-outline-warning')
-                    btn.classList.add('btn-outline-danger')
+                for (btn of trialDependentButtons) {
+                    if (params.trial === "true") {
+                        btn.classList.add('btn-outline-warning')
+                        btn.classList.remove('btn-outline-danger')
+                    } else {
+                        btn.classList.remove('btn-outline-warning')
+                        btn.classList.add('btn-outline-danger')
+                    }
                 }
             }
         }
-    }
 
-    const handleSelectMember = (memberId, trial) => {
+        const handleSelectMember = (memberId, trial) => {
+            const params = Tapir.getUrlParams();
+
+            if (params.member === memberId) {
+                handleShowMemberDetailsPage();
+            } else {
+                params.member = memberId;
+                params.trial = trial;
+
+                Tapir.replaceUrlParams(params);
+
+                activateRow();
+            }
+        }
+
+        const handleExport = () => {
+            const params = Tapir.getUrlParams();
+            const url = "{% url 'wirgarten:member_overview_export' %}"
+            const newParams = {
+                ...params,
+                next: window.location.pathname + Tapir.stringifyUrlParams(params)
+            };
+            window.location.href = url + Tapir.stringifyUrlParams(newParams);
+        }
+
+        const handleExportCoopMemberList = () => {
+            window.location.href = "{% url 'wirgarten:member_list_coop_export' %}";
+        }
+
+        const handleAddMember = () => {
+            FormModal.load('{% url '
+                wirgarten: member_create ' %}', 'Neues Mitglied anlegen');
+        }
+
+        const handleShowMemberDetailsPage = () => {
+            const params = Tapir.getUrlParams();
+
+            window.location.href = `/tapir/members/${params.member}`;
+        }
+
+        const handleShowContractPage = () => {
+            const params = Tapir.getUrlParams();
+            window.location.href = "{% url 'wirgarten:subscription_list' %}?member=" + params.member;
+        }
+
+        const handleShowPayments = () => {
+            const params = Tapir.getUrlParams();
+            window.location.href = `../../../../payments/${params.member}`;
+        }
+
+        const handleShowDeliveries = () => {
+            const params = Tapir.getUrlParams();
+            window.location.href = `/tapir/deliveries/${params.member}`;
+        }
+
+        const handleTransferCoopShares = () => {
+            const params = Tapir.getUrlParams();
+            FormModal.load(`/tapir/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
+        }
+
+        const handleCancelCoopShares = () => {
+            const params = Tapir.getUrlParams();
+            FormModal.load(`/tapir/members/${params.member}/coopsharescancel`, "Genossenschaftsanteile kündigen");
+        }
+
+        const handleResendVerifyEmail = () => {
+            const params = Tapir.getUrlParams();
+            ConfirmationModal.open('Verifizierungs-Email erneut senden', 'Bist du dir sicher, dass du die Verifizierungs-Email erneut an dieses Mitglied senden möchtest?', 'Mail erneut senden', 'danger', () => {
+                const url = "{% url 'wirgarten:member_resend_verify_email' pk='-----' %}".replace('/-----/', '/' + params.member + '/');
+                const newParams = {
+                    next: window.location.pathname + Tapir.stringifyUrlParams(params)
+                };
+                window.location.replace(url + Tapir.stringifyUrlParams(newParams));
+            })
+        }
+
+        const handleDeleteMember = () => {
+            ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du dieses Mitglied wirklich löschen?', 'Löschen', 'danger', () => {
+                alert("Not yet implemented!")
+            })
+        }
+
+        activateRow();
+
         const params = Tapir.getUrlParams();
+        if (params.resend_verify_email) {
+            if (params.resend_verify_email === 'success') {
+                const alert = document.getElementById("success-alert");
+                alert.style.display = 'block';
+                alert.querySelectorAll(".alert-heading")[0].innerText = "Verifizierungs-Email erfolgreich versendet!"
+            } else {
+                const alert = document.getElementById("error-alert");
+                alert.style.display = 'block';
+                alert.querySelectorAll(".alert-content")[0].innerText = decodeURIComponent(params.resend_verify_email);
+            }
 
-        if(params.member === memberId){
-            handleShowMemberDetailsPage();
-        } else {
-            params.member = memberId;
-            params.trial = trial;
-
+            params.resend_verify_email = undefined;
             Tapir.replaceUrlParams(params);
-
-            activateRow();
         }
-    }
-
-    const handleExport = () => {
-        const params = Tapir.getUrlParams();
-        const url = "{% url 'wirgarten:member_overview_export' %}"
-        const newParams = {...params, next: window.location.pathname + Tapir.stringifyUrlParams(params)};
-        window.location.href = url + Tapir.stringifyUrlParams(newParams);
-    }
-
-    const handleExportCoopMemberList = () => {
-        window.location.href = "{% url 'wirgarten:member_list_coop_export' %}";
-    }
-
-    const handleAddMember = () => {
-        FormModal.load('{% url 'wirgarten:member_create' %}', 'Neues Mitglied anlegen');
-    }
-
-    const handleShowMemberDetailsPage = () => {
-        const params = Tapir.getUrlParams();
-
-        window.location.href = `/tapir/members/${params.member}`;
-    }
-
-    const handleShowContractPage = () => {
-        const params = Tapir.getUrlParams();
-        window.location.href = "{% url 'wirgarten:subscription_list' %}?member=" + params.member;
-    }
-
-    const handleShowPayments = () => {
-        const params = Tapir.getUrlParams();
-        window.location.href = `../../../../payments/${params.member}`;
-    }
-
-    const handleShowDeliveries = () => {
-        const params = Tapir.getUrlParams();
-        window.location.href = `/tapir/deliveries/${params.member}`;
-    }
-
-    const handleTransferCoopShares = () => {
-        const params = Tapir.getUrlParams();
-        FormModal.load(`/tapir/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
-    }
-
-    const handleCancelCoopShares = () => {
-        const params = Tapir.getUrlParams();
-        FormModal.load(`/tapir/members/${params.member}/coopsharescancel`, "Genossenschaftsanteile kündigen");
-    }
-
-    const handleEditMemberDetails = () => {
-        const params = Tapir.getUrlParams();
-        FormModal.load(`/tapir/members/${params.member}/edit`, 'Persönliche Daten ändern')
-        FormModal.addCallback((e) => {
-            if(e.data.type === "modal-save-successful"){
-                window.location.replace(window.location.href)
-            }
-        })
-    }
-
-    const handleResendVerifyEmail = () => {
-        const params = Tapir.getUrlParams();
-        ConfirmationModal.open('Verifizierungs-Email erneut senden', 'Bist du dir sicher, dass du die Verifizierungs-Email erneut an dieses Mitglied senden möchtest?', 'Mail erneut senden', 'danger', () => {
-            const url = "{% url 'wirgarten:member_resend_verify_email' pk='-----' %}".replace('/-----/', '/' + params.member + '/');
-            const newParams = {next: window.location.pathname + Tapir.stringifyUrlParams(params)};
-            window.location.replace(url + Tapir.stringifyUrlParams(newParams));
-        })
-    }
-
-    const handleDeleteMember = () => {
-        ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du dieses Mitglied wirklich löschen?', 'Löschen', 'danger', () => {
-            alert("Not yet implemented!")
-        })
-    }
-
-    activateRow();
-
-    const params = Tapir.getUrlParams();
-    if(params.resend_verify_email){
-        if(params.resend_verify_email === 'success'){
-            const alert = document.getElementById("success-alert");
-            alert.style.display = 'block';
-            alert.querySelectorAll(".alert-heading")[0].innerText="Verifizierungs-Email erfolgreich versendet!"
-        } else {
-            const alert = document.getElementById("error-alert");
-            alert.style.display = 'block';
-            alert.querySelectorAll(".alert-content")[0].innerText=decodeURIComponent(params.resend_verify_email);
-        }
-
-        params.resend_verify_email = undefined;
-        Tapir.replaceUrlParams(params);
-    }
     </script>
 {% endblock %}
