@@ -713,13 +713,10 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         if reference_date is None:
             reference_date = max(self.start_date, get_today(cache=cache))
 
-        if not hasattr(self, "_total_price"):
-            from tapir.wirgarten.service.products import get_product_price
+        from tapir.wirgarten.service.products import get_product_price
 
-            price = get_product_price(self.product, reference_date, cache=cache).price
-            self._total_price = self.quantity * price
-
-        return self._total_price
+        price = get_product_price(self.product, reference_date, cache=cache).price
+        return self.quantity * price
 
     @property
     def total_price_without_soli(self):
