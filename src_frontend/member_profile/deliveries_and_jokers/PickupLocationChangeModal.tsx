@@ -15,6 +15,7 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
+import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
 import { v4 as uuidv4 } from "uuid";
@@ -303,33 +304,11 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* Delivery Day Filter Tabs */}
-          {availableDeliveryDays.length > 1 && (
-            <div className="mb-3">
-              <Nav variant="pills" className="flex-row">
-                <Nav.Item>
-                  <Nav.Link
-                    active={selectedDeliveryDay === null}
-                    onClick={() => setSelectedDeliveryDay(null)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    Alle Tage
-                  </Nav.Link>
-                </Nav.Item>
-                {availableDeliveryDays.map((day) => (
-                  <Nav.Item key={day}>
-                    <Nav.Link
-                      active={selectedDeliveryDay === day}
-                      onClick={() => setSelectedDeliveryDay(day)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {WEEKDAY_NAMES[day]}
-                    </Nav.Link>
-                  </Nav.Item>
-                ))}
-              </Nav>
-            </div>
-          )}
+          <DeliveryDayTabs
+            availableDays={availableDeliveryDays}
+            selectedDay={selectedDeliveryDay}
+            onSelectDay={setSelectedDeliveryDay}
+          />
 
           {waitingListModeEnabled && (
             <PickupLocationWaitingListSelector

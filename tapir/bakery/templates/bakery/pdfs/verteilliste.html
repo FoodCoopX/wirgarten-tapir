@@ -1,6 +1,20 @@
 {% extends "bakery/pdfs/base_pdf.html" %}
 {% load bakery_pdf_tags %}
 
+{% block extra_styles %}
+  @page {
+    size: A4 landscape;
+    margin: 1.5cm;
+  }
+
+  .bread-separator {
+    border-left: 2.5px solid #8B4513 !important;
+  }
+
+  .green { color: #28a745; }
+  .red { color: #dc3545; }
+{% endblock %}
+
 {% block content %}
 
 {% if not has_solver_results %}
@@ -10,39 +24,124 @@
 {% endif %}
 
 {% if locations %}
-  
+
   <table>
     <thead>
       <tr>
-        <th>Abholstation</th>
-        {% for bread_name in bread_names %}
-        <th class="text-center">{{ bread_name }}</th>
-        {% endfor %}
-        <th class="text-end">Gesamt</th>
+        <th rowspan="2" style="vertical-align: bottom;">Abholstation</th>
+        {% if has_solver_results %}
+          {% for bread_name in bread_names %}
+          <th colspan="3" class="text-center bread-separator" style="border-bottom: none;">{{ bread_name }}</th>
+          {% endfor %}
+          <th colspan="3" class="text-center bread-separator" style="border-bottom: none;">Gesamt</th>
+        {% else %}
+          {% if bread_names %}
+            {% for bread_name in bread_names %}
+            <th class="text-center bread-separator" style="border-bottom: none;">{{ bread_name }}</th>
+            {% endfor %}
+          {% endif %}
+          <th colspan="3" class="text-center bread-separator" style="border-bottom: none;">Gesamt</th>
+        {% endif %}
+      </tr>
+      <tr>
+        {% if has_solver_results %}
+          {% for bread_name in bread_names %}
+          <th class="text-center bread-separator" style="font-size: 0.6em; font-weight: normal;">Best.</th>
+          <th class="text-center" style="font-size: 0.6em; font-weight: normal;">+/-</th>
+          <th class="text-center" style="font-size: 0.6em; font-weight: normal;">Ges.</th>
+          {% endfor %}
+          <th class="text-center bread-separator" style="font-size: 0.6em; font-weight: normal;">Best.</th>
+          <th class="text-center" style="font-size: 0.6em; font-weight: normal;">+/-</th>
+          <th class="text-center" style="font-size: 0.6em; font-weight: normal;">Ges.</th>
+        {% else %}
+          {% if bread_names %}
+            {% for bread_name in bread_names %}
+            <th class="text-center bread-separator" style="font-size: 0.6em; font-weight: normal;">Best.</th>
+            {% endfor %}
+          {% endif %}
+          <th class="text-center bread-separator" style="font-size: 0.6em; font-weight: normal;">Best.</th>
+          <th class="text-center" style="font-size: 0.6em; font-weight: normal;">offen</th>
+          <th class="text-center" style="font-size: 0.6em; font-weight: normal;">Ges.</th>
+        {% endif %}
       </tr>
     </thead>
     <tbody>
       {% for loc in locations %}
       <tr>
         <td>{{ loc.name }}</td>
-        {% for bread_name in bread_names %}
-        <td class="text-center {% if loc.breads|get_item:bread_name %}{% else %}grey{% endif %}">
-          {{ loc.breads|get_item:bread_name|default:"—" }}
-        </td>
-        {% endfor %}
-        <td class="text-end brown">{{ loc.total }}</td>
+        {% if has_solver_results %}
+          {% for bread_name in bread_names %}
+            {% with bread_data=loc.breads|get_item:bread_name %}
+            <td class="text-center bread-separator">{{ bread_data.ordered|default:"—" }}</td>
+            <td class="text-center {% if bread_data.extra > 0 %}green{% elif bread_data.extra < 0 %}red{% else %}grey{% endif %}">
+              {% if bread_data.extra > 0 %}+{{ bread_data.extra }}{% elif bread_data %}{{ bread_data.extra }}{% else %}—{% endif %}
+            </td>
+            <td class="text-center brown">{{ bread_data.baked|default:"—" }}</td>
+            {% endwith %}
+          {% endfor %}
+          <td class="text-center bread-separator">{{ loc.total_ordered }}</td>
+          <td class="text-center {% if loc.total_extra > 0 %}green{% elif loc.total_extra < 0 %}red{% endif %}">
+            {% if loc.total_extra > 0 %}+{{ loc.total_extra }}{% else %}{{ loc.total_extra }}{% endif %}
+          </td>
+          <td class="text-center brown">{{ loc.total_baked }}</td>
+        {% else %}
+          {% if bread_names %}
+            {% for bread_name in bread_names %}
+              {% with bread_data=loc.breads|get_item:bread_name %}
+              <td class="text-center bread-separator">{{ bread_data.ordered|default:"—" }}</td>
+              {% endwith %}
+            {% endfor %}
+          {% endif %}
+          <td class="text-center bread-separator">{{ loc.total_ordered }}</td>
+          <td class="text-center {% if loc.total_extra > 0 %}red{% else %}grey{% endif %}">
+            {{ loc.total_extra }}
+          </td>
+          <td class="text-center brown">{{ loc.total_baked }}</td>
+        {% endif %}
       </tr>
       {% endfor %}
       <tr class="total-row">
         <td>Gesamt</td>
-        {% for bread_name in bread_names %}
-        <td class="text-center">{{ bread_totals|get_item:bread_name|default:"0" }}</td>
-        {% endfor %}
-        <td class="text-end">{{ grand_total }}</td>
+        {% if has_solver_results %}
+          {% for bread_name in bread_names %}
+            {% with bt=bread_totals|get_item:bread_name %}
+            <td class="text-center bread-separator">{{ bt.ordered|default:"0" }}</td>
+            <td class="text-center {% if bt.extra > 0 %}green{% elif bt.extra < 0 %}red{% endif %}">
+              {% if bt.extra > 0 %}+{{ bt.extra }}{% else %}{{ bt.extra|default:"0" }}{% endif %}
+            </td>
+            <td class="text-center">{{ bt.baked|default:"0" }}</td>
+            {% endwith %}
+          {% endfor %}
+          <td class="text-center bread-separator">{{ grand_total_ordered }}</td>
+          <td class="text-center {% if grand_total_extra > 0 %}green{% elif grand_total_extra < 0 %}red{% endif %}">
+            {% if grand_total_extra > 0 %}+{{ grand_total_extra }}{% else %}{{ grand_total_extra }}{% endif %}
+          </td>
+          <td class="text-center">{{ grand_total_baked }}</td>
+        {% else %}
+          {% if bread_names %}
+            {% for bread_name in bread_names %}
+              {% with bt=bread_totals|get_item:bread_name %}
+              <td class="text-center bread-separator">{{ bt.ordered|default:"0" }}</td>
+              {% endwith %}
+            {% endfor %}
+          {% endif %}
+          <td class="text-center bread-separator">{{ grand_total_ordered }}</td>
+          <td class="text-center {% if grand_total_extra > 0 %}red{% else %}grey{% endif %}">
+            {{ grand_total_extra }}
+          </td>
+          <td class="text-center">{{ grand_total_baked }}</td>
+        {% endif %}
       </tr>
     </tbody>
   </table>
 
+  {% if not has_solver_results %}
+  <div class="legend" style="margin-top: 4mm;">
+    Best. = direkt gewählte Brotsorten &nbsp;|&nbsp;
+    offen = noch nicht gewählt &nbsp;|&nbsp;
+    Ges. = Brotanteile gesamt
+  </div>
+  {% endif %}
 
 {% else %}
   <div class="no-data">Keine Verteilungsdaten vorhanden.</div>

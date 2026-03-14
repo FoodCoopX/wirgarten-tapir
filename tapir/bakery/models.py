@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta
-
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from tapir.bakery.services.breaddelivery_service import (
+    ensure_bread_deliveries_for_member,
+)
 from tapir.core.models import TapirModel
 from tapir.wirgarten.models import (
     Member,
@@ -213,136 +214,18 @@ class BreadDelivery(TapirModel):
         ]
 
 
-def get_weeks_in_range(start_date, end_date):
-    """
-    Generator that yields (year, week_number) tuples for all weeks between start_date and end_date
-    """
-    current_date = start_date
-    while current_date <= end_date:
-        iso_calendar = current_date.isocalendar()
-        yield (iso_calendar[0], iso_calendar[1])  # (year, week)
-        current_date += timedelta(weeks=1)
-
-
 @receiver(post_save, sender="wirgarten.Subscription")
-def sync_bread_deliveries_with_subscription(sender, instance, created, **kwargs):
-    """
-    When a subscription is created or updated, synchronize all BreadDelivery records
-    for current and future weeks within the subscription period
-    """
-    # Only sync for weekly subscriptions
-    if instance.product.type.delivery_cycle != "WEEKLY":
+def on_subscription_saved(sender, instance, created, **kwargs):
+    if instance.product.type.delivery_cycle != "weekly":
         return
-
-    # Only sync if subscription has valid dates
     if not instance.start_date or not instance.end_date:
         return
-
-    now = datetime.now().date()
-
-    start_date = instance.start_date
-    end_date = instance.end_date
-
-    member_pickup_location = instance.member.get_pickup_location(now)
-
-    weeks_in_period = list(get_weeks_in_range(start_date, end_date))
-
-    created_count = 0
-    deleted_count = 0
-    skipped_count = 0
-
-    for year, week in weeks_in_period:
-        existing_deliveries = BreadDelivery.objects.filter(
-            subscription=instance, year=year, delivery_week=week
-        ).order_by("slot_number")
-
-        existing_count = existing_deliveries.count()
-        target_quantity = instance.quantity
-
-        if existing_count < target_quantity:
-            for slot_number in range(existing_count + 1, target_quantity + 1):
-                BreadDelivery.objects.create(
-                    subscription=instance,
-                    year=year,
-                    delivery_week=week,
-                    slot_number=slot_number,
-                    pickup_location=member_pickup_location,
-                    bread=None,
-                )
-                created_count += 1
-        elif existing_count > target_quantity:
-            deliveries_to_remove = existing_deliveries[target_quantity:]
-            for delivery in deliveries_to_remove:
-                delivery.delete()
-                deleted_count += 1
-        else:
-            skipped_count += 1
-
-    # Delete any deliveries outside the subscription period
-    valid_year_weeks = set(weeks_in_period)
-    all_deliveries = BreadDelivery.objects.filter(subscription=instance)
-    ids_to_keep = []
-    for delivery in all_deliveries:
-        if (delivery.year, delivery.delivery_week) in valid_year_weeks:
-            ids_to_keep.append(delivery.id)
-
-    outside = all_deliveries.exclude(id__in=ids_to_keep)
-    outside.delete()
+    ensure_bread_deliveries_for_member(instance.member)
 
 
 @receiver(post_save, sender="wirgarten.MemberPickupLocation")
-def update_bread_deliveries_pickup_location(sender, instance, created, **kwargs):
-    """
-    When a member's pickup location changes or is created, update all current and future BreadDelivery records.
-    If the member has subscriptions but no deliveries yet, trigger their creation.
-    """
-
-    now = datetime.now().date()
-    current_iso = now.isocalendar()
-    current_year, current_week = current_iso[0], current_iso[1]
-
-    # Check what deliveries exist for this member
-    all_member_deliveries = BreadDelivery.objects.filter(
-        subscription__member=instance.member
-    )
-
-    # Check what the filter would match
-    future_deliveries = all_member_deliveries.filter(year__gte=current_year).filter(
-        models.Q(year__gt=current_year)
-        | models.Q(year=current_year, delivery_week__gte=current_week)
-    )
-    print(f"   📦 Future deliveries (to update): {future_deliveries.count()}")
-
-    if future_deliveries.count() > 0:
-        print(
-            f"   First future delivery: Year={future_deliveries.first().year}, Week={future_deliveries.first().delivery_week}"
-        )
-        print(
-            f"   Last future delivery: Year={future_deliveries.last().year}, Week={future_deliveries.last().delivery_week}"
-        )
-
-    # Do the update
-    updated = future_deliveries.update(pickup_location=instance.pickup_location)
-
-    if created or updated == 0:
-        print("   ➡️  YES - triggering subscription sync")
-
-        active_subscriptions = Subscription.objects.filter(
-            member=instance.member,
-            end_date__gte=now,
-        )
-        print(f"   Active subscriptions found: {active_subscriptions.count()}")
-
-        for subscription in active_subscriptions:
-            print(f"\n   ➡️  Triggering sync for subscription {subscription.id}")
-            print(
-                f"       Period: {subscription.start_date} to {subscription.end_date}"
-            )
-            sync_bread_deliveries_with_subscription(
-                sender=Subscription, instance=subscription, created=False, kwargs={}
-            )
-    else:
-        print("   ➡️  NO - deliveries were updated directly, no sync needed")
+def on_pickup_location_saved(sender, instance, created, **kwargs):
+    ensure_bread_deliveries_for_member(instance.member)
 
 
 class PreferredBread(TapirModel):

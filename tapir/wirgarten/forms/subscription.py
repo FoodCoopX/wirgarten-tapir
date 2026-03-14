@@ -11,7 +11,9 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
-from tapir.bakery.models import sync_bread_deliveries_with_subscription
+from tapir.bakery.services.breaddelivery_service import (
+    ensure_bread_deliveries_for_member,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
@@ -794,17 +796,11 @@ class AdditionalProductForm(forms.Form):
                     )
                 )
 
-        new_subscriptions = Subscription.objects.bulk_create(self.subscriptions)
+        Subscription.objects.bulk_create(self.subscriptions)
 
-        # Manually trigger sync for each created subscription
+        # Ensure bread deliveries are created/updated for this member
         if get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=self.cache):
-            for subscription in new_subscriptions:
-                sync_bread_deliveries_with_subscription(
-                    sender=Subscription,
-                    instance=subscription,
-                    created=True,
-                    raw=False,
-                )
+            ensure_bread_deliveries_for_member(member=member_id, cache=self.cache)
 
         TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())

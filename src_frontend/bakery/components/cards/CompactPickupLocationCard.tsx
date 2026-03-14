@@ -1,5 +1,9 @@
 import React from 'react';
-import { GeoAlt, Calendar } from 'react-bootstrap-icons';
+import { GeoAlt } from 'react-bootstrap-icons';
+import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek';
+
+dayjs.extend(isoWeek);
 
 interface CompactPickupLocationCardProps {
   name: string;
@@ -8,6 +12,8 @@ interface CompactPickupLocationCardProps {
   deliveryDay?: number;
   onEdit?: () => void;
   disabled?: boolean;
+  year?: number;
+  week?: number;
 }
 
 const DAY_LABELS: Record<number, string> = {
@@ -27,7 +33,13 @@ export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps>
   deliveryDay,
   onEdit,
   disabled = false,
+  year, 
+  week
 }) => {
+  const deliveryDate = (year && week && deliveryDay !== undefined && deliveryDay !== null)
+    ? dayjs().year(year).isoWeek(week).isoWeekday(deliveryDay).format('DD.MM.YYYY')
+    : null;
+
   return (
     <div 
       className="card w-100" 
@@ -54,9 +66,9 @@ export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps>
 
             {deliveryDay !== undefined && deliveryDay !== null && (
               <div className="d-flex align-items-center text-muted small" style={{ marginLeft: '26px' }}>
-                
                 <span style={{ fontSize: '0.85rem' }}>
                   Lieferung: {DAY_LABELS[deliveryDay] || `Tag ${deliveryDay}`}
+                  {deliveryDate && `, ${deliveryDate}`}
                 </span>
               </div>
             )}
@@ -64,9 +76,7 @@ export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps>
 
           {onEdit && (
             <button
-            className="btn btn-sm btn-outline-secondary dark-brown-button"
-
-             
+              className="btn btn-sm btn-outline-secondary dark-brown-button"
               onClick={onEdit}
               disabled={disabled}
             >

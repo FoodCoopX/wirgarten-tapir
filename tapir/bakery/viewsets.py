@@ -243,8 +243,16 @@ class BreadViewSet(viewsets.ModelViewSet):
         label_ids = request.query_params.get("label_ids", "").split(",")
 
         try:
-            label_ids = [int(id) for id in label_ids if id]
+            label_ids = [id.strip() for id in label_ids if id.strip()]
         except ValueError:
+            return Response({"error": "Invalid label IDs provided"}, status=400)
+
+        if not label_ids:
+            return Response({"error": "Invalid label IDs provided"}, status=400)
+
+        # Validate that all provided IDs correspond to existing labels
+        existing_count = BreadLabel.objects.filter(id__in=label_ids).count()
+        if existing_count != len(label_ids):
             return Response({"error": "Invalid label IDs provided"}, status=400)
 
         breads = self.get_queryset().filter(labels__id__in=label_ids).distinct()

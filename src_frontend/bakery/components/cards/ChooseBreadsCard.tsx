@@ -112,7 +112,9 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     const deliveryDate = dayjs()
       .year(selectedYear)
       .isoWeek(selectedWeek)
-      .isoWeekday(firstDelivery.deliveryDay+1); // 1 = Monday, 7 = Sunday
+      .isoWeekday(firstDelivery.deliveryDay); // 1 = Monday, 7 = Sunday
+    
+    console.log('Delivery Date:', deliveryDate.format('YYYY-MM-DD'));
 
     // Calculate deadline: delivery_date - baking_day_offset - last_choosing_day_offset
     const totalDaysBeforeDelivery = bakingDayBeforeDelivery + lastChoosingDayBeforeBaking;
@@ -128,7 +130,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       );
     } else {
       setBreadDeadlineMessage(
-        `Auswahl für diese Woche bis ${deadline.format('DD.MM.YYYY')}`
+        `Auswahl für diese Woche möglich bis ${deadline.format('DD.MM.YYYY')}`
       );
     }
   };
@@ -279,6 +281,8 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       <div className="row g-3">
         {deliveries.map((delivery, index) => {
           const isFirstSlot = index === 0;
+          const hasBreadSelected = !!delivery.bread;
+
           const canEditThisLocation = (chooseStationPerBread || isFirstSlot) && canChangePickupLocation;
           const selectedBread = getBreadDetails(delivery.bread || null);
           const breadLabels = selectedBread
@@ -316,9 +320,16 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                           city={delivery.pickupLocationCity || 'Unbekannt'}
                           deliveryDay={delivery.deliveryDay}
                           onEdit={canEditThisLocation ? () => setEditingLocation(delivery.id!) : undefined}
-                          disabled={saving === delivery.id || !canChangePickupLocation}
+                          disabled={saving === delivery.id || !canChangePickupLocation || hasBreadSelected}
+                          year = {selectedYear}
+                          week = {selectedWeek}
                         />
-                        {!canChangePickupLocation && canEditThisLocation && (
+                        {hasBreadSelected  && !isAfterBreadDeadline &&(
+                            <div className="alert alert-warning mt-2 mb-0 py-1 px-2">
+                              <small className="text-muted">Zum Ändern des Abholorts, bitte zuerst Brotauswahl entfernen. (Es sind nicht alle Brote an allen Abholorten verfügbar.)</small>
+                            </div>
+                                                  )}
+                        {!hasBreadSelected && !canChangePickupLocation && canEditThisLocation && (
                           <div className="alert alert-warning mt-2 mb-0 py-1 px-2">
                             <small>⚠️ Nur ab nächster Woche änderbar</small>
                           </div>
@@ -374,12 +385,12 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                         />
                         {isAfterBreadDeadline && (
                           <div className="alert alert-danger mt-2 mb-0 py-1 px-2">
-                            <small>⚠️ {breadDeadlineMessage}</small>
+                            <small>{breadDeadlineMessage}</small>
                           </div>
                         )}
                         {!isAfterBreadDeadline && breadDeadlineMessage && (
                           <div className="alert alert-info mt-2 mb-0 py-1 px-2">
-                            <small>ℹ️ {breadDeadlineMessage}</small>
+                            <small>{breadDeadlineMessage}</small>
                           </div>
                         )}
                       </>

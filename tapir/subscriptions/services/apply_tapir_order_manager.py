@@ -1,7 +1,9 @@
 import datetime
 
 from tapir.accounts.models import TapirUser
-from tapir.bakery.models import sync_bread_deliveries_with_subscription
+from tapir.bakery.services.breaddelivery_service import (
+    ensure_bread_deliveries_for_member,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
@@ -119,15 +121,9 @@ class ApplyTapirOrderManager:
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
 
-        # Manually trigger sync for each created subscription
+        # Ensure bread deliveries are created/updated for this member
         if get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=cache):
-            for subscription in new_subscriptions:
-                sync_bread_deliveries_with_subscription(
-                    sender=Subscription,
-                    instance=subscription,
-                    created=True,
-                    raw=False,
-                )
+            ensure_bread_deliveries_for_member(member)
 
         TapirCacheManager.clear_category(cache=cache, category="subscriptions")
         if len(new_subscriptions) > 0:
