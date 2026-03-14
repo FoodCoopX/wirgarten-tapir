@@ -162,6 +162,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/SolverError'
           description: ''
+  /bakery/api/configuration-parameters/:
+    get:
+      operationId: bakery_api_configuration_parameters_retrieve
+      description: Get configuration parameters needed by the frontend.
+      summary: Get configuration parameters
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
+          description: ''
   /bakery/api/preferred-bread-statistics/:
     get:
       operationId: bakery_api_preferred_bread_statistics_retrieve
@@ -264,15 +289,15 @@ paths:
       operationId: bakery_bread_capacity_pickup_location_list
       parameters:
       - in: query
-        name: delivery_week
-        schema:
-          type: integer
-      - in: query
         name: pickup_location_ids[]
         schema:
           type: array
           items:
             type: string
+      - in: query
+        name: week
+        schema:
+          type: integer
       - in: query
         name: year
         schema:
@@ -1015,11 +1040,6 @@ paths:
       description: ViewSet for managing bread variants
       parameters:
       - in: query
-        name: delivery_week
-        schema:
-          type: integer
-        description: Filter by delivery week (requires pickup_location_id and year)
-      - in: query
         name: is_active
         schema:
           type: boolean
@@ -1034,6 +1054,11 @@ paths:
         schema:
           type: string
         description: Filter by pickup location ID (requires year and week)
+      - in: query
+        name: week
+        schema:
+          type: integer
+        description: Filter by delivery week (requires pickup_location_id and year)
       - in: query
         name: year
         schema:

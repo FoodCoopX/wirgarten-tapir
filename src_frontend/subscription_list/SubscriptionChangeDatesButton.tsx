@@ -25,7 +25,7 @@ const SubscriptionChangeDatesButton: React.FC<
         onClick={() => {
           const subscriptionId = getParameterFromUrl("contract");
           if (!subscriptionId) {
-            alert("Du musst erst das Vertrag auswählen.");
+            alert("Du musst erst den Vertrag auswählen.");
             return;
           }
           setSubscriptionId(subscriptionId);

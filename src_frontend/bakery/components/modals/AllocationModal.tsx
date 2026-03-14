@@ -87,7 +87,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       if (locationIds.length > 0) {
         capacities = await bakeryApi.bakeryBreadCapacityPickupLocationList({
           year,
-          deliveryWeek: week,
+          week,
           pickupLocationIds: locationIds,
         });
       }

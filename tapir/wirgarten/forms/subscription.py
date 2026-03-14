@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from datetime import date
-from math import floor, ceil
+from math import ceil, floor
 from typing import Dict
 
 from dateutil.relativedelta import relativedelta
@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
+from tapir.bakery.models import sync_bread_deliveries_with_subscription
 from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
@@ -58,10 +59,10 @@ from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
+    get_next_growing_period,
     get_product_price,
     get_total_price_for_subs,
-    get_next_growing_period,
-    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -311,10 +312,9 @@ class BaseProductForm(forms.Form):
             harvest_share_strings.append(
                 ",".join(
                     map(
-                        lambda p: BASE_PRODUCT_FIELD_PREFIX
-                        + p.name
-                        + ":"
-                        + str(prices[p.id]),
+                        lambda p: (
+                            BASE_PRODUCT_FIELD_PREFIX + p.name + ":" + str(prices[p.id])
+                        ),
                         harvest_share_products,
                     )
                 )
@@ -794,7 +794,17 @@ class AdditionalProductForm(forms.Form):
                     )
                 )
 
-        Subscription.objects.bulk_create(self.subscriptions)
+        new_subscriptions = Subscription.objects.bulk_create(self.subscriptions)
+
+        # Manually trigger sync for each created subscription
+        if get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=self.cache):
+            for subscription in new_subscriptions:
+                sync_bread_deliveries_with_subscription(
+                    sender=Subscription,
+                    instance=subscription,
+                    created=True,
+                    raw=False,
+                )
 
         TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())

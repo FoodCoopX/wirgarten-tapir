@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from tapir.core.models import TapirModel
@@ -184,13 +184,13 @@ class BreadDelivery(TapirModel):
     )  # 1, 2, 3, ... up to subscription.quantity
     pickup_location = models.ForeignKey(
         PickupLocation,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
     )
     bread = models.ForeignKey(
         Bread,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
     )
@@ -230,54 +230,22 @@ def sync_bread_deliveries_with_subscription(sender, instance, created, **kwargs)
     When a subscription is created or updated, synchronize all BreadDelivery records
     for current and future weeks within the subscription period
     """
-    print(f"\n{'=' * 60}")
-    print("🔔 SIGNAL: sync_bread_deliveries_with_subscription")
-    print(f"   Subscription ID: {instance.id}")
-    print(f"   Created: {created}")
-    print(
-        f"   Member: {instance.member.first_name} {instance.member.last_name} (ID: {instance.member.id})"
-    )
-    print(f"   Start: {instance.start_date}, End: {instance.end_date}")
-    print(f"   Quantity: {instance.quantity}")
-    print(f"{'=' * 60}")
+    # Only sync for weekly subscriptions
+    if instance.product.type.delivery_cycle != "WEEKLY":
+        return
 
+    # Only sync if subscription has valid dates
     if not instance.start_date or not instance.end_date:
-        print("   ❌ EARLY RETURN: start_date or end_date is None")
         return
 
     now = datetime.now().date()
-    print(f"   Now: {now}")
 
     start_date = instance.start_date
     end_date = instance.end_date
 
-    # Try to get member's pickup location
-    print("\n   📍 Looking up pickup location...")
-    print(f"   Calling instance.member.get_pickup_location({now})...")
-
     member_pickup_location = instance.member.get_pickup_location(now)
-    print(f"   Result: {member_pickup_location}")
-
-    if member_pickup_location is None:
-        print("   ⚠️  get_pickup_location returned None!")
-        print("   Checking MemberPickupLocation objects for this member...")
-        from tapir.wirgarten.models import MemberPickupLocation
-
-        mpls = MemberPickupLocation.objects.filter(member=instance.member)
-        print(f"   Found {mpls.count()} MemberPickupLocation(s):")
-        for mpl in mpls:
-            print(
-                f"     - Location: {mpl.pickup_location.name}, Valid from: {mpl.valid_from}"
-            )
-    else:
-        print(
-            f"   ✅ Found pickup location: {member_pickup_location.name} (ID: {member_pickup_location.id})"
-        )
 
     weeks_in_period = list(get_weeks_in_range(start_date, end_date))
-    print(f"\n   📅 Weeks in period: {len(weeks_in_period)}")
-    print(f"   First week: {weeks_in_period[0] if weeks_in_period else 'NONE'}")
-    print(f"   Last week: {weeks_in_period[-1] if weeks_in_period else 'NONE'}")
 
     created_count = 0
     deleted_count = 0
@@ -311,40 +279,15 @@ def sync_bread_deliveries_with_subscription(sender, instance, created, **kwargs)
             skipped_count += 1
 
     # Delete any deliveries outside the subscription period
-    outside = BreadDelivery.objects.filter(subscription=instance).exclude(
-        year__in=[w[0] for w in weeks_in_period],
-        delivery_week__in=[w[1] for w in weeks_in_period],
-    )
-    outside_count = outside.count()
+    valid_year_weeks = set(weeks_in_period)
+    all_deliveries = BreadDelivery.objects.filter(subscription=instance)
+    ids_to_keep = []
+    for delivery in all_deliveries:
+        if (delivery.year, delivery.delivery_week) in valid_year_weeks:
+            ids_to_keep.append(delivery.id)
+
+    outside = all_deliveries.exclude(id__in=ids_to_keep)
     outside.delete()
-
-    print("\n   📊 RESULT:")
-    print(f"   Created: {created_count}")
-    print(f"   Deleted (excess slots): {deleted_count}")
-    print(f"   Deleted (outside period): {outside_count}")
-    print(f"   Skipped (already correct): {skipped_count}")
-    print(f"   Pickup location used: {member_pickup_location}")
-
-    # Verify
-    final_deliveries = BreadDelivery.objects.filter(subscription=instance)
-    with_pickup = final_deliveries.filter(pickup_location__isnull=False).count()
-    without_pickup = final_deliveries.filter(pickup_location__isnull=True).count()
-    print(
-        f"   Final total: {final_deliveries.count()} (✅ with pickup: {with_pickup}, ❌ without: {without_pickup})"
-    )
-    print(f"{'=' * 60}\n")
-
-
-@receiver(post_delete, sender="wirgarten.Subscription")
-def delete_bread_deliveries_on_subscription_delete(sender, instance, **kwargs):
-    """
-    When a subscription is deleted, delete all associated bread deliveries
-    """
-    count = BreadDelivery.objects.filter(subscription=instance).count()
-    print("\n🔔 SIGNAL: delete_bread_deliveries_on_subscription_delete")
-    print(f"   Subscription ID: {instance.id}")
-    print(f"   Deleting {count} BreadDelivery objects")
-    BreadDelivery.objects.filter(subscription=instance).delete()
 
 
 @receiver(post_save, sender="wirgarten.MemberPickupLocation")
@@ -353,29 +296,14 @@ def update_bread_deliveries_pickup_location(sender, instance, created, **kwargs)
     When a member's pickup location changes or is created, update all current and future BreadDelivery records.
     If the member has subscriptions but no deliveries yet, trigger their creation.
     """
-    print(f"\n{'=' * 60}")
-    print("🔔 SIGNAL: update_bread_deliveries_pickup_location")
-    print(f"   MemberPickupLocation created: {created}")
-    print(
-        f"   Member: {instance.member.first_name} {instance.member.last_name} (ID: {instance.member.id})"
-    )
-    print(
-        f"   Pickup Location: {instance.pickup_location.name} (ID: {instance.pickup_location.id})"
-    )
-    print(f"   Valid from: {instance.valid_from}")
-    print(f"{'=' * 60}")
 
     now = datetime.now().date()
     current_iso = now.isocalendar()
     current_year, current_week = current_iso[0], current_iso[1]
-    print(f"   Now: {now}, Current year: {current_year}, Current week: {current_week}")
 
     # Check what deliveries exist for this member
     all_member_deliveries = BreadDelivery.objects.filter(
         subscription__member=instance.member
-    )
-    print(
-        f"\n   📦 Total BreadDeliveries for this member: {all_member_deliveries.count()}"
     )
 
     # Check what the filter would match
@@ -395,14 +323,6 @@ def update_bread_deliveries_pickup_location(sender, instance, created, **kwargs)
 
     # Do the update
     updated = future_deliveries.update(pickup_location=instance.pickup_location)
-    print(
-        f"\n   ✏️  Updated {updated} deliveries with pickup_location={instance.pickup_location.name}"
-    )
-
-    # Check if we need to trigger subscription sync
-    print("\n   🔍 Check if we need to trigger subscription sync:")
-    print(f"   created={created}, updated={updated}")
-    print(f"   Condition (created or updated == 0): {created or updated == 0}")
 
     if created or updated == 0:
         print("   ➡️  YES - triggering subscription sync")
@@ -423,18 +343,6 @@ def update_bread_deliveries_pickup_location(sender, instance, created, **kwargs)
             )
     else:
         print("   ➡️  NO - deliveries were updated directly, no sync needed")
-
-    # Final check
-    final_deliveries = BreadDelivery.objects.filter(
-        subscription__member=instance.member
-    )
-    with_pickup = final_deliveries.filter(pickup_location__isnull=False).count()
-    without_pickup = final_deliveries.filter(pickup_location__isnull=True).count()
-    print("\n   📊 FINAL STATE for member:")
-    print(f"   Total deliveries: {final_deliveries.count()}")
-    print(f"   ✅ With pickup: {with_pickup}")
-    print(f"   ❌ Without pickup: {without_pickup}")
-    print(f"{'=' * 60}\n")
 
 
 class PreferredBread(TapirModel):

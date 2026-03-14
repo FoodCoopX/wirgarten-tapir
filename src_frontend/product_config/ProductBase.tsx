@@ -15,7 +15,7 @@ const ProductBase: React.FC<ProductBaseProps> = ({ csrfToken }) => {
 
   function onClick() {
     if (!getProductIdFromUrl()) {
-      alert("Du musst erst das Produkt das du editieren möchtest auswählen.");
+      alert("Du musst erst das Produkt, das du editieren möchtest, auswählen.");
       return;
     }
     setShowModal(true);

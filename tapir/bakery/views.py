@@ -30,8 +30,10 @@ from tapir.bakery.serializers import (
 )
 from tapir.bakery.services.abholliste_service import AbhollisteService
 from tapir.bakery.utils import parse_week_params
+from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.wirgarten.models import PickupLocation
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class AvailableBreadsForDeliveryListView(APIView):
@@ -777,3 +779,60 @@ class PreferredBreadStatisticsView(APIView):
                 "breads": bread_statistics,
             }
         )
+
+
+@extend_schema(tags=["bakery"])
+class ConfigurationParametersView(APIView):
+    """
+    Get configuration parameters needed by the frontend.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Get configuration parameters",
+        responses={
+            200: {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "key": {"type": "string"},
+                        "value": {"type": "string"},
+                    },
+                },
+            }
+        },
+    )
+    def get(self, request: Request) -> Response:
+
+        # Define which parameters to expose to the frontend
+        exposed_parameters = [
+            {
+                "key": ParameterKeys.BAKERY_LAST_CHOOSING_DAY_BEFORE_BAKING_DAY,
+                "description": "Days before baking day when members must choose breads",
+            },
+            {
+                "key": ParameterKeys.BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY,
+                "description": "Days before delivery day when baking happens",
+            },
+        ]
+
+        parameters = []
+        for param in exposed_parameters:
+            try:
+                value = get_parameter_value(param["key"])
+                parameters.append(
+                    {
+                        "key": param["key"],
+                        "value": str(value) if value is not None else "",
+                    }
+                )
+            except Exception as e:
+                # Log error but don't fail the entire request
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to get parameter {param['key']}: {e}")
+
+        return Response(parameters)

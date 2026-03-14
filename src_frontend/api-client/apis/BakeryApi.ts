@@ -17,6 +17,7 @@ import * as runtime from '../runtime';
 import type {
   AbhollisteResponse,
   AvailableBreadsForDeliveryListResponse,
+  BakeryApiConfigurationParametersRetrieve200ResponseInner,
   BreadCapacityBulkUpdateRequest,
   BreadCapacityPickupLocation,
   BreadCapacityPickupLocationRequest,
@@ -70,6 +71,8 @@ import {
     AbhollisteResponseToJSON,
     AvailableBreadsForDeliveryListResponseFromJSON,
     AvailableBreadsForDeliveryListResponseToJSON,
+    BakeryApiConfigurationParametersRetrieve200ResponseInnerFromJSON,
+    BakeryApiConfigurationParametersRetrieve200ResponseInnerToJSON,
     BreadCapacityBulkUpdateRequestFromJSON,
     BreadCapacityBulkUpdateRequestToJSON,
     BreadCapacityPickupLocationFromJSON,
@@ -216,8 +219,8 @@ export interface BakeryBreadCapacityPickupLocationDestroyRequest {
 }
 
 export interface BakeryBreadCapacityPickupLocationListRequest {
-    deliveryWeek?: number;
     pickupLocationIds?: Array<string>;
+    week?: number;
     year?: number;
 }
 
@@ -345,10 +348,10 @@ export interface BakeryBreadsListDestroyRequest {
 }
 
 export interface BakeryBreadsListListRequest {
-    deliveryWeek?: number;
     isActive?: boolean;
     labelId?: string;
     pickupLocationId?: string;
+    week?: number;
     year?: number;
 }
 
@@ -736,6 +739,41 @@ export class BakeryApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get configuration parameters needed by the frontend.
+     * Get configuration parameters
+     */
+    async bakeryApiConfigurationParametersRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BakeryApiConfigurationParametersRetrieve200ResponseInner>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+        }
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/bakery/api/configuration-parameters/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(BakeryApiConfigurationParametersRetrieve200ResponseInnerFromJSON));
+    }
+
+    /**
+     * Get configuration parameters needed by the frontend.
+     * Get configuration parameters
+     */
+    async bakeryApiConfigurationParametersRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BakeryApiConfigurationParametersRetrieve200ResponseInner>> {
+        const response = await this.bakeryApiConfigurationParametersRetrieveRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Count preferred breads among members with active deliveries for the given week.
      */
     async bakeryApiPreferredBreadStatisticsRetrieveRaw(requestParameters: BakeryApiPreferredBreadStatisticsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{ [key: string]: any; }>> {
@@ -1034,12 +1072,12 @@ export class BakeryApi extends runtime.BaseAPI {
     async bakeryBreadCapacityPickupLocationListRaw(requestParameters: BakeryBreadCapacityPickupLocationListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BreadCapacityPickupLocation>>> {
         const queryParameters: any = {};
 
-        if (requestParameters['deliveryWeek'] != null) {
-            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
-        }
-
         if (requestParameters['pickupLocationIds'] != null) {
             queryParameters['pickup_location_ids[]'] = requestParameters['pickupLocationIds'];
+        }
+
+        if (requestParameters['week'] != null) {
+            queryParameters['week'] = requestParameters['week'];
         }
 
         if (requestParameters['year'] != null) {
@@ -2239,10 +2277,6 @@ export class BakeryApi extends runtime.BaseAPI {
     async bakeryBreadsListListRaw(requestParameters: BakeryBreadsListListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BreadList>>> {
         const queryParameters: any = {};
 
-        if (requestParameters['deliveryWeek'] != null) {
-            queryParameters['delivery_week'] = requestParameters['deliveryWeek'];
-        }
-
         if (requestParameters['isActive'] != null) {
             queryParameters['is_active'] = requestParameters['isActive'];
         }
@@ -2253,6 +2287,10 @@ export class BakeryApi extends runtime.BaseAPI {
 
         if (requestParameters['pickupLocationId'] != null) {
             queryParameters['pickup_location_id'] = requestParameters['pickupLocationId'];
+        }
+
+        if (requestParameters['week'] != null) {
+            queryParameters['week'] = requestParameters['week'];
         }
 
         if (requestParameters['year'] != null) {

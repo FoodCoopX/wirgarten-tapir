@@ -16,7 +16,7 @@ const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
   function onClick() {
     if (!getPeriodIdFromUrl()) {
       alert(
-        "Du musst erst die Vertragsperiode die du editieren möchtest auswählen.",
+        "Du musst erst die Vertragsperiode, die du editieren möchtest, auswählen.",
       );
       return;
     }

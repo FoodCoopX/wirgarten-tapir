@@ -21,7 +21,7 @@ const ProductTypeBase: React.FC<ProductTypeBaseProps> = ({ csrfToken }) => {
   function onEditClick() {
     if (!getProductTypeIdFromUrl()) {
       alert(
-        "Du musst erst das Produkt-Typ das du editieren möchtest auswählen.",
+        "Du musst erst den Produkt-Typ, den du editieren möchtest, auswählen.",
       );
       return;
     }

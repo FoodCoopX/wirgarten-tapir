@@ -18,6 +18,7 @@ models/AbhollisteResponse.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts
+models/BakeryApiConfigurationParametersRetrieve200ResponseInner.ts
 models/BestellWizardBaseDataResponse.ts
 models/BestellWizardCapacityCheckRequestRequest.ts
 models/BestellWizardCapacityCheckResponse.ts

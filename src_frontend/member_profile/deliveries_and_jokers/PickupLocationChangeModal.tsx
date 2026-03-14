@@ -72,23 +72,23 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   ] = useState(false);
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
 
-  // Get unique delivery days from pickup locations
-  const availableDeliveryDays = React.useMemo(() => {
+    // Get unique delivery days from pickup locations
+  const availableDeliveryDays = React.useMemo((): number[] => {
     const days = new Set(
       pickupLocations
-        .map((loc) => loc.deliveryDay)
-        .filter((day): day is number => day !== null && day !== undefined)
+        .map((loc) => Number(loc.deliveryDay))
+        .filter((day) => !isNaN(day))
     );
     return Array.from(days).sort();
   }, [pickupLocations]);
-
+  
   // Filter pickup locations by selected delivery day
   const filteredPickupLocations = React.useMemo(() => {
     if (selectedDeliveryDay === null) {
       return pickupLocations;
     }
     return pickupLocations.filter(
-      (loc) => loc.deliveryDay === selectedDeliveryDay
+      (loc) => Number(loc.deliveryDay) === selectedDeliveryDay
     );
   }, [pickupLocations, selectedDeliveryDay]);
 

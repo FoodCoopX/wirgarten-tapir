@@ -1,8 +1,7 @@
 import datetime
 
-from django.db.models.signals import post_save
-
 from tapir.accounts.models import TapirUser
+from tapir.bakery.models import sync_bread_deliveries_with_subscription
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
@@ -120,12 +119,16 @@ class ApplyTapirOrderManager:
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
 
-        # Manually trigger post_save signal for each created subscription
+        # Manually trigger sync for each created subscription
         if get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=cache):
             for subscription in new_subscriptions:
-                post_save.send(
-                    sender=Subscription, instance=subscription, created=True, raw=False
+                sync_bread_deliveries_with_subscription(
+                    sender=Subscription,
+                    instance=subscription,
+                    created=True,
+                    raw=False,
                 )
+
         TapirCacheManager.clear_category(cache=cache, category="subscriptions")
         if len(new_subscriptions) > 0:
             OnboardingTrigger.on_subscription_updated(new_subscriptions[0])

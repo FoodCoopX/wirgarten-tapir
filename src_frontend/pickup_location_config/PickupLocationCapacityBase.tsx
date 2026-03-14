@@ -19,7 +19,7 @@ const PickupLocationCapacityBase: React.FC<ProductBaseProps> = ({
 
   function onClick() {
     if (!getParameterFromUrl(URL_PARAMETER_PICKUP_LOCATION_ID)) {
-      alert("Du musst erst die Abholort das du editieren möchtest auswählen.");
+      alert("Du musst erst den Abholort, den du editieren möchtest, auswählen.");
       return;
     }
     setShowModal(true);

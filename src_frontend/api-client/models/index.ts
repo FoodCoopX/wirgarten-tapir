@@ -5,6 +5,7 @@ export * from './AbhollisteResponse';
 export * from './AutomatedExportCycleEnum';
 export * from './AvailableBreadsForDeliveryListResponse';
 export * from './AvailableSegmentsResponse';
+export * from './BakeryApiConfigurationParametersRetrieve200ResponseInner';
 export * from './BestellWizardBaseDataResponse';
 export * from './BestellWizardCapacityCheckRequestRequest';
 export * from './BestellWizardCapacityCheckResponse';

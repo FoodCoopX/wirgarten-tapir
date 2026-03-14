@@ -41,11 +41,97 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   const [modalOpen, setModalOpen] = useState<string | null>(null);
   const [editingLocation, setEditingLocation] = useState<string | null>(null);
   const [toastDatas, setToastDatas] = useState<any[]>([]);
+  
+  // Parameters for deadline calculation
+  const [lastChoosingDayBeforeBaking, setLastChoosingDayBeforeBaking] = useState<number>(0);
+  const [bakingDayBeforeDelivery, setBakingDayBeforeDelivery] = useState<number>(0);
+  const [isAfterBreadDeadline, setIsAfterBreadDeadline] = useState(false);
+  const [breadDeadlineMessage, setBreadDeadlineMessage] = useState<string>('');
+  const [canChangePickupLocation, setCanChangePickupLocation] = useState(false);
+
+  useEffect(() => {
+    loadParameters();
+    // eslint-disable-next-line
+  }, []);
 
   useEffect(() => {
     loadData();
     // eslint-disable-next-line
   }, [memberId, selectedWeek, selectedYear]);
+
+  useEffect(() => {
+    calculateDeadlines();
+    // eslint-disable-next-line
+  }, [selectedWeek, selectedYear, deliveries, lastChoosingDayBeforeBaking, bakingDayBeforeDelivery]);
+
+  const loadParameters = async () => {
+    try {
+      const params = await bakeryApi.bakeryApiConfigurationParametersRetrieve();
+      
+      const lastChoosingParam = params.find(
+        p => p.key === 'wirgarten.bakery.last_choosing_day_before_baking_day'
+      );
+      const bakingDayParam = params.find(
+        p => p.key === 'wirgarten.bakery.baking_day_before_delivery_day'
+      );
+
+      setLastChoosingDayBeforeBaking(Number(lastChoosingParam?.value || 0));
+      setBakingDayBeforeDelivery(Number(bakingDayParam?.value || 0));
+    } catch (error) {
+      console.error('Failed to load parameters:', error);
+    }
+  };
+
+  const calculateDeadlines = () => {
+    const now = dayjs();
+    const nowWeek = now.isoWeek();
+    const nowYear = now.year();
+
+    // 1. Check if pickup location can be changed (only for next week or later)
+    const isNextWeekOrLater = 
+      selectedYear > nowYear || 
+      (selectedYear === nowYear && selectedWeek > nowWeek);
+    
+    setCanChangePickupLocation(isNextWeekOrLater);
+
+    // 2. Calculate bread selection deadline
+    if (deliveries.length === 0) {
+      setIsAfterBreadDeadline(false);
+      setBreadDeadlineMessage('');
+      return;
+    }
+
+    const firstDelivery = deliveries[0];
+    if (!firstDelivery.deliveryDay) {
+      setIsAfterBreadDeadline(false);
+      setBreadDeadlineMessage('');
+      return;
+    }
+
+    // Calculate the delivery date for the selected ISO week
+    const deliveryDate = dayjs()
+      .year(selectedYear)
+      .isoWeek(selectedWeek)
+      .isoWeekday(firstDelivery.deliveryDay+1); // 1 = Monday, 7 = Sunday
+
+    // Calculate deadline: delivery_date - baking_day_offset - last_choosing_day_offset
+    const totalDaysBeforeDelivery = bakingDayBeforeDelivery + lastChoosingDayBeforeBaking;
+    const deadline = deliveryDate.subtract(totalDaysBeforeDelivery, 'day');
+    
+    const isPastDeadline = now.isAfter(deadline.endOf('day'));
+    
+    setIsAfterBreadDeadline(isPastDeadline);
+    
+    if (isPastDeadline) {
+      setBreadDeadlineMessage(
+        `Frist zur Auswahl für diese Woche abgelaufen (${deadline.format('DD.MM.YYYY')})`
+      );
+    } else {
+      setBreadDeadlineMessage(
+        `Auswahl für diese Woche bis ${deadline.format('DD.MM.YYYY')}`
+      );
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -102,8 +188,6 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     setEditingLocation(null);
     await loadData();
   };
-
-
 
   const handleBreadSelected = async (deliveryId: string, breadId: string) => {
     const delivery = deliveries.find(d => d.id === deliveryId);
@@ -174,7 +258,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
               {membersCanChooseBreadSorts && (
                 <>
                   <br/>
-                  Hier kannst du auch eine verfügbare Brotsorte direkt auswählen für diese Lieferung.
+                  Du kannst auch eine verfügbare Brotsorte direkt auswählen für diese Lieferung.
                 </>
               )}
             </>
@@ -195,7 +279,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       <div className="row g-3">
         {deliveries.map((delivery, index) => {
           const isFirstSlot = index === 0;
-          const canChangeLocation = chooseStationPerBread || isFirstSlot;
+          const canEditThisLocation = (chooseStationPerBread || isFirstSlot) && canChangePickupLocation;
           const selectedBread = getBreadDetails(delivery.bread || null);
           const breadLabels = selectedBread
             ? (selectedBread.labels || [])
@@ -225,27 +309,41 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                     )}
 
                     {delivery.pickupLocation ? (
-                      <CompactPickupLocationCard
-                        name={delivery.pickupLocationName || 'Unbekannt'}
-                        street={delivery.pickupLocationStreet || 'Unbekannt'}
-                        city={delivery.pickupLocationCity || 'Unbekannt'}
-                        deliveryDay={delivery.deliveryDay}
-                        onEdit={canChangeLocation ? () => setEditingLocation(delivery.id!) : undefined}
-                        disabled={saving === delivery.id}
-                      />
-                    ) : (
-                      <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
-                        <span className="text-muted">Noch nicht gewählt</span>
-                        {canChangeLocation && (
-                          <button
-                            className="btn btn-sm btn-outline-secondary dark-brown-button"
-                            onClick={() => setEditingLocation(delivery.id!)}
-                            disabled={saving === delivery.id}
-                          >
-                            Auswählen
-                          </button>
+                      <>
+                        <CompactPickupLocationCard
+                          name={delivery.pickupLocationName || 'Unbekannt'}
+                          street={delivery.pickupLocationStreet || 'Unbekannt'}
+                          city={delivery.pickupLocationCity || 'Unbekannt'}
+                          deliveryDay={delivery.deliveryDay}
+                          onEdit={canEditThisLocation ? () => setEditingLocation(delivery.id!) : undefined}
+                          disabled={saving === delivery.id || !canChangePickupLocation}
+                        />
+                        {!canChangePickupLocation && canEditThisLocation && (
+                          <div className="alert alert-warning mt-2 mb-0 py-1 px-2">
+                            <small>⚠️ Nur ab nächster Woche änderbar</small>
+                          </div>
                         )}
-                      </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
+                          <span className="text-muted">Noch nicht gewählt</span>
+                          {canEditThisLocation && (
+                            <button
+                              className="btn btn-sm btn-outline-secondary dark-brown-button"
+                              onClick={() => setEditingLocation(delivery.id!)}
+                              disabled={saving === delivery.id || !canChangePickupLocation}
+                            >
+                              Auswählen
+                            </button>
+                          )}
+                        </div>
+                        {!canChangePickupLocation && canEditThisLocation && (
+                          <div className="alert alert-warning mt-2 mb-0 py-1 px-2">
+                            <small>⚠️ Nur ab nächster Woche wählbar</small>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -265,32 +363,56 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                         </small>
                       </div>
                     ) : selectedBread ? (
-                      <CompactBreadCard
-                        bread={selectedBread}
-                        contents={contents}
-                        labels={breadLabels}
-                        onEdit={() => setModalOpen(delivery.id!)}
-                        onRemove={() => handleRemoveBread(delivery.id!)}
-                        disabled={saving === delivery.id}
-                      />
+                      <>
+                        <CompactBreadCard
+                          bread={selectedBread}
+                          contents={contents}
+                          labels={breadLabels}
+                          onEdit={!isAfterBreadDeadline ? () => setModalOpen(delivery.id!) : undefined}
+                          onRemove={!isAfterBreadDeadline ? () => handleRemoveBread(delivery.id!) : undefined}
+                          disabled={saving === delivery.id || isAfterBreadDeadline}
+                        />
+                        {isAfterBreadDeadline && (
+                          <div className="alert alert-danger mt-2 mb-0 py-1 px-2">
+                            <small>⚠️ {breadDeadlineMessage}</small>
+                          </div>
+                        )}
+                        {!isAfterBreadDeadline && breadDeadlineMessage && (
+                          <div className="alert alert-info mt-2 mb-0 py-1 px-2">
+                            <small>ℹ️ {breadDeadlineMessage}</small>
+                          </div>
+                        )}
+                      </>
                     ) : (
-                      <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
-                        <span className="text-muted">Noch nicht gewählt</span>
-                        <button
-                          className="btn btn-sm btn-outline-secondary dark-brown-button"
-                          onClick={() => setModalOpen(delivery.id!)}
-                          disabled={!delivery.pickupLocation || saving === delivery.id}
-                        >
-                          Auswählen
-                        </button>
-                      </div>
+                      <>
+                        <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
+                          <span className="text-muted">Noch nicht gewählt</span>
+                          <button
+                            className="btn btn-sm btn-outline-secondary dark-brown-button"
+                            onClick={() => setModalOpen(delivery.id!)}
+                            disabled={!delivery.pickupLocation || saving === delivery.id || isAfterBreadDeadline}
+                          >
+                            Auswählen
+                          </button>
+                        </div>
+                        {isAfterBreadDeadline && (
+                          <div className="alert alert-danger mt-2 mb-0 py-1 px-2">
+                            <small>⚠️ {breadDeadlineMessage}</small>
+                          </div>
+                        )}
+                        {!isAfterBreadDeadline && breadDeadlineMessage && (
+                          <div className="alert alert-info mt-2 mb-0 py-1 px-2">
+                            <small>ℹ️ {breadDeadlineMessage}</small>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>)}
                 </div>
               </div>
 
               {/* Bread Selection Modal */}
-              {modalOpen === delivery.id && delivery.pickupLocation && (
+              {modalOpen === delivery.id && delivery.pickupLocation && !isAfterBreadDeadline && (
                 <BreadSelectionModal
                   breads={breads}
                   contentsMap={contentsMap}
@@ -311,7 +433,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
       {/* Pickup Location Change Modal */}
       <PickupLocationChangeModal
-        show={editingLocation !== null}
+        show={editingLocation !== null && canChangePickupLocation}
         onHide={() => setEditingLocation(null)}
         csrfToken={csrfToken}
         memberId={memberId}
