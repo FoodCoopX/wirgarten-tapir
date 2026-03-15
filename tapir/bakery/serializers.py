@@ -217,6 +217,14 @@ class BreadCapacityBulkUpdateSerializer(serializers.Serializer):
 ###---------------- Serializers for solver results and requests ------------------ ##
 
 
+class SolverDiagnosticSerializer(serializers.Serializer):
+    level = serializers.ChoiceField(choices=["info", "warning", "error"])
+    category = serializers.CharField(allow_blank=True)
+    bread_name = serializers.CharField(allow_null=True, required=False)
+    location_name = serializers.CharField(allow_null=True, required=False)
+    message = serializers.CharField()
+
+
 class StoveLayerSerializer(serializers.Serializer):
     layer = serializers.IntegerField()
     bread_id = serializers.CharField(allow_null=True, required=False)
@@ -249,6 +257,7 @@ class BreadDistributionSerializer(serializers.Serializer):
 
 class SolverErrorSerializer(serializers.Serializer):
     error = serializers.CharField()
+    diagnostics = SolverDiagnosticSerializer(many=True, required=False, default=[])
 
 
 class SolverPreviewRequestSerializer(serializers.Serializer):
@@ -277,6 +286,9 @@ class SolverPreviewSolutionSummarySerializer(serializers.Serializer):
 class SolverPreviewResponseSerializer(serializers.Serializer):
     total_solutions = serializers.IntegerField()
     solutions = SolverPreviewSolutionSummarySerializer(many=True)
+    diagnostics = serializers.ListField(
+        child=serializers.DictField(), required=False, default=list
+    )
 
 
 class SolverPreviewDetailStoveLayerSerializer(serializers.Serializer):
@@ -349,6 +361,19 @@ class BreadBreakdownSerializer(serializers.Serializer):
     directly_chosen = serializers.IntegerField()
 
 
+class AssignmentLogEntrySerializer(serializers.Serializer):
+    member_name = serializers.CharField()
+    member_id = serializers.CharField()
+    status = serializers.ChoiceField(
+        choices=["directly_chosen", "no_favorites", "got_favorite", "no_match"]
+    )
+    assigned_bread_id = serializers.CharField(allow_null=True)
+    assigned_bread_name = serializers.CharField(allow_null=True)
+    preferred_bread_names = serializers.ListField(
+        child=serializers.CharField(), allow_empty=True
+    )
+
+
 class LocationMetricsSerializer(serializers.Serializer):
     pickup_location_id = serializers.CharField()
     pickup_location_name = serializers.CharField()
@@ -361,6 +386,7 @@ class LocationMetricsSerializer(serializers.Serializer):
     satisfied_percentage = serializers.FloatField()
     no_match = serializers.IntegerField()
     bread_breakdown = BreadBreakdownSerializer(many=True)
+    assignment_log = AssignmentLogEntrySerializer(many=True)
 
 
 class PreferenceSatisfactionResponseSerializer(serializers.Serializer):

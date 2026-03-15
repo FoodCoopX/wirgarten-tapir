@@ -39,6 +39,12 @@ export interface SolverPreviewResponse {
      * @memberof SolverPreviewResponse
      */
     solutions: Array<SolverPreviewSolutionSummary>;
+    /**
+     * 
+     * @type {Array<{ [key: string]: any; }>}
+     * @memberof SolverPreviewResponse
+     */
+    diagnostics?: Array<{ [key: string]: any; }>;
 }
 
 /**
@@ -62,6 +68,7 @@ export function SolverPreviewResponseFromJSONTyped(json: any, ignoreDiscriminato
         
         'totalSolutions': json['total_solutions'],
         'solutions': ((json['solutions'] as Array<any>).map(SolverPreviewSolutionSummaryFromJSON)),
+        'diagnostics': json['diagnostics'] == null ? undefined : json['diagnostics'],
     };
 }
 
@@ -78,6 +85,7 @@ export function SolverPreviewResponseFromJSONTyped(json: any, ignoreDiscriminato
         
         'total_solutions': value['totalSolutions'],
         'solutions': ((value['solutions'] as Array<any>).map(SolverPreviewSolutionSummaryToJSON)),
+        'diagnostics': value['diagnostics'],
     };
 }
 

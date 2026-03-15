@@ -15,6 +15,8 @@ apis/index.ts
 index.ts
 models/AbhollisteEntry.ts
 models/AbhollisteResponse.ts
+models/AssignmentLogEntry.ts
+models/AssignmentLogEntryStatusEnum.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts
@@ -105,6 +107,7 @@ models/Joker.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
 models/LegalStatusEnum.ts
+models/LevelEnum.ts
 models/LocaleEnum.ts
 models/LocationMetrics.ts
 models/MailCategory.ts
@@ -222,6 +225,7 @@ models/SoliSerializerRequest.ts
 models/SolidarityContribution.ts
 models/SolverApplyRequestRequest.ts
 models/SolverApplyResponse.ts
+models/SolverDiagnostic.ts
 models/SolverError.ts
 models/SolverPreviewBreadQuantity.ts
 models/SolverPreviewDetailDistribution.ts

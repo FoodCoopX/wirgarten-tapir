@@ -231,19 +231,26 @@ class SolverPreviewView(APIView):
         if solver_input is None:
             return Response(
                 {
-                    "error": "Keine Daten gefunden (keine Brote, Lieferungen oder Abholstationen)."
+                    "error": "Keine Daten gefunden (keine Brote, Lieferungen oder Abholstationen).",
+                    "diagnostics": [],
                 },
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
-        results = solve_bread_planning_all(
+        solver_output = solve_bread_planning_all(
             **solver_input,
             max_solutions=max_solutions,
         )
 
+        results = solver_output["solutions"]
+        all_diagnostics = solver_output["diagnostics"]
+
         if not results:
             return Response(
-                {"error": "Keine Lösung gefunden. Bitte Daten prüfen."},
+                {
+                    "error": "Keine Lösung gefunden. Bitte Daten prüfen.",
+                    "diagnostics": all_diagnostics,
+                },
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
@@ -290,6 +297,7 @@ class SolverPreviewView(APIView):
         response_data = {
             "total_solutions": len(results),
             "solutions": summaries,
+            "diagnostics": all_diagnostics,
         }
 
         response_serializer = SolverPreviewResponseSerializer(data=response_data)
@@ -581,10 +589,29 @@ class PreferenceSatisfactionMetricsView(APIView):
             got_favorite_count = 0
             no_match_count = 0
 
+            # Assignment log for debugging
+            assignment_log = []
+
             # 1) Process directly chosen breads first
             for delivery in location_deliveries:
                 if delivery.bread_id:
                     directly_chosen_count += 1
+
+                    member = delivery.subscription.member
+                    assignment_log.append(
+                        {
+                            "member_name": f"{member.first_name} {member.last_name}",
+                            "member_id": str(member.id),
+                            "status": "directly_chosen",
+                            "assigned_bread_id": str(delivery.bread_id),
+                            "assigned_bread_name": (
+                                bread_map[delivery.bread_id].name
+                                if delivery.bread_id in bread_map
+                                else "?"
+                            ),
+                            "preferred_bread_names": [],
+                        }
+                    )
 
                     if delivery.bread_id in available_breads_count:
                         available_breads_count[delivery.bread_id] = max(
@@ -609,6 +636,16 @@ class PreferenceSatisfactionMetricsView(APIView):
                 # Member has no favorites set → everything is fine for them
                 if member.id not in member_favorites:
                     no_favorites_count += 1
+                    assignment_log.append(
+                        {
+                            "member_name": f"{member.first_name} {member.last_name}",
+                            "member_id": str(member.id),
+                            "status": "no_favorites",
+                            "assigned_bread_id": None,
+                            "assigned_bread_name": None,
+                            "preferred_bread_names": [],
+                        }
+                    )
                     continue
 
                 favorite_bread_ids = member_favorites[member.id]
@@ -616,7 +653,22 @@ class PreferenceSatisfactionMetricsView(APIView):
                 # Member has empty favorites list → same as no favorites
                 if not favorite_bread_ids:
                     no_favorites_count += 1
+                    assignment_log.append(
+                        {
+                            "member_name": f"{member.first_name} {member.last_name}",
+                            "member_id": str(member.id),
+                            "status": "no_favorites",
+                            "assigned_bread_id": None,
+                            "assigned_bread_name": None,
+                            "preferred_bread_names": [],
+                        }
+                    )
                     continue
+
+                preferred_names = [
+                    bread_map[b_id].name if b_id in bread_map else "?"
+                    for b_id in favorite_bread_ids
+                ]
 
                 # Try to assign first available favorite
                 assigned = False
@@ -628,10 +680,34 @@ class PreferenceSatisfactionMetricsView(APIView):
                         got_favorite_count += 1
                         available_breads_count[bread_id] -= 1
                         assigned = True
+                        assignment_log.append(
+                            {
+                                "member_name": f"{member.first_name} {member.last_name}",
+                                "member_id": str(member.id),
+                                "status": "got_favorite",
+                                "assigned_bread_id": str(bread_id),
+                                "assigned_bread_name": (
+                                    bread_map[bread_id].name
+                                    if bread_id in bread_map
+                                    else "?"
+                                ),
+                                "preferred_bread_names": preferred_names,
+                            }
+                        )
                         break
 
                 if not assigned:
                     no_match_count += 1
+                    assignment_log.append(
+                        {
+                            "member_name": f"{member.first_name} {member.last_name}",
+                            "member_id": str(member.id),
+                            "status": "no_match",
+                            "assigned_bread_id": None,
+                            "assigned_bread_name": None,
+                            "preferred_bread_names": preferred_names,
+                        }
+                    )
 
             # "Satisfied" = directly chosen + no favorites (happy with anything) + got a favorite
             satisfied_count = (
@@ -675,6 +751,7 @@ class PreferenceSatisfactionMetricsView(APIView):
                     "satisfied_percentage": round(satisfied_percentage, 1),
                     "no_match": no_match_count,
                     "bread_breakdown": bread_breakdown_list,
+                    "assignment_log": assignment_log,
                 }
             )
 

@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
@@ -195,6 +196,29 @@ class BreadDelivery(TapirModel):
         blank=True,
         null=True,
     )
+
+    def clean(self):
+        super().clean()
+        if self.bread and self.pickup_location:
+            exists = BreadsPerPickupLocationPerWeek.objects.filter(
+                year=self.year,
+                delivery_week=self.delivery_week,
+                pickup_location=self.pickup_location,
+                bread=self.bread,
+            ).exists()
+            if not exists:
+                raise ValidationError(
+                    {
+                        "bread": (
+                            f"'{self.bread.name}' is not available at "
+                            f"this pickup location in week {self.delivery_week}/{self.year}."
+                        )
+                    }
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["year", "delivery_week", "slot_number"]

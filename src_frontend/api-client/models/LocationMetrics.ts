@@ -20,6 +20,13 @@ import {
     BreadBreakdownToJSON,
     BreadBreakdownToJSONTyped,
 } from './BreadBreakdown';
+import type { AssignmentLogEntry } from './AssignmentLogEntry';
+import {
+    AssignmentLogEntryFromJSON,
+    AssignmentLogEntryFromJSONTyped,
+    AssignmentLogEntryToJSON,
+    AssignmentLogEntryToJSONTyped,
+} from './AssignmentLogEntry';
 
 /**
  * 
@@ -93,6 +100,12 @@ export interface LocationMetrics {
      * @memberof LocationMetrics
      */
     breadBreakdown: Array<BreadBreakdown>;
+    /**
+     * 
+     * @type {Array<AssignmentLogEntry>}
+     * @memberof LocationMetrics
+     */
+    assignmentLog: Array<AssignmentLogEntry>;
 }
 
 /**
@@ -110,6 +123,7 @@ export function instanceOfLocationMetrics(value: object): value is LocationMetri
     if (!('satisfiedPercentage' in value) || value['satisfiedPercentage'] === undefined) return false;
     if (!('noMatch' in value) || value['noMatch'] === undefined) return false;
     if (!('breadBreakdown' in value) || value['breadBreakdown'] === undefined) return false;
+    if (!('assignmentLog' in value) || value['assignmentLog'] === undefined) return false;
     return true;
 }
 
@@ -134,6 +148,7 @@ export function LocationMetricsFromJSONTyped(json: any, ignoreDiscriminator: boo
         'satisfiedPercentage': json['satisfied_percentage'],
         'noMatch': json['no_match'],
         'breadBreakdown': ((json['bread_breakdown'] as Array<any>).map(BreadBreakdownFromJSON)),
+        'assignmentLog': ((json['assignment_log'] as Array<any>).map(AssignmentLogEntryFromJSON)),
     };
 }
 
@@ -159,6 +174,7 @@ export function LocationMetricsFromJSONTyped(json: any, ignoreDiscriminator: boo
         'satisfied_percentage': value['satisfiedPercentage'],
         'no_match': value['noMatch'],
         'bread_breakdown': ((value['breadBreakdown'] as Array<any>).map(BreadBreakdownToJSON)),
+        'assignment_log': ((value['assignmentLog'] as Array<any>).map(AssignmentLogEntryToJSON)),
     };
 }
 

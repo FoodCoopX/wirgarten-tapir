@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { SolverDiagnostic } from './SolverDiagnostic';
+import {
+    SolverDiagnosticFromJSON,
+    SolverDiagnosticFromJSONTyped,
+    SolverDiagnosticToJSON,
+    SolverDiagnosticToJSONTyped,
+} from './SolverDiagnostic';
+
 /**
  * 
  * @export
@@ -25,6 +33,12 @@ export interface SolverError {
      * @memberof SolverError
      */
     error: string;
+    /**
+     * 
+     * @type {Array<SolverDiagnostic>}
+     * @memberof SolverError
+     */
+    diagnostics?: Array<SolverDiagnostic>;
 }
 
 /**
@@ -46,6 +60,7 @@ export function SolverErrorFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return {
         
         'error': json['error'],
+        'diagnostics': json['diagnostics'] == null ? undefined : ((json['diagnostics'] as Array<any>).map(SolverDiagnosticFromJSON)),
     };
 }
 
@@ -61,6 +76,7 @@ export function SolverErrorFromJSONTyped(json: any, ignoreDiscriminator: boolean
     return {
         
         'error': value['error'],
+        'diagnostics': value['diagnostics'] == null ? undefined : ((value['diagnostics'] as Array<any>).map(SolverDiagnosticToJSON)),
     };
 }
 

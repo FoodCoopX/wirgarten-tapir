@@ -317,6 +317,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       <small>KW {week}</small>
                     </div>
                     <RunSolverCard
+                    key={`solver-${year}-${week}-${day}`}
                       year={year} deliveryWeek={week} deliveryDay={day} csrfToken={csrfToken}
                       hasSavedPlan={d.daySessions.length > 0 || d.dayCounts.length > 0}
                       onPreviewDetail={(detail) => handlePreviewDetail(day, detail)}

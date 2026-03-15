@@ -2,6 +2,8 @@
 /* eslint-disable */
 export * from './AbhollisteEntry';
 export * from './AbhollisteResponse';
+export * from './AssignmentLogEntry';
+export * from './AssignmentLogEntryStatusEnum';
 export * from './AutomatedExportCycleEnum';
 export * from './AvailableBreadsForDeliveryListResponse';
 export * from './AvailableSegmentsResponse';
@@ -92,6 +94,7 @@ export * from './Joker';
 export * from './JokerRestriction';
 export * from './JokerWithCancellationLimit';
 export * from './LegalStatusEnum';
+export * from './LevelEnum';
 export * from './LocaleEnum';
 export * from './LocationMetrics';
 export * from './MailCategory';
@@ -209,6 +212,7 @@ export * from './SoliSerializerRequest';
 export * from './SolidarityContribution';
 export * from './SolverApplyRequestRequest';
 export * from './SolverApplyResponse';
+export * from './SolverDiagnostic';
 export * from './SolverError';
 export * from './SolverPreviewBreadQuantity';
 export * from './SolverPreviewDetailDistribution';
