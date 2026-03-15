@@ -7315,6 +7315,44 @@ components:
       - bread_totals
       - entries
       - grand_total
+    AssignmentLogEntry:
+      type: object
+      properties:
+        member_name:
+          type: string
+        member_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/AssignmentLogEntryStatusEnum'
+        assigned_bread_id:
+          type: string
+          nullable: true
+        assigned_bread_name:
+          type: string
+          nullable: true
+        preferred_bread_names:
+          type: array
+          items:
+            type: string
+      required:
+      - assigned_bread_id
+      - assigned_bread_name
+      - member_id
+      - member_name
+      - preferred_bread_names
+      - status
+    AssignmentLogEntryStatusEnum:
+      enum:
+      - directly_chosen
+      - no_favorites
+      - got_favorite
+      - no_match
+      type: string
+      description: |-
+        * `directly_chosen` - directly_chosen
+        * `no_favorites` - no_favorites
+        * `got_favorite` - got_favorite
+        * `no_match` - no_match
     AutomatedExportCycleEnum:
       enum:
       - yearly
@@ -10440,6 +10478,16 @@ components:
         * `association` - Verein
         * `coop` - Genossenschaft
         * `company` - Einzelunternehmen
+    LevelEnum:
+      enum:
+      - info
+      - warning
+      - error
+      type: string
+      description: |-
+        * `info` - info
+        * `warning` - warning
+        * `error` - error
     LocaleEnum:
       enum:
       - de_DE.utf-8
@@ -10476,7 +10524,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BreadBreakdown'
+        assignment_log:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignmentLogEntry'
       required:
+      - assignment_log
       - bread_breakdown
       - delivery_day
       - directly_chosen
@@ -13144,11 +13197,35 @@ components:
       - message
       - solution_index
       - success
+    SolverDiagnostic:
+      type: object
+      properties:
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        category:
+          type: string
+        bread_name:
+          type: string
+          nullable: true
+        location_name:
+          type: string
+          nullable: true
+        message:
+          type: string
+      required:
+      - category
+      - level
+      - message
     SolverError:
       type: object
       properties:
         error:
           type: string
+        diagnostics:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolverDiagnostic'
+          default: []
       required:
       - error
     SolverPreviewBreadQuantity:
@@ -13267,6 +13344,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SolverPreviewSolutionSummary'
+        diagnostics:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
       required:
       - solutions
       - total_solutions
