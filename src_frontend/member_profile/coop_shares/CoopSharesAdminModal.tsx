@@ -5,7 +5,7 @@ import { useApi } from "../../hooks/useApi.ts";
 import { CoopApi } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
-import dayjs from "dayjs";
+import TapirDateInput from "../../components/TapirDateInput.tsx";
 
 interface CoopSharesAdminModalProps {
   memberId: string;
@@ -88,11 +88,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
       <Form>
         <Form.Group id={"start-date"}>
           <Form.Label>Wirksamkeitsdatum</Form.Label>
-          <Form.Control
-            type={"date"}
-            onChange={(event) => setStartDate(new Date(event.target.value))}
-            value={dayjs(startDate).format("YYYY-MM-DD")}
-          />
+          <TapirDateInput date={startDate} setDate={setStartDate} />
         </Form.Group>
         <Form.Group id={"quantity"}>
           <Form.Label>Anzahl</Form.Label>
