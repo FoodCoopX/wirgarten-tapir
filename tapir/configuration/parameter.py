@@ -38,7 +38,7 @@ class ParameterMeta:
         validators: list[Callable] = None,
         textarea=False,
         vars_hint: list[str] = None,
-        show_only_when: callable = None,
+        show_only_when: Callable = None,
     ):
         if validators is None:
             validators = []

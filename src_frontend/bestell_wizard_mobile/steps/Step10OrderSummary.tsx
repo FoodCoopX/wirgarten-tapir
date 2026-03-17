@@ -98,7 +98,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
 
   function getCoopSharesTitle() {
     if (studentStatusEnabled) {
-      return "Keine Mitgliedschaft in der Genossenschaft (student)";
+      return settings.strings.step10FlagStudent;
     }
 
     return (
@@ -289,7 +289,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                   <Accordion.Header>{getCoopSharesTitle()}</Accordion.Header>
                   <AccordionBody>
                     {studentStatusEnabled
-                      ? "Keine Anteile gezeichnet da student."
+                      ? settings.strings.step10TextStudent
                       : numberOfCoopShares +
                         " Genossenschaftsanteile à " +
                         formatCurrency(settings.priceOfAShare) +

@@ -187,7 +187,6 @@ models/Subscription.ts
 models/SubscriptionChange.ts
 models/SubscriptionChangeLogEntry.ts
 models/SubscriptionDateChangeRequest.ts
-models/TapirmailApiSegmentAvailableFiltersRetrieve200Response.ts
 models/TapirmailApiSegmentCombineCreate200Response.ts
 models/TapirmailApiSegmentCombineCreate200ResponseRecipientsInner.ts
 models/TemporaryUpload.ts

@@ -202,11 +202,10 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             />
             {studentStatusEnabled && (
               <Form.Text>
-                Die Immatrikulationsbescheinigung muss per Mail an{" "}
-                <a href={"mailto:" + settings.contactMailAddress}>
-                  {settings.contactMailAddress}
-                </a>{" "}
-                gesendet werden.
+                {settings.strings.studentCheckboxExplanationText.replace(
+                  "{{kontakt_mail}}",
+                  settings.contactMailAddress,
+                )}
               </Form.Text>
             )}
           </>

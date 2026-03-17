@@ -63,6 +63,8 @@ export function buildEmptySettings(): BestellWizardSettings {
       step9Title: "",
       step9PaymentRhythmModalText: "",
       step10Title: "",
+      step10FlagStudent: "",
+      step10TextStudent: "",
       step11Title: "",
       step11PrivacyPolicyLabel: "",
       step11PrivacyPolicyText: "",
@@ -77,6 +79,7 @@ export function buildEmptySettings(): BestellWizardSettings {
       step14bText: "",
       privacyPolicyUrl: "",
       labelStudentCheckbox: "",
+      studentCheckboxExplanationText: "",
     },
     images: {
       step1BackgroundImage: "",

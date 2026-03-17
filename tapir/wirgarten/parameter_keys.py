@@ -234,6 +234,11 @@ class ParameterKeys:
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )
     LABEL_STUDENT_CHECKBOX = f"{PREFIX}.coop.label_student_checkbox"
+    STUDENT_CHECKBOX_EXPLANATION_TEXT = (
+        f"{PREFIX}.coop.student_checkbox_explanation_text"
+    )
+    BESTELLWIZARD_STEP10_FLAG_STUDENT = f"{PREFIX}.bestellwizard.step10.flag_student"
+    BESTELLWIZARD_STEP10_TEXT_STUDENT = f"{PREFIX}.bestellwizard.step10.text_student"
     ENABLE_EXTRA_MAIL_ADDRESSES = f"{PREFIX}.emails.enable_extra_mail_addresses"
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"

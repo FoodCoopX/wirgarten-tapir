@@ -91,6 +91,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step9_title = serializers.CharField()
     step9_payment_rhythm_modal_text = serializers.CharField()
     step10_title = serializers.CharField()
+    step10_flag_student = serializers.CharField()
+    step10_text_student = serializers.CharField()
     step11_title = serializers.CharField()
     step11_privacy_policy_label = serializers.CharField()
     step11_privacy_policy_text = serializers.CharField()
@@ -105,6 +107,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step14b_text = serializers.CharField()
     privacy_policy_url = serializers.URLField()
     label_student_checkbox = serializers.CharField()
+    student_checkbox_explanation_text = serializers.CharField()
 
 
 class BestellWizardImagesSerializer(serializers.Serializer):
