@@ -270,7 +270,17 @@ class MemberImporter:
             member_pickup_location.save()
 
         target_amount = DataImportUtils.safe_float(row.get("Solidarpreis in EUR"))
+        if target_amount != 0:
+            cls.create_solidarity_contribution(member, row, target_amount)
 
+        MemberImportedLogEntry().populate(model=member, actor=None, user=member).save()
+
+        return MEMBER_IMPORT_STATUS_CREATED
+
+    @classmethod
+    def create_solidarity_contribution(
+        cls, member: Member, row: dict[str, str], target_amount: float
+    ):
         target_start_date = DataImportUtils.to_date(row.get("Solidarpreis Start_Date"))
         target_start_date = target_start_date or member.created_at.date()
 
@@ -288,7 +298,3 @@ class MemberImporter:
             start_date=target_start_date,
             end_date=target_end_date,
         )
-
-        MemberImportedLogEntry().populate(model=member, actor=None, user=member).save()
-
-        return MEMBER_IMPORT_STATUS_CREATED
