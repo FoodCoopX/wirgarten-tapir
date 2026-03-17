@@ -133,7 +133,7 @@ class SubscriptionListFilter(FilterSet):
                 start_date__lte=today, end_date__gte=today
             )
             if not growing_periods.exists():
-                return None
+                return GrowingPeriod.objects.order_by("start_date").first()
 
             return growing_periods.first().id
 
