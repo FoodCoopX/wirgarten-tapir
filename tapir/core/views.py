@@ -18,7 +18,7 @@ from rest_framework.exceptions import (
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.models import MailCategory, InternalRecipientCategoryRegistration
-from tapir_mail.registries import segment_registry
+from tapir_mail.registries import get_mail_segments
 from tapir_mail.serializers import MailCategorySerializer
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
@@ -84,7 +84,7 @@ class MemberMailCategoryDataApiView(APIView):
             category
             for category in mail_categories
             if category.dynamic_segment_name != ""
-            and member in segment_registry[category.dynamic_segment_name]()
+            and member in get_mail_segments()[category.dynamic_segment_name]()
         ]
 
         categories_registered_to = {

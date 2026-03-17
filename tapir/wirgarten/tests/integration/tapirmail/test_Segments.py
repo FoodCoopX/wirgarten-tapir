@@ -8,7 +8,7 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 )
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tapirmail import Segments, _register_segments
+from tapir.wirgarten.tapirmail import Segments, configure_mail_module
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     MemberWithCoopSharesFactory,
@@ -33,7 +33,7 @@ class SegmentTest(TapirIntegrationTest):
         mock_timezone(self, self.NOW)
         set_bypass_keycloak()
 
-        _register_segments()
+        configure_mail_module()
 
         self.create_test_data()
 
