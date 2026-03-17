@@ -55,6 +55,10 @@ class SubscriptionImporter:
         quantity = DataImportUtils.safe_int(row.get("Quantity"))
         start_date = DataImportUtils.to_date(row.get("Vertragsbeginn"))
         end_date = DataImportUtils.to_date(row.get("Vertragsende"))
+        if end_date is None:
+            # we must explicitly check for end date because the end_date field accepts None and
+            # DataImportUtils.to_date can return None if for example the column doesn't exist.
+            raise TapirDataImportException("Missing end date")
         consent_ts = DataImportUtils.to_datetime(row.get("consent_vertragsgrundsätze"))
         withdrawal_consent_ts = DataImportUtils.to_datetime(row.get("consent_widerruf"))
 
