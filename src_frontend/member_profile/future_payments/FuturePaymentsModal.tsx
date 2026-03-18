@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Badge, Form, Modal, Table } from "react-bootstrap";
 import "dayjs/locale/de";
 
@@ -6,7 +6,12 @@ import "../../fixed_header.css";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import { ExtendedPayment, MemberCredit, Payment } from "../../api-client";
+import {
+  ExtendedPayment,
+  MemberCredit,
+  Payment,
+  PaymentsApi,
+} from "../../api-client";
 import formatSubscription from "../../utils/formatSubscription.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
@@ -14,12 +19,18 @@ import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
 import { getMinimumDate } from "../../utils/getMinimumDate.ts";
 import { getMaximumDate } from "../../utils/getMaximumDate.ts";
 import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface FuturePaymentsModalProps {
   transactionsByDueDate: TransactionsByDueDate;
   show: boolean;
   onHide: () => void;
   loading: boolean;
+  csrfToken: string;
+  memberId: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 function getBadgeBackground(payment: Payment) {
@@ -116,8 +127,32 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   show,
   transactionsByDueDate,
   loading,
+  csrfToken,
+  memberId,
+  setToastDatas,
 }) => {
   dayjs.extend(RelativeTime);
+  const api = useApi(PaymentsApi, csrfToken);
+
+  const [showPastPayments, setShowPastPayments] = useState(false);
+  const [pastPayments, setPastPayments] = useState<ExtendedPayment[]>([]);
+
+  useEffect(() => {
+    if (!show) {
+      return;
+    }
+
+    api
+      .paymentsApiMemberPastPaymentsRetrieve({ memberId: memberId })
+      .then((response) => setPastPayments(response.payments))
+      .catch(async (error) => {
+        await handleRequestError(
+          error,
+          "Fehler beim Laden der vergangene Zahlungen",
+          setToastDatas,
+        );
+      });
+  }, [show]);
 
   function buildExtendedPayment(extendedPayment: ExtendedPayment) {
     return (
@@ -171,12 +206,81 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
     );
   }
 
+  function buildTableContent() {
+    if (loading) {
+      return <PlaceholderTableRows nbColumns={2} nbRows={12} size={"lg"} />;
+    }
+
+    if (showPastPayments) {
+      return buildTableContentPastPayments();
+    }
+
+    return buildTableContentFuturePayments();
+  }
+
+  function buildTableContentPastPayments() {
+    return pastPayments.map((extendedPayment) => (
+      <tr key={extendedPayment.payment.id}>
+        <td style={{ textAlign: "center" }}>
+          <div className={"d-flex flex-column"}>
+            <strong>
+              {formatDateText(new Date(extendedPayment.payment.dueDate))}
+            </strong>
+            <span>{dayjs().to(new Date(extendedPayment.payment.dueDate))}</span>
+          </div>
+        </td>
+        <td>
+          <div className={"d-flex flex-column"}>
+            {buildExtendedPayment(extendedPayment)}
+          </div>
+        </td>
+      </tr>
+    ));
+  }
+
+  function buildTableContentFuturePayments() {
+    return Object.entries(transactionsByDueDate).map(
+      ([dueDateAsString, objects]) => (
+        <tr key={dueDateAsString}>
+          <td style={{ textAlign: "center" }}>
+            <div className={"d-flex flex-column"}>
+              <strong>{formatDateText(new Date(dueDateAsString))}</strong>
+              <span>{dayjs().to(new Date(dueDateAsString))}</span>
+            </div>
+          </td>
+          <td>
+            <div className={"d-flex flex-column"}>
+              {objects.map((object) =>
+                "payment" in object
+                  ? buildExtendedPayment(object)
+                  : buildCredit(object),
+              )}
+            </div>
+          </td>
+        </tr>
+      ),
+    );
+  }
+
   return (
     <Modal onHide={onHide} show={show} centered={true} size={"lg"}>
       <Modal.Header closeButton>
-        <Modal.Title>
-          <h4>Zahlungen</h4>
-        </Modal.Title>
+        <span
+          className={
+            "d-flex flex-row justify-content-between align-items-center"
+          }
+          style={{ width: "100%" }}
+        >
+          <Modal.Title>
+            <h4>Zahlungen</h4>
+          </Modal.Title>
+          <Form.Check
+            id={"statute"}
+            checked={showPastPayments}
+            onChange={(event) => setShowPastPayments(event.target.checked)}
+            label={"Vergangene Zahlungen anzeigen"}
+          />
+        </span>
       </Modal.Header>
       <Modal.Body>
         <Form.Text>
@@ -190,35 +294,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
               <th>Zahlungen</th>
             </tr>
           </thead>
-          <tbody>
-            {loading ? (
-              <PlaceholderTableRows nbColumns={2} nbRows={12} size={"lg"} />
-            ) : (
-              Object.entries(transactionsByDueDate).map(
-                ([dueDateAsString, objects]) => (
-                  <tr key={dueDateAsString}>
-                    <td style={{ textAlign: "center" }}>
-                      <div className={"d-flex flex-column"}>
-                        <strong>
-                          {formatDateText(new Date(dueDateAsString))}
-                        </strong>
-                        <span>{dayjs().to(new Date(dueDateAsString))}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className={"d-flex flex-column"}>
-                        {objects.map((object) =>
-                          "payment" in object
-                            ? buildExtendedPayment(object)
-                            : buildCredit(object),
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ),
-              )
-            )}
-          </tbody>
+          <tbody>{buildTableContent()}</tbody>
         </Table>
       </Modal.Body>
     </Modal>

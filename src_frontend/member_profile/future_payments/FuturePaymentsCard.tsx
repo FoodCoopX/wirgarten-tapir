@@ -190,6 +190,9 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         show={showModal}
         onHide={() => setShowModal(false)}
         loading={loading}
+        csrfToken={csrfToken}
+        memberId={memberId}
+        setToastDatas={setToastDatas}
       />
       <TapirToastContainer
         toastDatas={toastDatas}

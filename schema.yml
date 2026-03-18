@@ -1388,6 +1388,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/FuturePaymentsResponse'
           description: ''
+  /payments/api/member_past_payments:
+    get:
+      operationId: payments_api_member_past_payments_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FuturePaymentsResponse'
+          description: ''
   /payments/api/member_payment_rhythm_data:
     get:
       operationId: payments_api_member_payment_rhythm_data_retrieve
