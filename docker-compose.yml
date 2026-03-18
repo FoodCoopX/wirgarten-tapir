@@ -72,12 +72,6 @@ services:
     depends_on:
       - redis
       - celery
-
-  db-admin:
-    image: adminer
-    ports:
-      - "8280:8080"
-
   vite:
     build:
       context: .
