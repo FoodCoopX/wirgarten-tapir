@@ -1,79 +1,128 @@
-import sys
-
 from django.core.management import BaseCommand
+from django.db.models import QuerySet, Count, Q
 
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.service.member import (
+    annotate_member_queryset_with_coop_shares_total_value,
+)
+from tapir.wirgarten.utils import get_today
 
 
 class Command(BaseCommand):
-    help = "Sends the keycloak verify emails to the specified user group"
+    help = (
+        "Sends the keycloak verification mails to all members that don't have a keycloak account yet. "
+        "Members that have neither coop shares nor subscriptions are ignored."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--with-subscription",
-            help="Send keycloak verify emails to the Members with any Subscription",
+            "--only-members-with-subscription",
+            help="Filter out members that don't have any subscription (past subscriptions are ignored)",
             action="store_true",
         )
         parser.add_argument(
-            "--no-subscription",
-            help="Send keycloak verify emails to the Members WITHOUT any Subscription (only investing)",
+            "--only-members-without-subscription",
+            help="Filter out members that have at least one subscription (past subscriptions are ignored)",
+            action="store_true",
+        )
+        parser.add_argument(
+            "--dry-run",
+            help="Don't apply any permanent change (mails won't be sent)",
             action="store_true",
         )
 
     def handle(self, *args, **options):
-        def confirm_member_group(members):
-            if len(members) < 1:
+        members = (
+            self.get_members_with_at_least_one_share_or_one_relevant_subscription()
+        )
+
+        if not members.exists():
+            self.stdout.write(
+                self.style.WARNING("-> No Members in selected user group!")
+            )
+            return
+
+        self.stdout.write(
+            f"{members.count()} members in total don't have a keycloak account yet"
+        )
+
+        if options["only_members_without_subscription"]:
+            count_before = members.count()
+            members = members.filter(num_subscriptions=0)
+            count_after = members.count()
+            self.stdout.write(
+                f"{count_before - count_after} members will be ignored because they have a current or future subscription"
+            )
+
+        if options["only_members_with_subscription"]:
+            count_before = members.count()
+            members = members.filter(num_subscriptions__gt=0)
+            count_after = members.count()
+            self.stdout.write(
+                f"{count_before - count_after} members will be ignored because they don't have a current or future subscription"
+            )
+
+        members = list(members.distinct().order_by("member_no", "last_name"))
+        self.stdout.write(
+            f"Sending emails to {len(members)} members WITHOUT subscription:"
+        )
+        if not options["dry_run"]:
+            self.send_emails(members)
+
+    def confirm_member_group(self, members):
+        if len(members) == 0:
+            self.stdout.write(
+                self.style.WARNING("-> No Members in selected user group!")
+            )
+            return False
+
+        for member in members:
+            self.stdout.write(f" - {member}")
+            subscriptions = list(member.subscription_set.all())
+            if len(subscriptions) > 0:
                 self.stdout.write(
-                    self.style.WARNING("-> No Members in selected user group!")
+                    "\n".join(f"\t - {subscription}" for subscription in subscriptions),
                 )
-                sys.exit(1)
-            for member in members:
 
-                print("- ", member)
-                if member.subscription_set.exists():
-                    print(
-                        "         -",
-                        "\n         - ".join(
-                            map(lambda x: x.__str__(), member.subscription_set.all())
-                        ),
-                    )
-            answer = input("Are you sure you want to continue? [y/N] ")
-            if answer.lower() not in ["y", "yes"]:
-                self.stdout.write(self.style.WARNING("Command was canceled."))
-                sys.exit(1)
-            else:
-                return True
-
-        def send_emails(members):
-            if confirm_member_group(members):
-                for m in members:
-                    try:
-                        m.save(bypass_keycloak=False)
-                        # The member must be saved twice in order to persist the keycloak ID
-                        m.save(bypass_keycloak=False)
-                    except Exception as e:
-                        print(e)
-                        continue
-
-        qs = Member.objects.filter(keycloak_id=None)
-        if options["with_subscription"]:
-            members = list(
-                qs.filter(subscription__isnull=False)
-                .distinct()
-                .order_by("member_no", "last_name")
-            )
-            print(f"Sending emails to {len(members)} members WITH subscription:")
-            send_emails(members)
-
-        elif options["no_subscription"]:
-            members = list(
-                qs.exclude(subscription__isnull=False)
-                .distinct()
-                .order_by("member_no", "last_name")
-            )
-            print(f"Sending emails to {len(members)} members WITHOUT subscription:")
-            send_emails(members)
-
+        answer = input("Are you sure you want to continue? [y/N] ")
+        if answer.lower() not in ["y", "yes"]:
+            self.stdout.write(self.style.WARNING("Command was canceled."))
+            return False
         else:
-            self.print_help("manage.py", "send_verify_emails")
-            sys.exit(1)
+            return True
+
+    @staticmethod
+    def annotate_member_queryset_with_number_of_current_and_future_subscriptions(
+        queryset: QuerySet[Member],
+    ):
+        return queryset.annotate(
+            num_subscriptions=Count(
+                "subscription", filter=Q(subscription__end_date__gte=get_today())
+            )
+        )
+
+    @classmethod
+    def get_members_with_at_least_one_share_or_one_relevant_subscription(cls):
+        members = Member.objects.filter(keycloak_id=None)
+        members = annotate_member_queryset_with_coop_shares_total_value(
+            queryset=members
+        ).filter()
+        members = cls.annotate_member_queryset_with_number_of_current_and_future_subscriptions(
+            members
+        )
+        return members.filter(
+            Q(coop_shares_total_value__gt=0) | Q(num_subscriptions__gt=0)
+        )
+
+    def send_emails(self, members):
+        if not self.confirm_member_group(members):
+            return
+
+        for member in members:
+            try:
+                member.save(bypass_keycloak=False)
+                # The member must be saved twice in order to persist the keycloak ID
+                member.save(bypass_keycloak=False)
+            except Exception as e:
+                self.stderr.write(f"Error when saving member {member}: {e}")
+                continue
