@@ -30,6 +30,7 @@ TOKENS_COOP_ENTRY = {
 
 
 class Segments:
+    ALL_USERS = "Alle Benutzer"
     COOP_MEMBERS = "Geno-Mitglieder"
     NON_COOP_MEMBERS = "Nicht Geno-Mitglieder"
     WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Ertevertrag"
