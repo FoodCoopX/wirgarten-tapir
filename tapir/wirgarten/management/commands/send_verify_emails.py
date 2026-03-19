@@ -63,9 +63,7 @@ class Command(BaseCommand):
             )
 
         members = list(members.distinct().order_by("member_no", "last_name"))
-        self.stdout.write(
-            f"Sending emails to {len(members)} members WITHOUT subscription:"
-        )
+        self.stdout.write(f"Sending emails to {len(members)} members:")
 
         self.send_emails(members, options["dry_run"])
 
