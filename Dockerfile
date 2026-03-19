@@ -2,7 +2,7 @@ FROM python:3.14
 ARG TAPIR_VERSION
 ENV TAPIR_VERSION=$TAPIR_VERSION
 ENV PYTHONUNBUFFERED=1
-COPY . /app
+
 WORKDIR /app
 
 RUN apt-get update -y && apt-get install -y libldap2-dev libsasl2-dev gettext locales
@@ -17,4 +17,11 @@ RUN mkdir -p /etc/apt/keyrings && \
 RUN sed -i '/de_DE.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
-RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry lock && poetry install && poetry run python manage.py compilemessages
+COPY ./pyproject.toml /app/pyproject.toml
+COPY ./poetry.lock /app/poetry.lock
+RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry install
+
+COPY tapir /app/tapir
+COPY manage.py /app/manage.py
+COPY Makefile /app/Makefile
+RUN poetry run python manage.py compilemessages
