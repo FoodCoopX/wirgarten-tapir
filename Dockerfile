@@ -21,5 +21,8 @@ COPY ./pyproject.toml /app/pyproject.toml
 COPY ./poetry.lock /app/poetry.lock
 RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry install
 
-COPY . /app
+COPY tapir /app/tapir
+COPY manage.py /app/manage.py
+COPY Makefile /app/Makefile
+COPY dist /app/dist
 RUN poetry run python manage.py compilemessages
