@@ -66,8 +66,8 @@ class Command(BaseCommand):
         self.stdout.write(
             f"Sending emails to {len(members)} members WITHOUT subscription:"
         )
-        if not options["dry_run"]:
-            self.send_emails(members)
+
+        self.send_emails(members, options["dry_run"])
 
     def confirm_member_group(self, members):
         if len(members) == 0:
@@ -114,8 +114,12 @@ class Command(BaseCommand):
             Q(coop_shares_total_value__gt=0) | Q(num_subscriptions__gt=0)
         )
 
-    def send_emails(self, members):
+    def send_emails(self, members, dry_run: bool):
         if not self.confirm_member_group(members):
+            return
+
+        if dry_run:
+            self.stdout.write("Dry run enabled, aborting")
             return
 
         for member in members:
