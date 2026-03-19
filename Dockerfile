@@ -24,4 +24,5 @@ RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetr
 COPY tapir /app/tapir
 COPY manage.py /app/manage.py
 COPY Makefile /app/Makefile
+COPY dist /app/dist
 RUN poetry run python manage.py compilemessages
