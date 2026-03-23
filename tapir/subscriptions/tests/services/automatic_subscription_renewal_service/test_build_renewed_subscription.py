@@ -43,6 +43,7 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         original_subscription.mandate_ref = mandate_ref
         admin_confirmed = Mock()
         original_subscription.admin_confirmed = admin_confirmed
+        original_subscription.end_date = Mock()
 
         next_growing_period = GrowingPeriodFactory.build()
         start_date = Mock()
@@ -68,7 +69,9 @@ class TestBuildRenewedSubscription(SimpleTestCase):
             )
         )
 
-        mock_get_next_growing_period.assert_called_once_with(cache=cache)
+        mock_get_next_growing_period.assert_called_once_with(
+            reference_date=original_subscription.end_date, cache=cache
+        )
         mock_get_notice_period_duration.assert_called_once_with(
             product_type, next_growing_period, cache=cache
         )

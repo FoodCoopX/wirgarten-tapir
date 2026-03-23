@@ -9,7 +9,9 @@ from tapir.subscriptions.config import (
     SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED,
     SOLIDARITY_MODE_ONLY_POSITIVE,
 )
-from tapir.utils.services.tapir_cache import TapirCache
+from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
+    AutomaticSolidarityContributionRenewalService,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
@@ -49,8 +51,12 @@ class SolidarityValidator:
         reference_date: datetime.date,
         cache: dict,
     ) -> Decimal:
-        return TapirCache.get_solidarity_excess_at_date(
+        relevant_contributions = AutomaticSolidarityContributionRenewalService.get_current_and_renewed_solidarity_contributions_at_date(
             reference_date=reference_date, cache=cache
+        )
+        return sum(
+            [contribution.amount for contribution in relevant_contributions],
+            start=Decimal(0),
         )
 
     @classmethod

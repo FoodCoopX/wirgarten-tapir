@@ -64,7 +64,9 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def build_renewed_subscription(cls, subscription: Subscription, cache: dict):
-        next_growing_period = get_next_growing_period(cache=cache)
+        next_growing_period = get_next_growing_period(
+            reference_date=subscription.end_date, cache=cache
+        )
 
         trial_disabled, trial_end_date_override = cls.get_renewed_trial_data(
             subscription, cache=cache

@@ -2,8 +2,6 @@ import datetime
 from decimal import Decimal
 from typing import Set
 
-from django.db import models
-
 from tapir.deliveries.models import Joker, DeliveryDayAdjustment, DeliveryDonation
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -505,25 +503,6 @@ class TapirCache:
                 product_type=product_type,
                 growing_period=growing_period,
             ).first(),
-        )
-
-    @classmethod
-    def get_solidarity_excess_at_date(
-        cls, reference_date: datetime.date, cache: dict
-    ) -> Decimal:
-        solidarity_excess_by_date = get_from_cache_or_compute(
-            cache=cache, key="solidarity_excess_by_date", compute_function=lambda: {}
-        )
-
-        def compute() -> Decimal:
-            return SolidarityContribution.objects.filter(
-                start_date__lte=reference_date, end_date__gte=reference_date
-            ).aggregate(sum=models.Sum(models.F("amount")))["sum"] or Decimal(0)
-
-        return get_from_cache_or_compute(
-            cache=solidarity_excess_by_date,
-            key=reference_date,
-            compute_function=compute,
         )
 
     @classmethod
