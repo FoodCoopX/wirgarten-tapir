@@ -137,8 +137,11 @@ class KeycloakUser(AbstractUser):
                     cache=cache,
                 )
             )
-            # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
-            self.email = self_before_save.email
+            if self.email_verified(cache=cache) and self_before_save:
+                # important: reset the email to the original email before persisting.
+                # The actual change happens after the user click the confirmation link.
+                # A confirmation link is only sent the email is verified.
+                self.email = self_before_save.email
         else:
             KeycloakUserManager.create_keycloak_user(
                 user=self,

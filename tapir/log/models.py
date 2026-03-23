@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField
-from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.db import models
 from django.template.loader import render_to_string
