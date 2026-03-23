@@ -155,7 +155,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         )
         iban = serializer.validated_data.get("iban", None)
         account_owner = serializer.validated_data.get("account_owner", None)
-        if needs_banking_data and (iban is None or account_owner is None):
+        if needs_banking_data and (not iban or not account_owner):
             raise DrfValidationError(
                 "Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)"
             )

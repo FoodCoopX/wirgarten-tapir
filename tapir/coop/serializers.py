@@ -15,8 +15,8 @@ class GetCoopShareTransactionsResponseSerializer(serializers.Serializer):
 class ExistingMemberPurchasesSharesRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     number_of_shares_to_add = serializers.IntegerField()
-    iban = serializers.CharField(required=False)
-    account_owner = serializers.CharField(required=False)
+    iban = serializers.CharField(required=False, allow_blank=True)
+    account_owner = serializers.CharField(required=False, allow_blank=True)
     as_admin = serializers.BooleanField()
     start_date = serializers.DateField(required=False)
 
