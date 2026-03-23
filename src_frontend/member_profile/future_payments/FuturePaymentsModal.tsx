@@ -31,6 +31,7 @@ interface FuturePaymentsModalProps {
   csrfToken: string;
   memberId: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  trialPeriodEnabled: boolean;
 }
 
 function getBadgeBackground(payment: Payment) {
@@ -107,8 +108,14 @@ function partialMonthText(extendedPayment: ExtendedPayment) {
   return "";
 }
 
-function trialPeriodText(extendedPayment: ExtendedPayment) {
-  if (!extendedPayment.payment.subscriptionPaymentRangeEnd) {
+function trialPeriodText(
+  extendedPayment: ExtendedPayment,
+  trialPeriodEnabled: boolean,
+) {
+  if (
+    !trialPeriodEnabled ||
+    !extendedPayment.payment.subscriptionPaymentRangeEnd
+  ) {
     return "";
   }
 
@@ -130,6 +137,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   csrfToken,
   memberId,
   setToastDatas,
+  trialPeriodEnabled,
 }) => {
   dayjs.extend(RelativeTime);
   const api = useApi(PaymentsApi, csrfToken);
@@ -164,7 +172,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
             <span key={subscription.id}>
               {formatSubscription(subscription)}
               {partialMonthText(extendedPayment)}
-              {trialPeriodText(extendedPayment)}
+              {trialPeriodText(extendedPayment, trialPeriodEnabled)}
             </span>
           ))}
           {extendedPayment.coopShareTransactions.map((transaction) => (
@@ -176,7 +184,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
           {extendedPayment.solidarityContributions.length > 0 && (
             <span>
               Solidarbeitrag{partialMonthText(extendedPayment)}
-              {trialPeriodText(extendedPayment)}
+              {trialPeriodText(extendedPayment, trialPeriodEnabled)}
             </span>
           )}
           {(extendedPayment.subscriptions.length > 0 ||

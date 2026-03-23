@@ -43,6 +43,7 @@ class ExtendedMemberCreditSerializer(serializers.Serializer):
 class FuturePaymentsResponseSerializer(serializers.Serializer):
     payments = ExtendedPaymentSerializer(many=True)
     credits = MemberCreditSerializer(many=True)
+    trial_period_enabled = serializers.BooleanField()
 
 
 class MemberPaymentRhythmSerializer(serializers.ModelSerializer):

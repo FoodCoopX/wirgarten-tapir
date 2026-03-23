@@ -67,6 +67,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   const [extendedPayments, setExtendedPayments] = useState<ExtendedPayment[]>(
     [],
   );
+  const [trialPeriodEnabled, setTrialPeriodEnabled] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -74,6 +75,8 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
     api
       .paymentsApiMemberFuturePaymentsRetrieve({ memberId: memberId })
       .then((response) => {
+        setTrialPeriodEnabled(response.trialPeriodEnabled);
+
         const groupedTransactions: TransactionsByDueDate = {};
 
         const extendedPayments = response.payments.toSorted(
@@ -193,6 +196,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         csrfToken={csrfToken}
         memberId={memberId}
         setToastDatas={setToastDatas}
+        trialPeriodEnabled={trialPeriodEnabled}
       />
       <TapirToastContainer
         toastDatas={toastDatas}

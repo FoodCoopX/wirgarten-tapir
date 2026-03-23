@@ -7360,9 +7360,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MemberCredit'
+        trial_period_enabled:
+          type: boolean
       required:
       - credits
       - payments
+      - trial_period_enabled
     GetCoopShareTransactionsResponse:
       type: object
       properties:

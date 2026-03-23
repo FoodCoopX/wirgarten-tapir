@@ -89,6 +89,9 @@ class GetFutureMemberPaymentsApiView(APIView):
                         ].due_date,
                     ),
                     "credits": member_credits,
+                    "trial_period_enabled": get_parameter_value(
+                        key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                    ),
                 }
             ).data
         )
@@ -268,6 +271,9 @@ class GetPastMemberPaymentsApiView(APIView):
                         reverse=True,
                     ),
                     "credits": member_credits,
+                    "trial_period_enabled": get_parameter_value(
+                        key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                    ),
                 }
             ).data
         )
