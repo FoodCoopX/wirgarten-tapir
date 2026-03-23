@@ -21,7 +21,7 @@ def get_from_cache_or_compute[T](
 
 
 def get_product_prices_by_product_id(cache: dict, product_id: str, apps):
-    ProductPrice = apps.get_model("wirgarten", "Subscription")
+    ProductPrice = apps.get_model("wirgarten", "ProductPrice")
     product_prices_by_product_id = get_from_cache_or_compute(
         cache, "product_prices_by_product_id", lambda: {}
     )
