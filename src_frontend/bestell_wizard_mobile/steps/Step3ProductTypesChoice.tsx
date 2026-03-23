@@ -123,7 +123,9 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                   updateSelection(productType, event.target.checked)
                 }
                 checked={selectedProductTypes.includes(productType)}
-                disabled={productType.mustBeSubscribedTo}
+                disabled={
+                  productType.mustBeSubscribedTo && !investingMembership
+                }
               />
               <label
                 className={"btn btn-" + BUTTON_VARIANT}
