@@ -4,6 +4,7 @@ import { useApi } from '../../../hooks/useApi';
 import { BakeryApi } from '../../../api-client';
 import type { BreadList, BreadLabel, BreadContent } from '../../../api-client/models';
 import { SingleBreadCard } from '../cards';
+import '../../styles/bakery_styles.css';
 
 interface PreferredBreadsModalProps {
   isOpen: boolean;
@@ -151,8 +152,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
         <div className="modal-dialog modal-xl modal-dialog-scrollable">
           <div className="modal-content">
             <div
-              className="modal-header"
-              style={{ backgroundColor: '#D4A574', color: 'white' }}
+              className="modal-header header-white-on-middle-brown"
             >
               <h5 className="modal-title">
                 <StarFill size={20} className="me-2" />
@@ -169,7 +169,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
             <div className="modal-body p-4">
               {loading ? (
                 <div className="text-center py-5">
-                  <div className="spinner-border" style={{ color: '#D4A574' }} />
+                  <div className="spinner-border spinner-bakery-primary" />
                   <p className="mt-2 text-muted">Lade Brote...</p>
                 </div>
               ) : breads.length === 0 ? (
@@ -180,7 +180,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
               ) : (
                 <>
                   <div className="alert alert-light d-flex align-items-start mb-4" role="alert">
-                    <InfoCircle size={20} className="me-2 mt-1" style={{ color: '#8B6F47' }} />
+                    <InfoCircle size={20} className="me-2 mt-1 icon-bakery-primary-darker" style={{ color: 'var(--bakery-brown-medium)' }} />
                     <div>
                       <strong>Wähle bis zu {MAX_PREFERRED_BREADS} Lieblingsbrote aus</strong>
                       <p className="mb-0 small text-muted">

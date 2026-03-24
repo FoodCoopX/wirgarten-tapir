@@ -2,6 +2,7 @@ import React from 'react';
 import { SectionToggle } from './SectionToggle';
 import { ActionButtons } from './ActionButtons';
 import type { AbhollisteResponse, PickupLocation } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface AbhollisteSectionProps {
   isOpen: boolean;
@@ -57,14 +58,14 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
 
         {isLoading ? (
           <div className="text-center py-3">
-            <div className="spinner-border spinner-border-sm" style={{ color: '#D4A574' }} />
+            <div className="spinner-border spinner-border-sm spinner-bakery-primary" />
             <p className="mt-1 text-muted small">Lade Abholliste...</p>
           </div>
         ) : selectedLocation && abhollisteData?.entries?.length ? (
           <>
             <div className="table-responsive mb-3 mt-3">
               <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
-                <thead style={{ backgroundColor: '#F5E6D3' }}>
+                <thead className="table-header-bakery">
                   <tr>
                     <th className="text-center" style={{ width: '30px' }}>#</th>
                     <th>Name</th>
@@ -73,10 +74,7 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                       <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
                     </th>
                     {abhollisteData.breadNames.map(name => (
-                      <th key={name} className="text-center" style={{
-                        writingMode: 'vertical-rl', transform: 'rotate(180deg)',
-                        minWidth: '28px', maxWidth: '28px', padding: '8px 2px', fontSize: '0.7rem',
-                      }}>{name}</th>
+                      <th key={name} className="text-center th-vertical">{name}</th>
                     ))}
                   </tr>
                 </thead>
@@ -90,15 +88,11 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                     const isChecked = checkedMembers[memberId] || false;
 
                     return (
-                      <tr key={memberId} style={{
-                        backgroundColor: isChecked ? '#d4edda' : undefined,
-                        textDecoration: isChecked ? 'line-through' : undefined,
-                        opacity: isChecked ? 0.7 : 1,
-                      }}>
+                      <tr key={memberId} className={isChecked ? 'checked-row' : ''}>
                         <td className="text-center text-muted">{index + 1}</td>
                         <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{displayName}</td>
                         <td className="text-center">
-                          <strong style={{ color: '#8B4513' }}>{totalBreads}</strong>
+                          <strong className="text-bakery-primary-darker">{totalBreads}</strong>
                         </td>
                         <td className="text-center">
                           <input
@@ -112,10 +106,7 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                           const count = breadCounts[name] || 0;
                           const preferred = breadPreferred[name] || false;
                           return (
-                            <td key={name} className="text-center" style={{
-                              backgroundColor: preferred ? '#d4edda' : undefined,
-                              color: count > 0 ? '#212529' : '#ccc',
-                            }}>
+                            <td key={name} className={`text-center ${preferred ? 'bg-bakery-checked' : ''} ${count > 0 ? '' : 'text-bakery-light'}`}>
                               {count > 0 ? count : preferred ? '' : '—'}
                             </td>
                           );
@@ -123,7 +114,7 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                       </tr>
                     );
                   })}
-                  <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
+                  <tr className="total-row-brown fw-bold">
                     <td />
                     <td>Gesamt</td>
                     <td className="text-center">{abhollisteData.grandTotal}</td>
@@ -138,9 +129,8 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
               </table>
             </div>
             <div className="d-flex align-items-center gap-2 mb-2" style={{ fontSize: '0.75rem' }}>
-              <span style={{
+              <span className="bg-bakery-checked border border-bakery-checked" style={{
                 display: 'inline-block', width: '14px', height: '14px',
-                backgroundColor: '#d4edda', border: '1px solid #c3e6cb',
               }} />
               <span className="text-muted">= als Lieblingsbrot angegeben</span>
             </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { EggFried, CheckCircleFill, StarFill } from 'react-bootstrap-icons';
 import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface SingleBreadCardProps {
   bread: BreadList;
@@ -28,14 +29,8 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
   return (
     <div style={{ width, flex: `0 0 ${width}` }}>
       <div
-        className="card h-100 shadow-sm position-relative"
-        style={{
-          border: isSelected ? '3px solid #2E7D32' : isPreferred ? '2px solid #FFD700' : '1px solid #dee2e6',
-          cursor: onClick ? 'pointer' : 'default',
-          transform: isSelected ? 'scale(1.02)' : 'scale(1)',
-          transition: 'all 0.2s ease',
-          backgroundColor: isSelected ? '#d4edda' : 'white',
-        }}
+        className={`card h-100 shadow-sm position-relative ${isSelected ? 'bread-selected' : isPreferred ? 'bread-preferred' : ''}`}
+        style={{ cursor: onClick ? 'pointer' : 'default' }}
         onClick={onClick}
       >
         {/* Selected/Preferred Badge */}
@@ -47,20 +42,15 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
             {isSelected ? (
               <CheckCircleFill 
                 size={32} 
-                style={{ 
-                  color: '#2E7D32',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-                }} 
+                className="text-bakery-success-dark"
+                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} 
               />
             ) : isPreferred ? (
               <div
+                className="bg-bakery-gold d-flex align-items-center justify-content-center"
                 style={{
-                  backgroundColor: 'rgba(255, 215, 0, 0.95)',
                   borderRadius: '50%',
                   padding: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                 }}
               >
@@ -76,24 +66,20 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
             src={bread.picture}
             alt={bread.name}
             className="card-img-top"
-            style={{ 
-              height: '180px', 
-              objectFit: 'cover',
-              opacity: isSelected ? 1 : 0.95
-            }}
+            style={{ height: '180px', objectFit: 'cover' }}
           />
         ) : (
           <div
-            className="d-flex align-items-center justify-content-center"
-            style={{ height: '180px', backgroundColor: '#F5E6D3' }}
+            className="d-flex align-items-center justify-content-center bg-bakery-cream"
+            style={{ height: '180px' }}
           >
-            <EggFried size={48} style={{ color: '#D4A574' }} />
+            <EggFried size={48} className="icon-bakery-primary" />
           </div>
         )}
 
         {/* Card Body */}
         <div className="card-body d-flex flex-column">
-          <h6 className="card-title mb-0" style={{ color: '#8B4513' }}>
+          <h6 className="card-title mb-0 text-bakery-primary-darker">
             {bread.name}
           </h6>
 
@@ -106,12 +92,8 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
               {labels.map(label => (
                 <span
                   key={label.id}
-                  className="badge me-1"
-                  style={{ 
-                    backgroundColor: label.isActive ? '#2E7D32' : '#9E9E9E',
-                    color: 'white',
-                    fontSize: '0.7rem'
-                  }}
+                  className={`badge me-1 ${label.isActive ? 'badge-bakery-success' : 'badge-bakery-muted'}`}
+                  style={{ fontSize: '0.7rem' }}
                 >
                   {label.name}
                 </span>
@@ -125,11 +107,11 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
 
           {contents.length > 0 && (
             <div className="mb-2" style={{ flex: 1 }}>
-              <small className="fw-bold" style={{ color: '#C4A882', fontSize: '0.7rem' }}>
+              <small className="fw-bold content-ingredients-label" style={{ fontSize: '0.7rem' }}>
                 ZUTATEN:
               </small>
               <br />
-              <small style={{ color: '#B8A99A', fontSize: '0.75rem' }}>
+              <small className="content-ingredients-text" style={{ fontSize: '0.75rem' }}>
                 {contents.map(c => c.ingredientName).join(', ')}
               </small>
             </div>
@@ -139,11 +121,7 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
         {/* Footer */}
         {showFooter && (
           <div 
-            className="card-footer text-center py-2" 
-            style={{ 
-              backgroundColor: isSelected ? '#2E7D32' : isPreferred ? '#FFD700' : '#8B4513', 
-              color: 'white' 
-            }}
+            className={`card-footer text-center py-2 ${isSelected ? 'bread-card-footer-selected' : isPreferred ? 'bread-card-footer-preferred' : 'bread-card-footer-default'}`}
           >
             {footerText || (isSelected ? 'Ist ausgewählt' : isPreferred ? 'Lieblingsbrot' : 'Auswählen')}
           </div>

@@ -38,6 +38,7 @@ from tapir.bakery.serializers import (
 )
 from tapir.bakery.utils import str_to_bool
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.wirgarten.models import PickupLocationOpeningTime
 
 
 @extend_schema(tags=["bakery"])
@@ -121,11 +122,6 @@ class BreadViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @extend_schema(
-        summary="Add an ingredient to a bread",
-        request=BreadContentSerializer,
-        responses={201: BreadContentSerializer},
-    )
     def get_serializer_class(self):
         """Use detailed serializer for retrieve, list serializer otherwise"""
         if self.action == "retrieve":
@@ -410,7 +406,7 @@ class BreadDeliveryViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(
-    tags=["Bakery"],
+    tags=["bakery"],
     description="Manage preferred bread labels for a member.",
     request=PreferredLabelSerializer,
     responses={200: PreferredLabelSerializer},
@@ -454,12 +450,11 @@ class PreferredLabelViewSet(viewsets.ModelViewSet):
         preferred, _ = PreferredLabel.objects.get_or_create(member_id=pk)
 
         preferred.labels.set(labels)
-        preferred.save()
         return Response(serializer.data)
 
 
 @extend_schema(
-    tags=["Bakery"],
+    tags=["bakery"],
     description="Manage preferred breads for a member.",
     request=PreferredBreadSerializer,
     responses={200: PreferredBreadSerializer},
@@ -502,7 +497,6 @@ class PreferredBreadViewSet(viewsets.ModelViewSet):
         preferred, _ = PreferredBread.objects.get_or_create(member_id=pk)
 
         preferred.breads.set(breads)
-        preferred.save()
         return Response(serializer.data)
 
 
@@ -610,14 +604,10 @@ class BreadsPerPickupLocationPerWeekViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(delivery_week=delivery_week)
         if delivery_day is not None:
             delivery_day_int = int(delivery_day)
-            # Get all pickup location IDs that match this delivery day
-            from tapir.bakery.models import PickupLocation
-
-            pickup_location_ids = [
-                pl.id
-                for pl in PickupLocation.objects.all()
-                if pl.delivery_day == delivery_day_int
-            ]
+            # Get all pickup location IDs that match this delivery day via opening times
+            pickup_location_ids = PickupLocationOpeningTime.objects.filter(
+                day_of_week=delivery_day_int
+            ).values_list("pickup_location_id", flat=True)
             queryset = queryset.filter(pickup_location_id__in=pickup_location_ids)
 
         return queryset.order_by("bread__name")

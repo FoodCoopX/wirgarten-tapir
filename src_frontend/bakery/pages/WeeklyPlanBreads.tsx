@@ -7,6 +7,7 @@ import { useApi } from '../../hooks/useApi';
 import type { BreadList } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
+import '../styles/bakery_styles.css';
 
 dayjs.extend(isoWeek);
 
@@ -208,7 +209,7 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
       <div className="row">
         {loading && days.length === 0 ? (
           <div className="col-12 text-center py-5">
-            <div className="spinner-border" style={{ color: '#D4A574' }} />
+            <div className="spinner-border spinner-bakery-primary" />
             <p className="mt-2 text-muted">Lade Liefertage...</p>
           </div>
         ) : days.length === 0 ? (
@@ -220,8 +221,7 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
             <div key={dayConfig.day} className="col-lg-4 mb-4">
               <div className="card h-100">
                 <div 
-                  className="card-header d-flex justify-content-between align-items-center"
-                  style={{ backgroundColor: '#D4A574', color: 'white' }}
+                  className="card-header header-white-on-middle-brown d-flex justify-content-between align-items-center"
                 >
                   <div>
                     <h5 className="mb-0">{dayConfig.label}</h5>
@@ -233,7 +233,7 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
                 <div className="card-body" style={{ maxHeight: '600px', overflowY: 'auto' }}>
                   {loading ? (
                     <div className="text-center py-4">
-                      <div className="spinner-border" style={{ color: '#D4A574' }} />
+                      <div className="spinner-border spinner-bakery-primary" />
                     </div>
                   ) : allBreads.length === 0 ? (
                     <p className="text-muted text-center">Keine Brote verfügbar</p>
@@ -270,13 +270,11 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
 
                             <div className="form-check form-switch">
                               <input
-                                className="form-check-input"
+                                className={`form-check-input ${isActive ? 'checkbox-bakery' : ''}`}
                                 type="checkbox"
                                 checked={isActive}
                                 onChange={() => toggleBread(dayIndex, bread.id!)}
                                 style={{
-                                  backgroundColor: isActive ? '#8B6F47' : '',
-                                  borderColor: isActive ? '#8B6F47' : '',
                                   cursor: 'pointer',
                                 }}
                               />
@@ -295,8 +293,7 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
                 </div>
                 <div className="card-footer">
                   <button
-                    className="btn w-100"
-                    style={{ backgroundColor: '#8B6F47', color: 'white' }}
+                    className="btn btn-bakery-brown w-100"
                     onClick={() => handleOpenModal(dayConfig.day, dayConfig.label)}
                     disabled={loading}
                   >

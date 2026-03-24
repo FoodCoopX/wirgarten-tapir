@@ -4,15 +4,42 @@
   
 
   {% if entries %}
+  <style>
+      @page {
+        size: A4 landscape;
+      }
+      table {
+        table-layout: fixed;
+        width: 100%;
+      }
+      .bread-col-header {
+        white-space: nowrap;
+        font-size: 8pt;
+        text-align: center;
+        overflow: visible;
+      }
+      .bread-col-data {
+        text-align: center;
+      }
+  </style>
     <table>
+      <colgroup>
+        <col style="width: 20px;">
+        <col>
+        <col style="width: 50px;">
+        <col style="width: 50px;">
+        {% for bread_name in bread_names %}
+        <col style="width: 110px;">
+        {% endfor %}
+      </colgroup>
       <thead>
         <tr>
-          <th style="width: 12px; text-align: center;">#</th>
+          <th style="text-align: center;">#</th>
           <th>Mitglied</th>
-          <th  style="width: 36px; text-align: center;">Brote</th>
-          <th style="width: 28px; text-align: center;">✓</th>
+          <th style="text-align: center;">Brote</th>
+          <th style="text-align: center;">✓</th>
           {% for bread_name in bread_names %}
-          <th class="bread-col">{{ bread_name }}</th>
+          <th class="bread-col-header">{{ bread_name }}</th>
           {% endfor %}
         </tr>
       </thead>
@@ -25,7 +52,7 @@
           <td class="text-center"><span class="checkbox"></span></td>
           {% for bread_name in bread_names %}
           {% with count=entry.bread_counts|get_item:bread_name preferred=entry.bread_preferred|get_item:bread_name %}
-          <td class="text-center {% if preferred %}preferred{% elif not count %}grey{% endif %}">
+          <td class="bread-col-data {% if preferred %}preferred{% elif not count %}grey{% endif %}">
             {% if count %}{{ count }}{% elif preferred %}{% else %}—{% endif %}
           </td>
           {% endwith %}
@@ -40,7 +67,7 @@
           <td class="text-end">{{ grand_total }}</td>
           <td class="text-center counter"></td>
           {% for bread_name in bread_names %}
-          <td class="text-center"></td>
+          <td class="bread-col-data"></td>
           {% endfor %}
         </tr>
       </tfoot>
@@ -48,7 +75,7 @@
 
     <div class="legend">
       <span class="legend-swatch"></span>
-      = Lieblingsbrot
+      = angegebenes Lieblingsbrot
     </div>
     <div class="legend" style="text-align: end; margin-top: 2mm;">
     

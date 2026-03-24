@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import React from 'react';
+import '../../styles/bakery_styles.css';
 
 interface YearWeekSelectorCardProps {
   selectedYear: number;
@@ -21,7 +22,7 @@ const years = Array.from({ length: (currentYear + 1) - 2026 + 1 }, (_, i) => 202
 
   return (
     <div className="card shadow-sm">
-      <div className="card-header" style={{ backgroundColor: '#F5E6D3', color: '#8B4513' }}>
+      <div className="card-header header-darkbrown-on-sahara">
         <h5 className="mb-0">
           Woche & Jahr auswählen
         </h5>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { SectionToggle } from './SectionToggle';
 import { ActionButtons } from './ActionButtons';
+import '../../styles/bakery_styles.css';
 
 interface BacklisteSectionProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export const BacklisteSection: React.FC<BacklisteSectionProps> = ({
           <>
             <div className="table-responsive mb-3">
               <table className="table table-sm" style={{ fontSize: '0.8rem' }}>
-                <thead style={{ backgroundColor: '#F5E6D3', fontSize: '0.8rem' }}>
+                <thead className="table-header-bakery" style={{ fontSize: '0.8rem' }}>
                   <tr className="total-row-brown">
                     <th>Brotsorte</th>
                     <th className="text-end" title="Zuweisung zu Verteilstationen">
@@ -52,19 +53,19 @@ export const BacklisteSection: React.FC<BacklisteSectionProps> = ({
                       <tr key={name}>
                         <td>{name}</td>
                         <td className="text-end">{deliveries}</td>
-                        <td className="text-end" style={{ color: extra > 0 ? '#28a745' : '#6c757d' }}>
+                        <td className={`text-end ${extra > 0 ? 'text-bakery-success' : 'text-bakery-muted'}`}>
                           {extra > 0 ? `+${extra}` : extra}
                         </td>
                         <td className="text-end">
-                          <strong style={{ color: '#8B4513' }}>{baked}</strong>
+                          <strong className="text-bakery-primary-darker">{baked}</strong>
                         </td>
                       </tr>
                     );
                   })}
-                  <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
+                  <tr className="total-row-brown fw-bold">
                     <td>Gesamt</td>
                     <td className="text-end">{totalDeliveries}</td>
-                    <td className="text-end" style={{ color: totalExtra > 0 ? '#28a745' : '#6c757d' }}>
+                    <td className={`text-end ${totalExtra > 0 ? 'text-bakery-success' : 'text-bakery-muted'}`}>
                       {totalExtra > 0 ? `+${totalExtra}` : totalExtra}
                     </td>
                     <td className="text-end">{totalBaked}</td>

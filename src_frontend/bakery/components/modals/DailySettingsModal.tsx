@@ -180,12 +180,8 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
   return (
     <>
       <button
-        className="btn btn-sm w-100 mt-2"
-        style={{
-          backgroundColor: '#D4A574',
-          color: 'white',
-          border: '1px solid rgba(255,255,255,0.4)',
-        }}
+        className="btn btn-sm w-100 mt-2 btn-bakery-primary"
+        style={{ border: '1px solid rgba(255,255,255,0.4)' }}
         onClick={() => setShow(true)}
       >
         <span
@@ -240,7 +236,7 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
                 <div className="modal-body p-3">
                   {loading ? (
                     <div className="text-center py-5">
-                      <div className="spinner-border" style={{ color: '#D4A574' }} />
+                      <div className="spinner-border spinner-bakery-primary" />
                       <p className="mt-2 text-muted">Lade Daten...</p>
                     </div>
                   ) : activeBreads.length === 0 ? (
@@ -254,8 +250,8 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
                         <div className="table-responsive">
                           <table className="table table-bordered table-hover mb-0">
                             <thead
+                              className="table-header-bakery"
                               style={{
-                                backgroundColor: '#F5E6D3',
                                 position: 'sticky',
                                 top: 0,
                                 zIndex: 10,
@@ -302,7 +298,7 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
                                     <td key={f.key} className="p-1">
                                       <input
                                         type="text"
-                                        className="form-control form-control-sm text-center"
+                                        className={`form-control form-control-sm text-center ${specifics[bread.id!]?.[f.key] ? 'text-bakery-highlight fw-bold' : 'text-bakery-muted'}`}
                                         value={specifics[bread.id!]?.[f.key] || ''}
                                         onChange={(e) =>
                                           handleCellChange(bread.id!, f.key, e.target.value)
@@ -311,8 +307,6 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
                                         style={{
                                           minWidth: '60px',
                                           fontSize: '14px',
-                                          fontWeight: specifics[bread.id!]?.[f.key] ? 'bold' : 'normal',
-                                          color: specifics[bread.id!]?.[f.key] ? '#dd1755' : '#6c757d',
                                         }}
                                       />
                                     </td>

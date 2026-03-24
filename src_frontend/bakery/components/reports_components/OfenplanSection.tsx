@@ -1,5 +1,6 @@
 import React from 'react';
 import { SectionToggle } from './SectionToggle';
+import '../../styles/bakery_styles.css';
 
 interface StoveSessionGrouped {
   session: number;
@@ -23,7 +24,7 @@ export const OfenplanSection: React.FC<OfenplanSectionProps> = ({ isOpen, onTogg
           <div className="d-flex flex-column gap-2 mb-3">
             {displaySessions.map((session) => (
               <div key={session.session} className="card">
-                <div className="card-header py-1" style={{ backgroundColor: '#D4A574', color: 'white' }}>
+                <div className="card-header py-1 header-white-on-middle-brown">
                   <small className="fw-bold">Ofengang {session.session}</small>
                 </div>
                 <ul className="list-group list-group-flush">

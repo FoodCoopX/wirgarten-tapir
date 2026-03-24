@@ -1,6 +1,7 @@
 import React from 'react';
 import { EggFried } from 'react-bootstrap-icons';
 import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface CompactBreadCardProps {
   bread: BreadList;
@@ -22,13 +23,7 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
   disabled = false,
 }) => {
   return (
-    <div 
-      className="card w-100" 
-      style={{ 
-        borderLeft: '4px solid #8B4513',
-        backgroundColor: '#FAF8F5' 
-      }}
-    >
+    <div className="card w-100 card-bakery-border-left">
       <div className="card-body p-3">
         <div className="row g-2">
           {/* Image column */}
@@ -37,24 +32,11 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
               <img
                 src={bread.picture}
                 alt={bread.name}
-                style={{ 
-                  width: '80px', 
-                  height: '80px', 
-                  objectFit: 'cover',
-                  borderRadius: '4px'
-                }}
+                className="compact-card-image"
               />
             ) : (
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{ 
-                  width: '80px', 
-                  height: '80px', 
-                  backgroundColor: '#F5E6D3',
-                  borderRadius: '4px'
-                }}
-              >
-                <EggFried size={24} style={{ color: '#D4A574' }} />
+              <div className="compact-card-placeholder">
+                <EggFried size={24} className="icon-bakery-primary" />
               </div>
             )}
           </div>
@@ -63,20 +45,14 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
           <div className="col">
             <div className="d-flex flex-column h-100">
               <div className="d-flex justify-content-between align-items-start mb-1">
-                <h6 className="mb-0" style={{ color: '#8B4513' }}>
+                <h6 className="mb-0 text-bakery-primary-darker">
                   {bread.name}
                 </h6>
                 {showActions && (
                   <div className="d-flex gap-1">
                     {onEdit && (
                       <button
-                        className="btn btn-sm"
-                        style={{ 
-                          backgroundColor: '#8B4513', 
-                          color: 'white',
-                          fontSize: '0.75rem',
-                          padding: '0.25rem 0.5rem'
-                        }}
+                        className="btn btn-sm dark-brown-button btn-compact-action"
                         onClick={onEdit}
                         disabled={disabled}
                       >
@@ -85,11 +61,7 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
                     )}
                     {onRemove && (
                       <button
-                        className="btn btn-sm btn-outline-danger"
-                        style={{ 
-                          fontSize: '0.75rem',
-                          padding: '0.25rem 0.5rem'
-                        }}
+                        className="btn btn-sm btn-outline-danger btn-compact-action"
                         onClick={onRemove}
                         disabled={disabled}
                       >
@@ -111,12 +83,8 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
                   {labels.map(label => (
                     <span
                       key={label.id}
-                      className="badge me-1"
-                      style={{ 
-                        backgroundColor: label.isActive ? '#2E7D32' : '#9E9E9E',
-                        color: 'white',
-                        fontSize: '0.65rem'
-                      }}
+                      className={`badge me-1 ${label.isActive ? 'badge-bakery-success' : 'badge-bakery-muted'}`}
+                      style={{ fontSize: '0.65rem' }}
                     >
                       {label.name}
                     </span>
@@ -132,11 +100,11 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
 
               {contents.length > 0 && (
                 <div className="mt-auto">
-                  <small className="fw-bold" style={{ color: '#C4A882', fontSize: '0.65rem' }}>
+                  <small className="fw-bold content-ingredients-label">
                     ZUTATEN:
                   </small>
                   <br />
-                  <small style={{ color: '#B8A99A', fontSize: '0.7rem' }}>
+                  <small className="content-ingredients-text">
                     {contents.map(c => c.ingredientName).join(', ')}
                   </small>
                 </div>

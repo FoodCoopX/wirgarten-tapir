@@ -40,7 +40,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
     <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className="modal-dialog">
         <div className="modal-content">
-          <div className="modal-header" style={{ backgroundColor: '#F0F4E8', color: '#5D7A4A' }}>
+          <div className="modal-header header-bakery-ingredients">
             <h5 className="modal-title">
               {ingredient ? 'Zutat bearbeiten' : 'Neue Zutat'}
             </h5>
@@ -110,7 +110,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
               <button type="button" className="btn btn-secondary" onClick={onClose}>
                 Abbrechen
               </button>
-              <button type="submit" className="btn" style={{ backgroundColor: '#5D7A4A', color: 'white' }}>
+              <button type="submit" className="btn btn-bakery-ingredients">
                 Speichern & Schließen
               </button>
             </div>

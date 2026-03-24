@@ -1,14 +1,72 @@
 :root {
-  /* Bakery color palette */
+  /* Bakery color palette - Browns */
   --bakery-primary: #D4A574;
   --bakery-primary-dark: #9c5e07ce;
   --bakery-primary-darker: #8B4513;
-  --bakery-table-header: #F5E6D3;
+  --bakery-brown-medium: #8B6F47;
+  
+  /* Bakery backgrounds */
+  --bakery-bg-cream: #F5E6D3;
+  --bakery-bg-light: #FBF8F3;
+  --bakery-bg-lighter: #FAF8F5;
+  --bakery-bg-chart: #f0e6d9;
+  
+  /* Ingredients/Labels greens */
+  --bakery-ingredients-green: #5D7A4A;
+  --bakery-ingredients-bg: #F0F4E8;
+  --bakery-ingredients-body: #F9FBF7;
+  --bakery-labels-bg: #E8F5E9;
+  --bakery-labels-body: #F1F8F4;
+  
+  /* Success colors */
   --bakery-success: #28a745;
   --bakery-success-dark: #2E7D32;
-  --bakery-muted: #6c757d;
+  --bakery-bio-green: #81C784;
   --bakery-checked-row: #d4edda;
+  
+  /* Other colors */
+  --bakery-gold: #FFD700;
+  --bakery-muted: #6c757d;
+  --bakery-muted-light: #9E9E9E;
+  --bakery-icon-muted: #757575;
+  --bakery-content-label: #C4A882;
+  --bakery-content-text: #B8A99A;
   --bakery-white: #ffffff;
+  --bakery-danger: #dc3545;
+  --bakery-gray-light: #F8F9FA;
+  --bakery-text-light: #ccc;
+  --bakery-checked-border: #c3e6cb;
+  --bakery-highlight: #dd1755;
+}
+
+/* ============================================
+   TEXT COLORS
+   ============================================ */
+.text-bakery-success {
+  color: var(--bakery-success) !important;
+}
+
+.text-bakery-muted {
+  color: var(--bakery-muted) !important;
+}
+
+.text-bakery-danger {
+  color: var(--bakery-danger) !important;
+}
+
+.text-bakery-light {
+  color: var(--bakery-text-light) !important;
+}
+
+.text-bakery-highlight {
+  color: var(--bakery-highlight) !important;
+}
+.text-bakery-primary {
+  color: var(--bakery-primary) !important;
+}
+
+.text-bakery-primary-darker {
+  color: var(--bakery-primary-darker) !important;
 }
 
 .text-bakery-success-dark {
@@ -19,6 +77,64 @@
   color: var(--bakery-muted-light) !important;
 }
 
+.text-bakery-icon-muted {
+  color: var(--bakery-icon-muted) !important;
+}
+
+.text-bakery-content-label {
+  color: var(--bakery-content-label) !important;
+}
+
+.text-bakery-content-text {
+  color: var(--bakery-content-text) !important;
+}
+
+.text-bakery-gold {
+  color: var(--bakery-gold) !important;
+}
+
+.text-bakery-ingredients {
+  color: var(--bakery-ingredients-green) !important;
+}
+
+/* ============================================
+   BACKGROUND COLORS
+   ============================================ */
+.bg-bakery-cream {
+  background-color: var(--bakery-bg-cream) !important;
+}
+
+.bg-bakery-light {
+  background-color: var(--bakery-bg-light) !important;
+}
+
+.bg-bakery-lighter {
+  background-color: var(--bakery-bg-lighter) !important;
+}
+
+.bg-bakery-primary {
+  background-color: var(--bakery-primary) !important;
+}
+
+.bg-bakery-primary-darker {
+  background-color: var(--bakery-primary-darker) !important;
+}
+
+.bg-bakery-checked {
+  background-color: var(--bakery-checked-row) !important;
+}
+
+.bg-bakery-gold {
+  background-color: var(--bakery-gold) !important;
+}
+
+.bg-bakery-gray-light {
+  background-color: var(--bakery-gray-light) !important;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
 .dark-brown-button {
   background-color: var(--bakery-primary-darker);
   color: var(--bakery-white);
@@ -29,12 +145,35 @@
   color: var(--bakery-white);
 }
 
-.header-darkbrown-on-sahara {
-  background-color: var(--bakery-table-header);
-  color: var(--bakery-primary-darker);
-}
-.header-white-on-middle-brown {
+.btn-bakery-primary {
   background-color: var(--bakery-primary);
+  color: var(--bakery-white);
+  border: none;
+}
+
+.btn-bakery-primary:hover {
+  background-color: var(--bakery-primary-dark);
+  color: var(--bakery-white);
+}
+
+.btn-bakery-ingredients {
+  background-color: var(--bakery-ingredients-green);
+  color: var(--bakery-white);
+}
+
+.btn-bakery-ingredients:hover {
+  background-color: #4a6239;
+  color: var(--bakery-white);
+}
+
+.btn-bakery-brown {
+  background-color: var(--bakery-brown-medium);
+  color: var(--bakery-white);
+  border-color: var(--bakery-brown-medium);
+}
+
+.btn-bakery-brown:hover {
+  background-color: var(--bakery-primary-darker);
   color: var(--bakery-white);
 }
 
@@ -43,6 +182,77 @@
   color: var(--bakery-white) !important;
 }
 
+/* ============================================
+   HEADERS
+   ============================================ */
+.header-darkbrown-on-sahara {
+  background-color: var(--bakery-bg-cream);
+  color: var(--bakery-primary-darker);
+}
+
+.header-white-on-middle-brown {
+  background-color: var(--bakery-primary);
+  color: var(--bakery-white);
+}
+
+.header-white-on-brown {
+  background-color: var(--bakery-brown-medium);
+  color: var(--bakery-white);
+}
+
+.header-bakery-ingredients {
+  background-color: var(--bakery-ingredients-bg);
+  color: var(--bakery-ingredients-green);
+}
+
+.header-bakery-labels {
+  background-color: var(--bakery-labels-bg);
+  color: var(--bakery-success-dark);
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.card-body-bakery {
+  background-color: var(--bakery-bg-light);
+}
+
+.card-body-bakery-lighter {
+  background-color: var(--bakery-bg-lighter);
+}
+
+.card-body-ingredients {
+  background-color: var(--bakery-ingredients-body);
+}
+
+.card-body-labels {
+  background-color: var(--bakery-labels-body);
+}
+
+.card-footer-bakery {
+  background-color: var(--bakery-bg-light);
+}
+
+.card-footer-ingredients {
+  background-color: var(--bakery-ingredients-body);
+}
+
+.card-footer-labels {
+  background-color: var(--bakery-labels-body);
+}
+
+.card-bakery-border-left {
+  border-left: 4px solid var(--bakery-primary-darker);
+  background-color: var(--bakery-bg-lighter);
+}
+
+.card-footer-bakery-cream {
+  background-color: var(--bakery-bg-cream);
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
 .form-switch-bakery.form-check-input:checked {
   background-color: var(--bakery-success-dark);
   border-color: var(--bakery-success-dark);
@@ -52,13 +262,327 @@
   border-color: var(--bakery-success-dark);
 }
 
-/* === Badges === */
+.checkbox-bakery:checked {
+  background-color: var(--bakery-primary-darker);
+  border-color: var(--bakery-primary-darker);
+}
+
+.checkbox-bakery {
+  border-color: var(--bakery-primary-darker);
+}
+
+.checkbox-ingredients:checked {
+  background-color: var(--bakery-ingredients-green);
+  border-color: var(--bakery-ingredients-green);
+}
+
+.checkbox-ingredients {
+  border-color: var(--bakery-ingredients-green);
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
 .badge-bio {
-  background-color: #81C784;
+  background-color: var(--bakery-bio-green);
   color: var(--bakery-white);
 }
+
+.badge-bakery-primary {
+  background-color: var(--bakery-primary);
+  color: var(--bakery-white);
+}
+
+.badge-bakery-success {
+  background-color: var(--bakery-success-dark);
+  color: var(--bakery-white);
+}
+
+.badge-bakery-muted {
+  background-color: var(--bakery-muted-light);
+  color: var(--bakery-white);
+}
+
+.badge-bakery-brown {
+  background-color: var(--bakery-brown-medium);
+  color: var(--bakery-white);
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
 .total-row-brown,
 .total-row-brown th,
 .total-row-brown td {
-  background-color: #F5E6D3 !important;
+  background-color: var(--bakery-bg-cream) !important;
+}
+
+.table-header-bakery {
+  background-color: var(--bakery-bg-cream);
+}
+
+/* ============================================
+   SPINNERS
+   ============================================ */
+.spinner-bakery {
+  color: var(--bakery-primary-darker);
+}
+
+.spinner-bakery-primary {
+  color: var(--bakery-primary);
+}
+
+.spinner-ingredients {
+  color: var(--bakery-ingredients-green);
+}
+
+/* ============================================
+   ICONS
+   ============================================ */
+.icon-bakery-primary {
+  color: var(--bakery-primary);
+}
+
+.icon-bakery-primary-darker {
+  color: var(--bakery-primary-darker);
+}
+
+.icon-bakery-gold {
+  color: var(--bakery-gold);
+}
+
+.icon-bakery-ingredients {
+  color: var(--bakery-ingredients-green);
+}
+
+.icon-bakery-muted {
+  color: var(--bakery-icon-muted);
+}
+
+/* ============================================
+   BORDERS
+   ============================================ */
+.border-bakery-primary {
+  border-color: var(--bakery-primary) !important;
+}
+
+.border-bakery-cream {
+  border-color: var(--bakery-bg-cream) !important;
+}
+
+.border-bakery-gold {
+  border-color: var(--bakery-gold) !important;
+}
+
+.border-bakery-checked {
+  border-color: var(--bakery-checked-border) !important;
+}
+
+.border-left-bakery {
+  border-left: 3px solid var(--bakery-primary-darker);
+}
+
+/* ============================================
+   SELECTION STATES
+   ============================================ */
+.bread-selected {
+  border: 3px solid var(--bakery-success-dark) !important;
+  background-color: var(--bakery-checked-row) !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+.bread-preferred {
+  border: 2px solid var(--bakery-gold) !important;
+}
+
+.bread-card-footer-selected {
+  background-color: var(--bakery-success-dark);
+  color: var(--bakery-white);
+}
+
+.bread-card-footer-preferred {
+  background-color: var(--bakery-gold);
+  color: var(--bakery-white);
+}
+
+.bread-card-footer-default {
+  background-color: var(--bakery-primary-darker);
+  color: var(--bakery-white);
+}
+
+/* ============================================
+   PROGRESS BARS
+   ============================================ */
+.progress-bar-bakery-success {
+  background-color: var(--bakery-success);
+}
+
+.progress-bar-bakery-chart {
+  background-color: var(--bakery-bg-chart);
+}
+
+.progress-bar-bakery-primary {
+  background-color: var(--bakery-primary);
+}
+
+/* ============================================
+   IMAGE CONTAINERS
+   ============================================ */
+.bread-image-placeholder {
+  background-color: var(--bakery-bg-cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   MISCELLANEOUS
+   ============================================ */
+.list-item-transparent {
+  background-color: transparent !important;
+}
+
+.checked-row {
+  background-color: var(--bakery-checked-row);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.section-step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.section-step-bakery {
+  background-color: var(--bakery-primary);
+  color: var(--bakery-white);
+}
+
+.section-step-gold {
+  background-color: var(--bakery-gold);
+  color: var(--bakery-primary-darker);
+}
+
+.separator-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--bakery-bg-cream);
+  border: 2px solid var(--bakery-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hr-bakery {
+  border-color: var(--bakery-primary);
+}
+
+/* ============================================
+   LABEL/CONTENT STYLES
+   ============================================ */
+.content-ingredients-label {
+  color: var(--bakery-content-label);
+  font-size: 0.65rem;
+  font-weight: bold;
+}
+
+.content-ingredients-text {
+  color: var(--bakery-content-text);
+  font-size: 0.7rem;
+}
+
+/* ============================================
+   COMPACT CARD STYLES
+   ============================================ */
+.compact-card-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.compact-card-placeholder {
+  width: 80px;
+  height: 80px;
+  background-color: var(--bakery-bg-cream);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bread-list-image {
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  min-height: 60px;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.bread-list-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid var(--bakery-bg-cream);
+}
+
+.bread-list-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bakery-bg-cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bakery-bg-cream);
+  border-radius: 8px;
+}
+
+/* ============================================
+   METRICS CARD STYLES
+   ============================================ */
+.metrics-card-header {
+  background-color: var(--bakery-brown-medium);
+  color: var(--bakery-white);
+  cursor: pointer;
+}
+
+.metrics-breakdown-item {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   MODAL STYLES
+   ============================================ */
+.modal-body-bakery {
+  background-color: var(--bakery-bg-lighter);
+}
+
+/* Action button style for compact card */
+.btn-compact-action {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* ============================================
+   VERTICAL TABLE HEADER
+   ============================================ */
+.th-vertical {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  min-width: 28px;
+  max-width: 28px;
+  padding: 8px 2px;
+  font-size: 0.7rem;
 }

@@ -108,7 +108,7 @@ def collect_solver_input(
     # ── Deliveries ───────────────────────────────────────────────────
 
     deliveries_qs = BreadDelivery.objects.filter(
-        year=year, delivery_week=delivery_week
+        year=year, delivery_week=delivery_week, joker_taken=False
     ).select_related("pickup_location", "bread")
     deliveries = list(deliveries_qs)
 

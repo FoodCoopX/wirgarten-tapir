@@ -10,6 +10,7 @@ from tapir.bakery.models import (
 )
 from tapir.bakery.tests.factories import (
     AvailableBreadsForDeliveryDayFactory,
+    BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
     BreadsPerPickupLocationPerWeekFactory,
@@ -309,6 +310,14 @@ class TestAbhollisteView(TapirIntegrationTest):
         member = MemberFactory.create()
         sub = SubscriptionFactory.create(member=member)
 
+        BreadCapacityPickupLocationFactory.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            pickup_location=pl,
+            bread=bread,
+            capacity=10,
+        )
+
         BreadDeliveryFactory.create(
             year=YEAR,
             delivery_week=WEEK,
@@ -380,7 +389,7 @@ class TestSolverPreviewView(TapirIntegrationTest):
             "locations": [],
             "deliveries": [],
         }
-        mock_solve.return_value = []
+        mock_solve.return_value = {"solutions": [], "diagnostics": []}
 
         response = self.client.post(
             self.url,
@@ -402,14 +411,17 @@ class TestSolverPreviewView(TapirIntegrationTest):
             "locations": [],
             "deliveries": [],
         }
-        mock_solve.return_value = [
-            {
-                "bread_quantities": {bread.id: 10},
-                "remaining_quantities": {bread.id: 2},
-                "stove_sessions": [[(bread.id, 10)]],
-                "distribution": {},
-            }
-        ]
+        mock_solve.return_value = {
+            "solutions": [
+                {
+                    "bread_quantities": {bread.id: 10},
+                    "remaining_quantities": {bread.id: 2},
+                    "stove_sessions": [[(bread.id, 10)]],
+                    "distribution": {},
+                }
+            ],
+            "diagnostics": [],
+        }
 
         response = self.client.post(
             self.url,
@@ -639,6 +651,14 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         member = MemberFactory.create()
         sub = SubscriptionFactory.create(member=member)
 
+        BreadCapacityPickupLocationFactory.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            pickup_location=pl,
+            bread=bread,
+            capacity=10,
+        )
+
         BreadDeliveryFactory.create(
             year=YEAR,
             delivery_week=WEEK,
@@ -784,6 +804,21 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
         sub = SubscriptionFactory.create(member=member)
+
+        BreadCapacityPickupLocationFactory.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            pickup_location=pl_z,
+            bread=bread,
+            capacity=10,
+        )
+        BreadCapacityPickupLocationFactory.create(
+            year=YEAR,
+            delivery_week=WEEK,
+            pickup_location=pl_a,
+            bread=bread,
+            capacity=10,
+        )
 
         BreadDeliveryFactory.create(
             year=YEAR,

@@ -532,10 +532,18 @@ class TestBreadDeliveryViewSet(TapirIntegrationTest):
         sub1 = SubscriptionFactory.create(member=member1)
         sub2 = SubscriptionFactory.create(member=member2)
         BreadDeliveryFactory.create(
-            year=YEAR, delivery_week=WEEK, subscription=sub1, pickup_location=pl
+            year=YEAR,
+            delivery_week=WEEK,
+            subscription=sub1,
+            pickup_location=pl,
+            bread=None,
         )
         BreadDeliveryFactory.create(
-            year=YEAR, delivery_week=WEEK, subscription=sub2, pickup_location=pl
+            year=YEAR,
+            delivery_week=WEEK,
+            subscription=sub2,
+            pickup_location=pl,
+            bread=None,
         )
 
         response = self.client.get(
@@ -551,10 +559,18 @@ class TestBreadDeliveryViewSet(TapirIntegrationTest):
         member = MemberFactory.create()
         sub = SubscriptionFactory.create(member=member)
         BreadDeliveryFactory.create(
-            year=YEAR, delivery_week=WEEK, subscription=sub, pickup_location=pl
+            year=YEAR,
+            delivery_week=WEEK,
+            subscription=sub,
+            pickup_location=pl,
+            bread=None,
         )
         BreadDeliveryFactory.create(
-            year=YEAR, delivery_week=WEEK + 1, subscription=sub, pickup_location=pl
+            year=YEAR,
+            delivery_week=WEEK + 1,
+            subscription=sub,
+            pickup_location=pl,
+            bread=None,
         )
 
         response = self.client.get(

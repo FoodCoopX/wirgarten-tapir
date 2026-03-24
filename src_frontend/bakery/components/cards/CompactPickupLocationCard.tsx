@@ -2,6 +2,7 @@ import React from 'react';
 import { GeoAlt } from 'react-bootstrap-icons';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import '../../styles/bakery_styles.css';
 
 dayjs.extend(isoWeek);
 
@@ -41,19 +42,13 @@ export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps>
     : null;
 
   return (
-    <div 
-      className="card w-100" 
-      style={{ 
-        borderLeft: '4px solid #8B4513',
-        backgroundColor: '#FAF8F5' 
-      }}
-    >
+    <div className="card w-100 card-bakery-border-left">
       <div className="card-body p-3">
         <div className="d-flex justify-content-between align-items-start">
           <div className="flex-grow-1">
             <div className="d-flex align-items-center mb-2">
-              <GeoAlt size={18} className="me-2" style={{ color: '#8B4513' }} />
-              <h6 className="mb-0" style={{ color: '#8B4513' }}>
+              <GeoAlt size={18} className="me-2 icon-bakery-primary-darker" />
+              <h6 className="mb-0 text-bakery-primary-darker">
                 {name}
               </h6>
             </div>

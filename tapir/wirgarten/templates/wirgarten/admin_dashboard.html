@@ -90,6 +90,17 @@
              style="grid-area: span 2 / span 4">
             <div class="spinner-border"></div>
         </div>
+        {% if bakery_enabled %}
+        <div class="dashboard-section-heading">
+            <hr />
+            Statistik Lieblingsbrote
+        </div>
+        <div id="dashboard_bakery_stats_entry"
+             class="dashboard-tile"
+             style="grid-area: span 2 / span 4">
+            <div class="spinner-border"></div>
+        </div>
+        {% endif %}
         {% if next_capacity_labels %}
             <div class="dashboard-section-heading">
                 <hr />

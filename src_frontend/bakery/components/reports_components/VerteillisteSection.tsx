@@ -1,6 +1,7 @@
 import React from 'react';
 import { SectionToggle } from './SectionToggle';
 import { ActionButtons } from './ActionButtons';
+import '../../styles/bakery_styles.css';
 
 interface LocationTotals {
   totalBaked: number;
@@ -40,7 +41,7 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
         <>
           {isLoading ? (
             <div className="text-center py-3">
-              <div className="spinner-border spinner-border-sm" style={{ color: '#D4A574' }} />
+              <div className="spinner-border spinner-border-sm spinner-bakery-primary" />
               <p className="mt-1 text-muted small">Lade Daten...</p>
             </div>
           ) : Object.keys(locationBreads).length > 0 ? (
@@ -65,25 +66,25 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                       {hasSolverResults ? (
                         <>
                           {distBreadNames.map(name => (
-                            <th key={name} colSpan={3} className="text-center" style={{
+                            <th key={name} colSpan={3} className="text-center border-left-bakery" style={{
                               minWidth: '60px', padding: '4px 2px', fontSize: '0.6rem',
-                              borderBottom: 'none', borderLeft: '3px solid #8B4513',
+                              borderBottom: 'none',
                             }}>{name}</th>
                           ))}
-                          <th colSpan={3} className="text-center" style={{
-                            borderBottom: 'none', borderLeft: '3px solid #8B4513',
+                          <th colSpan={3} className="text-center border-left-bakery" style={{
+                            borderBottom: 'none',
                           }}>Gesamt</th>
                         </>
                       ) : (
                         <>
                           {distBreadNames.map(name => (
-                            <th key={name} className="text-center" style={{
+                            <th key={name} className="text-center border-left-bakery" style={{
                               padding: '4px 2px', fontSize: '0.6rem',
-                              borderBottom: 'none', borderLeft: '3px solid #8B4513',
+                              borderBottom: 'none',
                             }}>{name}</th>
                           ))}
-                          <th colSpan={3} className="text-center" style={{
-                            borderBottom: 'none', borderLeft: '3px solid #8B4513',
+                          <th colSpan={3} className="text-center border-left-bakery" style={{
+                            borderBottom: 'none',
                           }}>Gesamt</th>
                         </>
                       )}
@@ -93,7 +94,7 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                         <>
                           {distBreadNames.map(name => (
                             <React.Fragment key={`header-${name}`}>
-                              <th className="text-center" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px', borderLeft: '3px solid #8B4513' }} title="Bestellt">
+                              <th className="text-center border-left-bakery" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px' }} title="Bestellt">
                                 <span className="material-icons" style={{ fontSize: '10px' }}>shopping_cart</span>
                               </th>
                               <th className="text-center" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px' }} title="Differenz">+/-</th>
@@ -102,7 +103,7 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                               </th>
                             </React.Fragment>
                           ))}
-                          <th className="text-center" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px', borderLeft: '3px solid #8B4513' }} title="Bestellt">
+                          <th className="text-center border-left-bakery" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px' }} title="Bestellt">
                             <span className="material-icons" style={{ fontSize: '10px' }}>shopping_cart</span>
                           </th>
                           <th className="text-center" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px' }} title="Differenz">+/-</th>
@@ -113,9 +114,9 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                       ) : (
                         <>
                           {distBreadNames.map(name => (
-                            <th key={`header-${name}`} className="text-center" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px', borderLeft: '3px solid #8B4513' }} title="Bestellt">Best.</th>
+                            <th key={`header-${name}`} className="text-center border-left-bakery" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px' }} title="Bestellt">Best.</th>
                           ))}
-                          <th className="text-center" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px', borderLeft: '3px solid #8B4513' }} title="Bestellt">Best.</th>
+                          <th className="text-center border-left-bakery" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px' }} title="Bestellt">Best.</th>
                           <th className="text-center" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px' }} title="Noch offen">offen</th>
                           <th className="text-center" style={{ fontSize: '0.55rem', fontWeight: 'normal', padding: '2px' }} title="Gesamt">Ges.</th>
                         </>
@@ -140,14 +141,13 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                               const data = breads[name] || { baked: 0, ordered: 0, extra: 0 };
                               return (
                                 <React.Fragment key={`${loc}-${name}`}>
-                                  <td className="text-center" style={{ borderLeft: '3px solid #8B4513' }}>{data.ordered || '—'}</td>
-                                  <td className="text-center" style={{
-                                    color: data.extra > 0 ? '#28a745' : data.extra < 0 ? '#dc3545' : '#6c757d',
+                                  <td className="text-center border-left-bakery">{data.ordered || '—'}</td>
+                                  <td className={`text-center ${data.extra > 0 ? 'text-bakery-success' : data.extra < 0 ? 'text-bakery-danger' : 'text-bakery-muted'}`} style={{
                                     fontSize: '0.65rem',
                                   }}>
                                     {data.extra > 0 ? `+${data.extra}` : data.extra === 0 ? '—' : data.extra}
                                   </td>
-                                  <td className="text-center" style={{ color: '#8B4513', fontWeight: 'bold' }}>{data.baked || '—'}</td>
+                                  <td className="text-center text-bakery-primary-darker fw-bold">{data.baked || '—'}</td>
                                 </React.Fragment>
                               );
                             })
@@ -155,24 +155,23 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                             distBreadNames.map(name => {
                               const data = breads[name] || { ordered: 0 };
                               return (
-                                <td key={`${loc}-${name}`} className="text-center" style={{ borderLeft: '3px solid #8B4513' }}>{data.ordered || '—'}</td>
+                                <td key={`${loc}-${name}`} className="text-center border-left-bakery">{data.ordered || '—'}</td>
                               );
                             })
                           )}
-                          <td className="text-center" style={{ borderLeft: '3px solid #8B4513' }}>{locTots.totalOrdered}</td>
-                          <td className="text-center" style={{
-                            color: locTots.totalExtra > 0 ? '#dc3545' : '#6c757d',
+                          <td className="text-center border-left-bakery">{locTots.totalOrdered}</td>
+                          <td className={`text-center ${locTots.totalExtra > 0 ? 'text-bakery-danger' : 'text-bakery-muted'}`} style={{
                             fontSize: '0.65rem',
                           }}>
                             {hasSolverResults
                               ? (locTots.totalExtra > 0 ? `+${locTots.totalExtra}` : locTots.totalExtra === 0 ? '—' : locTots.totalExtra)
                               : locTots.totalExtra}
                           </td>
-                          <td className="text-center" style={{ fontWeight: 'bold', color: '#8B4513' }}>{locTots.totalBaked}</td>
+                          <td className="text-center text-bakery-primary-darker fw-bold">{locTots.totalBaked}</td>
                         </tr>
                       );
                     })}
-                    <tr style={{ backgroundColor: '#F5E6D3', fontWeight: 'bold' }}>
+                    <tr className="total-row-brown fw-bold">
                       <td>Gesamt</td>
                       {hasSolverResults ? (
                         distBreadNames.map(name => {
@@ -181,8 +180,8 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                           const totExtra = totBaked - totOrdered;
                           return (
                             <React.Fragment key={`total-${name}`}>
-                              <td className="text-center" style={{ borderLeft: '3px solid #8B4513' }}>{totOrdered}</td>
-                              <td className="text-center" style={{ color: totExtra > 0 ? '#28a745' : totExtra < 0 ? '#dc3545' : '#6c757d' }}>
+                              <td className="text-center border-left-bakery">{totOrdered}</td>
+                              <td className={`text-center ${totExtra > 0 ? 'text-bakery-success' : totExtra < 0 ? 'text-bakery-danger' : 'text-bakery-muted'}`}>
                                 {totExtra > 0 ? `+${totExtra}` : totExtra === 0 ? '—' : totExtra}
                               </td>
                               <td className="text-center">{totBaked}</td>
@@ -192,7 +191,7 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                       ) : (
                         distBreadNames.map(name => {
                           const totOrdered = Object.values(locationBreads).reduce((s, b) => s + (b[name]?.ordered || 0), 0);
-                          return <td key={`total-${name}`} className="text-center" style={{ borderLeft: '3px solid #8B4513' }}>{totOrdered}</td>;
+                          return <td key={`total-${name}`} className="text-center border-left-bakery">{totOrdered}</td>;
                         })
                       )}
                       {(() => {
@@ -205,8 +204,8 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                         const gtExtra = gtBaked - gtOrdered;
                         return (
                           <>
-                            <td className="text-center" style={{ borderLeft: '3px solid #8B4513' }}>{gtOrdered}</td>
-                            <td className="text-center" style={{ color: gtExtra > 0 ? '#dc3545' : '#6c757d' }}>
+                            <td className="text-center border-left-bakery">{gtOrdered}</td>
+                            <td className={`text-center ${gtExtra > 0 ? 'text-bakery-danger' : 'text-bakery-muted'}`}>
                               {hasSolverResults ? (gtExtra > 0 ? `+${gtExtra}` : gtExtra === 0 ? '—' : gtExtra) : gtExtra}
                             </td>
                             <td className="text-center">{gtBaked}</td>
@@ -222,7 +221,7 @@ export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
                   {hasSolverResults ? (
                     <>
                       <span className="material-icons" style={{ fontSize: '10px', verticalAlign: 'middle' }}>shopping_cart</span> = Bestellt &nbsp;|&nbsp;
-                      <span style={{ color: '#28a745' }}>+</span>/<span style={{ color: '#dc3545' }}>-</span> = Differenz &nbsp;|&nbsp;
+                      <span className="text-bakery-success">+</span>/<span className="text-bakery-danger">-</span> = Differenz &nbsp;|&nbsp;
                       <span className="material-icons" style={{ fontSize: '10px', verticalAlign: 'middle' }}>local_fire_department</span> = Gebacken (lt. Backplan)
                     </>
                   ) : (

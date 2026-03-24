@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
+import '../../styles/bakery_styles.css';
 
 interface BreadStat {
   breadName: string;
@@ -67,7 +68,7 @@ export const PreferredBreadStatisticsCard: React.FC<PreferredBreadStatisticsCard
   if (loading) {
     return (
       <div className="text-center py-3">
-        <div className="spinner-border spinner-border-sm" style={{ color: '#D4A574' }} />
+        <div className="spinner-border spinner-border-sm spinner-bakery-primary" />
         <p className="mt-1 text-muted small">Lade Statistik...</p>
       </div>
     );
@@ -98,7 +99,7 @@ export const PreferredBreadStatisticsCard: React.FC<PreferredBreadStatisticsCard
     <div>
       {/* Summary badges */}
       <div className="d-flex flex-wrap gap-2 mb-3">
-        <span className="badge" style={{ backgroundColor: '#D4A574', fontSize: '0.75rem' }}>
+        <span className="badge badge-bakery-primary" style={{ fontSize: '0.75rem' }}>
           <span className="material-icons me-1" style={{ fontSize: '12px', verticalAlign: 'middle' }}>people</span>
           {stats.totalMembers} Mitglieder
         </span>
@@ -121,23 +122,16 @@ export const PreferredBreadStatisticsCard: React.FC<PreferredBreadStatisticsCard
               <div key={bread.breadName}>
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{bread.breadName}</span>
-                  <span style={{ fontSize: '0.75rem', color: '#8B4513', fontWeight: 'bold' }}>
+                  <span className="text-bakery-primary-darker" style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
                     {bread.count}× ({bread.percentage}%)
                   </span>
                 </div>
-                <div
-                  style={{
-                    backgroundColor: '#f0e6d9',
-                    borderRadius: '4px',
-                    height: '12px',
-                    overflow: 'hidden',
-                  }}
-                >
+                <div className="progress-bar-bakery-chart" style={{ borderRadius: '4px', height: '12px', overflow: 'hidden' }}>
                   <div
+                    className="progress-bar-bakery-primary"
                     style={{
                       width: `${barWidth}%`,
                       height: '100%',
-                      backgroundColor: '#D4A574',
                       borderRadius: '4px',
                       transition: 'width 0.5s ease',
                     }}

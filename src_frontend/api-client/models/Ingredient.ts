@@ -27,10 +27,10 @@ export interface Ingredient {
     id?: string;
     /**
      * 
-     * @type {string}
+     * @type {boolean}
      * @memberof Ingredient
      */
-    readonly canBeDeleted: string;
+    readonly canBeDeleted: boolean;
     /**
      * 
      * @type {boolean}

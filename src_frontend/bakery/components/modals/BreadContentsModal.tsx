@@ -4,6 +4,7 @@ import { Plus, Trash } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import type { Ingredient, BreadContent, BreadContentRequest, BreadList } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface BreadContentsModalProps {
   bread: BreadList;
@@ -148,7 +149,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
           ) : (
             <>
               {/* Add New Ingredient */}
-              <div className="card mb-4 border-0" style={{ backgroundColor: '#FBF8F3' }}>
+              <div className="card mb-4 border-0 card-body-bakery">
                 <div className="card-body">
                   <h6 className="card-title mb-3">Zutat hinzufügen</h6>
                   <div className="row g-2 align-items-end">
@@ -183,8 +184,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
                     <div className="col-md-2">
                       <button
                         type="button"
-                        className="btn w-100 d-inline-flex align-items-center justify-content-center"
-                        style={{ backgroundColor: '#8B4513', color: 'white' }}
+                        className="btn w-100 d-inline-flex align-items-center justify-content-center dark-brown-button"
                         onClick={handleAdd}
                         disabled={!selectedIngredient}
                       >

@@ -45,6 +45,12 @@ export interface BreadDeliveryRequest {
     slotNumber?: number;
     /**
      * 
+     * @type {boolean}
+     * @memberof BreadDeliveryRequest
+     */
+    jokerTaken?: boolean;
+    /**
+     * 
      * @type {string}
      * @memberof BreadDeliveryRequest
      */
@@ -87,6 +93,7 @@ export function BreadDeliveryRequestFromJSONTyped(json: any, ignoreDiscriminator
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
         'slotNumber': json['slot_number'] == null ? undefined : json['slot_number'],
+        'jokerTaken': json['joker_taken'] == null ? undefined : json['joker_taken'],
         'subscription': json['subscription'],
         'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
         'bread': json['bread'] == null ? undefined : json['bread'],
@@ -108,6 +115,7 @@ export function BreadDeliveryRequestFromJSONTyped(json: any, ignoreDiscriminator
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'slot_number': value['slotNumber'],
+        'joker_taken': value['jokerTaken'],
         'subscription': value['subscription'],
         'pickup_location': value['pickupLocation'],
         'bread': value['bread'],

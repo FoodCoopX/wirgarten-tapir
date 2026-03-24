@@ -172,13 +172,13 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                 <label className="form-label fw-bold">
                   Labels
                   {formData.labels!.length > 0 && (
-                    <span className="badge bg-success ms-2">{formData.labels!.length}</span>
+                    <span className="badge badge-bakery-success ms-2">{formData.labels!.length}</span>
                   )}
                 </label>
                 
                 {loading ? (
                   <div className="text-center py-3">
-                    <div className="spinner-border spinner-border-sm" style={{ color: '#8B4513' }} role="status">
+                    <div className="spinner-border spinner-border-sm spinner-bakery" role="status">
                       <span className="visually-hidden">Lädt...</span>
                     </div>
                   </div>
@@ -191,9 +191,8 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                           {assignedLabels.map((label) => (
                             <span
                               key={label.id}
-                              className="badge"
+                              className="badge badge-bakery-success"
                               style={{ 
-                                backgroundColor: '#2E7D32',
                                 cursor: 'pointer',
                                 fontSize: '0.75rem',
                                 padding: '0.25rem 0.5rem'
@@ -215,9 +214,8 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                           {unassignedLabels.map((label) => (
                             <span
                               key={label.id}
-                              className="badge"
+                              className="badge badge-bakery-muted"
                               style={{ 
-                                backgroundColor: '#9E9E9E',
                                 cursor: 'pointer',
                                 fontSize: '0.75rem',
                                 padding: '0.25rem 0.5rem'
@@ -255,9 +253,9 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
               </div>
 
               {/* Baking Details Section */}
-              <div className="border rounded p-3" style={{ backgroundColor: '#F8F9FA' }}>
+              <div className="border rounded p-3 bg-bakery-gray-light">
                 
-                  <h6 className="mb-0" style={{ color: '#8B4513' }}>
+                  <h6 className="mb-0 text-bakery-primary-darker">
                     Back-Details 
                   </h6>
                 

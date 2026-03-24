@@ -45,6 +45,12 @@ export interface PatchedBreadDeliveryRequest {
     slotNumber?: number;
     /**
      * 
+     * @type {boolean}
+     * @memberof PatchedBreadDeliveryRequest
+     */
+    jokerTaken?: boolean;
+    /**
+     * 
      * @type {string}
      * @memberof PatchedBreadDeliveryRequest
      */
@@ -84,6 +90,7 @@ export function PatchedBreadDeliveryRequestFromJSONTyped(json: any, ignoreDiscri
         'year': json['year'] == null ? undefined : json['year'],
         'deliveryWeek': json['delivery_week'] == null ? undefined : json['delivery_week'],
         'slotNumber': json['slot_number'] == null ? undefined : json['slot_number'],
+        'jokerTaken': json['joker_taken'] == null ? undefined : json['joker_taken'],
         'subscription': json['subscription'] == null ? undefined : json['subscription'],
         'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
         'bread': json['bread'] == null ? undefined : json['bread'],
@@ -105,6 +112,7 @@ export function PatchedBreadDeliveryRequestFromJSONTyped(json: any, ignoreDiscri
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'slot_number': value['slotNumber'],
+        'joker_taken': value['jokerTaken'],
         'subscription': value['subscription'],
         'pickup_location': value['pickupLocation'],
         'bread': value['bread'],

@@ -48,6 +48,7 @@ class AbhollisteService:
             year=year,
             delivery_week=week,
             pickup_location_id=pickup_location_id,
+            joker_taken=False,  # Exclude jokers from the abholliste
         ).select_related(
             "subscription__member",
             "bread",

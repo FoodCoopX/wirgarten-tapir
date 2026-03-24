@@ -29,11 +29,11 @@ from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
+    Payment,
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
     Subscription,
-    Payment,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -43,9 +43,9 @@ from tapir.wirgarten.service.payment import (
     get_next_payment_date,
 )
 from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
     get_active_product_capacities,
     get_active_product_types,
-    get_active_and_future_subscriptions,
     get_next_growing_period,
     get_product_price,
 )
@@ -53,8 +53,8 @@ from tapir.wirgarten.utils import (
     format_currency,
     format_date,
     get_today,
-    legal_status_is_cooperative,
     legal_status_is_association,
+    legal_status_is_cooperative,
 )
 
 
@@ -205,6 +205,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         )
         context["show_association_content"] = legal_status_is_association(
             cache=self.cache
+        )
+
+        context["bakery_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_A_ENABLED, cache=self.cache
         )
 
         return context

@@ -6,6 +6,7 @@ import { Plus, Pencil, ListUl, Tag, Search, XLg, Camera, EggFried } from 'react-
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import type { BreadList, BreadListRequest } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface BreadsCardProps {
   csrfToken: string;
@@ -123,7 +124,7 @@ useEffect(() => {
             <h5 className="mb-0">Brote</h5>
             <div className="input-group input-group-sm mx-3" style={{ maxWidth: '300px' }}>
               <span className="input-group-text bg-white border-end-0">
-                <Search size={14} style={{ color: 'var(--bakery-primary-darker)' }} />
+                <Search size={14} className="icon-bakery-primary-darker" />
               </span>
               <input
                 type="text"
@@ -134,10 +135,9 @@ useEffect(() => {
               />
               {searchTerm && (
                 <button
-                  className="btn btn-sm"
+                  className="btn btn-sm icon-bakery-primary-darker"
                   type="button"
                   onClick={() => setSearchTerm('')}
-                  style={{ color: 'var(--bakery-primary-darker)' }}
                 >
                   <XLg size={14} />
                 </button>
@@ -145,15 +145,11 @@ useEffect(() => {
             </div>
             <div className="form-check form-check-sm mb-0">
               <input
-                className="form-check-input"
+                className="form-check-input checkbox-bakery"
                 type="checkbox"
                 id="showOnlyActive"
                 checked={showOnlyActive}
                 onChange={(e) => setShowOnlyActive(e.target.checked)}
-                style={{
-                  backgroundColor: showOnlyActive ? 'var(--bakery-primary-darker)' : 'transparent',
-                  borderColor: 'var(--bakery-primary-darker)'
-                }}
               />
               <label className="form-check-label" htmlFor="showOnlyActive" style={{ fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
                 nur aktive
@@ -168,10 +164,10 @@ useEffect(() => {
           </div>
         </div>
         
-        <div className="card-body" style={{ backgroundColor: '#FBF8F3' }}>
+        <div className="card-body card-body-bakery">
           {loading ? (
             <div className="text-center py-4">
-              <div className="spinner-border" style={{ color: 'var(--bakery-primary-darker)' }} role="status">
+              <div className="spinner-border spinner-bakery" role="status">
                 <span className="visually-hidden">Lädt...</span>
               </div>
             </div>
@@ -196,23 +192,11 @@ useEffect(() => {
           ) : (
             <div className="list-group list-group-flush">
               {filteredBreads.map((bread) => (
-                <div key={bread.id} className="list-group-item px-0 d-flex justify-content-between align-items-start border-0"
-                     style={{ backgroundColor: 'transparent' }}>
+                <div key={bread.id} className="list-group-item px-0 d-flex justify-content-between align-items-start border-0 list-item-transparent">
                   <div className="d-flex gap-3 flex-grow-1">
                     {/* Bread Image */}
                     <div
-                      className="bread-image-container"
-                      style={{
-                        width: '60px',
-                        height: '60px',
-                        minWidth: '60px',
-                        minHeight: '60px',
-                        flexShrink: 0,
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        position: 'relative',
-                        overflow: 'hidden',
-                      }}
+                      className="bread-list-image"
                       onClick={() => handleImageClick(bread.id!)}
                       title="Bild ändern"
                     >
@@ -220,27 +204,10 @@ useEffect(() => {
                         <img 
                           src={bread.picture} 
                           alt={bread.name}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            border: '2px solid #F5E6D3'
-                          }}
                         />
                       ) : (
-                        <div 
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: '#F5E6D3',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: '2px solid #F5E6D3',
-                            borderRadius: '8px',
-                          }}
-                        >
-                          <EggFried size={28} style={{ color: '#8B4513' }} />
+                        <div className="bread-list-placeholder">
+                          <EggFried size={28} className="icon-bakery-primary-darker" />
                         </div>
                       )}
                       {/* Hover overlay */}
@@ -314,25 +281,22 @@ useEffect(() => {
                   
                   <div className="btn-group btn-group-sm ms-2">
                     <button 
-                      className="btn btn-outline-secondary border-0" 
+                      className="btn btn-outline-secondary border-0 icon-bakery-muted" 
                       title="Bearbeiten"
-                      style={{ color: '#757575' }}
                       onClick={() => handleEdit(bread)}
                     >
                       <Pencil size={16} />
                     </button>
                     <button 
-                      className="btn border-0" 
+                      className="btn border-0 icon-bakery-primary-darker" 
                       title="Inhaltsstoffe verwalten"
-                      style={{ color: '#8B4513' }}
                       onClick={() => handleManageContents(bread)}
                     >
                       <ListUl size={16} />
                     </button>
                     <button 
-                      className="btn border-0" 
+                      className="btn border-0 icon-bakery-ingredients" 
                       title="Labels verwalten"
-                      style={{ color: '#5D7A4A' }}
                       onClick={() => handleManageLabels(bread)}
                     >
                       <Tag size={16} />
@@ -344,7 +308,7 @@ useEffect(() => {
           )}
         </div>
         
-        <div className="card-footer border-0 text-muted" style={{ backgroundColor: '#FBF8F3' }}>
+        <div className="card-footer border-0 text-muted card-footer-bakery">
           <small>
             {searchTerm 
               ? `${filteredBreads.length} von ${breads.length} Brot${breads.length !== 1 ? 'en' : ''}`

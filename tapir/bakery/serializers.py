@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from tapir.bakery.models import (
@@ -33,6 +34,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = "__all__"
 
+    @extend_schema_field(serializers.BooleanField)
     def get_can_be_deleted(self, obj):
         can_delete, _ = can_delete_instance(obj)
         return can_delete

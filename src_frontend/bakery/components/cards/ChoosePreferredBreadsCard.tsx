@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Star, StarFill } from 'react-bootstrap-icons';
+import { Star, InfoCircle, StarFill } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
 import { BakeryApi } from '../../../api-client';
 import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
 import { PreferredBreadsModal } from '../modals/PreferredBreadsModal';
 import { CompactBreadCard } from './CompactBreadCard';
+import '../../styles/bakery_styles.css';
+
 
 interface ChoosePreferredBreadsCardProps {
   memberId: string;
   csrfToken: string;
 }
+const MAX_PREFERRED_BREADS = 3;
 
 export const ChoosePreferredBreadsCard: React.FC<ChoosePreferredBreadsCardProps> = ({ 
   memberId, 
@@ -87,14 +90,15 @@ export const ChoosePreferredBreadsCard: React.FC<ChoosePreferredBreadsCardProps>
     <>
       <div className="card">
         <div 
-          className="card-header"
-          style={{ backgroundColor: '#F5E6D3', borderBottom: '1px solid #D4A574' }}
+          className="card-header header-darkbrown-on-sahara border-bakery-primary"
+          style={{ borderBottom: '1px solid var(--bakery-primary)' }}
         >
           <div className="d-flex justify-content-between align-items-center">
-            <h5 className="mb-0" style={{ color: '#8B4513' }}>
-              <StarFill size={20} className="me-2" style={{ color: '#FFD700' }} />
+            <h5 className="mb-0 text-bakery-primary-darker">
+              <StarFill size={20} className="me-2 icon-bakery-gold" />
               Deine Lieblingsbrote
             </h5>
+           
             <button
               className="btn btn-sm dark-brown-button"
               onClick={() => setIsModalOpen(true)}
@@ -104,18 +108,19 @@ export const ChoosePreferredBreadsCard: React.FC<ChoosePreferredBreadsCardProps>
               {preferredBreads.length > 0 ? 'Bearbeiten' : 'Auswählen'}
             </button>
           </div>
+         
         </div>
 
         <div className="card-body">
           {loading ? (
             <div className="text-center py-4">
-              <div className="spinner-border" style={{ color: '#D4A574' }}>
+              <div className="spinner-border spinner-bakery-primary">
                 <span className="visually-hidden">Loading...</span>
               </div>
             </div>
           ) : preferredBreads.length === 0 ? (
             <div className="text-center py-4">
-              <Star size={48} className="mb-3" style={{ color: '#D4A574', opacity: 0.3 }} />
+              <Star size={48} className="mb-3 icon-bakery-primary" style={{ opacity: 0.3 }} />
               <p className="text-muted mb-0">
                 Du hast noch keine Lieblingsbrote ausgewählt.
               </p>
@@ -147,10 +152,8 @@ export const ChoosePreferredBreadsCard: React.FC<ChoosePreferredBreadsCardProps>
         </div>
 
         {preferredBreads.length > 0 && (
-          <div className="card-footer text-muted" style={{ backgroundColor: '#F5E6D3' }}>
-            <small>
-              {preferredBreads.length} {preferredBreads.length === 1 ? 'Lieblingsbrot' : 'Lieblingsbrote'} ausgewählt
-            </small>
+          <div className="card-footer text-muted card-footer-bakery-cream">
+          
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from django.db import models
 
@@ -26,11 +26,6 @@ def _get_bread_delivery_model():
 
 
 def ensure_bread_deliveries_for_member(member: Member):
-    print(f"\n{'=' * 60}")
-    print(
-        f"🍞 ensure_bread_deliveries_for_member called for member {member.pk} ({member})"
-    )
-    print(f"   _sync_in_progress: {_sync_in_progress}")
 
     if member.pk in _sync_in_progress:
         print(f"   ⚠️  SKIPPING - already in progress for member {member.pk}")
@@ -58,6 +53,7 @@ def _sync_deliveries(member: Member):
 
     _sync_relevant_subscriptions(member, now, pickup_location)
     _update_future_pickup_locations(member, current_year, current_week, pickup_location)
+    _sync_joker_status(member)
     _cleanup_expired_subscriptions(member, now, current_year, current_week)
 
 
@@ -135,9 +131,13 @@ def _sync_subscription_deliveries(subscription, pickup_location):
             f"      📅 First week: {weeks_in_period[0]}, Last week: {weeks_in_period[-1]}"
         )
 
+    member = subscription.member
     for year, week in weeks_in_period:
+        # Get correct pickup location for this specific week
+        delivery_date = date.fromisocalendar(year, week, 1)  # Monday of that week
+        week_pickup_location = member.get_pickup_location(delivery_date)
         _ensure_correct_slot_count(
-            subscription, year, week, target_quantity, pickup_location
+            subscription, year, week, target_quantity, week_pickup_location
         )
 
     _delete_deliveries_outside_period(subscription, valid_year_weeks)
@@ -204,12 +204,11 @@ def _delete_deliveries_outside_period(subscription, valid_year_weeks):
 def _update_future_pickup_locations(
     member, current_year, current_week, pickup_location
 ):
-    if pickup_location is None:
-        print(
-            "   🏪 _update_future_pickup_locations: pickup_location is None, skipping"
-        )
-        return
-
+    """
+    Update pickup locations for future deliveries, considering valid_from dates.
+    Each delivery gets the pickup location that's valid for its delivery week.
+    If pickup_location changes, bread assignment is cleared (may not be available at new location).
+    """
     BreadDelivery = _get_bread_delivery_model()
     future_deliveries = BreadDelivery.objects.filter(
         subscription__member=member,
@@ -217,10 +216,55 @@ def _update_future_pickup_locations(
         models.Q(year__gt=current_year)
         | models.Q(year=current_year, delivery_week__gte=current_week)
     )
+
     count = future_deliveries.count()
-    updated = future_deliveries.update(pickup_location=pickup_location)
+    updated = 0
+
+    for delivery in future_deliveries:
+        # Calculate the Monday of the delivery week as reference date
+        delivery_date = date.fromisocalendar(delivery.year, delivery.delivery_week, 1)
+        correct_pickup_location = member.get_pickup_location(delivery_date)
+
+        if (
+            correct_pickup_location
+            and delivery.pickup_location_id != correct_pickup_location.id
+        ):
+            delivery.pickup_location = correct_pickup_location
+            # Clear bread assignment since it may not be available at the new location
+            delivery.bread = None
+            delivery.save(update_fields=["pickup_location", "bread"])
+            updated += 1
+
     print(
-        f"   🏪 _update_future_pickup_locations: found {count} future deliveries, updated {updated} to pickup_location={pickup_location}"
+        f"   🏪 _update_future_pickup_locations: found {count} future deliveries, updated {updated} pickup locations"
+    )
+
+
+def _sync_joker_status(member):
+    from tapir.deliveries.models import Joker
+
+    BreadDelivery = _get_bread_delivery_model()
+
+    joker_weeks = set()
+    for joker in Joker.objects.filter(member=member):
+        iso_year, iso_week, _ = joker.date.isocalendar()
+        joker_weeks.add((iso_year, iso_week))
+
+    deliveries = BreadDelivery.objects.filter(subscription__member=member)
+
+    if joker_weeks:
+        joker_q = models.Q()
+        for year, week in joker_weeks:
+            joker_q |= models.Q(year=year, delivery_week=week)
+        updated_true = deliveries.filter(joker_q).update(joker_taken=True)
+        updated_false = deliveries.exclude(joker_q).update(joker_taken=False)
+    else:
+        updated_true = 0
+        updated_false = deliveries.update(joker_taken=False)
+
+    print(
+        f"   🃏 _sync_joker_status: {len(joker_weeks)} joker weeks, "
+        f"set joker_taken=True on {updated_true}, False on {updated_false}"
     )
 
 

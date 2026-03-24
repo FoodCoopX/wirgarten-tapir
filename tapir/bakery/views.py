@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 
 from django.core.cache import cache
@@ -532,7 +533,9 @@ class PreferenceSatisfactionMetricsView(APIView):
 
         if delivery_day is not None:
             deliveries = [
-                d for d in deliveries if d.pickup_location.delivery_day == delivery_day
+                d
+                for d in deliveries
+                if d.pickup_location and d.pickup_location.delivery_day == delivery_day
             ]
 
         if not deliveries:
@@ -550,7 +553,9 @@ class PreferenceSatisfactionMetricsView(APIView):
             (d.bread_id, d.pickup_location_id): d.count for d in distribution_qs
         }
 
-        bread_map = {b.id: b for b in Bread.objects.all()}
+        bread_ids = set(d.bread_id for d in deliveries if d.bread_id)
+        bread_ids.update(bread_id for bread_id, _ in distributed_breads_lookup.keys())
+        bread_map = {b.id: b for b in Bread.objects.filter(id__in=bread_ids)}
 
         member_ids = [d.subscription.member_id for d in deliveries]
         preferred_breads_qs = PreferredBread.objects.filter(
@@ -905,11 +910,11 @@ class ConfigurationParametersView(APIView):
                         "value": str(value) if value is not None else "",
                     }
                 )
-            except Exception as e:
+            except Exception:
                 # Log error but don't fail the entire request
-                import logging
-
                 logger = logging.getLogger(__name__)
-                logger.warning(f"Failed to get parameter {param['key']}: {e}")
+                logger.warning(
+                    "Failed to get parameter %s", param["key"], exc_info=True
+                )
 
         return Response(parameters)

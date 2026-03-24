@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash } from 'react-bootstrap-icons';
 import { BakeryApi, Configuration } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import type { Ingredient, IngredientRequest } from '../../../api-client/models';
+import '../../styles/bakery_styles.css';
 
 interface IngredientsCardProps {
   csrfToken: string;
@@ -87,29 +88,23 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
   return (
     <>
       <div className="card h-100 shadow-sm">
-        <div className="card-header border-0 d-flex justify-content-between align-items-center" 
-             style={{ backgroundColor: '#F0F4E8', color: '#5D7A4A' }}>
+        <div className="card-header border-0 d-flex justify-content-between align-items-center header-bakery-ingredients">
           <h5 className="mb-0">Zutaten</h5>
           <div className="d-flex align-items-center gap-3">
             <div className="form-check form-check-sm mb-0">
               <input
-                className="form-check-input"
+                className="form-check-input checkbox-ingredients"
                 type="checkbox"
                 id="showOnlyActiveIngredients"
                 checked={showOnlyActive}
                 onChange={(e) => setShowOnlyActive(e.target.checked)}
-                style={{
-                  backgroundColor: showOnlyActive ? '#5D7A4A' : 'transparent',
-                  borderColor: '#5D7A4A'
-                }}
               />
               <label className="form-check-label" htmlFor="showOnlyActiveIngredients" style={{ fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
                 nur aktive
               </label>
             </div>
             <button 
-              className="btn btn-sm py-0" 
-              style={{ backgroundColor: '#5D7A4A', color: 'white' }}
+              className="btn btn-sm py-0 btn-bakery-ingredients" 
               onClick={handleCreate}
             >
               <Plus size={16} />              neu
@@ -117,10 +112,10 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
           </div>
         </div>
         
-        <div className="card-body" style={{ backgroundColor: '#F9FBF7' }}>
+        <div className="card-body card-body-ingredients">
           {loading ? (
             <div className="text-center py-4">
-              <div className="spinner-border" style={{ color: '#5D7A4A' }} role="status">
+              <div className="spinner-border spinner-ingredients" role="status">
                 <span className="visually-hidden">Lädt...</span>
               </div>
             </div>
@@ -145,13 +140,12 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
           ) : (
             <div className="list-group list-group-flush">
               {filteredIngredients.map((ingredient) => (
-                <div key={ingredient.id} className="list-group-item px-0 d-flex justify-content-between align-items-start border-0"
-                     style={{ backgroundColor: 'transparent' }}>
+                <div key={ingredient.id} className="list-group-item px-0 d-flex justify-content-between align-items-start border-0 list-item-transparent">
                   <div className="flex-grow-1">
                     <h6 className="mb-1">
                       {ingredient.name}
                       {ingredient.isOrganic && (
-                        <span className="badge ms-2" style={{ backgroundColor: '#81C784', color: 'white' }}>Bio</span>
+                        <span className="badge ms-2 badge-bio">Bio</span>
                       )}
                       {!ingredient.isActive && (
                         <span className="badge bg-secondary ms-2">inaktiv</span>
@@ -163,9 +157,8 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
                   </div>
                   <div className="btn-group btn-group-sm ms-2">
                     <button 
-                      className="btn btn-outline-secondary border-0" 
+                      className="btn btn-outline-secondary border-0 icon-bakery-muted" 
                       title="Bearbeiten"
-                      style={{ color: '#757575' }}
                       onClick={() => handleEdit(ingredient)}
                     >
                       <Pencil size={16} />
@@ -187,7 +180,7 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
         </div>
         
                         
-        <div className="card-footer border-0 text-muted" style={{ backgroundColor: '#F9FBF7' }}>
+        <div className="card-footer border-0 text-muted card-footer-ingredients">
           <small>
             {ingredients.length} Zutat{ingredients.length !== 1 ? 'en' : ''}
           </small>

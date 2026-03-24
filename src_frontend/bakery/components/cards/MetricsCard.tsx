@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BakeryApi } from '../../../api-client';
 import type { PreferenceSatisfactionResponse } from '../../../api-client/models';
 import { useApi } from '../../../hooks/useApi';
+import '../../styles/bakery_styles.css';
 
 interface MetricsCardProps {
   year: number;
@@ -100,8 +101,7 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
         return (
           <div key={metric.pickupLocationId} className="card">
             <div 
-              className="card-header py-2" 
-              style={{ backgroundColor: '#8B6F47', color: 'white', cursor: 'pointer' }}
+              className="card-header py-2 metrics-card-header"
               onClick={() => toggleLocation(metric.pickupLocationId)}
             >
               <div className="d-flex justify-content-between align-items-center">
@@ -121,10 +121,9 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
               {/* Progress Bar */}
               <div className="progress mb-2" style={{ height: '20px' }}>
                 <div 
-                  className="progress-bar" 
+                  className="progress-bar progress-bar-bakery-success" 
                   style={{ 
                     width: `${metric.satisfiedPercentage}%`,
-                    backgroundColor: '#28a745',
                     fontSize: '0.7rem',
                     fontWeight: 'bold',
                   }}
@@ -148,19 +147,19 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
               {/* Breakdown Numbers */}
               <div className="d-flex justify-content-between" style={{ fontSize: '0.8rem' }}>
                 <div className="text-muted">
-                  <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle', color: '#28a745' }}>
+                  <span className="material-icons text-bakery-success" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
                     check_circle
                   </span>
                   {' '}<strong>{metric.directlyChosen}</strong> direkt gewählt
                 </div>
                 <div className="text-muted">
-                  <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle', color: '#28a745' }}>
+                  <span className="material-icons text-bakery-success" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
                     favorite
                   </span>
                   {' '}<strong>{metric.gotFavorite}</strong> Favorit möglich
                 </div>
                 <div className="text-muted">
-                  <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle', color: '#6c757d' }}>
+                  <span className="material-icons text-bakery-muted" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
                     sentiment_satisfied
                   </span>
                   {' '}<strong>{metric.noFavorites}</strong> ohne Präf.
@@ -185,12 +184,7 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
                     {metric.breadBreakdown.map((bread) => (
                       <div 
                         key={bread.breadId} 
-                        className="d-flex justify-content-between align-items-center py-1 px-2"
-                        style={{ 
-                          backgroundColor: '#f8f9fa',
-                          borderRadius: '4px',
-                          fontSize: '0.85rem',
-                        }}
+                        className="metrics-breakdown-item d-flex justify-content-between align-items-center py-1 px-2"
                       >
                         <span 
                           className="text-truncate fw-medium" 
@@ -210,11 +204,8 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
                           </span>
                           {bread.directlyChosen > 0 && (
                             <span 
-                              className="badge" 
-                              style={{ 
-                                backgroundColor: '#8B6F47',
-                                minWidth: '32px',
-                              }}
+                              className="badge badge-bakery-brown"
+                              style={{ minWidth: '32px' }}
                               title="Direkt gewählt"
                             >
                               ✓{bread.directlyChosen}

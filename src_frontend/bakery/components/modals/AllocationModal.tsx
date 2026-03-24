@@ -232,7 +232,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
             <div className="modal-body p-3">
               {loading ? (
                 <div className="text-center py-5">
-                  <div className="spinner-border" style={{ color: '#D4A574' }} />
+                  <div className="spinner-border spinner-bakery-primary" />
                   <p className="mt-2 text-muted">Lade Daten...</p>
                 </div>
               ) : (
@@ -252,7 +252,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                       <div className="card-body p-0">
                         <div className="table-responsive">
                           <table className="table table-bordered table-hover mb-0">
-                            <thead style={{ backgroundColor: '#F5E6D3', position: 'sticky', top: 0, zIndex: 10 }}>
+                            <thead className="table-header-bakery" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                               <tr>
                                 <th style={{ minWidth: '150px' }}>Abholort</th>
                                 {activeBreads.map(bread => (
@@ -260,7 +260,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                     {bread.name}
                                   </th>
                                 ))}
-                                <th className="text-center" style={{ minWidth: '80px', backgroundColor: '#EDE0D0' }}>
+                                <th className="text-center bg-bakery-cream" style={{ minWidth: '80px' }}>
                                   Σ
                                 </th>
                               </tr>
@@ -295,8 +295,8 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                       </td>
                                     ))}
                                     <td
-                                      className="text-center align-middle fw-bold"
-                                      style={{ backgroundColor: '#F5E6D3', fontSize: '14px' }}
+                                      className="text-center align-middle fw-bold bg-bakery-cream"
+                                      style={{ fontSize: '14px' }}
                                     >
                                       {rowSum === Infinity ? '∞' : rowSum === 0 ? '-' : rowSum}
                                     </td>
@@ -305,8 +305,8 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                               })}
                             </tbody>
                             <tfoot>
-                              <tr style={{ backgroundColor: '#EDE0D0' }}>
-                                <td className="fw-bold" style={{ backgroundColor: '#EDE0D0' }}>Σ Gesamt</td>
+                              <tr className="bg-bakery-cream">
+                                <td className="fw-bold bg-bakery-cream">Σ Gesamt</td>
                                 {activeBreads.map(bread => {
                                   const colSum = pickupLocations.reduce((sum, location) => {
                                     const val = allocations[location.id]?.[bread.id!] || '';
@@ -318,16 +318,16 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                   return (
                                     <td
                                       key={bread.id}
-                                      className="text-center fw-bold align-middle"
-                                      style={{  fontSize: '14px', backgroundColor: '#EDE0D0' }}
+                                      className="text-center fw-bold align-middle bg-bakery-cream"
+                                      style={{  fontSize: '14px' }}
                                     >
                                       {colSum === Infinity ? '∞' : colSum === 0 ? '-' : colSum}
                                     </td>
                                   );
                                 })}
                                 <td
-                                  className="text-center fw-bold align-middle"
-                                  style={{ backgroundColor: '#D4A574', color: 'white',  fontSize: '14px' }}
+                                  className="text-center fw-bold align-middle bg-bakery-primary text-white"
+                                  style={{ fontSize: '14px' }}
                                 >
                                   {(() => {
                                     const totalSum = pickupLocations.reduce((total, location) => {

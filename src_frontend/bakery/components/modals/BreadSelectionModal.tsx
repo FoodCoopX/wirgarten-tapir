@@ -3,6 +3,7 @@ import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
 import { SingleBreadCard } from '../cards';
+import '../../styles/bakery_styles.css';
 
 interface BreadSelectionModalProps {
   breads: BreadList[];
@@ -95,10 +96,10 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
               />
             </div>
 
-            <div className="modal-body" style={{ backgroundColor: '#FAF8F5' }}>
+            <div className="modal-body modal-body-bakery">
               {loading ? (
                 <div className="text-center py-5">
-                  <div className="spinner-border text-bakery-primary-dark" />
+                  <div className="spinner-border spinner-bakery" />
                   <p className="mt-2 text-muted">Lade verfügbare Brote...</p>
                 </div>
               ) : (

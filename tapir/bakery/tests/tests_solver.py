@@ -83,9 +83,9 @@ def assert_solver_success(result):
     """Assert that the solver returned a successful result with a plan."""
     assert result is not None
     assert isinstance(result, SolverResult)
-    assert result.status == "optimal", (
-        f"Expected status 'ok', got '{result.status}': {result.diagnostics}"
-    )
+    assert (
+        result.status == "optimal"
+    ), f"Expected status 'ok', got '{result.status}': {result.diagnostics}"
     assert result.plan is not None
 
 
@@ -376,9 +376,9 @@ class TestStoveSessions:
                 if info is not None:
                     last_used = i
             for i in range(last_used):
-                assert sess[i] is not None, (
-                    f"Gap in layers: layer {i} is None but layer {last_used} is used"
-                )
+                assert (
+                    sess[i] is not None
+                ), f"Gap in layers: layer {i} is None but layer {last_used} is used"
 
     def test_minimizes_sessions(self):
         """Solver should prefer fewer sessions (highest priority)."""
@@ -722,7 +722,7 @@ class TestMultipleSolutions:
         locations = [make_location(location_id=1, total_deliveries=10)]
         caps = make_capacities(breads, locations)
 
-        solutions = solve_bread_planning_all(
+        result = solve_bread_planning_all(
             breads,
             locations,
             caps,
@@ -732,7 +732,11 @@ class TestMultipleSolutions:
             max_solutions=5,
         )
 
-        assert solutions is not None
+        assert result is not None
+        assert isinstance(result, dict)
+        assert "solutions" in result
+        assert "diagnostics" in result
+        solutions = result["solutions"]
         assert isinstance(solutions, list)
         assert len(solutions) >= 1
         for sol in solutions:
@@ -742,7 +746,10 @@ class TestMultipleSolutions:
 
     def test_solve_all_empty_input(self):
         result = solve_bread_planning_all([], [], {})
-        assert result is None
+        assert result is not None
+        assert isinstance(result, dict)
+        assert "solutions" in result
+        assert len(result["solutions"]) == 0
 
 
 # ===========================================================================

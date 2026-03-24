@@ -250,7 +250,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
       />
 
       {/* Instructions */}
-      <div className="alert alert-info white-on-green mb-3 mt-3">
+      {/* <div className="alert alert-info white-on-green mb-3 mt-3">
         <strong>Du hast {maxBreads} Brot-Anteil{maxBreads !== 1 ? 'e' : ''} für diese Woche.</strong>
         <br />
        <small>
@@ -275,10 +275,10 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
             </>
           )}
         </small>
-      </div>
+      </div> */}
 
       {/* Bread Delivery Slots */}
-      <div className="row g-3">
+      <div className="row g-3" style={{ marginTop: '0.5rem' }}>
         {deliveries.map((delivery, index) => {
           const isFirstSlot = index === 0;
           const hasBreadSelected = !!delivery.bread;
@@ -296,14 +296,20 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
             <div key={delivery.id} className="col-12 col-md-6 col-lg-4">
               <div className="card h-100">
                 <div 
-                  className="card-header"
-                  style={{ backgroundColor: '#D4A574', color: 'white' }}
+                  className="card-header header-white-on-middle-brown"
                 >
                   <h6 className="mb-0">Brotanteil {index + 1}</h6>
                 </div>
                 <div className="card-body">
+                  {delivery.jokerTaken ? (
+                    <div className="d-flex align-items-center justify-content-center p-4">
+                      <span className="badge bg-secondary fs-6">
+                        Joker genommen
+                      </span>
+                    </div>
+                  ) : (<>
                   {/* Pickup Location Row */}
-                  <div className="mb-3">
+                  {/* <div className="mb-3">
                     <strong className="mb-2 d-block">Gewählter Abholort:</strong>
                     
                     {!chooseStationPerBread && !isFirstSlot && (
@@ -337,7 +343,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                       </>
                     ) : (
                       <>
-                        <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
+                        <div className="d-flex align-items-center justify-content-between p-3 border rounded bg-bakery-gray-light">
                           <span className="text-muted">Noch nicht gewählt</span>
                           {canEditThisLocation && (
                             <button
@@ -356,7 +362,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                         )}
                       </>
                     )}
-                  </div>
+                  </div> */}
 
                   <hr />
 
@@ -396,7 +402,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                       </>
                     ) : (
                       <>
-                        <div className="d-flex align-items-center justify-content-between p-3 border rounded" style={{ backgroundColor: '#F8F9FA' }}>
+                        <div className="d-flex align-items-center justify-content-between p-3 border rounded bg-bakery-gray-light">
                           <span className="text-muted">Noch nicht gewählt</span>
                           <button
                             className="btn btn-sm btn-outline-secondary dark-brown-button"
@@ -419,6 +425,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                       </>
                     )}
                   </div>)}
+                  </>)}
                 </div>
               </div>
 

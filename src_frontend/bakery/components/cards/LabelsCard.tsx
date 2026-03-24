@@ -116,12 +116,11 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
 
   return (
     <div className="card h-100 shadow-sm">
-      <div className="card-header border-0 d-flex justify-content-between align-items-center" 
-           style={{ backgroundColor: '#E8F5E9', color: '#2E7D32' }}>
+      <div className="card-header border-0 d-flex justify-content-between align-items-center header-bakery-labels">
         <h5 className="mb-0">Labels</h5>
       </div>
       
-      <div className="card-body" style={{ backgroundColor: '#F1F8F4' }}>
+      <div className="card-body card-body-labels">
         <form onSubmit={handleCreate} className="mb-4">
           <div className="input-group">
             <input
@@ -189,7 +188,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
                 ) : (
                   <>
                     <div className="flex-grow-1">
-                      <span className="badge" style={{ backgroundColor: label.isActive ? '#2E7D32' : '#9E9E9E' }}>
+                      <span className={`badge ${label.isActive ? 'badge-bakery-success' : 'badge-bakery-muted'}`}>
                         {label.name}
                       </span>
                     </div>
@@ -202,9 +201,8 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
                         {label.isActive ? <ToggleOn size={16} /> : <ToggleOff size={16} />}
                       </button>
                       <button
-                        className="btn btn-outline-secondary border-0"
+                        className="btn btn-outline-secondary border-0 icon-bakery-muted"
                         title="Bearbeiten"
-                        style={{ color: '#757575' }}
                         onClick={() => handleStartEdit(label)}
                       >
                         <Pencil size={16} />
@@ -225,7 +223,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
         )}
       </div>
       
-      <div className="card-footer border-0 text-muted" style={{ backgroundColor: '#F1F8F4' }}>
+      <div className="card-footer border-0 text-muted card-footer-labels">
         <small>{labels.length} Label{labels.length !== 1 ? 's' : ''}</small>
       </div>
     </div>

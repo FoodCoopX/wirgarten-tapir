@@ -4,7 +4,7 @@ import { useApi } from '../../hooks/useApi';
 import type { AbhollisteResponse, PickupLocation, SolverPreviewDetailResponse } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
-import { RunSolverCard, MetricsCard, PreferredBreadStatisticsCard, YearWeekSelectorCard } from '../components/cards';
+import { RunSolverCard, MetricsCard, YearWeekSelectorCard } from '../components/cards';
 import {
   SectionToggle,
   BacklisteSection,
@@ -292,7 +292,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       <div className="row">
         {loading ? (
           <div className="col-12 text-center py-5">
-            <div className="spinner-border" style={{ color: '#D4A574' }} />
+            <div className="spinner-border spinner-bakery-primary" />
             <p className="mt-2 text-muted">Lade Liefertage...</p>
           </div>
         ) : deliveryDays.length === 0 ? (
@@ -308,7 +308,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
             return (
               <div key={day} className="col-lg-4 mb-4">
                 <div className="card h-100">
-                  <div className="card-header" style={{ backgroundColor: '#D4A574', color: 'white' }}>
+                  <div className="card-header header-white-on-middle-brown">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
                         <h5 className="mb-0">{DAY_LABELS[day] || `Tag ${day}`}</h5>
@@ -392,24 +392,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       allPdfUrl={`/bakery/pdf/abholliste-alle/${year}/${week}/${day}/`}
                       onEmail={() => {}}
                     />
-                    <hr />
-
-                    <div className="mb-3">
-                      <SectionToggle
-                        isOpen={isSectionOpen(`statistic-${day}`)}
-                        onToggle={() => toggleSection(`statistic-${day}`)}
-                        title="Statistik Lieblingsbrote" icon="favorite"
-                      />
-                      {isSectionOpen(`statistic-${day}`) && (
-                        <div className="mt-3">
-                          <h6 className="d-flex align-items-center mb-2" style={{ fontSize: '0.85rem' }}>
-                            <span className="material-icons me-2" style={{ fontSize: '16px', color: '#D4A574' }}>bar_chart</span>
-                            Lieblingsbrote
-                          </h6>
-                          <PreferredBreadStatisticsCard year={year} week={week} deliveryDay={day} csrfToken={csrfToken} />
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
