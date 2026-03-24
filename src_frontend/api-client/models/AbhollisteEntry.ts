@@ -30,13 +30,19 @@ export interface AbhollisteEntry {
      * @type {string}
      * @memberof AbhollisteEntry
      */
-    displayName: string;
+    memberName: string;
     /**
      * 
      * @type {number}
      * @memberof AbhollisteEntry
      */
-    totalBreads: number;
+    total: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof AbhollisteEntry
+     */
+    totalAssigned: number;
     /**
      * 
      * @type {{ [key: string]: number; }}
@@ -62,8 +68,9 @@ export interface AbhollisteEntry {
  */
 export function instanceOfAbhollisteEntry(value: object): value is AbhollisteEntry {
     if (!('memberId' in value) || value['memberId'] === undefined) return false;
-    if (!('displayName' in value) || value['displayName'] === undefined) return false;
-    if (!('totalBreads' in value) || value['totalBreads'] === undefined) return false;
+    if (!('memberName' in value) || value['memberName'] === undefined) return false;
+    if (!('total' in value) || value['total'] === undefined) return false;
+    if (!('totalAssigned' in value) || value['totalAssigned'] === undefined) return false;
     if (!('breadCounts' in value) || value['breadCounts'] === undefined) return false;
     if (!('breadPreferred' in value) || value['breadPreferred'] === undefined) return false;
     if (!('breads' in value) || value['breads'] === undefined) return false;
@@ -81,8 +88,9 @@ export function AbhollisteEntryFromJSONTyped(json: any, ignoreDiscriminator: boo
     return {
         
         'memberId': json['member_id'],
-        'displayName': json['display_name'],
-        'totalBreads': json['total_breads'],
+        'memberName': json['member_name'],
+        'total': json['total'],
+        'totalAssigned': json['total_assigned'],
         'breadCounts': json['bread_counts'],
         'breadPreferred': json['bread_preferred'],
         'breads': json['breads'],
@@ -101,8 +109,9 @@ export function AbhollisteEntryFromJSONTyped(json: any, ignoreDiscriminator: boo
     return {
         
         'member_id': value['memberId'],
-        'display_name': value['displayName'],
-        'total_breads': value['totalBreads'],
+        'member_name': value['memberName'],
+        'total': value['total'],
+        'total_assigned': value['totalAssigned'],
         'bread_counts': value['breadCounts'],
         'bread_preferred': value['breadPreferred'],
         'breads': value['breads'],

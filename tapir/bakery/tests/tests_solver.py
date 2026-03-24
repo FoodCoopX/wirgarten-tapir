@@ -83,9 +83,9 @@ def assert_solver_success(result):
     """Assert that the solver returned a successful result with a plan."""
     assert result is not None
     assert isinstance(result, SolverResult)
-    assert (
-        result.status == "optimal"
-    ), f"Expected status 'ok', got '{result.status}': {result.diagnostics}"
+    assert result.status == "optimal", (
+        f"Expected status 'ok', got '{result.status}': {result.diagnostics}"
+    )
     assert result.plan is not None
 
 
@@ -376,9 +376,9 @@ class TestStoveSessions:
                 if info is not None:
                     last_used = i
             for i in range(last_used):
-                assert (
-                    sess[i] is not None
-                ), f"Gap in layers: layer {i} is None but layer {last_used} is used"
+                assert sess[i] is not None, (
+                    f"Gap in layers: layer {i} is None but layer {last_used} is used"
+                )
 
     def test_minimizes_sessions(self):
         """Solver should prefer fewer sessions (highest priority)."""
@@ -1203,8 +1203,8 @@ class TestSaveSolutionToDb(TapirIntegrationTest):
         sess_records = StoveSession.objects.filter(year=year, delivery_week=week)
         self.assertEqual(sess_records.count(), 2)
 
-    def test_saveSolutionToDb_calledTwice_createsDoubleRecords(self):
-        """save_solution_to_db does not delete previous records — it appends."""
+    def test_saveSolutionToDb_calledTwice_replacesExistingRecords(self):
+        """save_solution_to_db deletes previous records for the same locations before inserting."""
         from tapir.bakery.models import BreadsPerPickupLocationPerWeek
         from tapir.bakery.solver.django_integration import save_solution_to_db
 
@@ -1232,12 +1232,13 @@ class TestSaveSolutionToDb(TapirIntegrationTest):
             1,
         )
 
+        # Second call should replace, not append
         save_solution_to_db(year, week, delivery_day, solution)
         self.assertEqual(
             BreadsPerPickupLocationPerWeek.objects.filter(
                 year=year, delivery_week=week
             ).count(),
-            2,
+            1,  # Still 1, not 2
         )
 
     def test_saveSolutionToDb_emptyDistribution_noRecordsCreated(self):

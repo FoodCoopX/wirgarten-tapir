@@ -68,10 +68,8 @@ def can_delete_instance(
         if related_manager is None:
             continue
 
-        # Use exists() instead of count() - much more efficient
-        if related_manager.exists():
-            count = related_manager.count()
-
+        count = related_manager.count()
+        if count > 0:
             # If it's a PROTECT relation, we know it will block deletion
             if related_object.on_delete == PROTECT:
                 protected_relations.append(
@@ -137,7 +135,7 @@ def _get_related_manager(instance: Model, related_object: Any) -> Optional[Any]:
         return None
 
 
-def parse_week_params(query_params) -> tuple[int, int, int | None] | Response:
+def parse_week_params(query_params: Any) -> Tuple[int, int, Optional[int]] | Response:
     """
     Parse year, delivery_week, and optional delivery_day from query params.
 

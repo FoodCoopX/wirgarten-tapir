@@ -175,25 +175,7 @@ class AbhollisteView(APIView):
         pickup_location_id = request.query_params.get("pickup_location_id")
 
         data = AbhollisteService.get_abholliste(year, delivery_week, pickup_location_id)
-
-        result = {
-            "bread_names": data["bread_names"],
-            "bread_totals": data["bread_totals"],
-            "grand_total": data["grand_total"],
-            "entries": [
-                {
-                    "member_id": entry["member_id"],
-                    "display_name": entry["member_name"],
-                    "total_breads": entry["total"],
-                    "bread_counts": entry["bread_counts"],
-                    "bread_preferred": entry["bread_preferred"],
-                    "breads": entry["breads"],
-                }
-                for entry in data["entries"]
-            ],
-        }
-
-        serializer = AbhollisteResponseSerializer(result)
+        serializer = AbhollisteResponseSerializer(data)
         return Response(serializer.data)
 
 

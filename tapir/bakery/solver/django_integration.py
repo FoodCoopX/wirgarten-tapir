@@ -200,21 +200,17 @@ def save_solution_to_db(
     from django.db import transaction
 
     from tapir.bakery.models import (
-        BreadDelivery,
         BreadsPerPickupLocationPerWeek,
         StoveSession,
     )
 
     with transaction.atomic():
+        # Get location IDs from the solution's distribution
         if delivery_day is not None:
-            deliveries = BreadDelivery.objects.filter(
-                year=year, delivery_week=delivery_week
-            ).select_related("pickup_location")
             location_ids = list(
                 set(
-                    d.pickup_location_id
-                    for d in deliveries
-                    if d.pickup_location.delivery_day == delivery_day
+                    key[1] if isinstance(key, tuple) else str(key).split(",")[1]
+                    for key in solution.get("distribution", {}).keys()
                 )
             )
         else:
@@ -223,7 +219,7 @@ def save_solution_to_db(
         delete_dist_qs = BreadsPerPickupLocationPerWeek.objects.filter(
             year=year, delivery_week=delivery_week
         )
-        if location_ids is not None:
+        if location_ids:
             delete_dist_qs = delete_dist_qs.filter(pickup_location_id__in=location_ids)
         delete_dist_qs.delete()
 

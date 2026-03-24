@@ -81,8 +81,8 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                 <tbody>
                   {abhollisteData.entries.map((entry: any, index: number) => {
                     const memberId = entry.memberId || entry.member_id;
-                    const displayName = entry.displayName || entry.display_name;
-                    const totalBreads = entry.totalBreads || entry.total_breads || 0;
+                    const memberName = entry.memberName || entry.member_name;
+                    const total = entry.total ?? 0;
                     const breadCounts: Record<string, number> = entry.breadCounts || entry.bread_counts || {};
                     const breadPreferred: Record<string, boolean> = entry.breadPreferred || entry.bread_preferred || {};
                     const isChecked = checkedMembers[memberId] || false;
@@ -90,9 +90,9 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                     return (
                       <tr key={memberId} className={isChecked ? 'checked-row' : ''}>
                         <td className="text-center text-muted">{index + 1}</td>
-                        <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{displayName}</td>
+                        <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{memberName}</td>
                         <td className="text-center">
-                          <strong className="text-bakery-primary-darker">{totalBreads}</strong>
+                          <strong className="text-bakery-primary-darker">{total}</strong>
                         </td>
                         <td className="text-center">
                           <input

@@ -192,8 +192,9 @@ class PreferredBreadsBulkUpdateSerializer(serializers.Serializer):
 
 class AbhollisteEntrySerializer(serializers.Serializer):
     member_id = serializers.CharField()
-    display_name = serializers.CharField()
-    total_breads = serializers.IntegerField()
+    member_name = serializers.CharField()
+    total = serializers.IntegerField()
+    total_assigned = serializers.IntegerField()
     bread_counts = serializers.DictField(child=serializers.IntegerField())
     bread_preferred = serializers.DictField(child=serializers.BooleanField())
     breads = serializers.ListField(

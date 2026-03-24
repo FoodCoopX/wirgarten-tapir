@@ -1,19 +1,33 @@
+from typing import Any
+
+from django.db.models import OuterRef, Subquery
+
 from tapir.bakery.models import BreadsPerPickupLocationPerWeek, StoveSession
 from tapir.pickup_locations.models import PickupLocation
+from tapir.wirgarten.models import PickupLocationOpeningTime
 
 
 class BacklisteService:
     @staticmethod
-    def get_pickup_location_ids_for_day(day: int) -> list:
-        """Filter pickup locations by delivery_day property (not a DB field)."""
-        return [
-            pl.id
-            for pl in PickupLocation.objects.all()
-            if getattr(pl, "delivery_day", None) == day
-        ]
+    def get_pickup_location_ids_for_day(day: int) -> list[str]:
+        """Get pickup location IDs that have their first opening time on the given day."""
+        # Subquery to get the minimum day_of_week for each pickup location
+        first_day_subquery = (
+            PickupLocationOpeningTime.objects.filter(pickup_location=OuterRef("pk"))
+            .order_by("day_of_week")
+            .values("day_of_week")[:1]
+        )
+
+        return list(
+            PickupLocation.objects.annotate(
+                first_delivery_day=Subquery(first_day_subquery)
+            )
+            .filter(first_delivery_day=day)
+            .values_list("id", flat=True)
+        )
 
     @staticmethod
-    def get_backliste(year: int, week: int, day: int) -> dict:
+    def get_backliste(year: int, week: int, day: int) -> dict[str, Any]:
         """
         Returns:
         {
@@ -89,7 +103,7 @@ class BacklisteService:
             )
         sorted_sessions = sorted(session_groups.values(), key=lambda s: s["session"])
         for s in sorted_sessions:
-            s["layers"].sort(key=lambda l: l["layer"])
+            s["layers"].sort(key=lambda layer: layer["layer"])
 
         return {
             "breads": breads,

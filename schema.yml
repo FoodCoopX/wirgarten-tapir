@@ -7276,9 +7276,11 @@ components:
       properties:
         member_id:
           type: string
-        display_name:
+        member_name:
           type: string
-        total_breads:
+        total:
+          type: integer
+        total_assigned:
           type: integer
         bread_counts:
           type: object
@@ -7299,9 +7301,10 @@ components:
       - bread_counts
       - bread_preferred
       - breads
-      - display_name
       - member_id
-      - total_breads
+      - member_name
+      - total
+      - total_assigned
     AbhollisteResponse:
       type: object
       properties:

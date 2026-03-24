@@ -1,15 +1,27 @@
+from typing import Any
+
+from django.db.models import OuterRef, Subquery
+
 from tapir.bakery.models import BreadDelivery, BreadsPerPickupLocationPerWeek
 from tapir.pickup_locations.models import PickupLocation
+from tapir.wirgarten.models import PickupLocationOpeningTime
 
 
 class VerteillisteService:
     @staticmethod
-    def get_verteilliste(year: int, week: int, day: int) -> dict:
-        day_locations = [
-            pl
-            for pl in PickupLocation.objects.all()
-            if getattr(pl, "delivery_day", None) == day
-        ]
+    def get_verteilliste(year: int, week: int, day: int) -> dict[str, Any]:
+        # Efficient query: get pickup locations with their first delivery day
+        first_day_subquery = (
+            PickupLocationOpeningTime.objects.filter(pickup_location=OuterRef("pk"))
+            .order_by("day_of_week")
+            .values("day_of_week")[:1]
+        )
+
+        day_locations = list(
+            PickupLocation.objects.annotate(
+                first_delivery_day=Subquery(first_day_subquery)
+            ).filter(first_delivery_day=day)
+        )
         location_ids = [pl.id for pl in day_locations]
 
         # 1. Check for solver results
