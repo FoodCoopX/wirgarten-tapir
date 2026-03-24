@@ -83,9 +83,9 @@ def assert_solver_success(result):
     """Assert that the solver returned a successful result with a plan."""
     assert result is not None
     assert isinstance(result, SolverResult)
-    assert result.status == "optimal", (
-        f"Expected status 'ok', got '{result.status}': {result.diagnostics}"
-    )
+    assert (
+        result.status == "optimal"
+    ), f"Expected status 'ok', got '{result.status}': {result.diagnostics}"
     assert result.plan is not None
 
 
@@ -376,9 +376,9 @@ class TestStoveSessions:
                 if info is not None:
                     last_used = i
             for i in range(last_used):
-                assert sess[i] is not None, (
-                    f"Gap in layers: layer {i} is None but layer {last_used} is used"
-                )
+                assert (
+                    sess[i] is not None
+                ), f"Gap in layers: layer {i} is None but layer {last_used} is used"
 
     def test_minimizes_sessions(self):
         """Solver should prefer fewer sessions (highest priority)."""
