@@ -134,6 +134,7 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
                             labels={breadLabels}
                             isSelected={isSelected}
                             onClick={() => onSelect(bread.id!)}
+                            showAvailability={true}
                           />
                         );
                       })}

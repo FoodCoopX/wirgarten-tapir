@@ -108,6 +108,13 @@ class BreadDeliveryFactory(factory.django.DjangoModelFactory):
     pickup_location = factory.SubFactory(PickupLocationFactory)
     bread = factory.SubFactory(BreadFactory)
 
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Override create to skip capacity validation in tests."""
+        obj = model_class(*args, **kwargs)
+        obj.save(skip_validation=True)
+        return obj
+
 
 class PreferredBreadFactory(factory.django.DjangoModelFactory):
     class Meta:

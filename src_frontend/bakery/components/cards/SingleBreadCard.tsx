@@ -13,6 +13,7 @@ interface SingleBreadCardProps {
   width?: string;
   showFooter?: boolean;
   footerText?: string;
+  showAvailability?: boolean;
 }
 
 export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
@@ -25,7 +26,10 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
   width = '280px',
   showFooter = true,
   footerText,
+  showAvailability = false,
 }) => {
+  const availableCapacity = bread.availableCapacity;
+  const hasLimitedCapacity = showAvailability && availableCapacity !== undefined && availableCapacity <= 5;
   return (
     <div style={{ width, flex: `0 0 ${width}` }}>
       <div
@@ -85,6 +89,18 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
 
           {bread.weight && (
             <small className="text-muted mb-2">{Number(bread.weight).toFixed(0)}g</small>
+          )}
+
+          {/* Availability Badge */}
+          {showAvailability && availableCapacity !== undefined && (
+            <div className="mb-2">
+              <span 
+                className={`badge ${hasLimitedCapacity ? 'bg-warning text-dark' : 'badge-bakery-success'}`}
+                style={{ fontSize: '0.7rem' }}
+              >
+                {availableCapacity} verfügbar
+              </span>
+            </div>
           )}
 
           {labels.length > 0 && (

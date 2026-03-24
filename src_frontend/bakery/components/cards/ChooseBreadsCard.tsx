@@ -39,6 +39,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
   const [selectedWeek, setSelectedWeek] = useState(currentWeek);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [modalOpen, setModalOpen] = useState<string | null>(null);
+  const [modalRefreshKey, setModalRefreshKey] = useState(0);
   const [editingLocation, setEditingLocation] = useState<string | null>(null);
   const [toastDatas, setToastDatas] = useState<any[]>([]);
   
@@ -206,9 +207,21 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
 
       setModalOpen(null);
       await loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save bread selection:', error);
-      alert('Speichern des Brotes fehlgeschlagen');
+      // Handle capacity error (400 response)
+      if (error?.response?.status === 400) {
+        try {
+          const errorData = await error.response.json();
+          alert(errorData.error || 'Dieses Brot ist leider nicht mehr verfügbar. Bitte wähle ein anderes Brot.');
+        } catch {
+          alert('Dieses Brot ist leider nicht mehr verfügbar. Bitte wähle ein anderes Brot.');
+        }
+        // Refresh the modal to show updated availability
+        setModalRefreshKey(prev => prev + 1);
+      } else {
+        alert('Speichern des Brotes fehlgeschlagen');
+      }
     } finally {
       setSaving(null);
     }
@@ -432,6 +445,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
               {/* Bread Selection Modal */}
               {modalOpen === delivery.id && delivery.pickupLocation && !isAfterBreadDeadline && (
                 <BreadSelectionModal
+                  key={modalRefreshKey}
                   breads={breads}
                   contentsMap={contentsMap}
                   pickupLocationId={delivery.pickupLocation}

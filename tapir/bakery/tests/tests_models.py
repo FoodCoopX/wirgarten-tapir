@@ -10,8 +10,8 @@ from tapir.bakery.models import (
     StoveSession,
 )
 from tapir.bakery.tests.factories import (
+    BreadCapacityPickupLocationFactory,
     BreadFactory,
-    BreadsPerPickupLocationPerWeekFactory,
     IngredientFactory,
     PickupLocationFactory,
 )
@@ -109,12 +109,12 @@ class TestBreadDeliveryValidation(TapirIntegrationTest):
         self.subscription = SubscriptionFactory.create(member=self.member)
 
     def test_save_breadAvailableAtLocation_succeeds(self):
-        BreadsPerPickupLocationPerWeekFactory.create(
+        BreadCapacityPickupLocationFactory.create(
             year=2026,
             delivery_week=11,
             pickup_location=self.pl,
             bread=self.bread,
-            count=5,
+            capacity=5,
         )
 
         delivery = BreadDelivery(

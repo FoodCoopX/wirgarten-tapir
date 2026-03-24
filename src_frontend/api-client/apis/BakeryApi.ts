@@ -1359,6 +1359,7 @@ export class BakeryApi extends runtime.BaseAPI {
     }
 
     /**
+     * Update a bread delivery with capacity checking and locking.  When a bread is being selected, this method: 1. Locks the relevant capacity and delivery rows to prevent race conditions 2. Checks if there\'s available capacity for the selected bread 3. Only allows the update if capacity is available
      */
     async bakeryBreadDeliveriesPartialUpdateRaw(requestParameters: BakeryBreadDeliveriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BreadDelivery>> {
         if (requestParameters['id'] == null) {
@@ -1393,6 +1394,7 @@ export class BakeryApi extends runtime.BaseAPI {
     }
 
     /**
+     * Update a bread delivery with capacity checking and locking.  When a bread is being selected, this method: 1. Locks the relevant capacity and delivery rows to prevent race conditions 2. Checks if there\'s available capacity for the selected bread 3. Only allows the update if capacity is available
      */
     async bakeryBreadDeliveriesPartialUpdate(requestParameters: BakeryBreadDeliveriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BreadDelivery> {
         const response = await this.bakeryBreadDeliveriesPartialUpdateRaw(requestParameters, initOverrides);

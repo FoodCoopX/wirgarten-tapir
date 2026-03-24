@@ -53,6 +53,10 @@ class BreadContentSerializer(serializers.ModelSerializer):
 class BreadListSerializer(serializers.ModelSerializer):
     """Serializer for bread list view (minimal data)"""
 
+    capacity = serializers.IntegerField(read_only=True, required=False)
+    delivery_count = serializers.IntegerField(read_only=True, required=False)
+    available_capacity = serializers.IntegerField(read_only=True, required=False)
+
     class Meta:
         model = Bread
         fields = "__all__"

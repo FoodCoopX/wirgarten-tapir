@@ -231,8 +231,9 @@ class BreadDelivery(TapirModel):
                     }
                 )
 
-    def save(self, *args, **kwargs):
-        self.full_clean()
+    def save(self, *args, skip_validation=False, **kwargs):
+        if not skip_validation:
+            self.full_clean()
         super().save(*args, **kwargs)
 
     class Meta:

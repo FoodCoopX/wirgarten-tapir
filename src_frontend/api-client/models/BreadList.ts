@@ -27,6 +27,24 @@ export interface BreadList {
     id?: string;
     /**
      * 
+     * @type {number}
+     * @memberof BreadList
+     */
+    readonly capacity: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BreadList
+     */
+    readonly deliveryCount: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BreadList
+     */
+    readonly availableCapacity: number;
+    /**
+     * 
      * @type {string}
      * @memberof BreadList
      */
@@ -97,6 +115,9 @@ export interface BreadList {
  * Check if a given object implements the BreadList interface.
  */
 export function instanceOfBreadList(value: object): value is BreadList {
+    if (!('capacity' in value) || value['capacity'] === undefined) return false;
+    if (!('deliveryCount' in value) || value['deliveryCount'] === undefined) return false;
+    if (!('availableCapacity' in value) || value['availableCapacity'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('weight' in value) || value['weight'] === undefined) return false;
     return true;
@@ -113,6 +134,9 @@ export function BreadListFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'capacity': json['capacity'],
+        'deliveryCount': json['delivery_count'],
+        'availableCapacity': json['available_capacity'],
         'name': json['name'],
         'picture': json['picture'] == null ? undefined : json['picture'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -131,7 +155,7 @@ export function BreadListFromJSONTyped(json: any, ignoreDiscriminator: boolean):
       return BreadListToJSONTyped(json, false);
   }
 
-  export function BreadListToJSONTyped(value?: BreadList | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadListToJSONTyped(value?: Omit<BreadList, 'capacity'|'delivery_count'|'available_capacity'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

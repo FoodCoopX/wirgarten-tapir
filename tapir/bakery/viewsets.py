@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Subquery, When
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import permissions, status, viewsets
@@ -403,6 +404,83 @@ class BreadDeliveryViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(delivery_week=delivery_week)
 
         return queryset.select_related("bread", "pickup_location")
+
+    @extend_schema(
+        responses={
+            200: BreadDeliverySerializer,
+            400: OpenApiResponse(
+                description="No capacity available for selected bread"
+            ),
+        }
+    )
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Update a bread delivery with capacity checking and locking.
+
+        When a bread is being selected, this method:
+        1. Locks the relevant capacity and delivery rows to prevent race conditions
+        2. Checks if there's available capacity for the selected bread
+        3. Only allows the update if capacity is available
+        """
+        new_bread_id = request.data.get("bread")
+
+        # If no bread change, just do normal update
+        if new_bread_id is None:
+            return super().partial_update(request, *args, **kwargs)
+
+        with transaction.atomic():
+            # Get the delivery with a lock
+            delivery = BreadDelivery.objects.select_for_update().get(pk=kwargs["pk"])
+
+            # If bread isn't changing, no capacity check needed
+            old_bread_id = str(delivery.bread_id) if delivery.bread_id else None
+            if old_bread_id == new_bread_id:
+                return super().partial_update(request, *args, **kwargs)
+
+            # Check capacity for the new bread
+            if new_bread_id and delivery.pickup_location_id:
+                # Lock the capacity entry
+                capacity_entry = (
+                    BreadCapacityPickupLocation.objects.select_for_update()
+                    .filter(
+                        bread_id=new_bread_id,
+                        pickup_location_id=delivery.pickup_location_id,
+                        year=delivery.year,
+                        delivery_week=delivery.delivery_week,
+                    )
+                    .first()
+                )
+
+                if not capacity_entry:
+                    return Response(
+                        {
+                            "error": "Dieses Brot ist für diese Station/Woche nicht verfügbar."
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # Count existing deliveries for this bread (excluding current one if it had this bread)
+                existing_count = (
+                    BreadDelivery.objects.filter(
+                        bread_id=new_bread_id,
+                        pickup_location_id=delivery.pickup_location_id,
+                        year=delivery.year,
+                        delivery_week=delivery.delivery_week,
+                    )
+                    .exclude(pk=delivery.pk)
+                    .count()
+                )
+
+                available = capacity_entry.capacity - existing_count
+
+                if available <= 0:
+                    return Response(
+                        {"error": "Keine Kapazität mehr für dieses Brot verfügbar."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            # Capacity is available, proceed with update
+            return super().partial_update(request, *args, **kwargs)
 
 
 @extend_schema(
