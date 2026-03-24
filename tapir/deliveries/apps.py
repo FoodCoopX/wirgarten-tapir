@@ -1,5 +1,7 @@
 from django.apps import AppConfig
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+
+from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class DeliveriesConfig(AppConfig):
@@ -11,26 +13,43 @@ class DeliveriesConfig(AppConfig):
     MAIL_TRIGGER_DONATION_CANCELLED = "deliveries.donation_cancelled"
 
     def ready(self):
-        TransactionalTrigger.register_action(
-            "Joker: Joker eingesetzt",
-            self.MAIL_TRIGGER_JOKER_USED,
-            {"Joker Datum": "joker_date"},
+        from tapir.configuration.parameter import get_parameter_value
+        from tapir.wirgarten.tapirmail import register_transactional_trigger
+
+        register_transactional_trigger(
+            name="Joker: Joker eingesetzt",
+            key=self.MAIL_TRIGGER_JOKER_USED,
+            tokens={"Joker Datum": "joker_date"},
+            required=lambda: get_parameter_value(
+                ParameterKeys.JOKERS_ENABLED, cache={}
+            ),
         )
 
-        TransactionalTrigger.register_action(
-            "Joker: Joker storniert",
-            self.MAIL_TRIGGER_JOKER_CANCELLED,
-            {"Joker Datum": "joker_date"},
+        register_transactional_trigger(
+            name="Joker: Joker storniert",
+            key=self.MAIL_TRIGGER_JOKER_CANCELLED,
+            tokens={"Joker Datum": "joker_date"},
+            required=lambda: get_parameter_value(
+                ParameterKeys.JOKERS_ENABLED, cache={}
+            ),
         )
 
-        TransactionalTrigger.register_action(
-            "Lieferung Spende: Spende eingesetzt",
-            self.MAIL_TRIGGER_DONATION_USED,
-            {"Spende Datum": "donation_date"},
+        register_transactional_trigger(
+            name="Lieferung Spende: Spende eingesetzt",
+            key=self.MAIL_TRIGGER_DONATION_USED,
+            tokens={"Spende Datum": "donation_date"},
+            required=lambda: get_parameter_value(
+                ParameterKeys.DELIVERY_DONATION_MODE, cache={}
+            )
+            != DELIVERY_DONATION_MODE_DISABLED,
         )
 
-        TransactionalTrigger.register_action(
-            "Lieferung Spende: Spende storniert",
-            self.MAIL_TRIGGER_DONATION_CANCELLED,
-            {"Spende Datum": "donation_date"},
+        register_transactional_trigger(
+            name="Lieferung Spende: Spende storniert",
+            key=self.MAIL_TRIGGER_DONATION_CANCELLED,
+            tokens={"Spende Datum": "donation_date"},
+            required=lambda: get_parameter_value(
+                ParameterKeys.DELIVERY_DONATION_MODE, cache={}
+            )
+            != DELIVERY_DONATION_MODE_DISABLED,
         )
