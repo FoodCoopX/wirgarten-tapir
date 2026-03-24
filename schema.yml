@@ -7058,10 +7058,8 @@ components:
           type: integer
         iban:
           type: string
-          minLength: 1
         account_owner:
           type: string
-          minLength: 1
         as_admin:
           type: boolean
         start_date:
@@ -8048,7 +8046,12 @@ components:
           type: boolean
         user_can_update_contribution:
           type: boolean
+        alternative_change_valid_from:
+          type: string
+          format: date
+          nullable: true
       required:
+      - alternative_change_valid_from
       - change_valid_from
       - contributions
       - user_can_set_lower_value

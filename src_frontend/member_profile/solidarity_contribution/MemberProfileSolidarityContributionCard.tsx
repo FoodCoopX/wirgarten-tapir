@@ -29,6 +29,8 @@ const MemberProfileSolidarityContributionCard: React.FC<
   const [newContributionAsString, setNewContributionAsString] = useState("0");
   const [showValidation, setShowValidation] = useState(false);
   const [changeValidFrom, setChangeValidFrom] = useState(new Date());
+  const [alternativeChangeValidFrom, setAlternativeChangeValidFrom] =
+    useState<Date | null>(null);
   const [userCanSetLowerValue, setUserCanSetLowerValue] = useState(false);
   const [userCanUpdateContribution, setUserCanUpdateContribution] =
     useState(false);
@@ -44,6 +46,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
       .then((response) => {
         setSolidarityContributions(response.contributions);
         setChangeValidFrom(response.changeValidFrom);
+        setAlternativeChangeValidFrom(response.alternativeChangeValidFrom);
         setUserCanSetLowerValue(response.userCanSetLowerValue);
         setUserCanUpdateContribution(response.userCanUpdateContribution);
       })
@@ -174,11 +177,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
   }
 
   function shouldAskIfStartsNowOrLater() {
-    if (solidarityContributions.length === 0) {
-      return false;
-    }
-
-    return solidarityContributions[0].startDate > changeValidFrom;
+    return alternativeChangeValidFrom !== null;
   }
 
   function getValidFromDate() {
@@ -186,9 +185,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
       return changeValidFrom;
     }
 
-    return startContributionNow
-      ? changeValidFrom
-      : solidarityContributions[0].startDate;
+    return startContributionNow ? changeValidFrom : alternativeChangeValidFrom;
   }
 
   function buildContent() {
@@ -233,7 +230,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
           onHide={() => setModalOpen(false)}
         >
           <Modal.Header closeButton={true}>
-            Solidarbeitrag anpassen
+            <Modal.Title>Solidarbeitrag anpassen</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {shouldAskIfStartsNowOrLater() && (
@@ -254,18 +251,18 @@ const MemberProfileSolidarityContributionCard: React.FC<
                   name={"solidarity_contribution_now_or_later"}
                   label={
                     "Neuer Beitrag gültig ab Vertragsstart: " +
-                    formatDateNumeric(solidarityContributions[0].startDate)
+                    formatDateNumeric(alternativeChangeValidFrom)
                   }
                   onChange={() => setStartContributionNow(false)}
                   checked={!startContributionNow}
                   type={"radio"}
                 />
                 <Form.Text>
-                  Deiner aktueller Solidarbeitrag startet am{" "}
-                  {formatDateNumeric(solidarityContributions[0].startDate)}.
-                  Wenn du den ändern willst, kannst du entscheiden ob der neuer
-                  Beitrag so bald wie möglich starten soll oder erst zum
-                  geplantem Start-Datum.
+                  Deiner aktueller Vertrag und/oder Solidarbeitrag startet am{" "}
+                  {formatDateNumeric(alternativeChangeValidFrom)}. Wenn du den
+                  ändern willst, kannst du entscheiden ob der neuer Beitrag so
+                  bald wie möglich starten soll oder erst zum geplantem
+                  Start-Datum.
                 </Form.Text>
               </Form.Group>
             )}

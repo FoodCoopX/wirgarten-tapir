@@ -14,6 +14,7 @@ class MemberSolidarityContributionsResponseSerializer(serializers.Serializer):
     change_valid_from = serializers.DateField()
     user_can_set_lower_value = serializers.BooleanField()
     user_can_update_contribution = serializers.BooleanField()
+    alternative_change_valid_from = serializers.DateField(allow_null=True)
 
 
 class UpdateMemberSolidarityContributionRequestSerializer(serializers.Serializer):
