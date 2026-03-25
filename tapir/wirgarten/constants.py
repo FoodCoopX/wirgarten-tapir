@@ -13,7 +13,7 @@ DeliveryCycle = [
     ),
     CUSTOM_CYCLE := (
         "custom",
-        _("Freigelegte Lieferwochen"),
+        _("Benutzerdefinierte Lieferwochen"),
     ),
 ]
 

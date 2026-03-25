@@ -7,6 +7,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 
 interface CustomCycleDeliveryWeeksInputProps {
   deliveryWeeks: CustomCycleDeliveryWeeks;
@@ -203,6 +204,15 @@ const CustomCycleDeliveryWeeksInput: React.FC<
           })}
         </Form.Select>
       </Form.Group>
+      <div className={"d-flex flex-row gap-2 align-items-center"}>
+        <span>Lieferwochen für dieses Produkt</span>
+        <TapirHelpButton
+          text={
+            "Bitte gib an, in welchen Wochen das Produkt abgeholt bzw. geliefert wird. Du kannst beliebig viele Wochen angeben und auch wieder löschen. Änderungen können für zukünftige Abholungen / Lieferungen vorgenommen werden."
+          }
+          buttonSize={"sm"}
+        />
+      </div>
       {getInternalWeeksForCurrentPeriod().map((week, index) => (
         <Form.Group
           key={index}
@@ -227,6 +237,7 @@ const CustomCycleDeliveryWeeksInput: React.FC<
             variant={"outline-danger"}
             icon={"delete"}
             onClick={() => deleteDelivery(index)}
+            size={"sm"}
           />
         </Form.Group>
       ))}
@@ -235,6 +246,7 @@ const CustomCycleDeliveryWeeksInput: React.FC<
         variant={"outline-secondary"}
         icon={"add_circle"}
         onClick={addDelivery}
+        size={"sm"}
       />
       {errorMessage.length > 0 && (
         <Alert variant={"warning"}>
