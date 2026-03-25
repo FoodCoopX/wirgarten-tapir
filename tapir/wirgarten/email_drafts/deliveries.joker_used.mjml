@@ -3,13 +3,16 @@
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
 Trigger: Transaktionale Email, die versendet wird, wenn ein Joker eingesetzt wird. <br /> <br />
+Zweck: Kündigungsbestätigung für das Mitglied <br /> <br />
 Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /> <br />
 
 ____________________ <br /><br /><br /><br />
 
 <p> "Moin {{Empfänger.Vorname}}, <br /> <br />
 
-TEXT GOES HERE <br /> <br />
+du hast gerade einen Joker für die Abholung/Lieferung am {{Joker: Joker eingesetzt.Joker Datum}} gesetzt. <br /> <br /> 
+Bitte beachte, dass du in der entsprechenden Woche nicht dein(e) Produktanteil(e) erhältst. <br /> <br />
+Du erhältst von uns am Ende der Vertragsperiode eine Gutschrift für deine gesetzte(n) Joker. <br /> <br />
 
 Liebe Grüße, <br />
 Dein {{Allgemein.Admin Name}} <br />
