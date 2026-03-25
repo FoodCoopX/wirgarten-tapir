@@ -11,6 +11,10 @@ DeliveryCycle = [
         "every_four_weeks",
         _("Jede 4. Woche"),
     ),
+    CUSTOM_CYCLE := (
+        "custom",
+        _("Freigelegte Lieferwochen"),
+    ),
 ]
 
 DeliveryCycleDict = dict(DeliveryCycle)

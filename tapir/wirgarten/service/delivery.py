@@ -66,10 +66,6 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: dict = 
     while next_delivery_date <= last_growing_period.end_date and (
         limit is None or len(deliveries) < limit
     ):
-        accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
-            date=next_delivery_date, cache=cache
-        )
-
         active_subs = list(
             filter(
                 lambda subscription: subscription.start_date <= next_delivery_date
@@ -77,8 +73,9 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: dict = 
                     subscription.end_date is None
                     or next_delivery_date <= subscription.end_date
                 )
-                and subscription.product.type.delivery_cycle
-                in accepted_delivery_cycles,
+                and DeliveryCycleService.is_product_type_delivered_in_week(
+                    subscription.product.type, date=next_delivery_date, cache=cache
+                ),
                 subscriptions,
             )
         )

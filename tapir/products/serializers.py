@@ -41,6 +41,9 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
     title_bestellwizard_product_choice = serializers.CharField(allow_blank=True)
     title_bestellwizard_intro = serializers.CharField(allow_blank=True)
     background_image_in_bestellwizard = serializers.CharField(allow_blank=True)
+    custom_cycle_delivery_weeks = serializers.DictField(
+        child=serializers.ListSerializer(child=serializers.IntegerField())
+    )
 
 
 class ExtendedProductTypeAndConfigSerializer(serializers.Serializer):

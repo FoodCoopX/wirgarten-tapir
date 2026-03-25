@@ -126,22 +126,18 @@ class GetDeliveriesService:
     def get_relevant_subscriptions(
         cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> Set[Subscription]:
-        accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
-            date=reference_date, cache=cache
-        )
-
-        subscriptions_with_accepted_delivery_cycles = set()
-        for delivery_cycle in accepted_delivery_cycles:
-            subscriptions_with_accepted_delivery_cycles.update(
-                TapirCache.get_subscriptions_by_delivery_cycle(
-                    cache=cache, delivery_cycle=delivery_cycle
-                )
+        delivered_subscriptions = {
+            subscription
+            for subscription in TapirCache.get_all_subscriptions(cache=cache)
+            if DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=subscription.product.type, date=reference_date, cache=cache
             )
+        }
 
         def subscription_filter(subscription: Subscription):
             return (
                 subscription.member_id == member.id
-                and subscription in subscriptions_with_accepted_delivery_cycles
+                and subscription in delivered_subscriptions
             )
 
         return AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(

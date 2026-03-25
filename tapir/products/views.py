@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import CustomCycleDeliveryWeeks
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.products.serializers import (
     ExtendedProductTypeAndConfigSerializer,
@@ -126,8 +127,6 @@ class ExtendedProductTypeApiView(APIView):
             for field in self.direct_fields:
                 setattr(product_type, field, extended_data[field])
 
-            product_type.name = extended_data["name"]
-            product_type.icon_link = extended_data["icon_link"]
             product_type.save()
 
             product_capacity.capacity = extended_data["capacity"]
@@ -148,21 +147,59 @@ class ExtendedProductTypeApiView(APIView):
                 tax_rate_change_date=extended_data["tax_rate_change_date"],
             )
 
-            ProductTypeAccordionInBestellWizard.objects.filter(
-                product_type=product_type
-            ).delete()
-            accordions = [
-                ProductTypeAccordionInBestellWizard(
-                    product_type=product_type,
-                    title=accordion_data["title"],
-                    description=accordion_data["description"],
-                    order=index,
+            self.apply_bestell_wizard_accordion_changes(
+                extended_data=extended_data, product_type=product_type
+            )
+            self.apply_custom_cycle_delivery_week_changes(
+                extended_data=extended_data, product_type=product_type
+            )
+
+    @classmethod
+    def apply_custom_cycle_delivery_week_changes(
+        cls, extended_data: dict, product_type: ProductType
+    ):
+        CustomCycleDeliveryWeeks.objects.filter(product_type=product_type).delete()
+        objects_to_create = []
+        growing_periods = {
+            growing_period.id: growing_period
+            for growing_period in GrowingPeriod.objects.filter(
+                id__in=extended_data["custom_cycle_delivery_weeks"].keys()
+            )
+        }
+
+        for growing_period_id, weeks in extended_data[
+            "custom_cycle_delivery_weeks"
+        ].items():
+            for week in weeks:
+                objects_to_create.append(
+                    CustomCycleDeliveryWeeks(
+                        product_type=product_type,
+                        growing_period=growing_periods[growing_period_id],
+                        calendar_week=week,
+                    )
                 )
-                for index, accordion_data in enumerate(
-                    extended_data["accordions_in_bestell_wizard"]
-                )
-            ]
-            ProductTypeAccordionInBestellWizard.objects.bulk_create(accordions)
+
+        CustomCycleDeliveryWeeks.objects.bulk_create(objects_to_create)
+
+    @classmethod
+    def apply_bestell_wizard_accordion_changes(
+        cls, extended_data: dict, product_type: ProductType
+    ):
+        ProductTypeAccordionInBestellWizard.objects.filter(
+            product_type=product_type
+        ).delete()
+        accordions = [
+            ProductTypeAccordionInBestellWizard(
+                product_type=product_type,
+                title=accordion_data["title"],
+                description=accordion_data["description"],
+                order=index,
+            )
+            for index, accordion_data in enumerate(
+                extended_data["accordions_in_bestell_wizard"]
+            )
+        ]
+        ProductTypeAccordionInBestellWizard.objects.bulk_create(accordions)
 
     def build_extended_product_type_data(
         self, product_type: ProductType, growing_period: GrowingPeriod
@@ -199,6 +236,17 @@ class ExtendedProductTypeApiView(APIView):
                 product_type=product_type
             )
         )
+
+        custom_cycle_delivery_weeks = {}
+        data["custom_cycle_delivery_weeks"] = custom_cycle_delivery_weeks
+        for week_object in CustomCycleDeliveryWeeks.objects.filter(
+            product_type=product_type
+        ).order_by("calendar_week"):
+            if week_object.growing_period_id not in custom_cycle_delivery_weeks.keys():
+                custom_cycle_delivery_weeks[week_object.growing_period_id] = []
+            custom_cycle_delivery_weeks[week_object.growing_period_id].append(
+                week_object.calendar_week
+            )
 
         return data
 

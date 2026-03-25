@@ -714,12 +714,12 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         response_data = {}
         for pickup_location_id in PickupLocation.objects.values_list("id", flat=True):
             response_data[pickup_location_id] = {
-                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_product_type(
                     reference_date=reference_date,
                     pickup_location_id=pickup_location_id,
-                    delivery_cycle=TapirCache.get_product_type_by_id(
+                    product_type=TapirCache.get_product_type_by_id(
                         cache=self.cache, product_type_id=product_type_id
-                    ).delivery_cycle,
+                    ),
                     check_for_weeks_without_delivery=True,
                     cache=self.cache,
                 )

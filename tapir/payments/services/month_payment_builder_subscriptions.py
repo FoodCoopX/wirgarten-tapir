@@ -22,13 +22,14 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_last_day_of_month
+from tapir.utils.shortcuts import get_last_day_of_month, get_any_element_from_set
 from tapir.wirgarten.constants import (
     NO_DELIVERY,
     WEEKLY,
     ODD_WEEKS,
     EVEN_WEEKS,
     EVERY_FOUR_WEEKS,
+    CUSTOM_CYCLE,
 )
 from tapir.wirgarten.models import (
     Subscription,
@@ -65,8 +66,11 @@ class MonthPaymentBuilderSubscriptions:
             member,
             subscriptions_by_product_type,
         ) in subscriptions_by_member_and_product_type.items():
-            rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
-            if not in_trial:
+            if cls.force_monthly_payment_rhythm(
+                in_trial=in_trial, subscriptions=subscriptions
+            ):
+                rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
+            else:
                 rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
                     member=member, reference_date=current_month, cache=cache
                 )
@@ -90,6 +94,21 @@ class MonthPaymentBuilderSubscriptions:
                     payments_to_create.append(payment)
 
         return payments_to_create
+
+    @classmethod
+    def force_monthly_payment_rhythm(
+        cls, in_trial: bool, subscriptions: set[Subscription]
+    ):
+        if in_trial:
+            return True
+
+        if len(subscriptions) == 0:
+            return False
+
+        return (
+            get_any_element_from_set(subscriptions).product.type.delivery_cycle
+            == CUSTOM_CYCLE[0]
+        )
 
     @classmethod
     def get_total_to_pay(
@@ -240,14 +259,14 @@ class MonthPaymentBuilderSubscriptions:
         current_date = first_of_month - datetime.timedelta(days=1)
 
         while current_date <= last_of_month:
-            current_date = DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+            current_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
                 reference_date=current_date,
                 pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=subscription.member_id,
                     reference_date=current_date,
                     cache=cache,
                 ),
-                delivery_cycle=subscription.product.type.delivery_cycle,
+                product_type=subscription.product.type,
                 check_for_weeks_without_delivery=False,
                 cache=cache,
             )
@@ -315,8 +334,8 @@ class MonthPaymentBuilderSubscriptions:
             return 0
         if delivery_cycle == WEEKLY[0]:
             return 4
-        if delivery_cycle == ODD_WEEKS[0] or delivery_cycle == EVEN_WEEKS[0]:
+        if delivery_cycle in {EVEN_WEEKS[0], ODD_WEEKS[0]}:
             return 2
-        if delivery_cycle == EVERY_FOUR_WEEKS[0]:
+        if delivery_cycle in {EVERY_FOUR_WEEKS[0], CUSTOM_CYCLE[0]}:
             return 1
         raise ImproperlyConfigured("Unknown delivery cycle: " + delivery_cycle)

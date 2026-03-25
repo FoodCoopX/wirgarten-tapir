@@ -36,7 +36,7 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
 
         self.assertFalse(result)
         mock_is_week_delivered.assert_called_once_with(
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             delivery_date=delivery_date,
             check_for_weeks_without_delivery=True,
             cache=cache,
@@ -67,7 +67,7 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
         self.assertFalse(result)
 
         mock_is_week_delivered.assert_called_once_with(
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             delivery_date=delivery_date,
             check_for_weeks_without_delivery=True,
             cache=cache,
@@ -112,7 +112,7 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
         self.assertFalse(result)
 
         mock_is_week_delivered.assert_called_once_with(
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             delivery_date=delivery_date,
             check_for_weeks_without_delivery=True,
             cache=cache,
@@ -157,7 +157,7 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
         self.assertTrue(result)
 
         mock_is_week_delivered.assert_called_once_with(
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             delivery_date=delivery_date,
             check_for_weeks_without_delivery=True,
             cache=cache,
@@ -201,7 +201,7 @@ class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
         self.assertTrue(result)
 
         mock_is_week_delivered.assert_called_once_with(
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             delivery_date=delivery_date,
             check_for_weeks_without_delivery=True,
             cache=cache,

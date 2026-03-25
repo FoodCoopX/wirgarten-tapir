@@ -9,6 +9,7 @@ from tapir.pickup_locations.services.pickup_location_opening_times_manager impor
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
+from tapir.wirgarten.models import ProductType
 
 
 class DeliveryDateCalculator:
@@ -37,11 +38,11 @@ class DeliveryDateCalculator:
         return delivery_date_next_week
 
     @classmethod
-    def get_next_delivery_date_for_delivery_cycle(
+    def get_next_delivery_date_for_product_type(
         cls,
         reference_date: datetime.date,
         pickup_location_id,
-        delivery_cycle: str,
+        product_type: ProductType,
         check_for_weeks_without_delivery: bool,
         cache: dict,
     ):
@@ -50,11 +51,11 @@ class DeliveryDateCalculator:
             pickup_location_id=pickup_location_id,
             cache=cache,
         )
-        if delivery_cycle == NO_DELIVERY[0]:
+        if product_type.delivery_cycle == NO_DELIVERY[0]:
             return delivery_date
 
         while not cls.is_week_delivered(
-            delivery_cycle=delivery_cycle,
+            product_type=product_type,
             delivery_date=delivery_date,
             check_for_weeks_without_delivery=check_for_weeks_without_delivery,
             cache=cache,
@@ -70,7 +71,7 @@ class DeliveryDateCalculator:
     @classmethod
     def is_week_delivered(
         cls,
-        delivery_cycle: str,
+        product_type: ProductType,
         delivery_date: datetime.date,
         check_for_weeks_without_delivery: bool,
         cache: dict,
@@ -83,6 +84,6 @@ class DeliveryDateCalculator:
         ):
             return False
 
-        return DeliveryCycleService.is_cycle_delivered_in_week(
-            delivery_cycle, date=delivery_date, cache=cache
+        return DeliveryCycleService.is_product_type_delivered_in_week(
+            product_type=product_type, date=delivery_date, cache=cache
         )

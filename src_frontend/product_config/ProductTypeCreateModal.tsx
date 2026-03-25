@@ -16,6 +16,7 @@ import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import ProductTypeForm from "./ProductTypeForm.tsx";
+import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
 
 interface ProductTypeCreateModalProps {
   show: boolean;
@@ -83,6 +84,12 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [titleBestellWizardIntro, setTitleBestellWizardIntro] = useState("");
   const [backgroundImageInBestellWizard, setBackgroundImageInBestellWizard] =
     useState("");
+  const [deliveryWeeks, setDeliveryWeeks] = useState<CustomCycleDeliveryWeeks>(
+    {},
+  );
+  const [allGrowingPeriods, setAllGrowingPeriods] = useState<GrowingPeriod[]>(
+    [],
+  );
 
   useEffect(() => {
     if (!getPeriodIdFromUrl() || !show) return;
@@ -119,6 +126,17 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
         handleRequestError(
           error,
           "Fehler beim Laden der Vertragsperiode",
+          setToastDatas,
+        ),
+      );
+
+    deliveriesApi
+      .deliveriesGrowingPeriodsList()
+      .then(setAllGrowingPeriods)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Vertragsperioden",
           setToastDatas,
         ),
       );
@@ -179,6 +197,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
       titleBestellwizardProductChoice: titleBestellWizardProductChoices,
       titleBestellwizardIntro: titleBestellWizardIntro,
       backgroundImageInBestellwizard: backgroundImageInBestellWizard,
+      customCycleDeliveryWeeks: deliveryWeeks,
     };
 
     const request = {
@@ -275,7 +294,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setName={setName}
           iconLink={iconLink}
           setIconLink={setIconLink}
-          growingPeriod={growingPeriod}
+          globalSelectedGrowingPeriod={growingPeriod}
           capacity={capacity}
           setCapacity={setCapacity}
           deliveryCycle={deliveryCycle}
@@ -322,6 +341,9 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setNoticePeriodDuration={setNoticePeriodDuration}
           noticePeriodUnit={noticePeriodUnit}
           setNoticePeriodUnit={setNoticePeriodUnit}
+          deliveryWeeks={deliveryWeeks}
+          setDeliveryWeeks={setDeliveryWeeks}
+          allGrowingPeriods={allGrowingPeriods}
         />
       </Modal.Body>
     );

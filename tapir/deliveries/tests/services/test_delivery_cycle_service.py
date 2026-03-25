@@ -83,31 +83,37 @@ class TestDeliveryCycleService(SimpleTestCase):
             ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
         )
 
-    def test_isCycleDeliveredInWeek_cycleNoDelivery_returnsFalse(self):
+    def test_isProductTypeDeliveredInWeek_cycleNoDelivery_returnsFalse(self):
+        product_type = Mock()
+        product_type.delivery_cycle = NO_DELIVERY[0]
         self.assertFalse(
-            DeliveryCycleService.is_cycle_delivered_in_week(
-                NO_DELIVERY[0], date=Mock(), cache=Mock()
+            DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product_type, date=Mock(), cache=Mock()
             )
         )
 
-    def test_isCycleDeliveredInWeek_cycleWeekly_returnsTrue(self):
+    def test_isProductTypeDeliveredInWeek_cycleWeekly_returnsTrue(self):
+        product_type = Mock()
+        product_type.delivery_cycle = WEEKLY[0]
         self.assertTrue(
-            DeliveryCycleService.is_cycle_delivered_in_week(
-                WEEKLY[0], date=Mock(), cache=Mock()
+            DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product_type, date=Mock(), cache=Mock()
             )
         )
 
     @patch.object(DeliveryCycleService, "is_week_delivered_in_four_week_rhythm")
-    def test_isCycleDeliveredInWeek_cycleEveryFourWeeksAndIsInDeliveryWeek_returnsTrue(
+    def test_isProductTypeDeliveredInWeek_cycleEveryFourWeeksAndIsInDeliveryWeek_returnsTrue(
         self, mock_is_week_delivered_in_four_week_rhythm: Mock
     ):
         mock_is_week_delivered_in_four_week_rhythm.return_value = True
         date = Mock()
         cache = Mock()
+        product_type = Mock()
+        product_type.delivery_cycle = EVERY_FOUR_WEEKS[0]
 
         self.assertTrue(
-            DeliveryCycleService.is_cycle_delivered_in_week(
-                EVERY_FOUR_WEEKS[0], date=date, cache=cache
+            DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product_type, date=date, cache=cache
             )
         )
 
@@ -116,16 +122,19 @@ class TestDeliveryCycleService(SimpleTestCase):
         )
 
     @patch.object(DeliveryCycleService, "is_week_delivered_in_four_week_rhythm")
-    def test_isCycleDeliveredInWeek_cycleEveryFourWeeksAndIsNotInDeliveryWeek_returnsFalse(
+    def test_isProductTypeDeliveredInWeek_cycleEveryFourWeeksAndIsNotInDeliveryWeek_returnsFalse(
         self, mock_is_week_delivered_in_four_week_rhythm: Mock
     ):
         mock_is_week_delivered_in_four_week_rhythm.return_value = False
         date = Mock()
         cache = Mock()
 
+        product_type = Mock()
+        product_type.delivery_cycle = EVERY_FOUR_WEEKS[0]
+
         self.assertFalse(
-            DeliveryCycleService.is_cycle_delivered_in_week(
-                EVERY_FOUR_WEEKS[0], date=date, cache=cache
+            DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product_type, date=date, cache=cache
             )
         )
 
@@ -133,76 +142,46 @@ class TestDeliveryCycleService(SimpleTestCase):
             date=date, cache=cache
         )
 
-    def test_isCycleDeliveredInWeek_cycleEvenWeeksAndWeekIsEven_returnsTrue(self):
+    def test_isProductTypeDeliveredInWeek_cycleEvenWeeksAndWeekIsEven_returnsTrue(self):
+        product_type = Mock()
+        product_type.delivery_cycle = EVEN_WEEKS[0]
         self.assertTrue(
-            DeliveryCycleService.is_cycle_delivered_in_week(
-                EVEN_WEEKS[0],
+            DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product_type,
                 date=datetime.date(year=2025, month=1, day=6),
                 cache=Mock(),
             )
         )
 
-    def test_isCycleDeliveredInWeek_cycleEvenWeeksAndWeekIsOdd_returnsFalse(self):
+    def test_isProductTypeDeliveredInWeek_cycleEvenWeeksAndWeekIsOdd_returnsFalse(self):
+        product_type = Mock()
+        product_type.delivery_cycle = EVEN_WEEKS[0]
         self.assertFalse(
-            DeliveryCycleService.is_cycle_delivered_in_week(
-                EVEN_WEEKS[0],
+            DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product_type,
                 date=datetime.date(year=2025, month=1, day=13),
                 cache=Mock(),
             )
         )
 
-    def test_isCycleDeliveredInWeek_cycleOddWeeksAndWeekIsEven_returnsFalse(self):
+    def test_isProductTypeDeliveredInWeek_cycleOddWeeksAndWeekIsEven_returnsFalse(self):
+        product_type = Mock()
+        product_type.delivery_cycle = ODD_WEEKS[0]
         self.assertFalse(
-            DeliveryCycleService.is_cycle_delivered_in_week(
-                ODD_WEEKS[0],
+            DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product_type,
                 date=datetime.date(year=2025, month=1, day=6),
                 cache=Mock(),
             )
         )
 
-    def test_isCycleDeliveredInWeek_cycleOddWeeksAndWeekIsOdd_returnsTrue(self):
+    def test_isProductTypeDeliveredInWeek_cycleOddWeeksAndWeekIsOdd_returnsTrue(self):
+        product_type = Mock()
+        product_type.delivery_cycle = ODD_WEEKS[0]
         self.assertTrue(
-            DeliveryCycleService.is_cycle_delivered_in_week(
-                ODD_WEEKS[0],
+            DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=product_type,
                 date=datetime.date(year=2025, month=1, day=13),
                 cache=Mock(),
             )
-        )
-
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
-    def test_getCyclesDeliveredInWeek_default_returnsCorrectValues(
-        self, mock_get_parameter_value: Mock
-    ):
-        mock_get_parameter_value.return_value = datetime.date(year=2025, month=1, day=6)
-        cache = {}
-
-        self.assertEqual(
-            [WEEKLY[0], EVEN_WEEKS[0], EVERY_FOUR_WEEKS[0]],
-            DeliveryCycleService.get_cycles_delivered_in_week(
-                date=datetime.date(year=2025, month=1, day=6),
-                cache=cache,
-            ),
-        )
-
-        mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
-        )
-
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
-    def test_getCyclesDeliveredInWeek_default2_returnsCorrectValues(
-        self, mock_get_parameter_value: Mock
-    ):
-        mock_get_parameter_value.return_value = datetime.date(year=2025, month=1, day=6)
-        cache = {}
-
-        self.assertEqual(
-            [WEEKLY[0], ODD_WEEKS[0]],
-            DeliveryCycleService.get_cycles_delivered_in_week(
-                date=datetime.date(year=2025, month=1, day=13),
-                cache=cache,
-            ),
-        )
-
-        mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
         )

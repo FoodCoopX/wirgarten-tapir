@@ -40,6 +40,11 @@ urlpatterns = [
         views.GrowingPeriodWithDeliveryDayAdjustmentsView.as_view(),
         name="growing_period_with_adjustments",
     ),
+    path(
+        "api/get_dates_from_custom_cycle_delivery_weeks",
+        views.GetDatesFromCustomCycleDeliveryWeeks.as_view(),
+        name="get_dates_from_custom_cycle_delivery_weeks",
+    ),
 ]
 
 router = DefaultRouter()

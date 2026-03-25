@@ -3,6 +3,8 @@ import datetime
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import CustomCycleDeliveryWeeks
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import (
     EVERY_FOUR_WEEKS,
@@ -10,22 +12,29 @@ from tapir.wirgarten.constants import (
     WEEKLY,
     EVEN_WEEKS,
     ODD_WEEKS,
-    DeliveryCycle,
+    CUSTOM_CYCLE,
 )
+from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class DeliveryCycleService:
     @classmethod
-    def is_cycle_delivered_in_week(
-        cls, cycle: str, date: datetime.date, cache: dict
+    def is_product_type_delivered_in_week(
+        cls, product_type: ProductType, date: datetime.date, cache: dict
     ) -> bool:
+        cycle = product_type.delivery_cycle
+
         if cycle == NO_DELIVERY[0]:
             return False
         if cycle == WEEKLY[0]:
             return True
         if cycle == EVERY_FOUR_WEEKS[0]:
             return cls.is_week_delivered_in_four_week_rhythm(date=date, cache=cache)
+        if cycle == CUSTOM_CYCLE[0]:
+            return cls.is_week_delivered_in_custom_cycle(
+                date=date, product_type=product_type, cache=cache
+            )
 
         _, week_num, _ = date.isocalendar()
         even_week = week_num % 2 == 0
@@ -36,6 +45,21 @@ class DeliveryCycleService:
             return not even_week
 
         raise ImproperlyConfigured(f"Unknown delivery cycle: {cycle}")
+
+    @classmethod
+    def is_week_delivered_in_custom_cycle(
+        cls, date: datetime.date, product_type: ProductType, cache: dict
+    ):
+        week_of_potential_delivery = date.isocalendar().week
+
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=date, cache=cache
+        )
+        delivered_weeks = CustomCycleDeliveryWeeks.objects.filter(
+            product_type=product_type, growing_period=growing_period
+        ).values_list("calendar_week", flat=True)
+
+        return week_of_potential_delivery in delivered_weeks
 
     @classmethod
     def is_week_delivered_in_four_week_rhythm(
@@ -49,13 +73,3 @@ class DeliveryCycleService:
         date = get_monday(date)
 
         return ((start_point - date).days / 7) % 4 == 0
-
-    @classmethod
-    def get_cycles_delivered_in_week(cls, date: datetime.date, cache: dict):
-        return [
-            cycle[0]
-            for cycle in DeliveryCycle
-            if DeliveryCycleService.is_cycle_delivered_in_week(
-                cycle=cycle[0], date=date, cache=cache
-            )
-        ]

@@ -19,6 +19,7 @@
  * * `odd_weeks` - Jede 2. Woche (ungerade KW)
  * * `even_weeks` - Jede 2. Woche (gerade KW)
  * * `every_four_weeks` - Jede 4. Woche
+ * * `custom` - Freigelegte Lieferwochen
  * @export
  */
 export const DeliveryCycleEnum = {
@@ -26,7 +27,8 @@ export const DeliveryCycleEnum = {
     Weekly: 'weekly',
     OddWeeks: 'odd_weeks',
     EvenWeeks: 'even_weeks',
-    EveryFourWeeks: 'every_four_weeks'
+    EveryFourWeeks: 'every_four_weeks',
+    Custom: 'custom'
 } as const;
 export type DeliveryCycleEnum = typeof DeliveryCycleEnum[keyof typeof DeliveryCycleEnum];
 
