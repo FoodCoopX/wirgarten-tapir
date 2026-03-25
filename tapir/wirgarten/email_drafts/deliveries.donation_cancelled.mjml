@@ -3,12 +3,14 @@
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
 Trigger: Transaktionale Email, die versendet wird, wenn eine Spende eingesetzt wird. <br /> <br />
+Zweck: Information und Bestätigung für das Mitglied. <br /> <br />
 Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /> <br />
 ____________________ <br /><br /><br /><br />
 
 <p> "Moin {{Empfänger.Vorname}}, <br /> <br />
 
-TEXT GOES HERE <br /> <br />
+du hast gerade deine Spende für die Abholung / Lieferung am {{Lieferung Spende: Spende storniert.Spende Datum}} storniert. <br /> <br />
+Du erhältst in der entsprechenden Woche daher wie gewöhnlich deine Produktanteile. <br /> <br />
 
 Liebe Grüße, <br />
 Dein {{Allgemein.Admin Name}} <br />
