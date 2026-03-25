@@ -7,7 +7,6 @@ import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-import { formatDateText } from "../utils/formatDateText.ts";
 
 interface CustomCycleDeliveryWeeksInputProps {
   deliveryWeeks: CustomCycleDeliveryWeeks;
@@ -171,7 +170,17 @@ const CustomCycleDeliveryWeeksInput: React.FC<
     if (!(periodId in deliveryDates) || !(week in deliveryDates[periodId])) {
       return <Spinner />;
     }
-    return formatDateText(new Date(deliveryDates[periodId][week]));
+    const startOfWeek = new Date(deliveryDates[periodId][week]);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+    const formatter = new Intl.DateTimeFormat("de-DE", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+    return formatter.formatRange(startOfWeek, endOfWeek);
   }
 
   return (
