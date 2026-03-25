@@ -190,7 +190,8 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
       </div>
       <div>
         <Form.Text className={"text-center mb-0"} as={"p"}>
-          Basisbeitrag: {formatCurrency(product.price)} pro Monat inkl. MwSt.
+          Basisbeitrag: {formatCurrency(product.price)} pro{" "}
+          {productType.pricePerDelivery ? "Lieferung" : "Monat"} inkl. MwSt.
           {product.descriptionInBestellwizard && (
             <>
               <br />

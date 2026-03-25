@@ -9709,10 +9709,14 @@ components:
         background_image_in_bestellwizard:
           type: string
           maxLength: 512
+        price_per_delivery:
+          type: boolean
+          readOnly: true
       required:
       - accordions
       - name
       - no_delivery
+      - price_per_delivery
       - products
     PublicSubscription:
       type: object

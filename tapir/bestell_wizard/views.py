@@ -35,7 +35,6 @@ from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
-from tapir.deliveries.serializers import PublicGrowingPeriodSerializer
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -868,14 +867,17 @@ class PublicProductPricesApiView(APIView):
         parameters=[OpenApiParameter("growing_period_id", type=str)],
     )
     def get(self, request):
+        cache = {}
+
         growing_period = get_object_or_404(
             GrowingPeriod, id=request.query_params.get("growing_period_id")
         )
-        contract_start_date = PublicGrowingPeriodSerializer.get_contract_start_date(
-            growing_period
+        contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period, apply_buffer_time=True, cache=cache
+            )
         )
 
-        cache = {}
         prices_by_product_id = {
             product.id: get_product_price(
                 product=product, reference_date=contract_start_date, cache=cache
