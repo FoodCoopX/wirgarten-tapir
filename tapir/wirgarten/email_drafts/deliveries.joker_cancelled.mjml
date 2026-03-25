@@ -3,13 +3,15 @@
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
 Trigger: Transaktionale Email, die versendet wird, wenn ein Joker storniert wird. <br /> <br />
+Zweck: Information / Bestätigung für das Mitglied <br /> <br />
 Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /> <br />
 
 ____________________ <br /><br /><br /><br />
 
 <p> "Moin {{Empfänger.Vorname}}, <br /> <br />
 
-TEXT GOES HERE <br /> <br />
+du hast gerade deinen gesetzten Joker für die Abholung bzw. Lieferung am {{Joker: Joker storniert.Joker Datum}} widerrufen. <br /> <br />
+Du erhältst in der entsprechenden Kalenderwoche somit reguläre deine Produktanteile. <br /> <br />
 
 Liebe Grüße, <br />
 Dein {{Allgemein.Admin Name}} <br />
