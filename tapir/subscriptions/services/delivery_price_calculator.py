@@ -67,7 +67,7 @@ class DeliveryPriceCalculator:
         ).price
 
         delivery_cycle = subscription.product.type.delivery_cycle
-        if delivery_cycle == CUSTOM_CYCLE:
+        if delivery_cycle == CUSTOM_CYCLE[0]:
             return product_price
 
         delivery_price = (

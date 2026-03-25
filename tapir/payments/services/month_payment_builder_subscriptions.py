@@ -1,4 +1,5 @@
 import datetime
+from datetime import date
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
@@ -52,12 +53,14 @@ class MonthPaymentBuilderSubscriptions:
         if in_trial:
             target_month = (current_month - relativedelta(months=1)).replace(day=1)
 
-        subscriptions = cls.get_current_and_renewed_subscriptions(
+        current_and_renewed_subscriptions = cls.get_current_and_renewed_subscriptions(
             cache=cache, first_of_month=target_month, is_in_trial=in_trial
         )
 
         subscriptions_by_member_and_product_type = (
-            cls.group_subscriptions_by_member_and_product_type(subscriptions)
+            cls.group_subscriptions_by_member_and_product_type(
+                current_and_renewed_subscriptions
+            )
         )
 
         payments_to_create = []
@@ -66,16 +69,11 @@ class MonthPaymentBuilderSubscriptions:
             member,
             subscriptions_by_product_type,
         ) in subscriptions_by_member_and_product_type.items():
-            if cls.force_monthly_payment_rhythm(
-                in_trial=in_trial, subscriptions=subscriptions
-            ):
-                rhythm = MemberPaymentRhythm.Rhythm.MONTHLY
-            else:
-                rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
-                    member=member, reference_date=current_month, cache=cache
+            for product_type, subscriptions in subscriptions_by_product_type.items():
+                rhythm = cls.get_payment_rhythm(
+                    subscriptions, current_month, in_trial, member, cache
                 )
 
-            for product_type, subscriptions in subscriptions_by_product_type.items():
                 payment = (
                     MonthPaymentBuilderUtils.build_payment_for_contract_and_member(
                         member=member,
@@ -94,6 +92,24 @@ class MonthPaymentBuilderSubscriptions:
                     payments_to_create.append(payment)
 
         return payments_to_create
+
+    @classmethod
+    def get_payment_rhythm(
+        cls,
+        subscriptions: set[Subscription],
+        current_month: date,
+        in_trial: bool,
+        member: Member,
+        cache: dict,
+    ) -> str:
+        if cls.force_monthly_payment_rhythm(
+            in_trial=in_trial, subscriptions=subscriptions
+        ):
+            return MemberPaymentRhythm.Rhythm.MONTHLY
+
+        return MemberPaymentRhythmService.get_member_payment_rhythm(
+            member=member, reference_date=current_month, cache=cache
+        )
 
     @classmethod
     def force_monthly_payment_rhythm(
@@ -169,6 +185,7 @@ class MonthPaymentBuilderSubscriptions:
                 subscription=subscription, at_date=range_start, cache=cache
             )
         )
+
         return full_months_price + single_deliveries_price
 
     @classmethod
@@ -182,6 +199,10 @@ class MonthPaymentBuilderSubscriptions:
         current_month = range_start
         number_of_full_month_to_pay = 0
         number_of_single_deliveries_to_pay = 0
+        force_price_per_delivery = (
+            subscription.product.type.delivery_cycle == CUSTOM_CYCLE[0]
+        )
+
         while current_month < range_end:
             if not DateRangeOverlapChecker.do_ranges_overlap(
                 range_1_start=range_start,
@@ -190,17 +211,24 @@ class MonthPaymentBuilderSubscriptions:
                 range_2_end=subscription.end_date,
             ):
                 continue
-            if cls.is_month_fully_covered_by_subscription(
-                subscription=subscription, first_of_month=current_month
+
+            if (
+                cls.is_month_fully_covered_by_subscription(
+                    subscription=subscription, first_of_month=current_month
+                )
+                and not force_price_per_delivery
             ):
                 number_of_full_month_to_pay += 1
             else:
                 number_of_deliveries = cls.get_number_of_deliveries_in_month(
                     subscription=subscription, first_of_month=current_month, cache=cache
                 )
-                if cls.should_pay_full_month_price(
-                    number_of_deliveries=number_of_deliveries,
-                    delivery_cycle=subscription.product.type.delivery_cycle,
+                if (
+                    cls.should_pay_full_month_price(
+                        number_of_deliveries=number_of_deliveries,
+                        delivery_cycle=subscription.product.type.delivery_cycle,
+                    )
+                    and not force_price_per_delivery
                 ):
                     number_of_full_month_to_pay += 1
                 else:

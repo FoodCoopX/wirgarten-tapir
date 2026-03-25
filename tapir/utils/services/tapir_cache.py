@@ -2,7 +2,12 @@ import datetime
 from decimal import Decimal
 from typing import Set
 
-from tapir.deliveries.models import Joker, DeliveryDayAdjustment, DeliveryDonation
+from tapir.deliveries.models import (
+    Joker,
+    DeliveryDayAdjustment,
+    DeliveryDonation,
+    CustomCycleDeliveryWeeks,
+)
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import NoticePeriod
@@ -627,4 +632,32 @@ class TapirCache:
 
         return get_from_cache_or_compute(
             cache=donations_by_member_id, key=member_id, compute_function=compute
+        )
+
+    @classmethod
+    def get_delivered_weeks_for_custom_cycle(
+        cls, product_type: ProductType, growing_period: GrowingPeriod, cache: dict
+    ):
+        delivery_weeks_by_product_type_and_growing_period = get_from_cache_or_compute(
+            cache=cache,
+            key="delivery_weeks_by_product_type_and_growing_period",
+            compute_function=lambda: {},
+        )
+        delivery_weeks_by_growing_period = get_from_cache_or_compute(
+            cache=delivery_weeks_by_product_type_and_growing_period,
+            key=product_type,
+            compute_function=lambda: {},
+        )
+
+        def compute():
+            return set(
+                CustomCycleDeliveryWeeks.objects.filter(
+                    product_type=product_type, growing_period=growing_period
+                ).values_list("calendar_week", flat=True)
+            )
+
+        return get_from_cache_or_compute(
+            cache=delivery_weeks_by_growing_period,
+            key=growing_period,
+            compute_function=compute,
         )
