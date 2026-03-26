@@ -19,7 +19,7 @@
  * * `odd_weeks` - Jede 2. Woche (ungerade KW)
  * * `even_weeks` - Jede 2. Woche (gerade KW)
  * * `every_four_weeks` - Jede 4. Woche
- * * `custom` - Freigelegte Lieferwochen
+ * * `custom` - Benutzerdefinierte Lieferwochen
  * @export
  */
 export const DeliveryCycleEnum = {

@@ -11,10 +11,13 @@ from tapir.deliveries.serializers import (
     PickupLocationSerializer,
     ProductTypeSerializer,
 )
+from tapir.deliveries.services.subscription_price_type_decider import (
+    SubscriptionPriceTypeDecider,
+)
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
-from tapir.wirgarten.constants import NO_DELIVERY, CUSTOM_CYCLE
+from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     Member,
     CoopShareTransaction,
@@ -66,6 +69,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     url_of_image_in_bestellwizard = serializers.URLField(allow_blank=True)
     capacity = serializers.IntegerField(allow_null=True)
     min_coop_shares = serializers.IntegerField()
+    price_per_delivery = serializers.BooleanField()
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -163,7 +167,9 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_price_per_delivery(product_type: ProductType) -> bool:
-        return product_type.delivery_cycle == CUSTOM_CYCLE[0]
+        return SubscriptionPriceTypeDecider.is_price_by_delivery(
+            product_type.delivery_cycle
+        )
 
     @extend_schema_field(PublicProductSerializer(many=True))
     def get_products(self, product_type: ProductType):

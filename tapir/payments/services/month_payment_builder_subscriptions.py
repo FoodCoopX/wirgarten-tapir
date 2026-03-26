@@ -6,6 +6,9 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
+from tapir.deliveries.services.subscription_price_type_decider import (
+    SubscriptionPriceTypeDecider,
+)
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -199,8 +202,8 @@ class MonthPaymentBuilderSubscriptions:
         current_month = range_start
         number_of_full_month_to_pay = 0
         number_of_single_deliveries_to_pay = 0
-        force_price_per_delivery = (
-            subscription.product.type.delivery_cycle == CUSTOM_CYCLE[0]
+        force_price_per_delivery = SubscriptionPriceTypeDecider.is_price_by_delivery(
+            subscription.product.type.delivery_cycle
         )
 
         while current_month < range_end:

@@ -6545,7 +6545,7 @@ components:
         * `odd_weeks` - Jede 2. Woche (ungerade KW)
         * `even_weeks` - Jede 2. Woche (gerade KW)
         * `every_four_weeks` - Jede 4. Woche
-        * `custom` - Freigelegte Lieferwochen
+        * `custom` - Benutzerdefinierte Lieferwochen
     DeliveryDayAdjustment:
       type: object
       properties:
@@ -7217,6 +7217,8 @@ components:
           nullable: true
         min_coop_shares:
           type: integer
+        price_per_delivery:
+          type: boolean
       required:
       - base
       - basket_size_equivalences
@@ -7228,6 +7230,7 @@ components:
       - name
       - picking_mode
       - price
+      - price_per_delivery
       - size
       - url_of_image_in_bestellwizard
     ExtendedProductType:
@@ -8545,6 +8548,8 @@ components:
           nullable: true
         min_coop_shares:
           type: integer
+        price_per_delivery:
+          type: boolean
     PatchedGrowingPeriodRequest:
       type: object
       properties:
