@@ -33,6 +33,9 @@ from tapir.deliveries.serializers import (
     CustomCycleDeliveryWeeksSerializer,
     GetDatesFromCustomCycleDeliveryWeeksResponseSerializer,
 )
+from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
+    CustomCycleDeliveryDateCalculator,
+)
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import (
@@ -510,7 +513,7 @@ class GetDatesFromCustomCycleDeliveryWeeks(APIView):
             for growing_period_id, delivery_weeks in input_data.items():
                 growing_period = growing_periods[growing_period_id]
                 output_data[growing_period_id] = {
-                    week: self.get_date_from_calendar_week(
+                    week: CustomCycleDeliveryDateCalculator.get_date_from_calendar_week(
                         week=week, growing_period=growing_period
                     )
                     for week in delivery_weeks
@@ -530,11 +533,3 @@ class GetDatesFromCustomCycleDeliveryWeeks(APIView):
                 {"custom_cycle_delivery_weeks_dates": output_data, "error": ""}
             ).data
         )
-
-    @classmethod
-    def get_date_from_calendar_week(cls, week: int, growing_period: GrowingPeriod):
-        year = growing_period.start_date.year
-        if week < growing_period.start_date.isocalendar().week:
-            year += 1
-
-        return datetime.date.fromisocalendar(year=year, week=week, day=1)

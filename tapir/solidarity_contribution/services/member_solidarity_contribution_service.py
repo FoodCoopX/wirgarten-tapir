@@ -111,7 +111,7 @@ class MemberSolidarityContributionService:
             return False, None
 
         previous_trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
-            obj=contribution, cache=cache
+            contract=contribution, cache=cache
         )
         if previous_trial_end_date is None:
             return True, None

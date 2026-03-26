@@ -11,78 +11,9 @@ from tapir.wirgarten.constants import (
     EVEN_WEEKS,
     ODD_WEEKS,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestDeliveryCycleService(SimpleTestCase):
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
-    def test_isWeekDeliveredInFourWeekRhythm_dateInThePastAndFourWeeksAgo_returnsTrue(
-        self, mock_get_parameter_value: Mock
-    ):
-        mock_get_parameter_value.return_value = datetime.date(year=2025, month=1, day=6)
-        cache = {}
-
-        self.assertTrue(
-            DeliveryCycleService.is_week_delivered_in_four_week_rhythm(
-                date=datetime.date(year=2024, month=12, day=13), cache=cache
-            )
-        )
-
-        mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
-        )
-
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
-    def test_isWeekDeliveredInFourWeekRhythm_dateInThePastAndThreeWeeksAgo_returnsTrue(
-        self, mock_get_parameter_value: Mock
-    ):
-        mock_get_parameter_value.return_value = datetime.date(year=2025, month=1, day=6)
-        cache = {}
-
-        self.assertFalse(
-            DeliveryCycleService.is_week_delivered_in_four_week_rhythm(
-                date=datetime.date(year=2024, month=12, day=16), cache=cache
-            )
-        )
-
-        mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
-        )
-
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
-    def test_isWeekDeliveredInFourWeekRhythm_dateIsInSameWeek_returnsTrue(
-        self, mock_get_parameter_value: Mock
-    ):
-        mock_get_parameter_value.return_value = datetime.date(year=2025, month=1, day=6)
-        cache = {}
-
-        self.assertTrue(
-            DeliveryCycleService.is_week_delivered_in_four_week_rhythm(
-                date=datetime.date(year=2025, month=1, day=12), cache=cache
-            )
-        )
-
-        mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
-        )
-
-    @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
-    def test_isWeekDeliveredInFourWeekRhythm_dateIsOneWeekLater_returnsFalse(
-        self, mock_get_parameter_value: Mock
-    ):
-        mock_get_parameter_value.return_value = datetime.date(year=2025, month=1, day=6)
-        cache = {}
-
-        self.assertFalse(
-            DeliveryCycleService.is_week_delivered_in_four_week_rhythm(
-                date=datetime.date(year=2025, month=1, day=13), cache=cache
-            )
-        )
-
-        mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT, cache=cache
-        )
-
+class TestIsProductTypeDeliveredInWeek(SimpleTestCase):
     def test_isProductTypeDeliveredInWeek_cycleNoDelivery_returnsFalse(self):
         product_type = Mock()
         product_type.delivery_cycle = NO_DELIVERY[0]

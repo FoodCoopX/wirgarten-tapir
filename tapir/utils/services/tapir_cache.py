@@ -661,3 +661,21 @@ class TapirCache:
             key=growing_period,
             compute_function=compute,
         )
+
+    @classmethod
+    def get_all_delivered_week_objects_for_custom_cycle(
+        cls, product_type: ProductType, cache: dict
+    ):
+        delivery_week_objects_by_product_type = get_from_cache_or_compute(
+            cache=cache,
+            key="delivery_week_objects_by_product_type",
+            compute_function=lambda: {},
+        )
+
+        return get_from_cache_or_compute(
+            cache=delivery_week_objects_by_product_type,
+            key=product_type,
+            compute_function=lambda: CustomCycleDeliveryWeeks.objects.filter(
+                product_type=product_type
+            ),
+        )
