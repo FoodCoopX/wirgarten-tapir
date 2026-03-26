@@ -109,7 +109,7 @@ export interface ExtendedProduct {
    * @type {boolean}
    * @memberof ExtendedProduct
    */
-  pricePerDelivery: boolean;
+  readonly pricePerDelivery: boolean;
 }
 
 /**
@@ -186,7 +186,7 @@ export function ExtendedProductToJSON(json: any): ExtendedProduct {
 }
 
 export function ExtendedProductToJSONTyped(
-  value?: Omit<ExtendedProduct, "picking_mode"> | null,
+  value?: Omit<ExtendedProduct, "picking_mode" | "price_per_delivery"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -208,6 +208,5 @@ export function ExtendedProductToJSONTyped(
     url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
     capacity: value["capacity"],
     min_coop_shares: value["minCoopShares"],
-    price_per_delivery: value["pricePerDelivery"],
   };
 }

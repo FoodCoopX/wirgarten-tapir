@@ -96,12 +96,6 @@ export interface PatchedExtendedProductRequest {
    * @memberof PatchedExtendedProductRequest
    */
   minCoopShares?: number;
-  /**
-   *
-   * @type {boolean}
-   * @memberof PatchedExtendedProductRequest
-   */
-  pricePerDelivery?: boolean;
 }
 
 /**
@@ -152,10 +146,6 @@ export function PatchedExtendedProductRequestFromJSONTyped(
     capacity: json["capacity"] == null ? undefined : json["capacity"],
     minCoopShares:
       json["min_coop_shares"] == null ? undefined : json["min_coop_shares"],
-    pricePerDelivery:
-      json["price_per_delivery"] == null
-        ? undefined
-        : json["price_per_delivery"],
   };
 }
 
@@ -191,6 +181,5 @@ export function PatchedExtendedProductRequestToJSONTyped(
     url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
     capacity: value["capacity"],
     min_coop_shares: value["minCoopShares"],
-    price_per_delivery: value["pricePerDelivery"],
   };
 }

@@ -69,7 +69,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     url_of_image_in_bestellwizard = serializers.URLField(allow_blank=True)
     capacity = serializers.IntegerField(allow_null=True)
     min_coop_shares = serializers.IntegerField()
-    price_per_delivery = serializers.BooleanField()
+    price_per_delivery = serializers.BooleanField(read_only=True)
 
 
 class MemberSerializer(serializers.ModelSerializer):

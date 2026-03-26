@@ -8,7 +8,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class TestGetLastDayOfTrialPeriodByWeeks(SimpleTestCase):
-    @patch.object(TrialPeriodManager, "get_reference_date_for_trial", autospec=True)
+    @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
     @patch(
         "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
         autospec=True,
@@ -16,12 +16,12 @@ class TestGetLastDayOfTrialPeriodByWeeks(SimpleTestCase):
     def test_getLastDayOfTrialPeriodByWeeks_durationIsOneWeek_returnsCorrectDate(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_reference_date_for_trial: Mock,
+        mock_get_trial_period_start_date: Mock,
     ):
         subscription = Mock()
         subscription.start_date = datetime.date(year=2025, month=1, day=1)
         mock_get_parameter_value.return_value = 1
-        mock_get_reference_date_for_trial.return_value = datetime.date(
+        mock_get_trial_period_start_date.return_value = datetime.date(
             year=2025, month=1, day=13
         )
         cache = {}
@@ -35,7 +35,7 @@ class TestGetLastDayOfTrialPeriodByWeeks(SimpleTestCase):
             ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
         )
 
-    @patch.object(TrialPeriodManager, "get_reference_date_for_trial", autospec=True)
+    @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
     @patch(
         "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
         autospec=True,
@@ -43,12 +43,12 @@ class TestGetLastDayOfTrialPeriodByWeeks(SimpleTestCase):
     def test_getLastDayOfTrialPeriodByWeeks_durationIs5Week_returnsCorrectDate(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_reference_date_for_trial: Mock,
+        mock_get_trial_period_start_date: Mock,
     ):
         subscription = Mock()
         subscription.start_date = datetime.date(year=2025, month=5, day=6)
         mock_get_parameter_value.return_value = 5
-        mock_get_reference_date_for_trial.return_value = datetime.date(
+        mock_get_trial_period_start_date.return_value = datetime.date(
             year=2025, month=6, day=16
         )
         cache = {}

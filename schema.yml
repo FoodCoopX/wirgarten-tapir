@@ -7219,6 +7219,7 @@ components:
           type: integer
         price_per_delivery:
           type: boolean
+          readOnly: true
       required:
       - base
       - basket_size_equivalences
@@ -8548,8 +8549,6 @@ components:
           nullable: true
         min_coop_shares:
           type: integer
-        price_per_delivery:
-          type: boolean
     PatchedGrowingPeriodRequest:
       type: object
       properties:
