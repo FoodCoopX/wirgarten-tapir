@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.models import CustomCycleDeliveryWeeks
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.utils.forms import DateInput
 from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
@@ -135,7 +135,7 @@ class GrowingPeriodForm(forms.Form):
         if not growing_period_id:
             return
 
-        delivery_weeks = CustomCycleDeliveryWeeks.objects.filter(
+        delivery_weeks = CustomCycleScheduledDeliveryWeek.objects.filter(
             growing_period_id=growing_period_id
         )
         if not delivery_weeks.exists():

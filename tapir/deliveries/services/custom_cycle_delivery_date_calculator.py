@@ -1,6 +1,6 @@
 import datetime
 
-from tapir.deliveries.models import CustomCycleDeliveryWeeks
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import GrowingPeriod, ProductType
 
@@ -10,13 +10,13 @@ class CustomCycleDeliveryDateCalculator:
     def does_product_type_have_at_least_one_delivery_in_the_future(
         cls, product_type: ProductType, reference_date: datetime.date, cache: dict
     ):
-        week_objects = TapirCache.get_all_delivered_week_objects_for_custom_cycle(
+        scheduled_weeks = TapirCache.get_all_scheduled_weeks_for_custom_cycle(
             product_type=product_type, cache=cache
         )
-        for week_object in week_objects:
+        for scheduled_week in scheduled_weeks:
             if (
-                CustomCycleDeliveryDateCalculator.get_date_from_week_object(
-                    week_object=week_object
+                CustomCycleDeliveryDateCalculator.get_date_from_scheduled_week(
+                    scheduled_week=scheduled_week
                 )
                 >= reference_date
             ):
@@ -25,9 +25,12 @@ class CustomCycleDeliveryDateCalculator:
         return False
 
     @classmethod
-    def get_date_from_week_object(cls, week_object: CustomCycleDeliveryWeeks):
+    def get_date_from_scheduled_week(
+        cls, scheduled_week: CustomCycleScheduledDeliveryWeek
+    ):
         return cls.get_date_from_calendar_week(
-            week=week_object.calendar_week, growing_period=week_object.growing_period
+            week=scheduled_week.calendar_week,
+            growing_period=scheduled_week.growing_period,
         )
 
     @classmethod

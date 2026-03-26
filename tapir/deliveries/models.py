@@ -98,7 +98,7 @@ class DeliveryDonationCancelledLogEntry(LogEntry):
         return self
 
 
-class CustomCycleDeliveryWeeks(TapirModel):
+class CustomCycleScheduledDeliveryWeek(TapirModel):
     product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
     growing_period = models.ForeignKey(GrowingPeriod, on_delete=models.CASCADE)
     calendar_week = models.IntegerField(

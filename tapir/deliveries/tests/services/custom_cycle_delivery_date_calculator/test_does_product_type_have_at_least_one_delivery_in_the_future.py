@@ -5,7 +5,7 @@ from django.test import SimpleTestCase
 from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
     CustomCycleDeliveryDateCalculator,
 )
-from tapir.deliveries.tests.factories import CustomCycleDeliveryWeeksFactory
+from tapir.deliveries.tests.factories import CustomCycleScheduledDeliveryWeekFactory
 from tapir.wirgarten.tests.factories import ProductTypeFactory, GrowingPeriodFactory
 
 
@@ -14,7 +14,7 @@ class TestDoesProductTypeHaveAtLeastOneDeliveryInTheFuture(SimpleTestCase):
         self,
     ):
         product_type = ProductTypeFactory.build()
-        cache = {"delivery_week_objects_by_product_type": {product_type: []}}
+        cache = {"scheduled_weeks_by_product_type": {product_type: []}}
 
         result = CustomCycleDeliveryDateCalculator.does_product_type_have_at_least_one_delivery_in_the_future(
             product_type=product_type,
@@ -32,9 +32,9 @@ class TestDoesProductTypeHaveAtLeastOneDeliveryInTheFuture(SimpleTestCase):
             start_date=datetime.date(year=2019, month=1, day=1)
         )
         cache = {
-            "delivery_week_objects_by_product_type": {
+            "scheduled_weeks_by_product_type": {
                 product_type: [
-                    CustomCycleDeliveryWeeksFactory.build(
+                    CustomCycleScheduledDeliveryWeekFactory.build(
                         growing_period=growing_period, product_type=product_type
                     )
                 ]
@@ -57,9 +57,9 @@ class TestDoesProductTypeHaveAtLeastOneDeliveryInTheFuture(SimpleTestCase):
             start_date=datetime.date(year=2021, month=1, day=1)
         )
         cache = {
-            "delivery_week_objects_by_product_type": {
+            "scheduled_weeks_by_product_type": {
                 product_type: [
-                    CustomCycleDeliveryWeeksFactory.build(
+                    CustomCycleScheduledDeliveryWeekFactory.build(
                         growing_period=growing_period, product_type=product_type
                     )
                 ]

@@ -1,6 +1,6 @@
 import factory
 
-from tapir.deliveries.models import DeliveryDonation, CustomCycleDeliveryWeeks
+from tapir.deliveries.models import DeliveryDonation, CustomCycleScheduledDeliveryWeek
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     ProductTypeFactory,
@@ -16,11 +16,11 @@ class DeliveryDonationFactory(factory.django.DjangoModelFactory[DeliveryDonation
     date = factory.Faker("date")
 
 
-class CustomCycleDeliveryWeeksFactory(
-    factory.django.DjangoModelFactory[CustomCycleDeliveryWeeks]
+class CustomCycleScheduledDeliveryWeekFactory(
+    factory.django.DjangoModelFactory[CustomCycleScheduledDeliveryWeek]
 ):
     class Meta:
-        model = CustomCycleDeliveryWeeks
+        model = CustomCycleScheduledDeliveryWeek
 
     product_type = factory.SubFactory(ProductTypeFactory)
     growing_period = factory.SubFactory(GrowingPeriodFactory)

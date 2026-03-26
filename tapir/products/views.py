@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.models import CustomCycleDeliveryWeeks
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.products.serializers import (
     ExtendedProductTypeAndConfigSerializer,
@@ -183,13 +183,16 @@ class ExtendedProductTypeApiView(APIView):
 
         custom_cycle_delivery_weeks = {}
         data["custom_cycle_delivery_weeks"] = custom_cycle_delivery_weeks
-        for week_object in CustomCycleDeliveryWeeks.objects.filter(
+        for scheduled_week in CustomCycleScheduledDeliveryWeek.objects.filter(
             product_type=product_type
         ).order_by("calendar_week"):
-            if week_object.growing_period_id not in custom_cycle_delivery_weeks.keys():
-                custom_cycle_delivery_weeks[week_object.growing_period_id] = []
-            custom_cycle_delivery_weeks[week_object.growing_period_id].append(
-                week_object.calendar_week
+            if (
+                scheduled_week.growing_period_id
+                not in custom_cycle_delivery_weeks.keys()
+            ):
+                custom_cycle_delivery_weeks[scheduled_week.growing_period_id] = []
+            custom_cycle_delivery_weeks[scheduled_week.growing_period_id].append(
+                scheduled_week.calendar_week
             )
 
         return data

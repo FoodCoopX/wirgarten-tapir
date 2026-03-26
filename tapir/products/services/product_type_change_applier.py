@@ -1,5 +1,5 @@
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
-from tapir.deliveries.models import CustomCycleDeliveryWeeks
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.products.services.product_type_change_validator import (
     ProductTypeChangeValidator,
 )
@@ -66,10 +66,12 @@ class ProductTypeChangeApplier:
     def apply_custom_cycle_delivery_week_changes(
         cls, extended_data: dict, product_type: ProductType
     ):
-        CustomCycleDeliveryWeeks.objects.filter(product_type=product_type).delete()
+        CustomCycleScheduledDeliveryWeek.objects.filter(
+            product_type=product_type
+        ).delete()
 
-        CustomCycleDeliveryWeeks.objects.bulk_create(
-            ProductTypeChangeValidator.build_week_objects(
+        CustomCycleScheduledDeliveryWeek.objects.bulk_create(
+            ProductTypeChangeValidator.build_scheduled_weeks(
                 extended_data=extended_data, product_type=product_type
             )
         )

@@ -6,7 +6,7 @@ from tapir.deliveries.models import (
     Joker,
     DeliveryDayAdjustment,
     DeliveryDonation,
-    CustomCycleDeliveryWeeks,
+    CustomCycleScheduledDeliveryWeek,
 )
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -651,7 +651,7 @@ class TapirCache:
 
         def compute():
             return set(
-                CustomCycleDeliveryWeeks.objects.filter(
+                CustomCycleScheduledDeliveryWeek.objects.filter(
                     product_type=product_type, growing_period=growing_period
                 ).values_list("calendar_week", flat=True)
             )
@@ -663,19 +663,19 @@ class TapirCache:
         )
 
     @classmethod
-    def get_all_delivered_week_objects_for_custom_cycle(
+    def get_all_scheduled_weeks_for_custom_cycle(
         cls, product_type: ProductType, cache: dict
     ):
-        delivery_week_objects_by_product_type = get_from_cache_or_compute(
+        scheduled_weeks_by_product_type = get_from_cache_or_compute(
             cache=cache,
-            key="delivery_week_objects_by_product_type",
+            key="scheduled_weeks_by_product_type",
             compute_function=lambda: {},
         )
 
         return get_from_cache_or_compute(
-            cache=delivery_week_objects_by_product_type,
+            cache=scheduled_weeks_by_product_type,
             key=product_type,
-            compute_function=lambda: CustomCycleDeliveryWeeks.objects.filter(
+            compute_function=lambda: CustomCycleScheduledDeliveryWeek.objects.filter(
                 product_type=product_type
             ),
         )

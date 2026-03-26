@@ -7,7 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 
-from tapir.deliveries.models import CustomCycleDeliveryWeeks
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
@@ -154,16 +154,16 @@ def copy_growing_period(
     ProductCapacity.objects.bulk_create(product_capacities_to_create)
 
     delivery_weeks_to_create = [
-        CustomCycleDeliveryWeeks(
+        CustomCycleScheduledDeliveryWeek(
             growing_period=new_growing_period,
             product_type_id=previous_week.product_type_id,
             calendar_week=previous_week.calendar_week,
         )
-        for previous_week in CustomCycleDeliveryWeeks.objects.filter(
+        for previous_week in CustomCycleScheduledDeliveryWeek.objects.filter(
             growing_period=source_growing_period
         )
     ]
-    CustomCycleDeliveryWeeks.objects.bulk_create(delivery_weeks_to_create)
+    CustomCycleScheduledDeliveryWeek.objects.bulk_create(delivery_weeks_to_create)
 
     return new_growing_period
 
