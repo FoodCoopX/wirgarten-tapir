@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from icecream import ic
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,12 +31,14 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.wirgarten.constants import WEEKLY, NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     Product,
     SubscriptionChangeLogEntry,
     QuestionaireCancellationReasonResponse,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -81,11 +84,36 @@ class GetCancellationDataView(APIView):
             "solidarity_contribution_data": self.build_solidarity_contribution_data(
                 member, cache=cache
             ),
+            "show_trial_period_help_text": self.show_trial_period_help_text(
+                cache=cache, member=member
+            ),
+            "trial_period_duration": get_parameter_value(
+                ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
+            ),
         }
 
         return Response(
             CancellationDataSerializer(data).data,
             status=status.HTTP_200_OK,
+        )
+
+    @classmethod
+    def show_trial_period_help_text(cls, cache: dict, member: Member):
+        if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+            ic("NOPE")
+            return False
+
+        relevant_product_types = ProductType.objects.exclude(
+            delivery_cycle__in=[WEEKLY[0], NO_DELIVERY[0]]
+        )
+        subs = get_active_and_future_subscriptions(cache=cache).filter(
+            member=member, product__type__in=relevant_product_types
+        )
+        ic(relevant_product_types, subs)
+        return (
+            get_active_and_future_subscriptions(cache=cache)
+            .filter(member=member, product__type__in=relevant_product_types)
+            .exists()
         )
 
     @classmethod

@@ -17,7 +17,7 @@ class TestGetDateFromWeekObject(SimpleTestCase):
         self, mock_get_date_from_calendar_week: Mock
     ):
         growing_period = GrowingPeriodFactory.build()
-        scheduled_week = CustomCycleScheduledDeliveryWeekFactory.build(
+        week_object = CustomCycleScheduledDeliveryWeekFactory.build(
             calendar_week=13, growing_period=growing_period
         )
 
@@ -25,7 +25,7 @@ class TestGetDateFromWeekObject(SimpleTestCase):
         mock_get_date_from_calendar_week.return_value = expected_result
 
         actual_result = CustomCycleDeliveryDateCalculator.get_date_from_scheduled_week(
-            scheduled_week=scheduled_week
+            scheduled_week=week_object
         )
 
         self.assertEqual(expected_result, actual_result)

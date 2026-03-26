@@ -5776,12 +5776,18 @@ components:
           type: array
           items:
             type: string
+        show_trial_period_help_text:
+          type: boolean
+        trial_period_duration:
+          type: integer
       required:
       - can_cancel_coop_membership
       - default_cancellation_reasons
       - legal_status
+      - show_trial_period_help_text
       - solidarity_contribution_data
       - subscribed_products
+      - trial_period_duration
     ChangeTypeEnum:
       enum:
       - ADDED

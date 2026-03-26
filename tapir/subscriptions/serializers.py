@@ -48,6 +48,8 @@ class CancellationDataSerializer(serializers.Serializer):
     solidarity_contribution_data = SolidarityContributionCancellationDataSerializer()
     legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
     default_cancellation_reasons = serializers.ListField(child=serializers.CharField())
+    show_trial_period_help_text = serializers.BooleanField()
+    trial_period_duration = serializers.IntegerField()
 
 
 class CancelSubscriptionsViewResponseSerializer(serializers.Serializer):
