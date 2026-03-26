@@ -4,7 +4,7 @@ from django.db.models import UniqueConstraint
 
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry
-from tapir.wirgarten.models import Member, GrowingPeriod
+from tapir.wirgarten.models import Member, GrowingPeriod, ProductType
 
 
 class Joker(TapirModel):
@@ -96,3 +96,14 @@ class DeliveryDonationCancelledLogEntry(LogEntry):
         self.populate(actor, user)
         self.date = delivery_donation.date
         return self
+
+
+class CustomCycleScheduledDeliveryWeek(TapirModel):
+    product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+    growing_period = models.ForeignKey(GrowingPeriod, on_delete=models.CASCADE)
+    calendar_week = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(53)]
+    )
+
+    def __str__(self):
+        return f"{self.product_type.name}, {self.growing_period}, Week {self.calendar_week}"

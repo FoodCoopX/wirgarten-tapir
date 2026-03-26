@@ -9,14 +9,12 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 
 
 class TestGetPriceOfSingleDelivery(SimpleTestCase):
-    @patch.object(DeliveryPriceCalculator, "get_number_of_deliveries_in_growing_period")
     @patch.object(DeliveryPriceCalculator, "get_number_of_months_in_growing_period")
     @patch("tapir.subscriptions.services.delivery_price_calculator.get_product_price")
     def test_getPriceOfSingleDelivery_default_returnsCorrectPrice(
         self,
         mock_get_product_price: Mock,
         mock_get_number_of_months_in_growing_period: Mock,
-        mock_get_number_of_deliveries_in_growing_period: Mock,
     ):
         subscription, product = self.setup_mocks(mock_get_product_price)
         date = datetime.date(year=2021, month=5, day=7)  # 2021 has 52 weeks
@@ -32,17 +30,14 @@ class TestGetPriceOfSingleDelivery(SimpleTestCase):
             nb_weeks=52,
             mock_get_product_price=mock_get_product_price,
             mock_get_number_of_months_in_growing_period=mock_get_number_of_months_in_growing_period,
-            mock_get_number_of_deliveries_in_growing_period=mock_get_number_of_deliveries_in_growing_period,
         )
 
-    @patch.object(DeliveryPriceCalculator, "get_number_of_deliveries_in_growing_period")
     @patch.object(DeliveryPriceCalculator, "get_number_of_months_in_growing_period")
     @patch("tapir.subscriptions.services.delivery_price_calculator.get_product_price")
     def test_getPriceOfSingleDelivery_yearWith53Weeks_returnsCorrectPrice(
         self,
         mock_get_product_price: Mock,
         mock_get_number_of_months_in_growing_period: Mock,
-        mock_get_number_of_deliveries_in_growing_period: Mock,
     ):
         subscription, product = self.setup_mocks(mock_get_product_price)
         date = datetime.date(year=2020, month=5, day=7)  # 2020 has 53 weeks
@@ -58,7 +53,6 @@ class TestGetPriceOfSingleDelivery(SimpleTestCase):
             nb_weeks=53,
             mock_get_product_price=mock_get_product_price,
             mock_get_number_of_months_in_growing_period=mock_get_number_of_months_in_growing_period,
-            mock_get_number_of_deliveries_in_growing_period=mock_get_number_of_deliveries_in_growing_period,
         )
 
     @classmethod
@@ -84,10 +78,8 @@ class TestGetPriceOfSingleDelivery(SimpleTestCase):
         nb_weeks: int,
         mock_get_product_price,
         mock_get_number_of_months_in_growing_period,
-        mock_get_number_of_deliveries_in_growing_period,
     ):
         self.assertEqual(10 * 12 / nb_weeks, result)
 
         mock_get_product_price.assert_called_once_with(product, date, cache={})
         mock_get_number_of_months_in_growing_period.assert_not_called()
-        mock_get_number_of_deliveries_in_growing_period.assert_not_called()

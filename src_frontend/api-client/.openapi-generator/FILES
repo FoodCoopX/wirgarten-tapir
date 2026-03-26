@@ -38,6 +38,7 @@ models/Counts.ts
 models/CreateMissingTriggerMailRequest.ts
 models/CsvExportModel.ts
 models/CsvExportModelRequest.ts
+models/CustomCycleDeliveryWeeksRequest.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts
 models/DeliveryCycleEnum.ts
@@ -70,6 +71,7 @@ models/ExtendedProductTypeAndConfig.ts
 models/ExtendedProductTypeRequest.ts
 models/FuturePaymentsResponse.ts
 models/GetCoopShareTransactionsResponse.ts
+models/GetDatesFromCustomCycleDeliveryWeeksResponse.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts

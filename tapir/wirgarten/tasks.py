@@ -51,8 +51,8 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
     include_equivalents: If true, the M-Äquivalent column is included -> Kommissionierliste, else Lieferantenliste
     """
     next_delivery_date = get_next_delivery_date(cache=cache)
-    if not DeliveryCycleService.is_cycle_delivered_in_week(
-        cycle=product_type.delivery_cycle, date=next_delivery_date, cache=cache
+    if not DeliveryCycleService.is_product_type_delivered_in_week(
+        product_type=product_type, date=next_delivery_date, cache=cache
     ):
         print(
             f"Skipping export_pick_list_csv() for product type {product_type.name} because it is not due this week."

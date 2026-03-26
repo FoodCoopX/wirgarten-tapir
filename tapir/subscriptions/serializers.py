@@ -11,6 +11,9 @@ from tapir.deliveries.serializers import (
     PickupLocationSerializer,
     ProductTypeSerializer,
 )
+from tapir.deliveries.services.subscription_price_type_decider import (
+    SubscriptionPricingStrategyDecider,
+)
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
@@ -45,6 +48,8 @@ class CancellationDataSerializer(serializers.Serializer):
     solidarity_contribution_data = SolidarityContributionCancellationDataSerializer()
     legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
     default_cancellation_reasons = serializers.ListField(child=serializers.CharField())
+    show_trial_period_help_text = serializers.BooleanField()
+    trial_period_duration = serializers.IntegerField()
 
 
 class CancelSubscriptionsViewResponseSerializer(serializers.Serializer):
@@ -66,6 +71,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     url_of_image_in_bestellwizard = serializers.URLField(allow_blank=True)
     capacity = serializers.IntegerField(allow_null=True)
     min_coop_shares = serializers.IntegerField()
+    price_per_delivery = serializers.BooleanField(read_only=True)
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -153,11 +159,19 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "title_bestellwizard_intro",
             "icon_link",
             "background_image_in_bestellwizard",
+            "price_per_delivery",
         ]
 
     products = SerializerMethodField()
     no_delivery = SerializerMethodField()
     accordions = SerializerMethodField()
+    price_per_delivery = SerializerMethodField()
+
+    @staticmethod
+    def get_price_per_delivery(product_type: ProductType) -> bool:
+        return SubscriptionPricingStrategyDecider.is_price_by_delivery(
+            product_type.delivery_cycle
+        )
 
     @extend_schema_field(PublicProductSerializer(many=True))
     def get_products(self, product_type: ProductType):

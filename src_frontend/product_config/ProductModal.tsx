@@ -56,6 +56,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [minCoopShares, setMinCoopShares] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [priceIsPerDelivery, setPriceIsPerDelivery] = useState(false);
 
   useEffect(() => {
     if (!show) return;
@@ -82,6 +83,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setUrlOfImageInBestellWizard(extendedProduct.urlOfImageInBestellwizard);
         setCapacity(extendedProduct.capacity);
         setMinCoopShares(extendedProduct.minCoopShares);
+        setPriceIsPerDelivery(extendedProduct.pricePerDelivery);
       })
       .catch((error) =>
         handleRequestError(
@@ -171,10 +173,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </Form.Group>
               </Col>
             </Row>
-            <Row>
+            <Row className={"mt-2"}>
               <Col>
                 <Form.Group>
-                  <Form.Label>Preis (monatlich, €)</Form.Label>
+                  <Form.Label>
+                    Preis ({priceIsPerDelivery ? "pro Lieferung" : "monatlich"},
+                    €)
+                  </Form.Label>
                   <Form.Control
                     value={price}
                     type={"number"}

@@ -88,7 +88,10 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                 ),
               )}
             </strong>
-            <small> / Monat</small>
+            <small>
+              {" "}
+              / {productType.pricePerDelivery ? "Lieferung" : "Monat"}
+            </small>
           </span>
           {showContractEdit && (
             <TapirButton

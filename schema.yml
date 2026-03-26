@@ -607,6 +607,34 @@ paths:
               schema:
                 type: string
           description: ''
+  /deliveries/api/get_dates_from_custom_cycle_delivery_weeks:
+    post:
+      operationId: deliveries_api_get_dates_from_custom_cycle_delivery_weeks_create
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomCycleDeliveryWeeksRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomCycleDeliveryWeeksRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomCycleDeliveryWeeksRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDatesFromCustomCycleDeliveryWeeksResponse'
+          description: ''
   /deliveries/api/growing_period_with_adjustments:
     get:
       operationId: deliveries_api_growing_period_with_adjustments_retrieve
@@ -1746,7 +1774,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
     patch:
       operationId: products_api_extended_product_type_partial_update
@@ -1772,7 +1800,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /products/api/product_types_without_capacity:
     get:
@@ -5748,12 +5776,18 @@ components:
           type: array
           items:
             type: string
+        show_trial_period_help_text:
+          type: boolean
+        trial_period_duration:
+          type: integer
       required:
       - can_cancel_coop_membership
       - default_cancellation_reasons
       - legal_status
+      - show_trial_period_help_text
       - solidarity_contribution_data
       - subscribed_products
+      - trial_period_duration
     ChangeTypeEnum:
       enum:
       - ADDED
@@ -6434,6 +6468,17 @@ components:
       - file_name
       - name
       - separator
+    CustomCycleDeliveryWeeksRequest:
+      type: object
+      properties:
+        custom_cycle_delivery_weeks:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: integer
+      required:
+      - custom_cycle_delivery_weeks
     DayOfWeekEnum:
       enum:
       - 0
@@ -6498,6 +6543,7 @@ components:
       - odd_weeks
       - even_weeks
       - every_four_weeks
+      - custom
       type: string
       description: |-
         * `no_delivery` - Keine Lieferung/Abholung
@@ -6505,6 +6551,7 @@ components:
         * `odd_weeks` - Jede 2. Woche (ungerade KW)
         * `even_weeks` - Jede 2. Woche (gerade KW)
         * `every_four_weeks` - Jede 4. Woche
+        * `custom` - Benutzerdefinierte Lieferwochen
     DeliveryDayAdjustment:
       type: object
       properties:
@@ -7176,6 +7223,9 @@ components:
           nullable: true
         min_coop_shares:
           type: integer
+        price_per_delivery:
+          type: boolean
+          readOnly: true
       required:
       - base
       - basket_size_equivalences
@@ -7187,6 +7237,7 @@ components:
       - name
       - picking_mode
       - price
+      - price_per_delivery
       - size
       - url_of_image_in_bestellwizard
     ExtendedProductType:
@@ -7240,10 +7291,17 @@ components:
           type: string
         background_image_in_bestellwizard:
           type: string
+        custom_cycle_delivery_weeks:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: integer
       required:
       - accordions_in_bestell_wizard
       - background_image_in_bestellwizard
       - capacity
+      - custom_cycle_delivery_weeks
       - delivery_cycle
       - force_waiting_list
       - is_affected_by_jokers
@@ -7331,10 +7389,17 @@ components:
           type: string
         background_image_in_bestellwizard:
           type: string
+        custom_cycle_delivery_weeks:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: integer
       required:
       - accordions_in_bestell_wizard
       - background_image_in_bestellwizard
       - capacity
+      - custom_cycle_delivery_weeks
       - delivery_cycle
       - force_waiting_list
       - is_affected_by_jokers
@@ -7377,6 +7442,21 @@ components:
       required:
       - transactions
       - url_of_bestell_wizard
+    GetDatesFromCustomCycleDeliveryWeeksResponse:
+      type: object
+      properties:
+        custom_cycle_delivery_weeks_dates:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: string
+              format: date
+        error:
+          type: string
+      required:
+      - custom_cycle_delivery_weeks_dates
+      - error
     GroupedEmailDispatch:
       type: object
       properties:
@@ -9639,10 +9719,14 @@ components:
         background_image_in_bestellwizard:
           type: string
           maxLength: 512
+        price_per_delivery:
+          type: boolean
+          readOnly: true
       required:
       - accordions
       - name
       - no_delivery
+      - price_per_delivery
       - products
     PublicSubscription:
       type: object

@@ -160,3 +160,16 @@ class GrowingPeriodWithDeliveryDayAdjustmentsSerializer(serializers.Serializer):
     )
     jokers_enabled = serializers.BooleanField(read_only=True)
     is_available_in_bestell_wizard = serializers.BooleanField()
+
+
+class CustomCycleDeliveryWeeksSerializer(serializers.Serializer):
+    custom_cycle_delivery_weeks = serializers.DictField(
+        child=serializers.ListSerializer(child=serializers.IntegerField())
+    )
+
+
+class GetDatesFromCustomCycleDeliveryWeeksResponseSerializer(serializers.Serializer):
+    custom_cycle_delivery_weeks_dates = serializers.DictField(
+        child=serializers.DictField(child=serializers.DateField())
+    )
+    error = serializers.CharField()

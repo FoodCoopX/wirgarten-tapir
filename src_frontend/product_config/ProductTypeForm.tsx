@@ -10,13 +10,15 @@ import {
 import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
 import { getNoticePeriodUnitDisplay } from "./getNoticePeriodUnitDispay.ts";
+import CustomCycleDeliveryWeeksInput from "./CustomCycleDeliveryWeeksInput.tsx";
+import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
 
 interface ProductTypeFormProps {
   name: string;
   setName: (name: string) => void;
   iconLink: string;
   setIconLink: (iconLink: string) => void;
-  growingPeriod: GrowingPeriod;
+  globalSelectedGrowingPeriod: GrowingPeriod; // the period that is selected at the page level, the one that has it's ID in the URL
   capacity: number;
   setCapacity: (capacity: number) => void;
   deliveryCycle: DeliveryCycleEnum;
@@ -62,6 +64,9 @@ interface ProductTypeFormProps {
   noticePeriodUnit: NoticePeriodUnitEnum;
   setNoticePeriodUnit: (unit: NoticePeriodUnitEnum) => void;
   canUpdateNoticePeriod: boolean;
+  deliveryWeeks: CustomCycleDeliveryWeeks;
+  setDeliveryWeeks: (weeks: CustomCycleDeliveryWeeks) => void;
+  allGrowingPeriods: GrowingPeriod[];
 }
 
 type Tab = "general" | "contracts" | "bestell_wizard";
@@ -71,7 +76,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setName,
   iconLink,
   setIconLink,
-  growingPeriod,
+  globalSelectedGrowingPeriod,
   capacity,
   setCapacity,
   deliveryCycle,
@@ -117,6 +122,9 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   noticePeriodUnit,
   setNoticePeriodUnit,
   canUpdateNoticePeriod,
+  deliveryWeeks,
+  setDeliveryWeeks,
+  allGrowingPeriods,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
 
@@ -190,8 +198,9 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                 <Form.Group controlId={"capacity"}>
                   <Form.Label>
                     Produkt Kapazität in Produkt-Größe für die Vertragsperiode{" "}
-                    {formatDateNumeric(growingPeriod?.startDate)} bis{" "}
-                    {formatDateNumeric(growingPeriod?.endDate)}
+                    {formatDateNumeric(globalSelectedGrowingPeriod?.startDate)}{" "}
+                    bis{" "}
+                    {formatDateNumeric(globalSelectedGrowingPeriod?.endDate)}
                   </Form.Label>
                   <Form.Control
                     type={"number"}
@@ -254,6 +263,16 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                   </Form.Select>
                 </Form.Group>
               </Row>
+
+              {deliveryCycle === "custom" && (
+                <Row className={"mt-4"}>
+                  <CustomCycleDeliveryWeeksInput
+                    allGrowingPeriods={allGrowingPeriods}
+                    deliveryWeeks={deliveryWeeks}
+                    setDeliveryWeeks={setDeliveryWeeks}
+                  />
+                </Row>
+              )}
             </Col>
           </>
         )}

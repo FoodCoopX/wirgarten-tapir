@@ -370,12 +370,12 @@ def send_product_order_confirmation(
         if subscription.product.type.delivery_cycle == NO_DELIVERY[0]:
             continue
         at_least_one_product_with_delivery = True
-        next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+        next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
             reference_date=subscription.start_date,
             pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id(
                 member, subscription.start_date
             ),
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             check_for_weeks_without_delivery=True,
             cache=cache,
         )

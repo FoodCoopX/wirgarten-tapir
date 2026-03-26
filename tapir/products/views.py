@@ -1,6 +1,7 @@
 import datetime
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -10,15 +11,20 @@ from rest_framework.views import APIView
 
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.products.serializers import (
     ExtendedProductTypeAndConfigSerializer,
     SaveExtendedProductTypeSerializer,
     ProductTypesAndConfigSerializer,
 )
-from tapir.products.services.TaxRateService import TaxRateService
+from tapir.products.services.product_type_change_applier import ProductTypeChangeApplier
+from tapir.products.services.product_type_change_validator import (
+    ProductTypeChangeValidator,
+)
+from tapir.products.services.tax_rate_service import TaxRateService
 from tapir.subscriptions.models import NoticePeriod
-from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.wirgarten.constants import DeliveryCycleDict
 from tapir.wirgarten.models import ProductType, GrowingPeriod, ProductCapacity
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -27,24 +33,6 @@ from tapir.wirgarten.utils import get_today, legal_status_is_association
 
 class ExtendedProductTypeApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-
-    direct_fields = [
-        "name",
-        "description_bestellwizard_short",
-        "description_bestellwizard_long",
-        "order_in_bestellwizard",
-        "icon_link",
-        "contract_link",
-        "delivery_cycle",
-        "single_subscription_only",
-        "is_affected_by_jokers",
-        "must_be_subscribed_to",
-        "is_association_membership",
-        "force_waiting_list",
-        "title_bestellwizard_product_choice",
-        "title_bestellwizard_intro",
-        "background_image_in_bestellwizard",
-    ]
 
     def __init__(self):
         super().__init__()
@@ -85,20 +73,40 @@ class ExtendedProductTypeApiView(APIView):
         return Response(ExtendedProductTypeAndConfigSerializer(data).data)
 
     @extend_schema(
-        responses={200: str},
+        responses={200: OrderConfirmationResponseSerializer},
         request=SaveExtendedProductTypeSerializer(),
     )
     def post(self, request):
-        self.update_product_type(request, create_product_type=True)
-        return Response("OK")
+        error_message = None
+
+        try:
+            self.update_product_type(request, create_product_type=True)
+        except (ValidationError, ValueError) as error:
+            error_message = str(error)
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": error_message is None, "error": error_message}
+            ).data
+        )
 
     @extend_schema(
-        responses={200: str},
+        responses={200: OrderConfirmationResponseSerializer},
         request=SaveExtendedProductTypeSerializer(),
     )
     def patch(self, request):
-        self.update_product_type(request, create_product_type=False)
-        return Response("OK")
+        error_message = None
+
+        try:
+            self.update_product_type(request, create_product_type=False)
+        except (ValidationError, ValueError) as error:
+            error_message = str(error)
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": error_message is None, "error": error_message}
+            ).data
+        )
 
     def update_product_type(self, request, create_product_type: bool):
         serializer = SaveExtendedProductTypeSerializer(data=request.data)
@@ -122,52 +130,25 @@ class ExtendedProductTypeApiView(APIView):
             )
 
         extended_data = serializer.validated_data["extended_product_type"]
+
+        ProductTypeChangeValidator.validate_custom_cycle_changes(
+            extended_data=extended_data, product_type=product_type, cache=self.cache
+        )
+
         with transaction.atomic():
-            for field in self.direct_fields:
-                setattr(product_type, field, extended_data[field])
-
-            product_type.name = extended_data["name"]
-            product_type.icon_link = extended_data["icon_link"]
-            product_type.save()
-
-            product_capacity.capacity = extended_data["capacity"]
-            product_capacity.save()
-
-            NoticePeriodManager.set_notice_period_duration(
-                product_type=product_capacity.product_type,
-                growing_period=product_capacity.period,
-                notice_period_duration=extended_data.get(
-                    "notice_period_duration", None
-                ),
-                notice_period_unit=extended_data.get("notice_period_unit", None),
+            ProductTypeChangeApplier.apply_changes(
+                product_type=product_type,
+                product_capacity=product_capacity,
+                extended_data=extended_data,
             )
-
-            TaxRateService.create_or_update_default_tax_rate(
-                product_type_id=product_type.id,
-                tax_rate=extended_data["tax_rate"],
-                tax_rate_change_date=extended_data["tax_rate_change_date"],
-            )
-
-            ProductTypeAccordionInBestellWizard.objects.filter(
-                product_type=product_type
-            ).delete()
-            accordions = [
-                ProductTypeAccordionInBestellWizard(
-                    product_type=product_type,
-                    title=accordion_data["title"],
-                    description=accordion_data["description"],
-                    order=index,
-                )
-                for index, accordion_data in enumerate(
-                    extended_data["accordions_in_bestell_wizard"]
-                )
-            ]
-            ProductTypeAccordionInBestellWizard.objects.bulk_create(accordions)
 
     def build_extended_product_type_data(
         self, product_type: ProductType, growing_period: GrowingPeriod
     ):
-        data = {field: getattr(product_type, field) for field in self.direct_fields}
+        data = {
+            field: getattr(product_type, field)
+            for field in ProductTypeChangeApplier.direct_fields
+        }
 
         product_capacity = get_object_or_404(
             ProductCapacity, product_type=product_type, period=growing_period
@@ -199,6 +180,20 @@ class ExtendedProductTypeApiView(APIView):
                 product_type=product_type
             )
         )
+
+        custom_cycle_delivery_weeks = {}
+        data["custom_cycle_delivery_weeks"] = custom_cycle_delivery_weeks
+        for scheduled_week in CustomCycleScheduledDeliveryWeek.objects.filter(
+            product_type=product_type
+        ).order_by("calendar_week"):
+            if (
+                scheduled_week.growing_period_id
+                not in custom_cycle_delivery_weeks.keys()
+            ):
+                custom_cycle_delivery_weeks[scheduled_week.growing_period_id] = []
+            custom_cycle_delivery_weeks[scheduled_week.growing_period_id].append(
+                scheduled_week.calendar_week
+            )
 
         return data
 

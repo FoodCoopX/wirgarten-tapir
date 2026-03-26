@@ -74,7 +74,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     <>
       <Row className={"justify-content-center"}>
         {productType.products
-          .sort((a, b) => a.price - b.price)
+          .toSorted((a, b) => a.price - b.price)
           .map((product) => (
             <Col
               key={product.id}
@@ -108,7 +108,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     checked={shoppingCart[product.id!] > 0}
                     onChange={(event) => {
                       shoppingCart[product.id!] = event.target.checked ? 1 : 0;
-                      setShoppingCart(Object.assign({}, shoppingCart));
+                      setShoppingCart({ ...shoppingCart });
                     }}
                     disabled={waitingListLinkConfirmationModeEnabled}
                   />
@@ -118,12 +118,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     min={0}
                     value={shoppingCart[product.id!]}
                     onChange={(event) => {
-                      let newValue = parseInt(event.target.value);
+                      let newValue = Number.parseInt(event.target.value);
                       if (Number.isNaN(newValue)) {
                         newValue = 0;
                       }
                       shoppingCart[product.id!] = newValue;
-                      setShoppingCart(Object.assign({}, shoppingCart));
+                      setShoppingCart({ ...shoppingCart });
                     }}
                     disabled={waitingListLinkConfirmationModeEnabled}
                   />

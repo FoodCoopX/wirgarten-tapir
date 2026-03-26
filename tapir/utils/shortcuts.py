@@ -57,3 +57,7 @@ def get_last_day_of_month(date: datetime.date) -> datetime.date:
 
 def is_running_tests():
     return "PYTEST_CURRENT_TEST" in os.environ
+
+
+def get_any_element_from_set(s: set):
+    return next(iter(s))

@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
@@ -31,9 +32,6 @@ from tapir.wirgarten.validators import (
 def get_total_price_for_subs(subs: List[Payable], cache: dict) -> float:
     """
     Returns the total amount of one payment for the given list of subs.
-
-    :param subs: the list of subs (e.g. that are currently active for a user)
-    :return: the total price in €
     """
     if not subs:
         return 0
@@ -41,14 +39,9 @@ def get_total_price_for_subs(subs: List[Payable], cache: dict) -> float:
     return round(sum([x.total_price(cache=cache) for x in subs]), 2)
 
 
-def get_active_product_types(
-    reference_date: datetime.date = None, cache: dict = None
-) -> iter:
+def get_active_product_types(reference_date: datetime.date = None, cache: dict = None):
     """
     Returns the product types which are active for the given reference date.
-
-    :param reference_date: default: today()
-    :return: the QuerySet of ProductTypes filtered for the given reference date
     """
     if reference_date is None:
         reference_date = get_today(cache=cache)
@@ -115,10 +108,6 @@ def create_growing_period(
 ) -> GrowingPeriod:
     """
     Creates a new growing period with the given start and end dates
-
-    :param start_date: the start of the growing period
-    :param end_date: the end of the growing period
-    :return: the persisted instance
     """
 
     validate_date_range(start_date, end_date)
@@ -151,16 +140,30 @@ def copy_growing_period(
         max_jokers_per_member=source_growing_period.max_jokers_per_member,
         joker_restrictions=source_growing_period.joker_restrictions,
     )
-    ProductCapacity.objects.bulk_create(
-        map(
-            lambda x: ProductCapacity(
-                period_id=new_growing_period.id,
-                product_type=x.product_type,
-                capacity=x.capacity,
-            ),
-            ProductCapacity.objects.filter(period_id=growing_period_id),
+
+    product_capacities_to_create = [
+        ProductCapacity(
+            period_id=new_growing_period.id,
+            product_type=previous_product_capacity.product_type,
+            capacity=previous_product_capacity.capacity,
         )
-    )
+        for previous_product_capacity in ProductCapacity.objects.filter(
+            period_id=growing_period_id
+        )
+    ]
+    ProductCapacity.objects.bulk_create(product_capacities_to_create)
+
+    delivery_weeks_to_create = [
+        CustomCycleScheduledDeliveryWeek(
+            growing_period=new_growing_period,
+            product_type_id=previous_week.product_type_id,
+            calendar_week=previous_week.calendar_week,
+        )
+        for previous_week in CustomCycleScheduledDeliveryWeek.objects.filter(
+            growing_period=source_growing_period
+        )
+    ]
+    CustomCycleScheduledDeliveryWeek.objects.bulk_create(delivery_weeks_to_create)
 
     return new_growing_period
 
@@ -191,9 +194,6 @@ def get_active_product_capacities(
 ):
     """
     Gets the active product capacities for the given reference date.
-
-    :param reference_date: the date on which the capacity must be active
-    :return: queryset of active product capacities
     """
     if reference_date is None:
         reference_date = get_today(cache=cache)
@@ -218,9 +218,6 @@ def get_active_and_future_subscriptions(
 ):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
-
-    :param reference_date: the date on which the capacity must be active
-    :return: queryset of active and future subscriptions
     """
     if reference_date is None:
         reference_date = get_today(cache)
@@ -275,12 +272,6 @@ def create_product(
 ):
     """
     Creates a product and product price with the given attributes.
-
-    :param name: the name of the product
-    :param price: the price
-    :param capacity_id: gets information about the growing period and product type via the capacity
-    :param base: whether the product is the base product
-    :return: the newly created product
     """
     pc = ProductCapacity.objects.get(id=capacity_id)
 
