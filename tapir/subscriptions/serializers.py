@@ -12,7 +12,7 @@ from tapir.deliveries.serializers import (
     ProductTypeSerializer,
 )
 from tapir.deliveries.services.subscription_price_type_decider import (
-    SubscriptionPriceTypeDecider,
+    SubscriptionPricingStrategyDecider,
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
@@ -167,7 +167,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_price_per_delivery(product_type: ProductType) -> bool:
-        return SubscriptionPriceTypeDecider.is_price_by_delivery(
+        return SubscriptionPricingStrategyDecider.is_price_by_delivery(
             product_type.delivery_cycle
         )
 

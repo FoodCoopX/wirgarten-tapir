@@ -17,6 +17,8 @@ import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import ProductTypeForm from "./ProductTypeForm.tsx";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { addToast } from "../utils/addToast.ts";
+import { v4 as uuidv4 } from "uuid";
 
 interface ProductTypeCreateModalProps {
   show: boolean;
@@ -215,11 +217,25 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
         });
 
     promise
-      .then(() => location.reload())
+      .then((response) => {
+        if (response.orderConfirmed) {
+          location.reload();
+        } else {
+          addToast(
+            {
+              id: uuidv4(),
+              variant: "danger",
+              message: response.error!,
+              title: "Fehler beim Speichern der Produkt-Typ",
+            },
+            setToastDatas,
+          );
+        }
+      })
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Vertragsperiode",
+          "Fehler beim Speichern der Produkt-Typ",
           setToastDatas,
         ),
       )

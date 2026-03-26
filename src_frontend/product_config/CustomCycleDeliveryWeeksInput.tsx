@@ -166,12 +166,19 @@ const CustomCycleDeliveryWeeksInput: React.FC<
     setInternalWeeks({ ...internalWeeks });
   }
 
-  function getDateDisplay(week: number) {
+  function getStartDateForWeek(week: number) {
     const periodId = selectedGrowingPeriod?.id ?? "";
     if (!(periodId in deliveryDates) || !(week in deliveryDates[periodId])) {
+      return undefined;
+    }
+    return new Date(deliveryDates[periodId][week]);
+  }
+
+  function getDateDisplay(week: number) {
+    const startOfWeek = getStartDateForWeek(week);
+    if (!startOfWeek) {
       return <Spinner />;
     }
-    const startOfWeek = new Date(deliveryDates[periodId][week]);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 6);
 

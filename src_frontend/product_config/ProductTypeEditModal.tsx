@@ -18,6 +18,8 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
 import ProductTypeForm from "./ProductTypeForm.tsx";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { addToast } from "../utils/addToast.ts";
+import { v4 as uuidv4 } from "uuid";
 
 interface ProductTypeEditModalProps {
   show: boolean;
@@ -222,7 +224,21 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
           },
         },
       })
-      .then(() => location.reload())
+      .then((response) => {
+        if (response.orderConfirmed) {
+          location.reload();
+        } else {
+          addToast(
+            {
+              id: uuidv4(),
+              variant: "danger",
+              message: response.error!,
+              title: "Fehler beim Speichern der Produkt-Typ",
+            },
+            setToastDatas,
+          );
+        }
+      })
       .catch((error) =>
         handleRequestError(
           error,

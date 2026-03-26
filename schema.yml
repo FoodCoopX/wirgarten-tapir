@@ -1774,7 +1774,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
     patch:
       operationId: products_api_extended_product_type_partial_update
@@ -1800,7 +1800,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /products/api/product_types_without_capacity:
     get:
