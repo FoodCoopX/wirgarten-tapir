@@ -6,12 +6,7 @@ import "../../fixed_header.css";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import {
-  ExtendedPayment,
-  MemberCredit,
-  Payment,
-  PaymentsApi,
-} from "../../api-client";
+import { ExtendedPayment, MemberCredit, Payment, PaymentsApi } from "../../api-client";
 import formatSubscription from "../../utils/formatSubscription.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
@@ -22,6 +17,7 @@ import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 
 interface FuturePaymentsModalProps {
   transactionsByDueDate: TransactionsByDueDate;
@@ -128,6 +124,44 @@ function trialPeriodText(
 
   return "";
 }
+
+const EXPLANATION_TEXT = (
+  <div>
+    <p>
+      Die Zahlungsreihe zeigt dir an, wie sich der Betrag zusammensetzt, der von
+      deinem Konto abgebucht wird.
+    </p>
+    <p>
+      Sofern im Monat eine Abholung / Lieferung noch in eine ggf. vorhandene
+      Probezeit fällt, wird dieser Monat nachträglich, d.h. im nächsten Monat
+      bezahlt (z.B. am 5. Mai für April).
+    </p>
+    <p>
+      Erst sobald alle Abholungen / Lieferungen eines Monats außerhalb der
+      Probezeit liegen, wird der Monat vorschüssig, d.h. im Monat selbst für den
+      laufenden Monat bezahlt (z.B. am 5. April für April).
+    </p>
+    <p>
+      Im Übergang zahlst du daher in einem Monat einmal nachträglich für den
+      bereits abgelaufenen Monat und einmal vorschüssig für den nächsten Monat.
+    </p>
+    <p>
+      In Monaten in denen du aufgrund deines Vertragsstartes nicht alle
+      Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
+      auf Basis des Kistenpreises berechnet ((Monatspreis / 52 Wochen) und mit
+      der Anzahl der wahrgenommenen Lieferungen multipliziert.
+    </p>
+    <p>
+      Ein ggf. ausgewählter Solidarpreis wird taggenau auf den Monat
+      hochgerechnet.
+    </p>
+    <p>
+      In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die
+      nächsten 12 Monate angezeigt. Sie passen sich automatisch je nach deinen
+      Aktionen (z.B. Zeichnung weiterer Anteile) an.
+    </p>
+  </div>
+);
 
 const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   onHide,
@@ -282,12 +316,15 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
           <Modal.Title>
             <h4>Zahlungen</h4>
           </Modal.Title>
-          <Form.Check
-            id={"statute"}
-            checked={showPastPayments}
-            onChange={(event) => setShowPastPayments(event.target.checked)}
-            label={"Vergangene Zahlungen anzeigen"}
-          />
+          <span className={"d-flex flex-row align-items-center gap-2"}>
+            <Form.Check
+              id={"statute"}
+              checked={showPastPayments}
+              onChange={(event) => setShowPastPayments(event.target.checked)}
+              label={"Vergangene Zahlungen anzeigen"}
+            />
+            <TapirHelpButton text={EXPLANATION_TEXT} width={"700px"} />
+          </span>
         </span>
       </Modal.Header>
       <Modal.Body>
