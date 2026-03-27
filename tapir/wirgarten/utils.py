@@ -1,6 +1,7 @@
 import datetime
 import logging
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from django.core.exceptions import PermissionDenied
@@ -24,6 +25,9 @@ from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 LOG = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from tapir.wirgarten.models import Subscription
 
 
 def format_date(value: datetime.date | datetime.datetime) -> str:
@@ -114,9 +118,10 @@ def get_debug_now(cache: dict | None = None) -> datetime.datetime:
     return timezone.now()
 
 
-def format_subscription_list_html(subs: list) -> str:
-    subs.sort(key=lambda sub: sub.product_id)
-    return f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}"
+def format_subscription_list_html(subscriptions: list[Subscription]) -> str:
+    subscriptions.sort(key=lambda subscription: subscription.product_id)
+    formatted_subscriptions = [f"- {sub.long_str()}" for sub in subscriptions]
+    return f"{'<br/>'.join(formatted_subscriptions)}"
 
 
 def legal_status_is_cooperative(cache):
