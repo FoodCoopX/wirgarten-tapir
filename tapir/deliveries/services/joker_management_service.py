@@ -42,7 +42,7 @@ class JokerManagementService:
     ) -> bool:
         return cls.get_date_limit_for_joker_changes(
             reference_date, cache=cache
-        ) > get_today(cache=cache)
+        ) >= get_today(cache=cache)
 
     @classmethod
     def can_joker_be_used_relative_to_max_amount_per_growing_period(
