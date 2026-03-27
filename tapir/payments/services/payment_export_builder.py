@@ -1,4 +1,5 @@
 import datetime
+import locale
 from collections.abc import Iterable
 from decimal import Decimal
 
@@ -149,6 +150,9 @@ class PaymentExportBuilder:
         contract_payments: bool,
         cache: dict,
     ):
+        previous_locale = locale.getlocale()
+        locale.setlocale(locale.LC_ALL, "de_DE.UTF-8")
+
         output, writer = begin_csv_string(
             [
                 cls.KEY_NAME,
@@ -161,6 +165,7 @@ class PaymentExportBuilder:
         )
 
         payment_type_display = cls.get_payment_type_display(contract_payments)
+
         for payment in payments:
             verwendungszweck = f"{get_parameter_value(key=ParameterKeys.SITE_NAME)}, {payment.mandate_ref.member.last_name}, {payment_type_display}"
 
@@ -168,7 +173,7 @@ class PaymentExportBuilder:
                 {
                     cls.KEY_NAME: f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}",
                     cls.KEY_IBAN: payment.mandate_ref.member.iban,
-                    cls.KEY_AMOUNT: payment.amount,
+                    cls.KEY_AMOUNT: f"{payment.amount:n}",
                     cls.KEY_VERWENDUNGSZWECK: verwendungszweck,
                     cls.KEY_MANDATE_REF: payment.mandate_ref.ref,
                     cls.KEY_MANDATE_DATE: format_date(
@@ -176,6 +181,8 @@ class PaymentExportBuilder:
                     ),
                 }
             )
+
+        locale.setlocale(locale.LC_ALL, previous_locale)
 
         return export_file(
             filename=f"{payment_type_display}-Einzahlungen",
