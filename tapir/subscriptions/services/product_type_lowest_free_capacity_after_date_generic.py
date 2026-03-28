@@ -4,7 +4,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
     AutomaticSubscriptionRenewalService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_monday
+from tapir.utils.shortcuts import get_from_cache_or_compute, get_monday
 from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.service.products import get_product_price
 
@@ -12,6 +12,27 @@ from tapir.wirgarten.service.products import get_product_price
 class ProductTypeLowestFreeCapacityAfterDateCalculator:
     @classmethod
     def get_lowest_free_capacity_after_date(
+        cls,
+        product_type: ProductType,
+        reference_date: datetime.date,
+        cache: dict,
+    ):
+        cache_by_product_type = get_from_cache_or_compute(
+            cache,
+            "lowest_free_capacity_by_product_type",
+            lambda: {},
+        )
+
+        return get_from_cache_or_compute(
+            cache_by_product_type,
+            (product_type.id, reference_date),
+            lambda: cls._compute_lowest_free_capacity_after_date(
+                product_type, reference_date, cache
+            ),
+        )
+
+    @classmethod
+    def _compute_lowest_free_capacity_after_date(
         cls,
         product_type: ProductType,
         reference_date: datetime.date,
