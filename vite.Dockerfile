@@ -6,7 +6,7 @@ WORKDIR /app
 # Install node modules
 COPY \
     "./package.json" \
-    "./package-lock.json" \
+    "./pnpm-lock.yaml" \
     ./
 RUN pnpm install
 
