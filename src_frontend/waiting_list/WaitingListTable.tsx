@@ -21,12 +21,17 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
   setSelectedEntryForEdition,
 }) => {
   function buildWaitingListEntryRow(entry: WaitingListEntryDetails) {
+    const rowClass = entry.canBeFulfilled
+      ? "table-success"
+      : entry.linkSentDate
+        ? "table-warning"
+        : "";
     return (
       <tr
         key={entry.id}
         style={{ cursor: "pointer" }}
         onClick={() => setSelectedEntryForEdition(entry)}
-        className={entry.linkSentDate ? "table-warning" : ""}
+        className={rowClass}
       >
         <td>
           {entry.urlToMemberProfile && (

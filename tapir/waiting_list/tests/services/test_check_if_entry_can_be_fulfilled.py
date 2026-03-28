@@ -1,0 +1,84 @@
+import datetime
+
+from tapir.waiting_list.tests.factories import WaitingListEntryFactory
+from tapir.waiting_list.views import WaitingListApiView
+from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.models import (
+    WaitingListProductWish,
+    WaitingListPickupLocationWish,
+    ProductCapacity,
+)
+from tapir.wirgarten.tests.factories import (
+    ProductFactory,
+    PickupLocationFactory,
+    GrowingPeriodFactory,
+    ProductPriceFactory,
+    ProductCapacityFactory,
+    PickupLocationCapabilityFactory,
+)
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
+
+
+class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
+    def setUp(self):
+        mock_timezone(self, datetime.datetime(year=2025, month=1, day=15))
+
+        self.product = ProductFactory.create(type__delivery_cycle=WEEKLY[0])
+        ProductPriceFactory.create(product=self.product, size=1)
+        self.growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2025, month=1, day=1),
+            end_date=datetime.date(year=2025, month=12, day=31),
+        )
+        ProductCapacityFactory.create(
+            product_type=self.product.type,
+            period=self.growing_period,
+            capacity=100,
+        )
+
+        self.pickup_location = PickupLocationFactory.create()
+        PickupLocationCapabilityFactory.create(
+            pickup_location=self.pickup_location,
+            product_type=self.product.type,
+            max_capacity=100,
+        )
+
+    def test_no_pickup_location_wishes_returns_false(self):
+        entry = WaitingListEntryFactory.create()
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=self.product, quantity=1
+        )
+
+        result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
+
+        self.assertFalse(result)
+
+    def test_no_product_wishes_returns_false(self):
+        entry = WaitingListEntryFactory.create()
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=self.pickup_location,
+            priority=1,
+        )
+
+        result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
+
+        self.assertFalse(result)
+
+    def test_with_wishes_but_insufficient_global_capacity_returns_false(self):
+        ProductCapacity.objects.filter(
+            product_type=self.product.type, period=self.growing_period
+        ).update(capacity=0)
+
+        entry = WaitingListEntryFactory.create()
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=self.product, quantity=1
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=self.pickup_location,
+            priority=1,
+        )
+
+        result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
+
+        self.assertFalse(result)

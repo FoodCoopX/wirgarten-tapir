@@ -10754,6 +10754,8 @@ components:
           format: uri
         payment_rhythm:
           type: string
+        can_be_fulfilled:
+          type: boolean
       required:
       - city
       - comment
