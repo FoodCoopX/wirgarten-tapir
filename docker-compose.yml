@@ -81,6 +81,8 @@ services:
       - '5173:5173'
     volumes:
       - .:/app
+      - vite_node_modules:/app/node_modules
 
 volumes:
   nginx-certs-volume:
+  vite_node_modules:
