@@ -20,27 +20,29 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
-    def setUp(self):
-        mock_timezone(self, datetime.datetime(year=2025, month=1, day=15))
-
-        self.product = ProductFactory.create(type__delivery_cycle=WEEKLY[0])
-        ProductPriceFactory.create(product=self.product, size=1)
-        self.growing_period = GrowingPeriodFactory.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.product = ProductFactory.create(type__delivery_cycle=WEEKLY[0])
+        ProductPriceFactory.create(product=cls.product, size=1)
+        cls.growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=12, day=31),
         )
         ProductCapacityFactory.create(
-            product_type=self.product.type,
-            period=self.growing_period,
+            product_type=cls.product.type,
+            period=cls.growing_period,
             capacity=100,
         )
 
-        self.pickup_location = PickupLocationFactory.create()
+        cls.pickup_location = PickupLocationFactory.create()
         PickupLocationCapabilityFactory.create(
-            pickup_location=self.pickup_location,
-            product_type=self.product.type,
+            pickup_location=cls.pickup_location,
+            product_type=cls.product.type,
             max_capacity=100,
         )
+
+    def setUp(self):
+        mock_timezone(self, datetime.datetime(year=2025, month=1, day=15))
 
     def test_no_pickup_location_wishes_returns_false(self):
         entry = WaitingListEntryFactory.create()
