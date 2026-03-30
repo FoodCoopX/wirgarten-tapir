@@ -368,14 +368,13 @@ class WaitingListApiView(APIView):
     @classmethod
     def check_if_entry_can_be_fulfilled(cls, entry: WaitingListEntry, cache: dict):
         pickup_location_wishes = entry.pickup_location_wishes.all()
-        product_wishes = entry.product_wishes.all()
 
-        if not pickup_location_wishes or not product_wishes:
+        if not pickup_location_wishes or not entry.product_wishes.all():
             return False
 
-        order: TapirOrder = {}
-        for wish in product_wishes:
-            order[wish.product] = wish.quantity
+        order: TapirOrder = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
+            entry
+        )
 
         subscription_start = (
             entry.desired_start_date
