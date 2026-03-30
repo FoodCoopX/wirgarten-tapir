@@ -244,7 +244,7 @@ def _register_tokens():
             "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
             "Verteilstation - Abholzeiten": PickupLocationMailTokenService.pickup_location_opening_times,
             "Vertragsliste an der nächste Lieferung mit Gesamtpreis": SubscriptionMailTokenService.contract_list_on_next_delivery,
-            "Monatlicher Preis inkl. Soli beim nächste Lieferung": SubscriptionMailTokenService.total_price_on_next_delivery,
+            "Monatlicher Preis inkl Soli beim nächste Lieferung": SubscriptionMailTokenService.total_price_on_next_delivery,
             "Monatlicher Soli-Teil beim nächste Lieferung": SubscriptionMailTokenService.solidarity_part_on_next_delivery,
         },
     )
