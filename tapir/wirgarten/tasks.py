@@ -107,7 +107,9 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
             for key, group in itertools.groupby(subs, key=lambda sub: sub.product.name)
         }
 
-        sum_without_soli = sum(map(lambda x: x.total_price_without_soli, subs))
+        sum_without_soli = sum(
+            map(lambda x: x.total_price_without_soli(cache=cache), subs)
+        )
 
         data = {
             KEY_PICKUP_LOCATION: pickup_location,

@@ -725,7 +725,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
         return self._total_price
 
-    @property
     def total_price_without_soli(
         self, reference_date: datetime.date = None, cache: Dict = None
     ):
