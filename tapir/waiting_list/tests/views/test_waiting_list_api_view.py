@@ -67,7 +67,6 @@ class TestWaitingListAPIView(TapirIntegrationTest):
 
         growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2025, month=1, day=1),
-            end_date=datetime.date(year=2025, month=12, day=31),
         )
         ProductCapacityFactory.create(
             product_type=subscription.product.type,
