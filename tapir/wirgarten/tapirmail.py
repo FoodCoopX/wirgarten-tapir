@@ -21,6 +21,9 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.pickup_location_mail_token_service import (
     PickupLocationMailTokenService,
 )
+from tapir.subscriptions.services.subscriptions_mail_token_service import (
+    SubscriptionMailTokenService,
+)
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -75,6 +78,9 @@ class Segments:
     NON_COOP_MEMBERS = "Nicht Geno-Mitglieder"
     WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Ertevertrag"
     WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufenden Ertevertrag"
+    WITH_ACTIVE_SUBSCRIPTION_AT_NEXT_DELIVERY = (
+        "Mit laufendem Erntevertrag an der nächster Lieferung"
+    )
 
 
 class Filters:
@@ -114,6 +120,11 @@ def _register_segments():
     register_segment(
         Segments.WITHOUT_ACTIVE_SUBSCRIPTION,
         lambda: Member.objects.without_active_subscription(),
+    )
+
+    register_segment(
+        Segments.WITH_ACTIVE_SUBSCRIPTION_AT_NEXT_DELIVERY,
+        lambda: Member.objects.with_active_subscription_on_next_delivery(),
     )
 
 
@@ -232,6 +243,9 @@ def _register_tokens():
             "Verteilstation - Photo-Link": PickupLocationMailTokenService.pickup_location_photo_link,
             "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
             "Verteilstation - Abholzeiten": PickupLocationMailTokenService.pickup_location_opening_times,
+            "Vertragsliste an der nächste Lieferung mit Gesamtpreis": SubscriptionMailTokenService.contract_list_on_next_delivery,
+            "Monatlicher Preis inkl. Soli beim nächste Lieferung": SubscriptionMailTokenService.total_price_on_next_delivery,
+            "Monatlicher Soli-Teil beim nächste Lieferung": SubscriptionMailTokenService.solidarity_part_on_next_delivery,
         },
     )
 

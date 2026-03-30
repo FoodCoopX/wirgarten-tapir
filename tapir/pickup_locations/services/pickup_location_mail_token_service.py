@@ -1,4 +1,3 @@
-from icecream import ic
 from tapir_mail.models import StaticSegmentRecipient
 
 from tapir.pickup_locations.services.member_pickup_location_service import (
@@ -51,10 +50,8 @@ class PickupLocationMailTokenService:
     ):
         pickup_location = cls.get_pickup_location_if_available(recipient, cache)
         if pickup_location is None:
-            ic("GOT NONE", recipient.email)
             return cls.NOT_APPLICABLE
 
-        ic("GOT PL", recipient.email)
         return UserUtils.build_display_address(
             street=pickup_location.street,
             street_2=pickup_location.street_2,

@@ -289,6 +289,20 @@ class MemberQuerySet(models.QuerySet):
             .distinct()
         )
 
+    def with_active_subscription_on_next_delivery(
+        self, reference_date: datetime.date | None = None
+    ):
+        from tapir.wirgarten.service.products import get_active_subscriptions
+        from tapir.wirgarten.service.delivery import get_next_delivery_date
+
+        next_delivery_date = get_next_delivery_date(reference_date=reference_date)
+
+        return self.filter(
+            id__in=get_active_subscriptions(reference_date=next_delivery_date)
+            .values_list("member", flat=True)
+            .distinct()
+        )
+
     def without_active_subscription(self, reference_date: datetime.date | None = None):
         return self.exclude(
             id__in=Member.objects.with_active_subscription(reference_date)
@@ -712,11 +726,15 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         return self._total_price
 
     @property
-    def total_price_without_soli(self):
-        today = get_today()
+    def total_price_without_soli(
+        self, reference_date: datetime.date = None, cache: Dict = None
+    ):
+        if reference_date is None:
+            reference_date = get_today(cache=cache)
+
         if not hasattr(self, "_total_price_without_soli"):
             product_prices = ProductPrice.objects.filter(
-                product_id=self.product_id, valid_from__lte=today
+                product_id=self.product_id, valid_from__lte=reference_date
             ).order_by("product_id", "-valid_from")
             self._total_price_without_soli = (
                 next(
