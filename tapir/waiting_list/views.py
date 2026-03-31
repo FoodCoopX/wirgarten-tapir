@@ -382,32 +382,26 @@ class WaitingListApiView(APIView):
             else get_today(cache=cache)
         )
 
-        try:
-            product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
-                order_with_all_product_types=order,
-                member_id=entry.member_id if entry.member else None,
-                subscription_start_date=subscription_start,
-                cache=cache,
-            )
-        except Exception:
-            return False
+        product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
+            order_with_all_product_types=order,
+            member_id=entry.member_id if entry.member else None,
+            subscription_start_date=subscription_start,
+            cache=cache,
+        )
 
         if product_type_ids_without_enough_capacity:
             return False
 
         for pickup_location_wish in pickup_location_wishes:
-            try:
-                has_capacity = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
-                    pickup_location=pickup_location_wish.pickup_location,
-                    order=order,
-                    already_registered_member=entry.member,
-                    subscription_start=subscription_start,
-                    cache=cache,
-                )
-                if has_capacity:
-                    return True
-            except Exception:
-                continue
+            has_capacity = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+                pickup_location=pickup_location_wish.pickup_location,
+                order=order,
+                already_registered_member=entry.member,
+                subscription_start=subscription_start,
+                cache=cache,
+            )
+            if has_capacity:
+                return True
 
         return False
 
