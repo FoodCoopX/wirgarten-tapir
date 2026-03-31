@@ -19,7 +19,6 @@ class TestGetNumberOfMonthsAndDeliveriesToPay(SimpleTestCase):
         range_start = datetime.date(2020, 1, 1)
         range_end = datetime.date(2020, 6, 30)
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(2020, 1, 7),
             end_date=datetime.date(2020, 6, 20),
             product__type__delivery_cycle=WEEKLY[0],

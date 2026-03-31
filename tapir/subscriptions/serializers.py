@@ -17,6 +17,7 @@ from tapir.deliveries.services.subscription_price_type_decider import (
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     Member,
@@ -34,6 +35,11 @@ class ProductForCancellationSerializer(serializers.Serializer):
     product = ProductSerializer(read_only=True)
     is_in_trial = serializers.BooleanField()
     cancellation_date = serializers.DateField()
+    last_day_of_notice_period = serializers.DateField()
+    date_limit_for_trial_cancellation = serializers.DateField()
+    notice_period_duration = serializers.IntegerField()
+    notice_period_unit = serializers.ChoiceField(choices=NOTICE_PERIOD_UNIT_OPTIONS)
+    subscription_end_date = serializers.DateField()
 
 
 class SolidarityContributionCancellationDataSerializer(serializers.Serializer):
@@ -50,6 +56,7 @@ class CancellationDataSerializer(serializers.Serializer):
     default_cancellation_reasons = serializers.ListField(child=serializers.CharField())
     show_trial_period_help_text = serializers.BooleanField()
     trial_period_duration = serializers.IntegerField()
+    trial_period_is_flexible = serializers.BooleanField()
 
 
 class CancelSubscriptionsViewResponseSerializer(serializers.Serializer):

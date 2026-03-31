@@ -396,15 +396,14 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.client.force_login(member)
 
         growing_period = GrowingPeriodFactory.create(
-            start_date=TODAY.replace(month=1, day=1),
-            end_date=TODAY.replace(month=12, day=31),
+            start_date=TODAY.replace(month=1, day=1)
         )
         subscriptions = SubscriptionFactory.create_batch(
             size=3,
             member=member,
             period=growing_period,
         )
-        subscriptions[1].start_date = TODAY + datetime.timedelta(days=3)
+        subscriptions[1].start_date = TODAY + datetime.timedelta(days=5)
         subscriptions[1].save()
 
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
@@ -432,6 +431,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         self.assertEqual(0, len(response.json()["errors"]))
+
         mock_fire_action.assert_called_once_with(
             TransactionalTriggerData(
                 key=Events.CONTRACT_CANCELLED,

@@ -26,6 +26,10 @@ def get_monday(date: datetime.date):
     return date - datetime.timedelta(days=date.weekday())
 
 
+def get_next_sunday(date: datetime.date):
+    return get_monday(date) + datetime.timedelta(days=6)
+
+
 def get_timezone_aware_datetime(
     date: datetime.date, time: datetime.time
 ) -> datetime.datetime:

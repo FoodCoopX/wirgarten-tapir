@@ -17,16 +17,16 @@ class TestGroupSubscriptionsByMemberAndProductType(SimpleTestCase):
         member_1 = MemberFactory.build(pk="m1")
         member_2 = MemberFactory.build(pk="m2")
         subscription_m1_pt1_a = SubscriptionFactory.build(
-            member=member_1, product__type=product_type_1, mandate_ref__ref="test_ref_1"
+            member=member_1, product__type=product_type_1
         )
         subscription_m1_pt1_b = SubscriptionFactory.build(
-            member=member_1, product__type=product_type_1, mandate_ref__ref="test_ref_1"
+            member=member_1, product__type=product_type_1
         )
         subscription_m1_pt2 = SubscriptionFactory.build(
-            member=member_1, product__type=product_type_2, mandate_ref__ref="test_ref_1"
+            member=member_1, product__type=product_type_2
         )
         subscription_m2_pt1 = SubscriptionFactory.build(
-            member=member_2, product__type=product_type_1, mandate_ref__ref="test_ref_2"
+            member=member_2, product__type=product_type_1
         )
 
         result = MonthPaymentBuilderSubscriptions.group_subscriptions_by_member_and_product_type(

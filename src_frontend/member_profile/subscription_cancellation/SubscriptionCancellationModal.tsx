@@ -58,6 +58,7 @@ const SubscriptionCancellationModal: React.FC<
     string | undefined
   >();
   const [trialPeriodDuration, setTrialPeriodDuration] = useState<number>();
+  const [trialPeriodIsFlexible, setTrialPeriodIsFlexible] = useState(false);
 
   useEffect(() => {
     if (!show) {
@@ -77,6 +78,7 @@ const SubscriptionCancellationModal: React.FC<
         setLegalStatus(data.legalStatus);
         setDefaultCancellationReasons(data.defaultCancellationReasons);
         setSolidarityContributionData(data.solidarityContributionData);
+        setTrialPeriodIsFlexible(data.trialPeriodIsFlexible);
         if (data.showTrialPeriodHelpText) {
           setTrialPeriodDuration(data.trialPeriodDuration);
         }
@@ -180,6 +182,7 @@ const SubscriptionCancellationModal: React.FC<
               solidarityContributionData={solidarityContributionData}
               cancelSolidarityContribution={cancelSolidarityContribution}
               setCancelSolidarityContribution={setCancelSolidarityContribution}
+              trialPeriodIsFlexible={trialPeriodIsFlexible}
             />
           )}
           {currentStep === "reasons" && (

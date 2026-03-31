@@ -76,6 +76,12 @@ export interface CancellationData {
    * @memberof CancellationData
    */
   trialPeriodDuration: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof CancellationData
+   */
+  trialPeriodIsFlexible: boolean;
 }
 
 /**
@@ -116,6 +122,11 @@ export function instanceOfCancellationData(
     value["trialPeriodDuration"] === undefined
   )
     return false;
+  if (
+    !("trialPeriodIsFlexible" in value) ||
+    value["trialPeriodIsFlexible"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -142,6 +153,7 @@ export function CancellationDataFromJSONTyped(
     defaultCancellationReasons: json["default_cancellation_reasons"],
     showTrialPeriodHelpText: json["show_trial_period_help_text"],
     trialPeriodDuration: json["trial_period_duration"],
+    trialPeriodIsFlexible: json["trial_period_is_flexible"],
   };
 }
 
@@ -169,5 +181,6 @@ export function CancellationDataToJSONTyped(
     default_cancellation_reasons: value["defaultCancellationReasons"],
     show_trial_period_help_text: value["showTrialPeriodHelpText"],
     trial_period_duration: value["trialPeriodDuration"],
+    trial_period_is_flexible: value["trialPeriodIsFlexible"],
   };
 }

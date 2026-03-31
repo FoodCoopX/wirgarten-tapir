@@ -36,9 +36,7 @@ class TestDoesMemberHaveAtLeastOneSubscriptionDeliveredAtDate(SimpleTestCase):
         mock_get_subscriptions_active_at_date: Mock,
         mock_is_subscription_delivered_in_week: Mock,
     ):
-        subscriptions = SubscriptionFactory.build_batch(
-            size=3, mandate_ref__ref="test_ref"
-        )
+        subscriptions = SubscriptionFactory.build_batch(size=3)
         mock_get_subscriptions_active_at_date.return_value = subscriptions
 
         subscription_1, subscription_2, subscription_3 = subscriptions
@@ -81,9 +79,7 @@ class TestDoesMemberHaveAtLeastOneSubscriptionDeliveredAtDate(SimpleTestCase):
         mock_get_subscriptions_active_at_date: Mock,
         mock_is_subscription_delivered_in_week: Mock,
     ):
-        subscriptions = SubscriptionFactory.build_batch(
-            size=4, mandate_ref__ref="test_ref"
-        )
+        subscriptions = SubscriptionFactory.build_batch(size=4)
         mock_get_subscriptions_active_at_date.return_value = subscriptions
 
         subscription_1, subscription_2, subscription_3, subscription_4 = subscriptions

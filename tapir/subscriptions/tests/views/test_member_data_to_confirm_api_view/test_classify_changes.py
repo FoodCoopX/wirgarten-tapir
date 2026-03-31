@@ -8,24 +8,7 @@ class TestClassifyChanges(SimpleTestCase):
     def test_classifyChanges_productTypeHasOnlyCreations_allChangesAddedToCreations(
         self,
     ):
-        subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref")
-        changes_by_product_type = {
-            ProductTypeFactory.build(): {
-                "creations": [subscription],
-                "cancellations": [],
-            }
-        }
-
-        result = MemberDataToConfirmApiView.classify_changes(changes_by_product_type)
-
-        self.assertEqual([], result["cancellations"])
-        self.assertEqual([], result["changes"])
-        self.assertEqual([subscription], result["creations"])
-
-    def test_classifyChanges_productTypeSameOnlyCreations_allChangesAddedToCreations(
-        self,
-    ):
-        subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref")
+        subscription = SubscriptionFactory.build()
         changes_by_product_type = {
             ProductTypeFactory.build(): {
                 "creations": [subscription],
@@ -42,7 +25,7 @@ class TestClassifyChanges(SimpleTestCase):
     def test_classifyChanges_productTypeSameOnlyCancellations_allChangesAddedToCancellations(
         self,
     ):
-        subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref")
+        subscription = SubscriptionFactory.build()
         changes_by_product_type = {
             ProductTypeFactory.build(): {
                 "creations": [],
@@ -59,8 +42,8 @@ class TestClassifyChanges(SimpleTestCase):
     def test_classifyChanges_productTypeHasBothCreationsAndCancellations_allChangesAddedToChanges(
         self,
     ):
-        subscription_1 = SubscriptionFactory.build(mandate_ref__ref="test_ref")
-        subscription_2 = SubscriptionFactory.build(mandate_ref__ref="test_ref")
+        subscription_1 = SubscriptionFactory.build()
+        subscription_2 = SubscriptionFactory.build()
         product_type = ProductTypeFactory.build()
         changes_by_product_type = {
             product_type: {

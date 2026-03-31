@@ -19,7 +19,7 @@ MANDATE_REF_LENGTH = 35
 MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
-def generate_mandate_ref(member_id: str):
+def generate_mandate_ref(member: Member):
     """
     Generates a new mandate reference string.
 
@@ -28,11 +28,8 @@ def generate_mandate_ref(member_id: str):
     U = User Name
     X = Random String
 
-    :param member_id: the ID of the TapirUser/Member
-    :return: the mandate reference string
     """
 
-    member = Member.objects.get(id=member_id)
     cleaned_name = unidecode(f"{member.last_name[:5]}{member.first_name[:5]}")
     prefix = f"{cleaned_name}/".upper()
 

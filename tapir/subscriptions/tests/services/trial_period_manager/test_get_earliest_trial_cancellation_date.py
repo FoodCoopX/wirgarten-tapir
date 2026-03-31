@@ -23,7 +23,7 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
         "calculate_date_limit_for_delivery_changes_in_week",
     )
     @patch("tapir.subscriptions.services.trial_period_manager.get_next_delivery_date")
-    def test_getEarliestTrialCancellationDate_dateLimitIsAfterInputDate_returnsInputDate(
+    def test_getEarliestTrialCancellationDate_dateLimitIsAfterInputDate_returnsSundayAfterInputDate(
         self,
         mock_get_next_delivery_date: Mock,
         mock_calculate_date_limit_for_delivery_changes_in_week: Mock,
@@ -41,7 +41,7 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
             subscription, cache=cache
         )
 
-        self.assertEqual(self.today, result)
+        self.assertEqual(datetime.date(year=2027, month=6, day=6), result)
         mock_get_next_delivery_date.assert_called_once_with(self.today, cache=cache)
         mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
             next_delivery_date, cache=cache
@@ -56,7 +56,7 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
         "calculate_date_limit_for_delivery_changes_in_week",
     )
     @patch("tapir.subscriptions.services.trial_period_manager.get_next_delivery_date")
-    def test_getEarliestTrialCancellationDate_dateLimitIsSayDayAsInputDate_returnsInputDate(
+    def test_getEarliestTrialCancellationDate_dateLimitIsSameDayAsInputDate_returnsSundayAfterInputDate(
         self,
         mock_get_next_delivery_date: Mock,
         mock_calculate_date_limit_for_delivery_changes_in_week: Mock,
@@ -74,7 +74,7 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
             subscription, cache=cache
         )
 
-        self.assertEqual(self.today, result)
+        self.assertEqual(datetime.date(year=2027, month=6, day=6), result)
         mock_get_next_delivery_date.assert_called_once_with(self.today, cache=cache)
         mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
             next_delivery_date, cache=cache
@@ -89,7 +89,7 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
         "calculate_date_limit_for_delivery_changes_in_week",
     )
     @patch("tapir.subscriptions.services.trial_period_manager.get_next_delivery_date")
-    def test_getEarliestTrialCancellationDate_dateLimitIsBeforeInputDate_returnsDayAfterNextDelivery(
+    def test_getEarliestTrialCancellationDate_dateLimitIsBeforeInputDate_returnsSundayAfterDelivery(
         self,
         mock_get_next_delivery_date: Mock,
         mock_calculate_date_limit_for_delivery_changes_in_week: Mock,
@@ -107,7 +107,43 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
             subscription, cache=cache
         )
 
-        self.assertEqual(datetime.date(year=2027, month=6, day=11), result)
+        self.assertEqual(datetime.date(year=2027, month=6, day=13), result)
+        mock_get_next_delivery_date.assert_called_once_with(self.today, cache=cache)
+        mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
+            next_delivery_date, cache=cache
+        )
+        mock_get_parameter_value.assert_called_once_with(
+            ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
+        )
+
+    @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
+    @patch.object(
+        DateLimitForDeliveryChangeCalculator,
+        "calculate_date_limit_for_delivery_changes_in_week",
+    )
+    @patch("tapir.subscriptions.services.trial_period_manager.get_next_delivery_date")
+    def test_getEarliestTrialCancellationDate_dateLimitIsOnSundayAndTodayIsSunday_returnsToday(
+        self,
+        mock_get_next_delivery_date: Mock,
+        mock_calculate_date_limit_for_delivery_changes_in_week: Mock,
+        mock_get_parameter_value: Mock,
+    ):
+        self.today = mock_timezone(
+            self, datetime.datetime(year=2027, month=6, day=6)
+        ).date()
+        next_delivery_date = Mock()
+        mock_get_next_delivery_date.return_value = next_delivery_date
+        date_limit = datetime.date(year=2027, month=6, day=6)
+        mock_calculate_date_limit_for_delivery_changes_in_week.return_value = date_limit
+        cache = {}
+        subscription = Mock()
+        mock_get_parameter_value.return_value = True
+
+        result = TrialPeriodManager.get_earliest_trial_cancellation_date(
+            subscription, cache=cache
+        )
+
+        self.assertEqual(datetime.date(year=2027, month=6, day=6), result)
         mock_get_next_delivery_date.assert_called_once_with(self.today, cache=cache)
         mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
             next_delivery_date, cache=cache

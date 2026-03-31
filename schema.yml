@@ -5780,6 +5780,8 @@ components:
           type: boolean
         trial_period_duration:
           type: integer
+        trial_period_is_flexible:
+          type: boolean
       required:
       - can_cancel_coop_membership
       - default_cancellation_reasons
@@ -5788,6 +5790,7 @@ components:
       - solidarity_contribution_data
       - subscribed_products
       - trial_period_duration
+      - trial_period_is_flexible
     ChangeTypeEnum:
       enum:
       - ADDED
@@ -9395,10 +9398,28 @@ components:
         cancellation_date:
           type: string
           format: date
+        last_day_of_notice_period:
+          type: string
+          format: date
+        date_limit_for_trial_cancellation:
+          type: string
+          format: date
+        notice_period_duration:
+          type: integer
+        notice_period_unit:
+          $ref: '#/components/schemas/NoticePeriodUnitEnum'
+        subscription_end_date:
+          type: string
+          format: date
       required:
       - cancellation_date
+      - date_limit_for_trial_cancellation
       - is_in_trial
+      - last_day_of_notice_period
+      - notice_period_duration
+      - notice_period_unit
       - product
+      - subscription_end_date
     ProductType:
       type: object
       properties:
