@@ -8,7 +8,9 @@ from tapir.configuration.models import TapirParameter
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
-from tapir.subscriptions.views.cancellations import GetCancellationDataView
+from tapir.subscriptions.services.product_cancellation_data_builder import (
+    ProductCancellationDataBuilder,
+)
 from tapir.wirgarten.constants import ODD_WEEKS
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -72,6 +74,7 @@ class TestGet(TapirIntegrationTest):
         response_content = response.json()
         self.assertTrue(response_content["show_trial_period_help_text"])
         self.assertEqual(7, response_content["trial_period_duration"])
+        self.assertTrue(response_content["trial_period_is_flexible"])
 
     def test_get_trialPeriodDisabled_showTrialPeriodHelpTextIsFalse(
         self,
@@ -92,6 +95,25 @@ class TestGet(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["show_trial_period_help_text"])
 
+    def test_get_trialPeriodIsNotFlexible_returnsCorrectData(
+        self,
+    ):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END
+        ).update(value=False)
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+        SubscriptionFactory.create(
+            member=member, product__type__delivery_cycle=ODD_WEEKS[0]
+        )
+
+        url = reverse("subscriptions:cancellation_data")
+        response = self.client.get(f"{url}?member_id={member.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertFalse(response_content["trial_period_is_flexible"])
+
     def test_get_normalMemberAsksForDataOfOtherMember_returnsStatus403(
         self,
     ):
@@ -104,7 +126,7 @@ class TestGet(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
-    @patch.object(GetCancellationDataView, "build_subscribed_products_data")
+    @patch.object(ProductCancellationDataBuilder, "build_data_for_all_products")
     @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
     def test_get_adminAsksForDataOfOtherMember_returnsStatus200(self, *_):
         user = MemberFactory.create(is_superuser=True)
