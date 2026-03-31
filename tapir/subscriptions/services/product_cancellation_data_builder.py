@@ -27,7 +27,9 @@ class ProductCancellationDataBuilder:
             cls.build_data_for_a_single_product(
                 member=member, product=subscribed_product, cache=cache
             )
-            for subscribed_product in cls.get_subscribed_products(member, cache=cache)
+            for subscribed_product in cls.get_subscribed_products(
+                member=member, cache=cache
+            )
         ]
 
     @classmethod
