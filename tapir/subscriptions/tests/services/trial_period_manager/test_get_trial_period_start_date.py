@@ -54,7 +54,6 @@ class TestGetTrialPeriodStartDate(SimpleTestCase):
         contract_start_date = datetime.date(year=2022, month=12, day=16)
         product_type = ProductTypeFactory.build()
         contract = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=contract_start_date,
             member_id="test_member_id",
             product__type=product_type,

@@ -151,10 +151,11 @@ def create_mandate_ref(member: str | Member, cache: dict | None = None):
     :param member: the member
     """
 
-    member_id = resolve_member_id(member)
-    ref = generate_mandate_ref(member_id)
+    if isinstance(member, str):
+        member = Member.objects.get(id=member)
+    ref = generate_mandate_ref(member)
     return MandateReference.objects.create(
-        ref=ref, member_id=member_id, start_ts=get_now(cache)
+        ref=ref, member=member, start_ts=get_now(cache)
     )
 
 

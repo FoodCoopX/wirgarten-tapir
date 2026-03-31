@@ -135,7 +135,7 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference
     class Meta:
         model = MandateReference
 
-    ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member.id))
+    ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member))
     member = factory.SubFactory(MemberFactory)
     start_ts = NOW - relativedelta(months=1)
 

@@ -15,7 +15,6 @@ class TestValidateDates(SimpleTestCase):
         subscription = SubscriptionFactory.build(
             start_date=datetime.date(year=2022, month=5, day=17),
             end_date=datetime.date(year=2022, month=7, day=28),
-            mandate_ref__ref="test_ref",
         )
 
         with self.assertRaises(ValidationError):
@@ -30,7 +29,7 @@ class TestValidateDates(SimpleTestCase):
     def test_validateDates_givenEndDateIsNotOnCorrectDay_raisesError(
         self, mock_get_parameter_value: Mock
     ):
-        subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref")
+        subscription = SubscriptionFactory.build()
         parameter_values = {
             ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL: 6,
         }
@@ -56,7 +55,6 @@ class TestValidateDates(SimpleTestCase):
         self, mock_get_growing_period_at_date: Mock
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2023, month=1, day=1),
         )
         cache = Mock()
@@ -91,7 +89,6 @@ class TestValidateDates(SimpleTestCase):
         self, mock_get_parameter_value: Mock, mock_get_growing_period_at_date: Mock
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             end_date=datetime.date(year=2023, month=12, day=31),
         )
         parameter_values = {

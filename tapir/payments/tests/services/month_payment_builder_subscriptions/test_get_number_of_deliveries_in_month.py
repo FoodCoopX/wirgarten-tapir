@@ -28,7 +28,6 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
     ):
         delivery_cycle = Mock()
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=12, day=31),
             product__type__delivery_cycle=delivery_cycle,
@@ -137,7 +136,6 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
     ):
         delivery_cycle = Mock()
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2025, month=8, day=10),
             end_date=datetime.date(year=2025, month=12, day=31),
             product__type__delivery_cycle=delivery_cycle,
@@ -185,7 +183,6 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
     ):
         delivery_cycle = Mock()
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=8, day=23),
             product__type__delivery_cycle=delivery_cycle,
@@ -233,7 +230,6 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
     ):
         delivery_cycle = Mock()
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2025, month=8, day=4),
             end_date=datetime.date(year=2025, month=8, day=24),
             product__type__delivery_cycle=delivery_cycle,
