@@ -44,7 +44,7 @@ class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
     def setUp(self):
         mock_timezone(self, datetime.datetime(year=2025, month=1, day=15))
 
-    def test_no_pickup_location_wishes_returns_false(self):
+    def test_checkIfEntryCanBeFulfilled_noPickupLocationWishes_returnsFalse(self):
         entry = WaitingListEntryFactory.create()
         WaitingListProductWish.objects.create(
             waiting_list_entry=entry, product=self.product, quantity=1
@@ -54,7 +54,7 @@ class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
 
         self.assertFalse(result)
 
-    def test_no_product_wishes_returns_false(self):
+    def test_checkIfEntryCanBeFulfilled_noProductWishes_returnsFalse(self):
         entry = WaitingListEntryFactory.create()
         WaitingListPickupLocationWish.objects.create(
             waiting_list_entry=entry,
@@ -66,7 +66,9 @@ class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
 
         self.assertFalse(result)
 
-    def test_with_wishes_but_insufficient_global_capacity_returns_false(self):
+    def test_checkIfEntryCanBeFulfilled_withWishesButInsufficientGlobalCapacity_returnsFalse(
+        self,
+    ):
         ProductCapacity.objects.filter(
             product_type=self.product.type, period=self.growing_period
         ).update(capacity=0)
