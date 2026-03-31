@@ -27,7 +27,7 @@ class SubscriptionCancellationManager:
             if subscription.cancellation_ts is None
         ]
         earliest_subscription = subscriptions_for_this_product[0]
-        if TrialPeriodManager.is_contract_in_trial(earliest_subscription):
+        if TrialPeriodManager.is_contract_in_trial(earliest_subscription, cache=cache):
             return TrialPeriodManager.get_earliest_trial_cancellation_date(
                 earliest_subscription, cache=cache
             )

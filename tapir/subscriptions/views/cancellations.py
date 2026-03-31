@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from icecream import ic
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -26,6 +25,9 @@ from tapir.subscriptions.serializers import (
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
+)
+from tapir.subscriptions.services.product_cancellation_data_builder import (
+    ProductCancellationDataBuilder,
 )
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
@@ -69,7 +71,7 @@ class GetCancellationDataView(APIView):
             "can_cancel_coop_membership": MembershipCancellationManager.can_member_cancel_coop_membership(
                 member, cache=cache
             ),
-            "subscribed_products": self.build_subscribed_products_data(
+            "subscribed_products": ProductCancellationDataBuilder.build_data_for_all_products(
                 member, cache=cache
             ),
             "legal_status": get_parameter_value(
@@ -88,7 +90,10 @@ class GetCancellationDataView(APIView):
                 cache=cache, member=member
             ),
             "trial_period_duration": get_parameter_value(
-                ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
+                key=ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
+            ),
+            "trial_period_is_flexible": get_parameter_value(
+                key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
             ),
         }
 
@@ -100,16 +105,12 @@ class GetCancellationDataView(APIView):
     @classmethod
     def show_trial_period_help_text(cls, cache: dict, member: Member):
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
-            ic("NOPE")
             return False
 
         relevant_product_types = ProductType.objects.exclude(
             delivery_cycle__in=[WEEKLY[0], NO_DELIVERY[0]]
         )
-        subs = get_active_and_future_subscriptions(cache=cache).filter(
-            member=member, product__type__in=relevant_product_types
-        )
-        ic(relevant_product_types, subs)
+
         return (
             get_active_and_future_subscriptions(cache=cache)
             .filter(member=member, product__type__in=relevant_product_types)
@@ -141,30 +142,6 @@ class GetCancellationDataView(APIView):
             "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date_for_solidarity_contribution(
                 member=member, cache=cache
             ),
-        }
-
-    @classmethod
-    def build_subscribed_products_data(cls, member: Member, cache: dict):
-        return [
-            {
-                "product": subscribed_product,
-                "is_in_trial": TrialPeriodManager.is_product_in_trial(
-                    subscribed_product, member, cache=cache
-                ),
-                "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date_for_product(
-                    product=subscribed_product, member=member, cache=cache
-                ),
-            }
-            for subscribed_product in cls.get_subscribed_products(member, cache=cache)
-        ]
-
-    @classmethod
-    def get_subscribed_products(cls, member: Member, cache: dict):
-        return {
-            subscription.product
-            for subscription in get_active_and_future_subscriptions(cache=cache).filter(
-                member=member, cancellation_ts__isnull=True
-            )
         }
 
 
@@ -334,7 +311,7 @@ class CancelSubscriptionsView(APIView):
                 "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du noch nicht Mitglied bist."
             )
 
-        subscribed_products = GetCancellationDataView.get_subscribed_products(
+        subscribed_products = ProductCancellationDataBuilder.get_subscribed_products(
             member, cache=self.cache
         )
         if (

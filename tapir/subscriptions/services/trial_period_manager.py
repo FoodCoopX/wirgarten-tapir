@@ -84,8 +84,8 @@ class TrialPeriodManager:
     def is_contract_in_trial(
         cls,
         contract: Subscription | SolidarityContribution,
+        cache: dict,
         reference_date: datetime.date = None,
-        cache: dict = None,
     ) -> bool:
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
             return False
@@ -138,13 +138,14 @@ class TrialPeriodManager:
             reference_date = get_today(cache=cache)
 
         return cls.is_contract_in_trial(
-            get_active_and_future_subscriptions(
+            contract=get_active_and_future_subscriptions(
                 reference_date=reference_date, cache=cache
             )
             .filter(member=member, product=product)
             .order_by("start_date")
             .first(),
-            reference_date,
+            reference_date=reference_date,
+            cache=cache,
         )
 
     @classmethod
