@@ -9,7 +9,7 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
-from tapir.utils.shortcuts import get_monday
+from tapir.utils.shortcuts import get_monday, get_next_sunday
 from tapir.wirgarten.models import Subscription, Product, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
@@ -38,7 +38,7 @@ class TrialPeriodManager:
     @classmethod
     def get_last_day_of_trial_period_by_weeks(
         cls, contract: Subscription | SolidarityContribution, cache: dict
-    ):
+    ) -> datetime.date:
         start_date = cls.get_trial_period_start_date(contract=contract, cache=cache)
 
         return (
@@ -103,8 +103,8 @@ class TrialPeriodManager:
     def get_earliest_trial_cancellation_date(
         cls,
         contract: Subscription | SolidarityContribution,
-        reference_date: datetime.date | None = None,
-        cache: dict = None,
+        cache: dict,
+        reference_date: datetime.date = None,
     ) -> datetime.date:
         if not get_parameter_value(
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
@@ -119,9 +119,9 @@ class TrialPeriodManager:
             next_delivery_date, cache=cache
         )
         if date_limit >= reference_date:
-            return reference_date
+            return get_next_sunday(reference_date)
 
-        return next_delivery_date + datetime.timedelta(days=1)
+        return get_next_sunday(next_delivery_date)
 
     @classmethod
     def is_product_in_trial(

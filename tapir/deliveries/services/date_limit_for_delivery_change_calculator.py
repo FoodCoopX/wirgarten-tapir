@@ -10,7 +10,7 @@ class DateLimitForDeliveryChangeCalculator:
     @classmethod
     def calculate_date_limit_for_delivery_changes_in_week(
         cls, reference_date: datetime.date, cache: dict
-    ):
+    ) -> datetime.date:
         # at the latest,changes can be done at the returned date.
         # One day after the returned date, changes are not possible
 

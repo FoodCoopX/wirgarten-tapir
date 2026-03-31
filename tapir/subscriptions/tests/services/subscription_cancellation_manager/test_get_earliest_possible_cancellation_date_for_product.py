@@ -48,7 +48,7 @@ class TestGetEarliestPossibleCancellationDate(TapirIntegrationTest):
             product, member, cache={}
         )
 
-        self.assertEqual(datetime.date(year=2022, month=6, day=9), result)
+        self.assertEqual(datetime.date(year=2022, month=6, day=12), result)
 
     def test_getEarliestPossibleCancellationDateForProduct_noSubscriptionInTrial_returnsBiggestSubscriptionEndDate(
         self,
