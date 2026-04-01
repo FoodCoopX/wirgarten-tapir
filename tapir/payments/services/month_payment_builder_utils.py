@@ -172,7 +172,7 @@ class MonthPaymentBuilderUtils:
         contracts: set[Subscription | SolidarityContribution],
         cache: dict,
     ) -> datetime.date:
-        payments_due_date = MonthPaymentBuilderUtils.get_payment_due_date_on_month(
+        payments_due_date = cls.get_payment_due_date_on_month(
             reference_date=(
                 get_first_of_next_month(first_of_month) if in_trial else first_of_month
             ),
@@ -180,7 +180,7 @@ class MonthPaymentBuilderUtils:
         )
         min_start_date = min(contract.start_date for contract in contracts)
         if min_start_date > payments_due_date:
-            payments_due_date = MonthPaymentBuilderUtils.get_payment_due_date_on_month(
+            payments_due_date = cls.get_payment_due_date_on_month(
                 reference_date=(get_first_of_next_month(payments_due_date)),
                 cache=cache,
             )
