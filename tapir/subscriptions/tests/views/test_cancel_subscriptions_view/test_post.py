@@ -42,6 +42,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
+        super().setUp()
         mock_timezone(self, NOW)
 
     @patch.object(MembershipCancellationManager, "cancel_coop_membership")

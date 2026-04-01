@@ -19,6 +19,7 @@ class TestGetEarliestPossibleCancellationDate(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, datetime.datetime(year=2022, month=6, day=7))
 
     def test_getEarliestPossibleCancellationDateForProduct_earliestSubscriptionIsInTrial_returnsTrialCancellationDate(

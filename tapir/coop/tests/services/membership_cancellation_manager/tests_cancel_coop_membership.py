@@ -21,6 +21,7 @@ class TestCancelCoopMembership(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, datetime.datetime(year=2024, month=9, day=27))
 
     def test_cancelCoopMembership_default_deletesAllFutureSharePurchasesAndCreatesLogEntry(

@@ -22,6 +22,7 @@ class TestGetMemberDeliveriesView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, factories.NOW)
 
     @patch.object(GetDeliveriesService, "get_deliveries")

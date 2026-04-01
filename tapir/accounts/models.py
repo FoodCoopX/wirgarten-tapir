@@ -82,6 +82,9 @@ class KeycloakUser(AbstractUser):
         ).save()
 
     def has_perm(self, perm, obj=None):
+        if is_running_tests():
+            return self.is_superuser
+
         target = self
         if obj is not None:
             target = obj

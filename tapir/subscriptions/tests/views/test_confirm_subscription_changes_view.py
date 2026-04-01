@@ -23,6 +23,7 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(self, NOW)
 
     def test_post_loggedInAsNormalMember_returns403(self):
