@@ -175,6 +175,12 @@ class SubscriptionFactory(factory.django.DjangoModelFactory[Subscription]):
     )
     notice_period_duration = 3
     notice_period_unit = NOTICE_PERIOD_UNIT_MONTHS
+    created_at = factory.LazyAttribute(
+        lambda subscription: datetime.datetime.combine(
+            subscription.start_date - datetime.timedelta(days=4),
+            datetime.time(hour=5, minute=0),
+        )
+    )
 
 
 class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):

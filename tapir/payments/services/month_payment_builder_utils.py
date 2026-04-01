@@ -178,8 +178,16 @@ class MonthPaymentBuilderUtils:
             ),
             cache=cache,
         )
-        min_start_date = min(contract.start_date for contract in contracts)
-        if min_start_date > payments_due_date:
+
+        min_creation_date = min(
+            (
+                contract.created_at.date()
+                if contract.created_at
+                else contract.start_date
+            )  # Renewed contracts that are planned but not saved yet don't have a created_at yet.
+            for contract in contracts
+        )
+        if min_creation_date > payments_due_date:
             payments_due_date = cls.get_payment_due_date_on_month(
                 reference_date=(get_first_of_next_month(payments_due_date)),
                 cache=cache,
