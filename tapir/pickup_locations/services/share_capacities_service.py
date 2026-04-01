@@ -9,12 +9,9 @@ class SharesCapacityService:
         cls, pickup_location: PickupLocation, cache: dict = None
     ):
         def compute():
-            capacities = {
-                product_type: None
-                for product_type in ProductType.objects.exclude(
-                    delivery_cycle=NO_DELIVERY[0]
-                )
-            }
+            capacities = dict.fromkeys(
+                ProductType.objects.exclude(delivery_cycle=NO_DELIVERY[0]), None
+            )
             for capability in PickupLocationCapability.objects.filter(
                 pickup_location=pickup_location
             ).select_related("product_type"):

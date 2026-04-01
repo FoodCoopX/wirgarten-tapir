@@ -13,6 +13,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { CYCLE_OPTIONS } from "./CYCLE_OPTIONS.ts";
 
 interface CsvExportModalProps {
   show: boolean;
@@ -57,7 +58,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
 
   function onSegmentSelectChanged(event: ChangeEvent<HTMLSelectElement>) {
     const segmentId = event.target.value;
-    if (exportSegment && segmentId === exportSegment.id) return;
+    if (segmentId === exportSegment?.id) return;
 
     for (const segment of segments) {
       if (segment.id === segmentId) {
@@ -186,16 +187,6 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
     setExportSeparator(event.target.value);
   }
 
-  function cycleOptions() {
-    return {
-      yearly: "Jährlich",
-      monthly: "Monatlich",
-      weekly: "Wöchentlich",
-      daily: "Täglich",
-      never: "nie",
-    };
-  }
-
   return (
     <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
       <Modal.Header closeButton>
@@ -228,9 +219,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
                       <option
                         key={segment.id}
                         value={segment.id}
-                        selected={
-                          exportSegment && segment.id == exportSegment.id
-                        }
+                        selected={segment.id == exportSegment?.id}
                       >
                         {segment.displayName}
                       </option>
@@ -335,7 +324,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
                     )
                   }
                 >
-                  {Object.entries(cycleOptions()).map(([key, value]) => {
+                  {Object.entries(CYCLE_OPTIONS).map(([key, value]) => {
                     return (
                       <option
                         key={key}
@@ -355,7 +344,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
                 <Form.Control
                   type={"number"}
                   onChange={(event) =>
-                    setExportDay(parseInt(event.target.value))
+                    setExportDay(Number.parseInt(event.target.value))
                   }
                   required={true}
                   value={exportDay}

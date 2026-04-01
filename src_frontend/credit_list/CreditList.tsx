@@ -81,7 +81,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                       <Form.Select
                         value={monthFilter}
                         onChange={(event) =>
-                          setMonthFilter(parseInt(event.target.value))
+                          setMonthFilter(Number.parseInt(event.target.value))
                         }
                       >
                         <option key={-1} value={-1}>
@@ -106,7 +106,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                         onChange={(event) =>
                           event.target.value === ""
                             ? setYearFilter(undefined)
-                            : setYearFilter(parseInt(event.target.value))
+                            : setYearFilter(Number.parseInt(event.target.value))
                         }
                       ></Form.Control>
                     </Form.Group>

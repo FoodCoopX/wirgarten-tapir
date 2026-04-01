@@ -1,21 +1,25 @@
+{% load i18n %}
 {% load tapir_static %}
-
-<html>
-<head>
-    <link rel="stylesheet" href="{% static 'wirgarten/css/loading-spinner.css' %}"/>
-    <link rel="stylesheet" href="{% static 'core/css/custom.css' %}"/>
-    <script>
-        setTimeout(() => window.location.replace('{% url 'index' %}'), 3000)
-
-    </script>
-</head>
-<body>
-<div class="container" style="text-align: center; margin-top: 10%">
-    <h1>Ups, dieser Link scheint nicht gültig zu sein.</h1>
-    <br/>
-    {% include 'wirgarten/generic/loading-spinner.html' %}
-    <br/>
-    <h3>Du wirst gleich weitergeleitet...</h3>
-</div>
-</body>
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+    <head>
+        <title>Link expired</title>
+        <link rel="stylesheet"
+              href="{% static 'wirgarten/css/loading-spinner.css' %}" />
+        <link rel="stylesheet" href="{% static 'core/css/custom.css' %}" />
+        <script>
+            setTimeout(() => window.location.replace('{% url '
+                index ' %}'), 3000)
+        </script>
+    </head>
+    <body>
+        <div class="container" style="text-align: center; margin-top: 10%">
+            <h1>Ups, dieser Link scheint nicht gültig zu sein.</h1>
+            <br />
+            {% include 'wirgarten/generic/loading-spinner.html' %}
+            <br />
+            <h3>Du wirst gleich weitergeleitet...</h3>
+        </div>
+    </body>
 </html>

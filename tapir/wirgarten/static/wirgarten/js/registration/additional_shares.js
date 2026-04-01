@@ -1,10 +1,11 @@
-var initAdditionalShareSummary = (additional_share_prices, capacity_total, additional_share_sizes) => {
-
+var initAdditionalShareSummary = (
+  additional_share_prices,
+  capacity_total,
+  additional_share_sizes,
+) => {
   const calculatePrice = (chicken_share) => {
     const [key, price] = chicken_share.split(":");
-    const elem = document.querySelector(
-      `[name$='${key}']`
-    );
+    const elem = document.querySelector(`[name$='${key}']`);
 
     if (!elem) return 0;
     let value = 0;
@@ -18,9 +19,7 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total, addit
 
   const calculateCapacity = (chicken_share) => {
     const [key, size] = chicken_share.split(":");
-    const elem = document.querySelector(
-        `[name$='${key}']`
-    );
+    const elem = document.querySelector(`[name$='${key}']`);
 
     if (!elem) return 0;
     let value;
@@ -39,15 +38,17 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total, addit
   };
 
   const calculateTotalCapacity = () => {
-    return additional_share_sizes.map(calculateCapacity).reduce((a, b) => a + b);
+    return additional_share_sizes
+      .map(calculateCapacity)
+      .reduce((a, b) => a + b);
   };
 
   const handleChange = (event) => {
     if (event) {
-      const value = parseInt(event.target.value);
-      const max = parseInt(event.target.max || 100);
+      const value = Number.parseInt(event.target.value);
+      const max = Number.parseInt(event.target.max || 100);
 
-      if (isNaN(value)) {
+      if (Number.isNaN(value)) {
         event.target.value = event.target.checked ? 1 : 0;
       } else if (value < 0) {
         event.target.value = 0;
@@ -65,10 +66,8 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total, addit
 
   additional_share_prices.forEach((share) => {
     const [key, price] = share.split(":");
-    let input = document.querySelector(
-      `[name$='${key}']`
-    );
-    
+    let input = document.querySelector(`[name$='${key}']`);
+
     if (!input) return;
     if (input.max) {
       input.max = Math.max(0, Math.floor(capacity_total / price));

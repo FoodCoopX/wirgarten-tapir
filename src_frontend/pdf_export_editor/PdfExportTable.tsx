@@ -1,7 +1,8 @@
 import React from "react";
-import { Placeholder, Table } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import TapirButton from "../components/TapirButton.tsx";
 import { ExportSegment, PdfExportModel } from "../api-client";
+import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 
 interface PdfExportTableProps {
   exports: PdfExportModel[];
@@ -20,22 +21,6 @@ const PdfExportTable: React.FC<PdfExportTableProps> = ({
   onExportDeleteClicked,
   onExportBuildClicked,
 }) => {
-  function loadingPlaceholders() {
-    return Array.from(Array(7).keys()).map((index) => {
-      return (
-        <tr key={index}>
-          {Array.from(Array(3).keys()).map((index) => {
-            return (
-              <td key={index}>
-                <Placeholder lg={10} />
-              </td>
-            );
-          })}
-        </tr>
-      );
-    });
-  }
-
   function getSegmentName(segmentId: string) {
     for (const segment of segments) {
       if (segment.id === segmentId) return segment.displayName;
@@ -87,7 +72,13 @@ const PdfExportTable: React.FC<PdfExportTableProps> = ({
           <th></th>
         </tr>
       </thead>
-      <tbody>{loading ? loadingPlaceholders() : loadedContent()}</tbody>
+      <tbody>
+        {loading ? (
+          <PlaceholderTableRows nbRows={7} nbColumns={3} size={"lg"} />
+        ) : (
+          loadedContent()
+        )}
+      </tbody>
     </Table>
   );
 };

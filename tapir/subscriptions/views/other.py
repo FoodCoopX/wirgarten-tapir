@@ -77,7 +77,7 @@ class ExtendedProductView(APIView):
         data["basket_size_equivalences"] = [
             {"basket_size_name": size_name, "quantity": quantity}
             for size_name, quantity in BasketSizeCapacitiesService.get_basket_size_equivalences_for_product(
-                product
+                product, cache=cache
             ).items()
         ]
 

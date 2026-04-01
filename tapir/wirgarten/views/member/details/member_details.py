@@ -52,7 +52,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         return self.kwargs["pk"]
 
     def get_context_data(self, **kwargs):
-        context = super(MemberDetailView, self).get_context_data()
+        context = super().get_context_data(**kwargs)
 
         cache = {}
         today = kwargs.get("start_date", get_today(cache=cache))

@@ -32,8 +32,8 @@ class BasketSizeCapacitiesService:
         return [size for size in basket_sizes if size.strip() != ""]
 
     @classmethod
-    def get_basket_size_equivalences_for_product(cls, product: Product):
-        equivalences = {size_name: 0 for size_name in cls.get_basket_sizes()}
+    def get_basket_size_equivalences_for_product(cls, product: Product, cache: dict):
+        equivalences = dict.fromkeys(cls.get_basket_sizes(cache=cache), 0)
         for equivalence in ProductBasketSizeEquivalence.objects.filter(product=product):
             if equivalence.basket_size_name not in equivalences.keys():
                 continue
@@ -46,9 +46,7 @@ class BasketSizeCapacitiesService:
         cls, pickup_location: PickupLocation, cache: dict
     ):
         def compute():
-            capacities = {
-                size_name: None for size_name in cls.get_basket_sizes(cache=cache)
-            }
+            capacities = dict.fromkeys(cls.get_basket_sizes(cache=cache), None)
             for equivalence in PickupLocationBasketCapacity.objects.filter(
                 pickup_location=pickup_location
             ):
