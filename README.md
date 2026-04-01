@@ -41,6 +41,11 @@ Tests are run with `pytest`:
 ```shell
 docker compose exec web poetry run pytest
 ```
+You can try running tests in parallel with the following command, but you may run into problems with keycloak: 
+all tests run against the same keycloak instance that is not reset automatically by the tests. 
+```shell
+docker compose exec web poetry run pytest -n 8 # Other however many cores you have
+```
 
 ## Formatting
 Python files are formatted with [Black](https://github.com/psf/black).

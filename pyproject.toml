@@ -55,6 +55,7 @@ icecream = "^2.1.4"
 djlint = "^1.36.4"
 ipython = "^9.9.0"
 django-upgrade = "^1.25.0"
+pytest-xdist = "^3.8.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
