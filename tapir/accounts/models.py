@@ -1,28 +1,25 @@
-import base64
-import json
 import logging
 from functools import partial
 
-from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
 from django.contrib.auth import user_logged_out
 from django.contrib.auth.models import AbstractUser
 from django.db import models, transaction
 from django.dispatch import receiver
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
-from keycloak.exceptions import KeycloakDeleteError
+from keycloak.exceptions import KeycloakDeleteError, KeycloakGetError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.models import StaticSegmentRecipient
 
 from tapir import utils
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
 from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.utils.models import CountryField
+from tapir.utils.shortcuts import is_running_tests
 from tapir.utils.user_utils import UserUtils
 
 log = logging.getLogger(__name__)
@@ -43,9 +40,10 @@ class KeycloakUserQuerySetManager(models.Manager.from_queryset(KeycloakUserQuery
 
 
 class KeycloakUser(AbstractUser):
-    objects = KeycloakUserQuerySetManager()
+    class Meta:
+        abstract = True
 
-    _kc: KeycloakAdmin = None
+    objects = KeycloakUserQuerySetManager()
 
     id = models.CharField(
         "ID",
@@ -62,33 +60,18 @@ class KeycloakUser(AbstractUser):
         super().__init__(*args, **kwargs)
         self.roles = None
 
-    def email_verified(self):
-        kc = self.get_keycloak_client()
+    def email_verified(self, cache: dict = None) -> bool:
+        if cache is None:
+            cache = {}
+        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         try:
             kc_user = kc.get_user(self.keycloak_id)
             return kc_user["emailVerified"]
         except Exception:
             return False
 
-    @classmethod
-    def get_keycloak_client(self):
-        if not self._kc:
-            config = settings.KEYCLOAK_ADMIN_CONFIG
-
-            keycloak_connection = KeycloakOpenIDConnection(
-                server_url=config["SERVER_URL"],
-                realm_name=config["REALM_NAME"],
-                client_id=config["CLIENT_ID"],
-                client_secret_key=config["CLIENT_SECRET_KEY"],
-                verify=True,
-            )
-
-            self._kc = KeycloakAdmin(connection=keycloak_connection)
-
-        return self._kc
-
-    def send_verify_email(self):
-        kc = self.get_keycloak_client()
+    def send_verify_email(self, cache: dict):
+        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         kc.send_verify_email(
             user_id=self.keycloak_id,
             redirect_uri=settings.SITE_URL,
@@ -110,10 +93,17 @@ class KeycloakUser(AbstractUser):
 
         return perm in target.roles
 
+    def has_perms(self, perms, obj=None):
+        for perm in perms:
+            if not self.has_perm(perm, obj):
+                return False
+        return True
+
     @transaction.atomic
     def save(self, *args, **kwargs):
         bypass = kwargs.pop("bypass_keycloak", False)
         initial_password = kwargs.pop("initial_password", None)
+        cache = kwargs.pop("cache", {})
 
         if not self.email:
             print(f"{self} has no email address, skipping keycloak account creation.")
@@ -124,83 +114,63 @@ class KeycloakUser(AbstractUser):
             super().save(*args, **kwargs)
             return
 
-        kc = self.get_keycloak_client()
+        keycloak_client = KeycloakUserManager.get_keycloak_client(cache=cache)
         has_kc_account = self.keycloak_id is not None
         if has_kc_account:
             try:  # try fetch the keycloak user to see if it exists
-                kc.get_user(self.keycloak_id)
-            except:
+                keycloak_client.get_user(self.keycloak_id)
+            except KeycloakGetError:
                 has_kc_account = False
 
-        if not has_kc_account:  # Keycloak User does not exist yet --> create
-            data = {
-                "username": self.email,
-                "email": self.email,
-                "firstName": self.first_name,
-                "lastName": self.last_name,
-                "enabled": True,
-            }
-            print("Creating Keycloak user: ", data)
+        self_before_save = type(self).objects.filter(id=self.id).first()
 
-            keycloak_id = kc.get_user_id(self.email)
-            if keycloak_id is not None:
-                if not TapirUser.objects.filter(keycloak_id=keycloak_id).exists():
-                    self.keycloak_id = keycloak_id
-                    kc.update_user(user_id=self.keycloak_id, payload=data)
-            else:
-                if initial_password:
-                    data["credentials"] = [
-                        {"value": initial_password, "type": "password"}
-                    ]
-                    data["emailVerified"] = True
-                else:
-                    data["requiredActions"] = ["VERIFY_EMAIL", "UPDATE_PASSWORD"]
-
-                if self.is_superuser:
-                    group = kc.get_group_by_path(path="/superuser")
-                    if group:
-                        data["groups"] = ["superuser"]
-
-                self.keycloak_id = kc.create_user(data)
-
-                try:
-                    self.send_verify_email()
-                except Exception as e:
-                    print(
-                        f"Failed to send verify email to new user: ",
-                        e,
-                        f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
-                    )
-
-        else:  # Update --> change of keycloak data if necessary
-            original = type(self).objects.get(id=self.id)
-            email_changed = original.email != self.email
-            first_name_changed = original.first_name != self.first_name
-            last_name_changed = original.last_name != self.last_name
-
-            if first_name_changed or last_name_changed:
-                data = {"firstName": self.first_name, "lastName": self.last_name}
-                kc.update_user(user_id=self.keycloak_id, payload=data)
-
-            if email_changed:
-                if self.email_verified():
-                    self.start_email_change_process(self.email, original.email)
-                    # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
-                    self.email = original.email
-                else:  # in this case, don't start the email change process, just send the keycloak email to the new address and resend the link
-                    kc.update_user(
-                        user_id=self.keycloak_id, payload={"email": self.email}
-                    )
-                    self.send_verify_email()
-
-        super().save(*args, **kwargs)
-        if not has_kc_account:
-            SocialAccount.objects.create(
-                user=self, provider="keycloak", uid=self.keycloak_id
+        if has_kc_account:
+            _partial = partial(
+                KeycloakUserManager.update_keycloak_user,
+                user=self,
+                keycloak_client=keycloak_client,
+                old_first_name=self_before_save.first_name,
+                old_last_name=self_before_save.last_name,
+                old_email=self_before_save.email,
+                new_first_name=self.first_name,
+                new_last_name=self.last_name,
+                new_email=self.email,
+                cache=cache,
             )
 
+            if self.email_verified(cache=cache) and self_before_save:
+                # important: reset the email to the original email before persisting.
+                # The actual change happens after the user click the confirmation link.
+                # A confirmation link is only sent the email is verified.
+                self.email = self_before_save.email
+        else:
+            if self.id is None or not type(self).objects.filter(id=self.id).exists():
+                super().save(*args, **kwargs)
+                if "force_insert" in kwargs.keys():
+                    kwargs["force_insert"] = False
+
+            _partial = partial(
+                KeycloakUserManager.create_keycloak_user,
+                user=self,
+                keycloak_client=keycloak_client,
+                initial_password=initial_password,
+                cache=cache,
+            )
+
+        if is_running_tests():
+            _partial()
+        else:
+            transaction.on_commit(_partial)
+
+        if self_before_save:
+            StaticSegmentRecipient.objects.filter(email=self_before_save.email).update(
+                first_name=self.first_name, last_name=self.last_name
+            )
+
+        super().save(*args, **kwargs)
+
     def delete(self, *args, **kwargs):
-        kc = self.get_keycloak_client()
+        kc = KeycloakUserManager.get_keycloak_client(cache=kwargs.pop("cache", {}))
         if self.keycloak_id:
             try:
                 kc.delete_user(self.keycloak_id)
@@ -208,8 +178,8 @@ class KeycloakUser(AbstractUser):
                 print("Error deleting Keycloak user: ", e)
         super().delete(*args, **kwargs)
 
-    def change_email(self, new_email: str):
-        kc = self.get_keycloak_client()
+    def change_email(self, new_email: str, cache: dict):
+        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         kc.update_user(
             user_id=self.keycloak_id,
             payload={
@@ -217,64 +187,24 @@ class KeycloakUser(AbstractUser):
             },
         )
 
-    @transaction.atomic
-    def start_email_change_process(self, new_email: str, orig_email: str):
-        EmailChangeRequest.objects.filter(user_id=self.id).delete()
-        email_change_request = EmailChangeRequest.objects.create(
-            new_email=new_email, user_id=self.id
-        )
-        email_change_token = base64.urlsafe_b64encode(
-            json.dumps(
-                {
-                    "new_email": email_change_request.new_email,
-                    "secret": email_change_request.secret,
-                    "user": email_change_request.user_id,
-                }
-            ).encode()
-        ).decode()
-        verify_link = f"{settings.SITE_URL}{reverse_lazy('change_email_confirm', kwargs={'token': email_change_token})}"
-
-        from tapir.wirgarten.service.email import send_email
-        from tapir.wirgarten.tapirmail import Events
-
-        TransactionalTrigger.fire_action(
-            Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
-            orig_email,
-            {"verify_link": verify_link},
-        )
-
-        send_email(
-            to_email=[orig_email],
-            subject=_("Änderung deiner Email-Adresse"),
-            content=f"Hallo {self.first_name},<br/><br/>"
-            f"du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>"
-            f"Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/>"
-            f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
-            f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
-            f"<br/><br/>Grüße, dein WirGarten Team",
-        )
-
-    class Meta:
-        abstract = True
-
-
-@receiver(user_logged_out)
-def terminate_session(sender, request, user, **kwargs):
-    keycloak_client = KeycloakUserManager.get_keycloak_client()
-    keycloak_client.user_logout(user.keycloak_id)
-
 
 class TapirUser(KeycloakUser):
     first_name = models.CharField(_("First Name"), max_length=150, blank=False)
     last_name = models.CharField(_("Last Name"), max_length=150, blank=False)
     email = models.CharField(_("Email"), max_length=150, blank=True)
     phone_number = PhoneNumberField(_("Phone number"), blank=True, null=True)
+    phone_number_landline = PhoneNumberField(
+        _("Phone number (landline)"), blank=True, null=True
+    )
     birthdate = models.DateField(_("Birthdate"), blank=True, null=True)
     street = models.CharField(_("Street and house number"), max_length=150, blank=True)
     street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
     postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
     city = models.CharField(_("City"), max_length=50, blank=True)
     country = CountryField(_("Country"), blank=True, default="DE")
+    form_of_address = models.CharField(
+        _("Liebe/Lieber"), max_length=20, blank=True, null=True
+    )
 
     preferred_language = models.CharField(
         _("Preferred Language"),
@@ -289,9 +219,9 @@ class TapirUser(KeycloakUser):
         super().save(*args, **kwargs)  # call the parent save method
 
     @transaction.atomic
-    def change_email(self, new_email: str):
+    def change_email(self, new_email: str, cache: dict):
         TapirUser.objects.filter(id=self.id).update(email=new_email, username=new_email)
-        super().change_email(new_email)
+        super().change_email(new_email, cache=cache)
 
     def get_display_name(self):
         return UserUtils.build_display_name(self.first_name, self.last_name)
@@ -307,11 +237,14 @@ class TapirUser(KeycloakUser):
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
 
-    def has_perms(self, perms):
-        for perm in perms:
-            if not self.has_perm(perm, self):
-                return False
-        return True
+
+@receiver(user_logged_out)
+def terminate_session(sender, request, user, **kwargs):
+    if user is None:
+        return
+
+    keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
+    keycloak_client.user_logout(user.keycloak_id)
 
 
 def generate_random_secret():
@@ -324,7 +257,6 @@ class EmailChangeRequest(TapirModel):
     secret = models.CharField(
         _("Secret"), max_length=36, default=partial(generate_random_secret)
     )
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
 
 
 class UpdateTapirUserLogEntry(UpdateModelLogEntry):

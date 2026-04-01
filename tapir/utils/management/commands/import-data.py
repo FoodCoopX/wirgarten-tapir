@@ -1,20 +1,40 @@
 import csv
+import os
+import sys
+import traceback
+import unicodedata
+from csv import DictReader
+from typing import Literal
 
-import django.db
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.management import BaseCommand
+from django.db import transaction
+from icecream import ic
 
+from tapir.accounts.models import EmailChangeRequest
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.utils.config import (
+    MEMBER_IMPORT_STATUS_SKIPPED,
+    MEMBER_IMPORT_STATUS_CREATED,
+    MEMBER_IMPORT_STATUS_UPDATED,
+)
+from tapir.utils.exceptions import DryRunException
+from tapir.utils.services.member_importer import MemberImporter
+from tapir.utils.services.share_importer import ShareImporter
+from tapir.utils.services.subscription_importer import SubscriptionImporter
 from tapir.wirgarten.models import (
     Member,
     Subscription,
     CoopShareTransaction,
-    GrowingPeriod,
-    Product,
-    PickupLocation,
     MandateReference,
     MemberPickupLocation,
+    Payment,
+    LogEntry,
+    QuestionaireCancellationReasonResponse,
+    QuestionaireTrafficSourceResponse,
+    WaitingListEntry,
+    TransferCoopSharesLogEntry,
+    SubscriptionChangeLogEntry,
 )
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 
 class Command(BaseCommand):
@@ -27,217 +47,219 @@ class Command(BaseCommand):
         parser.add_argument("--file", nargs=1)
         parser.add_argument("--delete-all", action="store_true")
         parser.add_argument("--reset-all", action="store_true")
+        parser.add_argument(
+            "--verify-csv",
+            action="store_true",
+            help=(
+                "Read the CSV, normalize headers, print raw/cleaned headers and the first row, then exit "
+                "(no database writes)."
+            ),
+        )
+        parser.add_argument(
+            "--update",
+            nargs=1,
+            choices=["yes", "no"],
+            default=["no"],
+            help="Update existing records if differences are found (yes/no). Default: no.",
+        )
+
+        parser.add_argument(
+            "--dry-run", action="store_true", help="If enabled, no change will be saved"
+        )
+
+        parser.add_argument(
+            "--stacktrace",
+            action="store_true",
+            help="If enabled, will print the stacktrace for all errors. Otherwise, only a short summary will be printed",
+        )
 
     def handle(self, *args, **options):
-        # print(options)
+        # Helper functions
 
         if options["reset_all"]:
-            Subscription.objects.all().delete()
+            SolidarityContribution.objects.all().delete()
+            SubscriptionChangeLogEntry.objects.all().delete()
+            TransferCoopSharesLogEntry.objects.all().delete()
             CoopShareTransaction.objects.all().delete()
+            Subscription.objects.all().delete()
+            Payment.objects.all().delete()
             MandateReference.objects.all().delete()
+            MemberPickupLocation.objects.all().delete()
+            LogEntry.objects.all().delete()
+            QuestionaireCancellationReasonResponse.objects.all().delete()
+            QuestionaireTrafficSourceResponse.objects.all().delete()
+            WaitingListEntry.objects.all().delete()
+            EmailChangeRequest.objects.all().delete()
             Member.objects.all().delete()
             return
 
         # check if type and file params are present
-        if not options["file"][0] or not options["type"][0]:
-            print(
+        if (
+            not options.get("file")
+            or not options["file"][0]
+            or not options.get("type")
+            or not options["type"][0]
+        ):
+            self.stderr.write(
                 "If not --reset-all is used, parameters --type and --file must be present."
             )
-        filepath = options["file"][0]
-        type = options["type"][0]
-        delete_all = options["delete_all"]
+            return
 
-        with open(filepath, "r") as f:
-            reader = csv.DictReader(f)
-            if type == "members":
-                if delete_all:
-                    Member.objects.all().delete()
-                for row in reader:
-                    # identify pickup location ID
-                    try:
-                        if row["Abholort"] != "":
-                            picloc = PickupLocation.objects.get(name=row["Abholort"])
-                        else:
-                            picloc = None
-                    except ObjectDoesNotExist as e:
-                        print(row)
-                        print("Pickup Location not found - record is skipped!")
-                        continue
-                    m = Member(
-                        first_name=row["Vorname"],
-                        last_name=row["Nachname"],
-                        birthdate=row["Geburtstag/Gründungsdatum"],
-                        street=row["Straße"] + " " + row["Hausnr."],
-                        postcode=row["PLZ"],
-                        city=row["Ort"],
-                        email=row["Mailadresse"],
-                        phone_number=row["Telefon"],
-                        member_no=row["Nr"],
-                        iban=row["IBAN"],
-                        account_owner=row["Kontoinhaber"],
-                        sepa_consent=row["consent_sepa"],  # + "T12:00:00+0200",
-                        privacy_consent=row["privacy_consent"],  # + "T12:00:00+0200",
-                        # pickup_location=picloc
+        filepath = options["file"][0]
+        import_type = options["type"][0]
+        delete_all = options["delete_all"]
+        dry_run = options.get("dry_run", False)
+        print_stacktrace = options.get("stacktrace", False)
+        update_existing = options.get("update")[0] == "yes"
+
+        # Open with utf-8-sig so a potential BOM (U+FEFF) is discarded automatically
+        # Normalize/clean header names to remove invisible/odd whitespace
+        with open(filepath, "r", encoding="utf-8-sig", newline="") as f:
+            base_reader = csv.reader(f, delimiter=";")
+
+            try:
+                raw_headers = next(base_reader)
+            except StopIteration:
+                print("Provided CSV file is empty.")
+                return
+
+            cleaned_headers = [self._clean_field_name(h) for h in raw_headers]
+
+            # Continue reading remaining lines as DictReader with the cleaned headers
+            reader = csv.DictReader(f, delimiter=";", fieldnames=cleaned_headers)
+
+            # Optional verification mode: show what the importer sees without touching the DB
+            if options.get("verify_csv"):
+                self.verify_csv(cleaned_headers, raw_headers, reader)
+                return
+
+            try:
+                with transaction.atomic():
+                    if delete_all:
+                        if import_type == "members":
+                            SolidarityContribution.objects.all().delete()
+                            SubscriptionChangeLogEntry.objects.all().delete()
+                            TransferCoopSharesLogEntry.objects.all().delete()
+                            CoopShareTransaction.objects.all().delete()
+                            Subscription.objects.all().delete()
+                            Payment.objects.all().delete()
+                            MandateReference.objects.all().delete()
+                            MemberPickupLocation.objects.all().delete()
+                            LogEntry.objects.all().delete()
+                            QuestionaireCancellationReasonResponse.objects.all().delete()
+                            QuestionaireTrafficSourceResponse.objects.all().delete()
+                            WaitingListEntry.objects.all().delete()
+                            EmailChangeRequest.objects.all().delete()
+                            Member.objects.all().delete()
+
+                        if import_type == "shares":
+                            TransferCoopSharesLogEntry.objects.all().delete()
+                            CoopShareTransaction.objects.all().delete()
+
+                        if import_type == "subscriptions":
+                            SubscriptionChangeLogEntry.objects.all().delete()
+                            Subscription.objects.all().delete()
+                            Payment.objects.all().delete()
+
+                    self.import_generic(
+                        reader=reader,
+                        update_existing=update_existing,
+                        import_type=import_type,
+                        print_stacktrace=print_stacktrace,
                     )
-                    mp = MemberPickupLocation(
-                        member=m,
-                        pickup_location=picloc,
-                        valid_from=row["AO_gueltig_ab"],
-                    )
-                    try:
-                        m.save(bypass_keycloak=False)
-                        if picloc is not None:
-                            mp.save()
-                    except Exception as e:
-                        print(e)
-                        continue
-            if type == "shares":
-                if delete_all:
-                    CoopShareTransaction.objects.all().delete()
-                for row in reader:
-                    # print(row)
-                    # {'Mitgliedsnummer': '1', 'Bewegungsart (Z,Ü,K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
-                    qu = int(row["Anzahl Anteile"])
-                    transfer_member = None
-                    valid_date = row["Datum"]
-                    try:
-                        member = Member.objects.get(member_no=row["Mitgliedsnummer"])
-                    except ObjectDoesNotExist as e:
-                        print(row)
-                        print("Database Error: Member not found")
-                        continue
-                    if row["Übertragungspartner"] != "":
-                        try:
-                            transfer_member = Member.objects.get(
-                                member_no=row["Übertragungspartner"]
-                            )
-                        except ObjectDoesNotExist as e:
-                            print(row)
-                            print("Transfer Member not found!")
-                            continue
-                    match row["Bewegungsart (Z,Ü,K)"]:
-                        case "Z":
-                            trans_type = (
-                                CoopShareTransaction.CoopShareTransactionType.PURCHASE
-                            )
-                        case "Ü":
-                            if qu > 0:
-                                trans_type = (
-                                    CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN
-                                )
-                            else:
-                                trans_type = (
-                                    CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT
-                                )
-                        case "K":
-                            trans_type = (
-                                CoopShareTransaction.CoopShareTransactionType.CANCELLATION
-                            )
-                            valid_date = row["Wirkung Kündigung"]
-                        case _:
-                            raise "Unknown transaction type!"
-                    try:
-                        s = CoopShareTransaction.objects.create(
-                            member_id=member.id,
-                            transaction_type=trans_type,
-                            timestamp=row["Datum"] + " 00:00:00+0200",
-                            valid_at=valid_date,
-                            quantity=qu,
-                            share_price=50,
-                            transfer_member=transfer_member,
-                        )
-                    except django.db.Error as e:
-                        print(row)
-                        print("Database Error occured", e.__cause__)
-                    except ValidationError as e:
-                        print(row)
-                        print("Validation Error occured", e.messages)
-            if type == "subscriptions":
-                if delete_all:
-                    Subscription.objects.all().delete()
-                    # identify current growing_period
-                period = GrowingPeriod.objects.get(start_date="2023-01-01")
-                for row in reader:
-                    # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,Richtpreis,Solidarpreis in Prozent,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
-                    # print(row)
-                    # identify MemberID, either via MemberNo or Email
-                    try:
-                        if row["Mitgliedernummer"] != "":
-                            m = Member.objects.get(member_no=row["Mitgliedernummer"])
-                        else:
-                            if row["Email"] != "":
-                                m = Member.objects.get(email=row["Email"])
-                            else:
-                                print(row)
-                                print(
-                                    "No data to identify Member in subscription for ",
-                                    row["Mitgliedernummer"],
-                                    row["Email"],
-                                )
-                    except django.core.exceptions.ObjectDoesNotExist as e:
-                        print(row)
-                        print("Database Error: Member not found")
-                        continue
-                    except django.db.Error as e:
-                        print(row)
-                        print("Database Error occured with MemberNo", e.__cause__)
-                        continue
-                    except ValidationError as e:
-                        print(row)
-                        print("Validation Error occured", e.messages)
-                        continue
-                    # identify MandateRef
-                    mref = get_or_create_mandate_ref(m)
-                    # identify product
-                    try:
-                        if row["product"]:
-                            # print(row)
-                            prod = Product.objects.get(name=row["product"])
-                        else:
-                            print(row)
-                            print("No product defined in subscription.")
-                            continue
-                    except django.core.exceptions.ObjectDoesNotExist as e:
-                        print(row)
-                        print("Product not found")
-                        continue
-                    # prepare cancellation value
-                    if row["cancellation.ts"] != "":
-                        ts_cancel = row["cancellation.ts"] + " 12:00+0200"
-                    else:
-                        ts_cancel = None
-                    try:
-                        s = Subscription.objects.create(
-                            member_id=m.id,
-                            quantity=float(row["Quantity"]),
-                            start_date=row["Vertragsbeginn"],
-                            end_date=row["Vertragsende"],
-                            cancellation_ts=ts_cancel,
-                            solidarity_price=row["Solidarpreis in Prozent"],
-                            mandate_ref_id=mref.ref,
-                            period_id=period.id,
-                            product_id=prod.id,
-                            consent_ts=row["consent_vertragsgrundsätze"]
-                            + " 12:00+0200",
-                            withdrawal_consent_ts=row["consent_widerruf"]
-                            + " 12:00+0200",
-                        )
-                        # print("Subscription object successfully created.")
-                    except django.db.Error as e:
-                        print(row)
-                        print(
-                            "Database Error occured with create subscription: ",
-                            e.__cause__,
-                        )
-                        continue
-                    except ValidationError as e:
-                        print(row)
-                        print(
-                            "Validation Error occured with create subscription: ",
-                            e.messages,
-                        )
-                        continue
-                    except ValueError as e:
-                        print(row)
-                        print("Value Error occured with create subscription: ", e)
-                        continue
+                    if dry_run:
+                        raise DryRunException()
+            except DryRunException:
+                pass
+
+    def verify_csv(
+        self,
+        cleaned_headers: list[str | None],
+        raw_headers: list[str],
+        reader: DictReader[str | None],
+    ):
+        self.stdout.write(f"Raw headers: {raw_headers}")
+        self.stdout.write(f"Cleaned headers: {cleaned_headers}")
+        try:
+            first_row = next(reader)
+        except StopIteration:
+            self.stdout.write("CSV contains only a header row, no data rows.")
+            return
+        self.stdout.write(f"First row (as dict with cleaned headers): {first_row}")
+
+    def print_results(self, created: int, updated: int, skipped: int):
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Done. Created: {created}, Updated: {updated}, Skipped: {skipped}"
+            )
+        )
+
+    def import_generic(
+        self,
+        reader: DictReader[str],
+        update_existing: bool,
+        import_type: Literal["members", "shares", "subscriptions"],
+        print_stacktrace: bool,
+    ):
+        skipped = 0
+        created = 0
+        updated = 0
+
+        for row_index, row in enumerate(reader):
+            try:
+                match import_type:
+                    case "members":
+                        method = MemberImporter.import_member
+                    case "shares":
+                        method = ShareImporter.import_shares_single_member
+                    case "subscriptions":
+                        method = SubscriptionImporter.import_subscription
+
+                with transaction.atomic():
+                    import_status = method(row=row, update_existing=update_existing)
+
+                if import_status == MEMBER_IMPORT_STATUS_SKIPPED:
+                    skipped += 1
+                if import_status == MEMBER_IMPORT_STATUS_CREATED:
+                    created += 1
+                if import_status == MEMBER_IMPORT_STATUS_UPDATED:
+                    updated += 1
+
+            except Exception as exception:
+                self.stderr.write(
+                    f"Error while importing row with internal index {row_index} (should be line {row_index+2} in the file), import type: {import_type}"
+                )
+                self.print_exception_details(exception, print_stacktrace)
+                self.stderr.write(ic.format(row))
+                skipped += 1
+                continue
+
+        self.print_results(created=created, updated=updated, skipped=skipped)
+
+    def print_exception_details(self, exception, print_stacktrace: bool):
+        _, _, exception_traceback = sys.exc_info()
+        exception_filename = os.path.split(
+            exception_traceback.tb_frame.f_code.co_filename
+        )[1]
+        exception_line_number = exception_traceback.tb_lineno
+        self.stderr.write(f"{exception}, {exception_filename}:L{exception_line_number}")
+        if print_stacktrace:
+            self.stderr.write(traceback.format_exc())
+
+    @staticmethod
+    def _clean_field_name(s: str) -> str | None:
+        if s is None:
+            return s
+        # Remove common invisible characters and normalize
+        # - BOM (\ufeff), zero-width spaces (\u200b, \u200c, \u200d), word joiner (\u2060)
+        # - Non-breaking space (\u00a0) -> regular space
+        s = (
+            s.replace("\ufeff", "")
+            .replace("\u200b", "")
+            .replace("\u200c", "")
+            .replace("\u200d", "")
+            .replace("\u2060", "")
+            .replace("\xa0", " ")
+        )
+        s = unicodedata.normalize("NFKC", s)
+        return s.strip()

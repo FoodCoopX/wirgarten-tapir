@@ -1,0 +1,11 @@
+@media (max-width: 1000px) {
+  #footer_widescreen {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1001px) {
+  #footer_narrowscreen {
+    display: none !important;
+  }
+}

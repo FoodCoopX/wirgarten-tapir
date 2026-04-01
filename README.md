@@ -1,7 +1,9 @@
 # Tapir
 
+[![Python code test coverage](https://sonarcloud.io/api/project_badges/measure?project=FoodCoopX_wirgarten-tapir&metric=coverage)](https://sonarcloud.io/summary/overall?id=FoodCoopX_wirgarten-tapir&branch=master)
+
 Tapir is a management system for community supported agriculture. 
-It is currently used productively by several organizations including [WirGarten Lüneburg eG](https://lueneburg.wirgarten.com/), [Möllers Morgen](https://www.moellersmorgen.de), [Gemüsekollektiv Hebenshausen e.V.](https://gemuesekollektiv.org), and more.
+It is currently used productively by several organizations, including [WirGarten Lüneburg eG](https://lueneburg.wirgarten.com/), [Möllers Morgen](https://www.moellersmorgen.de), [Gemüsekollektiv Hebenshausen e.V.](https://gemuesekollektiv.org), and more.
 
 Its features include:
 - Member & membership management including cooperative shares
@@ -10,20 +12,64 @@ Its features include:
 - Delivery locations and capacity management
 - And more
 
-It is developed mainly by [Théo](https://seriousdino.org/) for [FoodCoopX](https://foodcoopx.de/). 
-Don't hesitate to contact Théo if you're interested in contributing or FoodCoopX if you'd like a demo. 
+It is developed by [Théo](https://seriousdino.org/) for [FoodCoopX](https://foodcoopx.de/).
 
 The backend code is written with Python and Django, the frontend code is a mix of Django templates and React.
 
-> [!WARNING]
-> The master branch is currently not in use, check the `biotop-dev` branch for the current version. You'll find a better README there.
-> We'll go back to using master soon, promise!
+Don't hesitate to contact us if you are interested in using or contributing to Tapir.
 
-> [!NOTE]
-> While this repo is (and will stay) open, we haven't invested any time in making it welcoming for new developpers. We are aware that this is not ideal, sorry about that.
-> As the project becomes more stable, we hope to find time to make efforts in that direction.
-> If you're interested in contributing, Théo will be very happy to give you a tour and help you get started. 
+## Getting started
 
-<img width="2558" height="1411" alt="image" src="https://github.com/user-attachments/assets/6b2b69bd-6621-40d8-91cb-e6af8cdf4142" />
+Use docker to quickly get a development server running on your machine. Run the following commands:
+```sh
+docker-compose up -d
+# Create tables
+docker compose exec web poetry run python manage.py migrate
+# Define the configuration parameters
+docker compose exec web poetry run python manage.py parameter_definitions    
+# Generate test data
+docker compose exec web poetry run python manage.py populate --reset_all
+```
 
-<img width="2558" height="1411" alt="image" src="https://github.com/user-attachments/assets/2a3114ec-7b47-4c8d-98cc-45478813536f" />
+You should now have a local instance accessible at http://localhost:8000/. 
+You can log in as admin with username `roberto.cortes@example.com` and password `roberto.cortes`.
+
+You can log in as any user using the same pattern: `[name]@example.come` as username and `[name]` as password 
+
+## Tests
+Tests are run with `pytest`:
+```shell
+docker compose exec web poetry run pytest
+```
+
+## Formatting
+Python files are formatted with [Black](https://github.com/psf/black).
+
+Javascript and React files are formatted with [Prettier](https://prettier.io/).
+
+Django template files are formatted with [djLint](https://djlint.com/)
+
+## Frontend API clients
+API Requests made from the React frontend use API clients. Here are the steps to get updated API clients:
+- Annotate your API view with [Spectacular](https://github.com/tfranzel/drf-spectacular) (search for `@extend_schema(` for examples)
+- Generate the API schema file with `python ./manage.py spectacular --file schema.yml`
+- Generate the TypeScript API clients using [OpenAPI Generator](https://openapi-generator.tech/) with `npx openapi-generator-cli generate -i schema.yml -g typescript-fetch -o ./src_frontend/api-client`
+
+There are help scripts in the `/scripts` folder. You can do a full update with the following command:
+```bash
+docker compose exec web ./scripts/generate_api_schema.sh && docker compose exec vite ./scripts/generate_api_clients.sh
+```
+
+## Class diagram
+
+[![models.png](models.png)](https://raw.githubusercontent.com/FoodCoopX/wirgarten-tapir/master/models.png)
+
+If this graph is outdated, you can re-generate it with:
+
+```shell
+docker compose exec web sh -c "apt update && apt install -y graphviz graphviz-dev && poetry run pip install pygraphviz && poetry run python manage.py graph_models -a -g -o models.png"
+```
+
+## The other Tapir
+This Tapir started as a fork of another project: [Tapir for cooperative supermarkets](https://github.com/SuperCoopBerlin/tapir).
+They are now completely separate but have kept the same name. Sorry for the confusion!

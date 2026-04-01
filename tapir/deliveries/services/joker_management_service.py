@@ -1,0 +1,231 @@
+import datetime
+import re
+from dataclasses import dataclass
+from typing import List
+
+from django.core.exceptions import ValidationError
+
+from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import Joker
+from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
+    DateLimitForDeliveryChangeCalculator,
+)
+from tapir.deliveries.services.weeks_without_delivery_service import (
+    WeeksWithoutDeliveryService,
+)
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import Member, Subscription, GrowingPeriod
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_today
+
+
+class JokerManagementService:
+    @dataclass
+    class JokerRestriction:
+        start_day: int
+        start_month: int
+        end_day: int
+        end_month: int
+        max_jokers: int
+
+    @classmethod
+    def get_date_limit_for_joker_changes(
+        cls, reference_date: datetime.date, cache: dict
+    ):
+        return DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
+            reference_date, cache=cache
+        )
+
+    @classmethod
+    def can_joker_be_used_relative_to_date_limit(
+        cls, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        return cls.get_date_limit_for_joker_changes(
+            reference_date, cache=cache
+        ) >= get_today(cache=cache)
+
+    @classmethod
+    def can_joker_be_used_relative_to_max_amount_per_growing_period(
+        cls, member: Member, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_date, cache=cache
+        )
+        if not growing_period:
+            return False
+
+        nb_used_jokers_in_growing_period = (
+            TapirCache.get_number_of_jokers_used_by_member_in_growing_period(
+                member_id=member.id, growing_period=growing_period, cache=cache
+            )
+        )
+
+        return nb_used_jokers_in_growing_period < growing_period.max_jokers_per_member
+
+    @classmethod
+    def can_joker_be_cancelled(cls, joker: Joker, cache: dict) -> bool:
+        return get_today(cache=cache) <= cls.get_date_limit_for_joker_changes(
+            joker.date, cache=cache
+        )
+
+    @classmethod
+    def cancel_joker(cls, joker: Joker):
+        joker.delete()
+
+    @classmethod
+    def can_joker_be_used_in_week(
+        cls, member: Member, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        from tapir.deliveries.services.delivery_donation_manager import (
+            DeliveryDonationManager,
+        )
+
+        if not get_parameter_value(key=ParameterKeys.JOKERS_ENABLED, cache=cache):
+            return False
+
+        return (
+            not cls.does_member_have_a_joker_in_week(
+                member, reference_date, cache=cache
+            )
+            and cls.can_joker_be_used_relative_to_date_limit(
+                reference_date, cache=cache
+            )
+            and cls.can_joker_be_used_relative_to_max_amount_per_growing_period(
+                member, reference_date, cache=cache
+            )
+            and cls.can_joker_be_used_relative_to_restrictions(
+                member, reference_date, cache=cache
+            )
+            and cls.can_joker_be_used_relative_to_weeks_without_delivery(
+                reference_date, cache=cache
+            )
+            and not DeliveryDonationManager.does_member_have_a_donation_in_week(
+                member=member, reference_date=reference_date, cache=cache
+            )
+        )
+
+    @classmethod
+    def does_member_have_a_joker_in_week(
+        cls, member: Member, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
+            return False
+
+        jokers = TapirCache.get_all_jokers_for_member(member_id=member.id, cache=cache)
+        for joker in jokers:
+            if (
+                joker.date.isocalendar().week == reference_date.isocalendar().week
+                and joker.date.year == reference_date.year
+            ):
+                return True
+            if joker.date > reference_date:
+                # jokers are sorted by date,
+                # if we reach a joker that is past our given date we know we won't find one for the given date
+                return False
+
+        return False
+
+    @classmethod
+    def get_extra_joker_restrictions(cls, growing_period: GrowingPeriod):
+        return cls.get_extra_joker_restrictions_from_string(
+            growing_period.joker_restrictions
+        )
+
+    @classmethod
+    def get_extra_joker_restrictions_from_string(
+        cls, restrictions_as_string: str
+    ) -> List[JokerRestriction]:
+        if restrictions_as_string == "disabled":
+            return []
+
+        restrictions = []
+        for restriction_as_string in restrictions_as_string.split(";"):
+            if restriction_as_string.strip() == "":
+                continue
+
+            # Example: 13.04.-25.06.[12]
+            result = re.search(
+                r"(\d+)\.(\d+)\.-(\d+)\.(\d+)\.\[(\d+)]", restriction_as_string
+            )
+            if result is None:
+                raise ValidationError(
+                    f"Invalid restriction given: {restriction_as_string}"
+                )
+
+            (
+                start_day_as_string,
+                start_month_as_string,
+                end_day_as_string,
+                end_month_as_string,
+                max_jokers_as_string,
+            ) = result.groups()
+
+            restrictions.append(
+                cls.JokerRestriction(
+                    start_day=int(start_day_as_string),
+                    start_month=int(start_month_as_string),
+                    end_day=int(end_day_as_string),
+                    end_month=int(end_month_as_string),
+                    max_jokers=int(max_jokers_as_string),
+                )
+            )
+
+        return restrictions
+
+    @classmethod
+    def validate_joker_restrictions(cls, restrictions_as_string: str):
+        try:
+            cls.get_extra_joker_restrictions_from_string(restrictions_as_string)
+        except Exception as e:
+            raise ValidationError(f"Invalid joker restriction value: {e}")
+
+    @classmethod
+    def can_joker_be_used_relative_to_restrictions(
+        cls, member: Member, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_date, cache=cache
+        )
+        restrictions = cls.get_extra_joker_restrictions(growing_period=growing_period)
+        for restriction in restrictions:
+            restriction_start_date = datetime.date(
+                year=reference_date.year,
+                month=restriction.start_month,
+                day=restriction.start_day,
+            )
+            if restriction_start_date > reference_date:
+                continue
+
+            restriction_end_date = datetime.date(
+                year=reference_date.year,
+                month=restriction.end_month,
+                day=restriction.end_day,
+            )
+            if restriction_end_date < reference_date:
+                continue
+
+            if (
+                Joker.objects.filter(
+                    member=member,
+                    date__gte=restriction_start_date,
+                    date__lte=restriction_end_date,
+                ).count()
+                >= restriction.max_jokers
+            ):
+                return False
+
+        return True
+
+    @staticmethod
+    def can_joker_be_used_relative_to_weeks_without_delivery(
+        reference_date: datetime.date, cache: dict
+    ) -> bool:
+        return not WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
+            reference_date, cache=cache
+        )
+
+    @classmethod
+    def is_subscription_affected_by_joker(
+        cls, subscription: Subscription, cache: dict
+    ) -> bool:
+        return subscription in TapirCache.get_subscriptions_affected_by_jokers(cache)

@@ -2,11 +2,8 @@ import sys
 
 from django.core.management.base import BaseCommand
 
-from tapir.utils.management.commands.populate_functions import (
-    populate_users,
-    clear_data,
-    reset_all_test_data,
-)
+from tapir.utils.config import Organization
+from tapir.utils.services.test_data_generation.data_generator import DataGenerator
 
 
 class Command(BaseCommand):
@@ -14,11 +11,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--users", help="Create randomised users", action="store_true"
-        )
-        parser.add_argument(
             "--clear",
-            help="Clears most objects (except admins)",
+            help="Clears most objects",
             action="store_true",
         )
         parser.add_argument(
@@ -27,17 +21,18 @@ class Command(BaseCommand):
             action="store_true",
         )
 
-    def handle(self, *args, **options):
-        def populate_all():
-            populate_users()
+        parser.add_argument("org", help="One of: VEREIN, BIOTOP, WIRGARTEN", nargs="?")
 
-        if options["users"]:
-            populate_users()
-        elif options["clear"]:
-            clear_data()
+    def handle(self, *args, **options):
+        if options["clear"]:
+            DataGenerator.clear()
         elif options["reset_all"]:
-            clear_data()
-            populate_all()
+            DataGenerator.clear()
+            DataGenerator.generate_all(
+                Organization[options["org"]]
+                if options["org"] is not None
+                else Organization.BIOTOP
+            )
         else:
             self.print_help("manage.py", "populate")
             sys.exit(1)

@@ -1,15 +1,16 @@
+import datetime
 import io
 import re
-from datetime import date
-from django.utils.translation import gettext_lazy as _
 
 from django.core.exceptions import ValidationError
-
-from tapir.wirgarten.models import GrowingPeriod
+from django.utils.translation import gettext_lazy as _
 from lxml import etree
 
+from tapir.wirgarten.models import GrowingPeriod, ProductType
+from tapir.wirgarten.utils import format_date
 
-def validate_growing_period_overlap(start_date: date, end_date: date):
+
+def validate_growing_period_overlap(start_date: datetime.date, end_date: datetime.date):
     """
     Validates if the given start and end dates would overlap with and existing GrowingPeriod.
 
@@ -27,7 +28,7 @@ def validate_growing_period_overlap(start_date: date, end_date: date):
         )
 
 
-def validate_date_range(start_date: date, end_date: date):
+def validate_date_range(start_date: datetime.date, end_date: datetime.date):
     """
     Validates if the given date range is valid.
 
@@ -84,3 +85,31 @@ def validate_html(html: str):
     if position:
         tag = html[position[0] : position[1]]
         raise ValidationError(f"Unclosed HTML tag {tag} at {position}!")
+
+
+def validate_iso_datetime(date_as_string: str):
+    try:
+        datetime.datetime.fromisoformat(date_as_string)
+    except ValueError as e:
+        raise ValidationError(f"Invalid date: {date_as_string}, error: {e}")
+
+
+def validate_base_product_type_exists(base_product_type_id: str):
+    if base_product_type_id is None:
+        return
+
+    if not ProductType.objects.exists():
+        # This allows the creation of the parameter on fresh installs
+        return
+
+    if not ProductType.objects.filter(id=base_product_type_id).exists():
+        raise ValidationError(
+            f"Ungültige ProduktTyp ID ({base_product_type_id}). Versuche die Seite neue zu laden. Wenn das Problem wieder auftaucht, kontaktiere bitte ein Admin."
+        )
+
+
+def validate_date_is_first_of_month(date: datetime.date):
+    if date.day != 1:
+        raise ValidationError(
+            f"Ungültiges Datum: {format_date(date)}, nur Monatserste sind erlaubt."
+        )

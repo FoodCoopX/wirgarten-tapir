@@ -1,0 +1,239 @@
+:root {
+  --secondary: #f49633;
+  --platinum: #e9e7e5;
+  --white: #ffffff;
+  --black: #000000;
+  --active-color: #bfdebd;
+}
+
+h1 {
+  line-height: 1.4 !important;
+  font-size: 39px !important;
+  font-family: "DinNextLight", sans-serif !important;
+}
+
+h2 {
+  line-height: 1.4 !important;
+  font-size: 33px !important;
+  font-family: "DinNextLight", sans-serif !important;
+}
+
+h3 {
+  line-height: 1.4 !important;
+  font-size: 23px !important;
+  font-family: "DinNextLight", sans-serif !important;
+}
+
+h4 {
+  line-height: 1.4 !important;
+  font-size: 20px !important;
+  font-family: "DinNextLight", sans-serif !important;
+}
+
+h5 {
+  line-height: 1.4 !important;
+  font-size: 17px !important;
+  font-family: "DinNextLight", sans-serif !important;
+}
+
+h6 {
+  line-height: 1.4 !important;
+  font-size: 16px !important;
+  font-family: "DinNextLight", sans-serif !important;
+}
+
+body {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  font-family: "DinNextLight", sans-serif !important;
+  color: var(--black);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+  filter: brightness(90%);
+}
+
+.btn-secondary:disabled,
+.btn-secondary.disabled {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+  opacity: 0.65;
+}
+
+.btn-secondary:not(:disabled):not(.disabled):active,
+.btn-secondary:not(:disabled):not(.disabled).active {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+  filter: brightness(75%);
+}
+
+.is-valid {
+  border-color: var(--primary) !important;
+}
+
+.photo {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  box-shadow: 2px 2px 18px 2px rgb(2 0 1 / 7%);
+  animation: fadeIn 0.8s;
+}
+
+nav-item .hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+tr.tr-href,
+tr.tr-clickable {
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+tr.tr-href.active,
+tr.tr-clickable.active {
+  background: var(--active-color);
+  color: black;
+}
+
+tr.tr-href:hover:not(.active),
+tr.tr-clickable:hover:not(.active) {
+  background: var(--bs-gray-100);
+}
+
+.card {
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ===== Scrollbar CSS ===== */
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 16px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: gray;
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+}
+
+.tapir-btn:disabled {
+  background-color: gray !important;
+  color: white !important;
+  border-color: grey;
+}
+
+.selectize-input {
+  background: #ffffff !important;
+  min-height: 2.375em !important;
+  font-size: 1em !important;
+  padding: 0.5rem 2.25rem 0.25rem 0.75rem;
+}
+
+div.option.selected {
+  background-color: var(--primary);
+}
+
+.table td,
+.table tr {
+  padding: 0.3rem;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar.sticky-top {
+  z-index: 995;
+}
+
+.custom-sidebar {
+  width: 4em;
+  transition: width 0.3s ease;
+  position: absolute;
+  padding-top: 4.5em;
+  white-space: nowrap;
+  z-index: 990;
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-item-details {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-group {
+  margin-top: 1em;
+}
+
+.custom-sidebar:hover {
+  width: 16em;
+}
+
+.custom-sidebar:hover > div > .sidebar-item-details,
+.custom-sidebar:hover > div > ul > li > a > span.sidebar-item-details {
+  opacity: 1;
+}
+
+.material-icons {
+  display: inline-block;
+  width: 1em; /* Set the width to be equivalent to 2 normal characters */
+  overflow: hidden;
+  text-align: center;
+  vertical-align: middle;
+}
+
+main {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+.step.active .step-icon {
+  background: #006633;
+}
+
+.step.active p {
+  color: #006633;
+}
+
+.indicator-line.active {
+  background: #006633;
+}
+
+@font-face {
+  font-family: "DinNextLight";
+  font-style: normal;
+  src: url("/static/core/themes/sacherl_tannberg/fonts/din-next-light.woff2")
+    format("woff2");
+  src: url("/static/core/themes/sacherl_tannberg/fonts/din-next-light.ttf")
+    format("ttf");
+}

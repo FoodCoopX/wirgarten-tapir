@@ -45,28 +45,20 @@ CELERY_BEAT_SCHEDULE = {
     "export_supplier_list_csv": {
         "task": "tapir.wirgarten.tasks.export_supplier_list_csv",
         "schedule": celery.schedules.crontab(
-            day_of_week="tuesday",
             minute=0,
             hour=3,
-            # once a week, Tuesday at 03:00
         ),
     },
     "export_pick_list_csv": {
         "task": "tapir.wirgarten.tasks.export_pick_list_csv",
         "schedule": celery.schedules.crontab(
-            day_of_week="tuesday",
             minute=0,
             hour=4,
-            # once a week, Monday at 04:00
         ),
-    },
-    "export_payments_per_product_type": {
-        "task": "tapir.wirgarten.tasks.export_payment_parts_csv",
-        "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
     },
     "generate_member_numbers": {
         "task": "tapir.wirgarten.tasks.generate_member_numbers",
-        "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
+        "schedule": celery.schedules.crontab(minute="0", hour="10"),
     },
     "resolve_segment_and_create_email_dispatches_task": {
         "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
@@ -79,6 +71,30 @@ CELERY_BEAT_SCHEDULE = {
     "check_email_bounces": {
         "task": "tapir_mail.tasks.check_email_bounces",
         "schedule": datetime.timedelta(minutes=1),
+    },
+    "do_automated_exports": {
+        "task": "tapir.generic_exports.tasks.do_automated_exports",
+        "schedule": datetime.timedelta(minutes=1),
+    },
+    "automatic_subscription_renewal": {
+        "task": "tapir.subscriptions.tasks.automatic_subscription_renewal",
+        "schedule": celery.schedules.crontab(hour="2", minute="0"),
+    },
+    "automatic_solidarity_contribution_renewal": {
+        "task": "tapir.solidarity_contribution.tasks.automatic_solidarity_contribution_renewal",
+        "schedule": celery.schedules.crontab(hour="2", minute="10"),
+    },
+    "automatic_confirmation": {
+        "task": "tapir.subscriptions.tasks.automatic_confirmation_subscriptions_and_share_purchases",
+        "schedule": celery.schedules.crontab(hour="9", minute="30"),
+    },
+    "create_payments_for_this_month": {
+        "task": "tapir.payments.tasks.create_payments_for_this_month",
+        "schedule": celery.schedules.crontab(hour="23", minute="59"),
+    },
+    "export_payments_for_this_month": {
+        "task": "tapir.payments.tasks.export_payments_for_this_month",
+        "schedule": celery.schedules.crontab(hour="5", minute="0"),
     },
 }
 
@@ -107,7 +123,7 @@ elif EMAIL_ENV == "test":
     # Local SMTP
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 elif EMAIL_ENV == "prod":
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_BACKEND = "tapir_mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn"
     EMAIL_HOST = env.str("EMAIL_HOST")
     EMAIL_HOST_SENDER = env.str(
         "EMAIL_HOST_SENDER"
@@ -124,16 +140,20 @@ elif EMAIL_ENV == "prod":
 # Crash emails will come from this address.
 SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 
-SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000")
+SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
-KEYCLOAK_ADMIN_CONFIG = dict(
-    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
-    PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
-    CLIENT_ID=env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
-    FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
-    REALM_NAME=env.str("KEYCLOAK_REALM_NAME", default="tapir"),
-    CLIENT_SECRET_KEY=env.str("KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"),
-)
+KEYCLOAK_ADMIN_CONFIG = {
+    "SERVER_URL": env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
+    "PUBLIC_URL": env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
+    "CLIENT_ID": env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
+    "FRONTEND_CLIENT_ID": env.str(
+        "KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"
+    ),
+    "REALM_NAME": env.str("KEYCLOAK_REALM_NAME", default="tapir"),
+    "CLIENT_SECRET_KEY": env.str(
+        "KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"
+    ),
+}
 
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 
@@ -170,8 +190,11 @@ CACHES = {
 }
 
 TAPIR_MAIL_PATH = "/tapirmail"
-os.environ["REACT_APP_API_ROOT"] = SITE_URL + TAPIR_MAIL_PATH
-os.environ["REACT_APP_BASENAME"] = TAPIR_MAIL_PATH
+TAPIRMAIL_REACT_APP_API_ROOT = SITE_URL + TAPIR_MAIL_PATH
+TAPIRMAIL_REACT_APP_BASENAME = TAPIR_MAIL_PATH
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]
 
 SOCIALACCOUNT_PROVIDERS = {
     "openid_connect": {
@@ -182,9 +205,12 @@ SOCIALACCOUNT_PROVIDERS = {
                 "client_id": KEYCLOAK_ADMIN_CONFIG["CLIENT_ID"],
                 "secret": KEYCLOAK_ADMIN_CONFIG["CLIENT_SECRET_KEY"],
                 "settings": {
-                    "server_url": f"{KEYCLOAK_ADMIN_CONFIG['SERVER_URL']}/realms/{KEYCLOAK_ADMIN_CONFIG['REALM_NAME']}/.well-known/openid-configuration",
+                    "server_url": f"{KEYCLOAK_ADMIN_CONFIG["SERVER_URL"]}/realms/{KEYCLOAK_ADMIN_CONFIG["REALM_NAME"]}/.well-known/openid-configuration",
                 },
             }
         ]
     }
 }
+
+if DEBUG:
+    INTERNAL_IPS = ["127.0.0.1"]

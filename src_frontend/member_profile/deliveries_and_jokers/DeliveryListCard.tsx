@@ -1,0 +1,276 @@
+import React, { useEffect, useState } from "react";
+import {
+  DeliveriesApi,
+  Delivery,
+  PickupLocation,
+  PickupLocationOpeningTime,
+} from "../../api-client";
+import { useApi } from "../../hooks/useApi.ts";
+import { Card, Placeholder, Spinner, Table } from "react-bootstrap";
+import TapirButton from "../../components/TapirButton.tsx";
+import { formatDateText } from "../../utils/formatDateText.ts";
+import RelativeTime from "dayjs/plugin/relativeTime";
+import dayjs from "dayjs";
+import "dayjs/locale/de";
+import PickupLocationDeliveryDetailsModal from "./PickupLocationDeliveryDetailsModal.tsx";
+import ManageJokersAndDonationsModal from "./ManageJokersAndDonationsModal.tsx";
+import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import WeekOfYear from "dayjs/plugin/weekOfYear";
+import PickupLocationChangeModal from "./PickupLocationChangeModal.tsx";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { ToastData } from "../../types/ToastData.ts";
+
+interface DeliveryListCardProps {
+  memberId: string;
+  areJokersEnabled: boolean;
+  areDonationsEnabled: boolean;
+  csrfToken: string;
+}
+
+function loadingPlaceholder() {
+  return Array.from(new Array(7).keys()).map((index) => {
+    return (
+      <tr key={index}>
+        {Array.from(new Array(3).keys()).map((index) => {
+          return (
+            <td key={index}>
+              <Placeholder lg={10} />
+            </td>
+          );
+        })}
+      </tr>
+    );
+  });
+}
+
+const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
+  memberId,
+  areJokersEnabled,
+  areDonationsEnabled,
+  csrfToken,
+}) => {
+  const api = useApi(DeliveriesApi, csrfToken);
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
+  const [selectedPickupLocation, setSelectedPickupLocation] =
+    useState<PickupLocation>();
+  const [
+    selectedPickupLocationOpeningTimes,
+    setSelectedPickupLocationOpeningTimes,
+  ] = useState<PickupLocationOpeningTime[]>([]);
+  const [showManageJokersModal, setShowManageJokersModal] = useState(false);
+  const [showPickupLocationChangeModal, setShowPickupLocationChangeModal] =
+    useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
+
+  dayjs.extend(RelativeTime);
+  dayjs.extend(WeekOfYear);
+  dayjs.locale("de");
+
+  useEffect(() => {
+    loadDeliveries();
+  }, []);
+
+  function loadDeliveries() {
+    setDeliveriesLoading(true);
+    api
+      .deliveriesApiMemberDeliveriesList({ memberId: memberId })
+      .then(setDeliveries)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Lieferungen",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setDeliveriesLoading(false));
+  }
+
+  function dateCell(delivery: Delivery) {
+    return (
+      <div className={"d-flex flex-column"}>
+        <strong>{formatDateText(delivery.deliveryDate)}</strong>
+        <small>
+          KW{dayjs(delivery.deliveryDate).week()},{" "}
+          {dayjs().to(dayjs(delivery.deliveryDate))}
+        </small>
+      </div>
+    );
+  }
+
+  function productCell(delivery: Delivery) {
+    let content;
+    if (delivery.isDeliveryCancelledThisWeek) {
+      content = <>Keine Lieferung</>;
+    } else if (delivery.jokerUsed) {
+      content = <>Joker eingesetzt</>;
+    } else if (delivery.donationUsed) {
+      content = <>Lieferung gespendet</>;
+    } else {
+      content = (
+        <>
+          {delivery.subscriptions.map((subscription) => {
+            return (
+              <div key={subscription.id}>
+                {subscription.quantity}
+                {" × "}
+                {subscription.product.name}
+              </div>
+            );
+          })}
+        </>
+      );
+    }
+
+    return <div className={"d-flex flex-column"}>{content}</div>;
+  }
+
+  function pickupLocationCell(delivery: Delivery) {
+    return (
+      <div className={"d-flex flex-column align-items-center"}>
+        <strong>{delivery.pickupLocation.name}</strong>
+        <div style={{ width: "32px" }}>
+          <TapirButton
+            variant={"outline-secondary"}
+            icon={"info"}
+            size={"sm"}
+            onClick={() => {
+              setSelectedPickupLocation(delivery.pickupLocation);
+              setSelectedPickupLocationOpeningTimes(
+                delivery.pickupLocationOpeningTimes,
+              );
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  function getJokerButtonText() {
+    if (areJokersEnabled && areDonationsEnabled) {
+      return "Joker & Spende";
+    }
+
+    if (areJokersEnabled) {
+      return "Joker";
+    }
+
+    if (areDonationsEnabled) {
+      return "Spenden";
+    }
+
+    return "Feature disabled";
+  }
+
+  function getHeaderButtons() {
+    if (deliveriesLoading) {
+      return <Spinner />;
+    }
+
+    if (deliveries.length === 0) {
+      return null;
+    }
+
+    return (
+      <span className={"d-flex gap-2"}>
+        {(areJokersEnabled || areDonationsEnabled) && (
+          <TapirButton
+            text={getJokerButtonText()}
+            icon={"free_cancellation"}
+            variant={"outline-primary"}
+            onClick={() => {
+              setShowManageJokersModal(true);
+            }}
+          />
+        )}
+        <TapirButton
+          text={"Verteilstation ändern"}
+          icon={"edit"}
+          variant={"outline-primary"}
+          onClick={() => setShowPickupLocationChangeModal(true)}
+        />
+      </span>
+    );
+  }
+
+  return (
+    <>
+      <Card style={{ marginBottom: "1rem" }}>
+        <Card.Header>
+          <div
+            className={"d-flex justify-content-between align-items-center mb-0"}
+          >
+            <h5 className={"mb-0"}>Abholung</h5>
+            {getHeaderButtons()}
+          </div>
+        </Card.Header>
+        <Card.Body className={deliveries.length > 0 ? "p-0" : ""}>
+          <div style={{ overflowY: "scroll", maxHeight: "30em" }}>
+            {!deliveriesLoading && deliveries.length === 0 ? (
+              <p className={"text-center mb-0"}>Keine Abholungen</p>
+            ) : (
+              <Table striped hover responsive className={"text-center"}>
+                <thead>
+                  <tr>
+                    <th>Datum</th>
+                    <th>Produkte</th>
+                    <th>Abholort</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deliveriesLoading
+                    ? loadingPlaceholder()
+                    : deliveries.map((delivery) => {
+                        return (
+                          <tr key={formatDateNumeric(delivery.deliveryDate)}>
+                            <td>{dateCell(delivery)}</td>
+                            <td>{productCell(delivery)}</td>
+                            <td>{pickupLocationCell(delivery)}</td>
+                          </tr>
+                        );
+                      })}
+                </tbody>
+              </Table>
+            )}
+          </div>
+        </Card.Body>
+      </Card>
+      {selectedPickupLocation && (
+        <PickupLocationDeliveryDetailsModal
+          pickupLocation={selectedPickupLocation}
+          openingTimes={selectedPickupLocationOpeningTimes}
+          onHide={() => setSelectedPickupLocation(undefined)}
+        />
+      )}
+      {(areJokersEnabled || areDonationsEnabled) && (
+        <ManageJokersAndDonationsModal
+          show={showManageJokersModal}
+          onHide={() => setShowManageJokersModal(false)}
+          memberId={memberId}
+          deliveries={deliveries}
+          loadDeliveries={loadDeliveries}
+          deliveriesLoading={deliveriesLoading}
+          csrfToken={csrfToken}
+          setToastDatas={setToastDatas}
+          areDonationsEnabled={areDonationsEnabled}
+          areJokersEnabled={areJokersEnabled}
+        />
+      )}
+      <PickupLocationChangeModal
+        onHide={() => setShowPickupLocationChangeModal(false)}
+        show={showPickupLocationChangeModal}
+        csrfToken={csrfToken}
+        memberId={memberId}
+        reloadDeliveries={loadDeliveries}
+        setToastDatas={setToastDatas}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
+    </>
+  );
+};
+
+export default DeliveryListCard;

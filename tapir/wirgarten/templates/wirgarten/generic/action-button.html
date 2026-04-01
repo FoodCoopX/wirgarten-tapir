@@ -1,15 +1,7 @@
-<button
-        {% if id %}
-        id="{{id}}"
-        {% endif %}
-        onclick="{{ onclick }}"
-        {% if title %}
-        data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ title }}"
-        {% endif %}
-        class="btn btn-outline-{{type|default:'success'}} mx-1 px-2 {{ class }}"
-        {% if disabled %}
-        disabled
-        {% endif %}
->
+<button {% if id %}id="{{ id }}"{% endif %}
+        onclick="{{ onclick|safe }}"
+        {% if title %}data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ title }}"{% endif %}
+        class="btn btn-outline-{{ type|default:'success' }} mx-1 {{ class }}"
+        {% if disabled %}disabled{% endif %}>
     <span class="material-icons">{{ icon }}</span>
 </button>

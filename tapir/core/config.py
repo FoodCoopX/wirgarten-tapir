@@ -1,0 +1,57 @@
+LEGAL_STATUS_ASSOCIATION = "association"
+LEGAL_STATUS_COOPERATIVE = "coop"
+LEGAL_STATUS_COMPANY = "company"
+
+LEGAL_STATUS_OPTIONS = [
+    (LEGAL_STATUS_ASSOCIATION, "Verein"),
+    (LEGAL_STATUS_COOPERATIVE, "Genossenschaft"),
+    (LEGAL_STATUS_COMPANY, "Einzelunternehmen"),
+]
+
+TEST_DATE_OVERRIDE_DISABLED = "disabled"
+TEST_DATE_OVERRIDE_FIRST_DAY_THIS_YEAR = "first_day_this_year"
+TEST_DATE_OVERRIDE_OCTOBER_TENTH_THIS_YEAR = "october_tenth_this_year"
+TEST_DATE_OVERRIDE_DECEMBER_FIFTEENTH_THIS_YEAR = "december_fifteenth_this_year"
+TEST_DATE_OVERRIDE_LAST_MINUTE_OF_THIS_YEAR = "last_minute_this_year"
+TEST_DATE_OVERRIDE_END_OF_FIRST_DAY_NEXT_YEAR = "end_of_first_day_next_year"
+TEST_DATE_OVERRIDE_MANUAL = "manual"
+
+TEST_DATE_OVERRIDE_OPTIONS = [
+    (TEST_DATE_OVERRIDE_DISABLED, "Nicht festgelegt"),
+    (TEST_DATE_OVERRIDE_FIRST_DAY_THIS_YEAR, "01.01. dieses Jahr, 23:59 Uhr"),
+    (TEST_DATE_OVERRIDE_OCTOBER_TENTH_THIS_YEAR, "10.10. dieses Jahr, 09 Uhr"),
+    (TEST_DATE_OVERRIDE_DECEMBER_FIFTEENTH_THIS_YEAR, "15.12. dieses Jahr, 09 Uhr"),
+    (TEST_DATE_OVERRIDE_LAST_MINUTE_OF_THIS_YEAR, "31.12. dieses Jahr, 23:59 Uhr"),
+    (TEST_DATE_OVERRIDE_END_OF_FIRST_DAY_NEXT_YEAR, "01.01. nächstes Jahr, 23:59 Uhr"),
+    (TEST_DATE_OVERRIDE_MANUAL, "Manuell"),
+]
+
+THEME_BIOTOP = "biotop"
+THEME_WIRGARTEN = "wirgarten"
+THEME_L2G = "l2g"
+THEME_MM = "mm"
+THEME_HUMUSWERKSTATT = "huw"
+THEME_ERNTEUNIONOST = "ernteunion_ost"
+THEME_KATRINGER_GRUENZEUG = "katringer"
+THEME_SOLAWI_HALL = "solawi_hall"
+THEME_LEISTENMUEHLE = "leistenmuehle"
+THEME_GROSSHOECHBERG = "grosshoechberg"
+THEME_SACHERL_TANNBERG = "sacherl_tannberg"
+THEME_ALFTER = "alfter"
+THEME_TEST = "test"
+
+THEME_OPTIONS = [
+    (THEME_ALFTER, "Alfter"),
+    (THEME_BIOTOP, "Biotop Oberland"),
+    (THEME_ERNTEUNIONOST, "Ernte Union Ost"),
+    (THEME_GROSSHOECHBERG, "Grosshöchberg"),
+    (THEME_HUMUSWERKSTATT, "Humuswerkstatt"),
+    (THEME_KATRINGER_GRUENZEUG, "Katringer Grünzeug"),
+    (THEME_L2G, "L2G Dickendorf"),
+    (THEME_LEISTENMUEHLE, "Leistenmühle"),
+    (THEME_MM, "Möllers Morgen"),
+    (THEME_SACHERL_TANNBERG, "Sacherl Tannberg"),
+    (THEME_SOLAWI_HALL, "Solawi Hall"),
+    (THEME_WIRGARTEN, "WirGarten Lüneburg"),
+    (THEME_TEST, "Test"),
+]

@@ -6,17 +6,19 @@ const init = (c_p_map_json, pe_c_map_json) => {
   activateDetails();
 };
 
+const CLASS_ROW_ACTIVE = "table-active";
+
 const activateGrowingPeriodList = (pe_c_map_json) => {
   const params = Tapir.getUrlParams();
   const children = Array.from(
-    document.getElementById("list_growing_periods").children
+    document.getElementById("list_growing_periods").children,
   );
   children.forEach((child) => {
     const id = `period-${params.periodId}`;
     if (child.id === id) {
-      child.classList.add("active");
+      child.classList.add(CLASS_ROW_ACTIVE);
     } else {
-      child.classList.remove("active");
+      child.classList.remove(CLASS_ROW_ACTIVE);
     }
   });
 
@@ -26,14 +28,14 @@ const activateGrowingPeriodList = (pe_c_map_json) => {
 const activateCapacityList = (c_p_map_json) => {
   const params = Tapir.getUrlParams();
   const children = Array.from(
-    document.getElementById("list_capacities").children
+    document.getElementById("list_capacities").children,
   );
   const id = `c-${params.capacityId}`;
   children.forEach((child) => {
     if (child.id === id) {
-      child.classList.add("active");
+      child.classList.add(CLASS_ROW_ACTIVE);
     } else {
-      child.classList.remove("active");
+      child.classList.remove(CLASS_ROW_ACTIVE);
     }
   });
 
@@ -47,9 +49,9 @@ const activateProductList = () => {
   const id = `p-${params.prodId}`;
   children.forEach((child) => {
     if (child.id === id) {
-      child.classList.add("active");
+      child.classList.add(CLASS_ROW_ACTIVE);
     } else {
-      child.classList.remove("active");
+      child.classList.remove(CLASS_ROW_ACTIVE);
     }
   });
 };
@@ -65,7 +67,7 @@ const setupCapacityList = (periodId, pe_c_map_json) => {
 
   Array.from(listItemsTypes).forEach((item) => {
     item.style["display"] = displayIds.includes(item.id) ? "table-row" : "none";
-    item.classList.remove("active");
+    item.classList.remove(CLASS_ROW_ACTIVE);
   });
 };
 
@@ -79,7 +81,7 @@ const setupProductList = (capacityId, c_p_map_json) => {
       : [];
   Array.from(listItems).forEach((item) => {
     item.style["display"] = displayIds.includes(item.id) ? "table-row" : "none";
-    item.classList.remove("active");
+    item.classList.remove(CLASS_ROW_ACTIVE);
   });
 };
 
@@ -99,7 +101,7 @@ const manageProductDependentButtons = (params) => {
 
 const manageGrowingPeriodDependentButtons = (params) => {
   const buttons = Array.from(
-    document.getElementsByClassName("need-growing-period")
+    document.getElementsByClassName("need-growing-period"),
   );
   buttons.forEach((btn) => {
     const deleteCondition =
@@ -117,7 +119,7 @@ const manageGrowingPeriodDependentButtons = (params) => {
 
 const manageCapacityDependentButtons = (params) => {
   const buttons = Array.from(
-    document.getElementsByClassName("need-product-type")
+    document.getElementsByClassName("need-product-type"),
   );
   buttons.forEach((btn) => {
     const deleteCondition =
@@ -143,28 +145,10 @@ const manageButtons = () => {
   manageProductDependentButtons(params);
 };
 
-const getCapacityEditForm = () => {
-  const params = Tapir.getUrlParams();
-  if (params.capacityId) {
-    const url = `/wirgarten/product/${params.periodId}/${
-      params.capacityId
-    }/typeedit${Tapir.stringifyUrlParams(params)}`;
-    FormModal.load(url, "Vertrag / Kapazität editieren");
-  }
-};
-
-const getCapacityAddForm = () => {
-  const params = Tapir.getUrlParams();
-  const url = `/wirgarten/product/${
-    params.periodId
-  }/typeadd${Tapir.stringifyUrlParams(params)}`;
-  FormModal.load(url, "Vertrag / Kapazität hinzufügen");
-};
-
 const getProductEditForm = () => {
   const params = Tapir.getUrlParams();
   if (params.prodId) {
-    const url = `/wirgarten/product/${params.periodId}/${params.capacityId}/${
+    const url = `/tapir/product/${params.periodId}/${params.capacityId}/${
       params.prodId
     }/edit${Tapir.stringifyUrlParams(params)}`;
     FormModal.load(url, "Produkt editieren");
@@ -173,7 +157,7 @@ const getProductEditForm = () => {
 
 const getProductAddForm = () => {
   const params = Tapir.getUrlParams();
-  const url = `/wirgarten/product/${params.periodId}/${
+  const url = `/tapir/product/${params.periodId}/${
     params.capacityId
   }/add${Tapir.stringifyUrlParams(params)}`;
   FormModal.load(url, "Neues Produkt hinzufügen");
@@ -181,25 +165,25 @@ const getProductAddForm = () => {
 
 const getGrowingPeriodAddForm = () => {
   const params = Tapir.getUrlParams();
-  const url = `/wirgarten/product/periodadd${Tapir.stringifyUrlParams(params)}`;
-  const title = "Neue Anbauperiode anlegen";
+  const url = `/tapir/product/periodadd${Tapir.stringifyUrlParams(params)}`;
+  const title = "Neue Vertragsperiode anlegen";
   FormModal.load(
     url,
     title,
     "Es wird empfohlen stattdessen die Copy Funktion auf die letzte Periode anzuwenden, damit Produkte und weitere Einstellungen übernommen werden. Diese sind nachträglich noch editierbar.",
-    "warning"
+    "warning",
   );
 };
 
 const getGrowingPeriodCopyForm = () => {
   const params = Tapir.getUrlParams();
-  const url = `/wirgarten/product/${
+  const url = `/tapir/product/${
     params.periodId
   }/periodcopy${Tapir.stringifyUrlParams(params)}`;
   FormModal.load(
     url,
-    "Neue Anbauperiode anlegen",
-    "Produkte werden von der gewählten Anbauperiode übernommen."
+    "Neue Vertragsperiode anlegen",
+    "Produkte werden von der gewählten Vertragsperiode übernommen.",
   );
 };
 
@@ -223,6 +207,7 @@ const select_capacity = (capacityId, productTypeId, pt_p_map_json) => {
     params.prodId = null;
   }
   params.capacityId = capacityId;
+  params.productTypeId = productTypeId;
   Tapir.replaceUrlParams(params);
 
   activateCapacityList(pt_p_map_json);
@@ -249,14 +234,14 @@ const deleteProduct = () => {
         params.prodId
       }/delete${Tapir.stringifyUrlParams({ ...params, prodId: undefined })}`;
       window.location.replace(url);
-    }
+    },
   );
 };
 
 const deleteCapacity = () => {
   ConfirmationModal.open(
     "Bist du dir sicher?",
-    "Möchtest du den Produkttypen wirklich für diese Anbauperiode löschen?",
+    "Möchtest du den Produkttypen wirklich für diese Vertragsperiode löschen?",
     "Löschen",
     "danger",
     () => {
@@ -268,14 +253,14 @@ const deleteCapacity = () => {
         capacityId: undefined,
       })}`;
       window.location.replace(url);
-    }
+    },
   );
 };
 
 const deleteGrowingPeriod = () => {
   ConfirmationModal.open(
     "Bist du dir sicher?",
-    "Möchtest du diese Anbauperiode wirklich löschen?",
+    "Möchtest du diese Vertragsperiode wirklich löschen?",
     "Löschen",
     "danger",
     () => {
@@ -287,6 +272,6 @@ const deleteGrowingPeriod = () => {
         periodId: undefined,
       })}`;
       window.location.replace(url);
-    }
+    },
   );
 };

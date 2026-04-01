@@ -1,16 +1,37 @@
 <div>
-    <strong>{{pickup_location.street}}<br /><small>{{pickup_location.postcode}}
-            {{pickup_location.city}}</small></strong><br /><br />
-    {% if pickup_location.info %}{{pickup_location.info}}<br /><br />{% endif %}
-    {% if pickup_location.contact_name %}<strong>Kontakt:</strong>
-    {{pickup_location.contact_name}}<br />{% endif %}
-    {% if pickup_location.messenger_group_link %}<strong>Signal Gruppe:</strong> <a
-        href='{{pickup_location.messenger_group_link}}' target='_blank'>Klicke hier zum Beitreten</a><br />{% endif %}
-    {% if pickup_location.access_code %}<strong>Zugangs-Code:</strong>
-    {{pickup_location.access_code}}<br />{% endif %}
-    {% if pickup_location.opening_times_html %}
-    <hr />
-    <h4>Öffnungszeiten</h4>{{pickup_location.opening_times_html|safe}}{% endif %}
-    {% if pickup_location.photo_link %}<a href='{{pickup_location.photo_link}}' target='_blank'><img
-            style='max-width: 100%' src='{{pickup_location.photo_link}}' /></a>{% endif %}
-</div>
+    <strong>{{ pickup_location.street }}
+        <br />
+        <small>{{ pickup_location.postcode }}
+        {{ pickup_location.city }}</small></strong>
+        <br />
+        <br />
+        {% if pickup_location.info %}
+            {{ pickup_location.info }}
+            <br />
+            <br />
+        {% endif %}
+        {% if pickup_location.contact_name %}
+            <strong>Kontakt:</strong>
+            {{ pickup_location.contact_name }}
+            <br />
+        {% endif %}
+        {% if pickup_location.messenger_group_link %}
+            <strong>Signal Gruppe:</strong> <a href='{{ pickup_location.messenger_group_link }}' target='_blank'>Klicke hier zum Beitreten</a>
+            <br />
+        {% endif %}
+        {% if pickup_location.access_code %}
+            <strong>Zugangs-Code:</strong>
+            {{ pickup_location.access_code }}
+            <br />
+        {% endif %}
+        {% if pickup_location.opening_times_html %}
+            <hr />
+            <h4>Abholtage</h4>
+            {{ pickup_location.opening_times_html|safe }}
+        {% endif %}
+        {% if pickup_location.photo_link %}
+            <a href='{{ pickup_location.photo_link }}' target='_blank'>
+                <img style='max-width: 100%' src='{{ pickup_location.photo_link }}' />
+            </a>
+        {% endif %}
+    </div>

@@ -1,0 +1,538 @@
+import datetime
+
+from django.core.exceptions import ImproperlyConfigured
+
+from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
+from tapir.configuration.models import TapirParameter
+from tapir.pickup_locations.models import ProductBasketSizeEquivalence
+from tapir.utils.config import Organization
+from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, NO_DELIVERY, EVERY_FOUR_WEEKS
+from tapir.wirgarten.models import (
+    ProductType,
+    Product,
+    GrowingPeriod,
+    ProductPrice,
+    ProductCapacity,
+    TaxRate,
+)
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_today
+
+
+class ProductGenerator:
+    @classmethod
+    def generate_product(
+        cls,
+        product_type: ProductType,
+        name: str,
+        base_price: float,
+        size: float,
+        base: bool,
+        min_coop_shares: int,
+        description_in_bestellwizard: str = "",
+    ):
+        product = Product.objects.create(
+            type=product_type,
+            name=name,
+            base=base,
+            min_coop_shares=min_coop_shares,
+            description_in_bestellwizard=description_in_bestellwizard,
+            url_of_image_in_bestellwizard=f"https://placehold.co/700x1000?text=Produkt+{name}",
+        )
+
+        # prices were a bit cheaper last year
+        start_of_previous_growing_period = (
+            GrowingPeriod.objects.order_by("start_date").first().start_date
+        )
+        ProductPrice.objects.create(
+            product=product,
+            size=size,
+            price=base_price * 0.9,
+            valid_from=start_of_previous_growing_period,
+        )
+
+        # new prices are from 2 month ago
+        ProductPrice.objects.create(
+            product=product,
+            size=size,
+            price=base_price,
+            valid_from=get_today() - datetime.timedelta(days=60),
+        )
+
+        # prices will be a bit more expensive next year
+        start_of_next_growing_period = (
+            GrowingPeriod.objects.order_by("-start_date").first().start_date
+        )
+        ProductPrice.objects.create(
+            product=product,
+            size=size,
+            price=base_price * 1.1,
+            valid_from=start_of_next_growing_period,
+        )
+
+    @classmethod
+    def generate_products(cls, organization: Organization):
+        with open(
+            "tapir/utils/services/test_data_generation/product_descriptions/ernteanteile_short.html",
+            "r",
+        ) as file:
+            description_bestellwizard_short = file.read()
+
+        ernteanteile = ProductType.objects.create(
+            name="Ernteanteile",
+            delivery_cycle=WEEKLY[0],
+            is_affected_by_jokers=True,
+            description_bestellwizard_short=description_bestellwizard_short,
+            description_bestellwizard_long="Der Ernteanteil besteht aus regional angebautem Bio-Gemüse und wird in Form von Kisten je Mitglied aufgeteilt. Pro Jahr werden im Regelfall 50 Kisten geliefert.",
+            order_in_bestellwizard=1,
+        )
+        ProductTypeAccordionInBestellWizard.objects.create(
+            product_type=ernteanteile,
+            title="Probezeit: Teste deinen Ernteanteil 6 Wochen",
+            description="Während der Probezeit besteht keine Kündigungsfrist und der Ernteanteil kann wöchentlich gekündigt werden. Du zahlst nur für die erhaltenen Anteile. Nach der Probezeit ist eine Kündigung nur zum Jahresende gewünscht. Die Probezeit beginnt mit deiner ersten Lieferung.",
+            order=1,
+        )
+        ProductTypeAccordionInBestellWizard.objects.create(
+            product_type=ernteanteile,
+            title="Zu je dem Anteil gibt es das ausgedruckte Wochenbladl",
+            description='Unsere wöchentliche "Erntepost" mit Rezepten, aktuelles aus der Gärtnerei und dem Hofpunkt, sowie Tipps und Tricks zum Gemüse.',
+            order=2,
+        )
+        ProductTypeAccordionInBestellWizard.objects.create(
+            product_type=ernteanteile,
+            title="Jokersystem: bis zu 4 mal Ernteanteil aussetzen pro Jahr",
+            description="Du kannst bis zu 4 mal im Jahr eine Kiste abbestellen (davon maximal 2 im Monat August). Diese Kisten werden nicht berechnet.",
+            order=3,
+        )
+        ProductTypeAccordionInBestellWizard.objects.create(
+            product_type=ernteanteile,
+            title="Der Inhalt deines Anteils variiert je nach Saison und Witterung",
+            description='Die Ernte wird unter allen Mitgliedern aufgeteilt. Im Sommer gibt es mehr, im Winter etwas weniger. Jede Woche gibt es aber mindestens 5 Kulturen, und im Winter nicht nur Kohl! Mehr Details findest du <a href="https://biotop-oberland.de/so-gehts/#ernteanteil">hier</a>.',
+            order=4,
+        )
+        TaxRate.objects.create(
+            product_type=ernteanteile,
+            tax_rate=0,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=ernteanteile.id
+        )
+
+        match organization:
+            case Organization.WIRGARTEN:
+                cls.generate_products_wirgarten(product_type_ernteanteile=ernteanteile)
+            case Organization.BIOTOP:
+                cls.generate_products_biotop(product_type_ernteanteile=ernteanteile)
+            case Organization.VEREIN:
+                cls.generate_products_verein(product_type_ernteanteile=ernteanteile)
+            case Organization.L2G:
+                cls.generate_products_l2g(product_type_ernteanteile=ernteanteile)
+            case Organization.MM:
+                cls.generate_products_mm(product_type_ernteanteile=ernteanteile)
+            case _:
+                raise ImproperlyConfigured(f"Unknown organization type: {organization}")
+
+    @classmethod
+    def generate_products_verein(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="M",
+            base_price=70.3,
+            size=1,
+            base=True,
+            min_coop_shares=2,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="S",
+            base_price=48.3,
+            size=0.66,
+            base=False,
+            min_coop_shares=1,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="L",
+            base_price=109.8,
+            size=1.33,
+            base=False,
+            min_coop_shares=3,
+        )
+
+        eggs = ProductType.objects.create(
+            name="Hühneranteile",
+            delivery_cycle=EVEN_WEEKS[0],
+            is_affected_by_jokers=True,
+            order_in_bestellwizard=2,
+        )
+        TaxRate.objects.create(
+            product_type=eggs,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=eggs,
+            name="Ganze",
+            base_price=18,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+        cls.generate_product(
+            product_type=eggs,
+            name="Halbe",
+            base_price=9.5,
+            size=0.5,
+            base=False,
+            min_coop_shares=0,
+        )
+
+        association_membership = ProductType.objects.create(
+            name="Vereinsmitgliedschaft",
+            delivery_cycle=NO_DELIVERY[0],
+            is_affected_by_jokers=False,
+            single_subscription_only=True,
+            subscriptions_have_end_dates=False,
+            must_be_subscribed_to=True,
+            is_association_membership=True,
+            order_in_bestellwizard=3,
+        )
+        TaxRate.objects.create(
+            product_type=association_membership,
+            tax_rate=0,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=association_membership,
+            name="Typ A",
+            base_price=10,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+        cls.generate_product(
+            product_type=association_membership,
+            name="Typ B",
+            base_price=17.5,
+            size=1,
+            base=False,
+            min_coop_shares=0,
+        )
+        cls.generate_product(
+            product_type=association_membership,
+            name="Typ C",
+            base_price=22.5,
+            size=1,
+            base=False,
+            min_coop_shares=0,
+        )
+
+    @classmethod
+    def generate_products_wirgarten(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="M",
+            base_price=70.3,
+            size=1,
+            base=True,
+            min_coop_shares=2,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="S",
+            base_price=48.3,
+            size=0.66,
+            base=False,
+            min_coop_shares=1,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="L",
+            base_price=109.8,
+            size=1.3,
+            base=False,
+            min_coop_shares=3,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="XL",
+            base_price=129.2,
+            size=1.66,
+            base=False,
+            min_coop_shares=4,
+        )
+
+        eggs = ProductType.objects.create(
+            name="Hühneranteile",
+            delivery_cycle=EVEN_WEEKS[0],
+            is_affected_by_jokers=True,
+            order_in_bestellwizard=2,
+        )
+        TaxRate.objects.create(
+            product_type=eggs,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=eggs,
+            name="Ganze",
+            base_price=18,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+        cls.generate_product(
+            product_type=eggs,
+            name="Halbe",
+            base_price=9.5,
+            size=0.5,
+            base=False,
+            min_coop_shares=0,
+        )
+
+        hofpunkt = ProductType.objects.create(
+            name="Hofpunkt",
+            delivery_cycle=NO_DELIVERY[0],
+            is_affected_by_jokers=False,
+            single_subscription_only=True,
+            order_in_bestellwizard=4,
+        )
+        TaxRate.objects.create(
+            product_type=hofpunkt,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=hofpunkt,
+            name="Mitgliedschaft",
+            base_price=3,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+
+    @classmethod
+    def generate_products_biotop(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="M",
+            base_price=70.3,
+            size=1,
+            base=True,
+            min_coop_shares=2,
+            description_in_bestellwizard="für ca. 2 Personen",
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="S",
+            base_price=48.3,
+            size=0.7,
+            base=False,
+            min_coop_shares=1,
+            description_in_bestellwizard="für ca. eine Person",
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="L",
+            base_price=109.8,
+            size=1.7,
+            base=False,
+            min_coop_shares=3,
+            description_in_bestellwizard="für Familien mit großem Gemüsehunger",
+        )
+
+        eggs = ProductType.objects.create(
+            name="Hühneranteile",
+            delivery_cycle=EVEN_WEEKS[0],
+            is_affected_by_jokers=True,
+            order_in_bestellwizard=2,
+        )
+        TaxRate.objects.create(
+            product_type=eggs,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=eggs,
+            name="Ganze",
+            base_price=18,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+        cls.generate_product(
+            product_type=eggs,
+            name="Halbe",
+            base_price=9.5,
+            size=0.5,
+            base=False,
+            min_coop_shares=0,
+        )
+
+        hofpunkt = ProductType.objects.create(
+            name="Hofpunkt",
+            delivery_cycle=NO_DELIVERY[0],
+            is_affected_by_jokers=False,
+            single_subscription_only=True,
+            order_in_bestellwizard=4,
+        )
+        TaxRate.objects.create(
+            product_type=hofpunkt,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=hofpunkt,
+            name="Mitgliedschaft",
+            base_price=3,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+
+        ProductBasketSizeEquivalence.objects.create(
+            product=Product.objects.get(name="S"),
+            basket_size_name="kleine Kiste",
+            quantity=1,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            product=Product.objects.get(name="M"),
+            basket_size_name="normale Kiste",
+            quantity=1,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            product=Product.objects.get(name="L"),
+            basket_size_name="kleine Kiste",
+            quantity=1,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            product=Product.objects.get(name="L"),
+            basket_size_name="normale Kiste",
+            quantity=1,
+        )
+
+    @classmethod
+    def generate_products_l2g(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="Klein",
+            base_price=72,
+            size=1,
+            base=True,
+            min_coop_shares=2,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="Groß",
+            base_price=112,
+            size=1.6,
+            base=False,
+            min_coop_shares=4,
+        )
+
+        bread = ProductType.objects.create(
+            name="Brot",
+            delivery_cycle=WEEKLY[0],
+            is_affected_by_jokers=True,
+            order_in_bestellwizard=5,
+        )
+        TaxRate.objects.create(
+            product_type=bread,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=bread,
+            name="Vollkornbrot",
+            base_price=27,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+        cls.generate_product(
+            product_type=bread,
+            name="Glutenfreies Vollkornbrot",
+            base_price=27,
+            size=1,
+            base=False,
+            min_coop_shares=0,
+        )
+
+        honey = ProductType.objects.create(
+            name="Honig",
+            delivery_cycle=EVERY_FOUR_WEEKS[0],
+            is_affected_by_jokers=True,
+            order_in_bestellwizard=6,
+        )
+        TaxRate.objects.create(
+            product_type=honey,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=honey,
+            name="Honig",
+            base_price=7,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+
+        oil = ProductType.objects.create(
+            name="Leinöl",
+            delivery_cycle=EVERY_FOUR_WEEKS[0],
+            is_affected_by_jokers=True,
+            order_in_bestellwizard=7,
+        )
+        TaxRate.objects.create(
+            product_type=oil,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=oil,
+            name="Frisches, kaltgepresstes Leinöl",
+            base_price=11,
+            size=1,
+            base=True,
+            min_coop_shares=0,
+        )
+
+    @classmethod
+    def generate_product_capacities(cls):
+        capacities = []
+        for growing_period in GrowingPeriod.objects.all():
+            for product_type in ProductType.objects.all():
+                capacities.append(
+                    ProductCapacity(
+                        product_type=product_type,
+                        period=growing_period,
+                        capacity=1000,
+                    )
+                )
+        ProductCapacity.objects.bulk_create(capacities)
+
+    @classmethod
+    def generate_product_data(cls, organization: Organization):
+        cls.generate_products(organization)
+        cls.generate_product_capacities()
+
+    @classmethod
+    def generate_products_mm(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="Ernteanteil ab Hof",
+            base_price=75,
+            size=1,
+            base=True,
+            min_coop_shares=2,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="Ernteanteil ab Depot",
+            base_price=90,
+            size=1,
+            base=False,
+            min_coop_shares=2,
+        )

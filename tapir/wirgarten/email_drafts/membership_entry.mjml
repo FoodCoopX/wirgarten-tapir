@@ -1,0 +1,30 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+Trigger: Transaktionale Email wenn das Beitrittsdatum zur Genossenschaft erreicht ist. <br /><br />
+Zweck: Information und Bestätigung des Beitritts für das Mitglied. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
+
+__________________ <br /><br />
+
+"Moin {{Empfänger.Vorname}}, <br /><br />
+
+herzlich willkommen in der {{Allgemein.WirGarten Standort}}. Wir freuen uns sehr, dich ab heute offiziell als Mitglied in der Genossenschaft begrüßen zu dürfen. <br /><br />
+
+Mit deiner Mitgliedschaft in der Genossenschaft trägst du aktiv dazu bei, ökologische, regionale, kleinbäuerliche Landwirtschaft zu ermöglichen. Gemeinsam sorgen wir dafür, dass Lebensmittel fair produziert werden – für die Menschen, die sie anbauen, und für die, die sie genießen. <br /><br />
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
+
+Liebe Grüße, <br />
+dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br />
+
+___________________<br /><br />
+
+Folgende Trigger sind hier relevant: keine <br /> 
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

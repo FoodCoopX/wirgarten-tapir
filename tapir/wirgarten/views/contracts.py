@@ -2,12 +2,10 @@ import csv
 from urllib.parse import parse_qs, urlencode
 
 from dateutil.relativedelta import relativedelta
-from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db import transaction
 from django.db.models import OuterRef, Subquery, Sum
 from django.forms import CheckboxInput
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView, View
@@ -15,9 +13,9 @@ from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFi
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
-    CoopShareTransaction,
     GrowingPeriod,
     Member,
     MemberPickupLocation,
@@ -26,73 +24,18 @@ from tapir.wirgarten.models import (
     ProductType,
     Subscription,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
 )
-from tapir.wirgarten.service.products import product_type_order_by
+from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import format_date, get_now, get_today
 from tapir.wirgarten.views.filters import SecondaryOrderingFilter
 
 
-class NewContractsView(PermissionRequiredMixin, TemplateView):
-    """
-    Displays a list of all new contracts that are not confirmed by the admin yet
-    """
-
-    template_name = "wirgarten/subscription/new_contracts_overview.html"
-    permission_required = "accounts.view"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        coop_shares = CoopShareTransaction.objects.filter(
-            admin_confirmed__isnull=True,
-            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-        ).order_by("timestamp")
-
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        harvest_shares = Subscription.objects.filter(
-            admin_confirmed__isnull=True, product__type_id=base_product_type_id
-        ).order_by("created_at")
-
-        additional_shares = (
-            Subscription.objects.filter(admin_confirmed__isnull=True)
-            .exclude(product__type_id=base_product_type_id)
-            .order_by("created_at")
-        )
-
-        context["new_harvest_and_coop_shares"] = harvest_shares
-        context["new_coop_shares"] = coop_shares
-        context["new_additional_shares"] = additional_shares
-        return context
-
-
-@permission_required("accounts.manage")
-@transaction.atomic
-def confirm_new_contracts(request, **kwargs):
-    """
-    Admin action to confirm the selected contracts
-    """
-
-    query_dict = dict(x.split("=") for x in request.environ["QUERY_STRING"].split("&"))
-    for key, val in query_dict.items():
-        query_dict[key] = val.split(",")
-
-    harvest_and_coop_shares = query_dict.pop("new_harvest_and_coop_shares", [])
-    additional_shares = query_dict.pop("new_additional_shares", [])
-    subscription_ids = harvest_and_coop_shares + additional_shares
-    now = get_now()
-    if len(subscription_ids):
-        Subscription.objects.filter(id__in=subscription_ids).update(admin_confirmed=now)
-
-    coop_shares = query_dict.pop("new_coop_shares", [])
-    if len(coop_shares):
-        CoopShareTransaction.objects.filter(id__in=coop_shares).update(
-            admin_confirmed=now
-        )
-
-    return HttpResponseRedirect(reverse_lazy("wirgarten:new_contracts"))
+class ContractUpdatesView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Accounts.MANAGE
+    template_name = "wirgarten/subscription/contract_updates.html"
 
 
 class SubscriptionListFilter(FilterSet):
@@ -107,7 +50,7 @@ class SubscriptionListFilter(FilterSet):
         widget=CheckboxInput,
     )
     period = ModelChoiceFilter(
-        label=_("Anbauperiode"),
+        label=_("Vertragsperiode"),
         queryset=GrowingPeriod.objects.all().order_by("-start_date"),
         required=True,
     )
@@ -138,8 +81,6 @@ class SubscriptionListFilter(FilterSet):
             ("member__member_no", "⮝ Mitgliedsnummer"),
             ("-member__first_name", "⮟ Name"),
             ("member__first_name", "⮝ Name"),
-            ("-solidarity_price", "⮟ Solidarpreis"),
-            ("solidarity_price", "⮝ Solidarpreis"),
         ),
         required=False,
         empty_label="",
@@ -192,7 +133,7 @@ class SubscriptionListFilter(FilterSet):
                 start_date__lte=today, end_date__gte=today
             )
             if not growing_periods.exists():
-                return None
+                return GrowingPeriod.objects.order_by("start_date").first()
 
             return growing_periods.first().id
 
@@ -253,9 +194,23 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
         new_query_string = urlencode(query_dict, doseq=True)
         context["filter_query"] = new_query_string
         context["today"] = get_today()
-        context["total_contracts"] = self.filterset.qs.aggregate(
-            total_count=Sum("quantity")
-        )["total_count"]
+        context["number_of_contracts"] = self.filterset.qs.count()
+        context["quantity_sum"] = self.filterset.qs.aggregate(
+            quantity_sum=Sum("quantity")
+        )["quantity_sum"]
+
+        cache = {}
+        subscriptions_trial_end_dates = {}
+        if get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+            for subscription in self.object_list:
+                if TrialPeriodManager.is_contract_in_trial(subscription, cache=cache):
+                    subscriptions_trial_end_dates[subscription.id] = (
+                        TrialPeriodManager.get_last_day_of_trial_period(
+                            subscription, cache=cache
+                        )
+                    )
+        context["subscriptions_trial_end_dates"] = subscriptions_trial_end_dates
+
         return context
 
     def get_queryset(self):
@@ -292,18 +247,12 @@ class ExportSubscriptionList(View):
                 "Vertragsende",
                 "Produkt",
                 "Variante",
-                "Solipreis",
                 "Abholort",
             ]
         )
 
         # Write data rows
         for sub in queryset:
-            soliprice_str = (
-                f"{sub.solidarity_price_absolute} €"
-                if sub.solidarity_price_absolute
-                else (f"{sub.solidarity_price * 100} %" if sub.solidarity_price else "")
-            )
             for _ in range(sub.quantity):
                 writer.writerow(
                     [
@@ -317,7 +266,6 @@ class ExportSubscriptionList(View):
                         format_date(sub.end_date),
                         sub.product.type.name,
                         sub.product.name,
-                        soliprice_str,
                         (
                             sub.member.pickup_location.name
                             if sub.member.pickup_location

@@ -1,0 +1,16 @@
+@media (max-width: 500px) {
+  #bw-header {
+    justify-content: left;
+    padding-left: 0.5rem;
+  }
+
+  #bw-header.bw-logo-centered {
+    justify-content: center;
+  }
+}
+
+@media (min-width: 501px) {
+  #bw-header {
+    justify-content: center;
+  }
+}

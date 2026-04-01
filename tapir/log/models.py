@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField
-from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.db import models
 from django.template.loader import render_to_string
@@ -64,7 +63,7 @@ class LogEntry(models.Model):
         else:
             return self
 
-    def populate(self, actor=None, user=None, share_owner=None):
+    def populate(self, actor=None, user=None):
         """Populate the log entry model fields.
 
         This should be used instead of the normal model creation mechanism to do event-specific info extraction logic
@@ -74,14 +73,6 @@ class LogEntry(models.Model):
 
         self.actor = actor
         self.user = user
-        self.share_owner = share_owner
-
-        if self.share_owner and hasattr(self.share_owner, "user"):
-            self.user = self.share_owner.user
-
-        # Prefer user over share_owner
-        if self.share_owner and self.user:
-            self.share_owner = None
 
         return self
 

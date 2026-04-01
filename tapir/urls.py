@@ -15,9 +15,8 @@ Including another URLconf
 """
 
 from django.conf import settings
-from django.conf.urls import url
 from django.conf.urls.static import static
-from django.urls import include, path, reverse
+from django.urls import include, path
 from django.views.generic import RedirectView
 
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
@@ -38,9 +37,21 @@ urlpatterns = [
         name="account_login",
     ),
     path("accounts/", include("allauth.urls")),
-    path("log/", include("tapir.log.urls")),
+    path("bestell_wizard/", include("tapir.bestell_wizard.urls")),
     path("config/", include("tapir.configuration.urls")),
-    path("wirgarten/", include("tapir.wirgarten.urls")),
+    path("coop/", include("tapir.coop.urls")),
+    path("core/", include("tapir.core.urls")),
+    path("deliveries/", include("tapir.deliveries.urls")),
+    path("generic_exports/", include("tapir.generic_exports.urls")),
+    path("log/", include("tapir.log.urls")),
+    path("payments/", include("tapir.payments.urls")),
+    path("pickup_locations/", include("tapir.pickup_locations.urls")),
+    path("products/", include("tapir.products.urls")),
+    path("solidarity_contribution/", include("tapir.solidarity_contribution.urls")),
+    path("subscriptions/", include("tapir.subscriptions.urls")),
+    path("utils/", include("tapir.utils.urls")),
+    path("waiting_list/", include("tapir.waiting_list.urls")),
+    path("tapir/", include("tapir.wirgarten.urls")),
     path(
         "mailing/",
         TapirMailView.as_view(),
@@ -51,4 +62,4 @@ urlpatterns = [
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:
-    urlpatterns += [url(r"^silk/", include("silk.urls", namespace="silk"))]
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

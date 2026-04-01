@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 
 from dateutil.relativedelta import relativedelta
-from django.db import models, transaction
+from django.db import transaction
 from django.utils import timezone
 from tapir_mail.models import (
     EmailConfigurationDispatch,
@@ -13,7 +13,7 @@ from tapir_mail.service.segment import resolve_segments
 from tapir_mail.service.triggers import Trigger
 
 from tapir.wirgarten.models import Member, Subscription
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.utils import get_now
 
 LOG = logging.getLogger(__name__)
@@ -41,7 +41,14 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         email_configuration_version: EmailConfigurationVersion,
         trigger_data: OnboardingTriggerData,
     ):
-        for recipient in resolve_segments(**email_configuration_version.segment_data):
+        for recipient in resolve_segments(
+            dynamic_segment_names_additive=email_configuration_version.dynamic_segments_additive,
+            dynamic_segment_names_subtractive=email_configuration_version.dynamic_segments_subtractive,
+            static_segment_ids_additive=email_configuration_version.static_segments_additive.all(),
+            static_segment_ids_subtractive=email_configuration_version.static_segments_subtractive.all(),
+            filter_list=email_configuration_version.filter_list,
+            mail_category_ids_additive=email_configuration_version.mail_categories_additive.all(),
+        ):
             cls._delete_unsent_config_dispatch(
                 version=email_configuration_version, recipient=recipient
             )
@@ -58,6 +65,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 version=email_configuration_version,
                 recipient=recipient,
                 trigger_data=trigger_data,
+                cache={},
             )
 
     @classmethod
@@ -88,6 +96,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 version=version,
                 recipient=subscription.member,
                 trigger_data=trigger_data,
+                cache={},
             )
 
     @classmethod
@@ -96,7 +105,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
     ):
         EmailConfigurationDispatch.objects.filter(
             email_configuration_version=version,
-            override_recipients=[recipient.email],
+            override_recipients=[{"recipient_id_in_base_queryset": recipient.id}],
             is_sent=False,
         ).delete()
 
@@ -106,12 +115,15 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         version: EmailConfigurationVersion,
         recipient: Member,
         trigger_data: OnboardingTriggerData,
+        cache: dict,
     ):
         first_subscription = recipient.subscription_set.order_by("start_date").first()
         if not first_subscription:
             return
 
-        first_delivery_date = get_next_delivery_date(first_subscription.start_date)
+        first_delivery_date = get_next_delivery_date(
+            first_subscription.start_date, cache=cache
+        )
         weeks_offset = int(trigger_data["delivery"])
         days_offset = int(trigger_data["days_offset"])
         target_delivery_date = first_delivery_date + relativedelta(weeks=weeks_offset)
@@ -121,12 +133,12 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         )
 
         # don't dispatch if scheduled time is in the past
-        if scheduled_time < get_now():
+        if scheduled_time < get_now(cache=cache):
             return
 
         EmailConfigurationDispatch.objects.create(
             email_configuration_version=version,
-            override_recipients=[recipient.email],
+            override_recipients=[{"recipient_id_in_base_queryset": recipient.id}],
             scheduled_time=scheduled_time,
             is_sent=False,
         )
@@ -155,11 +167,3 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 ],
             ),
         ]
-
-
-models.signals.post_save.connect(
-    receiver=lambda instance, **kwargs: OnboardingTrigger.on_subscription_updated(
-        instance
-    ),
-    sender=Subscription,
-)

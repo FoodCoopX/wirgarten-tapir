@@ -1,0 +1,42 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+               
+Trigger: Transaktionale Email, die bei einer Vertragsänderung im Mitgliederbereich (Wechsel Anteilsgröße, Veränderung Solidarbeitrag, neuer Produktvertrag abgeschlossen) versendet wird. <br /><br />
+Zweck: Information und Bestätigung der Änderungen und aktuellen Vertragskonstellation. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
+
+___________________ <br /><br />
+
+"Moin {{Empfänger.Vorname}} <br /><br />
+
+wir bestätigen dir hiermit deine Vertragsänderung. <br /><br />
+
+Deine neuen Daten sind: <br /><br />
+
+{{Vertragsänderungen im Mitgliederbereich.Vertragsliste}} <br />
+{{Vertragsänderungen im Mitgliederbereich.Vertragsstart}} <br />
+{{Vertragsänderungen im Mitgliederbereich.Vertragsende}} <br />
+{{Vertragsänderungen im Mitgliederbereich.Erste Abholung am}} <br /><br />
+
+Im Mitgliederbereich findest du eine Zahlungs-und Lieferübersicht, da kannst du nochmal genau sehen, wann und wie die Änderung in Kraft tritt. <br /><br />
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
+
+Liebe Grüße, <br />
+Dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br /> <br />
+
+________________________ <br /><br />
+
+Folgende Token sind hier relevant: <br />
+{{Vertragsänderungen im Mitgliederbereich.Vertragsliste}} <br />
+{{Vertragsänderungen im Mitgliederbereich.Vertragsstart}} <br />
+{{Vertragsänderungen im Mitgliederbereich.Vertragsende}} <br />
+{{Vertragsänderungen im Mitgliederbereich.Erste Abholung am}} <br />
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

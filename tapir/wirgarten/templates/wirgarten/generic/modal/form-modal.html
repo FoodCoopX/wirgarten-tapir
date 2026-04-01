@@ -1,28 +1,32 @@
 {% load tapir_static %}
 {% load i18n %}
-
 {% block head %}
-<link rel="stylesheet" href="{% static 'wirgarten/css/form-modal.css' %}">
-<link rel="stylesheet" href="{% static 'wirgarten/css/loading-spinner.css' %}">
+    <link rel="stylesheet" href="{% static 'wirgarten/css/form-modal.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'wirgarten/css/loading-spinner.css' %}">
 {% endblock %}
-
-<div class="modal fade" id="form-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+<div class="modal fade"
+     id="form-modal"
+     tabindex="-1"
+     role="dialog"
+     aria-labelledby="modalLabel"
      aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="modalLabel"></h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
                         aria-label="Close"></button>
             </div>
             <div id="modalInfo" class="modal-body" style="padding-bottom:0px">
                 <div id="modalInfoContent" class="alert" style="margin-bottom:0px;"></div>
             </div>
-            <div id="modal-loading-indicator" class="modal-body">
-                {% include 'wirgarten/generic/loading-spinner.html' %}
+            <div id="modal-loading-indicator" class="modal-body">{% include 'wirgarten/generic/loading-spinner.html' %}</div>
+            <div class="modal-body">
+                <iframe scrolling="no" id="content-frame" width="100%"></iframe>
             </div>
-
-            <iframe scrolling="no" id="content-frame"></iframe>
         </div>
     </div>
 </div>

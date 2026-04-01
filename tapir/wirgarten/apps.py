@@ -6,10 +6,6 @@ class WirgartenConfig(AppConfig):
     name = "tapir.wirgarten"
 
     def ready(self) -> None:
-        try:
-            from .tapirmail import configure_mail_module
+        from .tapirmail import configure_mail_module
 
-            configure_mail_module()
-        except Exception as e:
-            print(e)
-            pass
+        configure_mail_module()

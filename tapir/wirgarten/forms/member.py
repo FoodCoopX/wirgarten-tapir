@@ -1,14 +1,13 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
-from bootstrap_datepicker_plus.widgets import DatePickerInput
 from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.db import transaction
 from django.db.models import F, Sum, Q
 from django.forms import (
     BooleanField,
     CharField,
-    CheckboxInput,
     CheckboxSelectMultiple,
     ChoiceField,
     DateField,
@@ -18,38 +17,37 @@ from django.forms import (
     ModelForm,
     ModelMultipleChoiceField,
     MultipleChoiceField,
+    DateInput,
 )
 from django.utils.translation import gettext_lazy as _
 
-from tapir.accounts.models import KeycloakUser
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.utils.forms import TapirPhoneNumberField
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.form_mixins import FormWithRequestMixin
 from tapir.wirgarten.forms.registration.consents import ConsentForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.subscription import AdditionalProductForm, BaseProductForm
 from tapir.wirgarten.models import (
-    CoopShareTransaction,
     Member,
     Payment,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
-    Subscription,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
-    get_next_trial_end_date,
-    get_subscriptions_in_trial_period,
-    send_cancellation_confirmation_email,
-    send_order_confirmation,
+    send_product_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
-    get_future_subscriptions,
-    get_active_subscriptions,
+    get_active_and_future_subscriptions,
 )
-from tapir.wirgarten.utils import format_date, get_today, get_now
+from tapir.wirgarten.utils import get_today
 
 
 class PersonalDataForm(FormWithRequestMixin, ModelForm):
@@ -61,7 +59,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
-            if k not in ["street_2", "is_student"]:
+            if k not in ["street_2", "is_student", "birthdate"]:
                 v.required = True
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
@@ -79,6 +77,9 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
         if self.request and not self.request.user.has_perm(Permission.Accounts.MANAGE):
             self.fields["is_student"].disabled = True
+        self.fields["is_student"].label = get_parameter_value(
+            key=ParameterKeys.LABEL_STUDENT_CHECKBOX, cache={}
+        )
 
     class Meta:
         model = Member
@@ -95,7 +96,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
             "birthdate",
             "is_student",
         ]
-        widgets = {"birthdate": DatePickerInput(options={"format": "DD.MM.YYYY"})}
+        widgets = {"birthdate": DateInput()}
 
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
@@ -106,17 +107,17 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
     def _validate_duplicate_email_keycloak(self):
         try:
-            kc = KeycloakUser.get_keycloak_client()
+            kc = KeycloakUserManager.get_keycloak_client(cache={})
             keycloak_id = kc.get_user_id(self.cleaned_data["email"])
             if keycloak_id is not None:
-                duplicate_email_error_msg = _(
-                    "Ein Nutzer mit dieser Email Adresse existiert bereits."
+                raise ValidationError(
+                    {
+                        "email": _(
+                            "Ein Nutzer mit dieser Email Adresse existiert bereits."
+                        )
+                    }
                 )
-                self.add_error("email", duplicate_email_error_msg)
-                print(
-                    f"Error changing email: user with same email already exists in Keycloak, but not in Tapir: {keycloak_id}"
-                )
-        except Exception as e:
+        except Exception:
             pass
 
     def _validate_duplicate_email(self):
@@ -128,15 +129,14 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
         if self.instance and self.instance.id:
             duplicate_email_query = duplicate_email_query.exclude(id=self.instance.id)
 
-        duplicate_email_error_msg = _(
-            "Ein Nutzer mit dieser Email Adresse existiert bereits."
-        )
         if duplicate_email_query.exists():
-            self.add_error("email", duplicate_email_error_msg)
-            print("Error changing email: user with same email already exists in Tapir.")
+            raise ValidationError(
+                {"email": _("Ein Nutzer mit dieser Email Adresse existiert bereits.")}
+            )
 
         original = Member.objects.filter(id=self.instance.id)
         if not original.exists():
+            self._validate_duplicate_email_keycloak()
             return
 
         original = original.first()
@@ -145,7 +145,9 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
             self._validate_duplicate_email_keycloak()
 
     def _validate_birthdate(self):
-        birthdate = self.cleaned_data["birthdate"]
+        birthdate = self.cleaned_data.get("birthdate", None)
+        if birthdate is None:
+            return
         today = get_today()
         if birthdate > today or birthdate < (today + relativedelta(years=-120)):
             self.add_error("birthdate", _("Bitte wähle ein gültiges Datum aus."))
@@ -157,13 +159,9 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
                 ),
             )
 
-    def is_valid(self):
-        valid = super().is_valid()
-
+    def clean(self):
         self._validate_duplicate_email()
         self._validate_birthdate()
-
-        return valid and len(self.errors) == 0
 
 
 class MarketingFeedbackForm(Form):
@@ -172,6 +170,19 @@ class MarketingFeedbackForm(Form):
         widget=CheckboxSelectMultiple,
         label="",
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        sources = get_parameter_value(ParameterKeys.ORGANISATION_QUESTIONAIRE_SOURCES)
+        sources = sources.split(",")
+        sources = [source.strip() for source in sources]
+
+        for source in sources:
+            QuestionaireTrafficSourceOption.objects.get_or_create(name=source)
+
+        queryset = self.fields["sources"].queryset
+        self.fields["sources"].queryset = queryset.filter(name__in=sources)
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -212,13 +223,14 @@ class PersonalDataRegistrationForm(Form):
     def is_valid(self):
         super().is_valid()
         for form in self.forms:
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        if field == "__all__":
-                            self.add_error(None, error)
-                        else:
-                            self.add_error(field, error)
+            if form.is_valid():
+                continue
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == "__all__":
+                        self.add_error(None, error)
+                    else:
+                        self.add_error(field, error)
 
         return len(self.errors) == 0
 
@@ -241,7 +253,7 @@ class PaymentAmountEditForm(Form):
         if len(payments) < 1:
             initial = self.initial_amount
         elif len(payments) > 1:
-            raise AssertionError("TOO MANY PAYMENTS FOUND!!")  # FIXME
+            raise AssertionError("TOO MANY PAYMENTS FOUND!!")
         else:
             self.payment = payments[0]
             initial = self.payment.amount
@@ -276,12 +288,12 @@ class CoopShareTransferForm(Form):
         def member_to_string(m):
             return f"{m.first_name} {m.last_name} ({m.email})"
 
-        choices = map(
-            lambda x: (x.id, member_to_string(x)),
-            Member.objects.exclude(pk=kwargs["pk"]).order_by(
+        choices = [
+            (member.id, member_to_string(member))
+            for member in Member.objects.exclude(pk=kwargs["pk"]).order_by(
                 "first_name", "last_name", "email"
-            ),
-        )
+            )
+        ]
 
         self.fields["origin"] = CharField(
             label=_("Ursprünglicher Anteilseigner")
@@ -308,7 +320,7 @@ class CoopShareTransferForm(Form):
         remaining_shares = (
             self.orig_share_ownership_quantity - self.cleaned_data["quantity"]
         )
-        min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)
+        min_shares = get_parameter_value(ParameterKeys.COOP_MIN_SHARES)
         if remaining_shares > 0 and remaining_shares < min_shares:
             self.add_error(
                 "quantity",
@@ -334,13 +346,13 @@ class CoopShareCancelForm(Form):
             label=_("Kündigungsdatum"),
             initial=today,
             required=True,
-            widget=DatePickerInput,
+            widget=DateInput,
         )
         self.fields["valid_at"] = DateField(
             label=_("Kündigung gültig zum"),
             initial=valid_at,
             required=True,
-            widget=DatePickerInput,
+            widget=DateInput,
         )
         self.fields["quantity"] = IntegerField(
             label=_(
@@ -358,7 +370,7 @@ class CoopShareCancelForm(Form):
     def is_valid(self):
         super().is_valid()
         remaining_shares = self.original_share_quantity - self.cleaned_data["quantity"]
-        min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)
+        min_shares = get_parameter_value(ParameterKeys.COOP_MIN_SHARES)
         if remaining_shares > 0 and remaining_shares < min_shares:
             self.add_error(
                 "quantity",
@@ -380,244 +392,21 @@ class WaitingListForm(Form):
         self.fields["email"] = CharField(
             label=_("Email"), validators=[EmailValidator()]
         )
+        self.fields["phone_number"] = TapirPhoneNumberField(label=_("Telefon-Nr"))
+        self.fields["street"] = CharField(label=_("Adresse"))
+        self.fields["street_2"] = CharField(label=_("Adresszusatz"))
+        self.fields["postcode"] = CharField(label=_("Postleitzahl"))
+        self.fields["city"] = CharField(label=_("Stadt"))
         self.fields["privacy_consent"] = BooleanField(
             label=_("Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."),
             required=True,
             help_text=_(
                 'Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen der Mitgliederverwaltung und geben sie nicht an Dritte weiter. Unsere Datenschutzerklärung kannst du hier einsehen: <a target="_blank" href="{privacy_link}">Datenschutzerklärung - {site_name}</a>'
             ).format(
-                site_name=get_parameter_value(Parameter.SITE_NAME),
-                privacy_link=get_parameter_value(Parameter.SITE_PRIVACY_LINK),
+                site_name=get_parameter_value(ParameterKeys.SITE_NAME),
+                privacy_link=get_parameter_value(ParameterKeys.SITE_PRIVACY_LINK),
             ),
         )
-
-
-class NonTrialCancellationForm(Form):
-    KEY_PREFIX = "sub_"
-    BASE_PROD_TYPE_ATTR = "data-base-product-type"
-
-    def __init__(self, *args, **kwargs):
-        self.member_id = kwargs.pop("pk")
-        super(NonTrialCancellationForm, self).__init__(*args, **kwargs)
-
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        self.subs = get_future_subscriptions().filter(
-            member_id=self.member_id,
-            end_date__gte=get_today() + relativedelta(months=1, day=1),
-        )
-        self.member = Member.objects.get(id=self.member_id)
-
-        for sub in self.subs:
-            key = f"{self.KEY_PREFIX}{sub.id}"
-            self.fields[key] = BooleanField(
-                label=f"{sub.quantity} × {sub.product.name} {sub.product.type.name} ({format_date(sub.start_date)} - {format_date(sub.end_date)})",
-                required=False,
-            )
-            if len(self.subs) > 1 and sub.product.type.id == base_product_type_id:
-                self.fields[key].widget = CheckboxInput(
-                    attrs={self.BASE_PROD_TYPE_ATTR: "true"}
-                )
-
-    def save(self):
-        subs_to_cancel = self.get_subs_to_cancel()
-        now = datetime.now(tz=timezone.utc)
-        end_date = now + relativedelta(months=1, day=1, days=-1)
-        for sub in subs_to_cancel:
-            sub.cancellation_ts = now
-            sub.end_date = end_date
-            sub.save()
-
-    def is_valid(self):
-        all_base_product_types_selected = True
-        at_least_one_base_product_type_selected = False
-        at_least_one_additional_product_type_selected = False
-        for k, v in self.fields.items():
-            if k in self.data:
-                if self.BASE_PROD_TYPE_ATTR in v.widget.attrs:
-                    at_least_one_base_product_type_selected = True
-                    all_base_product_types_selected = False
-                else:
-                    at_least_one_additional_product_type_selected = True
-
-        if (
-            not at_least_one_base_product_type_selected
-            and not at_least_one_additional_product_type_selected
-        ):
-            self.add_error(
-                list(self.fields.keys())[0],
-                _(
-                    "Bitte wähle mindestens einen Vertrag aus, oder klick 'Abbrechen' falls du doch nicht kündigen möchtest."
-                ),
-            )
-        elif (
-            all_base_product_types_selected
-            and not at_least_one_additional_product_type_selected
-        ):
-            self.add_error(
-                list(self.fields.keys())[0],
-                _("Du kannst keine Zusatzabos beziehen wenn du das Basisabo kündigst."),
-            )
-
-        return not self._errors and super(NonTrialCancellationForm, self).is_valid()
-
-    def get_subs_to_cancel(self):
-        return self.subs.filter(
-            id__in=[
-                key.replace("sub_", "")
-                for key, value in self.cleaned_data.items()
-                if value
-            ]
-        )
-
-
-class TrialCancellationForm(Form):
-    KEY_PREFIX = "sub_"
-    BASE_PROD_TYPE_ATTR = "data-base-product-type"
-
-    template_name = "wirgarten/member/trial_cancellation_form.html"
-
-    def __init__(self, *args, **kwargs):
-        self.member_id = kwargs.pop("pk")
-        super(TrialCancellationForm, self).__init__(*args, **kwargs)
-
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        self.subs = get_subscriptions_in_trial_period(self.member_id)
-        self.next_trial_end_date = get_next_trial_end_date(
-            self.subs[0] if len(self.subs) > 0 else None
-        )
-
-        self.member = Member.objects.get(id=self.member_id)
-        today = get_today()
-
-        def is_new_member() -> bool:
-            return (
-                self.member.coop_entry_date is not None
-                and self.member.coop_entry_date > today
-            )
-
-        for sub in self.subs:
-            key = f"{self.KEY_PREFIX}{sub.id}"
-            self.fields[key] = BooleanField(
-                label=f"{sub.quantity} × {sub.product.name} {sub.product.type.name} ({format_date(sub.start_date)} - {format_date(sub.end_date)})",
-                required=False,
-            )
-            if len(self.subs) > 1 and sub.product.type.id == base_product_type_id:
-                self.fields[key].widget = CheckboxInput(
-                    attrs={self.BASE_PROD_TYPE_ATTR: "true"}
-                )
-
-        if is_new_member():
-            self.share_ownership = self.member.coopsharetransaction_set.filter(
-                transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                valid_at__gt=self.next_trial_end_date,
-            ).first()
-
-            self.fields["cancel_coop"] = BooleanField(
-                label="Beitrittserklärung zur Genossenschaft widerrufen", required=False
-            )
-
-    def is_valid(self):
-        all_base_product_types_selected = True
-        at_least_one_base_product_type_selected = False
-        at_least_one_additional_product_type_selected = False
-        for k, v in self.fields.items():
-            if k in self.data:
-                if self.BASE_PROD_TYPE_ATTR in v.widget.attrs:
-                    at_least_one_base_product_type_selected = True
-                    all_base_product_types_selected = False
-                else:
-                    at_least_one_additional_product_type_selected = True
-
-        if (
-            not at_least_one_base_product_type_selected
-            and not at_least_one_additional_product_type_selected
-        ):
-            self.add_error(
-                list(self.fields.keys())[0],
-                _(
-                    "Bitte wähle mindestens einen Vertrag aus, oder klick 'Abbrechen' falls du doch nicht kündigen möchtest."
-                ),
-            )
-        elif (
-            all_base_product_types_selected
-            and not at_least_one_additional_product_type_selected
-        ):
-            self.add_error(
-                list(self.fields.keys())[0],
-                _("Du kannst keine Zusatzabos beziehen wenn du das Basisabo kündigst."),
-            )
-
-        return not self._errors and super(TrialCancellationForm, self).is_valid()
-
-    def get_subs_to_cancel(self):
-        return self.subs.filter(
-            id__in=[
-                key.replace("sub_", "")
-                for key, value in self.cleaned_data.items()
-                if value
-            ]
-        )
-
-    def cancel_subscription(self, subscription: Subscription):
-        subscription.cancellation_ts = get_now()
-        subscription.end_date = self.next_trial_end_date
-        subscription.save()
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        skip_emails = kwargs.pop("skip_emails", False)
-        cancel_coop = self.is_cancel_coop_selected()
-
-        subs_to_cancel = self.get_subs_to_cancel()
-        for sub in subs_to_cancel:
-            self.cancel_subscription(sub)
-
-        for cancelled_subscription in subs_to_cancel:
-            # If the member first renewed during their trial period, but then cancels,
-            # we also cancel the renewed contracts.
-            is_any_subscription_of_same_type_still_active = (
-                get_active_subscriptions()
-                .filter(
-                    member__id=self.member_id,
-                    period=cancelled_subscription.period,
-                    product__type=cancelled_subscription.product.type,
-                    cancellation_ts=None,
-                )
-                .exists()
-            )
-            if not is_any_subscription_of_same_type_still_active:
-                for future_subscription in get_future_subscriptions().filter(
-                    member__id=self.member_id,
-                    product__type=cancelled_subscription.product.type,
-                    cancellation_ts=None,
-                ):
-                    self.cancel_subscription(future_subscription)
-
-        if cancel_coop:
-            if self.share_ownership.payment:
-                self.share_ownership.payment.delete()
-            self.share_ownership.delete()
-
-        send_cancellation_confirmation_email(
-            self.member_id,
-            self.next_trial_end_date,
-            subs_to_cancel,
-            cancel_coop,
-            skip_emails,
-        )
-
-        return (
-            subs_to_cancel[0].end_date if subs_to_cancel else self.next_trial_end_date
-        )
-
-    def is_cancel_coop_selected(self):
-        if not hasattr(self, "cancel_coop"):
-            self.cancel_coop = (
-                "cancel_coop" in self.cleaned_data
-                and self.cleaned_data.get("cancel_coop")
-                and self.share_ownership
-            )
-        return self.cancel_coop
 
 
 class SubscriptionRenewalForm(Form):
@@ -629,15 +418,18 @@ class SubscriptionRenewalForm(Form):
             **{k: v for k, v in kwargs.items() if k not in ["start_date", "member_id"]},
         )
         self.start_date = kwargs["start_date"]
-        self.available_product_types = [p.id for p in get_available_product_types()]
-
-        self.base_product_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        self.cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
+        )
         self.product_forms = [
-            BaseProductForm(*args, **kwargs, enable_validation=True),
+            BaseProductForm(*args, **kwargs, enable_validation=True, cache=self.cache),
             *[
-                AdditionalProductForm(*args, **kwargs, product_type_id=pt)
-                for pt in self.available_product_types
-                if pt != self.base_product_id
+                AdditionalProductForm(
+                    *args, **kwargs, product_type_id=product_type, cache=self.cache
+                )
+                for product_type in get_available_product_types(cache=self.cache)
+                if product_type != base_product_type
             ],
         ]
 
@@ -648,13 +440,14 @@ class SubscriptionRenewalForm(Form):
     def is_valid(self):
         super().is_valid()
         for form in self.product_forms:
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        if field == "__all__":
-                            self.add_error(None, error)
-                        else:
-                            self.add_error(field, error)
+            if form.is_valid():
+                continue
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == "__all__":
+                        self.add_error(None, error)
+                    else:
+                        self.add_error(field, error)
 
         return len(self.errors) == 0
 
@@ -663,26 +456,36 @@ class SubscriptionRenewalForm(Form):
         for form in self.product_forms:
             form.save(*args, **kwargs)
 
+        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+
         member_id = kwargs["member_id"]
-        self.subs = get_future_subscriptions(self.start_date).filter(
-            member_id=member_id, cancellation_ts__isnull=True
-        )
+        self.subs = get_active_and_future_subscriptions(
+            self.start_date, cache=self.cache
+        ).filter(member_id=member_id, cancellation_ts__isnull=True)
 
         member = Member.objects.get(id=member_id)
-        send_order_confirmation(member, self.subs)
+        send_product_order_confirmation(
+            member,
+            self.subs,
+            cache=self.cache,
+            from_waiting_list=False,
+            coop_share_transaction=None,
+            solidarity_contribution=None,
+        )
 
 
 class CancellationReasonForm(Form):
     def __init__(self, *args, **kwargs):
+
         super(CancellationReasonForm, self).__init__(*args, **kwargs)
         self.fields["reason"] = MultipleChoiceField(
             label="Grund für deine Kündigung",
-            choices=map(
-                lambda x: (x.strip(), x.strip()),
-                get_parameter_value(Parameter.MEMBER_CANCELLATION_REASON_CHOICES).split(
-                    ";"
-                ),
-            ),
+            choices=[
+                (reason.strip(), reason.strip)
+                for reason in get_parameter_value(
+                    ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES
+                ).split(";")
+            ],
             widget=CheckboxSelectMultiple,
             required=False,
         )

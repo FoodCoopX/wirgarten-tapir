@@ -5,12 +5,50 @@ from django.utils.translation import gettext_lazy as _
 DeliveryCycle = [
     NO_DELIVERY := ("no_delivery", _("Keine Lieferung/Abholung")),
     WEEKLY := ("weekly", _("1x pro Woche")),
-    ODD_WEEKS := ("odd_weeks", _("2x pro Monat (ungerade KW)")),
-    EVEN_WEEKS := ("even_weeks", _("2x pro Monat (gerade KW)")),
-    #    MONTHLY := ("monthly", _("1x pro Monat")),
+    ODD_WEEKS := ("odd_weeks", _("Jede 2. Woche (ungerade KW)")),
+    EVEN_WEEKS := ("even_weeks", _("Jede 2. Woche (gerade KW)")),
+    EVERY_FOUR_WEEKS := (
+        "every_four_weeks",
+        _("Jede 4. Woche"),
+    ),
+    CUSTOM_CYCLE := (
+        "custom",
+        _("Benutzerdefinierte Lieferwochen"),
+    ),
 ]
 
-DeliveryCycleDict = {key: value for key, value in DeliveryCycle}
+DeliveryCycleDict = dict(DeliveryCycle)
+
+OPTIONS_WEEKDAYS = [
+    (0, _("Montag")),
+    (1, _("Dienstag")),
+    (2, _("Mittwoch")),
+    (3, _("Donnerstag")),
+    (4, _("Freitag")),
+    (5, _("Samstag")),
+    (6, _("Sonntag")),
+]
+
+
+class ParameterCategory:
+    BESTELLWIZARD = "BestellWizard"
+    BUSINESS = "{{legal_status}}"
+    DELIVERY = "Lieferung"
+    JOKERS = "Joker"
+    MAIL = "E-Mails"
+    MEMBER_DASHBOARD = "Mitgliederbereich"
+    ORGANIZATION = "Organisation"
+    PAYMENT = "Zahlungen"
+    PICKING = "Kommissionierung"
+    SITE = "Standort"
+    SOLIDARITY = "Solidarbeitrag"
+    SUBSCRIPTIONS = "Verträge"
+    SUPPLIER_LIST = "Lieferantenliste"
+    TEST = "Tests"
+    TRIAL_PERIOD = "Probezeit"
+
+
+HTML_ALLOWED_TEXT = "HTML erlaubt"
 
 
 class Permission:
@@ -37,7 +75,6 @@ class Permission:
     class Coop:
         VIEW = "coop.view"
         MANAGE = "coop.manage"
-        # ADMIN = "coop.admin"
 
     class Accounts:
         VIEW = "accounts.view"

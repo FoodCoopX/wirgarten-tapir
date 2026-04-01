@@ -1,0 +1,15 @@
+{% load wirgarten %}
+Vertrag manuell geändert: <br/>
+{% if "start_date" in entry.old_values %}
+    Start-Datum: {{ entry.old_values.start_date|format_date }} -> {{ entry.new_values.start_date|format_date }} <br/>
+{% endif %}
+
+{% if "end_date" in entry.old_values %}
+    End-Datum: {{ entry.old_values.end_date|format_date }} -> {{ entry.new_values.end_date|format_date }} <br/>
+{% endif %}
+
+{% if "cancellation_ts" in entry.new_values %}
+    Gekündigt: {{ entry.old_values.cancellation_ts|yesno:"Ja,Nein" }}
+{% else %}
+    Gekündigt: Nein
+{% endif %}

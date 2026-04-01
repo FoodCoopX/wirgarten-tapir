@@ -1,15 +1,17 @@
+import datetime
 import re
+from collections.abc import Callable
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from tapir.configuration.models import (
     TapirParameter,
     TapirParameterDatatype,
-    TapirParameterDefinitionImporter,
 )
+from tapir.utils.shortcuts import get_from_cache_or_compute
 
 
-def validate_format_string(value: str, allowed_vars: [str]):
+def validate_format_string(value: str, allowed_vars: list[str]):
     """
     Validates if a string with potential format brackets (e.g.: "{some_variable}") only uses variables from the given array of known vars.
 
@@ -31,27 +33,38 @@ def validate_format_string(value: str, allowed_vars: [str]):
 class ParameterMeta:
     def __init__(
         self,
-        options: [tuple] = None,
-        validators: [callable] = [],
+        options: list[tuple] = None,
+        options_callable: Callable = None,
+        validators: list[Callable] = None,
         textarea=False,
-        vars_hint: [str] = None,
+        vars_hint: list[str] = None,
+        show_only_when: Callable = None,
     ):
+        if validators is None:
+            validators = []
+
         if vars_hint is not None and len(vars_hint) > 0:
             validators += [lambda x: validate_format_string(x, vars_hint)]
 
         self.vars_hint = vars_hint
         self.options = options
+        self.options_callable = options_callable
         self.validators = validators
         self.textarea = textarea
+        self.show_only_when = show_only_when
 
 
 class ParameterMetaInfo:
-    parameters = {str: ParameterMeta}
+    parameters: dict[str, ParameterMeta] = {}
     initialized = False
 
     def initialize(self):
-        for cls in TapirParameterDefinitionImporter.__subclasses__():
-            cls.import_definitions(cls)
+        if self.initialized:
+            return
+
+        from tapir.wirgarten.parameters import ParameterDefinitions
+
+        ParameterDefinitions().import_definitions()
         self.initialized = True
 
 
@@ -70,12 +83,22 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
     return meta_info.parameters[key]
 
 
-def get_parameter_value(key: str):
-    try:
-        param = TapirParameter.objects.get(key=key)
-        return param.get_value()
-    except ObjectDoesNotExist:
-        raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))
+def get_parameter_value(key: str, cache: dict | None = None):
+    parameters_by_key = get_from_cache_or_compute(
+        cache,
+        "parameters_by_key",
+        lambda: {
+            parameter.key: parameter for parameter in TapirParameter.objects.all()
+        },
+    )
+
+    def compute_parameter_value():
+        if key not in parameters_by_key.keys():
+            raise KeyError(f"Parameter with key '{key}' does not exist.")
+        return parameters_by_key[key].get_value()
+
+    parameter_cache = get_from_cache_or_compute(cache, "parameter_cache", lambda: {})
+    return get_from_cache_or_compute(parameter_cache, key, compute_parameter_value)
 
 
 def parameter_definition(
@@ -84,11 +107,14 @@ def parameter_definition(
     description: str,
     category: str,
     datatype: TapirParameterDatatype,
-    initial_value: str | int | float | bool,
+    initial_value: str | int | float | bool | datetime.date,
     order_priority: int = -1,
+    enabled: bool = True,
+    debug: bool = False,
     meta: ParameterMeta = ParameterMeta(
         options=None, validators=[], vars_hint=None, textarea=False
     ),
+    no_db_request=False,
 ):
     __validate_initial_value(datatype, initial_value, key, meta.validators)
 
@@ -100,9 +126,14 @@ def parameter_definition(
         key,
         label,
         order_priority,
+        enabled,
+        debug,
+        no_db_request,
     )
 
     meta_info.parameters[param.key] = meta
+
+    return param
 
 
 def __create_or_update_parameter(
@@ -113,7 +144,28 @@ def __create_or_update_parameter(
     key,
     label,
     order_priority,
+    enabled: bool,
+    debug: bool,
+    no_db_request: bool,
 ):
+    """
+    Updates the parameter in the DB if it exists, otherwise returns the new object, not yet persisted.
+    """
+
+    if no_db_request:
+        param = TapirParameter(
+            key=key,
+            label=label,
+            description=description,
+            category=category,
+            order_priority=order_priority,
+            datatype=datatype.value,
+            value=str(initial_value),
+            enabled=enabled,
+            debug=debug,
+        )
+        return param
+
     try:
         param = TapirParameter.objects.get(pk=key)
         param.label = label
@@ -124,8 +176,10 @@ def __create_or_update_parameter(
             param.value = initial_value  # only update value with initial value if the datatype changed!
 
         param.order_priority = order_priority
+        param.enabled = enabled
+        param.debug = debug
 
-        print("\t[update] ", key)
+        # print("\t[update] ", key)
 
         param.save()
     except ObjectDoesNotExist:
@@ -139,6 +193,8 @@ def __create_or_update_parameter(
             order_priority=order_priority,
             datatype=datatype.value,
             value=str(initial_value),
+            enabled=enabled,
+            debug=debug,
         )
 
     return param
@@ -146,14 +202,16 @@ def __create_or_update_parameter(
 
 def __validate_initial_value(datatype, initial_value, key, validators):
     try:
-        if type(initial_value) == str:
+        if isinstance(initial_value, str):
             assert datatype == TapirParameterDatatype.STRING
-        elif type(initial_value) == int:
-            assert datatype == TapirParameterDatatype.INTEGER
-        elif type(initial_value) == float:
-            assert datatype == TapirParameterDatatype.DECIMAL
-        elif type(initial_value) == bool:
+        elif isinstance(initial_value, bool):
             assert datatype == TapirParameterDatatype.BOOLEAN
+        elif isinstance(initial_value, int):
+            assert datatype == TapirParameterDatatype.INTEGER
+        elif isinstance(initial_value, float):
+            assert datatype == TapirParameterDatatype.DECIMAL
+        elif isinstance(initial_value, datetime.date):
+            assert datatype == TapirParameterDatatype.DATE
     except AssertionError:
         raise TypeError(
             "Parameter '{key}' is defined with datatype '{datatype}', \

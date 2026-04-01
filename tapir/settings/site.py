@@ -1,11 +1,7 @@
 BASE_PRODUCT_NAME = "Ernteanteile"
 
-COOP_SHARE_PRICE = 50.0
-
 # define the custom views from the site module
 VIEWS = {
-    "draftuser_register": "tapir.wirgarten_site.registration.views.RegistrationView",
-    "draftuser_confirm_registration": "tapir.lueneburg.registration.views.RegistrationWizardConfirmView",
     "admin_dashboard": "tapir.wirgarten.views.admin_dashboard.AdminDashboardView",
     "admin_dashboard_cashflow_data": "tapir.wirgarten.views.admin_dashboard.get_cashflow_chart_data",
 }
@@ -42,6 +38,21 @@ REGISTRATION_STEPS = {
         "title": "BestellCoop",
         "description": "BestellCoop - Möchtest du regelmäßig Grundnahrungsmittel in großen Mengen bestellen?",
         "intro_template": "registration/steps/bestellcoop.intro.html",
+    },
+    "additional_product_Brot": {
+        "title": "Brot",
+        "description": "Willst du einen Brot-Zusatzanteil?",
+        "intro_template": "registration/steps/bread.intro.html",
+    },
+    "additional_product_Honig": {
+        "title": "Honig",
+        "description": "Willst du einen Honig-Zusatzanteil?",
+        "intro_template": "registration/steps/honey.intro.html",
+    },
+    "additional_product_Leinöl": {
+        "title": "Leinöl",
+        "description": "Willst du einen Leinöl-Zusatzanteil?",
+        "intro_template": "registration/steps/oil.intro.html",
     },
     "pickup_location": {
         "title": "Abholort",

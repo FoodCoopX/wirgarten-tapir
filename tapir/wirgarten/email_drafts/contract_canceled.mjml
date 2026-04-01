@@ -1,0 +1,42 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+Trigger: Transaktionale Mail, die versendet wird, wenn Mitglieder ihren Vertrag regulär (also nicht in der Probezeit) kündigen. <br /> <br />                   
+Zweck: Kündigungsbestätigung für das Mitglied <br /> <br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /> <br />
+
+_____________________________________ <br /><br />
+
+"Moin {{Empfänger.Vorname}}, <br /><br />
+
+schade, dass Du gehst! <br /><br />
+
+Wir danken Dir für Dein Vertrauen und Deine Unterstützung bis hierher! <br /><br />
+
+Wir bestätigen dir hiermit die Kündigung folgender Verträge: <br />
+{{Vertrag gekündigt.Vertragsliste}} <br /><br />
+
+Dein Vertrag endet am: <br />
+{{Vertrag gekündigt.Vertragsende}}. <br /><br />
+
+Es wäre super, wenn Du Deinen Freund:innen und Bekannten von uns erzählst. Denn unsere Solidarische Landwirtschaft kann nur weiter bestehen, wenn ausreichend Menschen den Betrieb und unsere Art der Landwirtschaft unterstützen. <br /><br /> 
+
+Vielen Dank dafür! <br /><br />
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
+
+Liebe Grüße, <br />
+Dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br /><br />
+
+____________________ <br /><br /><br /><br />
+
+Folgende Token sind hier relevant: <br />
+{{Vertrag gekündigt.Vertragsliste}} <br />
+{{Vertrag gekündigt.Vertragsende}} <br />
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

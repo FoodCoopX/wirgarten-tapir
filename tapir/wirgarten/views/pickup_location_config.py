@@ -30,21 +30,34 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+        cache = {}
         pickup_locations = list(PickupLocation.objects.all().order_by("name"))
-        capabilities = get_active_pickup_location_capabilities().values(
+        capabilities = get_active_pickup_location_capabilities(cache=cache).values(
             "pickup_location_id",
             "product_type_id",
             "max_capacity",
             "product_type__name",
             "product_type__icon_link",
         )
+
         context["data"] = get_pickup_locations_map_data(
             pickup_locations=pickup_locations,
             location_capabilities=capabilities,
+            cache=cache,
         )
-        context["all_product_types"] = get_active_product_types().values("name")
+
+        context["all_product_types"] = get_active_product_types(cache=cache).values(
+            "name"
+        )
         context["pickup_locations"] = list(
-            map(lambda x: pickup_location_to_dict(capabilities, x), pickup_locations)
+            map(
+                lambda pickup_location: pickup_location_to_dict(
+                    location_capabilities=capabilities,
+                    pickup_location=pickup_location,
+                    cache=cache,
+                ),
+                pickup_locations,
+            )
         )
 
         return context

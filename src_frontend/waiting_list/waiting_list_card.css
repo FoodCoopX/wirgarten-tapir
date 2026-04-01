@@ -1,0 +1,4 @@
+.max-column-width :is(td, th) {
+    max-width: 300px;
+    text-wrap: wrap;
+}

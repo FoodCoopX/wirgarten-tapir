@@ -4,6 +4,7 @@ from decimal import Decimal
 from django import template
 
 from tapir.wirgarten import utils
+from tapir.wirgarten.utils import get_now
 
 register = template.Library()
 
@@ -23,11 +24,15 @@ def remove(value, arg):
 
 
 @register.filter(name="format_date")
-def format_date(value: date | datetime):
+def format_date(value: date | datetime | str):
     if type(value) is date or type(value) is datetime:
         return utils.format_date(value)
+    elif type(value) is str:
+        try:
+            return utils.format_date(datetime.strptime(value, "%Y-%m-%d").date())
+        except ValueError:
+            return None
     else:
-        print(value, type(value), datetime)
         return None
 
 
@@ -45,3 +50,10 @@ def format_percent(value: float | Decimal, decimal_places: int = 0):
 @register.simple_tag
 def create_range(n):
     return range(n)
+
+
+@register.simple_tag()
+def get_now_tag(cache):
+    if not isinstance(cache, dict):
+        cache = None
+    return format_date(get_now(cache=cache))

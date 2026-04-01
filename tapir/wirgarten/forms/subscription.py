@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from datetime import date
+from math import floor, ceil
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -8,73 +9,60 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.utils.forms import DateInput
+from tapir.solidarity_contribution.services.solidarity_validator import (
+    SolidarityValidator,
+)
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
+    ProductTypeLowestFreeCapacityAfterDateCalculator,
+)
+from tapir.subscriptions.services.subscription_change_validator import (
+    SubscriptionChangeValidator,
+)
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
-    get_current_capacity_usage,
 )
 from tapir.wirgarten.models import (
     GrowingPeriod,
-    HarvestShareProduct,
     MandateReference,
     Member,
     MemberPickupLocation,
     Product,
     ProductType,
     Subscription,
+    SubscriptionChangeLogEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
-    get_next_delivery_date,
 )
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.member import (
     change_pickup_location,
-    get_next_contract_start_date,
     get_or_create_mandate_ref,
-    send_order_confirmation,
+    send_product_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
-    get_automatically_calculated_solidarity_excess,
 )
 from tapir.wirgarten.service.products import (
-    get_active_subscriptions,
-    get_current_growing_period,
-    get_free_product_capacity,
     get_product_price,
     get_total_price_for_subs,
-    is_product_type_available,
-)
-from tapir.wirgarten.service.subscriptions import (
-    growing_period_selectable_in_base_product_form,
+    get_next_growing_period,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
-
-SOLIDARITY_PRICES = [
-    (0.0, _("Ich möchte den Richtpreis zahlen")),
-    ("custom", _("Ich möchte einen anderen Betrag zahlen  ⟶")),
-    (0.25, "+ 25% 🤩"),
-    (0.2, "+ 20% 😍"),
-    (0.15, "+ 15% 🚀"),
-    (0.1, "+ 10% 🥳"),
-    (0.05, "+ 5% 💚"),
-    (-0.05, "- 5%"),
-    (-0.10, "- 10%"),
-    (-0.15, "- 15%"),
-]
-
-
-def get_available_solidarity(reference_date: date = get_today()) -> float:
-    val = get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED)
-    if val == 0:  # disabled
-        return 0.0
-    elif val == 1:  # enabled
-        return 1000.0
-    elif val == 2:  # automatic calculation
-        return get_automatically_calculated_solidarity_excess(reference_date) or 0.0
-
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
 
@@ -88,35 +76,49 @@ class BaseProductForm(forms.Form):
         self.member_id = kwargs.pop("member_id", None)
         self.is_admin = kwargs.pop("is_admin", False)
         self.require_at_least_one = kwargs.pop("enable_validation", False)
+        self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         initial = kwargs.get("initial", {})
+        self.cache = kwargs.pop("cache", {})
 
         self.start_date = kwargs.pop(
-            "start_date", initial.get("start_date", get_next_contract_start_date())
+            "start_date",
+            initial.get(
+                "start_date",
+                ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=get_today(cache=self.cache),
+                    apply_buffer_time=True,
+                    cache=self.cache,
+                ),
+            ),
         )
-        self.intro_template = initial.pop("intro_template", None)
-        self.outro_template = initial.pop("outro_template", None)
+        self.intro_templates = initial.pop("intro_templates", None)
+        self.outro_templates = initial.pop("outro_templates", None)
 
-        self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         if initial and not self.choose_growing_period:
-            self.choose_growing_period = growing_period_selectable_in_base_product_form(
-                reference_date=get_today()
+            next_growing_period = get_next_growing_period(cache=self.cache)
+            self.choose_growing_period = (
+                next_growing_period
+                and (next_growing_period.start_date - get_today(cache=self.cache)).days
+                <= 61
             )
 
         super().__init__(*args, **kwargs)
 
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        base_product_type = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
+        )
         harvest_share_products = Product.objects.filter(
-            deleted=False, type_id=base_product_type_id
+            deleted=False, type=base_product_type
         )
         for p in harvest_share_products:
-            price = get_product_price(p)
+            price = get_product_price(p, cache=self.cache)
             if price and price.valid_from > self.start_date:
                 harvest_share_products = harvest_share_products.exclude(id=p.id)
 
         self.n_columns = max(2, len(harvest_share_products))
 
         prices = {
-            prod.id: get_product_price(prod, self.start_date).price
+            prod.id: get_product_price(prod, self.start_date, cache=self.cache).price
             for prod in harvest_share_products
         }
 
@@ -124,26 +126,17 @@ class BaseProductForm(forms.Form):
             harvest_share_products, key=lambda x: prices[x.id]
         )
 
-        self.product_type = ProductType.objects.get(id=base_product_type_id)
-        self.products = (
-            {
-                """harvest_shares_{variation}""".format(variation=p.product_ptr.name): p
-                for p in harvest_share_products
-            }
-            if type(harvest_share_products[0]) == HarvestShareProduct
-            else {
-                """harvest_shares_{variation}""".format(variation=p.name): p
-                for p in harvest_share_products
-            }
-        )
+        self.product_type = base_product_type
+        self.products = {
+            """harvest_shares_{variation}""".format(variation=p.name): p
+            for p in harvest_share_products
+        }
 
-        self.field_order = list(self.products.keys()) + [
-            "solidarity_price_harvest_shares"
-        ]
+        self.field_order = list(self.products.keys()) + ["solidarity_price_choice"]
         self.colspans = {
             "growing_period": self.n_columns,
-            "solidarity_price_harvest_shares": self.n_columns - 1,
-            "solidarity_price_absolute_harvest_shares": 1,
+            "solidarity_price_choice": floor(self.n_columns / 2),
+            "solidarity_price_custom": ceil(self.n_columns / 2),
             "consent_harvest_shares": self.n_columns,
             "pickup_location": self.n_columns,
             "pickup_location_change_date": self.n_columns,
@@ -157,69 +150,59 @@ class BaseProductForm(forms.Form):
                 end_date__gte=self.start_date,
             ).order_by("start_date")
 
-            growing_periods_with_free_capacity = list(
-                filter(
-                    lambda growing_period: is_product_type_available(
-                        self.product_type,
-                        reference_date=max(self.start_date, growing_period.start_date),
-                    ),
-                    available_growing_periods,
-                )
-            )
-
             self.solidarity_total = []
             self.free_capacity = []
-            for period in growing_periods_with_free_capacity:
+            for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
-                solidarity_total = f"{get_available_solidarity(start_date)}".replace(
+                solidarity_total = f"{SolidarityValidator.get_solidarity_excess(reference_date=start_date, cache=self.cache)}".replace(
                     ",", "."
                 )
                 self.solidarity_total.append(solidarity_total)
 
-                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date)}".replace(
-                    ",", "."
+                free_capacity_for_growing_period = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                    product_type=base_product_type,
+                    reference_date=start_date,
+                    cache=self.cache,
                 )
+
+                free_capacity = f"{free_capacity_for_growing_period}".replace(",", ".")
                 self.free_capacity.append(free_capacity)
 
-            help_texts = []
-            if not self.member_id:
-                help_texts.append(
-                    "<span style='font-weight: bold; color: #CC3333;'>Hinweis: Wenn du sowohl für die aktuelle (bis zum 30.6.) "
-                    "als auch kommende Vertragsperiode (ab 1.7.) "
-                    "Ernteanteile zeichnen möchtest, dann wähle die aktuelle Vertragsperiode aus "
-                    "und verlängere anschließend bequem über den Mitgliederbereich deinen Vertrag "
-                    "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen. "
-                    "Sollten für die alte Vertragsperiode (bis zum 30.6.) alle Ernteanteile vergeben sein, "
-                    "kannst du nur die neue Vertragsperiode (ab 1.7.) auswählen</span>"
-                )
-
             self.fields["growing_period"] = forms.ModelChoiceField(
-                queryset=(
-                    GrowingPeriod.objects.filter(
-                        id__in=[
-                            growing_period.id
-                            for growing_period in growing_periods_with_free_capacity
-                        ]
-                    )
-                ),
+                queryset=available_growing_periods,
                 label=_("Vertragsperiode"),
                 required=True,
                 empty_label=None,
                 initial=0,
-                help_text="<br/>".join(help_texts),
+                help_text=(
+                    None
+                    if self.member_id
+                    else _(
+                        "<span style='font-weight: bold; color: #CC3333;'>Hinweis: Wenn du sowohl für die aktuelle (bis zum 30.6.) "
+                        "als auch kommende Vertragsperiode (ab 1.7.) "
+                        "Ernteanteile zeichnen möchtest, dann wähle die aktuelle Vertragsperiode aus "
+                        "und verlängere anschließend bequem über den Mitgliederbereich deinen Vertrag "
+                        "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen</span>"
+                    )
+                ),
             )
         else:
-            self.growing_period = get_current_growing_period(self.start_date)
+            self.growing_period = TapirCache.get_growing_period_at_date(
+                reference_date=self.start_date, cache=self.cache
+            )
+
             self.solidarity_total = [
-                f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date))}".replace(
+                f"{SolidarityValidator.get_solidarity_excess(reference_date=max(self.growing_period.start_date, self.start_date), cache=self.cache)}".replace(
                     ",", "."
                 )
             ]
-
+            free_capacity_for_growing_period = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                product_type=base_product_type,
+                reference_date=max(self.growing_period.start_date, self.start_date),
+                cache=self.cache,
+            )
             self.free_capacity = [
-                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date))}".replace(
-                    ",", "."
-                )
+                f"{free_capacity_for_growing_period}".replace(",", ".")
             ]
 
         for prod_field in harvest_share_products:
@@ -229,24 +212,12 @@ class BaseProductForm(forms.Form):
                     max_value=10,
                     min_value=0,
                     initial=0,
-                    label=_(f"{prod_field.name}-{self.product_type.name}"),
+                    label=prod_field.name,
                     help_text="""{:.2f} € inkl. MwSt / Monat""".format(
                         prices[prod_field.id]
                     ),
                 )
             )
-
-        self.fields["solidarity_price_harvest_shares"] = forms.ChoiceField(
-            required=False,
-            label=_("Solidarpreis [%]²"),
-            choices=SOLIDARITY_PRICES,
-            initial=0.0,
-        )
-        self.fields["solidarity_price_absolute_harvest_shares"] = forms.DecimalField(
-            required=False,
-            label=_("Solidarpreis [€]²"),
-            min_value=0.0,
-        )
 
         if self.product_type.contract_link:
             self.fields["consent_harvest_shares"] = forms.BooleanField(
@@ -261,7 +232,7 @@ class BaseProductForm(forms.Form):
         if self.member_id:
             member = Member.objects.get(id=self.member_id)
             subs = get_active_subscriptions_grouped_by_product_type(
-                member, self.start_date
+                member, self.start_date, cache=self.cache
             )
 
             new_sub_dummy = Subscription(
@@ -274,17 +245,12 @@ class BaseProductForm(forms.Form):
                 for sub in subs[self.product_type.name]:
                     sub_variants[sub.product.name] = {
                         "quantity": sub.quantity,
-                        "solidarity_price": sub.solidarity_price,
-                        "solidarity_price_absolute": sub.solidarity_price_absolute,
                     }
 
                 self.current_used_capacity = get_total_price_for_subs(
-                    subs[self.product_type.name]
+                    subs[self.product_type.name], cache=self.cache
                 )
                 if len(sub_variants) > 0:
-                    soli_absolute = list(sub_variants.values())[0][
-                        "solidarity_price_absolute"
-                    ]
                     for key, field in self.fields.items():
                         if (
                             key.startswith(BASE_PRODUCT_FIELD_PREFIX)
@@ -294,14 +260,6 @@ class BaseProductForm(forms.Form):
                             field.initial = sub_variants[
                                 key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
                             ]["quantity"]
-                        elif key == "solidarity_price_harvest_shares":
-                            field.initial = (
-                                list(sub_variants.values())[0]["solidarity_price"]
-                                if not soli_absolute
-                                else "custom"
-                            )  # FIXME: maybe the soli price should not be in the subscription but in the Member model..
-                        elif key == "solidarity_price_absolute_harvest_shares":
-                            field.initial = soli_absolute
 
             subs[self.product_type.name] = (
                 [new_sub_dummy]
@@ -313,11 +271,12 @@ class BaseProductForm(forms.Form):
                 required=False,
                 label=_("Neuen Abholort auswählen"),
                 initial={"subs": subs},
+                cache=self.cache,
             )
 
-            today = get_today()
+            today = get_today(self.cache)
             next_delivery_date = get_next_delivery_date(
-                today + relativedelta(days=2)
+                today + relativedelta(days=2), cache=self.cache
             )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
             next_month = today + relativedelta(months=1, day=1)
             if next_month < next_delivery_date:
@@ -370,13 +329,17 @@ class BaseProductForm(forms.Form):
         member_id = member_id or self.member_id
 
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(member_id)
+            mandate_ref = get_or_create_mandate_ref(member_id, cache=self.cache)
+        now = get_now(cache=self.cache)
 
-        now = get_now()
-
-        self.subs = []
-        existing_trial_end_date = cancel_subs_for_edit(
-            member_id, self.start_date, self.product_type
+        self.subscriptions = []
+        member = Member.objects.get(id=member_id)
+        existing_trial_end_date = cancel_or_delete_subscriptions(
+            member=member,
+            start_date=self.start_date,
+            product_type=self.product_type,
+            actor=None,
+            cache=self.cache,
         )
 
         for key, quantity in self.cleaned_data.items():
@@ -392,13 +355,24 @@ class BaseProductForm(forms.Form):
                 name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
 
+            notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+                self.product_type, self.growing_period, cache=self.cache
+            )
+            notice_period_unit = NoticePeriodManager.get_notice_period_unit(
+                self.product_type, self.growing_period, cache=self.cache
+            )
+
+            end_date = self.growing_period.end_date
+            if not product.type.subscriptions_have_end_dates:
+                end_date = None
+
             sub = Subscription.objects.create(
                 member_id=member_id,
                 product=product,
                 period=self.growing_period,
                 quantity=quantity,
                 start_date=self.start_date,
-                end_date=self.growing_period.end_date,
+                end_date=end_date,
                 mandate_ref=mandate_ref,
                 consent_ts=(
                     now
@@ -407,31 +381,25 @@ class BaseProductForm(forms.Form):
                     else None
                 ),
                 withdrawal_consent_ts=now,
+                trial_disabled=not get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                ),
                 trial_end_date_override=existing_trial_end_date,
-                **self.build_solidarity_fields(),
+                notice_period_duration=notice_period_duration,
+                notice_period_unit=notice_period_unit,
             )
 
-            self.subs.append(sub)
+            self.subscriptions.append(sub)
 
-        member = Member.objects.get(id=member_id)
+        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+
         member.sepa_consent = now
-        member.save()
+        member.save(cache=self.cache)
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
         if new_pickup_location:
             change_date = self.cleaned_data.get("pickup_location_change_date")
             change_pickup_location(member_id, new_pickup_location, change_date)
-
-    def build_solidarity_fields(self):
-        selected_option = self.cleaned_data["solidarity_price_harvest_shares"]
-        if selected_option == "custom":
-            return {
-                "solidarity_price": 0.0,
-                "solidarity_price_absolute": self.cleaned_data[
-                    "solidarity_price_absolute_harvest_shares"
-                ],
-            }
-        return {"solidarity_price": selected_option}
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():
@@ -445,11 +413,12 @@ class BaseProductForm(forms.Form):
         if self.product_type.contract_link and not self.cleaned_data.get(
             "consent_harvest_shares", False
         ):
-            self.add_error(
-                "consent_harvest_shares",
-                _(
-                    f"Du musst den Vertragsgrundsätzen zustimmen um {self.product_type.name} zu zeichnen."
-                ),
+            raise ValidationError(
+                {
+                    "consent_harvest_shares": _(
+                        f"Du musst den Vertragsgrundsätzen zustimmen um {self.product_type.name} zu zeichnen."
+                    )
+                }
             )
 
     def validate_pickup_location(self):
@@ -468,7 +437,7 @@ class BaseProductForm(forms.Form):
         if member_pickup_locations.count() == 1:
             return member_pickup_locations.get().pickup_location
 
-        next_month = get_today() + relativedelta(months=1, day=1)
+        next_month = get_today(cache=self.cache) + relativedelta(months=1, day=1)
         return (
             member_pickup_locations.filter(valid_from__lte=next_month)
             .order_by("-valid_from")
@@ -476,102 +445,13 @@ class BaseProductForm(forms.Form):
             .pickup_location
         )
 
-    def calculate_capacity_used_by_the_ordered_products(
-        self, return_capacity_in_euros: bool = False
-    ):
-        base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-
-        total = 0.0
-        for key, quantity in self.cleaned_data.items():
-            if not key.startswith(BASE_PRODUCT_FIELD_PREFIX) or not quantity:
-                continue
-            next_month = get_today() + relativedelta(months=1, day=1)
-            product = Product.objects.get(
-                type_id=base_prod_type_id,
-                name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
-            )
-            relevant_value = get_product_price(product, next_month).size
-            if return_capacity_in_euros:
-                relevant_value = get_product_price(product, next_month).price
-            total += float(relevant_value) * quantity
-        return total
-
-    def calculate_capacity_used_by_the_current_subscriptions(
-        self, product_type_id: str
-    ):
-        next_month = get_today() + relativedelta(months=1, day=1)
-        current_subscriptions = get_active_subscriptions(next_month).filter(
-            member_id=self.member_id, product__type_id=product_type_id
-        )
-        return sum(
-            [subscription.get_used_capacity() for subscription in current_subscriptions]
-        )
-
-    def validate_pickup_location_capacity(self):
-        base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
-        capability = get_active_pickup_location_capabilities().get(
-            pickup_location=self.get_pickup_location(),
-            product_type__id=base_prod_type_id,
-        )
-        product_type = ProductType.objects.get(id=base_prod_type_id)
-        validate_pickup_location_capacity(
-            self,
-            capability,
-            product_type,
-            self.start_date,
-            ordered_capacity,
-            self.member_id,
-        )
-
-    def validate_total_capacity(self):
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        free_capacity = get_free_product_capacity(
-            product_type_id=base_product_type_id,
-            reference_date=self.start_date,
-        )
-        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
-        currently_used_capacity = float(
-            self.calculate_capacity_used_by_the_current_subscriptions(
-                base_product_type_id
-            )
-        )
-
-        if free_capacity < (ordered_capacity - currently_used_capacity):
-            self.add_error(
-                None,
-                f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}",
-            )
-
-    def validate_solidarity_price(self):
-        solidarity_fields = self.build_solidarity_fields()
-        ordered_solidarity_factor = float(
-            solidarity_fields["solidarity_price_absolute"]
-            if "solidarity_price_absolute" in solidarity_fields.keys()
-            else solidarity_fields["solidarity_price"]
-        )
-        if ordered_solidarity_factor >= 0:
-            return
-
-        excess_solidarity = get_available_solidarity(self.start_date)
-
-        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products(True)
-        solidarity_part_of_the_ordered_capacity = (
-            ordered_capacity * -ordered_solidarity_factor
-        )
-
-        if solidarity_part_of_the_ordered_capacity > excess_solidarity:
-            self.add_error(
-                "solidarity_price_harvest_shares",
-                "Der Solidartopf ist leider nicht ausreichend ausgefüllt.",
-            )
-
-    def is_valid(self):
-        super().is_valid()
-
+    def clean(self):
         if not hasattr(self, "growing_period"):
             self.growing_period = self.cleaned_data.get(
-                "growing_period", get_current_growing_period()
+                "growing_period",
+                TapirCache.get_growing_period_at_date(
+                    reference_date=get_today(cache=self.cache), cache=self.cache
+                ),
             )
 
         self.start_date = max(self.start_date, self.growing_period.start_date)
@@ -582,84 +462,63 @@ class BaseProductForm(forms.Form):
                 None, f"Bitte wähle mindestens einen {self.product_type.name}!"
             )
 
+        product_type_id = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
+        ).id
         if has_harvest_shares:
             self.validate_harvest_shares_consent()
             if self.member_id:
                 self.validate_pickup_location()
-                self.validate_pickup_location_capacity()
-            self.validate_total_capacity()
-            self.validate_solidarity_price()
-
-        self.validate_cannot_reduce_size()
-
-        return len(self.errors) == 0
-
-    def validate_cannot_reduce_size(self):
-        if not self.should_validate_cannot_reduce_size():
-            return
-
-        subscriptions = get_active_subscriptions(self.start_date).filter(
-            member__id=self.member_id
-        )
-        total_current_subscription_size = sum(
-            [subscription.get_used_capacity() for subscription in subscriptions]
-        )
-        ordered_size = self.calculate_capacity_used_by_the_ordered_products()
-        if ordered_size < total_current_subscription_size:
-            self.add_error(
-                None,
-                _(
-                    f"Während eine Vertrag läuft es ist nur erlaubt die Größe des Vertrags zu erhöhen. "
-                    f"Deiner aktueller Vertrag für diese Periode entspricht Größe {total_current_subscription_size:.2f}. "
-                    f"Deiner letzter Auswahl hier entsprach Größe {ordered_size:.2f}."
-                ),
+                SubscriptionChangeValidator.validate_pickup_location_capacity(
+                    pickup_location=self.get_pickup_location(),
+                    form=self,
+                    field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+                    subscription_start_date=self.start_date,
+                    member=Member.objects.get(id=self.member_id),
+                    cache=self.cache,
+                )
+            SubscriptionChangeValidator.validate_total_capacity(
+                form=self,
+                field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+                product_type_id=product_type_id,
+                member_id=self.member_id,
+                subscription_start_date=self.start_date,
+                cache=self.cache,
             )
 
-    def should_validate_cannot_reduce_size(self):
-        if self.is_admin:
-            return False
-
-        # Members cannot reduce the size of their subscriptions for the currently ongoing growing period.
-        growing_period = get_current_growing_period(self.start_date)
-        if not growing_period:
-            return False
-        if growing_period.start_date > get_today():
-            return False
-
-        subscriptions = Subscription.objects.filter(
-            member__id=self.member_id, period=growing_period
+        SubscriptionChangeValidator.validate_cannot_reduce_size(
+            logged_in_user_is_admin=self.is_admin,
+            subscription_start_date=self.start_date,
+            member_id=self.member_id,
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            product_type_id=product_type_id,
+            cache=self.cache,
         )
-        return subscriptions.exists()
 
-
-def validate_pickup_location_capacity(
-    form, capability, product_type, start_date, total_member_amount, member_id
-):
-    if not capability.max_capacity:
-        return
-
-    current_member_amount = float(
-        sum(
-            [
-                s.get_used_capacity()
-                for s in get_active_subscriptions(start_date).filter(
-                    member_id=member_id,
-                    product__type_id=product_type.id,
-                )
-            ]
+        SubscriptionChangeValidator.validate_must_be_subscribed_to(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            product_type=self.product_type,
+            cache=self.cache,
         )
-    )
-    diff_member_amount = total_member_amount - current_member_amount
-    new_total_amount = (
-        get_current_capacity_usage(capability, start_date) + diff_member_amount
-    )
 
-    if new_total_amount > capability.max_capacity:
-        form.add_error("pickup_location", "Abholort ist voll")  # this is not displayed
-        form.add_error(
-            None,
-            _("Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."),
+        SubscriptionChangeValidator.validate_single_subscription(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            product_type=self.product_type,
         )
+
+        if self.member_id:
+            SubscriptionChangeValidator.validate_at_least_one_change(
+                form=self,
+                field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+                member_id=self.member_id,
+                subscription_start_date=self.start_date,
+                cache=self.cache,
+            )
+
+        return super().clean()
 
 
 class AdditionalProductForm(forms.Form):
@@ -669,21 +528,32 @@ class AdditionalProductForm(forms.Form):
         self.is_admin = kwargs.pop("is_admin", False)
         self.member_id = kwargs.pop("member_id", None)
         initial = kwargs.get("initial", {})
+        self.cache = kwargs.pop("cache", {})
         product_type_id = kwargs.pop(
             "product_type_id", initial.pop("product_type_id", None)
         )
 
         self.product_type = get_object_or_404(ProductType, id=product_type_id)
 
-        self.intro_template = initial.pop("intro_template", None)
-        self.outro_template = initial.pop("outro_template", None)
+        self.intro_templates = initial.pop("intro_templates", None)
+        self.outro_templates = initial.pop("outro_templates", None)
 
         self.field_prefix = self.product_type.id + "_"
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
+
         self.start_date = kwargs.pop(
-            "start_date", initial.get("start_date", get_next_contract_start_date())
+            "start_date",
+            initial.get(
+                "start_date",
+                ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=get_today(cache=self.cache),
+                    apply_buffer_time=True,
+                    cache=self.cache,
+                ),
+            ),
         )
-        super(AdditionalProductForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
         self.consent_field_key = f"consent_{self.field_prefix}"
         products_queryset = Product.objects.filter(
             deleted=False, type=self.product_type
@@ -691,13 +561,8 @@ class AdditionalProductForm(forms.Form):
 
         # Calculate prices for each product
         prices = {
-            prod.id: get_product_price(prod, self.start_date).price
+            prod.id: get_product_price(prod, self.start_date, cache=self.cache).price
             for prod in products_queryset
-        }
-
-        sizes = {
-            product.id: get_product_price(product, self.start_date).size
-            for product in products_queryset
         }
 
         # Sort products by their prices in ascending order
@@ -715,6 +580,7 @@ class AdditionalProductForm(forms.Form):
             "pickup_location": self.n_columns,
             "pickup_location_change_date": self.n_columns,
         }
+
         if self.choose_growing_period:
             growing_periods = GrowingPeriod.objects.filter(
                 end_date__gte=self.start_date,
@@ -722,11 +588,15 @@ class AdditionalProductForm(forms.Form):
 
             self.free_capacity = []
             for period in growing_periods:
-                self.free_capacity.append(
-                    f"{get_free_product_capacity(self.product_type.id, max(period.start_date, self.start_date))}".replace(
-                        ",", "."
-                    )
+                free_capacity_for_growing_period = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                    product_type=self.product_type,
+                    reference_date=max(period.start_date, self.start_date),
+                    cache=self.cache,
                 )
+                self.free_capacity.append(
+                    f"{free_capacity_for_growing_period}".replace(",", ".")
+                )
+
             self.fields["growing_period"] = forms.ModelChoiceField(
                 queryset=growing_periods,
                 label=_("Vertragsperiode"),
@@ -735,29 +605,38 @@ class AdditionalProductForm(forms.Form):
                 initial=0,
             )
         else:
-            self.growing_period = get_current_growing_period(self.start_date)
+            self.growing_period = TapirCache.get_growing_period_at_date(
+                reference_date=self.start_date, cache=self.cache
+            )
+            free_capacity_for_growing_period = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                product_type=self.product_type,
+                reference_date=max(self.growing_period.start_date, self.start_date),
+                cache=self.cache,
+            )
             self.free_capacity = [
-                f"{get_free_product_capacity(self.product_type.id, max(self.growing_period.start_date, self.start_date))}".replace(
-                    ",", "."
-                )
+                f"{free_capacity_for_growing_period}".replace(",", ".")
             ]
 
         if self.product_type.single_subscription_only:
-            prod_name = [p for p in self.products.values() if p.base][0].name
-            self.fields[self.field_prefix + prod_name] = forms.BooleanField(
-                required=False,
-                label=_(f"{prod_name} {self.product_type.name}"),
-            )
+            for field_key, product in self.products.items():
+                self.fields[field_key] = forms.BooleanField(
+                    required=False,
+                    initial=False,
+                    label=product.name,
+                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
+                        prices[product.id]
+                    ),
+                )
         else:
-            for k, v in self.products.items():
-                self.fields[k] = forms.IntegerField(
+            for field_key, product in self.products.items():
+                self.fields[field_key] = forms.IntegerField(
                     required=False,
                     min_value=0,
                     initial=0,
-                    label=_(
-                        f"{k.replace(self.field_prefix, '')} {self.product_type.name}"
+                    label=product.name,
+                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
+                        prices[product.id]
                     ),
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[v.id]),
                 )
 
         if self.product_type.contract_link:
@@ -776,8 +655,24 @@ class AdditionalProductForm(forms.Form):
             member = Member.objects.get(id=self.member_id)
             subs = get_active_subscriptions_grouped_by_product_type(member)
 
-            today = get_today()
-            next_delivery_date = get_next_delivery_date(today + relativedelta(days=2))
+            for field_key, product in self.products.items():
+                relevant_subscription = None
+                for subscription in subs[self.product_type.name]:
+                    if subscription.product_id == product.id:
+                        relevant_subscription = subscription
+
+                if relevant_subscription is None:
+                    continue
+
+                if self.product_type.single_subscription_only:
+                    self.fields[field_key].initial = relevant_subscription.quantity > 0
+                else:
+                    self.fields[field_key].initial = relevant_subscription.quantity
+
+            today = get_today(cache=self.cache)
+            next_delivery_date = get_next_delivery_date(
+                today + relativedelta(days=2), cache=self.cache
+            )
             # FIXME: the +2 days should be a configurable threshold.
             # FIXME: It takes some time to prepare the deliveries in which no changes are allowed
             next_month = today + relativedelta(months=1, day=1)
@@ -797,6 +692,7 @@ class AdditionalProductForm(forms.Form):
                     required=False,
                     label=_("Neuen Abholort auswählen"),
                     initial={"subs": subs},
+                    cache=self.cache,
                 )
                 self.fields["pickup_location_change_date"] = forms.ChoiceField(
                     required=False,
@@ -811,7 +707,7 @@ class AdditionalProductForm(forms.Form):
                 )
 
             capability = (
-                get_active_pickup_location_capabilities()
+                get_active_pickup_location_capabilities(cache=self.cache)
                 .filter(
                     pickup_location=member.pickup_location,
                     product_type__id=self.product_type.id,
@@ -824,12 +720,6 @@ class AdditionalProductForm(forms.Form):
         self.prices = ",".join(
             map(
                 lambda k: k + ":" + str(prices[self.products[k].id]),
-                self.products.keys(),
-            )
-        )
-        self.sizes = ",".join(
-            map(
-                lambda k: k + ":" + str(sizes[self.products[k].id]),
                 self.products.keys(),
             )
         )
@@ -847,43 +737,65 @@ class AdditionalProductForm(forms.Form):
             member_id = self.member_id
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id)
-
-        now = get_now()
+        now = get_now(cache=self.cache)
 
         if not hasattr(self, "growing_period"):
-            self.growing_period = self.cleaned_data.get(
-                "growing_period", get_current_growing_period()
+            self.growing_period = self.cleaned_data.pop(
+                "growing_period",
+                TapirCache.get_growing_period_at_date(
+                    reference_date=now.date(), cache=self.cache
+                ),
             )
 
         self.start_date = max(self.start_date, self.growing_period.start_date)
 
-        existing_trial_end_date = cancel_subs_for_edit(
-            member_id, self.start_date, self.product_type
+        existing_trial_end_date = cancel_or_delete_subscriptions(
+            Member.objects.get(id=member_id),
+            self.start_date,
+            self.product_type,
+            actor=None,
+            cache=self.cache,
         )
 
-        self.subs = []
+        self.subscriptions = []
         for key, quantity in self.cleaned_data.items():
             if key.startswith(self.field_prefix) and quantity and quantity > 0:
                 product = Product.objects.get(
                     type=self.product_type,
                     name=key.replace(self.field_prefix, ""),
                 )
-                self.subs.append(
+                notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+                    self.product_type, self.growing_period, cache=self.cache
+                )
+                notice_period_unit = NoticePeriodManager.get_notice_period_unit(
+                    self.product_type, self.growing_period, cache=self.cache
+                )
+                end_date = self.growing_period.end_date
+                if not product.type.subscriptions_have_end_dates:
+                    end_date = None
+                self.subscriptions.append(
                     Subscription(
                         member_id=member_id,
                         product=product,
                         quantity=quantity,
                         period=self.growing_period,
                         start_date=self.start_date,
-                        end_date=self.growing_period.end_date,
+                        end_date=end_date,
                         mandate_ref=mandate_ref,
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
+                        trial_disabled=not get_parameter_value(
+                            ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                        ),
                         trial_end_date_override=existing_trial_end_date,
+                        notice_period_duration=notice_period_duration,
+                        notice_period_unit=notice_period_unit,
                     )
                 )
 
-        Subscription.objects.bulk_create(self.subs)
+        Subscription.objects.bulk_create(self.subscriptions)
+
+        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
@@ -893,7 +805,14 @@ class AdditionalProductForm(forms.Form):
 
         if send_mail:
             member = Member.objects.get(id=member_id)
-            send_order_confirmation(member, self.subs)
+            send_product_order_confirmation(
+                member,
+                self.subscriptions,
+                cache=self.cache,
+                from_waiting_list=False,
+                coop_share_transaction=None,
+                solidarity_contribution=None,
+            )
 
     def has_shares_selected(self):
         return self.get_total_ordered_quantity() > 0
@@ -918,18 +837,38 @@ class AdditionalProductForm(forms.Form):
             and has_shares_selected
             and not self.cleaned_data.get(self.consent_field_key, False)
         ):
-            self.add_error(
-                self.consent_field_key,
-                f"Du musst den Vertragsgrundsätzen zustimmen um {self.product_type.name} zu zeichnen.",
+            raise ValidationError(
+                {
+                    self.consent_field_key: f"Du musst den Vertragsgrundsätzen zustimmen um {self.product_type.name} zu zeichnen."
+                }
             )
 
-    def validate_pickup_location(self) -> bool:
+    def get_pickup_location(self):
+        pickup_location = self.cleaned_data.get("pickup_location")
+        if pickup_location:
+            return pickup_location
+
+        member_pickup_locations = MemberPickupLocation.objects.filter(
+            member_id=self.member_id
+        )
+        if member_pickup_locations.count() == 1:
+            return member_pickup_locations.get().pickup_location
+
+        next_month = get_today(cache=self.cache) + relativedelta(months=1, day=1)
+        return (
+            member_pickup_locations.filter(valid_from__lte=next_month)
+            .order_by("-valid_from")
+            .first()
+            .pickup_location
+        )
+
+    def validate_pickup_location(self, cache: dict):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         has_shares_selected = self.has_shares_selected()
         if new_pickup_location or not has_shares_selected or not self.member_id:
-            return True
+            return
 
-        next_month = get_today() + relativedelta(months=1, day=1)
+        next_month = get_today(cache=cache) + relativedelta(months=1, day=1)
         latest_member_pickup_location = (
             MemberPickupLocation.objects.filter(
                 member_id=self.member_id, valid_from__lte=next_month
@@ -938,98 +877,133 @@ class AdditionalProductForm(forms.Form):
             .first()
         )
         if not latest_member_pickup_location:
-            self.add_error(None, _("Bitte wähle einen Abholort aus!"))
-            return False
+            raise ValidationError(_("Bitte wähle einen Abholort aus!"))
 
-        latest_pickup_location = latest_member_pickup_location.pickup_location
-        capability = (
-            get_active_pickup_location_capabilities()
-            .filter(
-                pickup_location=latest_pickup_location,
-                product_type__id=self.product_type.id,
-            )
-            .first()
-        )
-        if capability is None:
-            self.add_error(
-                "pickup_location", "Abholort unterstützt Produkt nicht"
-            )  # this is not displayed
-            self.add_error(
-                None,
-                f"An deinem Abholort können leider keine {self.product_type.name} abgeholt werden. Bitte wähle einen anderen Abholort aus.",
-            )
-            return False
-
-        validate_pickup_location_capacity(
-            self,
-            capability,
-            self.product_type,
-            self.start_date,
-            self.get_total_ordered_quantity(),
-            self.member_id,
-        )
-
-        return True
-
-    def validate_has_base_product_subscription_at_same_growing_period(self):
+    def validate_has_base_product_subscription_at_same_growing_period(
+        self, cache: dict
+    ):
         if not self.member_id or not self.has_shares_selected():
             return
 
         growing_period = getattr(
             self,
             "growing_period",
-            self.cleaned_data.get("growing_period", get_current_growing_period()),
+            self.cleaned_data.pop(
+                "growing_period",
+                TapirCache.get_growing_period_at_date(
+                    reference_date=get_today(cache), cache=cache
+                ),
+            ),
         )
         if not Subscription.objects.filter(
             member__id=self.member_id,
             period=growing_period,
-            product__type__id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE),
+            product__type=BaseProductTypeService.get_base_product_type(cache=cache),
         ).exists():
             self.add_error(
                 None,
                 "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-                "musst du Anteile von der Basis-Produkt an der gleiche Anbauperiode haben.",
+                "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben.",
             )
 
-    def is_valid(self):
-        result = super().is_valid()
-
+    def clean(self):
         self.validate_contract_signed()
-        self.validate_has_base_product_subscription_at_same_growing_period()
-        if not self.validate_pickup_location():
-            return False
 
-        return result and len(self.errors) == 0
+        if not get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+            cache=self.cache,
+        ):
+            self.validate_has_base_product_subscription_at_same_growing_period(
+                cache=self.cache
+            )
+
+        if self.member_id:
+            self.validate_pickup_location(cache=self.cache)
+            SubscriptionChangeValidator.validate_pickup_location_capacity(
+                pickup_location=self.get_pickup_location(),
+                form=self,
+                field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+                subscription_start_date=self.start_date,
+                member=Member.objects.get(id=self.member_id),
+                cache=self.cache,
+            )
+            SubscriptionChangeValidator.validate_cannot_reduce_size(
+                logged_in_user_is_admin=self.is_admin,
+                subscription_start_date=self.start_date,
+                member_id=self.member_id,
+                form=self,
+                field_prefix=self.field_prefix,
+                product_type_id=self.product_type.id,
+                cache=self.cache,
+            )
+        SubscriptionChangeValidator.validate_total_capacity(
+            form=self,
+            field_prefix=self.field_prefix,
+            product_type_id=self.product_type.id,
+            member_id=self.member_id,
+            subscription_start_date=self.start_date,
+            cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_must_be_subscribed_to(
+            form=self,
+            field_prefix=self.field_prefix,
+            product_type=self.product_type,
+            cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_single_subscription(
+            form=self, field_prefix=self.field_prefix, product_type=self.product_type
+        )
+
+        return super().clean()
 
 
-def cancel_subs_for_edit(
-    member_id: str, start_date: date, product_type: ProductType
-) -> date:
+def cancel_or_delete_subscriptions(
+    member: Member,
+    start_date: date,
+    product_type: ProductType,
+    actor: TapirUser | None,
+    cache: dict,
+) -> date | None:
     """
     Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.
-
-    :param member_id: The member's id
-    :param start_date: The start date of the new contract
-    :param product_type: The product type of the subscriptions to cancel
 
     :return: The trial end date of the last subscription that was canceled
     """
 
-    subs = get_active_subscriptions(start_date).filter(
-        member_id=member_id, product__type=product_type
+    subscriptions = list(
+        get_active_and_future_subscriptions(
+            reference_date=start_date, cache=cache
+        ).filter(member_id=member.id, product__type=product_type)
     )
 
     existing_trial_end_date = None
 
-    for sub in subs:
-        sub.end_date = start_date - relativedelta(days=1)
-        existing_trial_end_date = sub.trial_end_date
+    if len(subscriptions) == 0:
+        return existing_trial_end_date
+
+    SubscriptionChangeLogEntry().populate_subscription_changed(
+        actor=actor,
+        user=member,
+        change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+        subscriptions=subscriptions,
+        admin_confirmed=get_now(cache=cache),
+    ).save()
+
+    for subscription in subscriptions:
+        subscription.end_date = start_date - relativedelta(days=1)
         if (
-            sub.start_date > sub.end_date
+            subscription.start_date > subscription.end_date
         ):  # change was done before the contract started, so we can delete the subscription
-            sub.delete()
-        else:
-            sub.save()
+            subscription.delete()
+            continue
+
+        subscription.cancellation_ts = get_now(cache=cache)
+        existing_trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
+            subscription, cache=cache
+        )
+        subscription.save()
 
     return existing_trial_end_date
 
@@ -1054,40 +1028,7 @@ class EditSubscriptionPriceForm(forms.Form):
     def save(self):
         if self.cleaned_data["new_price"]:
             self.subscription.price_override = self.cleaned_data["new_price"]
-            self.subscription.solidarity_price = 0.0
-            self.subscription.solidarity_price_absolute = None
         else:
             self.subscription.price_override = None
-        self.subscription.save()
-        return self.subscription
-
-
-class EditSubscriptionDatesForm(forms.Form):
-    start_date = forms.DateField(widget=DateInput)
-    end_date = forms.DateField(widget=DateInput)
-
-    def __init__(self, *args, **kwargs):
-        self.subscription_id = kwargs.pop("pk", None)
-        self.subscription = Subscription.objects.get(id=self.subscription_id)
-        super().__init__(*args, **kwargs)
-
-    def get_initial_for_field(self, field, field_name):
-        if field_name == "start_date":
-            return self.subscription.start_date
-        if field_name == "end_date":
-            return self.subscription.end_date
-        return super().get_initial_for_field(field, field_name)
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        if cleaned_data.get("start_date") > cleaned_data.get("end_date"):
-            raise ValidationError("Das Anfangsdatum muss vor dem Endsdatum sein")
-
-        return cleaned_data
-
-    def save(self):
-        self.subscription.start_date = self.cleaned_data["start_date"]
-        self.subscription.end_date = self.cleaned_data["end_date"]
         self.subscription.save()
         return self.subscription

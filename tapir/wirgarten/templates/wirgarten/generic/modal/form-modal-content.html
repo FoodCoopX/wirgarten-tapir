@@ -6,68 +6,64 @@
 {% load wirgarten %}
 
 {% block content %}
-<script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
-{{ form.media }}
-<form id="form" method="post" onsubmit="handleSubmit()">
-    {% csrf_token %}
-    <div class="modal-body">
-        {% if form.template_name %}
-        {% include form.template_name %}
-        {% else %}
-        {% if form.non_field_errors %}
-        {% for error in form.non_field_errors %}
-        <p style="color: #dc3545;">{{ error }}</p>
-        {% endfor %}
-        {% endif %}
-        <div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
-             class="form-fields">
-            {% for field in form %}
-            <div style="grid-column:span {{form.colspans|get_value:field.name|default:1}}" class="form-field"
-                 id="{{ field.name }}">
-                {% if field.name == 'member' or field.name == 'member__pickup_location' or field.name == 'product' or field.name == 'product__type' or field.name == 'receiver' %}
-                <div class="mb-3 searchable-select">
-                    <label class="form-label" for="id_{{field.name}}">{{field.label}}</label>
-                    {{ field }}
-                </div>
-                {% else %}
-                {% bootstrap_field field %}
-                {% endif %}
+    <script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
+    {{ form.media }}
+    <form id="form" method="post" onsubmit="handleSubmit()">
+        {% csrf_token %}
+        <div class="modal-body">
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <p style="color: #dc3545;">{{ error }}</p>
+                {% endfor %}
+            {% endif %}
+            <div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
+                 class="form-fields">
+                {% for field in form %}
+                    <div style="grid-column:span {{form.colspans|get_value:field.name|default:1}}" class="form-field"
+                         id="{{ field.name }}">
+                        {% if field.name == 'member' or field.name == 'member__pickup_location' or field.name == 'product' or field.name == 'product__type' or field.name == 'receiver' %}
+                            <div class="mb-3 searchable-select">
+                                <label class="form-label" for="id_{{field.name}}">{{field.label}}</label>
+                                {{ field }}
+                            </div>
+                        {% else %}
+                            {% bootstrap_field field %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+            {% if form.sum_template %}
+                {% include form.sum_template with form=form %}
+                <br/>
+            {% endif %}
+            {% if form.outro_template %}
+                {% include form.outro_template with form=form %}
+                <br/>
+            {% endif %}
         </div>
-        {% endif %}
-        {% if form.sum_template %}
-        {% include form.sum_template with form=form %}
-        <br/>
-        {% endif %}
-        {% if form.outro_template %}
-        {% include form.outro_template with form=form %}
-        <br/>
-        {% endif %}
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal" onclick="closeModal()">
-            {% translate 'Abbrechen'%}
-        </button>
-        <button id="submit-btn" type="submit" class="btn btn-primary"> {% translate 'Speichern'%}</button>
-    </div>
-</form>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal" onclick="closeModal()">
+                {% translate 'Abbrechen'%}
+            </button>
+            <button id="submit-btn" type="submit" class="btn btn-primary"> {% translate 'Speichern'%}</button>
+        </div>
+    </form>
 
-<script>
-    const closeModal = () => {
-        parent.postMessage({type:"modal-close"}, "*")
-    }
+    <script>
+        const closeModal = () => {
+            parent.postMessage({type:"modal-close"}, "*")
+        }
 
-    const showLoadingSpinner = () => {
-        parent.postMessage({type:"modal-loading-spinner"}, "*")
-    }
+        const showLoadingSpinner = () => {
+            parent.postMessage({type:"modal-loading-spinner"}, "*")
+        }
 
-    const handleSubmit = () => {
-        showLoadingSpinner();
-        const submitBtn = document.getElementById("submit-btn");
-        submitBtn.disabled = true;
-    }
-</script>
+        const handleSubmit = () => {
+            showLoadingSpinner();
+            const submitBtn = document.getElementById("submit-btn");
+            submitBtn.disabled = true;
+        }
+    </script>
 
 {% endblock %}
 

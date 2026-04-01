@@ -6,6 +6,7 @@ import factory
 from dateutil.relativedelta import relativedelta
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -34,6 +35,7 @@ TODAY = NOW.date()
 class MemberFactory(factory.django.DjangoModelFactory[Member]):
     class Meta:
         model = Member
+        skip_postgeneration_save = True
 
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
@@ -42,11 +44,35 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
     iban = factory.Faker("iban")
 
     @factory.post_generation
+    def member_no(self: Member, create, member_no, **kwargs):
+        if member_no is not None:
+            self.member_no = member_no
+
+        if not create:
+            return
+
+        if create and member_no is not None:
+            self.save()
+            return
+
+        member_no = 1
+        member_with_highest_number = (
+            Member.objects.filter(member_no__isnull=False).order_by("member_no").last()
+        )
+        if member_with_highest_number is not None:
+            member_no = member_with_highest_number.member_no + 1
+
+        self.member_no = member_no
+
+        if create:
+            self.save()
+
+    @factory.post_generation
     def is_superuser(self: Member, create, is_superuser: bool, **kwargs):
         if not create:
             return
 
-        keycloak_client = KeycloakUserManager.get_keycloak_client()
+        keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
         group_id = None
         for group in keycloak_client.get_groups():
             if group["name"] == "superuser":
@@ -74,7 +100,7 @@ class ProductTypeFactory(factory.django.DjangoModelFactory[ProductType]):
     class Meta:
         model = ProductType
 
-    name = factory.Faker("word")
+    name = factory.Faker("sentence", nb_words=3)
     delivery_cycle = NO_DELIVERY[0]
 
 
@@ -83,7 +109,8 @@ class ProductFactory(factory.django.DjangoModelFactory[Product]):
         model = Product
 
     type = factory.SubFactory(ProductTypeFactory)
-    name = factory.Faker("word")
+    name = factory.Faker("sentence", nb_words=3)
+    capacity = factory.Faker("pyint", min_value=100, max_value=1000)
 
     _type_counts = defaultdict(int)  # Track counts of Products for each ProductType
 
@@ -108,9 +135,9 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference
     class Meta:
         model = MandateReference
 
-    ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member.id))
+    ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member))
     member = factory.SubFactory(MemberFactory)
-    start_ts = TODAY - relativedelta(months=1)
+    start_ts = NOW - relativedelta(months=1)
 
 
 class GrowingPeriodFactory(factory.django.DjangoModelFactory[GrowingPeriod]):
@@ -118,7 +145,10 @@ class GrowingPeriodFactory(factory.django.DjangoModelFactory[GrowingPeriod]):
         model = GrowingPeriod
 
     start_date = TODAY + relativedelta(day=1)
-    end_date = start_date + relativedelta(years=1, days=-1)
+    end_date = factory.LazyAttribute(
+        lambda growing_period: growing_period.start_date
+        + relativedelta(years=1, days=-1)
+    )
 
 
 class ProductCapacityFactory(factory.django.DjangoModelFactory[ProductCapacity]):
@@ -143,7 +173,14 @@ class SubscriptionFactory(factory.django.DjangoModelFactory[Subscription]):
     mandate_ref = factory.SubFactory(
         MandateReferenceFactory, member=factory.SelfAttribute("..member")
     )
-    solidarity_price = factory.Faker("pyfloat", min_value=-0.25, max_value=0.25)
+    notice_period_duration = 3
+    notice_period_unit = NOTICE_PERIOD_UNIT_MONTHS
+    created_at = factory.LazyAttribute(
+        lambda subscription: datetime.datetime.combine(
+            subscription.start_date - datetime.timedelta(days=4),
+            datetime.time(hour=5, minute=0),
+        )
+    )
 
 
 class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
@@ -181,21 +218,6 @@ class MemberPickupLocationFactory(
     valid_from = TODAY - relativedelta(months=1)
 
 
-class CoopShareTransactionFactory(
-    factory.django.DjangoModelFactory[CoopShareTransaction]
-):
-    class Meta:
-        model = CoopShareTransaction
-
-    member = factory.SubFactory(MemberFactory)
-    transaction_type = factory.Faker(
-        "random_element", elements=["purchase"]
-    )  # cancellation, transfer_in, transfer_out (not implemented yet)
-    quantity = factory.Faker("random_int", min=1, max=10)
-    share_price = 50
-    valid_at = factory.Faker("date_object")
-
-
 class ExportedFileFactory(factory.django.DjangoModelFactory[ExportedFile]):
     class Meta:
         model = ExportedFile
@@ -218,9 +240,31 @@ class PaymentFactory(factory.django.DjangoModelFactory[Payment]):
         model = Payment
 
     due_date = TODAY + timedelta(weeks=1)
-    mandate_ref = factory.SubFactory(
-        MandateReferenceFactory, member=factory.SelfAttribute("..member")
-    )
+    mandate_ref = factory.SubFactory(MandateReferenceFactory)
     amount = 100
     status = "PAID"
     transaction = factory.SubFactory(PaymentTransactionFactory)
+
+
+class CoopShareTransactionFactory(
+    factory.django.DjangoModelFactory[CoopShareTransaction]
+):
+    class Meta:
+        model = CoopShareTransaction
+
+    member = factory.SubFactory(MemberFactory)
+    transaction_type = factory.Faker(
+        "random_element",
+        elements=[CoopShareTransaction.CoopShareTransactionType.PURCHASE],
+    )  # cancellation, transfer_in, transfer_out (not implemented yet)
+    quantity = factory.Faker("random_int", min=1, max=10)
+    share_price = 50
+    valid_at = NOW.date() - datetime.timedelta(days=1)
+    payment = factory.SubFactory(
+        PaymentFactory,
+        amount=factory.LazyAttribute(
+            lambda payment: payment.factory_parent.quantity
+            * payment.factory_parent.share_price
+        ),
+        mandate_ref__member=factory.SelfAttribute("...member"),
+    )

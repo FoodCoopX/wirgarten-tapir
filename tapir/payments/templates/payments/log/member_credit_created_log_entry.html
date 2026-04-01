@@ -1,0 +1,12 @@
+{% load wirgarten %}
+Gutschrift erzeugt: <br />
+<ul>
+{% for key, value in values %}
+    {% if key == "amount" %}
+        <li>Wert: {{ value|format_currency }} €</li>
+    {% endif %}
+    {% if key == "comment" %}
+        <li>Grund: {{ value }}</li>
+    {% endif %}
+{% endfor %}
+</ul>

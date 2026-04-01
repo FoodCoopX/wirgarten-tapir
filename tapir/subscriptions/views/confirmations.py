@@ -1,0 +1,542 @@
+from typing import Type
+
+from django.db import transaction
+from django.db.models import Model
+from django.http import Http404
+from django.urls import reverse
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import status, permissions
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
+
+from tapir.coop.models import CoopSharesRevokedLogEntry
+from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.subscriptions.models import SubscriptionsRevokedLogEntry
+from tapir.subscriptions.serializers import (
+    MemberDataToConfirmSerializer,
+)
+from tapir.subscriptions.services.order_confirmation_mail_sender import (
+    OrderConfirmationMailSender,
+)
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.mail_events import Events
+from tapir.wirgarten.models import (
+    Member,
+    Subscription,
+    CoopShareTransaction,
+    WaitingListEntry,
+    WaitingListProductWish,
+    SubscriptionChangeLogEntry,
+)
+from tapir.wirgarten.utils import (
+    get_today,
+    get_now,
+    format_date,
+    format_subscription_list_html,
+)
+
+
+class MemberDataToConfirmApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: MemberDataToConfirmSerializer(many=True)},
+    )
+    def get(self, request):
+        cache = {}
+        changes_by_member = self.build_changes_by_member(cache=cache)
+        member_data_to_confirm = [
+            self.build_data_to_confirm_for_member(
+                member=member,
+                changes_by_product_type=changes_by_product_type,
+                cache=cache,
+            )
+            for member, changes_by_product_type in changes_by_member.items()
+        ]
+        data = MemberDataToConfirmSerializer(
+            member_data_to_confirm,
+            many=True,
+        ).data
+
+        return Response(data)
+
+    @classmethod
+    def build_changes_by_member(cls, cache: dict):
+        changes_by_member = {}
+
+        unconfirmed_cancellations = Subscription.objects.filter(
+            cancellation_ts__isnull=False,
+            cancellation_admin_confirmed__isnull=True,
+        ).select_related("member", "product__type")
+        cls.group_changes_by_member_and_product_type(
+            subscriptions=unconfirmed_cancellations,
+            key="cancellations",
+            changes_by_member=changes_by_member,
+        )
+
+        unconfirmed_creations = Subscription.objects.filter(
+            admin_confirmed__isnull=True,
+            cancellation_ts__isnull=True,
+        ).select_related("member", "product__type")
+        cls.group_changes_by_member_and_product_type(
+            subscriptions=unconfirmed_creations,
+            key="creations",
+            changes_by_member=changes_by_member,
+        )
+
+        for change in SubscriptionChangeLogEntry.objects.filter(
+            admin_confirmed__isnull=True,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+        ).select_related("actor"):
+            member = change.user.member
+            if member not in changes_by_member.keys():
+                changes_by_member[member] = {}
+            if "deleted" not in changes_by_member[member].keys():
+                changes_by_member[member]["deleted"] = []
+            changes_by_member[member]["deleted"].append(change)
+
+        for member in Member.objects.all():
+            if member in changes_by_member.keys():
+                continue
+            unconfirmed_share_purchases = (
+                TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
+                    cache=cache
+                ).get(member.id, [])
+            )
+            if len(unconfirmed_share_purchases) == 0:
+                continue
+            changes_by_member[member] = {}
+
+        return changes_by_member
+
+    @classmethod
+    def get_number_of_unconfirmed_changes(cls, cache: dict):
+        return len(cls.build_changes_by_member(cache=cache).keys())
+
+    @classmethod
+    def group_changes_by_member_and_product_type(
+        cls, subscriptions, key: str, changes_by_member: dict
+    ):
+        for subscription in subscriptions:
+            if subscription.member not in changes_by_member.keys():
+                changes_by_member[subscription.member] = {}
+
+            if (
+                subscription.product.type
+                not in changes_by_member[subscription.member].keys()
+            ):
+                changes_by_member[subscription.member][subscription.product.type] = {
+                    "cancellations": [],
+                    "creations": [],
+                }
+
+            changes_by_member[subscription.member][subscription.product.type][
+                key
+            ].append(subscription)
+
+    @classmethod
+    def build_data_to_confirm_for_member(
+        cls,
+        member: Member,
+        changes_by_product_type: dict,
+        cache: dict,
+    ) -> dict:
+        pickup_location_id = (
+            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                member.id, reference_date=get_today(cache=cache), cache=cache
+            )
+        )
+
+        pickup_location = None
+        if pickup_location_id is not None:
+            pickup_location = TapirCache.get_pickup_location_by_id(
+                cache=cache, pickup_location_id=pickup_location_id
+            )
+
+        classified_changes = cls.classify_changes(changes_by_product_type)
+
+        cancellation_types = []
+        show_warning = False
+        for cancellation in classified_changes["cancellations"]:
+            cancellation_type, cancellation_shows_warning = cls.get_cancellation_type(
+                cancellation, cache=cache
+            )
+            show_warning = show_warning or cancellation_shows_warning
+            cancellation_types.append(cancellation_type)
+
+        return {
+            "member": member,
+            "member_profile_url": reverse("wirgarten:member_detail", args=[member.id]),
+            "pickup_location": pickup_location,
+            "subscription_cancellations": classified_changes["cancellations"],
+            "cancellation_types": cancellation_types,
+            "show_warning": show_warning,
+            "subscription_creations": classified_changes["creations"],
+            "subscription_changes": classified_changes["changes"],
+            "subscriptions_deleted": changes_by_product_type.get("deleted", []),
+            "share_purchases": TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
+                cache=cache
+            ).get(
+                member.id, []
+            ),
+        }
+
+    @classmethod
+    def classify_changes(cls, changes_by_product_type: dict):
+        creations = []
+        cancellations = []
+        changes = []
+
+        for (
+            product_type,
+            changes_for_this_product_type,
+        ) in changes_by_product_type.items():
+            if product_type is None or product_type == "deleted":
+                continue
+
+            creations_for_this_product_type = changes_for_this_product_type["creations"]
+            cancellations_for_this_product_type = changes_for_this_product_type[
+                "cancellations"
+            ]
+
+            if (
+                len(creations_for_this_product_type) > 0
+                and len(cancellations_for_this_product_type) == 0
+            ):
+                creations.extend(creations_for_this_product_type)
+                continue
+
+            if (
+                len(creations_for_this_product_type) == 0
+                and len(cancellations_for_this_product_type) > 0
+            ):
+                cancellations.extend(cancellations_for_this_product_type)
+                continue
+
+            changes.append(
+                {
+                    "product_type": product_type,
+                    "subscription_cancellations": cancellations_for_this_product_type,
+                    "subscription_creations": creations_for_this_product_type,
+                }
+            )
+        return {
+            "cancellations": cancellations,
+            "changes": changes,
+            "creations": creations,
+        }
+
+    @staticmethod
+    def get_cancellation_type(subscription: Subscription, cache: dict):
+        cancellation_type = "Reguläre Kündigung"
+        show_warning = False
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=subscription.end_date, cache=cache
+        )
+        if growing_period.end_date > subscription.end_date:
+            cancellation_type = "Unterjährige Kündigung"
+            show_warning = True
+        if TrialPeriodManager.is_contract_in_trial(
+            contract=subscription,
+            reference_date=subscription.cancellation_ts.date(),
+            cache=cache,
+        ):
+            cancellation_type = "Kündigung in der Probezeit"
+            show_warning = False
+
+        return cancellation_type, show_warning
+
+
+class ConfirmSubscriptionChangesView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[
+            OpenApiParameter(
+                name="confirm_cancellation_ids", type=str, required=True, many=True
+            ),
+            OpenApiParameter(
+                name="confirm_creation_ids", type=str, required=True, many=True
+            ),
+            OpenApiParameter(
+                name="confirm_purchase_ids", type=str, required=True, many=True
+            ),
+            OpenApiParameter(
+                name="confirm_deletion_ids", type=int, required=True, many=True
+            ),
+        ],
+    )
+    @transaction.atomic
+    def post(self, request: Request):
+        cache = {}
+
+        confirm_cancellation_ids = request.query_params.getlist(
+            "confirm_cancellation_ids"
+        )
+        self.apply_confirmation(
+            model=Subscription,
+            ids_to_confirm=confirm_cancellation_ids,
+            confirmation_field="cancellation_admin_confirmed",
+            cache=cache,
+            id_as_int=False,
+        )
+
+        confirm_creation_ids = request.query_params.getlist("confirm_creation_ids")
+        self.apply_confirmation(
+            model=Subscription,
+            ids_to_confirm=confirm_creation_ids,
+            confirmation_field="admin_confirmed",
+            cache=cache,
+            id_as_int=False,
+        )
+
+        confirm_purchase_ids = request.query_params.getlist("confirm_purchase_ids")
+        self.apply_confirmation(
+            model=CoopShareTransaction,
+            ids_to_confirm=confirm_purchase_ids,
+            confirmation_field="admin_confirmed",
+            cache=cache,
+            id_as_int=False,
+        )
+
+        confirm_deletion_ids = request.query_params.getlist("confirm_deletion_ids")
+        self.apply_confirmation(
+            model=SubscriptionChangeLogEntry,
+            ids_to_confirm=confirm_deletion_ids,
+            confirmation_field="admin_confirmed",
+            cache=cache,
+            id_as_int=True,
+        )
+
+        OrderConfirmationMailSender.send_confirmation_mail_if_necessary(
+            confirm_creation_ids=confirm_creation_ids,
+            confirm_purchase_ids=confirm_purchase_ids,
+        )
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+    @staticmethod
+    def apply_confirmation(
+        model: Type[Model],
+        ids_to_confirm: list[str] | list[int],
+        confirmation_field: str,
+        cache: dict,
+        id_as_int: bool,
+    ):
+        if id_as_int:
+            ids_to_confirm = [int(id_) for id_ in ids_to_confirm if id_.isnumeric()]
+        else:
+            ids_to_confirm = [
+                id_to_confirm.strip()
+                for id_to_confirm in ids_to_confirm
+                if id_to_confirm.strip() != ""
+            ]
+
+        objects_to_confirm = model.objects.filter(id__in=ids_to_confirm).filter(
+            **{f"{confirmation_field}__isnull": True}
+        )
+
+        ids_not_found = [
+            object_id
+            for object_id in ids_to_confirm
+            if object_id not in [obj.id for obj in objects_to_confirm]
+        ]
+
+        if len(ids_not_found) > 0:
+            raise Http404(
+                f"No {model.__name__} to confirm with ids {ids_not_found} found, field: {confirmation_field}"
+            )
+
+        objects_to_confirm.update(**{confirmation_field: get_now(cache=cache)})
+
+
+class RevokeChangesApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[
+            OpenApiParameter(
+                name="subscription_creation_ids", type=str, required=True, many=True
+            ),
+            OpenApiParameter(
+                name="coop_share_purchase_ids", type=str, required=True, many=True
+            ),
+            OpenApiParameter(
+                name="put_on_waiting_list", type=bool, required=True, many=False
+            ),
+        ],
+    )
+    @transaction.atomic
+    def post(self, request: Request):
+        cache = {}
+        subscription_creation_ids = request.query_params.getlist(
+            "subscription_creation_ids"
+        )
+        coop_share_purchase_ids = request.query_params.getlist(
+            "coop_share_purchase_ids"
+        )
+        put_on_waiting_list = request.query_params.get("put_on_waiting_list") == "true"
+
+        if not put_on_waiting_list:
+            self.send_mail_to_members(
+                subscription_creation_ids=subscription_creation_ids,
+                coop_share_purchase_ids=coop_share_purchase_ids,
+            )
+
+        subscriptions = self.delete_objects_or_404(
+            ids_to_delete=subscription_creation_ids,
+            model=Subscription,
+            field_start_date="start_date",
+            cache=cache,
+        )
+
+        share_transactions = self.delete_objects_or_404(
+            ids_to_delete=coop_share_purchase_ids,
+            model=CoopShareTransaction,
+            field_start_date="valid_at",
+            cache=cache,
+        )
+
+        self.create_log_entries(
+            subscriptions=subscriptions,
+            share_transactions=share_transactions,
+            actor=request.user,
+        )
+
+        if put_on_waiting_list:
+            self.create_waiting_list_entry(
+                subscriptions=subscriptions,
+                share_transactions=share_transactions,
+                cache=cache,
+            )
+
+        return Response("OK")
+
+    @classmethod
+    def create_log_entries(
+        cls,
+        subscriptions: list[Subscription],
+        share_transactions: list[CoopShareTransaction],
+        actor,
+    ):
+        subscriptions_by_member = {}
+        for subscription in subscriptions:
+            if subscription.member not in subscriptions_by_member.keys():
+                subscriptions_by_member[subscription.member] = []
+            subscriptions_by_member[subscription.member].append(subscription)
+
+        for member, member_subscriptions in subscriptions_by_member.items():
+            SubscriptionsRevokedLogEntry().populate_subscriptions(
+                subscriptions=member_subscriptions, actor=actor, user=member
+            ).save()
+
+        share_transactions_by_member: dict[Member, list[CoopShareTransaction]] = {}
+        for share_transaction in share_transactions:
+            if share_transaction.member not in share_transactions_by_member.keys():
+                share_transactions_by_member[share_transaction.member] = []
+            share_transactions_by_member[share_transaction.member].append(
+                share_transaction
+            )
+
+        for member, member_transactions in share_transactions_by_member.items():
+            CoopSharesRevokedLogEntry().populate_transactions(
+                coop_share_transactions=member_transactions, actor=actor, user=member
+            ).save()
+
+    @staticmethod
+    def send_mail_to_members(
+        subscription_creation_ids: list[str], coop_share_purchase_ids: list[str]
+    ):
+        data_by_member = OrderConfirmationMailSender.build_data_by_member(
+            confirm_creation_ids=subscription_creation_ids,
+            confirm_purchase_ids=coop_share_purchase_ids,
+            skip_auto_confirmed=False,
+        )
+        for member, data in data_by_member.items():
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.ORDER_REVOKED,
+                    recipient_id_in_base_queryset=member.id,
+                    token_data={
+                        "contract_list": format_subscription_list_html(
+                            data["subscriptions"]
+                        ),
+                        "number_of_coop_shares": data["number_of_coop_shares"],
+                    },
+                ),
+            )
+
+    @staticmethod
+    def create_waiting_list_entry(
+        subscriptions: list[Subscription],
+        share_transactions: list[CoopShareTransaction],
+        cache: dict,
+    ):
+        if len(subscriptions) > 0:
+            member = subscriptions[0].member
+        else:
+            member = share_transactions[0].member
+
+        nb_shares = sum(
+            [share_transaction.quantity for share_transaction in share_transactions]
+        )
+
+        waiting_list_entry = WaitingListEntry.objects.create(
+            member=member,
+            comment=f"Erzeugt von einem Widerruf am {format_date(get_now(cache=cache))}",
+            number_of_coop_shares=nb_shares,
+            first_name=member.first_name,
+            last_name=member.last_name,
+            phone_number=member.phone_number,
+            email=member.email,
+            privacy_consent=get_now(cache=cache),
+        )
+
+        WaitingListProductWish.objects.bulk_create(
+            [
+                WaitingListProductWish(
+                    waiting_list_entry=waiting_list_entry,
+                    product_id=subscription.product_id,
+                    quantity=subscription.quantity,
+                )
+                for subscription in subscriptions
+            ],
+        )
+
+    @staticmethod
+    def delete_objects_or_404[T: Model](
+        ids_to_delete: list[str], model: Type[T], field_start_date: str, cache: dict
+    ) -> list[T]:
+        ids_to_delete = [
+            ids_to_delete.strip()
+            for ids_to_delete in ids_to_delete
+            if ids_to_delete.strip() != ""
+        ]
+
+        objects_to_delete = (
+            model.objects.filter(id__in=ids_to_delete, admin_confirmed__isnull=True)
+            .exclude(**{f"{field_start_date}__lte": get_today(cache=cache)})
+            .select_related("member")
+        )
+        found_ids = [obj.pk for obj in objects_to_delete]
+        ids_not_found = [
+            object_id for object_id in ids_to_delete if object_id not in found_ids
+        ]
+
+        if len(ids_not_found) > 0:
+            raise Http404(f"Could not find {model.__name__} with ids {ids_not_found}")
+
+        objects = list(objects_to_delete)
+        objects_to_delete.delete()
+        return objects

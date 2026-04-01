@@ -1,82 +1,36 @@
-import base64
-import json
-
-from dateutil.relativedelta import relativedelta
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponseRedirect
-from django.urls import reverse_lazy
-from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
-from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
+    AutomaticSolidarityContributionRenewalService,
+)
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
     Subscription,
     SubscriptionChangeLogEntry,
 )
-from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.email import send_email
-from tapir.wirgarten.service.member import send_order_confirmation
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.member import send_product_order_confirmation
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_available_product_types,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_next_growing_period,
 )
-from tapir.wirgarten.tapirmail import Events
-from tapir.wirgarten.utils import format_date, get_now, member_detail_url
-
-EMAIL_CHANGE_LINK_VALIDITY_MINUTES = 4 * 60
-
-
-@transaction.atomic
-def change_email(request, **kwargs):
-    data = json.loads(base64.b64decode(kwargs["token"]))
-    user_id = data["user"]
-    new_email = data["new_email"]
-    matching_change_request = EmailChangeRequest.objects.filter(
-        new_email=new_email, secret=data["secret"], user_id=user_id
-    ).order_by("-created_at")
-
-    link_validity = relativedelta(minutes=EMAIL_CHANGE_LINK_VALIDITY_MINUTES)
-    now = get_now()
-    if matching_change_request.exists() and now < (
-        matching_change_request[0].created_at + link_validity
-    ):
-        # token is valid -> actually change email
-        user = TapirUser.objects.get(id=user_id)
-        orig_email = user.email
-        user.change_email(new_email)
-
-        # delete other change requests for this user
-        EmailChangeRequest.objects.filter(user_id=user_id).delete()
-        # delete expired change requests
-        EmailChangeRequest.objects.filter(created_at__lte=now - link_validity).delete()
-
-        # send confirmation to old email address
-        send_email(
-            to_email=[orig_email],
-            subject=_("Deine Email Adresse wurde geändert"),
-            content=_(
-                f"Hallo {user.first_name},<br/><br/>"
-                f"deine Email Adresse wurde erfolgreich zu <strong>{new_email}</strong> geändert.<br/>"
-                f"""Falls du das nicht warst, ändere bitte sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
-                f"<br/><br/>Herzliche Grüße, dein WirGarten Team"
-            ),
-        )
-
-        return HttpResponseRedirect(
-            reverse_lazy("wirgarten:member_detail", kwargs={"pk": user.id})
-            + "?email_changed=true"
-        )
-
-    return HttpResponseRedirect(reverse_lazy("link_expired"))
+from tapir.wirgarten.utils import format_date, get_now, member_detail_url, get_today
 
 
 @require_http_methods(["GET"])
@@ -86,13 +40,17 @@ def change_email(request, **kwargs):
 def renew_contract_same_conditions(request, **kwargs):
     member_id = kwargs["pk"]
     new_subs = []
-    next_period = get_next_growing_period()
+    cache = {}
+    next_period = get_next_growing_period(cache=cache)
 
     available_product_types = [
-        p.id for p in get_available_product_types(reference_date=next_period.start_date)
+        p.id
+        for p in get_available_product_types(
+            reference_date=next_period.start_date, cache=cache
+        )
     ]
 
-    for sub in get_active_subscriptions().filter(member_id=member_id):
+    for sub in get_active_subscriptions(cache=cache).filter(member_id=member_id):
         if sub.product.type.id in available_product_types:
             new_subs.append(
                 Subscription(
@@ -102,8 +60,14 @@ def renew_contract_same_conditions(request, **kwargs):
                     quantity=sub.quantity,
                     start_date=next_period.start_date,
                     end_date=next_period.end_date,
-                    solidarity_price=sub.solidarity_price,
                     mandate_ref=sub.mandate_ref,
+                    notice_period_duration=get_parameter_value(
+                        ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+                    ),
+                    notice_period_unit=get_parameter_value(
+                        ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
+                        cache=cache,
+                    ),
                 )
             )
             # reset cancellation date on existing sub
@@ -116,20 +80,54 @@ def renew_contract_same_conditions(request, **kwargs):
 
     Subscription.objects.bulk_create(new_subs)
 
+    TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+
     member = Member.objects.get(id=member_id)
-    member.sepa_consent = get_now()
+    member.sepa_consent = get_now(cache=cache)
     member.save()
 
-    SubscriptionChangeLogEntry().populate(
+    SubscriptionChangeLogEntry().populate_subscription_changed(
         actor=request.user,
         user=member,
         change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.RENEWED,
         subscriptions=new_subs,
+        admin_confirmed=get_now(cache=cache),
     ).save()
 
-    send_order_confirmation(member, new_subs)
+    renew_solidarity_contribution_if_necessary(member_id=member_id, cache=cache)
+
+    send_product_order_confirmation(
+        member,
+        new_subs,
+        cache=cache,
+        from_waiting_list=False,
+        coop_share_transaction=None,
+        solidarity_contribution=None,
+    )
 
     return HttpResponseRedirect(member_detail_url(member_id))
+
+
+def renew_solidarity_contribution_if_necessary(member_id: str, cache: dict):
+    current_growing_period = TapirCache.get_growing_period_at_date(
+        reference_date=get_today(cache), cache=cache
+    )
+    current_contribution = SolidarityContribution.objects.filter(
+        member_id=member_id,
+        start_date__lte=current_growing_period.end_date,
+        end_date__gte=current_growing_period.end_date,
+    ).first()
+    future_contribution = SolidarityContribution.objects.filter(
+        member_id=member_id,
+        start_date__gt=current_growing_period.end_date,
+    ).first()
+    if current_contribution is not None and future_contribution is None:
+        renewed_contribution = (
+            AutomaticSolidarityContributionRenewalService.build_renewed_contribution(
+                contribution=current_contribution, cache=cache
+            )
+        )
+        renewed_contribution.save()
 
 
 @require_http_methods(["GET"])
@@ -138,10 +136,10 @@ def renew_contract_same_conditions(request, **kwargs):
 @transaction.atomic
 def cancel_contract_at_period_end(request, **kwargs):
     member_id = kwargs["pk"]
-
-    now = get_now()
+    cache = {}
+    now = get_now(cache=cache)
     subs = list(
-        get_future_subscriptions().filter(
+        get_active_and_future_subscriptions(cache=cache).filter(
             member_id=member_id,
             period=GrowingPeriod.objects.get(start_date__lte=now, end_date__gte=now),
         )
@@ -154,20 +152,19 @@ def cancel_contract_at_period_end(request, **kwargs):
 
     member = Member.objects.get(id=member_id)
 
-    SubscriptionChangeLogEntry().populate(
+    SubscriptionChangeLogEntry().populate_subscription_changed(
         actor=request.user,
         user=member,
         change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.NOT_RENEWED,
         subscriptions=subs,
+        admin_confirmed=now,
     ).save()
 
-    TransactionalTrigger.fire_action(Events.CONTRACT_NOT_RENEWED, member.email)
-
-    # TODO: remove after tapir_mail migration
-    send_email(
-        to_email=[member.email],
-        subject=get_parameter_value(Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT),
-        content=get_parameter_value(Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT),
+    TransactionalTrigger.fire_action(
+        TransactionalTriggerData(
+            key=Events.CONTRACT_NOT_RENEWED,
+            recipient_id_in_base_queryset=member.id,
+        ),
     )
 
     return HttpResponseRedirect(

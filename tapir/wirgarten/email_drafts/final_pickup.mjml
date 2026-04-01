@@ -1,0 +1,32 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+Trigger: Transaktionale Mail, die am Montag in der letzten Abholwoche an das Mitglied, welches entweder gekündigt (regulär zum Ende der Vertragsperiode hin oder innerhalb der Probezeit) oder den Vertrag nicht verlängert hat (wenn Opt-In bei Vetragsverlängerung eingeschaltet) versendet wird. <br /><br />
+Zweck: Benachrichtigung / Erinnerung daran, dass diese Woche die letzte Abholung stattfindet, damit die Leute nicht ggf. weiter am Abholort Gemüse abholen, obwohl sie kein gültigen Vertrag mehr haben. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />                
+
+"Moin {{Empfänger.Vorname}}, <br /><br />
+
+du hast diese Woche Deine letzte Abholung gehabt. <br /><br />
+
+Folgende Verträge sind nun abgelaufen: <br />
+{{Vertrags-/Lieferende.Vertragsliste}} <br /><br />
+
+Egal ob letzte Lieferung nach dem Probemonat oder nach einer oder mehreren Saisons - wir danken Dir für Deine Unterstützung und Dein Vertrauen und freuen uns, Dich auch ohne Ernteanteil bald wieder bei uns zu treffen! <br /><br />
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
+
+Liebe Grüße, <br />
+dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br />
+
+__________________ <br /><br />
+
+Folgende Tokens sind hier relevant: <br />
+{{Vertrags-/Lieferende.Vertragsliste}} <br />
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

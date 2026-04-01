@@ -1,0 +1,42 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+Trigger: Transaktionale Mail, die versendet wird, wenn das Mitglied in der Probezeit kündigt. <br /><br />
+Zweck: Kündigungsbestätigung <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
+
+__________________ <br /><br />
+
+"Moin {{Empfänger.Vorname}}, <br /><br />
+
+schade, dass du gekündigt hast! <br /><br />
+
+Wir bestätigen dir hiermit deine Kündigung für: <br />
+{{Kündigung im Probemonat.Vertragsliste}} <br /><br />
+
+Dein Vertrag endet am: <br />
+{{Kündigung im Probemonat.Vertragsende}} <br /><br />
+
+Deine letzte Gemüsekiste erhältst du am: <br />
+{{Kündigung im Probemonat.Letzte Abholung am}} <br /><br />
+
+Wenn du doch nochmal Lust auf unser Gemüse hast, freuen wir uns dich wieder bei uns Begrüßen zu dürfen! <br /><br />
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
+
+Liebe Grüße, <br />
+dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}}" <br />
+
+____________________ <br /><br />
+
+Folgende Token sind hier relevant: <br />
+{{Kündigung im Probemonat.Vertragsliste}} <br />
+{{Kündigung im Probemonat.Vertragsende}} <br />
+{{Kündigung im Probemonat.Letzte Abholung am}} <br />
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

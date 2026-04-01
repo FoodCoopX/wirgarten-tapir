@@ -1,0 +1,203 @@
+import datetime
+
+from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+
+from tapir.accounts.models import TapirUser
+from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.models import MemberPaymentRhythm, MemberPaymentRhythmChangeLogEntry
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import Member
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_today
+
+
+class MemberPaymentRhythmService:
+    RELATIVE_DELTA_ONE_MONTH = relativedelta(months=1)
+
+    @staticmethod
+    def get_member_payment_rhythm(
+        member: Member, reference_date: datetime.date, cache: dict
+    ):
+        rhythm_object = TapirCache.get_member_payment_rhythm_object(
+            member=member, reference_date=reference_date, cache=cache
+        )
+        if rhythm_object is None:
+            return get_parameter_value(
+                ParameterKeys.PAYMENT_DEFAULT_RHYTHM, cache=cache
+            )
+        return rhythm_object.rhythm
+
+    @classmethod
+    def is_start_of_rhythm_period(
+        cls, rhythm, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        months_with_generation = cls.get_month_index_where_payments_should_be_created(
+            rhythm
+        )
+        month_index = cls.get_month_index_relative_to_growing_period(
+            reference_date=reference_date, cache=cache
+        )
+        return month_index in months_with_generation
+
+    @classmethod
+    def get_month_index_where_payments_should_be_created(cls, rhythm):
+        match rhythm:
+            case MemberPaymentRhythm.Rhythm.MONTHLY:
+                return range(1, 13)
+            case MemberPaymentRhythm.Rhythm.QUARTERLY:
+                return [1, 4, 7, 10]
+            case MemberPaymentRhythm.Rhythm.SEMIANNUALLY:
+                return [1, 7]
+            case MemberPaymentRhythm.Rhythm.YEARLY:
+                return [1]
+            case _:
+                raise ImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
+
+    @classmethod
+    def get_month_index_relative_to_growing_period(
+        cls, reference_date: datetime.date, cache: dict
+    ):
+        reference_date = reference_date.replace(day=1)
+        growing_periods = TapirCache.get_all_growing_periods_ascending(cache=cache)
+        last_growing_period = None
+        for growing_period in reversed(growing_periods):
+            if growing_period.start_date <= reference_date:
+                last_growing_period = growing_period
+                break
+
+        if last_growing_period is None:
+            last_growing_period = growing_periods[-1]
+
+        return (
+            relativedelta(reference_date, last_growing_period.start_date).months % 12
+        ) + 1
+
+    @classmethod
+    def get_number_of_months_paid_in_advance(cls, rhythm):
+        match rhythm:
+            case MemberPaymentRhythm.Rhythm.MONTHLY:
+                return 1
+            case MemberPaymentRhythm.Rhythm.QUARTERLY:
+                return 3
+            case MemberPaymentRhythm.Rhythm.SEMIANNUALLY:
+                return 6
+            case MemberPaymentRhythm.Rhythm.YEARLY:
+                return 12
+            case _:
+                raise ImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
+
+    @classmethod
+    def get_first_day_of_rhythm_period(
+        cls, rhythm, reference_date: datetime.date, cache: dict
+    ):
+        reference_date = reference_date.replace(day=1)
+        while not cls.is_start_of_rhythm_period(
+            rhythm=rhythm, reference_date=reference_date, cache=cache
+        ):
+            reference_date = reference_date - cls.RELATIVE_DELTA_ONE_MONTH
+        return reference_date
+
+    @classmethod
+    def get_last_day_of_rhythm_period(
+        cls, rhythm, reference_date: datetime.date, cache: dict
+    ):
+        start = cls.get_first_day_of_rhythm_period(
+            rhythm=rhythm, reference_date=reference_date, cache=cache
+        )
+        end = (
+            start
+            + relativedelta(
+                months=cls.get_number_of_months_paid_in_advance(rhythm=rhythm)
+            )
+            - datetime.timedelta(days=1)
+        )
+
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=start, cache=cache
+        )  # check the end of the growing period in case it is not 12 month long
+
+        if growing_period is None:
+            return end
+
+        return min(growing_period.end_date, end)
+
+    @classmethod
+    def validate_rhythms(cls, rhythms_as_string: str):
+        valid_choices = [
+            str(choice[1]) for choice in MemberPaymentRhythm.Rhythm.choices
+        ]
+        for rhythm in rhythms_as_string.split(","):
+            rhythm = rhythm.strip()
+            if rhythm == "":
+                continue
+            if rhythm not in valid_choices:
+                raise ValidationError(f"Ungültiges Intervall: {rhythm}")
+
+    @classmethod
+    def get_allowed_rhythms(cls, cache: dict):
+        allowed_rhythms_as_display_name = get_parameter_value(
+            key=ParameterKeys.PAYMENT_ALLOWED_RHYTHMS, cache=cache
+        )
+        allowed_rhythms_as_display_name = [
+            name.strip()
+            for name in allowed_rhythms_as_display_name.split(",")
+            if name.strip() != ""
+        ]
+        return [
+            choice[0]
+            for choice in MemberPaymentRhythm.Rhythm.choices
+            if str(choice[1]) in allowed_rhythms_as_display_name
+        ]
+
+    @classmethod
+    def is_payment_rhythm_allowed(cls, rhythm: str, cache: dict) -> bool:
+        return rhythm in cls.get_allowed_rhythms(cache=cache)
+
+    @classmethod
+    def get_rhythm_display_name(cls, rhythm: str) -> str:
+        for choice in MemberPaymentRhythm.Rhythm.choices:
+            if choice[0] == rhythm:
+                return choice[1]
+        return rhythm
+
+    @classmethod
+    def get_date_of_next_payment_rhythm_change(
+        cls, member: Member, reference_date: datetime.date, cache: dict
+    ) -> datetime.date:
+        rhythm_object = TapirCache.get_member_payment_rhythm_object(
+            member=member, reference_date=reference_date, cache=cache
+        )
+        if rhythm_object is None:
+            return reference_date
+
+        last_day = MemberPaymentRhythmService.get_last_day_of_rhythm_period(
+            rhythm=rhythm_object.rhythm, reference_date=reference_date, cache=cache
+        )
+        return last_day + datetime.timedelta(days=1)
+
+    @classmethod
+    def assign_payment_rhythm_to_member(
+        cls,
+        member: Member,
+        rhythm: str,
+        valid_from: datetime.date,
+        cache: dict,
+        actor: TapirUser,
+    ):
+        MemberPaymentRhythmChangeLogEntry().populate_rhythm(
+            old_rhythm=MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=member, reference_date=get_today(cache=cache), cache=cache
+            ),
+            new_rhythm=rhythm,
+            valid_from=valid_from,
+            actor=actor,
+            user=member,
+        ).save()
+
+        MemberPaymentRhythm.objects.filter(
+            member=member, valid_from__gte=valid_from
+        ).delete()
+        MemberPaymentRhythm.objects.create(
+            member=member, rhythm=rhythm, valid_from=valid_from
+        )

@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import os
-from pathlib import Path
 from importlib import resources
+from pathlib import Path
+
 import environ
 
 env = environ.Env()
@@ -32,7 +33,6 @@ ENABLE_SILK_PROFILING = False
 INSTALLED_APPS = [
     # Must come before contrib.auth to let the custom templates be discovered for auth views
     "tapir.accounts",
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -41,22 +41,33 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django_bootstrap5",
     "django_drf_filepond",
-    "bootstrap_datepicker_plus",
     "tapir_mail",
     "tapir.core",
     "tapir.log",
     "tapir.utils",
     "tapir.wirgarten",
     "tapir.configuration",
+    "tapir.deliveries",
+    "tapir.generic_exports",
+    "tapir.subscriptions",
+    "tapir.coop",
+    "tapir.pickup_locations",
+    "tapir.waiting_list",
+    "tapir.payments",
+    "tapir.products",
+    "tapir.bestell_wizard",
+    "tapir.solidarity_contribution",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields
     "phonenumber_field",
     "localflavor",
-    # TODO(Leon Handreke): Don't install in prod
     "django_extensions",
     "formtools",
-    "tapir.wirgarten_site",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",
+    "django_vite",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -118,7 +129,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "tapir.wsgi.application"
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
@@ -142,6 +152,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = "static"
 STATICFILES_DIRS = [
     get_tapir_mail_static_dir(),
+    "dist",
 ]
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
@@ -158,8 +169,8 @@ PHONENUMBER_DEFAULT_REGION = "DE"
 LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
 
 if ENABLE_SILK_PROFILING:
-    SILKY_PYTHON_PROFILER = True
-    SILKY_PYTHON_PROFILER_BINARY = True
+    SILKY_PYTHON_PROFILER = False
+    SILKY_PYTHON_PROFILER_BINARY = False
     SILKY_META = True
 
 # these are keycloak internal roles and will be filtered out automatically when fetching roles
@@ -169,28 +180,38 @@ KEYCLOAK_NON_TAPIR_ROLES = [
     "default-roles-tapir",
 ]
 
-# The link above contains all settings
-BOOTSTRAP_DATEPICKER_PLUS = {
-    "options": {
-        "locale": "de",
-        "showClose": True,
-        "showClear": True,
-        "showTodayButton": True,
-        "allowInputToggle": True,
-    },
-    "variant_options": {
-        "date": {
-            "format": "DD.MM.YYYY",
-        },
-        "datetime": {
-            "format": "DD.MM.YYYY HH:mm",
-        },
-    },
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "tapir.accounts.drf_authentication.DrfForwardAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
+SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
+
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
+        "manifest_path": "./dist/manifest.json",
+    }
+}
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
     },
 }
 

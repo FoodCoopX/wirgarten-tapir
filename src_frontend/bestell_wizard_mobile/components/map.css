@@ -1,0 +1,8 @@
+.leaflet-container {
+    flex-grow: 1
+}
+
+#pickup_location_carousel .carousel-inner {
+    position: absolute;
+    inset: 0
+}

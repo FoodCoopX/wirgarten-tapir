@@ -12,11 +12,15 @@ class TapirMailPermissionMiddleware:
 
     def __call__(self, request):
         # PUBLIC TRACKING PIXEL LINK ACCESS
-        if re.match(
-            settings.TAPIR_MAIL_PATH + r"/?api/tracking/(.*)/track/?", request.path
-        ) or re.match(
-            settings.TAPIR_MAIL_PATH + r"/?api/media_library/get_file/(.*)",
-            request.path,
+        if (
+            re.match(
+                settings.TAPIR_MAIL_PATH + r"/?api/tracking/(.*)/track/?", request.path
+            )
+            or re.match(
+                settings.TAPIR_MAIL_PATH + r"/?api/media_library/get_file/(.*)",
+                request.path,
+            )
+            or re.match(settings.TAPIR_MAIL_PATH + r"/external/.*", request.path)
         ):
             return self.get_response(request)
 

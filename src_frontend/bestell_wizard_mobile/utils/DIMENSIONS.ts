@@ -1,0 +1,4 @@
+export const HEADER_HEIGHT = 10;
+export const FOOTER_HEIGHT = 12;
+export const CONTENT_HEIGHT = 100 - HEADER_HEIGHT - FOOTER_HEIGHT;
+export const NEXT_BUTTON_HEIGHT = 10;

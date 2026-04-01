@@ -1,241 +1,256 @@
 {% extends "wirgarten/generic/filter-list.html" %}
-
+{% load member_list %}
 {% load i18n %}
 {% load core %}
 {% load tapir_static %}
 {% load wirgarten %}
 {% load django_bootstrap5 %}
-
+{% load django_vite %}
 {% block title %}
-{% translate "Mitglieder" %}
+    {% translate "Mitglieder" %}
 {% endblock %}
-
+{% block head %}
+    {% vite_asset 'member_list/member_list_entry.tsx' %}
+{% endblock head %}
 {% block page_top %}
-<div id="success-alert" style="display:none" class="alert alert-success">
-    <h4 class="alert-heading"></h4>
-    <button type="button" class="btn btn-primary"
-            onclick="document.getElementById('success-alert').style.display='none'">Alles klar
-    </button>
-</div>
-<div id="error-alert" style="display:none" class="alert alert-danger">
-    <h4 class="alert-heading">Es ist ein Fehler aufgetreten :(</h4>
-    <p class="alert-content"></p>
-    <button type="button" class="btn btn-primary"
-            onclick="document.getElementById('error-alert').style.display='none'">Alles klar
-    </button>
-</div>
+    {% csrf_token %}
+    <div id="success-alert" style="display:none" class="alert alert-success">
+        <h4 class="alert-heading"></h4>
+        <button type="button"
+                class="btn btn-primary"
+                onclick="document.getElementById('success-alert').style.display='none'">Alles klar</button>
+    </div>
+    <div id="error-alert" style="display:none" class="alert alert-danger">
+        <h4 class="alert-heading">Es ist ein Fehler aufgetreten :(</h4>
+        <p class="alert-content"></p>
+        <button type="button"
+                class="btn btn-primary"
+                onclick="document.getElementById('error-alert').style.display='none'">Alles klar</button>
+    </div>
 {% endblock %}
-
 {% block card_header %}
-<h4>{{filter.qs | length}} {% translate "Mitglieder" %}</h4>
-<span style="display: flex; flex-direction:row;">
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleExportCoopMemberList()' title='Mitgliederliste nach GenG exportieren' type='success' icon='receipt_long' %}
-    <div style="width: 1em"></div>
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleShowContractPage()' disabled=True title='Verträge anzeigen' type='info' icon='history_edu' class='needs-member' %}
-    {% if perms.payments.view %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleShowPayments()' disabled=True title='Zahlungsreihe anzeigen' type='info' icon='payments' class='needs-member' %}
-    {% endif %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleShowDeliveries()' disabled=True title='Lieferreihe anzeigen' type='info' icon='local_shipping' class='needs-member' %}
-    <div style="width: 1em"></div>
-    {% if perms.accounts.manage %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleEditMemberDetails()' disabled=True title='Mitgliedsdaten ändern' type='primary' icon='manage_accounts' class='needs-member' %}
-    {% if perms.coop.manage %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleCancelCoopShares()' disabled=True title='Genossenschaftsanteile kündigen' type='primary' icon='free_cancellation' class='needs-member' %}
-    {% endif %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
-    <div style="width: 1em"></div>
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleTrialCancellation()' disabled=True title='Verträge kündigen' type='danger' icon='free_cancellation' class='needs-member needs-trial-period' %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
-    {% endif %}
-</span>
+    <h4>{{ filter.qs | length }} {% translate "Mitglieder" %}</h4>
+    <span style="display: flex; flex-direction:row;">
+        {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
+        {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
+        {% if show_cooperative_content %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='handleExportCoopMemberList()' title='Mitgliederliste nach GenG exportieren' type='success' icon='receipt_long' %}
+        {% endif %}
+        {% if show_association_content %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='handleExportCoopMemberList()' title='Mitgliederliste exportieren' type='success' icon='receipt_long' %}
+        {% endif %}
+        <div style="width: 1em"></div>
+        {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
+        {% include 'wirgarten/generic/action-button.html' with onclick='handleShowContractPage()' disabled=True title='Verträge anzeigen' type='info' icon='history_edu' class='needs-member' %}
+        {% if perms.payments.view %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='handleShowPayments()' disabled=True title='Zahlungsreihe anzeigen' type='info' icon='payments' class='needs-member' %}
+        {% endif %}
+        {% include 'wirgarten/generic/action-button.html' with onclick='handleShowDeliveries()' disabled=True title='Lieferreihe anzeigen' type='info' icon='local_shipping' class='needs-member' %}
+        <div style="width: 1em"></div>
+        {% if perms.accounts.manage %}
+            {% if perms.coop.manage and show_cooperative_content %}
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleCancelCoopShares()' disabled=True title='Genossenschaftsanteile kündigen' type='primary' icon='free_cancellation' class='needs-member' %}
+            {% endif %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
+            <div style="width: 1em"></div>
+            <div class="d-flex gap-2">
+                <span id="subscription_cancellation_button"></span>
+                <span id="member_delete_button"></span>
+            </div>
+        {% endif %}
+    </span>
 {% endblock %}
-
 {% block table_head %}
-<tr>
-    <th class="sort-header" data-sort="member_no">#</th>
-    <th class="sort-header" data-sort="first_name">{% translate "Vorname" %}</th>
-    <th class="sort-header" data-sort="last_name">{% translate "Nachname" %}</th>
-    <th class="sort-header" data-sort="email">{% translate "Email" %}</th>
-    <th>{% translate "Telefon" %}</th>
-    <th class="sort-header" data-sort="coop_shares_total_value">{% translate "Geschäftsguthaben" %}</th>
-    <th class="sort-header" data-sort="monthly_payment">{% translate "Umsatz/Monat" %}</th>
-    <th>{% translate "Abholort" %}</th>
-    <th class="sort-header" data-sort="created_at">{% translate "Eintritt" %}</th>
-</tr>
+    <tr>
+        <th class="sort-header" data-sort="member_no">#</th>
+        <th class="sort-header" data-sort="first_name">{% translate "Vorname" %}</th>
+        <th class="sort-header" data-sort="last_name">{% translate "Nachname" %}</th>
+        <th class="sort-header" data-sort="email">{% translate "Email" %}</th>
+        <th>{% translate "Telefon" %}</th>
+        {% if show_cooperative_content %}
+            <th class="sort-header" data-sort="coop_shares_total_value">{% translate "Geschäftsguthaben" %}</th>
+        {% endif %}
+        <th class="sort-header" data-sort="monthly_payment">{% translate "Umsatz/Monat" %}</th>
+        <th>{% translate "Solidarbeitrag" %}</th>
+        <th>{% translate "Abholort" %}</th>
+        <th class="sort-header" data-sort="created_at">{% translate "Eintritt" %}</th>
+    </tr>
 {% endblock %}
-
 {% block table_body %}
-{% for member in object_list %}
-
-<tr id="member-{{member.id}}"
-    onClick="handleSelectMember('{{member.id}}', '{{ member.has_trial_contracts }}'.toLowerCase())"
-    class="tr-clickable member-row">
-    <td class="text-center">{{ member.member_no|default:'-' }}</td>
-    <td>{{ member.first_name }}</td>
-    <td>{{ member.last_name }}</td>
-    <td>{% if not member.email_verified %}<span title="Nicht verifiziert!"
-                                                style="color: var(--secondary); font-size: 1.5em; vertical-align:middle"
-                                                class="material-icons">warning</span>&nbsp;&nbsp;{% endif %}{{ member.email }}
-    </td>
-    <td>{{ member.phone_number }}</td>
-    <td class="text-end">{{ member.coop_shares_total_value|format_currency }} €&nbsp;&nbsp;</td>
-    <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
-    <td>{{ member.pickup_location.name }}</td>
-    <td>{{ member.coop_entry_date|format_date }}</td>
-</tr>
-{% endfor %}
+    {% for member in object_list %}
+        <tr id="member-{{ member.id }}"
+            onClick="handleSelectMember('{{ member.id }}', '{{ member.has_trial_contracts }}'.toLowerCase())"
+            class="tr-clickable member-row">
+            <td class="text-center">{{ member.member_no|default:'-' }}</td>
+            <td>{{ member.first_name }}</td>
+            <td>{{ member.last_name }}</td>
+            <td>
+                {% member_email_verified member cache as verified %}
+                {% if not verified %}
+                    <span title="Nicht verifiziert!"
+                          style="color: var(--secondary);
+                                 font-size: 1.5em;
+                                 vertical-align:middle"
+                          class="material-icons">warning</span>&nbsp;&nbsp;
+                {% endif %}
+                {{ member.email }}
+            </td>
+            <td>{{ member.phone_number }}</td>
+            {% if show_cooperative_content %}
+                <td class="text-end">{{ member.coop_shares_total_value|format_currency }} €&nbsp;&nbsp;</td>
+            {% endif %}
+            <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
+            <td class="text-end">
+                {% if not member.current_member_contribution and not member.future_member_contribution_amount %}
+                    <span>-</span>
+                {% elif member.current_member_contribution and not member.future_member_contribution_amount %}
+                    <span>{{ member.current_member_contribution|format_currency }} €</span>
+                {% elif not member.current_member_contribution and member.future_member_contribution_amount %}
+                    <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}:</small>{{ member.future_member_contribution_amount|format_currency }} €</span>
+                {% elif member.current_member_contribution and member.future_member_contribution_amount %}
+                    <span><small>Aktuell:</small>{{ member.current_member_contribution|format_currency }} €</span>
+                    <br />
+                    <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}:</small>{{ member.future_member_contribution_amount|format_currency }} €</span>
+                {% endif %}
+            </td>
+            <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
+            <td>{{ member.coop_entry_date|format_date }}</td>
+        </tr>
+    {% endfor %}
 {% endblock %}
 {% block script %}
-<script>
-    const memberRows = document.getElementsByClassName('member-row');
-    const buttons = document.getElementsByClassName('needs-member');
-    const trialDependentButtons = document.getElementsByClassName('needs-trial-period');
+    <script>
+        const memberRows = document.getElementsByClassName('member-row');
+        const buttons = document.getElementsByClassName('needs-member');
+        const trialDependentButtons = document.getElementsByClassName('needs-trial-period');
 
-    const activateRow = () => {
-        const params = Tapir.getUrlParams();
+        const activateRow = () => {
+            const params = Tapir.getUrlParams();
 
-        if(params.member){
-            for(row of memberRows){
-                if(row.id === `member-${params.member}`){
-                    row.classList.add('active');
-                } else {
-                    row.classList.remove('active');
+            if (params.member) {
+                for (row of memberRows) {
+                    if (row.id === `member-${params.member}`) {
+                        row.classList.add('table-active');
+                    } else {
+                        row.classList.remove('table-active');
+                    }
                 }
-            }
 
-            for(btn of buttons){
-                btn.disabled = false;
-            }
+                for (btn of buttons) {
+                    btn.disabled = false;
+                }
 
-            for(btn of trialDependentButtons){
-                if(params.trial === "true"){
-                    btn.classList.add('btn-outline-warning')
-                    btn.classList.remove('btn-outline-danger')
-                } else {
-                    btn.classList.remove('btn-outline-warning')
-                    btn.classList.add('btn-outline-danger')
+                for (btn of trialDependentButtons) {
+                    if (params.trial === "true") {
+                        btn.classList.add('btn-outline-warning')
+                        btn.classList.remove('btn-outline-danger')
+                    } else {
+                        btn.classList.remove('btn-outline-warning')
+                        btn.classList.add('btn-outline-danger')
+                    }
                 }
             }
         }
-    }
 
-    const handleSelectMember = (memberId, trial) => {
-        const params = Tapir.getUrlParams();
+        const handleSelectMember = (memberId, trial) => {
+            const params = Tapir.getUrlParams();
 
-        if(params.member === memberId){
-            handleShowMemberDetailsPage();
-        } else {
-            params.member = memberId;
-            params.trial = trial;
+            if (params.member === memberId) {
+                handleShowMemberDetailsPage();
+            } else {
+                params.member = memberId;
+                params.trial = trial;
 
-            Tapir.replaceUrlParams(params);
+                Tapir.replaceUrlParams(params);
 
-            activateRow();
+                activateRow();
+            }
         }
-    }
 
-    const handleTrialCancellation = () => {
-        const params = Tapir.getUrlParams();
-        if(params.trial === "true"){
-            FormModal.load(`members/${params.member}/canceltrial`, 'Verträge kündigen')
-        } else {
-            ConfirmationModal.open("Sonderkündigung", "Dieses Mitglied ist nicht mehr in der Probezeit. Möchtest du trotzdem Verträge kündigen? Auf der nächsten Seite kannst du die Verträge auswählen.", "Weiter", "danger", () => {
-                FormModal.load(`members/${params.member}/cancelnontrial`, 'Verträge kündigen')
+        const handleExport = () => {
+            const params = Tapir.getUrlParams();
+            const url = "{% url 'wirgarten:member_overview_export' %}"
+            const newParams = {
+                ...params,
+                next: window.location.pathname + Tapir.stringifyUrlParams(params)
+            };
+            window.location.href = url + Tapir.stringifyUrlParams(newParams);
+        }
+
+        const handleExportCoopMemberList = () => {
+            window.location.href = "{% url 'wirgarten:member_list_coop_export' %}";
+        }
+
+        const handleAddMember = () => {
+            const url = "{% url 'wirgarten:member_create' %}";
+            FormModal.load(url, 'Neues Mitglied anlegen');
+        }
+
+        const handleShowMemberDetailsPage = () => {
+            const params = Tapir.getUrlParams();
+
+            window.location.href = `/tapir/members/${params.member}`;
+        }
+
+        const handleShowContractPage = () => {
+            const params = Tapir.getUrlParams();
+            window.location.href = "{% url 'wirgarten:subscription_list' %}?member=" + params.member;
+        }
+
+        const handleShowPayments = () => {
+            const params = Tapir.getUrlParams();
+            window.location.href = `../../../../payments/${params.member}`;
+        }
+
+        const handleShowDeliveries = () => {
+            const params = Tapir.getUrlParams();
+            window.location.href = `/tapir/deliveries/${params.member}`;
+        }
+
+        const handleTransferCoopShares = () => {
+            const params = Tapir.getUrlParams();
+            FormModal.load(`/tapir/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
+        }
+
+        const handleCancelCoopShares = () => {
+            const params = Tapir.getUrlParams();
+            FormModal.load(`/tapir/members/${params.member}/coopsharescancel`, "Genossenschaftsanteile kündigen");
+        }
+
+        const handleResendVerifyEmail = () => {
+            const params = Tapir.getUrlParams();
+            ConfirmationModal.open('Verifizierungs-Email erneut senden', 'Bist du dir sicher, dass du die Verifizierungs-Email erneut an dieses Mitglied senden möchtest?', 'Mail erneut senden', 'danger', () => {
+                const url = "{% url 'wirgarten:member_resend_verify_email' pk='-----' %}".replace('/-----/', '/' + params.member + '/');
+                const newParams = {
+                    next: window.location.pathname + Tapir.stringifyUrlParams(params)
+                };
+                window.location.replace(url + Tapir.stringifyUrlParams(newParams));
             })
         }
-    }
 
-    const handleExport = () => {
-        const params = Tapir.getUrlParams();
-        const url = "{% url 'wirgarten:member_overview_export' %}"
-        const newParams = {...params, next: window.location.pathname + Tapir.stringifyUrlParams(params)};
-        window.location.href = url + Tapir.stringifyUrlParams(newParams);
-    }
-
-    const handleExportCoopMemberList = () => {
-        window.location.href = "{% url 'wirgarten:member_list_coop_export' %}"
-    }
-
-    const handleAddMember = () => {
-        FormModal.load('{% url 'wirgarten:member_create' %}', 'Neues Mitglied anlegen');
-    }
-
-    const handleShowMemberDetailsPage = () => {
-        const params = Tapir.getUrlParams();
-
-        window.location.href = `/wirgarten/members/${params.member}`;
-    }
-
-    const handleShowContractPage = () => {
-        const params = Tapir.getUrlParams();
-        window.location.href = "{% url 'wirgarten:subscription_list' %}?member=" + params.member;
-    }
-
-    const handleShowPayments = () => {
-        const params = Tapir.getUrlParams();
-        window.location.href = `/wirgarten/payments/${params.member}`;
-    }
-
-    const handleShowDeliveries = () => {
-        const params = Tapir.getUrlParams();
-        window.location.href = `/wirgarten/deliveries/${params.member}`;
-    }
-
-    const handleTransferCoopShares = () => {
-        const params = Tapir.getUrlParams();
-        FormModal.load(`/wirgarten/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
-    }
-
-    const handleCancelCoopShares = () => {
-        const params = Tapir.getUrlParams();
-        FormModal.load(`/wirgarten/members/${params.member}/coopsharescancel`, "Genossenschaftsanteile kündigen");
-    }
-
-    const handleEditMemberDetails = () => {
-        const params = Tapir.getUrlParams();
-        FormModal.load(`/wirgarten/members/${params.member}/edit`, 'Persönliche Daten ändern')
-        FormModal.addCallback((e) => {
-            if(e.data.type === "modal-save-successful"){
-                window.location.replace(window.location.href)
-            }
-        })
-    }
-
-    const handleResendVerifyEmail = () => {
-        const params = Tapir.getUrlParams();
-        ConfirmationModal.open('Verifizierungs-Email erneut senden', 'Bist du dir sicher, dass du die Verifizierungs-Email erneut an dieses Mitglied senden möchtest?', 'Mail erneut senden', 'danger', () => {
-            const url = "{% url 'wirgarten:member_resend_verify_email' pk='-----' %}".replace('/-----/', '/' + params.member + '/');
-            const newParams = {next: window.location.pathname + Tapir.stringifyUrlParams(params)};
-            window.location.replace(url + Tapir.stringifyUrlParams(newParams));
-        })
-    }
-
-    const handleDeleteMember = () => {
-        ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du dieses Mitglied wirklich löschen?', 'Löschen', 'danger', () => {
-            alert("Not yet implemented!")
-        })
-    }
-
-    activateRow();
-
-    const params = Tapir.getUrlParams();
-    if(params.resend_verify_email){
-        if(params.resend_verify_email === 'success'){
-            const alert = document.getElementById("success-alert");
-            alert.style.display = 'block';
-            alert.querySelectorAll(".alert-heading")[0].innerText="Verifizierungs-Email erfolgreich versendet!"
-        } else {
-            const alert = document.getElementById("error-alert");
-            alert.style.display = 'block';
-            alert.querySelectorAll(".alert-content")[0].innerText=decodeURIComponent(params.resend_verify_email);
+        const handleDeleteMember = () => {
+            ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du dieses Mitglied wirklich löschen?', 'Löschen', 'danger', () => {
+                alert("Not yet implemented!")
+            })
         }
 
-        params.resend_verify_email = undefined;
-        Tapir.replaceUrlParams(params);
-    }
-</script>
+        activateRow();
+
+        const params = Tapir.getUrlParams();
+        if (params.resend_verify_email) {
+            if (params.resend_verify_email === 'success') {
+                const alert = document.getElementById("success-alert");
+                alert.style.display = 'block';
+                alert.querySelectorAll(".alert-heading")[0].innerText = "Verifizierungs-Email erfolgreich versendet!"
+            } else {
+                const alert = document.getElementById("error-alert");
+                alert.style.display = 'block';
+                alert.querySelectorAll(".alert-content")[0].innerText = decodeURIComponent(params.resend_verify_email);
+            }
+
+            params.resend_verify_email = undefined;
+            Tapir.replaceUrlParams(params);
+        }
+    </script>
 {% endblock %}

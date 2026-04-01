@@ -1,0 +1,8 @@
+{% load wirgarten %}
+Solidarbeitrag geändert: {{ old_contribution_amount | format_currency }}€ -> {{ new_contribution_amount | format_currency }}€.
+<br />
+{% if new_contribution_start_date %}
+    Neuer Beitrag gültig ab: {{ new_contribution_start_date | format_date }}
+{% elif old_contribution_end_date %}
+    Alter Beitrag endet am: {{ old_contribution_end_date | format_date }}
+{% endif %}

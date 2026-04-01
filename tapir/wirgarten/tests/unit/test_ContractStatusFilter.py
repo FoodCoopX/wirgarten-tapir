@@ -1,20 +1,24 @@
 import datetime
 
-from django.test import TestCase
+from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
     GrowingPeriodFactory,
     MemberFactory,
 )
-from tapir.wirgarten.tests.test_utils import mock_timezone, set_bypass_keycloak
+from tapir.wirgarten.tests.test_utils import mock_timezone, TapirIntegrationTest
 from tapir.wirgarten.views.member.list.member_list import ContractStatusFilter
 
 
-class ContractStatusFilterTestCase(TestCase):
+class ContractStatusFilterTestCase(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self):
-        set_bypass_keycloak()
         mock_timezone(self, datetime.datetime(year=2023, month=6, day=15))
 
         current_growing_period = GrowingPeriodFactory.create(
@@ -51,7 +55,9 @@ class ContractStatusFilterTestCase(TestCase):
             period=current_growing_period,
             start_date=datetime.date(year=2023, month=6, day=1),
             end_date=datetime.date(year=2023, month=7, day=1),
-            cancellation_ts=datetime.date(year=2023, month=6, day=10),
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2023, month=6, day=10)
+            ),
         )
 
         self.member_that_cancelled_after_trial_period = MemberFactory.create(
@@ -60,7 +66,9 @@ class ContractStatusFilterTestCase(TestCase):
         SubscriptionFactory.create(
             member=self.member_that_cancelled_after_trial_period,
             period=current_growing_period,
-            cancellation_ts=datetime.date(year=2023, month=4, day=15),
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2023, month=4, day=15)
+            ),
         )
 
         self.member_in_trial = MemberFactory.create(first_name="member_in_trial")

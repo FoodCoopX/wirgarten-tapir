@@ -41,7 +41,7 @@ class TapirMailPermissionMiddlewareTest(TapirIntegrationTest):
         self,
     ):
         permission = Permission.Email.MANAGE
-        self.user.roles.append(permission)
+        self.user.roles = [permission]
         request = self.factory.get(self.other_url)
         request.user = self.user
         response = self.middleware(request)

@@ -1,0 +1,199 @@
+import datetime
+
+from tapir.accounts.models import TapirUser
+from tapir.configuration.parameter import get_parameter_value
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.subscriptions.types import TapirOrder
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
+from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
+from tapir.wirgarten.models import (
+    ProductType,
+    Member,
+    Subscription,
+    SubscriptionChangeLogEntry,
+)
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.member import (
+    get_or_create_mandate_ref,
+    send_contract_change_confirmation,
+    send_product_order_confirmation,
+)
+from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
+    get_active_subscriptions,
+)
+from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
+from tapir.wirgarten.utils import get_now
+
+
+class ApplyTapirOrderManager:
+    @classmethod
+    def apply_order_single_product_type(
+        cls,
+        member: Member,
+        order: TapirOrder,
+        product_type: ProductType,
+        contract_start_date: datetime.date,
+        actor: TapirUser,
+        needs_admin_confirmation: bool,
+        cache: dict,
+    ):
+        active_and_future_subscriptions = get_active_and_future_subscriptions(
+            reference_date=contract_start_date, cache=cache
+        ).filter(member=member, product__type_id=product_type.id)
+        subscriptions_existed_before_changes = active_and_future_subscriptions.exists()
+
+        earliest_trial_period_end_date = None
+        active_subscriptions_exists = get_active_subscriptions(
+            reference_date=contract_start_date, cache=cache
+        ).filter(id__in=active_and_future_subscriptions.values_list("id", flat=True))
+        if active_subscriptions_exists:
+            earliest_trial_period_end_date = (
+                TrialPeriodManager.get_earliest_trial_period_end_date_for_product_type(
+                    member_id=member.id,
+                    product_type_id=product_type.id,
+                    reference_date=contract_start_date,
+                    cache=cache,
+                )
+            )
+        cancel_or_delete_subscriptions(
+            member=member,
+            product_type=product_type,
+            start_date=contract_start_date,
+            actor=actor,
+            cache=cache,
+        )
+        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=contract_start_date, cache=cache
+        )
+
+        notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+            product_type=product_type,
+            growing_period=growing_period,
+            cache=cache,
+        )
+        notice_period_unit = NoticePeriodManager.get_notice_period_unit(
+            product_type=product_type,
+            growing_period=growing_period,
+            cache=cache,
+        )
+
+        contract_end_date = None
+        if product_type.subscriptions_have_end_dates:
+            contract_end_date = growing_period.end_date
+
+        now = get_now(cache=cache)
+        trial_disabled = (
+            active_subscriptions_exists
+            and earliest_trial_period_end_date is None
+            or not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache)
+        )
+        subscriptions = []
+        for product, quantity in order.items():
+            if quantity == 0:
+                continue
+            subscriptions.append(
+                Subscription(
+                    member=member,
+                    product=product,
+                    period=growing_period,
+                    quantity=quantity,
+                    start_date=contract_start_date,
+                    end_date=contract_end_date,
+                    cancellation_ts=None,
+                    mandate_ref=get_or_create_mandate_ref(member=member, cache=cache),
+                    consent_ts=now,
+                    withdrawal_consent_ts=now,
+                    trial_disabled=trial_disabled,
+                    trial_end_date_override=earliest_trial_period_end_date,
+                    notice_period_duration=notice_period_duration,
+                    notice_period_unit=notice_period_unit,
+                    auto_confirmed=None if needs_admin_confirmation else now,
+                )
+            )
+
+        new_subscriptions = Subscription.objects.bulk_create(subscriptions)
+        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+        if len(new_subscriptions) > 0:
+            OnboardingTrigger.on_subscription_updated(new_subscriptions[0])
+
+        SubscriptionChangeLogEntry().populate_subscription_changed(
+            actor=actor,
+            user=member,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
+            subscriptions=new_subscriptions,
+            admin_confirmed=now,
+        ).save()
+
+        return subscriptions_existed_before_changes, new_subscriptions
+
+    @classmethod
+    def apply_order_with_several_product_types(
+        cls,
+        member: Member,
+        order: TapirOrder,
+        contract_start_date: datetime.date,
+        actor: TapirUser,
+        needs_admin_confirmation,
+        cache: dict,
+    ) -> tuple[bool, list[Subscription]]:
+        orders_by_product_type = {}
+        subscriptions_existed_before_changes = False
+        new_subscriptions = []
+
+        for product, quantity in order.items():
+            if quantity == 0:
+                continue
+            if product.type not in orders_by_product_type.keys():
+                orders_by_product_type[product.type] = {}
+            orders_by_product_type[product.type][product] = quantity
+
+        for product_type, order in orders_by_product_type.items():
+            (
+                subscriptions_of_this_product_type_existed_before_changes,
+                new_subscriptions_of_this_product_type,
+            ) = ApplyTapirOrderManager.apply_order_single_product_type(
+                member=member,
+                order=order,
+                product_type=product_type,
+                contract_start_date=contract_start_date,
+                actor=actor,
+                needs_admin_confirmation=needs_admin_confirmation,
+                cache=cache,
+            )
+            subscriptions_existed_before_changes = (
+                subscriptions_existed_before_changes
+                or subscriptions_of_this_product_type_existed_before_changes
+            )
+            new_subscriptions.extend(new_subscriptions_of_this_product_type)
+
+        return subscriptions_existed_before_changes, new_subscriptions
+
+    @classmethod
+    def send_order_confirmation_mail(
+        cls,
+        subscriptions_existed_before_changes: bool,
+        member: Member,
+        new_subscriptions: list[Subscription],
+        cache: dict,
+        from_waiting_list: bool,
+        solidarity_contribution: SolidarityContribution | None,
+    ):
+        if subscriptions_existed_before_changes:
+            send_contract_change_confirmation(
+                member=member, subs=new_subscriptions, cache=cache
+            )
+        else:
+            send_product_order_confirmation(
+                member=member,
+                subs=new_subscriptions,
+                cache=cache,
+                from_waiting_list=from_waiting_list,
+                coop_share_transaction=None,
+                solidarity_contribution=solidarity_contribution,
+            )

@@ -3,17 +3,17 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.utils.forms import DateInput
-from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
+from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Product,
     ProductCapacity,
     ProductPrice,
-    ProductType,
-    TaxRate,
 )
-from tapir.wirgarten.service.member import get_next_contract_start_date
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
     validate_date_range,
@@ -23,105 +23,6 @@ from tapir.wirgarten.validators import (
 KW_PROD_ID = "prodId"
 KW_CAPACITY_ID = "capacityId"
 KW_PERIOD_ID = "periodId"
-
-
-class ProductTypeForm(forms.Form):
-    template_name = "wirgarten/product/product_type_form.html"
-
-    def __init__(self, *args, **kwargs):
-        super(ProductTypeForm, self).__init__(*args)
-        initial_name = ""
-        initial_delivery_cycle = NO_DELIVERY
-        initial_tax_rate = 0
-        initial_capacity = 0.0
-        product_type = None
-
-        if KW_PERIOD_ID in kwargs:
-            initial_period_id = kwargs[KW_PERIOD_ID]
-
-            if KW_CAPACITY_ID in kwargs:  # update existing product type
-                self.capacity = ProductCapacity.objects.get(id=kwargs[KW_CAPACITY_ID])
-                initial_capacity = self.capacity.capacity
-                product_type = ProductType.objects.get(id=self.capacity.product_type.id)
-
-                try:
-                    self.tax_rate = TaxRate.objects.get(
-                        product_type=product_type, valid_to=None
-                    )
-                    initial_tax_rate = self.tax_rate.tax_rate
-                except TaxRate.DoesNotExist:
-                    initial_tax_rate = 0.19  # FIXME: default value in tapir paramenter
-
-                initial_name = product_type.name
-                initial_delivery_cycle = product_type.delivery_cycle
-
-            else:  # create NEW -> lets choose from existing product types
-                prod_types_without_capacity = [(None, _("--- Neu anlegen ---"))]
-                prod_types_without_capacity.extend(
-                    list(
-                        map(
-                            lambda pt: (pt.id, _(pt.name)),
-                            ProductType.objects.exclude(
-                                id__in=ProductCapacity.objects.filter(
-                                    period__id=initial_period_id
-                                ).values("product_type__id")
-                            ),
-                        )
-                    )
-                )
-
-                self.fields["product_type"] = forms.ChoiceField(
-                    choices=prod_types_without_capacity, required=False
-                )
-
-        self.fields["name"] = forms.CharField(
-            initial=initial_name, required=False, label=_("Produkt Name")
-        )
-        self.fields["icon_link"] = forms.CharField(
-            required=False,
-            label=_("Icon Link"),
-            initial=product_type.icon_link if product_type is not None else "",
-        )
-        self.fields["contract_link"] = forms.CharField(
-            required=False,
-            label=_("Link zu den Vertragsgrundsätzen"),
-            initial=product_type.contract_link if product_type is not None else "",
-        )
-        self.fields["single_subscription_only"] = forms.BooleanField(
-            required=False,
-            label=_("Nur Einzelabonnement möglich"),
-            initial=(
-                product_type.single_subscription_only
-                if product_type is not None
-                else False
-            ),
-        )
-        self.fields["capacity"] = forms.FloatField(
-            initial=initial_capacity,
-            required=True,
-            label=_("Produkt Kapazität (in Produkt-Größe)"),
-        )
-        self.fields["delivery_cycle"] = forms.ChoiceField(
-            initial=initial_delivery_cycle,
-            required=True,
-            label=_("Liefer-/Abholzyklus"),
-            choices=DeliveryCycle,
-        )
-
-        self.fields["tax_rate"] = forms.FloatField(
-            initial=initial_tax_rate,
-            required=True,
-            label=_("Mehrwertsteuersatz"),  # FIXME: format
-        )
-
-        if product_type is not None:
-            next_month = get_today() + relativedelta(day=1, months=1)
-            self.fields["tax_rate_change_date"] = forms.DateField(
-                required=True,
-                label=_("Neuer Mehrwertsteuersatz gültig ab"),
-                widget=DateInput(),
-                initial=next_month,
-            )
 
 
 class ProductForm(forms.Form):
@@ -143,6 +44,7 @@ class ProductForm(forms.Form):
                 "-valid_from"
             )
             initial_name = product.name
+
             period = GrowingPeriod.objects.get(id=kwargs[KW_PERIOD_ID])
             for price in prices:
                 if price.valid_from < period.end_date:
@@ -181,8 +83,9 @@ class ProductForm(forms.Form):
 class GrowingPeriodForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(GrowingPeriodForm, self).__init__(*args)
+        self.cache = {}
 
-        today = get_today()
+        today = get_today(cache=self.cache)
         initial = {
             "id": "-",
             "start_date": today + relativedelta(days=1),
@@ -201,7 +104,7 @@ class GrowingPeriodForm(forms.Form):
                     period = period[:1][0]
                     new_start_date = period.end_date + relativedelta(days=1)
                 else:
-                    new_start_date = get_next_contract_start_date(ref_date=today)
+                    new_start_date = get_first_of_next_month(date=today)
                 self.update_initial(initial, new_start_date)
             except GrowingPeriod.DoesNotExist:
                 pass
@@ -220,6 +123,36 @@ class GrowingPeriodForm(forms.Form):
             label=_("Bis"),
             widget=DateInput(),
             initial=initial["end_date"],
+        )
+        if get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=self.cache):
+            self.fields["max_jokers_per_member"] = forms.BooleanField(
+                required=False,
+                label=_("Maximal Anzahl an Joker per Mitglied"),
+                initial=4,
+            )
+
+        growing_period_id = kwargs.get("periodId", None)
+        if not growing_period_id:
+            return
+
+        delivery_weeks = CustomCycleScheduledDeliveryWeek.objects.filter(
+            growing_period_id=growing_period_id
+        )
+        if not delivery_weeks.exists():
+            return
+
+        relevant_product_type_names = delivery_weeks.values_list(
+            "product_type__name", flat=True
+        ).distinct()
+        self.fields["confirm_delivery_weeks_copy"] = forms.BooleanField(
+            required=True,
+            label=_(
+                f"Übernahme der Lieferwochen für folgende Produktanteile: {", ".join(relevant_product_type_names)}"
+            ),
+            initial=False,
+            help_text="Bei den genannten Produktanteilen liegen benutzerdefinierte Lieferwochen vor. "
+            "Wir übernehmen die Lieferwochen aus der alten Vertragsperiode für die neue Vertragsperiode. "
+            "Du kannst diese dann in der Produktanteils-Einstellung für die neue Vertragsperiode ggf. anpassen (Bsp.: von KW 11 auf KW 13).",
         )
 
     def is_valid(self):

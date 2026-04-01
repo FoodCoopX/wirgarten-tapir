@@ -18,6 +18,8 @@ class TapirModel(models.Model):
         primary_key=True,
         default=partial(generate_id),
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
@@ -25,7 +27,6 @@ class TapirModel(models.Model):
 
 class SidebarLinkGroup:
     name: str
-    links: []
 
     def __init__(self, name: str):
         self.name = name

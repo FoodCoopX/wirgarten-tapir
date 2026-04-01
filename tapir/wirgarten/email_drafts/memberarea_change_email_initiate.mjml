@@ -1,0 +1,33 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+Trigger: Transaktionale Mail, die bei Änderung der Email-Adresse im Mitgliederbereich versendet wird. <br /><br />
+Zweck: Die Email wird an die alte Email-Adresse verschickt. Sie enthält einen Bestätigungslink, welcher geklickt werden muss, damit die Änderung der Email-Adresse wirksam wird. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen.  <br /><br />
+
+_____________ <br /><br />
+
+Moin {{Empfänger.Vorname}}, <br /> <br />
+
+du hast gerade die E-Mail-Adresse für Deinen Account geändert. <br /><br />
+
+Bitte klicke den folgenden Link, um die Änderung zu bestätigen: <br />
+{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}} (ggf. auch als Button einbinden!) <br /><br />
+
+Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
+
+Liebe Grüße, <br />
+dein {{Allgemein.Admin Name}} <br />
+{{Allgemein.Admin Telefonnr}} <br />
+{{Allgemein.Admin Email}} <br />
+{{Allgemein.WirGarten Standort}}" <br /><br />
+
+_______________ <br /><br />
+
+Folgende Token sind hier relevant: <br />
+{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}<br />
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

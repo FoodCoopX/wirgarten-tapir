@@ -1,0 +1,174 @@
+import calendar
+import datetime
+
+from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ImproperlyConfigured
+
+from tapir.configuration.parameter import get_parameter_value
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions import config as subscription_config
+from tapir.subscriptions.models import NoticePeriod
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import ProductType, GrowingPeriod, Subscription
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_today
+
+
+class NoticePeriodManager:
+    @classmethod
+    def set_notice_period_duration(
+        cls,
+        product_type: ProductType,
+        growing_period: GrowingPeriod,
+        notice_period_duration: int | None,
+        notice_period_unit: str | None,
+    ):
+        notice_period = NoticePeriod.objects.filter(
+            product_type=product_type,
+            growing_period=growing_period,
+        ).first()
+
+        if notice_period_duration is None:
+            if notice_period is not None:
+                notice_period.delete()
+            return
+
+        if notice_period:
+            notice_period.duration = notice_period_duration
+            notice_period.unit = notice_period_unit
+            notice_period.save()
+            return
+
+        NoticePeriod.objects.create(
+            product_type=product_type,
+            growing_period=growing_period,
+            duration=notice_period_duration,
+            unit=notice_period_unit,
+        )
+
+    @classmethod
+    def get_notice_period_duration(
+        cls,
+        product_type: ProductType,
+        growing_period: GrowingPeriod,
+        cache: dict,
+    ):
+        notice_period = TapirCache.get_notice_period_object(
+            product_type=product_type, growing_period=growing_period, cache=cache
+        )
+        if notice_period:
+            return notice_period.duration
+
+        return get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+        )
+
+    @classmethod
+    def get_notice_period_unit(
+        cls,
+        product_type: ProductType,
+        growing_period: GrowingPeriod,
+        cache: dict,
+    ):
+        notice_period = TapirCache.get_notice_period_object(
+            product_type=product_type, growing_period=growing_period, cache=cache
+        )
+        if notice_period:
+            return notice_period.unit
+
+        return get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
+        )
+
+    @classmethod
+    def get_max_cancellation_date_subscription(
+        cls, subscription: Subscription, cache: dict
+    ):
+        return cls.get_max_cancellation_date_general(
+            end_date=subscription.end_date,
+            notice_period_duration=subscription.notice_period_duration,
+            notice_period_unit=subscription.notice_period_unit,
+            cache=cache,
+        )
+
+    @classmethod
+    def get_max_cancellation_date_solidarity_contribution(
+        cls, contribution: SolidarityContribution, cache: dict
+    ):
+        notice_period_duration = get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+        )
+        notice_period_unit = get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
+        )
+
+        return cls.get_max_cancellation_date_general(
+            end_date=contribution.end_date,
+            notice_period_duration=notice_period_duration,
+            notice_period_unit=notice_period_unit,
+            cache=cache,
+        )
+
+    @classmethod
+    def get_max_cancellation_date_general(
+        cls,
+        end_date: datetime.date,
+        notice_period_duration: int,
+        notice_period_unit: str,
+        cache: dict,
+    ):
+        match notice_period_unit:
+            case subscription_config.NOTICE_PERIOD_UNIT_MONTHS:
+                return cls.get_max_cancellation_date_unit_months(
+                    end_date=end_date,
+                    notice_period_duration=notice_period_duration,
+                    cache=cache,
+                )
+            case subscription_config.NOTICE_PERIOD_UNIT_WEEKS:
+                return cls.get_max_cancellation_date_unit_weeks(
+                    end_date=end_date,
+                    notice_period_duration=notice_period_duration,
+                    cache=cache,
+                )
+            case _:
+                raise ImproperlyConfigured(
+                    f"Unknown notice period unit: {notice_period_unit}"
+                )
+
+    @classmethod
+    def get_max_cancellation_date_unit_weeks(
+        cls, end_date: datetime.date | None, notice_period_duration: int, cache: dict
+    ):
+        if end_date is None:
+            return get_today(cache=cache) + datetime.timedelta(
+                days=notice_period_duration * 7
+            )
+
+        return end_date - datetime.timedelta(days=notice_period_duration * 7)
+
+    @classmethod
+    def get_max_cancellation_date_unit_months(
+        cls, end_date: datetime.date | None, notice_period_duration: int, cache: dict
+    ):
+        if end_date is None:
+            return get_today(cache=cache) + relativedelta(months=notice_period_duration)
+
+        max_date = end_date
+        for _ in range(notice_period_duration):
+            max_date = max_date.replace(day=1) - datetime.timedelta(days=1)
+
+        _, nb_days_in_month_subscription_end_date = calendar.monthrange(
+            end_date.year, end_date.month
+        )
+        subscription_ends_on_last_day_of_month = (
+            nb_days_in_month_subscription_end_date == end_date.day
+        )
+        if subscription_ends_on_last_day_of_month:
+            return max_date
+
+        _, nb_days_in_month = calendar.monthrange(max_date.year, max_date.month)
+        target_day = end_date.day
+        if target_day > nb_days_in_month:
+            target_day = nb_days_in_month
+
+        return max_date.replace(day=target_day)

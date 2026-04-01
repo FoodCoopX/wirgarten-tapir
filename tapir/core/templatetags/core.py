@@ -1,18 +1,26 @@
 from django import template
+from django.conf import settings
+from django.core.handlers.wsgi import WSGIRequest
 from django.core.paginator import Paginator
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 from tapir.core.models import SidebarLinkGroup
+from tapir.subscriptions.views.confirmations import (
+    MemberDataToConfirmApiView,
+)
 from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
-from tapir.wirgarten.models import Subscription, CoopShareTransaction, WaitingListEntry
+from tapir.wirgarten.models import (
+    WaitingListEntry,
+)
+from tapir.wirgarten.utils import is_debug_instance
 
 register = template.Library()
 
 
 @register.inclusion_tag("core/sidebar_links.html", takes_context=True)
 def sidebar_links(context):
-    groups = get_sidebar_link_groups(context["request"])
+    groups = get_sidebar_link_groups(context["request"], cache=context.get("cache", {}))
 
     for group in groups:
         for link in group.links:
@@ -23,16 +31,16 @@ def sidebar_links(context):
     return context
 
 
-def get_sidebar_link_groups(request):
+def get_sidebar_link_groups(request, cache: dict):
     groups = []
 
     if request.user.has_perm(Permission.Coop.VIEW):
-        add_admin_links(groups, request)
+        add_admin_links(groups, request, cache=cache)
 
     return groups
 
 
-def add_admin_links(groups, request):
+def add_admin_links(groups, request, cache: dict):
     debug_group = SidebarLinkGroup(name=_("Debug"))
     debug_group.add_link(
         display_name=_("Exportierte Dateien"),
@@ -49,6 +57,12 @@ def add_admin_links(groups, request):
         material_icon="event_repeat",
         url=reverse_lazy("wirgarten:jobs"),
     )
+    if is_debug_instance():
+        debug_group.add_link(
+            display_name=_("Test data"),
+            material_icon="reset_wrench",
+            url=reverse_lazy("utils:reset_test_data"),
+        )
 
     admin_group = SidebarLinkGroup(name=_("Administration"))
     admin_group.add_link(
@@ -64,7 +78,7 @@ def add_admin_links(groups, request):
         )
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
-            display_name=_("Anbauperiode & Produkte"),
+            display_name=_("Vertragsperiode & Produkte"),
             material_icon="agriculture",
             url=reverse_lazy("wirgarten:product"),
         )
@@ -85,8 +99,25 @@ def add_admin_links(groups, request):
     if request.user.has_perm(Permission.Payments.VIEW):
         admin_group.add_link(
             display_name=_("Lastschrift"),
-            material_icon="account_balance",
+            material_icon="euro",
             url=reverse_lazy("wirgarten:payment_transactions"),
+        )
+        admin_group.add_link(
+            display_name=_("Gutschriften"),
+            material_icon="euro",
+            url=reverse_lazy("payments:credit_list"),
+        )
+
+    if request.user.has_perm(Permission.Coop.MANAGE):
+        admin_group.add_link(
+            display_name=_("CSV-Exports"),
+            material_icon="csv",
+            url=reverse_lazy("generic_exports:csv_export_editor"),
+        )
+        admin_group.add_link(
+            display_name=_("PDF-Exports"),
+            material_icon="picture_as_pdf",
+            url=reverse_lazy("generic_exports:pdf_export_editor"),
         )
 
     if request.user.has_perm(Permission.Accounts.VIEW):
@@ -99,30 +130,24 @@ def add_admin_links(groups, request):
 
         members_group.add_link(
             display_name=_("Verträge"),
-            material_icon="history_edu",
+            material_icon="contract",
             url=reverse_lazy("wirgarten:subscription_list"),
         )
 
-        coop_shares = CoopShareTransaction.objects.filter(
-            admin_confirmed__isnull=True,
-            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-        ).count()
-        product_shares = Subscription.objects.filter(
-            admin_confirmed__isnull=True
-        ).count()
-
         members_group.add_link(
-            display_name=_("Neue Zeichnungen"),
-            material_icon="approval_delegation",
-            url=reverse_lazy("wirgarten:new_contracts"),
-            notification_count=coop_shares + product_shares,
+            display_name=_("Zeichn. und Künd."),
+            material_icon="contract_edit",
+            url=reverse_lazy("wirgarten:contract_updates"),
+            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(
+                cache=cache
+            ),
         )
 
         waitlist_entries = WaitingListEntry.objects.count()
         members_group.add_link(
             display_name=_("Warteliste"),
-            material_icon="schedule",
-            url=reverse_lazy("wirgarten:waitinglist"),
+            material_icon="pending_actions",
+            url=reverse_lazy("waiting_list:list"),
             notification_count=waitlist_entries,
         )
 
@@ -130,6 +155,24 @@ def add_admin_links(groups, request):
     groups.append(admin_group)
 
     groups.append(debug_group)
+
+
+@register.inclusion_tag(
+    "core/tags/javascript_environment_variables.html", takes_context=True
+)
+def javascript_environment_variables(context):
+    request: WSGIRequest = context["request"]
+    api_root = f"{'https' if request.is_secure() else 'http'}://{request.get_host()}"
+    if request.get_host() == "localhost":
+        api_root = f"{api_root}:8000"
+
+    return {
+        "env_vars": {
+            "REACT_APP_API_ROOT": api_root,
+            "TAPIRMAIL_REACT_APP_BASENAME": settings.TAPIRMAIL_REACT_APP_BASENAME,
+            "TAPIRMAIL_REACT_APP_API_ROOT": settings.TAPIRMAIL_REACT_APP_API_ROOT,
+        },
+    }
 
 
 @register.simple_tag

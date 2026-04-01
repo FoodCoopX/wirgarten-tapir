@@ -1,12 +1,13 @@
 import importlib
 import json
-from contextlib import redirect_stdout
-from io import StringIO
 import sys
 import traceback
-from typing import Any, Dict
+from contextlib import redirect_stdout
+from io import StringIO
+from typing import Any
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import HttpResponse, JsonResponse
@@ -14,7 +15,6 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
-from django.conf import settings
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import ScheduledTask
 from tapir.wirgarten.utils import get_now
@@ -26,7 +26,7 @@ class ScheduledTasksListView(
     permission_required = Permission.Coop.MANAGE
     template_name = "wirgarten/debug/scheduled_tasks.html"
 
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
 
         time_offset = get_now() + relativedelta(days=-1)
@@ -56,7 +56,7 @@ class JobsListView(
     permission_required = Permission.Coop.MANAGE
     template_name = "wirgarten/debug/jobs.html"
 
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
 
         scheduled = []

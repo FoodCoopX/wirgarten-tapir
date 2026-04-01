@@ -1,0 +1,11 @@
+@media (max-width: 500px) {
+  .flex-col-on-small-screen {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 501px) {
+  .flex-col-on-small-screen {
+    flex-direction: row;
+  }
+}

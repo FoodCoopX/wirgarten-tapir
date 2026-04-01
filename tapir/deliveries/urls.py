@@ -1,0 +1,54 @@
+from django.urls import path
+from rest_framework.routers import DefaultRouter
+
+from tapir.deliveries import views
+
+app_name = "deliveries"
+urlpatterns = [
+    path(
+        "api/member_joker_information",
+        views.GetMemberJokerInformationView.as_view(),
+        name="member_joker_information",
+    ),
+    path(
+        "api/member_deliveries",
+        views.GetMemberDeliveriesView.as_view(),
+        name="member_deliveries",
+    ),
+    path(
+        "api/cancel_joker",
+        views.CancelJokerView.as_view(),
+        name="cancel_joker",
+    ),
+    path(
+        "api/cancel_donation",
+        views.CancelDeliveryDonationView.as_view(),
+        name="cancel_donation",
+    ),
+    path(
+        "api/use_joker",
+        views.UseJokerView.as_view(),
+        name="use_joker",
+    ),
+    path(
+        "api/use_donation",
+        views.UseDeliveryDonationView.as_view(),
+        name="use_donation",
+    ),
+    path(
+        "api/growing_period_with_adjustments",
+        views.GrowingPeriodWithDeliveryDayAdjustmentsView.as_view(),
+        name="growing_period_with_adjustments",
+    ),
+    path(
+        "api/get_dates_from_custom_cycle_delivery_weeks",
+        views.GetDatesFromCustomCycleDeliveryWeeks.as_view(),
+        name="get_dates_from_custom_cycle_delivery_weeks",
+    ),
+]
+
+router = DefaultRouter()
+router.register(
+    r"growing_periods", views.GrowingPeriodViewSet, basename="growing_periods"
+)
+urlpatterns += router.urls
