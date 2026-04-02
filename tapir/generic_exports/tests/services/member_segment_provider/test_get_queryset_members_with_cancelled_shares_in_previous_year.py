@@ -15,7 +15,7 @@ class TestGetQuerysetMembersWithCancelledSharesInPreviousYear(TapirIntegrationTe
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    def test_wip(self):
+    def test_get_queryset_members_with_cancelled_shares_in_previous_year(self):
         this_year = 2026
 
         members_with_shares_cancelled_last_year = []
