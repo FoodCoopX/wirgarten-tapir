@@ -12,7 +12,9 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.subscriptions.views.member_profile import UpdateSubscriptionsApiView
+from tapir.subscriptions.services.subscription_update_view_change_applier import (
+    SubscriptionUpdateViewChangeApplier,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import (
     Subscription,
@@ -56,6 +58,7 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
         )
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(
             test=self, now=datetime.datetime(year=2030, month=6, day=1)
         )
@@ -146,7 +149,7 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
         self.assertEqual("new account owner", member.account_owner)
         self.assertEqual("NL76RABO8675663943", member.iban)
 
-    @patch.object(UpdateSubscriptionsApiView, "apply_changes", autospec=True)
+    @patch.object(SubscriptionUpdateViewChangeApplier, "apply_changes", autospec=True)
     def test_post_orderIsInvalid_noChangesApplied(self, mock_apply_changes: Mock):
         member = MemberFactory.create()
         self.client.force_login(member)
