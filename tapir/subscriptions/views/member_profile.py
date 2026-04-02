@@ -58,7 +58,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
-from tapir.wirgarten.utils import check_permission_or_self, get_today
+from tapir.wirgarten.utils import check_permission_or_self, get_today, get_now
 
 
 class GetMemberSubscriptionDataApiView(APIView):
@@ -396,6 +396,9 @@ class UpdateSubscriptionsApiView(APIView):
         account_owner = validated_data.get("account_owner", "")
         if account_owner.strip() != "":
             member.account_owner = account_owner
+
+        if validated_data["sepa_allowed"]:
+            member.sepa_consent = get_now(cache=self.cache)
 
         member.save()
 
