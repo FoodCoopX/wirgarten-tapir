@@ -1,7 +1,7 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List
 
 from django.core.exceptions import ValidationError
 
@@ -30,7 +30,7 @@ class JokerManagementService:
 
     @classmethod
     def get_date_limit_for_joker_changes(
-        cls, reference_date: datetime.date, cache: Dict
+        cls, reference_date: datetime.date, cache: dict
     ):
         return DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
             reference_date, cache=cache
@@ -38,15 +38,15 @@ class JokerManagementService:
 
     @classmethod
     def can_joker_be_used_relative_to_date_limit(
-        cls, reference_date: datetime.date, cache: Dict
+        cls, reference_date: datetime.date, cache: dict
     ) -> bool:
         return cls.get_date_limit_for_joker_changes(
             reference_date, cache=cache
-        ) > get_today(cache=cache)
+        ) >= get_today(cache=cache)
 
     @classmethod
     def can_joker_be_used_relative_to_max_amount_per_growing_period(
-        cls, member: Member, reference_date: datetime.date, cache: Dict
+        cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> bool:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=reference_date, cache=cache
@@ -63,7 +63,7 @@ class JokerManagementService:
         return nb_used_jokers_in_growing_period < growing_period.max_jokers_per_member
 
     @classmethod
-    def can_joker_be_cancelled(cls, joker: Joker, cache: Dict) -> bool:
+    def can_joker_be_cancelled(cls, joker: Joker, cache: dict) -> bool:
         return get_today(cache=cache) <= cls.get_date_limit_for_joker_changes(
             joker.date, cache=cache
         )
@@ -181,7 +181,7 @@ class JokerManagementService:
 
     @classmethod
     def can_joker_be_used_relative_to_restrictions(
-        cls, member: Member, reference_date: datetime.date, cache: Dict
+        cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> bool:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=reference_date, cache=cache
@@ -218,7 +218,7 @@ class JokerManagementService:
 
     @staticmethod
     def can_joker_be_used_relative_to_weeks_without_delivery(
-        reference_date: datetime.date, cache: Dict
+        reference_date: datetime.date, cache: dict
     ) -> bool:
         return not WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
             reference_date, cache=cache
@@ -226,6 +226,6 @@ class JokerManagementService:
 
     @classmethod
     def is_subscription_affected_by_joker(
-        cls, subscription: Subscription, cache: Dict
+        cls, subscription: Subscription, cache: dict
     ) -> bool:
         return subscription in TapirCache.get_subscriptions_affected_by_jokers(cache)

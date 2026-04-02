@@ -13,7 +13,7 @@ services:
 
   web:
     build: .
-    command: bash -c "poetry lock && poetry install && poetry run python manage.py collectstatic --noinput &&
+    command: bash -c "poetry lock && poetry install &&
                       poetry run python manage.py compilemessages --ignore \".venv\" &&
                       poetry run python manage.py runserver_plus 0.0.0.0:8000 --reloader-type=stat"
     volumes:
@@ -24,7 +24,6 @@ services:
       DJANGO_VITE_DEBUG: True
     depends_on:
       - db
-      - keycloak
       - redis
     ports:
       - "8000:8000"
@@ -72,12 +71,6 @@ services:
     depends_on:
       - redis
       - celery
-
-  db-admin:
-    image: adminer
-    ports:
-      - "8280:8080"
-
   vite:
     build:
       context: .
@@ -87,6 +80,7 @@ services:
       - '5173:5173'
     volumes:
       - .:/app
+      - vite_node_modules:/app/node_modules
 
 volumes:
-  nginx-certs-volume:
+  vite_node_modules:

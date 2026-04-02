@@ -35,7 +35,6 @@ from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
-from tapir.deliveries.serializers import PublicGrowingPeriodSerializer
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -508,6 +507,7 @@ class BestellWizardBaseDataApiView(APIView):
             "contact_mail_address": ParameterKeys.SITE_EMAIL,
             "solidarity_contribution_default": ParameterKeys.SOLIDARITY_DEFAULT,
             "feedback_step_enabled": ParameterKeys.BESTELLWIZARD_STEP13_ENABLED,
+            "solidarity_step_position": ParameterKeys.BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
         }
         return cls.build_dictionary_from_config_parameters(
             serializer_key_to_parameter_key_map, cache
@@ -563,6 +563,9 @@ class BestellWizardBaseDataApiView(APIView):
             "step14b_text": ParameterKeys.BESTELLWIZARD_STEP14B_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
             "label_student_checkbox": ParameterKeys.LABEL_STUDENT_CHECKBOX,
+            "student_checkbox_explanation_text": ParameterKeys.STUDENT_CHECKBOX_EXPLANATION_TEXT,
+            "step10_flag_student": ParameterKeys.BESTELLWIZARD_STEP10_FLAG_STUDENT,
+            "step10_text_student": ParameterKeys.BESTELLWIZARD_STEP10_TEXT_STUDENT,
         }
         return cls.build_dictionary_from_config_parameters(
             string_id_to_parameter_key_map, cache
@@ -710,12 +713,12 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         response_data = {}
         for pickup_location_id in PickupLocation.objects.values_list("id", flat=True):
             response_data[pickup_location_id] = {
-                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_product_type(
                     reference_date=reference_date,
                     pickup_location_id=pickup_location_id,
-                    delivery_cycle=TapirCache.get_product_type_by_id(
+                    product_type=TapirCache.get_product_type_by_id(
                         cache=self.cache, product_type_id=product_type_id
-                    ).delivery_cycle,
+                    ),
                     check_for_weeks_without_delivery=True,
                     cache=self.cache,
                 )
@@ -864,14 +867,17 @@ class PublicProductPricesApiView(APIView):
         parameters=[OpenApiParameter("growing_period_id", type=str)],
     )
     def get(self, request):
+        cache = {}
+
         growing_period = get_object_or_404(
             GrowingPeriod, id=request.query_params.get("growing_period_id")
         )
-        contract_start_date = PublicGrowingPeriodSerializer.get_contract_start_date(
-            growing_period
+        contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period, apply_buffer_time=True, cache=cache
+            )
         )
 
-        cache = {}
         prices_by_product_id = {
             product.id: get_product_price(
                 product=product, reference_date=contract_start_date, cache=cache

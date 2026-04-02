@@ -1,4 +1,8 @@
-import { PublicPickupLocation, type PublicProductType, WaitingListEntryDetails } from "../../api-client";
+import {
+  PublicPickupLocation,
+  type PublicProductType,
+  WaitingListEntryDetails,
+} from "../../api-client";
 import { BestellWizardStep } from "../types/BestellWizardStep.ts";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";

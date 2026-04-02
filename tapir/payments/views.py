@@ -72,7 +72,7 @@ class GetFutureMemberPaymentsApiView(APIView):
 
         member_payments = self.get_due_and_future_payments(member_id)
         extended_payments = self.build_extended_payments(
-            member_id=member_id, member_payments=member_payments
+            member_id=member_id, member_payments=member_payments, cache=self.cache
         )
 
         member_credits = MemberCredit.objects.filter(
@@ -89,6 +89,9 @@ class GetFutureMemberPaymentsApiView(APIView):
                         ].due_date,
                     ),
                     "credits": member_credits,
+                    "trial_period_enabled": get_parameter_value(
+                        key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                    ),
                 }
             ).data
         )
@@ -125,18 +128,17 @@ class GetFutureMemberPaymentsApiView(APIView):
             current_month = get_first_of_next_month(current_month)
         return member_payments
 
-    def build_extended_payments(self, member_id, member_payments):
+    @classmethod
+    def build_extended_payments(cls, member_id, member_payments, cache: dict):
         extended_payments = []
         existing_subscriptions = [
             subscription
-            for subscription in TapirCache.get_all_subscriptions(cache=self.cache)
+            for subscription in TapirCache.get_all_subscriptions(cache=cache)
             if subscription.member_id == member_id
         ]
         existing_contributions = [
             contribution
-            for contribution in TapirCache.get_all_solidarity_contributions(
-                cache=self.cache
-            )
+            for contribution in TapirCache.get_all_solidarity_contributions(cache=cache)
             if contribution.member_id == member_id
         ]
         for payment in member_payments:
@@ -152,17 +154,19 @@ class GetFutureMemberPaymentsApiView(APIView):
                     MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
                 ):
                     solidarity_contributions = (
-                        self.get_relevant_solidarity_contributions(
+                        cls.get_relevant_solidarity_contributions(
                             existing_contributions=existing_contributions,
                             member_id=member_id,
                             payment=payment,
+                            cache=cache,
                         )
                     )
                 case _:
-                    subscriptions = self.get_relevant_subscriptions(
+                    subscriptions = cls.get_relevant_subscriptions(
                         existing_subscriptions=existing_subscriptions,
                         member_id=member_id,
                         payment=payment,
+                        cache=cache,
                     )
 
             extended_payments.append(
@@ -175,13 +179,16 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
         return extended_payments
 
-    def get_relevant_subscriptions(self, existing_subscriptions, member_id, payment):
+    @classmethod
+    def get_relevant_subscriptions(
+        cls, existing_subscriptions, member_id, payment, cache: dict
+    ):
         planned_renewed_subscriptions = [
             AutomaticSubscriptionRenewalService.build_renewed_subscription(
-                subscription=subscription, cache=self.cache
+                subscription=subscription, cache=cache
             )
             for subscription in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
-                reference_date=payment.due_date, cache=self.cache
+                reference_date=payment.due_date, cache=cache
             )
             if subscription.member_id == member_id
         ]
@@ -199,15 +206,16 @@ class GetFutureMemberPaymentsApiView(APIView):
         ]
         return subscriptions
 
+    @classmethod
     def get_relevant_solidarity_contributions(
-        self, existing_contributions, member_id, payment
+        cls, existing_contributions, member_id, payment, cache: dict
     ):
         planned_renewed_contributions = [
             AutomaticSolidarityContributionRenewalService.build_renewed_contribution(
-                contribution=contribution, cache=self.cache
+                contribution=contribution, cache=cache
             )
             for contribution in AutomaticSolidarityContributionRenewalService.get_contributions_that_will_be_renewed(
-                reference_date=payment.due_date, cache=self.cache
+                reference_date=payment.due_date, cache=cache
             )
             if contribution.member_id == member_id
         ]
@@ -222,6 +230,66 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
         ]
         return contributions
+
+
+class GetPastMemberPaymentsApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: FuturePaymentsResponseSerializer},
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        if not request.user.has_perm(
+            Permission.Coop.MANAGE
+        ) and not get_parameter_value(
+            ParameterKeys.MEMBERS_CAN_SEE_OWN_PAYMENTS, cache=self.cache
+        ):
+            raise PermissionDenied()
+
+        member_payments = self.get_past_payments(member_id)
+        extended_payments = GetFutureMemberPaymentsApiView.build_extended_payments(
+            member_id=member_id, member_payments=member_payments, cache=self.cache
+        )
+
+        member_credits = MemberCredit.objects.filter(
+            member_id=member_id, due_date__lte=get_today(cache=self.cache)
+        ).order_by("-due_date")
+
+        return Response(
+            FuturePaymentsResponseSerializer(
+                {
+                    "payments": sorted(
+                        extended_payments,
+                        key=lambda extended_payment: extended_payment[
+                            "payment"
+                        ].due_date,
+                        reverse=True,
+                    ),
+                    "credits": member_credits,
+                    "trial_period_enabled": get_parameter_value(
+                        key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                    ),
+                }
+            ).data
+        )
+
+    def get_past_payments(self, member_id):
+        mandate_ref_ids = MandateReference.objects.filter(
+            member_id=member_id
+        ).values_list("ref", flat=True)
+
+        member_payments = set(
+            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids).filter(
+                due_date__lte=get_today(cache=self.cache)
+            )
+        )
+
+        return member_payments
 
 
 class GetMemberPaymentRhythmDataApiView(APIView):

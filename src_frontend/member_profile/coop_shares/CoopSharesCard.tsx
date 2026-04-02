@@ -132,7 +132,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
               variant={"outline-primary"}
               icon={"add"}
               onClick={() => {
-                if (adminVersion) {
+                if (adminVersion && transactions.length == 0) {
                   setShowAdminModal(true);
                   return;
                 }

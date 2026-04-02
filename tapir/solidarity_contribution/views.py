@@ -1,3 +1,4 @@
+import datetime
 import decimal
 from decimal import Decimal
 
@@ -24,6 +25,7 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -42,15 +44,24 @@ class MemberSolidarityContributionsApiView(APIView):
         check_permission_or_self(member_id, request)
         cache = {}
 
+        change_valid_from = (
+            UpdateMemberSolidarityContributionApiView.get_base_change_date(
+                cache=cache,
+            )
+        )
+
+        alternative_change_valid_from = (
+            UpdateMemberSolidarityContributionApiView.get_alternative_change_date(
+                base_change_date=change_valid_from, member_id=member_id, cache=cache
+            )
+        )
+
         data = {
             "contributions": SolidarityContribution.objects.filter(
                 member_id=member_id
             ).order_by("start_date"),
-            "change_valid_from": UpdateMemberSolidarityContributionApiView.get_change_date(
-                member=Member.objects.get(id=member_id),
-                start_contribution_now=True,
-                cache=cache,
-            ),
+            "change_valid_from": change_valid_from,
+            "alternative_change_valid_from": alternative_change_valid_from,
             "user_can_set_lower_value": request.user.has_perm(Permission.Coop.MANAGE),
             "user_can_update_contribution": request.user.has_perm(
                 Permission.Coop.MANAGE
@@ -149,20 +160,49 @@ class UpdateMemberSolidarityContributionApiView(APIView):
 
     @classmethod
     def get_change_date(cls, start_contribution_now: bool, member: Member, cache: dict):
-        change_date = ContractStartDateCalculator.get_next_contract_start_date(
+        base_change_date = ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=get_today(cache=cache),
             apply_buffer_time=False,
             cache=cache,
         )
         if start_contribution_now:
-            return change_date
+            return base_change_date
 
-        first_contribution = (
-            SolidarityContribution.objects.filter(member=member)
-            .order_by("start_date")
-            .first()
+        alternative_change_date = cls.get_alternative_change_date(
+            base_change_date=base_change_date, member_id=member.id, cache=cache
         )
-        if first_contribution is None:
-            return change_date
+        if alternative_change_date is None:
+            return base_change_date
 
-        return max(change_date, first_contribution.start_date)
+        return alternative_change_date
+
+    @classmethod
+    def get_base_change_date(cls, cache: dict):
+        return ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=cache),
+            apply_buffer_time=False,
+            cache=cache,
+        )
+
+    @classmethod
+    def get_alternative_change_date(
+        cls, base_change_date: datetime.date, member_id: str, cache: dict
+    ):
+        contracts = TapirCache.get_all_solidarity_contributions(cache=cache).union(
+            TapirCache.get_all_subscriptions(cache=cache)
+        )
+        alternative_change_valid_from = min(
+            [
+                contract.start_date
+                for contract in contracts
+                if contract.member_id == member_id
+            ],
+            default=None,
+        )
+
+        if (
+            alternative_change_valid_from is not None
+            and alternative_change_valid_from < base_change_date
+        ):
+            alternative_change_valid_from = None
+        return alternative_change_valid_from

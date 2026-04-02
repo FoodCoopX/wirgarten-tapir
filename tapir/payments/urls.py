@@ -10,6 +10,11 @@ urlpatterns = [
         name="member_future_payments",
     ),
     path(
+        "api/member_past_payments",
+        views.GetPastMemberPaymentsApiView.as_view(),
+        name="member_past_payments",
+    ),
+    path(
         "api/member_payment_rhythm_data",
         views.GetMemberPaymentRhythmDataApiView.as_view(),
         name="member_payment_rhythm_data",

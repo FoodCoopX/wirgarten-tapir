@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 from tapir.utils.services.tapir_cache import TapirCache
 
@@ -7,7 +6,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 class WeeksWithoutDeliveryService:
     @staticmethod
     def is_delivery_cancelled_this_week(
-        delivery_date: datetime.date, cache: Dict
+        delivery_date: datetime.date, cache: dict
     ) -> bool:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=delivery_date, cache=cache

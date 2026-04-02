@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Callable
+from typing import Callable
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -31,7 +31,7 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def must_subscription_be_renewed(
-        cls, subscription: Subscription, cache: Dict
+        cls, subscription: Subscription, cache: dict
     ) -> bool:
         if not get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
@@ -63,8 +63,10 @@ class AutomaticSubscriptionRenewalService:
         return True
 
     @classmethod
-    def build_renewed_subscription(cls, subscription: Subscription, cache: Dict):
-        next_growing_period = get_next_growing_period(cache=cache)
+    def build_renewed_subscription(cls, subscription: Subscription, cache: dict):
+        next_growing_period = get_next_growing_period(
+            reference_date=subscription.end_date, cache=cache
+        )
 
         trial_disabled, trial_end_date_override = cls.get_renewed_trial_data(
             subscription, cache=cache
@@ -93,7 +95,7 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def get_renewed_trial_data(
-        cls, old_obj: Subscription | SolidarityContribution, cache: Dict
+        cls, old_obj: Subscription | SolidarityContribution, cache: dict
     ):
         # returns (trial_disabled, trial_end_date_override)
 
@@ -110,7 +112,7 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def get_subscriptions_that_will_be_renewed(
-        cls, reference_date: datetime.date, cache: Dict
+        cls, reference_date: datetime.date, cache: dict
     ) -> set[Subscription]:
         if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
             return set()
@@ -155,7 +157,7 @@ class AutomaticSubscriptionRenewalService:
         cls,
         reference_date: datetime.date,
         subscription_filter: Callable[[Subscription], bool],
-        cache: Dict,
+        cache: dict,
     ):
         subscriptions = TapirCache.get_subscriptions_active_at_date(
             reference_date=reference_date, cache=cache

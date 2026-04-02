@@ -5,6 +5,7 @@ import {
   PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
+  type SolidarityStepPositionEnum,
 } from "../../api-client";
 
 export type BestellWizardSettings = {
@@ -34,6 +35,7 @@ export type BestellWizardSettings = {
   solidarityContributionDefault: number;
   feedbackStepEnabled: boolean;
   growingPeriodChoices: PublicGrowingPeriod[];
+  solidarityStepPosition: SolidarityStepPositionEnum;
   strings: BestellWizardStrings;
   images: BestellWizardImages;
   debug: boolean;

@@ -82,8 +82,8 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
             lambda member, reference_date, cache: rhythms[member]
         )
 
-        payment_m1 = PaymentFactory.build(mandate_ref__ref="1")
-        payment_m2 = PaymentFactory.build(mandate_ref__ref="2")
+        payment_m1 = PaymentFactory.build()
+        payment_m2 = PaymentFactory.build()
         payments = {member_1: payment_m1, member_2: payment_m2, member_3: None}
 
         mock_build_payment_for_contract_and_member.side_effect = (
@@ -193,8 +193,8 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
             lambda member, reference_date, cache: rhythms[member]
         )
 
-        payment_m1 = PaymentFactory.build(mandate_ref__ref="1")
-        payment_m2 = PaymentFactory.build(mandate_ref__ref="2")
+        payment_m1 = PaymentFactory.build()
+        payment_m2 = PaymentFactory.build()
         payments = {member_1: payment_m1, member_2: payment_m2, member_3: None}
 
         mock_build_payment_for_contract_and_member.side_effect = (

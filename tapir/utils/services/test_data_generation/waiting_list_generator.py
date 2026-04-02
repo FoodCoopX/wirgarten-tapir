@@ -1,7 +1,6 @@
 import datetime
 import itertools
 import random
-from typing import Dict
 
 from faker import Faker
 
@@ -149,7 +148,7 @@ class WaitingListGenerator:
 
     @classmethod
     def build_pickup_location_wishes(
-        cls, all_pickup_locations, entry: WaitingListEntry, cache: Dict
+        cls, all_pickup_locations, entry: WaitingListEntry, cache: dict
     ):
         possible_pickup_locations = set(all_pickup_locations)
         if entry.member is not None:
@@ -186,7 +185,7 @@ class WaitingListGenerator:
 
     @classmethod
     def build_product_wishes(
-        cls, entry: WaitingListEntry, cache: Dict, all_product_types
+        cls, entry: WaitingListEntry, cache: dict, all_product_types
     ):
         possible_product_types = set(all_product_types)
         nb_product_wishes = random.randint(1, min(3, len(possible_product_types)))

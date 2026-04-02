@@ -2,6 +2,10 @@ import typing
 
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta, get_parameter_value
+from tapir.solidarity_contribution.config import (
+    OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
+    BESTELL_WIZARD_SOLIDARITY_STEP_POSITION_BEFORE_PERSONAL_DATA,
+)
 from tapir.wirgarten.constants import ParameterCategory, HTML_ALLOWED_TEXT
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -61,6 +65,18 @@ class ParameterDefinitionsBestellwizard:
                 ),
                 textarea=True,
             ),
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
+            label="Position der Schritt 'Solidarbeitrag' in der Reihenfolge der Seiten",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=BESTELL_WIZARD_SOLIDARITY_STEP_POSITION_BEFORE_PERSONAL_DATA,
+            category=ParameterCategory.BESTELLWIZARD,
+            description="",
+            meta=ParameterMeta(options=OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION),
             order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1

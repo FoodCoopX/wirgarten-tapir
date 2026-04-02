@@ -2,7 +2,6 @@ import datetime
 import uuid
 from decimal import Decimal
 from functools import partial
-from typing import Dict
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -685,7 +684,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
-    created_at = models.DateTimeField(default=partial(timezone.now), null=False)
     consent_ts = models.DateTimeField(null=True)
     withdrawal_consent_ts = models.DateTimeField(null=True)
     trial_disabled = models.BooleanField(default=False)
@@ -708,20 +706,17 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["member"]),
         ]
 
-    def total_price(self, reference_date=None, cache: Dict = None) -> Decimal:
+    def total_price(self, reference_date=None, cache: dict = None) -> Decimal:
         if self.price_override is not None:
             return self.price_override
 
         if reference_date is None:
             reference_date = max(self.start_date, get_today(cache=cache))
 
-        if not hasattr(self, "_total_price"):
-            from tapir.wirgarten.service.products import get_product_price
+        from tapir.wirgarten.service.products import get_product_price
 
-            price = get_product_price(self.product, reference_date, cache=cache).price
-            self._total_price = self.quantity * price
-
-        return self._total_price
+        price = get_product_price(self.product, reference_date, cache=cache).price
+        return self.quantity * price
 
     @property
     def total_price_without_soli(self):
@@ -744,7 +739,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
         return self._total_price_without_soli
 
-    def get_used_capacity(self, cache: Dict):
+    def get_used_capacity(self, cache: dict):
         today = get_today(cache=cache)
         if not hasattr(self, "_used_capacity"):
             from tapir.wirgarten.service.products import get_product_price
@@ -786,7 +781,9 @@ class ExportedFile(TapirModel):
     name = models.CharField(max_length=256, null=False)
     type = models.CharField(max_length=8, choices=FileType.choices, null=False)
     file = models.BinaryField(null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
+
+    def __str__(self):
+        return f"{self.type}, {self.created_at}"
 
 
 class PaymentTransaction(TapirModel):
@@ -795,7 +792,6 @@ class PaymentTransaction(TapirModel):
     The relevant payments must reference the transaction in the same step.
     """
 
-    created_at = models.DateTimeField()
     file = models.ForeignKey(ExportedFile, on_delete=models.PROTECT)
     type = models.CharField(max_length=100)
 
@@ -827,19 +823,13 @@ class Payment(TapirModel):
     subscription_payment_range_end = models.DateField(null=True)
 
     class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=["mandate_ref", "due_date", "type"],
-                name="unique_mandate_ref_date",
-            )
-        ]
         indexes = [
             Index(fields=["mandate_ref"], name="idx_payment_mandate_ref"),
             Index(fields=["due_date"], name="idx_payment_due_date"),
         ]
 
     def __str__(self):
-        return f"[{self.due_date}] {format_currency(self.amount)} €, edited={self.edited}, transaction={self.transaction}, type={self.type}, {self.mandate_ref.ref}"
+        return f"{format_currency(self.amount)} €, due_date:{self.due_date}, type:{self.type}, range:{self.subscription_payment_range_start} to {self.subscription_payment_range_end}, member:{self.mandate_ref.member}"
 
 
 class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
@@ -1104,7 +1094,6 @@ class WaitingListEntry(TapirModel):
     postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
     city = models.CharField(_("City"), max_length=50, blank=True)
     country = CountryField(_("Country"), blank=True, default="DE")
-    created_at = models.DateTimeField(auto_now_add=True)
     privacy_consent = models.DateTimeField()
     number_of_coop_shares = models.PositiveSmallIntegerField()
     # if desired_start_date is null, the wish is "as soon as possible"
@@ -1193,8 +1182,6 @@ class ScheduledTask(TapirModel):
         max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
     )
     error_message = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def execute(self):
         from importlib import import_module

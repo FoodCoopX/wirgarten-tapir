@@ -12,13 +12,14 @@ function compareOpeningTimes(
   }
 
   return (
-    parseInt(a.openTime.split(":")[0]) - parseInt(b.openTime.split(":")[0])
+    Number.parseInt(a.openTime.split(":")[0]) -
+    Number.parseInt(b.openTime.split(":")[0])
   );
 }
 
 export function formatOpeningTimes(pickupLocation: PublicPickupLocation) {
   return pickupLocation.openingTimes
-    .sort(compareOpeningTimes)
+    .toSorted(compareOpeningTimes)
     .map((openingTime) => {
       return (
         openingTime.dayOfWeekString.substring(0, 2) +

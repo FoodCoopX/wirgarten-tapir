@@ -1,5 +1,3 @@
-from typing import Dict
-
 from dateutil.relativedelta import relativedelta
 from django.db.models import F, Sum
 from django.views import generic
@@ -54,7 +52,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         return self.kwargs["pk"]
 
     def get_context_data(self, **kwargs):
-        context = super(MemberDetailView, self).get_context_data()
+        context = super().get_context_data(**kwargs)
 
         cache = {}
         today = kwargs.get("start_date", get_today(cache=cache))
@@ -218,7 +216,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         return context
 
-    def add_renewal_notice_context(self, context, next_month, today, cache: Dict):
+    def add_renewal_notice_context(self, context, next_month, today, cache: dict):
         """
         Renewal notice:
         - show_renewal_warning = less than 3 months before next period starts
@@ -364,7 +362,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         key: str,
         contract_end_date: str,
         next_growing_period: GrowingPeriod,
-        cache: Dict,
+        cache: dict,
         **kwargs,
     ):
         return get_parameter_value(key, cache=cache).format(

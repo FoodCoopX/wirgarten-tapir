@@ -98,7 +98,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
 
   function getCoopSharesTitle() {
     if (studentStatusEnabled) {
-      return "Keine Mitgliedschaft in der Genossenschaft (student)";
+      return settings.strings.step10FlagStudent;
     }
 
     return (
@@ -127,20 +127,20 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     );
   }
 
-  function getFirstDelivery(productTypeId: string) {
+  function getDateOfFirstDelivery(productTypeId: string) {
     const pickupLocation = getFirstPickupLocationWithCapacity(
       selectedPickupLocations,
       pickupLocationsWithCapacityFull,
     );
     if (!pickupLocation) {
-      return "";
+      return undefined;
     }
     const pickupLocationId = pickupLocation.id!;
 
     if (
       !(pickupLocationId in firstDeliveryDatesByPickupLocationAndProductType)
     ) {
-      return "";
+      return undefined;
     }
 
     if (
@@ -149,14 +149,12 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
         firstDeliveryDatesByPickupLocationAndProductType[pickupLocationId]
       )
     ) {
-      return "";
+      return undefined;
     }
 
-    return formatDateNumeric(
-      firstDeliveryDatesByPickupLocationAndProductType[pickupLocationId][
-        productTypeId
-      ],
-    );
+    return firstDeliveryDatesByPickupLocationAndProductType[pickupLocationId][
+      productTypeId
+    ];
   }
 
   function getPaymentRhythmDisplay(givenRhythm: string) {
@@ -177,8 +175,10 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     );
   }
 
-  function getEndOfTrialPeriod() {
-    return dayjs(contractStartDate)
+  function getEndOfTrialPeriod(productTypeId: string) {
+    const firstDelivery = dayjs(getDateOfFirstDelivery(productTypeId));
+    return firstDelivery
+      .subtract(firstDelivery.get("day") - 1, "days")
       .add(settings.trialPeriodLengthInWeeks, "week")
       .subtract(1, "day")
       .toDate();
@@ -223,7 +223,9 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                             <li>
                               Erste Lieferung:{" "}
                               {selectedPickupLocations.length > 0 &&
-                                getFirstDelivery(productType.id!)}
+                                formatDateNumeric(
+                                  getDateOfFirstDelivery(productType.id!),
+                                )}
                             </li>
                             <li>
                               Aktive Verteilstation:{" "}
@@ -262,7 +264,9 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         settings.trialPeriodLengthInWeeks > 0 && (
                           <li>
                             Probezeit bis{" "}
-                            {formatDateNumeric(getEndOfTrialPeriod())}
+                            {formatDateNumeric(
+                              getEndOfTrialPeriod(productType.id!),
+                            )}
                           </li>
                         )}
                     </ul>
@@ -289,7 +293,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                   <Accordion.Header>{getCoopSharesTitle()}</Accordion.Header>
                   <AccordionBody>
                     {studentStatusEnabled
-                      ? "Keine Anteile gezeichnet da student."
+                      ? settings.strings.step10TextStudent
                       : numberOfCoopShares +
                         " Genossenschaftsanteile à " +
                         formatCurrency(settings.priceOfAShare) +

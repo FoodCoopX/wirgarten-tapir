@@ -178,6 +178,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        referrerPolicy={"no-referrer-when-downgrade"}
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {pickupLocations.map((pickupLocation) => (

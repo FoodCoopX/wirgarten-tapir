@@ -255,6 +255,100 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetCoopShareTransactionsResponse'
           description: ''
+  /coop/api/member_banking_data:
+    get:
+      operationId: coop_api_member_banking_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - coop
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberBankDataResponse'
+          description: ''
+    patch:
+      operationId: coop_api_member_banking_data_partial_update
+      tags:
+      - coop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateMemberBankDataRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateMemberBankDataRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateMemberBankDataRequestRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /coop/api/member_personal_data:
+    get:
+      operationId: coop_api_member_personal_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - coop
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberProfilePersonalDataResponse'
+          description: ''
+    patch:
+      operationId: coop_api_member_personal_data_partial_update
+      tags:
+      - coop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberProfilePersonalDataRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberProfilePersonalDataRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberProfilePersonalDataRequestRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /coop/api/minimum_number_of_shares:
     get:
       operationId: coop_api_minimum_number_of_shares_retrieve
@@ -512,6 +606,34 @@ paths:
             application/json:
               schema:
                 type: string
+          description: ''
+  /deliveries/api/get_dates_from_custom_cycle_delivery_weeks:
+    post:
+      operationId: deliveries_api_get_dates_from_custom_cycle_delivery_weeks_create
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomCycleDeliveryWeeksRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomCycleDeliveryWeeksRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomCycleDeliveryWeeksRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDatesFromCustomCycleDeliveryWeeksResponse'
           description: ''
   /deliveries/api/growing_period_with_adjustments:
     get:
@@ -1294,6 +1416,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/FuturePaymentsResponse'
           description: ''
+  /payments/api/member_past_payments:
+    get:
+      operationId: payments_api_member_past_payments_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FuturePaymentsResponse'
+          description: ''
   /payments/api/member_payment_rhythm_data:
     get:
       operationId: payments_api_member_payment_rhythm_data_retrieve
@@ -1631,7 +1774,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
     patch:
       operationId: products_api_extended_product_type_partial_update
@@ -1657,7 +1800,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /products/api/product_types_without_capacity:
     get:
@@ -4064,28 +4207,6 @@ paths:
                 items:
                   $ref: '#/components/schemas/MissingTrigger'
           description: ''
-  /tapirmail/api/segment/available_filters/:
-    get:
-      operationId: tapirmail_api_segment_available_filters_retrieve
-      description: Get a list of available filters.
-      tags:
-      - tapirmail
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  filters:
-                    type: array
-                    items:
-                      type: string
-          description: ''
   /tapirmail/api/segment/available_segments/:
     get:
       operationId: tapirmail_api_segment_available_segments_retrieve
@@ -5128,6 +5249,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublicGrowingPeriod'
+        solidarity_step_position:
+          $ref: '#/components/schemas/SolidarityStepPositionEnum'
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
         images:
@@ -5161,6 +5284,7 @@ components:
       - solidarity_contribution_choices
       - solidarity_contribution_default
       - solidarity_contribution_minimum
+      - solidarity_step_position
       - strings
       - student_status_allowed
       - theme
@@ -5410,6 +5534,10 @@ components:
           type: string
         step10_title:
           type: string
+        step10_flag_student:
+          type: string
+        step10_text_student:
+          type: string
         step11_title:
           type: string
         step11_privacy_policy_label:
@@ -5439,9 +5567,13 @@ components:
           format: uri
         label_student_checkbox:
           type: string
+        student_checkbox_explanation_text:
+          type: string
       required:
       - label_student_checkbox
       - privacy_policy_url
+      - step10_flag_student
+      - step10_text_student
       - step10_title
       - step11_privacy_policy_label
       - step11_privacy_policy_text
@@ -5487,6 +5619,7 @@ components:
       - step8_title
       - step9_payment_rhythm_modal_text
       - step9_title
+      - student_checkbox_explanation_text
     BlankEnum:
       enum:
       - ''
@@ -5608,10 +5741,12 @@ components:
         custom_cancellation_reason:
           type: string
           minLength: 1
+        cancel_solidarity_contribution:
+          type: boolean
       required:
       - cancel_coop_membership
+      - cancel_solidarity_contribution
       - member_id
-      - product_ids
     CancelSubscriptionsViewResponse:
       type: object
       properties:
@@ -5633,17 +5768,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductForCancellation'
+        solidarity_contribution_data:
+          $ref: '#/components/schemas/SolidarityContributionCancellationData'
         legal_status:
           $ref: '#/components/schemas/LegalStatusEnum'
         default_cancellation_reasons:
           type: array
           items:
             type: string
+        show_trial_period_help_text:
+          type: boolean
+        trial_period_duration:
+          type: integer
+        trial_period_is_flexible:
+          type: boolean
       required:
       - can_cancel_coop_membership
       - default_cancellation_reasons
       - legal_status
+      - show_trial_period_help_text
+      - solidarity_contribution_data
       - subscribed_products
+      - trial_period_duration
+      - trial_period_is_flexible
     ChangeTypeEnum:
       enum:
       - ADDED
@@ -5662,6 +5809,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         admin_confirmed:
           type: string
           format: date-time
@@ -5698,10 +5853,12 @@ components:
           type: string
           nullable: true
       required:
+      - created_at
       - member
       - quantity
       - share_price
       - transaction_type
+      - updated_at
       - valid_at
     CountryEnum:
       enum:
@@ -6314,6 +6471,17 @@ components:
       - file_name
       - name
       - separator
+    CustomCycleDeliveryWeeksRequest:
+      type: object
+      properties:
+        custom_cycle_delivery_weeks:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: integer
+      required:
+      - custom_cycle_delivery_weeks
     DayOfWeekEnum:
       enum:
       - 0
@@ -6378,6 +6546,7 @@ components:
       - odd_weeks
       - even_weeks
       - every_four_weeks
+      - custom
       type: string
       description: |-
         * `no_delivery` - Keine Lieferung/Abholung
@@ -6385,6 +6554,7 @@ components:
         * `odd_weeks` - Jede 2. Woche (ungerade KW)
         * `even_weeks` - Jede 2. Woche (gerade KW)
         * `every_four_weeks` - Jede 4. Woche
+        * `custom` - Benutzerdefinierte Lieferwochen
     DeliveryDayAdjustment:
       type: object
       properties:
@@ -6411,14 +6581,24 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         date:
           type: string
           format: date
         member:
           type: string
       required:
+      - created_at
       - date
       - member
+      - updated_at
     DeliveryDonationWithCancellationLimit:
       type: object
       properties:
@@ -6602,11 +6782,6 @@ components:
           items:
             type: string
             maxLength: 100
-        filter_list:
-          type: array
-          items:
-            type: string
-            maxLength: 100
         static_segments_additive:
           type: array
           items:
@@ -6657,12 +6832,6 @@ components:
             minLength: 1
             maxLength: 100
         dynamic_segments_subtractive:
-          type: array
-          items:
-            type: string
-            minLength: 1
-            maxLength: 100
-        filter_list:
           type: array
           items:
             type: string
@@ -6939,10 +7108,8 @@ components:
           type: integer
         iban:
           type: string
-          minLength: 1
         account_owner:
           type: string
-          minLength: 1
         as_admin:
           type: boolean
         start_date:
@@ -7059,6 +7226,9 @@ components:
           nullable: true
         min_coop_shares:
           type: integer
+        price_per_delivery:
+          type: boolean
+          readOnly: true
       required:
       - base
       - basket_size_equivalences
@@ -7070,6 +7240,7 @@ components:
       - name
       - picking_mode
       - price
+      - price_per_delivery
       - size
       - url_of_image_in_bestellwizard
     ExtendedProductType:
@@ -7123,10 +7294,17 @@ components:
           type: string
         background_image_in_bestellwizard:
           type: string
+        custom_cycle_delivery_weeks:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: integer
       required:
       - accordions_in_bestell_wizard
       - background_image_in_bestellwizard
       - capacity
+      - custom_cycle_delivery_weeks
       - delivery_cycle
       - force_waiting_list
       - is_affected_by_jokers
@@ -7214,10 +7392,17 @@ components:
           type: string
         background_image_in_bestellwizard:
           type: string
+        custom_cycle_delivery_weeks:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: integer
       required:
       - accordions_in_bestell_wizard
       - background_image_in_bestellwizard
       - capacity
+      - custom_cycle_delivery_weeks
       - delivery_cycle
       - force_waiting_list
       - is_affected_by_jokers
@@ -7241,9 +7426,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MemberCredit'
+        trial_period_enabled:
+          type: boolean
       required:
       - credits
       - payments
+      - trial_period_enabled
     GetCoopShareTransactionsResponse:
       type: object
       properties:
@@ -7257,6 +7445,21 @@ components:
       required:
       - transactions
       - url_of_bestell_wizard
+    GetDatesFromCustomCycleDeliveryWeeksResponse:
+      type: object
+      properties:
+        custom_cycle_delivery_weeks_dates:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: string
+              format: date
+        error:
+          type: string
+      required:
+      - custom_cycle_delivery_weeks_dates
+      - error
     GroupedEmailDispatch:
       type: object
       properties:
@@ -7273,6 +7476,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         start_date:
           type: string
           format: date
@@ -7295,8 +7506,10 @@ components:
         is_available_in_bestell_wizard:
           type: boolean
       required:
+      - created_at
       - end_date
       - start_date
+      - updated_at
     GrowingPeriodRequest:
       type: object
       properties:
@@ -7373,14 +7586,24 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         date:
           type: string
           format: date
         member:
           type: string
       required:
+      - created_at
       - date
       - member
+      - updated_at
     JokerRestriction:
       type: object
       properties:
@@ -7617,6 +7840,19 @@ components:
       - last_name
       - password
       - username
+    MemberBankDataResponse:
+      type: object
+      properties:
+        iban:
+          type: string
+        account_owner:
+          type: string
+        organisation_name:
+          type: string
+      required:
+      - account_owner
+      - iban
+      - organisation_name
     MemberCredit:
       type: object
       properties:
@@ -7626,13 +7862,17 @@ components:
         amount:
           type: number
           format: double
-        due_date:
-          type: string
-          format: date
         created_at:
           type: string
           format: date-time
           readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        due_date:
+          type: string
+          format: date
         purpose:
           type: string
           maxLength: 1024
@@ -7647,6 +7887,7 @@ components:
       - due_date
       - member
       - purpose
+      - updated_at
     MemberCreditCreateRequest:
       type: object
       properties:
@@ -7840,6 +8081,40 @@ components:
       required:
       - member_id
       - shopping_cart
+    MemberProfilePersonalDataResponse:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        is_student:
+          type: boolean
+        can_edit_student:
+          type: boolean
+      required:
+      - can_edit_student
+      - city
+      - email
+      - first_name
+      - last_name
+      - phone_number
+      - postcode
+      - street
+      - street_2
     MemberSolidarityContributionsResponse:
       type: object
       properties:
@@ -7854,7 +8129,12 @@ components:
           type: boolean
         user_can_update_contribution:
           type: boolean
+        alternative_change_valid_from:
+          type: string
+          format: date
+          nullable: true
       required:
+      - alternative_change_valid_from
       - change_valid_from
       - contributions
       - user_can_set_lower_value
@@ -8352,6 +8632,38 @@ components:
         dynamic_segment_name:
           type: string
           maxLength: 100
+    PatchedMemberProfilePersonalDataRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        phone_number:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+        street_2:
+          type: string
+        postcode:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        is_student:
+          type: boolean
     PatchedPdfExportModelRequest:
       type: object
       properties:
@@ -8503,6 +8815,20 @@ components:
           type: string
           minLength: 1
           nullable: true
+    PatchedUpdateMemberBankDataRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        iban:
+          type: string
+          minLength: 1
+        account_owner:
+          type: string
+          minLength: 1
+        sepa_consent:
+          type: boolean
     PatchedWaitingListEntryRequest:
       type: object
       properties:
@@ -8584,6 +8910,14 @@ components:
         amount:
           type: number
           format: double
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         due_date:
           type: string
           format: date
@@ -8609,9 +8943,11 @@ components:
           nullable: true
       required:
       - amount
+      - created_at
       - due_date
       - mandate_ref
       - type
+      - updated_at
     PaymentStatusEnum:
       enum:
       - PAID
@@ -8626,6 +8962,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         export_segment_id:
           type: string
           maxLength: 512
@@ -8660,11 +9004,13 @@ components:
       - automated_export_cycle
       - automated_export_day
       - automated_export_hour
+      - created_at
       - export_segment_id
       - file_name
       - generate_one_file_for_every_segment_entry
       - name
       - template
+      - updated_at
     PdfExportModelRequest:
       type: object
       properties:
@@ -8776,6 +9122,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         name:
           type: string
           maxLength: 150
@@ -8824,9 +9178,11 @@ components:
       - city
       - coords_lat
       - coords_lon
+      - created_at
       - name
       - postcode
       - street
+      - updated_at
     PickupLocationCapacities:
       type: object
       properties:
@@ -8929,6 +9285,14 @@ components:
         day_of_week_string:
           type: string
           readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         day_of_week:
           allOf:
           - $ref: '#/components/schemas/DayOfWeekEnum'
@@ -8944,10 +9308,12 @@ components:
           type: string
       required:
       - close_time
+      - created_at
       - day_of_week
       - day_of_week_string
       - open_time
       - pickup_location
+      - updated_at
     PreferredLanguageEnum:
       enum:
       - de
@@ -8963,6 +9329,14 @@ components:
           maxLength: 10
         type:
           $ref: '#/components/schemas/ProductType'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         name:
           type: string
           maxLength: 128
@@ -8987,8 +9361,10 @@ components:
           maximum: 2147483647
           minimum: -2147483648
       required:
+      - created_at
       - name
       - type
+      - updated_at
     ProductBasketSizeEquivalence:
       type: object
       properties:
@@ -9022,16 +9398,42 @@ components:
         cancellation_date:
           type: string
           format: date
+        last_day_of_notice_period:
+          type: string
+          format: date
+        date_limit_for_trial_cancellation:
+          type: string
+          format: date
+        notice_period_duration:
+          type: integer
+        notice_period_unit:
+          $ref: '#/components/schemas/NoticePeriodUnitEnum'
+        subscription_end_date:
+          type: string
+          format: date
       required:
       - cancellation_date
+      - date_limit_for_trial_cancellation
       - is_in_trial
+      - last_day_of_notice_period
+      - notice_period_duration
+      - notice_period_unit
       - product
+      - subscription_end_date
     ProductType:
       type: object
       properties:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         name:
           type: string
           title: Produkt Name
@@ -9092,7 +9494,9 @@ components:
           type: string
           maxLength: 512
       required:
+      - created_at
       - name
+      - updated_at
     ProductTypeAccordionInBestellWizard:
       type: object
       properties:
@@ -9336,10 +9740,14 @@ components:
         background_image_in_bestellwizard:
           type: string
           maxLength: 512
+        price_per_delivery:
+          type: boolean
+          readOnly: true
       required:
       - accordions
       - name
       - no_delivery
+      - price_per_delivery
       - products
     PublicSubscription:
       type: object
@@ -9578,14 +9986,9 @@ components:
           type: array
           items:
             type: string
-        filter_list:
-          type: array
-          items:
-            type: string
       required:
       - dynamic_segment_names_additive
       - dynamic_segment_names_subtractive
-      - filter_list
       - mail_category_ids_additive
       - static_segment_ids_additive
       - static_segment_ids_subtractive
@@ -9617,15 +10020,9 @@ components:
           items:
             type: string
             minLength: 1
-        filter_list:
-          type: array
-          items:
-            type: string
-            minLength: 1
       required:
       - dynamic_segment_names_additive
       - dynamic_segment_names_subtractive
-      - filter_list
       - mail_category_ids_additive
       - static_segment_ids_additive
       - static_segment_ids_subtractive
@@ -9635,6 +10032,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         amount:
           type: string
           format: decimal
@@ -9659,9 +10064,33 @@ components:
           type: string
       required:
       - amount
+      - created_at
       - end_date
       - member
       - start_date
+      - updated_at
+    SolidarityContributionCancellationData:
+      type: object
+      properties:
+        exists:
+          type: boolean
+        is_in_trial:
+          type: boolean
+        cancellation_date:
+          type: string
+          format: date
+      required:
+      - cancellation_date
+      - exists
+      - is_in_trial
+    SolidarityStepPositionEnum:
+      enum:
+      - before_pickup_location
+      - before_personal_data
+      type: string
+      description: |-
+        * `before_pickup_location` - Vor der Verteilstation-Seite
+        * `before_personal_data` - Vor der persönliche Daten-Seite
     StaticSegment:
       type: object
       properties:
@@ -9822,6 +10251,14 @@ components:
           maxLength: 10
         product:
           $ref: '#/components/schemas/Product'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         admin_confirmed:
           type: string
           format: date-time
@@ -9845,9 +10282,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        created_at:
-          type: string
-          format: date-time
         consent_ts:
           type: string
           format: date-time
@@ -9885,6 +10319,7 @@ components:
         mandate_ref:
           type: string
       required:
+      - created_at
       - mandate_ref
       - member
       - notice_period_duration
@@ -9892,6 +10327,7 @@ components:
       - product
       - quantity
       - start_date
+      - updated_at
     SubscriptionChange:
       type: object
       properties:
@@ -10183,6 +10619,14 @@ components:
         id:
           type: string
           maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         first_name:
           type: string
           maxLength: 256
@@ -10214,10 +10658,6 @@ components:
           oneOf:
           - $ref: '#/components/schemas/CountryEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
         privacy_consent:
           type: string
           format: date-time
@@ -10254,6 +10694,7 @@ components:
       - number_of_coop_shares
       - phone_number
       - privacy_consent
+      - updated_at
     WaitingListEntryDetails:
       type: object
       properties:

@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import List, Dict
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -144,17 +144,18 @@ def cancel_coop_shares(
     )
 
 
-def create_mandate_ref(member: str | Member, cache: Dict | None = None):
+def create_mandate_ref(member: str | Member, cache: dict | None = None):
     """
     Generates and persists a new mandate reference for a member.
 
     :param member: the member
     """
 
-    member_id = resolve_member_id(member)
-    ref = generate_mandate_ref(member_id)
+    if isinstance(member, str):
+        member = Member.objects.get(id=member)
+    ref = generate_mandate_ref(member)
     return MandateReference.objects.create(
-        ref=ref, member_id=member_id, start_ts=get_now(cache)
+        ref=ref, member=member, start_ts=get_now(cache)
     )
 
 
@@ -167,7 +168,7 @@ le_sum = 0
 
 def get_or_create_mandate_ref(
     member: str | Member,
-    cache: Dict | None = None,
+    cache: dict | None = None,
 ) -> MandateReference:
     """
     Returns the existing mandate ref for a member of creates a new one if none exists.
@@ -251,7 +252,7 @@ def send_cancellation_confirmation_email(
     contract_end_date: datetime.date,
     subs_to_cancel: List[Subscription],
     revoke_coop_membership: bool = False,
-    cache: Dict = None,
+    cache: dict = None,
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
@@ -295,7 +296,7 @@ def send_cancellation_confirmation_email(
 
 
 def send_contract_change_confirmation(
-    member: Member, subs: List[Subscription], cache: Dict
+    member: Member, subs: List[Subscription], cache: dict
 ):
     if not len(subs):
         raise Exception(
@@ -370,12 +371,12 @@ def send_product_order_confirmation(
         if subscription.product.type.delivery_cycle == NO_DELIVERY[0]:
             continue
         at_least_one_product_with_delivery = True
-        next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+        next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
             reference_date=subscription.start_date,
             pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id(
                 member, subscription.start_date
             ),
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             check_for_weeks_without_delivery=True,
             cache=cache,
         )

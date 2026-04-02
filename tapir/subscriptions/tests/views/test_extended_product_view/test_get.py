@@ -3,6 +3,7 @@ from django.urls import reverse
 from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.config import PICKING_MODE_BASKET
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
+from tapir.wirgarten.constants import CUSTOM_CYCLE
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -66,6 +67,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "url_of_image_in_bestellwizard": "",
                 "capacity": 100,
                 "min_coop_shares": 2,
+                "price_per_delivery": False,
             },
             response_content,
         )
@@ -84,6 +86,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
             url_of_image_in_bestellwizard="test url",
             capacity=234,
             min_coop_shares=7,
+            type__delivery_cycle=CUSTOM_CYCLE[0],
         )
         ProductPriceFactory.create(product=product, price=15.2, size=1.3)
         ProductBasketSizeEquivalence.objects.create(
@@ -115,6 +118,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "url_of_image_in_bestellwizard": "test url",
                 "capacity": 234,
                 "min_coop_shares": 7,
+                "price_per_delivery": True,
             },
             response_content,
         )

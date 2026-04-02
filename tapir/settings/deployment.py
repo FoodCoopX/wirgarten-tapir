@@ -123,7 +123,7 @@ elif EMAIL_ENV == "test":
     # Local SMTP
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 elif EMAIL_ENV == "prod":
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_BACKEND = "tapir_mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn"
     EMAIL_HOST = env.str("EMAIL_HOST")
     EMAIL_HOST_SENDER = env.str(
         "EMAIL_HOST_SENDER"

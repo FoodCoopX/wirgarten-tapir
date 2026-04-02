@@ -30,6 +30,11 @@ from tapir.deliveries.serializers import (
     UsedJokerInGrowingPeriodSerializer,
     GrowingPeriodSerializer,
     GrowingPeriodWithDeliveryDayAdjustmentsSerializer,
+    CustomCycleDeliveryWeeksSerializer,
+    GetDatesFromCustomCycleDeliveryWeeksResponseSerializer,
+)
+from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
+    CustomCycleDeliveryDateCalculator,
 )
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
@@ -481,4 +486,50 @@ class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
         return Response(
             "OK",
             status=status.HTTP_200_OK,
+        )
+
+
+class GetDatesFromCustomCycleDeliveryWeeks(APIView):
+    @extend_schema(
+        responses={200: GetDatesFromCustomCycleDeliveryWeeksResponseSerializer},
+        request=CustomCycleDeliveryWeeksSerializer,
+    )
+    def post(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        serializer = CustomCycleDeliveryWeeksSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        input_data = serializer.validated_data["custom_cycle_delivery_weeks"]
+        growing_periods = {
+            growing_period.id: growing_period
+            for growing_period in GrowingPeriod.objects.filter(id__in=input_data.keys())
+        }
+
+        output_data = {}
+
+        try:
+            for growing_period_id, delivery_weeks in input_data.items():
+                growing_period = growing_periods[growing_period_id]
+                output_data[growing_period_id] = {
+                    week: CustomCycleDeliveryDateCalculator.get_date_from_calendar_week(
+                        week=week, growing_period=growing_period
+                    )
+                    for week in delivery_weeks
+                }
+        except Exception as error:
+            return Response(
+                GetDatesFromCustomCycleDeliveryWeeksResponseSerializer(
+                    {
+                        "custom_cycle_delivery_weeks_dates": {},
+                        "error": str(error),
+                    }
+                ).data
+            )
+
+        return Response(
+            GetDatesFromCustomCycleDeliveryWeeksResponseSerializer(
+                {"custom_cycle_delivery_weeks_dates": output_data, "error": ""}
+            ).data
         )

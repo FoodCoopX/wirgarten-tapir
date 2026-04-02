@@ -4,7 +4,12 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
 )
+from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
 from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.utils.shortcuts import get_monday, get_next_sunday
 from tapir.wirgarten.models import Subscription, Product, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
@@ -18,24 +23,26 @@ from tapir.wirgarten.utils import get_today
 class TrialPeriodManager:
     @classmethod
     def get_last_day_of_trial_period(
-        cls, obj: Subscription | SolidarityContribution, cache: dict
+        cls, contract: Subscription | SolidarityContribution, cache: dict
     ):
-        if obj.trial_disabled or not get_parameter_value(
+        if contract.trial_disabled or not get_parameter_value(
             ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
         ):
             return None
 
-        if obj.trial_end_date_override is not None:
-            return obj.trial_end_date_override
+        if contract.trial_end_date_override is not None:
+            return contract.trial_end_date_override
 
-        return cls.get_last_day_of_trial_period_by_weeks(obj, cache=cache)
+        return cls.get_last_day_of_trial_period_by_weeks(contract, cache=cache)
 
     @classmethod
     def get_last_day_of_trial_period_by_weeks(
-        cls, obj: Subscription | SolidarityContribution, cache: dict
-    ):
+        cls, contract: Subscription | SolidarityContribution, cache: dict
+    ) -> datetime.date:
+        start_date = cls.get_trial_period_start_date(contract=contract, cache=cache)
+
         return (
-            obj.start_date
+            start_date
             + datetime.timedelta(
                 weeks=get_parameter_value(
                     ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
@@ -45,11 +52,40 @@ class TrialPeriodManager:
         )
 
     @classmethod
+    def get_trial_period_start_date(
+        cls, contract: Subscription | SolidarityContribution, cache: dict
+    ):
+        # For subscriptions that are delivered, the trial period starts on the monday before the first delivery,
+        # not on the contract start date
+
+        product = getattr(contract, "product", None)
+        if product is None:
+            return contract.start_date
+
+        pickup_location_id = (
+            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                member_id=contract.member_id,
+                reference_date=contract.start_date,
+                cache=cache,
+            )
+        )
+        date_of_first_delivery = (
+            DeliveryDateCalculator.get_next_delivery_date_for_product_type(
+                reference_date=contract.start_date,
+                product_type=product.type,
+                check_for_weeks_without_delivery=False,
+                pickup_location_id=pickup_location_id,
+                cache=cache,
+            )
+        )
+        return get_monday(date_of_first_delivery)
+
+    @classmethod
     def is_contract_in_trial(
         cls,
         contract: Subscription | SolidarityContribution,
+        cache: dict,
         reference_date: datetime.date = None,
-        cache: dict = None,
     ) -> bool:
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
             return False
@@ -66,14 +102,14 @@ class TrialPeriodManager:
     @classmethod
     def get_earliest_trial_cancellation_date(
         cls,
-        subscription: Subscription,
-        reference_date: datetime.date | None = None,
-        cache: dict = None,
+        contract: Subscription | SolidarityContribution,
+        cache: dict,
+        reference_date: datetime.date = None,
     ) -> datetime.date:
         if not get_parameter_value(
             ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         ):
-            return cls.get_last_day_of_trial_period(subscription, cache=cache)
+            return cls.get_last_day_of_trial_period(contract, cache=cache)
 
         if reference_date is None:
             reference_date = get_today(cache=cache)
@@ -83,9 +119,9 @@ class TrialPeriodManager:
             next_delivery_date, cache=cache
         )
         if date_limit >= reference_date:
-            return reference_date
+            return get_next_sunday(reference_date)
 
-        return next_delivery_date + datetime.timedelta(days=1)
+        return get_next_sunday(next_delivery_date)
 
     @classmethod
     def is_product_in_trial(
@@ -102,13 +138,14 @@ class TrialPeriodManager:
             reference_date = get_today(cache=cache)
 
         return cls.is_contract_in_trial(
-            get_active_and_future_subscriptions(
+            contract=get_active_and_future_subscriptions(
                 reference_date=reference_date, cache=cache
             )
             .filter(member=member, product=product)
             .order_by("start_date")
             .first(),
-            reference_date,
+            reference_date=reference_date,
+            cache=cache,
         )
 
     @classmethod

@@ -10,6 +10,9 @@ from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import ProductSerializer, SubscriptionSerializer
+from tapir.deliveries.services.subscription_price_type_decider import (
+    SubscriptionPricingStrategyDecider,
+)
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
@@ -74,12 +77,18 @@ class ExtendedProductView(APIView):
         data["basket_size_equivalences"] = [
             {"basket_size_name": size_name, "quantity": quantity}
             for size_name, quantity in BasketSizeCapacitiesService.get_basket_size_equivalences_for_product(
-                product
+                product, cache=cache
             ).items()
         ]
 
         data["picking_mode"] = get_parameter_value(
             ParameterKeys.PICKING_MODE, cache=cache
+        )
+
+        data["price_per_delivery"] = (
+            SubscriptionPricingStrategyDecider.is_price_by_delivery(
+                product.type.delivery_cycle
+            )
         )
 
         return Response(

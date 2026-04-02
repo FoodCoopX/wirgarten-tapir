@@ -158,7 +158,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         const newSettings = buildSettings(baseData);
         setSettings(newSettings);
         setSettingsLoaded(true);
-        setSelectedProductTypes(newSettings.productTypes);
+        setSelectedProductTypes(
+          newSettings.introEnabled ? [] : newSettings.productTypes,
+        );
         if (waitingListEntryDetails) {
           setShoppingCart(
             buildShoppingCartFromWaitingListEntry(

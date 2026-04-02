@@ -1,6 +1,5 @@
 import datetime
 import locale
-from typing import Dict
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -93,7 +92,7 @@ class PickupLocationCapacitiesView(APIView):
 
     @classmethod
     def build_serializer_data_picking_mode_shares(
-        cls, pickup_location: PickupLocation, cache: Dict
+        cls, pickup_location: PickupLocation, cache: dict
     ):
         capacities = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location, cache=cache
@@ -172,7 +171,7 @@ class PickupLocationCapacityEvolutionView(APIView):
 
     @staticmethod
     def build_data_for_picking_mode_shares(
-        pickup_location: PickupLocation, cache: Dict
+        pickup_location: PickupLocation, cache: dict
     ):
         data_points = []
         product_types = ProductType.objects.order_by(*product_type_order_by())

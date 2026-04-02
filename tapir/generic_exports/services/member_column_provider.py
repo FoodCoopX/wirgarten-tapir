@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import locale
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 from django.db.models import (
     F,
@@ -158,7 +158,7 @@ class MemberColumnProvider:
 
     @classmethod
     def get_value_member_joker_credit_value(
-        cls, member: Member, reference_datetime: datetime.datetime, cache: Dict
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
     ):
         from tapir.deliveries.models import Joker
 
@@ -189,7 +189,7 @@ class MemberColumnProvider:
 
     @classmethod
     def get_value_member_joker_credit_details(
-        cls, member: Member, reference_datetime: datetime.datetime, cache: Dict
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
     ):
         from tapir.deliveries.models import Joker
 

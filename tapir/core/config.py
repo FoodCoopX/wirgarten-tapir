@@ -37,19 +37,21 @@ THEME_SOLAWI_HALL = "solawi_hall"
 THEME_LEISTENMUEHLE = "leistenmuehle"
 THEME_GROSSHOECHBERG = "grosshoechberg"
 THEME_SACHERL_TANNBERG = "sacherl_tannberg"
+THEME_ALFTER = "alfter"
 THEME_TEST = "test"
 
 THEME_OPTIONS = [
+    (THEME_ALFTER, "Alfter"),
     (THEME_BIOTOP, "Biotop Oberland"),
-    (THEME_WIRGARTEN, "WirGarten Lüneburg"),
-    (THEME_L2G, "L2G Dickendorf"),
-    (THEME_MM, "Möllers Morgen"),
-    (THEME_HUMUSWERKSTATT, "Humuswerkstatt"),
     (THEME_ERNTEUNIONOST, "Ernte Union Ost"),
-    (THEME_KATRINGER_GRUENZEUG, "Katringer Grünzeug"),
-    (THEME_SOLAWI_HALL, "Solawi Hall"),
-    (THEME_LEISTENMUEHLE, "Leistenmühle"),
     (THEME_GROSSHOECHBERG, "Grosshöchberg"),
+    (THEME_HUMUSWERKSTATT, "Humuswerkstatt"),
+    (THEME_KATRINGER_GRUENZEUG, "Katringer Grünzeug"),
+    (THEME_L2G, "L2G Dickendorf"),
+    (THEME_LEISTENMUEHLE, "Leistenmühle"),
+    (THEME_MM, "Möllers Morgen"),
     (THEME_SACHERL_TANNBERG, "Sacherl Tannberg"),
+    (THEME_SOLAWI_HALL, "Solawi Hall"),
+    (THEME_WIRGARTEN, "WirGarten Lüneburg"),
     (THEME_TEST, "Test"),
 ]

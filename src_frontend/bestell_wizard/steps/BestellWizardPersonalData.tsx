@@ -12,13 +12,9 @@ import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import "react-datetime/css/react-datetime.css";
-import moment from "moment";
-import "moment/dist/locale/de";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../utils/isAtLeastOneProductOrdered.ts";
-
-moment.locale("de");
 
 interface BestellWizardPersonalDataProps {
   personalData: PersonalData;

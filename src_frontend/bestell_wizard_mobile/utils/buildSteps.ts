@@ -10,6 +10,7 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
 import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 
 export function buildSteps(
   settings: BestellWizardSettings,
@@ -44,6 +45,16 @@ export function buildSteps(
     if (!productType.noDelivery) {
       newSteps.push(productType.id! + "_intro", productType.id! + "_order");
     }
+  }
+
+  if (
+    shouldShowStepSolidarityContributionBeforeStepPickupLocation(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+    )
+  ) {
+    newSteps.push("7_solidarity_contribution");
   }
 
   if (
@@ -89,7 +100,13 @@ export function buildSteps(
     }
   }
 
-  if (shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+  if (
+    shouldShowStepSolidarityContributionBeforeStepPersonalData(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+    )
+  ) {
     newSteps.push("7_solidarity_contribution");
   }
 
@@ -168,4 +185,39 @@ function shouldShowStepSolidarityContribution(
   }
 
   return !waitingListEntryDetails.memberAlreadyExists;
+}
+
+function shouldShowStepSolidarityContributionBeforeStepPickupLocation(
+  settings: BestellWizardSettings,
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  shoppingCart: ShoppingCart,
+) {
+  if (!shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+    return false;
+  }
+
+  if (settings.solidarityStepPosition !== "before_pickup_location") {
+    return false;
+  }
+
+  return isAtLeastOneProductOrdered(shoppingCart);
+}
+
+function shouldShowStepSolidarityContributionBeforeStepPersonalData(
+  settings: BestellWizardSettings,
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  shoppingCart: ShoppingCart,
+) {
+  if (!shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+    return false;
+  }
+
+  return (
+    settings.solidarityStepPosition === "before_personal_data" ||
+    !shouldShowStepSolidarityContributionBeforeStepPickupLocation(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+    )
+  );
 }

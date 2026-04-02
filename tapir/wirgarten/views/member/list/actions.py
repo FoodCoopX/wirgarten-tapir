@@ -10,10 +10,17 @@ from django.views.decorators.http import require_GET
 from django.views.generic import View
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import CoopShareTransaction, Member, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string
+from tapir.wirgarten.service.member import (
+    annotate_member_queryset_with_coop_shares_total_value,
+    annotate_member_queryset_with_monthly_payment,
+)
 from tapir.wirgarten.utils import (
     format_currency,
     format_date,
@@ -22,7 +29,7 @@ from tapir.wirgarten.utils import (
     legal_status_is_association,
     legal_status_is_cooperative,
 )
-from tapir.wirgarten.views.member.list.member_list import MemberFilter, MemberListView
+from tapir.wirgarten.views.member.list.member_list import MemberFilter
 
 
 @require_GET
@@ -267,10 +274,16 @@ def export_coop_member_list(request, **kwargs):
 
 
 class ExportMembersView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get(self, request, *args, **kwargs):
         # Get queryset based on filters and ordering
         filter_class = MemberFilter
-        queryset = filter_class(request.GET, queryset=self.get_queryset()).qs
+        queryset = filter_class(request.GET, queryset=self.get_queryset()).qs.order_by(
+            "member_no"
+        )
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")
@@ -316,14 +329,26 @@ class ExportMembersView(View):
                     format_date(member.coop_entry_date),
                     format_currency(member.coop_shares_total_value),
                     format_currency(member.monthly_payment),
-                    member.pickup_location.name if member.pickup_location else "",
+                    getattr(
+                        member,
+                        MemberPickupLocationGetter.ANNOTATION_CURRENT_PICKUP_LOCATION_NAME,
+                    ),
                 ]
             )
 
         return response
 
     def get_queryset(self):
-        return MemberListView.get_queryset(self)
+        today = get_today(cache=self.cache)
+        queryset = Member.objects.all()
+        queryset = annotate_member_queryset_with_coop_shares_total_value(
+            queryset, cache=self.cache
+        )
+        queryset = annotate_member_queryset_with_monthly_payment(queryset, today)
+        queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_name_at_date(
+            queryset=queryset, reference_date=today
+        )
+        return queryset
 
     def get_filterset_class(self):
         return MemberFilter

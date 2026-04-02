@@ -21,6 +21,9 @@ class TestGetQuerysetMembersWithJokerUsed(TapirIntegrationTest):
             start_date=datetime.date(year=2023, month=1, day=1),
             end_date=datetime.date(year=2023, month=12, day=31),
         )
+
+    def setUp(self) -> None:
+        super().setUp()
         for date in [
             datetime.date(year=2022, month=5, day=5),
             datetime.date(year=2023, month=10, day=6),

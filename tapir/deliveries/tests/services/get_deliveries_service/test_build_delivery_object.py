@@ -33,6 +33,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
     def setUp(self):
+        super().setUp()
         mock_timezone(self, factories.NOW)
 
     @classmethod

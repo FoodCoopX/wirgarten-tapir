@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Card, Col, Form, ListGroup, Row, Tab, Tabs } from "react-bootstrap";
+import {
+  Badge,
+  Card,
+  Col,
+  Form,
+  ListGroup,
+  Row,
+  Tab,
+  Tabs,
+} from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
   Counts,
@@ -11,7 +20,7 @@ import {
   WaitingListApiListListEntryTypeEnum,
   WaitingListApiListListMemberTypeEnum,
   WaitingListApiListListOrderByEnum,
-  WaitingListEntryDetails
+  WaitingListEntryDetails,
 } from "../api-client";
 import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -263,7 +272,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                             setFilterCurrentPickupLocation(event.target.value)
                           }
                         >
-                          <option value="">Filter ausgeschaltet</option>
+                          <option value="">Filter gerade nicht aktiv</option>
                           {pickupLocations.map((pickupLocation) => (
                             <option
                               key={pickupLocation.id}
@@ -286,7 +295,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                           setFilterPickupLocationWish(event.target.value)
                         }
                       >
-                        <option value="">Filter ausgeschaltet</option>
+                        <option value="">Filter gerade nicht aktiv</option>
                         {pickupLocations.map((pickupLocation) => (
                           <option
                             key={pickupLocation.id}
@@ -306,7 +315,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                           setFilterProductWish(event.target.value)
                         }
                       >
-                        <option value="">Filter ausgeschaltet</option>
+                        <option value="">Filter gerade nicht aktiv</option>
                         {products.map((product) => (
                           <option key={product.id} value={product.id}>
                             {product.type.name}: {product.name}

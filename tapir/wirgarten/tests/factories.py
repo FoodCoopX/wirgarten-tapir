@@ -5,7 +5,6 @@ from datetime import timedelta
 import factory
 from dateutil.relativedelta import relativedelta
 
-from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
@@ -67,22 +66,6 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
         if create:
             self.save()
 
-    @factory.post_generation
-    def is_superuser(self: Member, create, is_superuser: bool, **kwargs):
-        if not create:
-            return
-
-        keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
-        group_id = None
-        for group in keycloak_client.get_groups():
-            if group["name"] == "superuser":
-                group_id = group["id"]
-                break
-        if is_superuser:
-            keycloak_client.group_user_add(self.keycloak_id, group_id)
-        else:
-            keycloak_client.group_user_remove(self.keycloak_id, group_id)
-
 
 class MemberWithCoopSharesFactory(MemberFactory):
     @factory.post_generation
@@ -135,7 +118,7 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference
     class Meta:
         model = MandateReference
 
-    ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member.id))
+    ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member))
     member = factory.SubFactory(MemberFactory)
     start_ts = NOW - relativedelta(months=1)
 
@@ -175,6 +158,12 @@ class SubscriptionFactory(factory.django.DjangoModelFactory[Subscription]):
     )
     notice_period_duration = 3
     notice_period_unit = NOTICE_PERIOD_UNIT_MONTHS
+    created_at = factory.LazyAttribute(
+        lambda subscription: datetime.datetime.combine(
+            subscription.start_date - datetime.timedelta(days=4),
+            datetime.time(hour=5, minute=0),
+        )
+    )
 
 
 class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):

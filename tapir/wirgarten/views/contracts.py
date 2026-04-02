@@ -133,7 +133,7 @@ class SubscriptionListFilter(FilterSet):
                 start_date__lte=today, end_date__gte=today
             )
             if not growing_periods.exists():
-                return None
+                return GrowingPeriod.objects.order_by("start_date").first()
 
             return growing_periods.first().id
 
@@ -194,9 +194,10 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
         new_query_string = urlencode(query_dict, doseq=True)
         context["filter_query"] = new_query_string
         context["today"] = get_today()
-        context["total_contracts"] = self.filterset.qs.aggregate(
-            total_count=Sum("quantity")
-        )["total_count"]
+        context["number_of_contracts"] = self.filterset.qs.count()
+        context["quantity_sum"] = self.filterset.qs.aggregate(
+            quantity_sum=Sum("quantity")
+        )["quantity_sum"]
 
         cache = {}
         subscriptions_trial_end_dates = {}

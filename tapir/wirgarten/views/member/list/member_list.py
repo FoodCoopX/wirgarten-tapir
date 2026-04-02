@@ -42,6 +42,10 @@ from tapir.wirgarten.views.filters import MultiFieldFilter
 
 
 class ContractStatusFilter(ChoiceFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = {}
+
     def filter(self, qs, value):
         if not value:
             return qs
@@ -50,7 +54,7 @@ class ContractStatusFilter(ChoiceFilter):
             raise ValueError(f"Unknown filter value: {value}")
 
         # Filter members with an active subscription which is not cancelled
-        today = get_today()
+        today = get_today(cache=self.cache)
         qs = qs.filter(
             subscription__start_date__lte=today,
             subscription__end_date__gte=today,
@@ -65,10 +69,9 @@ class ContractStatusFilter(ChoiceFilter):
 
         return qs.distinct()
 
-    @staticmethod
-    def filter_contract_renewed(qs):
+    def filter_contract_renewed(self, qs):
         # Get the upcoming growing period
-        growing_period = get_next_growing_period()
+        growing_period = get_next_growing_period(cache=self.cache)
 
         # Filter members with at least one subscription starting in the upcoming growing period
         return qs.filter(
@@ -91,12 +94,13 @@ class ContractStatusFilter(ChoiceFilter):
             subscription__cancellation_ts__isnull=False,
         )
 
-    @staticmethod
-    def filter_undecided(qs):
-        growing_period = get_next_growing_period()
+    def filter_undecided(self, qs):
+        growing_period = get_next_growing_period(cache=self.cache)
 
         # Calculate the trial period start date
-        trial_period_start = get_today() + relativedelta(months=-1, day=1)
+        trial_period_start = get_today(cache=self.cache) + relativedelta(
+            months=-1, day=1
+        )
 
         # Filter members with no active subscriptions that started within the last month
         qs = qs.filter(subscription__start_date__lte=trial_period_start).exclude(
@@ -164,10 +168,28 @@ class MemberFilter(FilterSet):
         empty_label=None,
     )
 
+    def __init__(self, data=None, *args, **kwargs):
+        self.cache = {}
+
+        if data is None:
+            data = {"o": "-created_at"}
+        else:
+            data = data.copy()
+
+            if "o" not in data:
+                data["o"] = "-created_at"
+
+        super(MemberFilter, self).__init__(data, *args, **kwargs)
+
+        if get_next_growing_period() is None:
+            w = self.form.fields["contract_status"].widget
+            w.attrs["disabled"] = True
+            w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
+
     def filter_pickup_location(self, queryset, name, value):
         if value:
             # Subquery to get the latest MemberPickupLocation id for each Member
-            today = get_today()
+            today = get_today(cache=self.cache)
             latest_pickup_location_subquery = Subquery(
                 MemberPickupLocation.objects.filter(
                     member_id=OuterRef("id"),  # references Member.id
@@ -188,7 +210,7 @@ class MemberFilter(FilterSet):
     def filter_email_verified(self, queryset, name, value):
         new_queryset = queryset.all()
         for member in queryset:
-            if member.email_verified() != value:
+            if member.email_verified(cache=self.cache) != value:
                 new_queryset = new_queryset.exclude(id=member.id)
         return new_queryset
 
@@ -201,22 +223,6 @@ class MemberFilter(FilterSet):
             return queryset.filter(is_student=True)
         if value == "nicht-mitglied":
             return queryset.filter(is_student=False)
-
-    def __init__(self, data=None, *args, **kwargs):
-        if data is None:
-            data = {"o": "-created_at"}
-        else:
-            data = data.copy()
-
-            if "o" not in data:
-                data["o"] = "-created_at"
-
-        super(MemberFilter, self).__init__(data, *args, **kwargs)
-
-        if get_next_growing_period() is None:
-            w = self.form.fields["contract_status"].widget
-            w.attrs["disabled"] = True
-            w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
 
 
 class MemberListView(PermissionRequiredMixin, FilterView):

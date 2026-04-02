@@ -19,16 +19,15 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
     )
     @patch.object(
         DeliveryDateCalculator,
-        "get_next_delivery_date_for_delivery_cycle",
+        "get_next_delivery_date_for_product_type",
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionFullyIncludesGivenMonth_returnsAllDeliveries(
         self,
-        mock_get_next_delivery_date_for_delivery_cycle: Mock,
+        mock_get_next_delivery_date_for_product_type: Mock,
         mock_get_member_pickup_location_id_from_cache: Mock,
     ):
         delivery_cycle = Mock()
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=12, day=31),
             product__type__delivery_cycle=delivery_cycle,
@@ -48,7 +47,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         def mock_get_next_delivery_date(
             reference_date,
             pickup_location_id,
-            delivery_cycle,
+            product_type,
             check_for_weeks_without_delivery,
             cache,
         ):
@@ -56,7 +55,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
                 return first_of_month
             return reference_date + datetime.timedelta(days=7)
 
-        mock_get_next_delivery_date_for_delivery_cycle.side_effect = (
+        mock_get_next_delivery_date_for_product_type.side_effect = (
             mock_get_next_delivery_date
         )
 
@@ -88,13 +87,13 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
                 ]
             ]
         )
-        self.assertEqual(6, mock_get_next_delivery_date_for_delivery_cycle.call_count)
-        mock_get_next_delivery_date_for_delivery_cycle.assert_has_calls(
+        self.assertEqual(6, mock_get_next_delivery_date_for_product_type.call_count)
+        mock_get_next_delivery_date_for_product_type.assert_has_calls(
             [
                 call(
                     reference_date=reference_date,
                     pickup_location_id="pl_id_1",
-                    delivery_cycle=delivery_cycle,
+                    product_type=subscription.product.type,
                     check_for_weeks_without_delivery=False,
                     cache=cache,
                 )
@@ -106,12 +105,12 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
                 ]
             ]
         )
-        mock_get_next_delivery_date_for_delivery_cycle.assert_has_calls(
+        mock_get_next_delivery_date_for_product_type.assert_has_calls(
             [
                 call(
                     reference_date=reference_date,
                     pickup_location_id="pl_id_2",
-                    delivery_cycle=delivery_cycle,
+                    product_type=subscription.product.type,
                     check_for_weeks_without_delivery=False,
                     cache=cache,
                 )
@@ -123,20 +122,20 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         )
 
     @patch.object(
-        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter,
+        "get_member_pickup_location_id_from_cache",
+        autospec=True,
     )
     @patch.object(
-        DeliveryDateCalculator,
-        "get_next_delivery_date_for_delivery_cycle",
+        DeliveryDateCalculator, "get_next_delivery_date_for_product_type", autospec=True
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionStartsInGivenMonth_returnsDeliveriesAfterStartOnly(
         self,
-        mock_get_next_delivery_date_for_delivery_cycle: Mock,
+        mock_get_next_delivery_date_for_product_type: Mock,
         mock_get_member_pickup_location_id_from_cache: Mock,
     ):
         delivery_cycle = Mock()
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2025, month=8, day=10),
             end_date=datetime.date(year=2025, month=12, day=31),
             product__type__delivery_cycle=delivery_cycle,
@@ -150,7 +149,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         def mock_get_next_delivery_date(
             reference_date,
             pickup_location_id,
-            delivery_cycle,
+            product_type,
             check_for_weeks_without_delivery,
             cache,
         ):
@@ -158,7 +157,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
                 return first_of_month
             return reference_date + datetime.timedelta(days=7)
 
-        mock_get_next_delivery_date_for_delivery_cycle.side_effect = (
+        mock_get_next_delivery_date_for_product_type.side_effect = (
             mock_get_next_delivery_date
         )
 
@@ -175,16 +174,15 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
     )
     @patch.object(
         DeliveryDateCalculator,
-        "get_next_delivery_date_for_delivery_cycle",
+        "get_next_delivery_date_for_product_type",
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionEndsInGivenMonth_returnsDeliveriesBeforeEndOnly(
         self,
-        mock_get_next_delivery_date_for_delivery_cycle: Mock,
+        mock_get_next_delivery_date_for_product_type: Mock,
         mock_get_member_pickup_location_id_from_cache: Mock,
     ):
         delivery_cycle = Mock()
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=8, day=23),
             product__type__delivery_cycle=delivery_cycle,
@@ -198,7 +196,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         def mock_get_next_delivery_date(
             reference_date,
             pickup_location_id,
-            delivery_cycle,
+            product_type,
             check_for_weeks_without_delivery,
             cache,
         ):
@@ -206,7 +204,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
                 return first_of_month
             return reference_date + datetime.timedelta(days=7)
 
-        mock_get_next_delivery_date_for_delivery_cycle.side_effect = (
+        mock_get_next_delivery_date_for_product_type.side_effect = (
             mock_get_next_delivery_date
         )
 
@@ -223,16 +221,15 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
     )
     @patch.object(
         DeliveryDateCalculator,
-        "get_next_delivery_date_for_delivery_cycle",
+        "get_next_delivery_date_for_product_type",
     )
     def test_getNumberOfDeliveriesInMonth_subscriptionStartsAndEndsInGivenMonth_returnsDeliveriesInsideSubscriptionOnly(
         self,
-        mock_get_next_delivery_date_for_delivery_cycle: Mock,
+        mock_get_next_delivery_date_for_product_type: Mock,
         mock_get_member_pickup_location_id_from_cache: Mock,
     ):
         delivery_cycle = Mock()
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2025, month=8, day=4),
             end_date=datetime.date(year=2025, month=8, day=24),
             product__type__delivery_cycle=delivery_cycle,
@@ -246,7 +243,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
         def mock_get_next_delivery_date(
             reference_date,
             pickup_location_id,
-            delivery_cycle,
+            product_type,
             check_for_weeks_without_delivery,
             cache,
         ):
@@ -254,7 +251,7 @@ class TestGetNumberOfDeliveriesInMonth(SimpleTestCase):
                 return first_of_month
             return reference_date + datetime.timedelta(days=7)
 
-        mock_get_next_delivery_date_for_delivery_cycle.side_effect = (
+        mock_get_next_delivery_date_for_product_type.side_effect = (
             mock_get_next_delivery_date
         )
 

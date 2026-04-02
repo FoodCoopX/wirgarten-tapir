@@ -82,6 +82,9 @@ class KeycloakUser(AbstractUser):
         ).save()
 
     def has_perm(self, perm, obj=None):
+        if is_running_tests():
+            return self.is_superuser
+
         target = self
         if obj is not None:
             target = obj
@@ -139,8 +142,9 @@ class KeycloakUser(AbstractUser):
             )
 
             if self.email_verified(cache=cache) and self_before_save:
-                # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
-                # a confirmation link is only sent the email is verified
+                # important: reset the email to the original email before persisting.
+                # The actual change happens after the user click the confirmation link.
+                # A confirmation link is only sent the email is verified.
                 self.email = self_before_save.email
         else:
             if self.id is None or not type(self).objects.filter(id=self.id).exists():
@@ -256,7 +260,6 @@ class EmailChangeRequest(TapirModel):
     secret = models.CharField(
         _("Secret"), max_length=36, default=partial(generate_random_secret)
     )
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
 
 
 class UpdateTapirUserLogEntry(UpdateModelLogEntry):

@@ -13,6 +13,8 @@ class TestMemberCreditListApiView(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
+    def setUp(self) -> None:
+        super().setUp()
         MemberCredit.objects.bulk_create(
             [
                 MemberCredit(

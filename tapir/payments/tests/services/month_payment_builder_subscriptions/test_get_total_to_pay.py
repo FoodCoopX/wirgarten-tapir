@@ -20,15 +20,13 @@ class TestGetTotalToPay(SimpleTestCase):
         range_start = datetime.date(year=2028, month=1, day=1)
         range_end = datetime.date(year=2028, month=1, day=31)
         subscription_1 = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref", start_date=range_start, end_date=range_end
+            start_date=range_start, end_date=range_end
         )
         subscription_2 = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=12, day=15),
             end_date=datetime.date(year=2027, month=12, day=31),
         )
         subscription_3 = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=12, day=15),
             end_date=datetime.date(year=2028, month=1, day=19),
         )

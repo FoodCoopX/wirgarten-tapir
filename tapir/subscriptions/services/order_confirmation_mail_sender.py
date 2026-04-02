@@ -47,7 +47,7 @@ class OrderConfirmationMailSender:
 
         for subscription in Subscription.objects.filter(
             id__in=confirm_creation_ids
-        ).select_related("member"):
+        ).select_related("member", "product__type"):
             if skip_auto_confirmed and subscription.auto_confirmed is not None:
                 continue
             if subscription.member not in data_by_member.keys():

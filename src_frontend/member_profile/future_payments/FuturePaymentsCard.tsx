@@ -18,6 +18,42 @@ interface FuturePaymentsCardProps {
   csrfToken: string;
 }
 
+function sortGroupedTransactions(groupedTransactions: TransactionsByDueDate) {
+  for (const key of Object.keys(groupedTransactions)) {
+    groupedTransactions[key] =
+      groupedTransactions[key].toSorted(compareTransactions);
+  }
+}
+
+function compareTransactions(
+  a: MemberCredit | ExtendedPayment,
+  b: MemberCredit | ExtendedPayment,
+) {
+  const a_is_payment = "subscriptions" in a;
+  const b_is_payment = "subscriptions" in b;
+  if (a_is_payment !== b_is_payment) {
+    return a_is_payment ? 1 : -1;
+  }
+
+  if (!a_is_payment || !b_is_payment) {
+    return 0;
+  }
+
+  if (
+    a.payment.subscriptionPaymentRangeStart &&
+    b.payment.subscriptionPaymentRangeStart &&
+    a.payment.subscriptionPaymentRangeStart.getTime() !==
+      b.payment.subscriptionPaymentRangeStart.getTime()
+  ) {
+    return (
+      a.payment.subscriptionPaymentRangeStart.getTime() -
+      b.payment.subscriptionPaymentRangeStart.getTime()
+    );
+  }
+
+  return b.payment.amount - a.payment.amount;
+}
+
 const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   memberId,
   csrfToken,
@@ -31,6 +67,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   const [extendedPayments, setExtendedPayments] = useState<ExtendedPayment[]>(
     [],
   );
+  const [trialPeriodEnabled, setTrialPeriodEnabled] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -38,9 +75,11 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
     api
       .paymentsApiMemberFuturePaymentsRetrieve({ memberId: memberId })
       .then((response) => {
+        setTrialPeriodEnabled(response.trialPeriodEnabled);
+
         const groupedTransactions: TransactionsByDueDate = {};
 
-        const extendedPayments = response.payments.sort(
+        const extendedPayments = response.payments.toSorted(
           (a, b) => a.payment.dueDate.getTime() - b.payment.dueDate.getTime(),
         );
         setExtendedPayments(extendedPayments);
@@ -63,6 +102,8 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
           }
           groupedTransactions[dueDateAsAstring].push(memberCredit);
         }
+
+        sortGroupedTransactions(groupedTransactions);
 
         setTransactionsByDueDate(groupedTransactions);
       })
@@ -152,6 +193,10 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         show={showModal}
         onHide={() => setShowModal(false)}
         loading={loading}
+        csrfToken={csrfToken}
+        memberId={memberId}
+        setToastDatas={setToastDatas}
+        trialPeriodEnabled={trialPeriodEnabled}
       />
       <TapirToastContainer
         toastDatas={toastDatas}

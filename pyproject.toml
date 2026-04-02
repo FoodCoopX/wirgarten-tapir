@@ -14,7 +14,7 @@ django-tables2 = "^2.7.5"
 django-filter = "^25.1"
 tablib = "^3.8.0"
 django-phonenumber-field = {version = "^5.2.0", extras = ["phonenumbers"]}
-phonenumbers = "^9.0.6"
+phonenumbers = "^9.0.25"
 weasyprint = "^68.0"
 django-select2 = "^8.4.1"
 django-silk = "^5.4.0"
@@ -27,16 +27,16 @@ redis = "5.3"
 django-localflavor = "^5.0"
 tomlkit = "^0.13.2"
 nanoid = "^2.0.0"
-lxml= "^5.4.0"
+lxml= "^6.0.2"
 python-keycloak = "^5.5.1"
 unidecode = "^1.4.0"
 importlib-resources = "^6.5.2"
-tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1772618196/tapir_mail-0.0.0.dev1772618196-py3-none-any.whl" }
+tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1774347435/tapir_mail-0.0.0.dev1774347435-py3-none-any.whl" }
 djangorestframework = "^3.16.0"
 drf-spectacular = "^0.29.0"
 django-vite = "^3.1.0"
 django-weasyprint = "^2.4.0"
-whitenoise = "^6.11.0"
+whitenoise = {extras = ["brotli"], version = "^6.12.0"}
 pyjwt = "2.9"
 legacy-cgi = "^2.6.3"
 django-allauth = {extras = ["socialaccount"], version = "^65.10.0"}
@@ -55,6 +55,7 @@ icecream = "^2.1.4"
 djlint = "^1.36.4"
 ipython = "^9.9.0"
 django-upgrade = "^1.25.0"
+pytest-xdist = "^3.8.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

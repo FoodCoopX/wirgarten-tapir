@@ -57,7 +57,7 @@ class MonthPaymentBuilder:
             in_trial=False,
         )
 
-        return cls.combine_similar_payments(
+        return (
             payments_to_create_subscriptions_not_in_trial
             + payments_to_create_subscriptions_in_trial
             + payments_to_create_solidarity_contributions_in_trial

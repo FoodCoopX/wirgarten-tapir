@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -22,7 +21,7 @@ class PickupLocationCapacityGeneralChecker:
         order: TapirOrder,
         already_registered_member: Member | None,
         subscription_start: datetime.date,
-        cache: Dict,
+        cache: dict,
     ) -> bool:
         if (
             already_registered_member

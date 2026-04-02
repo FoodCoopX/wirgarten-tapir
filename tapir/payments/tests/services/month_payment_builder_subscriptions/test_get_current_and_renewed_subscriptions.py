@@ -28,7 +28,7 @@ class TestGetCurrentAndRenewedSubscriptions(SimpleTestCase):
         mock_get_subscriptions_that_will_be_renewed: Mock,
         mock_is_contract_in_trial: Mock,
     ):
-        subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref_1")
+        subscription = SubscriptionFactory.build()
         mock_get_all_subscriptions.return_value = {subscription}
         mock_get_subscriptions_that_will_be_renewed.return_value = set()
         mock_is_contract_in_trial.return_value = False
@@ -62,7 +62,7 @@ class TestGetCurrentAndRenewedSubscriptions(SimpleTestCase):
         mock_get_subscriptions_that_will_be_renewed: Mock,
         mock_is_contract_in_trial: Mock,
     ):
-        subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref_1")
+        subscription = SubscriptionFactory.build()
         mock_get_all_subscriptions.return_value = {subscription}
         mock_get_subscriptions_that_will_be_renewed.return_value = set()
         mock_is_contract_in_trial.return_value = True
@@ -100,8 +100,8 @@ class TestGetCurrentAndRenewedSubscriptions(SimpleTestCase):
         mock_build_renewed_subscription: Mock,
         mock_is_contract_in_trial: Mock,
     ):
-        original_subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref_1")
-        renewed_subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref_1")
+        original_subscription = SubscriptionFactory.build()
+        renewed_subscription = SubscriptionFactory.build()
         mock_get_all_subscriptions.return_value = set()
         mock_get_subscriptions_that_will_be_renewed.return_value = {
             original_subscription
@@ -147,8 +147,8 @@ class TestGetCurrentAndRenewedSubscriptions(SimpleTestCase):
         mock_build_renewed_subscription: Mock,
         mock_is_contract_in_trial: Mock,
     ):
-        original_subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref_1")
-        renewed_subscription = SubscriptionFactory.build(mandate_ref__ref="test_ref_1")
+        original_subscription = SubscriptionFactory.build()
+        renewed_subscription = SubscriptionFactory.build()
         mock_get_all_subscriptions.return_value = set()
         mock_get_subscriptions_that_will_be_renewed.return_value = {
             original_subscription

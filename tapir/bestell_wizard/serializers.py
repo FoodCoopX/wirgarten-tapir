@@ -4,6 +4,9 @@ from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
 )
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
+from tapir.solidarity_contribution.config import (
+    OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
+)
 from tapir.subscriptions.serializers import PublicProductTypeSerializer
 
 
@@ -88,6 +91,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step9_title = serializers.CharField()
     step9_payment_rhythm_modal_text = serializers.CharField()
     step10_title = serializers.CharField()
+    step10_flag_student = serializers.CharField()
+    step10_text_student = serializers.CharField()
     step11_title = serializers.CharField()
     step11_privacy_policy_label = serializers.CharField()
     step11_privacy_policy_text = serializers.CharField()
@@ -102,6 +107,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step14b_text = serializers.CharField()
     privacy_policy_url = serializers.URLField()
     label_student_checkbox = serializers.CharField()
+    student_checkbox_explanation_text = serializers.CharField()
 
 
 class BestellWizardImagesSerializer(serializers.Serializer):
@@ -154,6 +160,9 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     solidarity_contribution_default = serializers.FloatField()
     feedback_step_enabled = serializers.BooleanField()
     growing_period_choices = PublicGrowingPeriodSerializer(many=True)
+    solidarity_step_position = serializers.ChoiceField(
+        choices=OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION
+    )
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
     debug = serializers.BooleanField()

@@ -4,7 +4,7 @@
             <mj-text padding="10px 25px 10px 25px" align="left">
 Trigger: Transaktionale Email, wenn die neue Zeichnung durch Klick des Admins auf "Auswahl bestätigen" in der Zeichnungsübersicht bestätigt werden bzw. wenn die Frist abgelaufen ist, in der der Admin die Zeichnung hätte widerrufen oder pausieren können.  <br /><br />
 Zweck: Mit dieser Mail kann ggf. erst final die Bestellung bestätigt werden. Dann sollte die Bestellbestätigung allerdings so formuliert sein, dass die Bestellung noch nicht final bearbeitet ist. Ansonsten kann sie nochmal eine Erinnerung sein, sie ist aber nicht notwendig unbedingt. <br /><br />
-Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /><br />
+Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. Beachtet, dass ggf. der Abholort nicht relevant ist, wenn ihr die Option eingestellt habt, dass ihr Fördermitgliedschaften zulässt (dann gibt es i.d.R. keinen Abholort).<br /><br />
 
 _____________________<br /><br />
 
@@ -16,7 +16,7 @@ Du erhältst folgende Produkte: <br />
 {{Bestellung vom Admin bestätigt.Vertragsliste}} <br />
 {{Bestellung vom Admin bestätigt.Anzahl an GenoAnteile}} <br /><br />
 
-Dein ausgewählter Abholort ist: <br />
+(Nur relevant, wenn du einen Produktvertrag abgeschlossen hast): Dein ausgewählter Abholort ist: <br />
 {{Empfänger.Abholort}} <br /><br />
 
 Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />

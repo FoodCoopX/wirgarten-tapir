@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from datetime import date
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from nanoid import generate
@@ -20,7 +19,7 @@ MANDATE_REF_LENGTH = 35
 MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
-def generate_mandate_ref(member_id: str):
+def generate_mandate_ref(member: Member):
     """
     Generates a new mandate reference string.
 
@@ -29,18 +28,15 @@ def generate_mandate_ref(member_id: str):
     U = User Name
     X = Random String
 
-    :param member_id: the ID of the TapirUser/Member
-    :return: the mandate reference string
     """
 
-    member = Member.objects.get(id=member_id)
     cleaned_name = unidecode(f"{member.last_name[:5]}{member.first_name[:5]}")
     prefix = f"{cleaned_name}/".upper()
 
     return f"""{prefix}{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix))}"""
 
 
-def get_next_payment_date(reference_date: date = None, cache: Dict = None):
+def get_next_payment_date(reference_date: date = None, cache: dict = None):
     """
     Get the next date on which payments are due.
 
@@ -62,7 +58,7 @@ def get_active_subscriptions_grouped_by_product_type(
     member: Member,
     reference_date: date = None,
     include_future_subscriptions: bool = False,
-    cache: Dict = None,
+    cache: dict = None,
 ) -> OrderedDict[str, list[Subscription]]:
     """
     Get all active subscriptions for a member grouped by product types.

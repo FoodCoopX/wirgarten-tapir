@@ -2,21 +2,12 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from tapir_mail.triggers.transactional_trigger import (
-    TransactionalTrigger,
-    TransactionalTriggerData,
-)
 
-from tapir.accounts.models import UpdateTapirUserLogEntry
-from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
-    PersonalDataForm,
     SubscriptionRenewalForm,
     WaitingListForm,
 )
-from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
-from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     QuestionaireCancellationReasonResponse,
@@ -34,44 +25,6 @@ from tapir.wirgarten.utils import (
     member_detail_url,
 )
 from tapir.wirgarten.views.modal import get_form_modal
-
-
-@require_http_methods(["GET", "POST"])
-@csrf_protect
-@login_required
-def get_member_personal_data_edit_form(request, **kwargs):
-    pk = kwargs.pop("pk")
-
-    check_permission_or_self(pk, request)
-
-    kwargs["can_edit_name_and_birthdate"] = request.user.has_perm(
-        Permission.Accounts.MANAGE
-    )
-
-    @transaction.atomic
-    def save(member: Member):
-        orig = Member.objects.get(id=member.id)
-        UpdateTapirUserLogEntry().populate(
-            old_model=orig, new_model=member, user=member, actor=request.user
-        ).save()
-
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.MEMBERAREA_CHANGE_DATA,
-                recipient_id_in_base_queryset=member.id,
-            ),
-        )
-
-        member.save()
-
-    return get_form_modal(
-        request=request,
-        form_class=PersonalDataForm,
-        instance=Member.objects.get(pk=pk),
-        handler=lambda x: save(x.instance),
-        redirect_url_resolver=lambda _: member_detail_url(pk),
-        **kwargs,
-    )
 
 
 @require_http_methods(["GET", "POST"])
@@ -137,49 +90,6 @@ def get_renew_contracts_form(request, **kwargs):
         request=request,
         form_class=SubscriptionRenewalForm,
         handler=lambda x: save(x),
-        redirect_url_resolver=lambda _: member_detail_url(member_id),
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@csrf_protect
-@login_required
-def get_member_payment_data_edit_form(request, **kwargs):
-    member_id = kwargs.pop("pk")
-    check_permission_or_self(member_id, request)
-
-    instance = Member.objects.get(pk=member_id)
-
-    def update_payment_data(member: Member, account_owner: str, iban: str):
-        member.account_owner = account_owner
-        member.iban = iban
-        member.sepa_consent = get_now()
-
-        orig = Member.objects.get(id=member.id)
-        UpdateTapirUserLogEntry().populate(
-            old_model=orig, new_model=member, user=member, actor=request.user
-        ).save()
-
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.MEMBERAREA_CHANGE_DATA,
-                recipient_id_in_base_queryset=member.id,
-            ),
-        )
-
-        member.save()
-        return member
-
-    return get_form_modal(
-        request=request,
-        form_class=PaymentDataForm,
-        instance=instance,
-        handler=lambda x: update_payment_data(
-            member=instance,
-            account_owner=x.cleaned_data["account_owner"],
-            iban=x.cleaned_data["iban"],
-        ),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )

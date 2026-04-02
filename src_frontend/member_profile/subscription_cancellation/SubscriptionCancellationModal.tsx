@@ -3,6 +3,7 @@ import { Modal, Spinner } from "react-bootstrap";
 import {
   LegalStatusEnum,
   ProductForCancellation,
+  SolidarityContributionCancellationData,
   SubscriptionsApi,
 } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
@@ -12,6 +13,7 @@ import { ToastData } from "../../types/ToastData.ts";
 import CancellationStepSubscriptions from "./steps/CancellationStepSubscriptions.tsx";
 import CancellationStepReasons from "./steps/CancellationStepReasons.tsx";
 import CancellationStepConfirmation from "./steps/CancellationStepConfirmation.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 
 interface SubscriptionCancellationModalProps {
   onHide: () => void;
@@ -30,6 +32,10 @@ const SubscriptionCancellationModal: React.FC<
   const [subscribedProducts, setSubscribedProducts] = useState<
     ProductForCancellation[]
   >([]);
+  const [solidarityContributionData, setSolidarityContributionData] =
+    useState<SolidarityContributionCancellationData>();
+  const [cancelSolidarityContribution, setCancelSolidarityContribution] =
+    useState(false);
   const [canCancelCoopMembership, setCanCancelCoopMembership] = useState(false);
   const [legalStatus, setLegalStatus] = useState<LegalStatusEnum>();
   const [loading, setLoading] = useState(true);
@@ -51,6 +57,8 @@ const SubscriptionCancellationModal: React.FC<
   const [customCancellationReason, setCustomCancellationReason] = useState<
     string | undefined
   >();
+  const [trialPeriodDuration, setTrialPeriodDuration] = useState<number>();
+  const [trialPeriodIsFlexible, setTrialPeriodIsFlexible] = useState(false);
 
   useEffect(() => {
     if (!show) {
@@ -69,6 +77,11 @@ const SubscriptionCancellationModal: React.FC<
         setCanCancelCoopMembership(data.canCancelCoopMembership);
         setLegalStatus(data.legalStatus);
         setDefaultCancellationReasons(data.defaultCancellationReasons);
+        setSolidarityContributionData(data.solidarityContributionData);
+        setTrialPeriodIsFlexible(data.trialPeriodIsFlexible);
+        if (data.showTrialPeriodHelpText) {
+          setTrialPeriodDuration(data.trialPeriodDuration);
+        }
       })
       .catch((error) =>
         handleRequestError(
@@ -102,6 +115,7 @@ const SubscriptionCancellationModal: React.FC<
           cancelCoopMembership: cancelCoopMembershipSelected,
           cancellationReasons: selectedCancellationReasons,
           customCancellationReason: customCancellationReason,
+          cancelSolidarityContribution: cancelSolidarityContribution,
         },
       })
       .then((response) => {
@@ -127,9 +141,23 @@ const SubscriptionCancellationModal: React.FC<
       size={"lg"}
     >
       <Modal.Header closeButton>
-        <Modal.Title>
-          <h4>Verträge kündigen</h4>
-        </Modal.Title>
+        <span
+          className={
+            "d-flex flex-row justify-content-between align-items-center"
+          }
+          style={{ width: "100%" }}
+        >
+          <Modal.Title>Verträge kündigen</Modal.Title>
+          {trialPeriodDuration && (
+            <TapirHelpButton
+              text={
+                "Um zu bestimmen wann die Probezeit endet, werden die " +
+                trialPeriodDuration +
+                " Wochen ab der Montag vor der erste Lieferung berechnet, nicht ab dem Vertragsstart-Datum."
+              }
+            />
+          )}
+        </span>
       </Modal.Header>
       {loading ? (
         <>
@@ -151,6 +179,10 @@ const SubscriptionCancellationModal: React.FC<
               cancelCoopMembershipSelected={cancelCoopMembershipSelected}
               setCancelCoopMembershipSelected={setCancelCoopMembershipSelected}
               goToNextStep={() => setCurrentStep("reasons")}
+              solidarityContributionData={solidarityContributionData}
+              cancelSolidarityContribution={cancelSolidarityContribution}
+              setCancelSolidarityContribution={setCancelSolidarityContribution}
+              trialPeriodIsFlexible={trialPeriodIsFlexible}
             />
           )}
           {currentStep === "reasons" && (

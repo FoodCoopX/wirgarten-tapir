@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
@@ -11,6 +12,8 @@ from tapir.configuration.models import TapirParameter
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
@@ -27,6 +30,7 @@ from tapir.wirgarten.tests.factories import (
     NOW,
     GrowingPeriodFactory,
     TODAY,
+    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 from tapir.wirgarten.utils import format_date, format_subscription_list_html
@@ -38,6 +42,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
+        super().setUp()
         mock_timezone(self, NOW)
 
     @patch.object(MembershipCancellationManager, "cancel_coop_membership")
@@ -392,15 +397,14 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.client.force_login(member)
 
         growing_period = GrowingPeriodFactory.create(
-            start_date=TODAY.replace(month=1, day=1),
-            end_date=TODAY.replace(month=12, day=31),
+            start_date=TODAY.replace(month=1, day=1)
         )
         subscriptions = SubscriptionFactory.create_batch(
             size=3,
             member=member,
             period=growing_period,
         )
-        subscriptions[1].start_date = TODAY + datetime.timedelta(days=3)
+        subscriptions[1].start_date = TODAY + datetime.timedelta(days=5)
         subscriptions[1].save()
 
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
@@ -428,6 +432,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         self.assertEqual(0, len(response.json()["errors"]))
+
         mock_fire_action.assert_called_once_with(
             TransactionalTriggerData(
                 key=Events.CONTRACT_CANCELLED,
@@ -633,4 +638,88 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             QuestionaireCancellationReasonResponse.objects.filter(
                 member=member, reason="reason1", custom=False, timestamp=NOW
             ).exists()
+        )
+
+    def test_post_memberCancelsSolidarityButItCannotBeCancelled_returnsError(self):
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=ProductTypeFactory.create().id
+        )
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+            "cancel_solidarity_contribution": True,
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertEqual(1, len(response_content["errors"]))
+        self.assertEqual(
+            "Es kann kein Solidarbeitrag gekündigt werden.",
+            response_content["errors"][0],
+        )
+
+    def test_post_memberCancelsSolidarity_correctlyUpdatesContribution(self):
+        mock_timezone(
+            test=self, now=datetime.datetime(year=2013, month=1, day=20, hour=10)
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=ProductTypeFactory.create().id
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=True
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_DURATION).update(
+            value=8
+        )
+        TapirParameter.objects.filter(
+            key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END
+        ).update(value=True)
+
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2013, month=1, day=1),
+            amount=12,
+        )
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2014, month=1, day=1),
+            amount=13.5,
+        )
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+            "cancel_solidarity_contribution": True,
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertEqual(0, len(response_content["errors"]))
+
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        contribution = SolidarityContribution.objects.get()
+        self.assertEqual(Decimal(12), contribution.amount)
+
+        # since we are still in trial the mocked today is before the weekday change limit, the change happens today.
+        # With the changes happening today, the new contribution value (0) is valid from today. So the previous contribution must end yesterday
+        self.assertEqual(
+            datetime.date(year=2013, month=1, day=19), contribution.end_date
         )

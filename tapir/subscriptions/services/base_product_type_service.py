@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
@@ -9,7 +7,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 class BaseProductTypeService:
     @classmethod
-    def get_base_product_type(cls, cache: Dict):
+    def get_base_product_type(cls, cache: dict):
         from tapir.wirgarten.models import ProductType
 
         base_product_type_id = get_parameter_value(

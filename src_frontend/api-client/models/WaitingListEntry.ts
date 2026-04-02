@@ -29,6 +29,18 @@ export interface WaitingListEntry {
   id?: string;
   /**
    *
+   * @type {Date}
+   * @memberof WaitingListEntry
+   */
+  readonly createdAt: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof WaitingListEntry
+   */
+  readonly updatedAt: Date;
+  /**
+   *
    * @type {string}
    * @memberof WaitingListEntry
    */
@@ -86,12 +98,6 @@ export interface WaitingListEntry {
    * @type {Date}
    * @memberof WaitingListEntry
    */
-  readonly createdAt: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof WaitingListEntry
-   */
   privacyConsent: Date;
   /**
    *
@@ -143,12 +149,13 @@ export interface WaitingListEntry {
 export function instanceOfWaitingListEntry(
   value: object,
 ): value is WaitingListEntry {
+  if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
+  if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("firstName" in value) || value["firstName"] === undefined) return false;
   if (!("lastName" in value) || value["lastName"] === undefined) return false;
   if (!("phoneNumber" in value) || value["phoneNumber"] === undefined)
     return false;
   if (!("email" in value) || value["email"] === undefined) return false;
-  if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("privacyConsent" in value) || value["privacyConsent"] === undefined)
     return false;
   if (
@@ -172,6 +179,8 @@ export function WaitingListEntryFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
+    createdAt: new Date(json["created_at"]),
+    updatedAt: new Date(json["updated_at"]),
     firstName: json["first_name"],
     lastName: json["last_name"],
     phoneNumber: json["phone_number"],
@@ -184,7 +193,6 @@ export function WaitingListEntryFromJSONTyped(
       json["country"] == null
         ? undefined
         : MemberCountryFromJSON(json["country"]),
-    createdAt: new Date(json["created_at"]),
     privacyConsent: new Date(json["privacy_consent"]),
     numberOfCoopShares: json["number_of_coop_shares"],
     desiredStartDate:
@@ -210,7 +218,7 @@ export function WaitingListEntryToJSON(json: any): WaitingListEntry {
 }
 
 export function WaitingListEntryToJSONTyped(
-  value?: Omit<WaitingListEntry, "created_at"> | null,
+  value?: Omit<WaitingListEntry, "created_at" | "updated_at"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

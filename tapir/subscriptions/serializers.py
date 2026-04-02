@@ -11,9 +11,13 @@ from tapir.deliveries.serializers import (
     PickupLocationSerializer,
     ProductTypeSerializer,
 )
+from tapir.deliveries.services.subscription_price_type_decider import (
+    SubscriptionPricingStrategyDecider,
+)
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     Member,
@@ -31,13 +35,28 @@ class ProductForCancellationSerializer(serializers.Serializer):
     product = ProductSerializer(read_only=True)
     is_in_trial = serializers.BooleanField()
     cancellation_date = serializers.DateField()
+    last_day_of_notice_period = serializers.DateField()
+    date_limit_for_trial_cancellation = serializers.DateField()
+    notice_period_duration = serializers.IntegerField()
+    notice_period_unit = serializers.ChoiceField(choices=NOTICE_PERIOD_UNIT_OPTIONS)
+    subscription_end_date = serializers.DateField()
+
+
+class SolidarityContributionCancellationDataSerializer(serializers.Serializer):
+    exists = serializers.BooleanField()
+    is_in_trial = serializers.BooleanField()
+    cancellation_date = serializers.DateField()
 
 
 class CancellationDataSerializer(serializers.Serializer):
     can_cancel_coop_membership = serializers.BooleanField()
     subscribed_products = ProductForCancellationSerializer(many=True)
+    solidarity_contribution_data = SolidarityContributionCancellationDataSerializer()
     legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
     default_cancellation_reasons = serializers.ListField(child=serializers.CharField())
+    show_trial_period_help_text = serializers.BooleanField()
+    trial_period_duration = serializers.IntegerField()
+    trial_period_is_flexible = serializers.BooleanField()
 
 
 class CancelSubscriptionsViewResponseSerializer(serializers.Serializer):
@@ -59,6 +78,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     url_of_image_in_bestellwizard = serializers.URLField(allow_blank=True)
     capacity = serializers.IntegerField(allow_null=True)
     min_coop_shares = serializers.IntegerField()
+    price_per_delivery = serializers.BooleanField(read_only=True)
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -146,11 +166,19 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "title_bestellwizard_intro",
             "icon_link",
             "background_image_in_bestellwizard",
+            "price_per_delivery",
         ]
 
     products = SerializerMethodField()
     no_delivery = SerializerMethodField()
     accordions = SerializerMethodField()
+    price_per_delivery = SerializerMethodField()
+
+    @staticmethod
+    def get_price_per_delivery(product_type: ProductType) -> bool:
+        return SubscriptionPricingStrategyDecider.is_price_by_delivery(
+            product_type.delivery_cycle
+        )
 
     @extend_schema_field(PublicProductSerializer(many=True))
     def get_products(self, product_type: ProductType):
@@ -234,12 +262,13 @@ class MemberProfileCapacityCheckRequestSerializer(serializers.Serializer):
 
 class CancelSubscriptionsRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
-    product_ids = serializers.ListField(child=serializers.CharField())
+    product_ids = serializers.ListField(child=serializers.CharField(), required=False)
     cancel_coop_membership = serializers.BooleanField()
     cancellation_reasons = serializers.ListField(
         child=serializers.CharField(), required=False
     )
     custom_cancellation_reason = serializers.CharField(required=False)
+    cancel_solidarity_contribution = serializers.BooleanField()
 
 
 class MemberSubscriptionDataSerializer(serializers.Serializer):

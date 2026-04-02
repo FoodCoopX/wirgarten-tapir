@@ -149,15 +149,15 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
 
   function getJokerButtonText() {
     if (areJokersEnabled && areDonationsEnabled) {
-      return "Joker & Spenden verwalten";
+      return "Joker & Spende";
     }
 
     if (areJokersEnabled) {
-      return "Joker verwalten";
+      return "Joker";
     }
 
     if (areDonationsEnabled) {
-      return "Spenden verwalten";
+      return "Spenden";
     }
 
     return "Feature disabled";

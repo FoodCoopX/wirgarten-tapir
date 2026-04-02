@@ -43,12 +43,13 @@ class ExtendedMemberCreditSerializer(serializers.Serializer):
 class FuturePaymentsResponseSerializer(serializers.Serializer):
     payments = ExtendedPaymentSerializer(many=True)
     credits = MemberCreditSerializer(many=True)
+    trial_period_enabled = serializers.BooleanField()
 
 
 class MemberPaymentRhythmSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberPaymentRhythm
-        fields = "__all__"
+        exclude = ["updated_at", "created_at"]
 
 
 class MemberPaymentRhythmDataSerializer(serializers.Serializer):

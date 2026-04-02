@@ -17,7 +17,7 @@ from tapir.wirgarten.models import (
 class WaitingListProductWishSerializer(serializers.ModelSerializer):
     class Meta:
         model = WaitingListProductWish
-        fields = "__all__"
+        exclude = ["created_at", "updated_at"]
 
     product = ProductSerializer()
 
@@ -33,7 +33,7 @@ class PublicWaitingListProductWishSerializer(serializers.ModelSerializer):
 class WaitingListPickupLocationWishSerializer(serializers.ModelSerializer):
     class Meta:
         model = WaitingListPickupLocationWish
-        fields = "__all__"
+        exclude = ["created_at", "updated_at"]
 
     pickup_location = PickupLocationSerializer()
 

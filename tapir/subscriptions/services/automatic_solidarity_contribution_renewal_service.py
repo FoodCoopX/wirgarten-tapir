@@ -67,7 +67,9 @@ class AutomaticSolidarityContributionRenewalService:
     def build_renewed_contribution(
         cls, contribution: SolidarityContribution, cache: dict
     ):
-        next_growing_period = get_next_growing_period(cache=cache)
+        next_growing_period = get_next_growing_period(
+            reference_date=contribution.end_date, cache=cache
+        )
 
         trial_disabled, trial_end_date_override = (
             AutomaticSubscriptionRenewalService.get_renewed_trial_data(
@@ -121,3 +123,26 @@ class AutomaticSolidarityContributionRenewalService:
             for contribution in contributions_from_previous_growing_period
             if contribution.member_id not in member_ids_that_already_have_a_contribution
         }
+
+    @classmethod
+    def get_current_and_renewed_solidarity_contributions_at_date(
+        cls, reference_date: datetime.date, cache: dict
+    ):
+        existing_contributions = TapirCache.get_all_solidarity_contributions(
+            cache=cache
+        )
+
+        planned_renewed_contributions = [
+            cls.build_renewed_contribution(contribution=contribution, cache=cache)
+            for contribution in cls.get_contributions_that_will_be_renewed(
+                reference_date=reference_date, cache=cache
+            )
+        ]
+
+        return [
+            contribution
+            for contribution in existing_contributions.union(
+                planned_renewed_contributions
+            )
+            if contribution.start_date <= reference_date <= contribution.end_date
+        ]

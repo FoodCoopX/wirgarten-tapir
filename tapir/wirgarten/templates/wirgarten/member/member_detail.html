@@ -83,12 +83,7 @@
                             {% if extra_email_addresses_enabled %}
                                 <span id="extra_email_addresses" data-member-id="{{ object.id }}"></span>
                             {% endif %}
-                            <button class="btn tapir-btn btn-outline-primary"
-                                    onclick="FormModal.load(`{% url 'wirgarten:member_edit' object.pk %}`, 'Persönliche Daten ändern')"
-                                    id="tapir_user_edit_button">
-                                <span class="material-icons">edit</span>
-                                <h5 class="mb-0">{% translate 'Bearbeiten' %}</h5>
-                            </button>
+                            <span id="edit_personal_data_button" data-member-id="{{ object.id }}"></span>
                         </span>
                     </div>
                     <div class="card-body">
@@ -243,12 +238,7 @@
                         <div id="member-payment-data" class="card">
                             <h5 class="card-header d-flex justify-content-between align-items-center">
                                 {% translate "Bankverbindung" %}
-                                <button class="btn tapir-btn btn-outline-primary"
-                                        {% if lock_functions %}disabled="disabled"{% endif %}
-                                        onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
-                                    <span class="material-icons">edit</span>
-                                    <h5 class="mb-0">{% translate 'Bearbeiten' %}</h5>
-                                </button>
+                                <span id="bank_data_button" data-member-id="{{ object.id }}"></span>
                             </h5>
                             <div class="card-body">
                                 <div class="row m-1">

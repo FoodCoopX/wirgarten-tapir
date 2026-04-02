@@ -31,6 +31,7 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
         )
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, factories.NOW)
 
     def test_getMemberJokerInformationView_accessOtherMemberInfoAsNormalUser_returns403(

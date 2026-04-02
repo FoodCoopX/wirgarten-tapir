@@ -25,6 +25,16 @@ urlpatterns = [
         views.DeleteMemberApiView.as_view(),
         name="delete_member",
     ),
+    path(
+        "api/member_banking_data",
+        views.MemberBankDataApiView.as_view(),
+        name="member_banking_data",
+    ),
+    path(
+        "api/member_personal_data",
+        views.MemberPersonalDataApiView.as_view(),
+        name="member_personal_data",
+    ),
 ]
 
 router = DefaultRouter()

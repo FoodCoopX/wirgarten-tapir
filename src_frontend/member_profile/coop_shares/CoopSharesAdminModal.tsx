@@ -5,7 +5,7 @@ import { useApi } from "../../hooks/useApi.ts";
 import { CoopApi } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
-import dayjs from "dayjs";
+import TapirDateInput from "../../components/TapirDateInput.tsx";
 
 interface CoopSharesAdminModalProps {
   memberId: string;
@@ -61,21 +61,22 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
         <Popover.Body>
           <p>
             Als Admin kannst du Genossenschaftsanteile manuell hinzufügen und
-            hinterlegen, wann der Beitritts- bzw. Zeichnungerklärung durch den
-            Vorstand zugestimmt wurde. Relevant ist also der Zeitpunkt, an dem
-            die Beitritts- bzw. Zeichnungserklärung durch den Vorstand
-            akzeptiert wurde (nicht unbedingt der Zeitpunkt, wann das Mitglied
-            diese eingereicht hat).
+            hinterlegen, wann der Beitritts- bzw. Zeichnungserklärung durch den
+            Vorstand zugestimmt wurde.
           </p>
           <p>
-            Nutze diese Funktion vor allem dann, wenn du bei bereits bestehenden
-            Mitgliedern die Zeichnung von Genossenschaftsanteilen in der
-            Vergangenheit eintragen möchtest.
+            Du kannst zum einen in der Vergangenheit gezeichnete
+            Genossenschaftsanteile hinterlegen. Dies ist v.a. relevant wenn ihr
+            eure Mitglieder selbstständig anlegen / importieren wollt.
           </p>
           <p>
-            Falls das Mitglied gerade aktuell weitere Genossenschaftsanteile
-            zeichnen möchte, dann folge diesem{" "}
-            <a href={bestellWizardUrl}>Link</a>
+            Du kannst aber auch für bereits bestehende Mitglieder die Zeichnung
+            von Genossenschaftsanteilen eintragen. Dies ist v.a. relevant, wenn
+            Mitglieder nicht selbstständig ihren Mitgliederbereich verwalten
+            können/wollen. Das Wirksamkeitsdatum der Zeichnung der
+            Genossenschaftsanteile ergibt sich hier aus den von euren
+            Konfigurationseinstellung abhängigen Regeln und kann nicht durch
+            euch festgelegt werden."
           </p>
         </Popover.Body>
       </Popover>
@@ -87,11 +88,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
       <Form>
         <Form.Group id={"start-date"}>
           <Form.Label>Wirksamkeitsdatum</Form.Label>
-          <Form.Control
-            type={"date"}
-            onChange={(event) => setStartDate(new Date(event.target.value))}
-            value={dayjs(startDate).format("YYYY-MM-DD")}
-          />
+          <TapirDateInput date={startDate} setDate={setStartDate} />
         </Form.Group>
         <Form.Group id={"quantity"}>
           <Form.Label>Anzahl</Form.Label>

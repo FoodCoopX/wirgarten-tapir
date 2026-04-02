@@ -7,6 +7,7 @@ from django.db import transaction
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.models import CoopSharesPurchasedLogEntry
+from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.utils.shortcuts import is_running_tests
 from tapir.wirgarten.models import (
     Member,
@@ -82,12 +83,11 @@ class CoopSharePurchaseHandler:
             shares_valid_at=shares_valid_at, cache=cache
         )
 
-        payment_type = "Genossenschaftsanteile"
         existing_payment = Payment.objects.filter(
             due_date=due_date,
             mandate_ref=mandate_ref,
             status=Payment.PaymentStatus.DUE,
-            type=payment_type,
+            type=PAYMENT_TYPE_COOP_SHARES,
         ).first()
         if existing_payment is not None:
             existing_payment.amount = (
@@ -101,7 +101,7 @@ class CoopSharePurchaseHandler:
             amount=share_price * quantity,
             mandate_ref=mandate_ref,
             status=Payment.PaymentStatus.DUE,
-            type=payment_type,
+            type=PAYMENT_TYPE_COOP_SHARES,
         )
 
     @classmethod

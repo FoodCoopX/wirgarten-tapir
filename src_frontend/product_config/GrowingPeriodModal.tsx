@@ -218,7 +218,9 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                     <Form.Control
                       type={"number"}
                       onChange={(event) =>
-                        setMaxJokersPerMember(parseInt(event.target.value))
+                        setMaxJokersPerMember(
+                          Number.parseInt(event.target.value),
+                        )
                       }
                       required={true}
                       value={maxJokersPerMember}
@@ -249,7 +251,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                       2 Joker im Zeitraum 01.08. - 31.08. und maximal 3 Joker im
                       Zeitraum 15.02. - 20.03.. <br />
                       Wenn es keine Einschränkungen geben soll, bitte "disabled"
-                      eintragen.
+                      eintragen
                     </Form.Text>
                   </Form.Group>
                 </Col>
@@ -274,7 +276,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                             onChange={(event) => {
                               onWeekWithoutDeliveryChanged(
                                 index,
-                                parseInt(event.target.value),
+                                Number.parseInt(event.target.value),
                               );
                             }}
                           />
@@ -331,7 +333,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                             onChange={(event) => {
                               onAdjustmentWeekChanged(
                                 index,
-                                parseInt(event.target.value),
+                                Number.parseInt(event.target.value),
                               );
                             }}
                             aria-labelledby={"label-kw-adjustment-" + index}
@@ -340,7 +342,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                             onChange={(event) => {
                               onAdjustmentWeekdayChanged(
                                 index,
-                                parseInt(event.target.value),
+                                Number.parseInt(event.target.value),
                               );
                             }}
                             value={adjustment.adjustedWeekday}
