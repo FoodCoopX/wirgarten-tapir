@@ -120,10 +120,6 @@ class SubscriptionUpdateViewChangeApplier:
             member=member,
             actor=actor,
             rhythm=payment_rhythm,
-            valid_from=MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(
-                member=member,
-                reference_date=get_today(cache=cache),
-                cache=cache,
-            ),
+            valid_from=rhythm_valid_from,
             cache=cache,
         )

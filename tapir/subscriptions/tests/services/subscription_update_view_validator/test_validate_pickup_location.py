@@ -13,7 +13,9 @@ from tapir.subscriptions.services.subscription_update_view_validator import (
 from tapir.wirgarten.models import PickupLocation
 
 
-@patch.object(PickupLocation, "objects", autospec=True)
+@patch.object(
+    PickupLocation, "objects", autospec=False
+)  # Can't autospec "objects" because it doesn't have the get() function by default
 @patch.object(
     MemberPickupLocationGetter, "get_member_pickup_location_id", autospec=True
 )
