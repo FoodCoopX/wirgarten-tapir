@@ -41,15 +41,22 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(SimpleTestCase):
     @patch.object(
         SubscriptionUpdateViewValidator,
         "validate_additional_product_can_be_ordered_without_base_product_subscription",
+        autospec=True,
     )
-    @patch.object(OrderValidator, "validate_at_least_one_change")
-    @patch.object(OrderValidator, "validate_cannot_reduce_size")
-    @patch.object(OrderValidator, "validate_order_general")
-    @patch.object(SubscriptionUpdateViewValidator, "validate_pickup_location")
+    @patch.object(OrderValidator, "validate_at_least_one_change", autospec=True)
+    @patch.object(OrderValidator, "validate_cannot_reduce_size", autospec=True)
+    @patch.object(OrderValidator, "validate_order_general", autospec=True)
     @patch.object(
-        SubscriptionUpdateViewValidator, "validate_all_products_belong_to_product_type"
+        SubscriptionUpdateViewValidator, "validate_pickup_location", autospec=True
     )
-    @patch.object(SubscriptionUpdateViewValidator, "validate_banking_data")
+    @patch.object(
+        SubscriptionUpdateViewValidator,
+        "validate_all_products_belong_to_product_type",
+        autospec=True,
+    )
+    @patch.object(
+        SubscriptionUpdateViewValidator, "validate_banking_data", autospec=True
+    )
     def test_validateEverything_allValid_callsAllValidators(
         self,
         mock_validate_banking_data: Mock,

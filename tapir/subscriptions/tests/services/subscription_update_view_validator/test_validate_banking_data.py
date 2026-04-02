@@ -17,10 +17,14 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-@patch.object(MemberPaymentRhythmService, "get_allowed_rhythms", return_value=[])
-@patch.object(MemberPaymentRhythmService, "is_payment_rhythm_allowed")
-@patch.object(TapirCache, "get_member_payment_rhythm_object")
-@patch.object(MemberNeedsBankingDataChecker, "does_member_need_banking_data")
+@patch.object(
+    MemberPaymentRhythmService, "get_allowed_rhythms", return_value=[], autospec=True
+)
+@patch.object(MemberPaymentRhythmService, "is_payment_rhythm_allowed", autospec=True)
+@patch.object(TapirCache, "get_member_payment_rhythm_object", autospec=True)
+@patch.object(
+    MemberNeedsBankingDataChecker, "does_member_need_banking_data", autospec=True
+)
 class TestSubscriptionUpdateViewValidatorValidateBankingData(SimpleTestCase):
     def setUp(self):
         self.now = mock_timezone(

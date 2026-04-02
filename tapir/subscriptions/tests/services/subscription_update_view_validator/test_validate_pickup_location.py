@@ -13,9 +13,11 @@ from tapir.subscriptions.services.subscription_update_view_validator import (
 from tapir.wirgarten.models import PickupLocation
 
 
-@patch.object(PickupLocation, "objects")
-@patch.object(MemberPickupLocationGetter, "get_member_pickup_location_id")
-@patch.object(OrderValidator, "does_order_need_a_pickup_location")
+@patch.object(PickupLocation, "objects", autospec=True)
+@patch.object(
+    MemberPickupLocationGetter, "get_member_pickup_location_id", autospec=True
+)
+@patch.object(OrderValidator, "does_order_need_a_pickup_location", autospec=True)
 class TestSubscriptionUpdateViewValidatorValidatePickupLocation(SimpleTestCase):
     def build_default_params(self):
         self.order = Mock()
