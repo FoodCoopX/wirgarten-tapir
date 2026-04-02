@@ -39,13 +39,18 @@ You can log in as any user using the same pattern: `[name]@example.come` as user
 ## Tests
 Tests are run with `pytest`:
 ```shell
-docker compose exec web poetry run pytest
+docker compose exec web poetry run pytest --reuse-db -n auto
 ```
-You can try running tests in parallel with the following command, but you may run into problems with keycloak: 
-all tests run against the same keycloak instance that is not reset automatically by the tests. 
-```shell
-docker compose exec web poetry run pytest -n 8 # Other however many cores you have
-```
+If you run into troubles while running the tests, try running them without `--reuse-db -n auto`.
+
+You can run unit tests outside the Docker container with just by simple running `pytest`, 
+assuming you have the poetry environment installed and activated. That should be a bit faster. 
+Integration tests must be run from inside Docker.
+
+### Keycloak during tests
+User authentication is handled by keycloak through `django-allauth`. 
+During integration tests, this connection is mocked via `tapir.wirgarten.tests.test_utils.mock_keycloak`, called in `TapirIntegrationTest`.
+The mocking happen during `setUp` and `setUpTestData` happens before `setUp`, that means we can't create users inside `setUpTestData`. 
 
 ## Formatting
 Python files are formatted with [Black](https://github.com/psf/black).
