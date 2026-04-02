@@ -161,11 +161,7 @@ class SubscriptionUpdateViewValidator:
         ):
             raise ValidationError("Du hast schon eine Verteilstation")
 
-        pickup_location_id = None
-        if current_pickup_location_id is not None:
-            pickup_location_id = current_pickup_location_id
-        if desired_pickup_location_id is not None:
-            pickup_location_id = desired_pickup_location_id
+        pickup_location_id = current_pickup_location_id or desired_pickup_location_id
         if pickup_location_id is None:
             raise ValidationError("Bitte wähle einen Abholort aus!")
 
