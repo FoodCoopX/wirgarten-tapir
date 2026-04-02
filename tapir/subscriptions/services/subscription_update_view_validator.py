@@ -37,7 +37,7 @@ class SubscriptionUpdateViewValidator:
         contract_start_date: datetime.date,
         member: Member,
         logged_in_user_is_admin: bool,
-        desired_pickup_location_id: str,
+        desired_pickup_location_id: str | None,
         account_owner: str,
         iban: str,
         payment_rhythm: str | None,
