@@ -38,9 +38,6 @@ importers:
       libphonenumber-js:
         specifier: ^1.12.33
         version: 1.12.33
-      prettier:
-        specifier: ^3.7.4
-        version: 3.7.4
       react:
         specifier: ^19.2.3
         version: 19.2.3
@@ -96,6 +93,9 @@ importers:
       globals:
         specifier: ^15.9.0
         version: 15.15.0
+      prettier:
+        specifier: ^3.7.4
+        version: 3.7.4
       typescript-eslint:
         specifier: ^8.33.1
         version: 8.39.0(eslint@9.32.0)(typescript@5.9.3)

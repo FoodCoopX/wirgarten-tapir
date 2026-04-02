@@ -20,7 +20,6 @@
     "iban": "^0.0.14",
     "leaflet": "^1.9.4",
     "libphonenumber-js": "^1.12.33",
-    "prettier": "^3.7.4",
     "react": "^19.2.3",
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-icons": "^1.11.6",
@@ -41,6 +40,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.9.0",
+    "prettier": "^3.7.4",
     "typescript-eslint": "^8.33.1",
     "vite": "^7.3.0"
   }

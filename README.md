@@ -36,6 +36,38 @@ You can log in as admin with username `roberto.cortes@example.com` and password 
 
 You can log in as any user using the same pattern: `[name]@example.come` as username and `[name]` as password 
 
+## Setup Dev Environment
+
+### System
+Assuming you are on a Debian-Based Distro (otherwise just try the following step and see if you get any warnings):
+`sudo apt install libsqlite3-dev libreadline-dev`
+
+### Python
+
+Install the latest Python version directly from [Python.org](https://www.python.org/downloads) or use [pyenv](https://github.com/pyenv/pyenv):
+
+_Please check pyproject.toml for the current version used in this project_
+`pyenv install 3.14:latest`
+
+Install [Poetry](https://python-poetry.org/docs/#installing-with-pipx) and configure your Interpreter in PyCharm with Poetry or run:
+`poetry install --with dev`
+
+### NodeJS
+Install the latest Version of [Node](https://nodejs.org/en/download) and [pnpm](https://pnpm.io/installation) and run:
+`pnpm install -D`
+
+### Style Checks
+Python files are formatted with [Black](https://github.com/psf/black).
+
+Javascript and React files are formatted with [Prettier](https://prettier.io/).
+
+Django template files are formatted with [djLint](https://djlint.com/)
+
+All you have to do is:
+`poetry run pre-commit` 
+
+This will install djLint and Black. Prettier should already be installed by the previous step.
+
 ## Tests
 Tests are run with `pytest`:
 ```shell
@@ -51,13 +83,6 @@ Integration tests must be run from inside Docker.
 User authentication is handled by keycloak through `django-allauth`. 
 During integration tests, this connection is mocked via `tapir.wirgarten.tests.test_utils.mock_keycloak`, called in `TapirIntegrationTest`.
 The mocking happen during `setUp` and `setUpTestData` happens before `setUp`, that means we can't create users inside `setUpTestData`. 
-
-## Formatting
-Python files are formatted with [Black](https://github.com/psf/black).
-
-Javascript and React files are formatted with [Prettier](https://prettier.io/).
-
-Django template files are formatted with [djLint](https://djlint.com/)
 
 ## Frontend API clients
 API Requests made from the React frontend use API clients. Here are the steps to get updated API clients:
