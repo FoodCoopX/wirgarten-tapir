@@ -14,6 +14,7 @@ class TestGetDeliveriesServiceGetDeliveries(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
+        super().setUp()
         mock_timezone(self, factories.NOW)
 
     @patch.object(GetDeliveriesService, "build_delivery_object")

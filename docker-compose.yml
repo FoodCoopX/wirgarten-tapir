@@ -24,7 +24,6 @@ services:
       DJANGO_VITE_DEBUG: True
     depends_on:
       - db
-      - keycloak
       - redis
     ports:
       - "8000:8000"

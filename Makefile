@@ -7,7 +7,7 @@ test-lint:
 test: test-lint
 	find tapir -path "*/tests/*.py" | grep -q . || exit 0; \
 	poetry run python manage.py collectstatic
-	poetry run pytest --cov-report xml:coverage.xml --cov=tapir --cov-config=pyproject.toml
+	poetry run pytest --cov-report xml:coverage.xml --cov=tapir --cov-config=pyproject.toml -n auto
 
 publish-docker-image:
 	gh workflow -R foodcoopx/wirgarten-tapir run "Create and publish Docker image"

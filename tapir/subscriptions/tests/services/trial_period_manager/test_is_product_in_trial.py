@@ -20,6 +20,7 @@ class TestIsProductInTrial(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
+        super().setUp()
         self.today = mock_timezone(
             self, datetime.datetime(year=2021, month=8, day=10)
         ).date()

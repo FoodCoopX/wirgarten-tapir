@@ -36,6 +36,7 @@ class TestLinkMemberToPickupLocation(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DAY).update(value=2)
 
     def setUp(self):
+        super().setUp()
         self.now = mock_timezone(
             test=self, now=datetime.datetime(year=2020, month=1, day=1)
         )

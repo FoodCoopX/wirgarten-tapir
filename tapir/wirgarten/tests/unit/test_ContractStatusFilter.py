@@ -19,6 +19,7 @@ class ContractStatusFilterTestCase(TapirIntegrationTest):
         ParameterDefinitions().import_definitions()
 
     def setUp(self):
+        super().setUp()
         mock_timezone(self, datetime.datetime(year=2023, month=6, day=15))
 
         current_growing_period = GrowingPeriodFactory.create(

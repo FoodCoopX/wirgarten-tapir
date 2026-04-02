@@ -18,7 +18,6 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
     mock_timezone,
-    set_bypass_keycloak,
 )
 
 
@@ -30,8 +29,8 @@ class SegmentTest(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
+        super().setUp()
         mock_timezone(self, self.NOW)
-        set_bypass_keycloak()
 
         configure_mail_module()
 

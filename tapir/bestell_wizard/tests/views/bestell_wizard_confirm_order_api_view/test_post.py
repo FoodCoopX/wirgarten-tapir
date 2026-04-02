@@ -10,7 +10,6 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
-from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
@@ -98,13 +97,8 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         QuestionnaireSourceService.get_questionnaire_source_choices(cache={})
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(self, datetime.datetime(year=2027, month=6, day=27))
-
-        # make sure our test user is not already present in the keycloak db
-        client = KeycloakUserManager.get_keycloak_client(cache={})
-        user_id = client.get_user_id("john@doe.de")
-        if user_id is not None:
-            client.delete_user(user_id)
 
     @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
