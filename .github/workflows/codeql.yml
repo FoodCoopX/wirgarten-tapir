@@ -41,7 +41,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install libsasl2-dev libldap2-dev
 
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
