@@ -179,7 +179,7 @@ class SubscriptionUpdateViewValidator:
             product = TapirCache.get_product_by_id(cache=cache, product_id=product.id)
             if product.type_id != product_type_id:
                 raise ValidationError(
-                    f"Product '{product.name}' does not belong to product type with id{product_type_id}"
+                    f"Product '{product.name}' does not belong to product type with id: {product_type_id}"
                 )
 
     @classmethod
