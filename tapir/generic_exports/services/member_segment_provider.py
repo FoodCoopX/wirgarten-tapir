@@ -152,8 +152,8 @@ class MemberSegmentProvider:
 
         year = reference_datetime.year
         timerange = (
-            datetime.datetime(year - 1, 1, 1),
-            datetime.datetime(year, 1, 1) - datetime.timedelta(milliseconds=1),
+            datetime.date(year - 1, 1, 1),
+            datetime.date(year, 1, 1) - datetime.timedelta(milliseconds=1),
         )
         return Member.objects.filter(
             coopsharetransaction__transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,

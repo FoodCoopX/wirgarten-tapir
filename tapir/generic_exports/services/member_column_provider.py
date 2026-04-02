@@ -258,8 +258,8 @@ class MemberColumnProvider:
     ):
         year = reference_datetime.year
         timerange = (
-            datetime.datetime(year - 1, 1, 1),
-            datetime.datetime(year, 1, 1) - datetime.timedelta(milliseconds=1),
+            datetime.date(year - 1, 1, 1),
+            datetime.date(year, 1, 1) - datetime.timedelta(milliseconds=1),
         )
         return -(
             member.coopsharetransaction_set.filter(
