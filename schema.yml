@@ -4707,6 +4707,15 @@ paths:
       operationId: waiting_list_api_list_list
       parameters:
       - in: query
+        name: can_be_fulfilled
+        schema:
+          type: string
+          enum:
+          - any
+          - fulfillable
+          - not_fulfillable
+        required: true
+      - in: query
         name: category
         schema:
           type: string

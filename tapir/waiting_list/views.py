@@ -126,6 +126,12 @@ class WaitingListApiView(APIView):
             OpenApiParameter(name="pickup_location_wish", type=str, required=True),
             OpenApiParameter(name="product_wish", type=str, required=True),
             OpenApiParameter(
+                name="can_be_fulfilled",
+                type=str,
+                enum=["any", "fulfillable", "not_fulfillable"],
+                required=True,
+            ),
+            OpenApiParameter(
                 name="order_by",
                 type=str,
                 required=True,
@@ -150,6 +156,7 @@ class WaitingListApiView(APIView):
             "current_pickup_location_id",
             "pickup_location_wish",
             "product_wish",
+            "can_be_fulfilled",
         ]
         for filter_name in filters:
             parameter = request.query_params.get(filter_name)
@@ -243,6 +250,26 @@ class WaitingListApiView(APIView):
             return entries
         wishes = WaitingListProductWish.objects.filter(product_id=product_id)
         return entries.filter(product_wishes__in=wishes)
+
+    @classmethod
+    def filter_by_can_be_fulfilled(
+        cls, value: str, entries: QuerySet[WaitingListEntry]
+    ):
+        if not value or value == "any":
+            return entries
+
+        cache = {}
+        filtered_entries = []
+        for entry in entries:
+            can_be_fulfilled = cls.check_if_entry_can_be_fulfilled(
+                entry=entry, cache=cache
+            )
+            if value == "fulfillable" and can_be_fulfilled:
+                filtered_entries.append(entry.id)
+            elif value == "not_fulfillable" and not can_be_fulfilled:
+                filtered_entries.append(entry.id)
+
+        return entries.filter(id__in=filtered_entries)
 
     @classmethod
     def order_by_coop_entry_date(
