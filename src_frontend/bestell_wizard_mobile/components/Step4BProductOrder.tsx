@@ -195,7 +195,11 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
           {product.descriptionInBestellwizard && (
             <>
               <br />
-              {product.descriptionInBestellwizard}
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: product.descriptionInBestellwizard,
+                }}
+              />
             </>
           )}
           <br />
