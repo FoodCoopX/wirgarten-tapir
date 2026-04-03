@@ -153,6 +153,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP3_TITLE = f"{PREFIX}.bestellwizard.step3.title"
     BESTELLWIZARD_STEP3_TEXT = f"{PREFIX}.bestellwizard.step3.text"
+    BESTELLWIZARD_STEP3_NAME_SUPPORTING_MEMBERSHIP = (
+        f"{PREFIX}.bestellwizard.step3.name_supporting_membership"
+    )
     BESTELLWIZARD_STEP3_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step3.background_image"
     )

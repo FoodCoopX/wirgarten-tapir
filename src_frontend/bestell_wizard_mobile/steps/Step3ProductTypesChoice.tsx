@@ -168,7 +168,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                 style={{ pointerEvents: "none" }}
                 readOnly={true}
               />
-              <span>Fördermitgliedschaft</span>
+              <span>{settings.strings.step3SupportingMembershipName}</span>
             </div>
           </label>
         </div>

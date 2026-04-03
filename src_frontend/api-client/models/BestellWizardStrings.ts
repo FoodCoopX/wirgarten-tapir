@@ -71,6 +71,12 @@ export interface BestellWizardStrings {
    * @type {string}
    * @memberof BestellWizardStrings
    */
+  step3SupportingMembershipName: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
   step3bTitle: string;
   /**
    *
@@ -340,6 +346,11 @@ export function instanceOfBestellWizardStrings(
   if (!("step3Title" in value) || value["step3Title"] === undefined)
     return false;
   if (!("step3Text" in value) || value["step3Text"] === undefined) return false;
+  if (
+    !("step3SupportingMembershipName" in value) ||
+    value["step3SupportingMembershipName"] === undefined
+  )
+    return false;
   if (!("step3bTitle" in value) || value["step3bTitle"] === undefined)
     return false;
   if (!("step3bText" in value) || value["step3bText"] === undefined)
@@ -488,6 +499,7 @@ export function BestellWizardStringsFromJSONTyped(
     step2Text: json["step2_text"],
     step3Title: json["step3_title"],
     step3Text: json["step3_text"],
+    step3SupportingMembershipName: json["step3_supporting_membership_name"],
     step3bTitle: json["step3b_title"],
     step3bText: json["step3b_text"],
     step4bWaitingListModalTitle: json["step4b_waiting_list_modal_title"],
@@ -554,6 +566,7 @@ export function BestellWizardStringsToJSONTyped(
     step2_text: value["step2Text"],
     step3_title: value["step3Title"],
     step3_text: value["step3Text"],
+    step3_supporting_membership_name: value["step3SupportingMembershipName"],
     step3b_title: value["step3bTitle"],
     step3b_text: value["step3bText"],
     step4b_waiting_list_modal_title: value["step4bWaitingListModalTitle"],

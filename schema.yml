@@ -5484,6 +5484,8 @@ components:
           type: string
         step3_text:
           type: string
+        step3_supporting_membership_name:
+          type: string
         step3b_title:
           type: string
         step3b_text:
@@ -5593,6 +5595,7 @@ components:
       - step1b_title
       - step2_text
       - step2_title
+      - step3_supporting_membership_name
       - step3_text
       - step3_title
       - step3b_text

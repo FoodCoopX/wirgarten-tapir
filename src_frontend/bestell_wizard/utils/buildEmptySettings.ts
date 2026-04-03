@@ -40,6 +40,7 @@ export function buildEmptySettings(): BestellWizardSettings {
       step3Text: "",
       step3bTitle: "",
       step3bText: "",
+      step3SupportingMembershipName: "",
       step4bWaitingListModalTitle: "",
       step4bWaitingListModalText: "",
       step4dTitle: "",
