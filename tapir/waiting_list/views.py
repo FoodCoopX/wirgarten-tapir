@@ -387,6 +387,7 @@ class WaitingListApiView(APIView):
             member_id=entry.member_id if entry.member else None,
             subscription_start_date=subscription_start,
             cache=cache,
+            check_waiting_list_entries=False,
         )
 
         if product_type_ids_without_enough_capacity:
