@@ -68,7 +68,12 @@ from tapir.wirgarten.models import (
     MandateReference,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import check_permission_or_self, get_today, get_now
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    get_today,
+    get_now,
+    legal_status_is_cooperative,
+)
 
 
 class MinimumNumberOfSharesApiView(APIView):
@@ -380,8 +385,9 @@ class MemberPersonalDataApiView(APIView):
         member = get_object_or_404(Member, id=member_id)
 
         is_student = None
-        if get_parameter_value(
-            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache={}
+        if legal_status_is_cooperative(cache=self.cache) and get_parameter_value(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            cache=self.cache,
         ):
             is_student = member.is_student
 
@@ -420,8 +426,11 @@ class MemberPersonalDataApiView(APIView):
         member = get_object_or_404(Member, id=member_id)
 
         member_before = freeze_for_log(member)
-        student_status_enabled = get_parameter_value(
-            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache={}
+        student_status_enabled = legal_status_is_cooperative(
+            cache=self.cache
+        ) and get_parameter_value(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            cache=self.cache,
         )
 
         try:

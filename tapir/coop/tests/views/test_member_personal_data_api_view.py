@@ -8,7 +8,10 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import UpdateTapirUserLogEntry, KeycloakUser
+from tapir.configuration.models import TapirParameter
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION, LEGAL_STATUS_COOPERATIVE
 from tapir.wirgarten.mail_events import Events
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -67,6 +70,46 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         response_content = response.json()
         for field in self.SIMPLE_FIELDS:
             self.assertEqual(getattr(target, field), response_content[field])
+
+    def test_get_studentStatusEnabledButLegalStatusIsNotCooperative_returnsNoneAsStudentStatus(
+        self,
+    ):
+        user = MemberFactory.create()
+        self.client.force_login(user)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES
+        ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).update(value=LEGAL_STATUS_ASSOCIATION)
+
+        url = reverse("coop:member_personal_data")
+        url = f"{url}?member_id={user.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertIsNone(response_content["is_student"])
+
+    def test_get_studentStatusEnabledAndLegalStatusIsCooperative_returnsCorrectValueForStudentStatus(
+        self,
+    ):
+        user = MemberFactory.create(is_student=True)
+        self.client.force_login(user)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES
+        ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).update(value=LEGAL_STATUS_COOPERATIVE)
+
+        url = reverse("coop:member_personal_data")
+        url = f"{url}?member_id={user.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertTrue(response_content["is_student"])
 
     @patch.object(TransactionalTrigger, "fire_action")
     def test_patch_memberTriesToUpdateDataFromAnotherMember_returns403(
