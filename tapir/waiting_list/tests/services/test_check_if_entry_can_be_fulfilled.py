@@ -3,6 +3,7 @@ import datetime
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.waiting_list.views import WaitingListApiView
 from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.models import (
     WaitingListProductWish,
     WaitingListPickupLocationWish,
@@ -22,6 +23,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
         cls.product = ProductFactory.create(type__delivery_cycle=WEEKLY[0])
         ProductPriceFactory.create(product=cls.product, size=1)
         cls.growing_period = GrowingPeriodFactory.create(
