@@ -88,3 +88,84 @@ class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
         result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
 
         self.assertFalse(result)
+
+    def test_checkIfEntryCanBeFulfilled_withWishesAndSufficientCapacity_returnsTrue(
+        self,
+    ):
+        entry = WaitingListEntryFactory.create()
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=self.product, quantity=1
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=self.pickup_location,
+            priority=1,
+        )
+
+        result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
+
+        self.assertTrue(result)
+
+    def test_checkIfEntryCanBeFulfilled_multiplePickupLocationWishesNoneWithCapacity_returnsFalse(
+        self,
+    ):
+        from tapir.wirgarten.models import PickupLocationCapability
+
+        PickupLocationCapability.objects.filter(
+            pickup_location=self.pickup_location
+        ).update(max_capacity=0)
+
+        pickup_location_2 = PickupLocationFactory.create()
+        PickupLocationCapabilityFactory.create(
+            pickup_location=pickup_location_2,
+            product_type=self.product.type,
+            max_capacity=0,
+        )
+
+        entry = WaitingListEntryFactory.create()
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=self.product, quantity=1
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=self.pickup_location,
+            priority=1,
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=pickup_location_2,
+            priority=2,
+        )
+
+        result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
+
+        self.assertFalse(result)
+
+    def test_checkIfEntryCanBeFulfilled_multiplePickupLocationWishesOneWithCapacity_returnsTrue(
+        self,
+    ):
+        pickup_location_2 = PickupLocationFactory.create()
+        PickupLocationCapabilityFactory.create(
+            pickup_location=pickup_location_2,
+            product_type=self.product.type,
+            max_capacity=0,
+        )
+
+        entry = WaitingListEntryFactory.create()
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=self.product, quantity=1
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=pickup_location_2,
+            priority=1,
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=self.pickup_location,
+            priority=2,
+        )
+
+        result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
+
+        self.assertTrue(result)
