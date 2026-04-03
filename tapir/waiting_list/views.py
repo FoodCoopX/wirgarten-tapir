@@ -435,6 +435,7 @@ class WaitingListApiView(APIView):
                 already_registered_member=entry.member,
                 subscription_start=subscription_start,
                 cache=cache,
+                check_waiting_list_entries=False,
             )
             if has_capacity:
                 return True

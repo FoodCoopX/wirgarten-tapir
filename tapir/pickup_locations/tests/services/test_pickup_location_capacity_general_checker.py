@@ -58,6 +58,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
+            check_waiting_list_entries=True,
         )
 
     @patch.object(
@@ -95,4 +96,5 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
             already_registered_member=None,
             subscription_start=subscription_start,
             cache=cache,
+            check_waiting_list_entries=True,
         )
