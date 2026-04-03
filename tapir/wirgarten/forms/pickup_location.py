@@ -310,7 +310,7 @@ class PickupLocationEditForm(forms.Form):
             label=_("Zugangscode"), required=False
         )
         self.fields["messenger_group_link"] = forms.CharField(
-            label=_("Link zur Signal-Gruppe"), required=False
+            label=_("Link zur Messenger-Gruppe"), required=False
         )
         self.fields["contact_name"] = forms.CharField(
             label=_("Name der Abholort-Pat*innen"), required=False
