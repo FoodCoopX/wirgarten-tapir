@@ -35,7 +35,6 @@ class WaitingListReservedCapacityCalculator:
     def _compute_all_reserved_capacities(
         cls, reference_date: datetime.date, cache: dict
     ):
-        result = {}
 
         all_product_wishes = list(
             WaitingListProductWish.objects.select_related(
@@ -43,9 +42,7 @@ class WaitingListReservedCapacityCalculator:
             ).prefetch_related("waiting_list_entry__pickup_location_wishes")
         )
 
-        global_reserved = {}
-        by_pickup_location = {}
-
+        result = {}
         for wish in all_product_wishes:
             product = wish.product
             product_type_id = product.type_id
@@ -54,20 +51,13 @@ class WaitingListReservedCapacityCalculator:
             ).size
             capacity = product_size * wish.quantity
 
-            global_reserved[product_type_id] = (
-                global_reserved.get(product_type_id, 0) + capacity
+            result[(product_type_id, "__global__")] = (
+                result.get((product_type_id, "__global__"), 0) + capacity
             )
 
             entry = wish.waiting_list_entry
-            for pl_wish in entry.pickup_location_wishes.all():
-                pl_id = pl_wish.pickup_location_id
-                key = (product_type_id, pl_id)
-                by_pickup_location[key] = by_pickup_location.get(key, 0) + capacity
-
-        for product_type_id, capacity in global_reserved.items():
-            result[(product_type_id, "__global__")] = capacity
-
-        for (product_type_id, pl_id), capacity in by_pickup_location.items():
-            result[(product_type_id, pl_id)] = capacity
+            for pickup_location_wish in entry.pickup_location_wishes.all():
+                key = (product_type_id, pickup_location_wish.pickup_location_id)
+                result[key] = result.get(key, 0) + capacity
 
         return result
