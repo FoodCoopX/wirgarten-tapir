@@ -8,6 +8,7 @@ from tapir.wirgarten.models import (
     WaitingListProductWish,
     WaitingListPickupLocationWish,
     ProductCapacity,
+    PickupLocationCapability,
 )
 from tapir.wirgarten.tests.factories import (
     ProductFactory,
@@ -109,8 +110,6 @@ class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
     def test_checkIfEntryCanBeFulfilled_multiplePickupLocationWishesNoneWithCapacity_returnsFalse(
         self,
     ):
-        from tapir.wirgarten.models import PickupLocationCapability
-
         PickupLocationCapability.objects.filter(
             pickup_location=self.pickup_location
         ).update(max_capacity=0)
