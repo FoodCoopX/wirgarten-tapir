@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Form, Modal, OverlayTrigger, Popover } from "react-bootstrap";
+import { Form, Modal } from "react-bootstrap";
 import "dayjs/locale/de";
 import { useApi } from "../../hooks/useApi.ts";
 import { CoopApi } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import TapirDateInput from "../../components/TapirDateInput.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 
 interface CoopSharesAdminModalProps {
   memberId: string;
@@ -56,30 +57,27 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
 
   function buildTooltip() {
     return (
-      <Popover id="popover-basic" style={{ maxWidth: "500px" }}>
-        <Popover.Header as="h3">Erklärung</Popover.Header>
-        <Popover.Body>
-          <p>
-            Als Admin kannst du Genossenschaftsanteile manuell hinzufügen und
-            hinterlegen, wann der Beitritts- bzw. Zeichnungserklärung durch den
-            Vorstand zugestimmt wurde.
-          </p>
-          <p>
-            Du kannst zum einen in der Vergangenheit gezeichnete
-            Genossenschaftsanteile hinterlegen. Dies ist v.a. relevant wenn ihr
-            eure Mitglieder selbstständig anlegen / importieren wollt.
-          </p>
-          <p>
-            Du kannst aber auch für bereits bestehende Mitglieder die Zeichnung
-            von Genossenschaftsanteilen eintragen. Dies ist v.a. relevant, wenn
-            Mitglieder nicht selbstständig ihren Mitgliederbereich verwalten
-            können/wollen. Das Wirksamkeitsdatum der Zeichnung der
-            Genossenschaftsanteile ergibt sich hier aus den von euren
-            Konfigurationseinstellung abhängigen Regeln und kann nicht durch
-            euch festgelegt werden."
-          </p>
-        </Popover.Body>
-      </Popover>
+      <>
+        <p>
+          Als Admin kannst du Genossenschaftsanteile manuell hinzufügen und
+          hinterlegen, wann der Beitritts- bzw. Zeichnungserklärung durch den
+          Vorstand zugestimmt wurde.
+        </p>
+        <p>
+          Du kannst zum einen in der Vergangenheit gezeichnete
+          Genossenschaftsanteile hinterlegen. Dies ist v.a. relevant wenn ihr
+          eure Mitglieder selbstständig anlegen / importieren wollt.
+        </p>
+        <p>
+          Du kannst aber auch für bereits bestehende Mitglieder die Zeichnung
+          von Genossenschaftsanteilen eintragen. Dies ist v.a. relevant, wenn
+          Mitglieder nicht selbstständig ihren Mitgliederbereich verwalten
+          können/wollen. Das Wirksamkeitsdatum der Zeichnung der
+          Genossenschaftsanteile ergibt sich hier aus den von euren
+          Konfigurationseinstellung abhängigen Regeln und kann nicht durch euch
+          festgelegt werden.
+        </p>
+      </>
     );
   }
 
@@ -134,13 +132,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
           <h5 className={"mb-0"}>
             Genossenschaftsanteile als Admin hinzufügen
           </h5>
-          <OverlayTrigger
-            overlay={buildTooltip()}
-            trigger={"click"}
-            placement={"bottom"}
-          >
-            <TapirButton variant={"outline-secondary"} icon={"help"} />
-          </OverlayTrigger>
+          <TapirHelpButton text={buildTooltip()} />
         </div>
       </Modal.Header>
       <Modal.Body>{showForm ? buildForm() : buildChoice()}</Modal.Body>

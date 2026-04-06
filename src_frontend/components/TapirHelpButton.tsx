@@ -29,6 +29,7 @@ const TapirHelpButton: React.FC<TapirHelpButtonProps> = ({
       overlay={buildTooltip()}
       trigger={"click"}
       placement={"bottom"}
+      rootClose={true}
     >
       <TapirButton
         variant={"outline-secondary"}
