@@ -66,6 +66,7 @@ export interface WaitingListApiDisableWaitingListLinkCreateRequest {
 }
 
 export interface WaitingListApiListListRequest {
+    canBeFulfilled: WaitingListApiListListCanBeFulfilledEnum;
     category: string;
     currentPickupLocationId: string;
     entryType: WaitingListApiListListEntryTypeEnum;
@@ -250,6 +251,13 @@ export class WaitingListApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['canBeFulfilled'] == null) {
+            throw new runtime.RequiredError(
+                'canBeFulfilled',
+                'Required parameter "canBeFulfilled" was null or undefined when calling waitingListApiListList().'
+            );
+        }
+
         if (requestParameters['currentPickupLocationId'] == null) {
             throw new runtime.RequiredError(
                 'currentPickupLocationId',
@@ -310,6 +318,10 @@ export class WaitingListApi extends runtime.BaseAPI {
 
         if (requestParameters['category'] != null) {
             queryParameters['category'] = requestParameters['category'];
+        }
+
+        if (requestParameters['canBeFulfilled'] != null) {
+            queryParameters['can_be_fulfilled'] = requestParameters['canBeFulfilled'];
         }
 
         if (requestParameters['currentPickupLocationId'] != null) {
@@ -951,6 +963,16 @@ export class WaitingListApi extends runtime.BaseAPI {
 
 }
 
+/**
+ * @export
+ */
+export const WaitingListApiListListCanBeFulfilledEnum = {
+    Any: 'any',
+    Fulfillable: 'fulfillable',
+    NotFulfillable: 'not_fulfillable',
+} as const;
+export type WaitingListApiListListCanBeFulfilledEnum =
+    (typeof WaitingListApiListListCanBeFulfilledEnum)[keyof typeof WaitingListApiListListCanBeFulfilledEnum];
 /**
  * @export
  */

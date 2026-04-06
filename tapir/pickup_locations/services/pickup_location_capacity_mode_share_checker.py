@@ -39,6 +39,7 @@ class PickupLocationCapacityModeShareChecker:
         already_registered_member: Member | None,
         subscription_start: datetime.date,
         cache: dict,
+        check_waiting_list_entries: bool = True,
     ) -> bool:
         product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location=pickup_location, cache=cache
@@ -58,7 +59,7 @@ class PickupLocationCapacityModeShareChecker:
                 pickup_location=pickup_location,
                 subscription_start=subscription_start,
                 ordered_product_to_quantity_map=order,
-                check_waiting_list_entries=True,
+                check_waiting_list_entries=check_waiting_list_entries,
                 cache=cache,
             ):
                 return False

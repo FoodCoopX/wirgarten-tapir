@@ -72,6 +72,7 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     link_sent_date = serializers.DateTimeField(required=False)
     link = serializers.URLField(required=False)
     payment_rhythm = serializers.CharField(required=False)
+    can_be_fulfilled = serializers.BooleanField(required=False)
 
 
 class PublicWaitingListEntryDetailsSerializer(serializers.Serializer):
