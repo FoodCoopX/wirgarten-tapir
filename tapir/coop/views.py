@@ -122,7 +122,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        responses={200: str},
+        responses={200: OrderConfirmationResponseSerializer},
         request=ExistingMemberPurchasesSharesRequestSerializer,
     )
     def post(self, request):
@@ -139,31 +139,28 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         ):
             raise PermissionDenied("Du hast hast die nötige Berechtigung nicht.")
 
+        iban = serializer.validated_data.get("iban", None)
+        account_owner = serializer.validated_data.get("account_owner", None)
         number_of_shares_to_add = serializer.validated_data["number_of_shares_to_add"]
-        if number_of_shares_to_add <= 0:
-            raise DrfValidationError("Number of coop shares must be positive")
-
-        if not member.is_student and not as_admin:
-            self.validate_number_of_shares(
-                number_of_shares_to_add=number_of_shares_to_add,
-                cache=self.cache,
-                member=member,
-            )
-
-        if MembershipCancellationManager.is_in_coop_trial(member) and not as_admin:
-            raise DrfValidationError(
-                "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
-            )
-
         needs_banking_data = (
             MemberNeedsBankingDataChecker.does_member_need_banking_data(member)
         )
-        iban = serializer.validated_data.get("iban", None)
-        account_owner = serializer.validated_data.get("account_owner", None)
-        if needs_banking_data and (not iban or not account_owner):
-            raise DrfValidationError(
-                "Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)"
+
+        try:
+            self.validate_everything(
+                as_admin=as_admin,
+                account_owner=account_owner,
+                iban=iban,
+                member=member,
+                needs_banking_data=needs_banking_data,
+                number_of_shares_to_add=number_of_shares_to_add,
             )
+        except DjangoValidationError as error:
+            data = {
+                "order_confirmed": False,
+                "error": error.message,
+            }
+            return Response(OrderConfirmationResponseSerializer(data).data)
 
         if as_admin:
             shares_valid_at = serializer.validated_data["start_date"]
@@ -188,7 +185,42 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 member.sepa_consent = get_now(cache=self.cache)
                 member.save()
 
-        return Response(member.get_absolute_url())
+        data = {
+            "order_confirmed": True,
+            "error": None,
+            "redirect_url": member.get_absolute_url(),
+        }
+        return Response(OrderConfirmationResponseSerializer(data).data)
+
+    def validate_everything(
+        self,
+        as_admin: bool,
+        account_owner: str | None,
+        iban: str | None,
+        member: Member,
+        needs_banking_data: bool,
+        number_of_shares_to_add: int,
+    ):
+
+        if number_of_shares_to_add <= 0:
+            raise DjangoValidationError("Number of coop shares must be positive")
+
+        if not member.is_student and not as_admin:
+            self.validate_number_of_shares(
+                number_of_shares_to_add=number_of_shares_to_add,
+                cache=self.cache,
+                member=member,
+            )
+
+        if MembershipCancellationManager.is_in_coop_trial(member) and not as_admin:
+            raise DjangoValidationError(
+                "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
+            )
+
+        if needs_banking_data and (not iban or not account_owner):
+            raise DjangoValidationError(
+                "Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)"
+            )
 
     @classmethod
     def validate_number_of_shares(
@@ -219,7 +251,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         )
 
         if current_shares + number_of_shares_to_add < total_min_shares:
-            raise DrfValidationError(
+            raise DjangoValidationError(
                 f"The minimum final number of shares is {total_min_shares}, "
                 f"this member currently has {current_shares}, adding {number_of_shares_to_add} is not enough."
             )

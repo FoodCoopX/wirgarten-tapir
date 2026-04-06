@@ -140,7 +140,7 @@ export class CoopApi extends runtime.BaseAPI {
   async coopApiExistingMemberPurchasesSharesCreateRaw(
     requestParameters: CoopApiExistingMemberPurchasesSharesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<string>> {
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
     if (
       requestParameters["existingMemberPurchasesSharesRequestRequest"] == null
     ) {
@@ -183,11 +183,9 @@ export class CoopApi extends runtime.BaseAPI {
       initOverrides,
     );
 
-    if (this.isJsonMime(response.headers.get("content-type"))) {
-      return new runtime.JSONApiResponse<string>(response);
-    } else {
-      return new runtime.TextApiResponse(response) as any;
-    }
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
   }
 
   /**
@@ -195,7 +193,7 @@ export class CoopApi extends runtime.BaseAPI {
   async coopApiExistingMemberPurchasesSharesCreate(
     requestParameters: CoopApiExistingMemberPurchasesSharesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<string> {
+  ): Promise<OrderConfirmationResponse> {
     const response = await this.coopApiExistingMemberPurchasesSharesCreateRaw(
       requestParameters,
       initOverrides,

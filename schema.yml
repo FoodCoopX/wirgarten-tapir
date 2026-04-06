@@ -231,7 +231,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /coop/api/get_coop_share_transactions:
     get:

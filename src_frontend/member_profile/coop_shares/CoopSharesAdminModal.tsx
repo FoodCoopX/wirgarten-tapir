@@ -7,6 +7,9 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import TapirDateInput from "../../components/TapirDateInput.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import { addToast } from "../../utils/addToast.ts";
+import { v4 as uuidv4 } from "uuid";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface CoopSharesAdminModalProps {
   memberId: string;
@@ -14,6 +17,7 @@ interface CoopSharesAdminModalProps {
   show: boolean;
   onHide: () => void;
   bestellWizardUrl: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
@@ -22,6 +26,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
   show,
   onHide,
   bestellWizardUrl,
+  setToastDatas,
 }) => {
   const coopApi = useApi(CoopApi, csrfToken);
   const [loading, setLoading] = useState(false);
@@ -45,12 +50,29 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
           startDate: startDate,
         },
       })
-      .then(() => location.reload())
+      .then((response) => {
+        if (response.orderConfirmed) {
+          location.reload();
+          return;
+        }
+
+        setLoading(false);
+        addToast(
+          {
+            title: "Fehler beim Hinzufügen der Geno-Anteile",
+            message: response.error ?? undefined,
+            variant: "danger",
+            id: uuidv4(),
+          },
+          setToastDatas,
+        );
+      })
       .catch((error) => {
         setLoading(false);
         handleRequestError(
           error,
           "Fehler bei der manueller Zeichnung der Geno-Anteile",
+          setToastDatas,
         );
       });
   }
