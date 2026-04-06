@@ -22,6 +22,7 @@ class PickupLocationCapacityGeneralChecker:
         already_registered_member: Member | None,
         subscription_start: datetime.date,
         cache: dict,
+        check_waiting_list_entries: bool = True,
     ) -> bool:
         if (
             already_registered_member
@@ -38,4 +39,5 @@ class PickupLocationCapacityGeneralChecker:
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
+            check_waiting_list_entries=check_waiting_list_entries,
         )
