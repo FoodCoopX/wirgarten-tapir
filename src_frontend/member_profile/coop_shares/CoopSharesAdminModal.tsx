@@ -85,7 +85,17 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
     return (
       <Form>
         <Form.Group id={"start-date"}>
-          <Form.Label>Wirksamkeitsdatum</Form.Label>
+          <Form.Label>
+            <span className={"d-flex flex-row gap-2 align-items-center"}>
+              Wirksamkeitsdatum
+              <TapirHelpButton
+                buttonSize={"sm"}
+                text={
+                  "Das Wirksamkeitsdatum ist das Datum, an dem der Vorstand bzw. Generalversammlung (abhängig von der Satzung) der Beitritts- bzw Zeichnungserklärung zugestimmt hat. Bitte gib dieses Datum hier ein."
+                }
+              />
+            </span>
+          </Form.Label>
           <TapirDateInput date={startDate} setDate={setStartDate} />
         </Form.Group>
         <Form.Group id={"quantity"}>
