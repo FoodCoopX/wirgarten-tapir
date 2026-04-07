@@ -90,3 +90,36 @@ class ParameterDefinitionsPayments:
             order_priority=order_priority,
         )
         order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_EXPORT_WITH_HEADER,
+            label="Zahlungsexport mit Header",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Ob der Export der Lastschriften 2 extra Zeile Oben haben soll: (Basis-Lastschriften, IBAN, Gläubiger-ID)",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_ORGANISATION_IBAN,
+            label="IBAN der Organisation",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Wird in der Lastschriften-Export Oben eingetragen",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER,
+            label="Gläubiger-Identifikationsnummer",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Wird in der Lastschriften-Export Oben eingetragen",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1

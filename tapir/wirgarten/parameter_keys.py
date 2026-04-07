@@ -36,6 +36,9 @@ class ParameterKeys:
     PAYMENT_DEFAULT_RHYTHM = f"{PREFIX}.payment.default_rhythm"
     PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
+    PAYMENT_EXPORT_WITH_HEADER = f"{PREFIX}.payment.export_with_header"
+    PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
+    PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
     MEMBERS_CAN_SEE_OWN_PAYMENTS = (
         f"{PREFIX}.member.dashboard.members_can_see_own_payments"
     )

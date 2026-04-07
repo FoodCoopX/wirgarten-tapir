@@ -1,4 +1,6 @@
+import csv
 import datetime
+import io
 import locale
 from collections.abc import Iterable
 from decimal import Decimal
@@ -184,13 +186,36 @@ class PaymentExportBuilder:
 
         locale.setlocale(locale.LC_ALL, previous_locale)
 
+        file_content = "".join(output.csv_string)
+        if get_parameter_value(ParameterKeys.PAYMENT_EXPORT_WITH_HEADER, cache=cache):
+            file_content = cls.add_header(file_content, cache)
+
         return export_file(
             filename=f"{payment_type_display}-Einzahlungen",
             filetype=ExportedFile.FileType.CSV,
-            content=bytes("".join(output.csv_string), "utf-8"),
+            content=bytes(file_content, "utf-8"),
             send_email=True,
             cache=cache,
         )
+
+    @classmethod
+    def add_header(cls, file_content: str, cache: dict):
+        organisation_name = get_parameter_value(
+            key=ParameterKeys.SITE_NAME, cache=cache
+        )
+        iban = get_parameter_value(
+            key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, cache=cache
+        )
+        credential_identifier = get_parameter_value(
+            key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER, cache=cache
+        )
+
+        header = io.StringIO()
+        writer = csv.writer(header, delimiter=";", quoting=csv.QUOTE_ALL)
+        writer.writerow(["Basis-Lastschriften"])
+        writer.writerow([organisation_name, iban, credential_identifier])
+
+        return "".join([header.getvalue(), file_content])
 
     @classmethod
     def get_payment_type_display(cls, contract_payments: bool):
