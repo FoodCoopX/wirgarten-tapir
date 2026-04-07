@@ -291,6 +291,19 @@ def _register_triggers():
         ),
     )
 
+    register_transactional_trigger(
+        name="Eintragung von Kündigung von Geno-Anteilen",
+        key=Events.CANCELLATION_OF_COOP_SHARES,
+        tokens={
+            "Kündigungsdatum": "date_where_the_cancellation_was_triggered",
+            "Wirksamkeitsdatum": "date_where_the_cancellation_is_active",
+            "Anzahl der gekündigten Geno-Anteile": "number_of_cancelled_shares",
+            "Wert eines Geno-Anteils": "value_of_a_single_share",
+            "Gesamtwert gekündigte Geno-Anteile": "value_of_all_cancelled_shares",
+        },
+        required=lambda: legal_status_is_cooperative(cache={}),
+    )
+
 
 def register_transactional_trigger(
     name: str, key: str, tokens: dict = None, required: bool | Callable = False

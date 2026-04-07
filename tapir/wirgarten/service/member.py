@@ -128,6 +128,7 @@ def transfer_coop_shares(
     Member.objects.get(id=target_member_id).save()
 
 
+@transaction.atomic
 def cancel_coop_shares(
     member_id: str,
     quantity: int,
@@ -137,7 +138,7 @@ def cancel_coop_shares(
 ):
     member = get_object_or_404(Member, id=member_id)
 
-    transaction = CoopShareTransaction.objects.create(
+    coop_share_transaction = CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=-quantity,
         share_price=get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache={}),
@@ -147,8 +148,31 @@ def cancel_coop_shares(
     )
 
     CoopSharesCancelledLogEntry.populate_transaction(
-        coop_share_transaction=transaction, user=member, actor=actor
+        coop_share_transaction=coop_share_transaction, user=member, actor=actor
     ).save()
+
+    TransactionalTrigger.fire_action(
+        TransactionalTriggerData(
+            key=Events.CANCELLATION_OF_COOP_SHARES,
+            recipient_id_in_base_queryset=member_id,
+            token_data={
+                "date_where_the_cancellation_was_triggered": format_date(
+                    cancellation_date
+                ),
+                "date_where_the_cancellation_is_active": format_date(
+                    coop_share_transaction.valid_at
+                ),
+                "number_of_cancelled_shares": -coop_share_transaction.quantity,
+                "value_of_a_single_share": format_currency(
+                    coop_share_transaction.share_price
+                ),
+                "value_of_all_cancelled_shares": format_currency(
+                    -coop_share_transaction.quantity
+                    * coop_share_transaction.share_price
+                ),
+            },
+        ),
+    )
 
 
 def create_mandate_ref(member: str | Member, cache: dict | None = None):
