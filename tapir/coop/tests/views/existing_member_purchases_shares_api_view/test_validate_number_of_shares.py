@@ -1,4 +1,4 @@
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 
 from tapir.configuration.models import TapirParameter
 from tapir.coop.views import ExistingMemberPurchasesSharesApiView
