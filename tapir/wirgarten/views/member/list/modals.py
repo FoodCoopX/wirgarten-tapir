@@ -43,10 +43,11 @@ def get_coop_share_cancel_form(request, **kwargs):
         request=request,
         form_class=CoopShareCancelForm,
         handler=lambda x: cancel_coop_shares(
-            member=kwargs["pk"],
+            member_id=kwargs["pk"],
             quantity=x.cleaned_data["quantity"],
             cancellation_date=x.cleaned_data["cancellation_date"],
             valid_at=x.cleaned_data["valid_at"],
+            actor=request.user,
         ),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,

@@ -13,6 +13,7 @@ from django.db.models import (
     FloatField,
 )
 from django.db.models.functions import Coalesce
+from django.shortcuts import get_object_or_404
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -20,6 +21,7 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.models import CoopSharesCancelledLogEntry
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.coop.services.token_builder_coop_entry import TokenBuilderCoopEntry
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
@@ -127,14 +129,15 @@ def transfer_coop_shares(
 
 
 def cancel_coop_shares(
-    member: str | Member,
+    member_id: str,
     quantity: int,
     cancellation_date: datetime.datetime | datetime.date,
     valid_at: datetime.date,
+    actor: TapirUser,
 ):
-    member_id = resolve_member_id(member)
+    member = get_object_or_404(Member, id=member_id)
 
-    CoopShareTransaction.objects.create(
+    transaction = CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=-quantity,
         share_price=get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache={}),
@@ -142,6 +145,10 @@ def cancel_coop_shares(
         timestamp=cancellation_date,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
     )
+
+    CoopSharesCancelledLogEntry.populate_transaction(
+        coop_share_transaction=transaction, user=member, actor=actor
+    ).save()
 
 
 def create_mandate_ref(member: str | Member, cache: dict | None = None):
