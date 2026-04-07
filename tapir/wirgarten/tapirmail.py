@@ -107,7 +107,7 @@ def _register_tokens():
             "Verteilstation - Name": PickupLocationMailTokenService.pickup_location_name,
             "Verteilstation - Adresse": PickupLocationMailTokenService.pickup_location_address,
             "Verteilstation - Zugangscode": PickupLocationMailTokenService.pickup_location_access_code,
-            "Verteilstation - Signal-Gruppe": PickupLocationMailTokenService.pickup_location_messenger_group_link,
+            "Verteilstation - Messenger-Gruppe": PickupLocationMailTokenService.pickup_location_messenger_group_link,
             "Verteilstation - Kontaktname": PickupLocationMailTokenService.pickup_location_contact_name,
             "Verteilstation - Photo-Link": PickupLocationMailTokenService.pickup_location_photo_link,
             "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
