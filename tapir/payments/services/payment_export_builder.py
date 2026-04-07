@@ -177,7 +177,7 @@ class PaymentExportBuilder:
                     cls.KEY_VERWENDUNGSZWECK: verwendungszweck,
                     cls.KEY_MANDATE_REF: payment.mandate_ref.ref,
                     cls.KEY_MANDATE_DATE: format_date(
-                        payment.mandate_ref.member.sepa_consent
+                        payment.mandate_ref.member.sepa_consent.date()
                     ),
                 }
             )
