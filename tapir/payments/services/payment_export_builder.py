@@ -16,7 +16,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.utils import format_date, get_now
+from tapir.wirgarten.utils import format_date, get_now, format_currency
 
 
 class PaymentExportBuilder:
@@ -173,7 +173,7 @@ class PaymentExportBuilder:
                 {
                     cls.KEY_NAME: f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}",
                     cls.KEY_IBAN: payment.mandate_ref.member.iban,
-                    cls.KEY_AMOUNT: f"{payment.amount:n}",
+                    cls.KEY_AMOUNT: format_currency(payment.amount).replace(".", ""),
                     cls.KEY_VERWENDUNGSZWECK: verwendungszweck,
                     cls.KEY_MANDATE_REF: payment.mandate_ref.ref,
                     cls.KEY_MANDATE_DATE: format_date(
