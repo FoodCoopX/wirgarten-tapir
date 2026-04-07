@@ -115,8 +115,8 @@ function buildHelpText(
     <>
       <p>
         Du kannst deinen Vertrag bis zum{" "}
-        {formatDateTextLong(subscribedProduct.dateLimitForTrialCancellation)}
-        um 23.59 Uhr kündigen, damit dein Vertrag am{" "}
+        {formatDateTextLong(subscribedProduct.dateLimitForTrialCancellation)} um
+        23.59 Uhr kündigen, damit dein Vertrag am{" "}
         {formatDateTextLong(subscribedProduct.cancellationDate)} beendet wird.
       </p>
 
