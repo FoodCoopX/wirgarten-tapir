@@ -22,8 +22,8 @@ from tapir.wirgarten.utils import format_date, get_now, format_currency
 
 
 class PaymentExportBuilder:
-    KEY_NAME = "Name"
-    KEY_IBAN = "IBAN"
+    KEY_NAME = "Zahlungspflichtigen-Name"
+    KEY_IBAN = "Zahlungspflichtigen-IBAN"
     KEY_AMOUNT = "Betrag"
     KEY_VERWENDUNGSZWECK = "Verwendungszweck"
     KEY_MANDATE_REF = "Mandatsreferenz"
@@ -159,8 +159,8 @@ class PaymentExportBuilder:
             [
                 cls.KEY_NAME,
                 cls.KEY_IBAN,
-                cls.KEY_AMOUNT,
                 cls.KEY_VERWENDUNGSZWECK,
+                cls.KEY_AMOUNT,
                 cls.KEY_MANDATE_REF,
                 cls.KEY_MANDATE_DATE,
             ]
@@ -187,8 +187,7 @@ class PaymentExportBuilder:
         locale.setlocale(locale.LC_ALL, previous_locale)
 
         file_content = "".join(output.csv_string)
-        if get_parameter_value(ParameterKeys.PAYMENT_EXPORT_WITH_HEADER, cache=cache):
-            file_content = cls.add_header(file_content, cache)
+        file_content = cls.add_header(file_content, cache)
 
         return export_file(
             filename=f"{payment_type_display}-Einzahlungen",
