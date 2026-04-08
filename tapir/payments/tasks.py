@@ -1,3 +1,5 @@
+import datetime
+
 from celery import shared_task
 
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
@@ -11,19 +13,26 @@ from tapir.wirgarten.utils import (
 
 
 @shared_task
-def create_payments_for_this_month():
+def create_payments_for_this_month(reference_date: datetime.date = None):
     cache = {}
-    today = get_today(cache=cache)
+    if reference_date is None:
+        reference_date = get_today(cache=cache)
     payments = MonthPaymentBuilder.build_payments_for_month(
-        reference_date=today, cache=cache, generated_payments=set()
+        reference_date=reference_date, cache=cache, generated_payments=set()
     )
     Payment.objects.bulk_create(payments)
 
 
 @shared_task
-def export_payments_for_this_month():
+def export_payments_for_this_month(
+    reference_date: datetime.date = None, send_mail: bool = True
+):
     cache = {}
-    reference_date = get_today(cache=cache)
+    if reference_date is None:
+        reference_date = get_today(cache=cache)
+
     PaymentExportBuilder.export_all_unexported_payments(
-        reference_date=reference_date, cache=cache
+        reference_date=reference_date,
+        send_mail=send_mail,
+        cache=cache,
     )

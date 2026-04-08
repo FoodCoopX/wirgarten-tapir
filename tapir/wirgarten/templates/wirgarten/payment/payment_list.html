@@ -21,6 +21,7 @@
                        aria-label="{% translate 'Liste der Lastschriften' %}">
                     <thead>
                         <tr>
+                            <th>{% translate "Monat" %}</th>
                             <th>{% translate "Erstellt am" %}</th>
                             <th>{% translate "Typ" %}</th>
                             <th>{% translate "Anzahl" %}</th>
@@ -32,6 +33,7 @@
                             <tr id="transaction-{{ transaction.id }}"
                                 class="tr-clickable transaction-row"
                                 onclick="handleSelectTransaction('{{ transaction.id }}')">
+                                <td class="align-middle">{{ transaction.month | format_month_and_year }}</td>
                                 <td class="align-middle">{{ transaction.created_at | format_date }}</td>
                                 <td class="align-middle">{{ transaction.type }}</td>
                                 <td class="align-middle">{{ transaction.number_of_payments }}</td>
