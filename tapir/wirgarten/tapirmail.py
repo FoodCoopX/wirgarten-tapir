@@ -304,6 +304,20 @@ def _register_triggers():
         required=lambda: legal_status_is_cooperative(cache={}),
     )
 
+    register_transactional_trigger(
+        name="Zeichnung von Geno-Anteile bei bestehendes Mitglied",
+        key=Events.EXISTING_MEMBER_BUYS_COOP_SHARES,
+        tokens={
+            "Anzahl gezeichneter Geschäftsanteile": "number_of_purchased_shares",
+            "Wert eines Geschäftsanteils": "price_of_a_share",
+            "Gesamtwert der gezeichneten geschäftsanteile": "price_of_the_purchased_shares",
+            "Wirksamkeitsdatum der neuen Anteile": "new_shares_valid_at",
+            "Gesamtanzahl der Geno-Anteile": "total_number_of_shares",
+            "Gesamtwert der insgesamt dann gehaltenen geschäftsanteile": "total_price_of_shares",
+        },
+        required=lambda: legal_status_is_cooperative(cache={}),
+    )
+
 
 def register_transactional_trigger(
     name: str, key: str, tokens: dict = None, required: bool | Callable = False

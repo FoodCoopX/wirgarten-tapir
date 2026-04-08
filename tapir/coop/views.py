@@ -1,6 +1,7 @@
 from django.core.exceptions import BadRequest
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -73,6 +74,8 @@ from tapir.wirgarten.utils import (
     get_today,
     get_now,
     legal_status_is_cooperative,
+    format_currency,
+    format_date,
 )
 
 
@@ -172,7 +175,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
             )
 
         with transaction.atomic():
-            CoopSharePurchaseHandler.buy_cooperative_shares(
+            coop_share_transaction = CoopSharePurchaseHandler.buy_cooperative_shares(
                 quantity=number_of_shares_to_add,
                 member=member,
                 shares_valid_at=shares_valid_at,
@@ -185,12 +188,45 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 member.sepa_consent = get_now(cache=self.cache)
                 member.save()
 
+            price_of_a_share = coop_share_transaction.share_price
+            total_number_of_shares = self.get_number_of_shares_after_purchase(member)
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.EXISTING_MEMBER_BUYS_COOP_SHARES,
+                    recipient_id_in_base_queryset=member.id,
+                    token_data={
+                        "number_of_purchased_shares": number_of_shares_to_add,
+                        "price_of_a_share": format_currency(price_of_a_share),
+                        "price_of_the_purchased_shares": format_currency(
+                            coop_share_transaction.share_price
+                            * coop_share_transaction.quantity
+                        ),
+                        "new_shares_valid_at": format_date(
+                            coop_share_transaction.valid_at
+                        ),
+                        "total_number_of_shares": total_number_of_shares,
+                        "total_price_of_shares": format_currency(
+                            total_number_of_shares * price_of_a_share
+                        ),
+                    },
+                ),
+            )
+
         data = {
             "order_confirmed": True,
             "error": None,
             "redirect_url": member.get_absolute_url(),
         }
         return Response(OrderConfirmationResponseSerializer(data).data)
+
+    @classmethod
+    def get_number_of_shares_after_purchase(cls, member: Member):
+        return (
+            member.coopsharetransaction_set.aggregate(quantity=Sum(F("quantity")))[
+                "quantity"
+            ]
+            or 0
+        )
 
     def validate_everything(
         self,
