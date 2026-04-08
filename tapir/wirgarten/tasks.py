@@ -164,25 +164,54 @@ def send_email_member_contract_end_reminder(member_id: str):
 
 @shared_task
 def generate_member_numbers(print_results=True, cache: dict = None):
+    """
+    Safety net for member number assignment.
+
+    Since US 4.3 (#535), new members get their number *immediately* on
+    creation (see ``service.member_numbers.assign_member_no_if_eligible``).
+    This task is still scheduled (see Celery beat in ``tapir/settings.py`` /
+    ``tapir/settings/deployment.py``) and catches members who for some
+    reason don't have a number yet — e.g. they were created in a phase
+    where the trial toggle suppressed assignment and their status has
+    changed since.
+
+    The ``MEMBERSHIP_ENTRY`` mail trigger is fired *exclusively* from this
+    task (not from the direct wizard assignment) so that the event keeps
+    its original semantics and never fires inside a still-uncommitted
+    wizard transaction. Side effect: during the transition period the
+    event will fire much less often because the safety-net task barely
+    finds any members — that is intentional.
+
+    ``legal_status_is_cooperative``: in the cooperative context the task
+    also checks that the member has already joined (coop_entry_date is set
+    and not in the future). This check is kept from the old implementation
+    so the policy in this path does not silently change.
+    """
+    # Local import to avoid circular imports and keep the new business
+    # logic centralised in the service module.
+    from tapir.wirgarten.service.member_numbers import (
+        assign_member_no_if_eligible,
+    )
+
     if cache is None:
         cache = {}
     members = Member.objects.filter(member_no__isnull=True)
     today = get_today(cache=cache)
-    members_to_update = []
-    next_member_number = Member.generate_member_no()
+
     for member in members:
         if legal_status_is_cooperative(cache=cache):
             coop_entry_date = member.coop_entry_date
             if coop_entry_date is None or coop_entry_date > today:
                 continue
 
-        member.member_no = next_member_number
-        next_member_number = Member.generate_member_no(next_member_number)
-        members_to_update.append(member)
+        with transaction.atomic():
+            # ``assign_member_no_if_eligible`` already respects the trial
+            # toggle and the configured start value. The return value tells
+            # us whether a number was actually assigned — we only want to
+            # fire the MEMBERSHIP_ENTRY trigger in that case.
+            if not assign_member_no_if_eligible(member, cache=cache):
+                continue
 
-    with transaction.atomic():
-        Member.objects.bulk_update(members_to_update, ["member_no"])
-        for member in members_to_update:
             TransactionalTrigger.fire_action(
                 TransactionalTriggerData(
                     key=Events.MEMBERSHIP_ENTRY,

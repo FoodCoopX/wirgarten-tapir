@@ -125,6 +125,18 @@ class BestellWizardOrderFulfiller:
             member_id=member.id,
         )
 
+        # US 4.3 (#535): Assign the member number immediately. This has to
+        # happen *after* subscriptions and coop shares have been created —
+        # otherwise ``is_member_in_any_trial`` can't see them and the trial
+        # toggle would never kick in for fresh registrations. The service
+        # call deliberately does not fire MEMBERSHIP_ENTRY (that is still
+        # owned by the safety-net task in ``tapir.wirgarten.tasks``).
+        from tapir.wirgarten.service.member_numbers import (
+            assign_member_no_if_eligible,
+        )
+
+        assign_member_no_if_eligible(member, cache=cache)
+
         if coop_share_transaction is not None and len(subscriptions) == 0:
             send_investing_membership_confirmation(
                 member_id=member.id, coop_share_transaction=coop_share_transaction

@@ -138,7 +138,11 @@ class MemberColumnProvider:
 
     @classmethod
     def get_value_member_number(cls, member: Member, _, __):
-        return str(member.member_no)
+        # US 4.3 (#535): generic PDF exports should print the formatted
+        # number (prefix + padding) just like the member list UI.
+        # ``formatted_member_no`` returns None when the member has no
+        # number yet — fall back to an empty string to keep exports stable.
+        return member.formatted_member_no or ""
 
     @classmethod
     def get_value_member_email_address(cls, member: Member, _, __):

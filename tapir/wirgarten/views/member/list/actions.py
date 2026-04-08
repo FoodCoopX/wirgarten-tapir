@@ -168,7 +168,9 @@ def export_coop_member_list(request, **kwargs):
         ).order_by("timestamp")
 
         data = {
-            KEY_MEMBER_NO: entry.member_no,
+            # US 4.3 (#535): CSV export should carry the formatted number
+            # (incl. admin-configured prefix/padding), not the raw integer.
+            KEY_MEMBER_NO: entry.formatted_member_no,
             KEY_FIRST_NAME: entry.first_name,
             KEY_LAST_NAME: entry.last_name,
             KEY_ADDRESS: entry.street,
@@ -218,9 +220,11 @@ def export_coop_member_list(request, **kwargs):
         data[KEY_COOP_SHARES_TRANSFER_EURO] = transfer_euro_string
         data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = "\n".join(
             map(
+                # US 4.3 (#535): show the transfer member's number in the
+                # configured format (prefix/padding) just like everywhere else.
                 lambda x: f"Übertragung {format_currency(abs(x.quantity) * get_parameter_value(
                     ParameterKeys.COOP_SHARE_PRICE, cache=cache
-                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {x.transfer_member.member_no})",
+                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {x.transfer_member.formatted_member_no})",
                 transfers,
             )
         )
@@ -316,7 +320,8 @@ class ExportMembersView(View):
         for member in queryset:
             writer.writerow(
                 [
-                    member.member_no,
+                    # US 4.3 (#535): filtered CSV export also uses the formatted number.
+                    member.formatted_member_no,
                     member.first_name,
                     member.last_name,
                     member.email,

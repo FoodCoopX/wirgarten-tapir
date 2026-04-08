@@ -82,7 +82,8 @@
         <tr id="member-{{ member.id }}"
             onClick="handleSelectMember('{{ member.id }}', '{{ member.has_trial_contracts }}'.toLowerCase())"
             class="tr-clickable member-row">
-            <td class="text-center">{{ member.member_no|default:'-' }}</td>
+            {# US 4.3 (#535): use formatted_member_no to render prefix + padding. #}
+            <td class="text-center">{{ member.formatted_member_no|default:'-' }}</td>
             <td>{{ member.first_name }}</td>
             <td>{{ member.last_name }}</td>
             <td>

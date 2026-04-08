@@ -70,6 +70,17 @@ def get_member_personal_data_create_form(request, **kwargs):
 def save_member_twice(member: Member):
     member.save()
     member.save()
+    # US 4.3 (#535): Members that an admin creates manually don't go through
+    # the Bestell-Wizard, so nobody would assign them a member number until
+    # the nightly safety-net task runs. Do it right here instead — the
+    # member has no subscriptions or coop shares at this point, so the
+    # trial check will correctly report "not in trial" and the number gets
+    # assigned (subject to the admin-configured rules).
+    from tapir.wirgarten.service.member_numbers import (
+        assign_member_no_if_eligible,
+    )
+
+    assign_member_no_if_eligible(member)
 
 
 @require_http_methods(["GET", "POST"])

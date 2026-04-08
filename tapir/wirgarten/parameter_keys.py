@@ -248,3 +248,13 @@ class ParameterKeys:
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
     )
+
+    # US 4.3 (#535): Konfigurierbare Mitgliedsnummer.
+    # Die Nummer wird weiterhin als Integer in der DB gespeichert (`Member.member_no`).
+    # Präfix, Länge und Zero-Padding werden beim Anzeigen live über
+    # `tapir.wirgarten.service.member_numbers.format_member_no()` angewandt.
+    MEMBER_NUMBER_PREFIX = f"{PREFIX}.member.number.prefix"
+    MEMBER_NUMBER_LENGTH = f"{PREFIX}.member.number.length"
+    MEMBER_NUMBER_ZERO_PAD = f"{PREFIX}.member.number.zero_pad"
+    MEMBER_NUMBER_START_VALUE = f"{PREFIX}.member.number.start_value"
+    MEMBER_NUMBER_ASSIGN_DURING_TRIAL = f"{PREFIX}.member.number.assign_during_trial"

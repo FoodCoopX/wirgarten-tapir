@@ -61,7 +61,12 @@ class PickupLocationColumnProvider:
 
         return "-".join(
             [
-                member.member_no or "Nicht mitglied"
+                # US 4.3 (#535): render the formatted number here too, so
+                # pickup-location exports carry the admin-configured prefix
+                # and padding. ``formatted_member_no`` is always a str or
+                # None, which keeps the ``join`` happy (the previous code
+                # would have crashed if any member actually had a number).
+                member.formatted_member_no or "Nicht mitglied"
                 for member in members_annotated_with_pickup_location.filter(
                     current_pickup_location_id=location.id
                 )

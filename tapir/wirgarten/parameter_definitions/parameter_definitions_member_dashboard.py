@@ -1,5 +1,7 @@
 import typing
 
+from django.core.validators import MaxValueValidator, MinValueValidator
+
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
 from tapir.wirgarten.constants import ParameterCategory, OPTIONS_WEEKDAYS
@@ -181,4 +183,90 @@ class ParameterDefinitionsMemberDashboard:
             "Wenn es eingeschaltet ist, können die Mitglieder deren Verträge selber anpassen, dafür nur 'nach Oben' (Höhere Solidarbeitrag, größere Anteil-Größe...)'",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=200,
+        )
+
+        # ------------------------------------------------------------------
+        # US 4.3 (#535): Konfiguration der Mitgliedsnummer
+        # ------------------------------------------------------------------
+        # In der DB bleibt `Member.member_no` weiterhin ein Integer mit der
+        # reinen Zahl. Präfix/Länge/Zero-Padding werden erst bei der
+        # Darstellung angewandt (siehe `service.member_numbers.format_member_no`
+        # und `Member.formatted_member_no`).
+        # Der Admin kann das Format hier konfigurieren und bekommt im
+        # Parameter-View eine Live-Vorschau (JavaScript in parameter_view.html).
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_PREFIX,
+            label="Mitgliedsnummer: Präfix",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description=(
+                "Präfix, der bei der Anzeige jeder Mitgliedsnummer vorangestellt "
+                "wird. In der Datenbank wird nur die reine Zahl gespeichert. "
+                "Beispiel: 'BT' ergibt 'BT0017'."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=1000,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_LENGTH,
+            label="Mitgliedsnummer: Anzahl Stellen",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=4,
+            description=(
+                "Mindestanzahl der Ziffern. Wenn 'Mit Nullen auffüllen' aktiv ist, "
+                "wird die Zahl auf diese Länge links mit Nullen aufgefüllt. "
+                "Beispiel: Anzahl=4, Zahl=17, mit Nullen → '0017'; ohne Nullen → '17'."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=999,
+            meta=ParameterMeta(
+                validators=[
+                    MinValueValidator(limit_value=1),
+                    MaxValueValidator(limit_value=20),
+                ]
+            ),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD,
+            label="Mitgliedsnummer: Mit Nullen links auffüllen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description=(
+                "Wenn aktiv, wird die Zahl auf 'Anzahl Stellen' mit führenden "
+                "Nullen aufgefüllt."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=998,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_START_VALUE,
+            label="Mitgliedsnummer: Startwert des Zählers",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=1,
+            description=(
+                "Ab welchem Wert der Zähler beginnt. Wirkt als untere Schranke: "
+                "Neue Nummern sind mindestens so hoch wie dieser Wert. "
+                "Sind bereits höhere Nummern vergeben, wird MAX+1 verwendet."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=997,
+            meta=ParameterMeta(validators=[MinValueValidator(limit_value=1)]),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_ASSIGN_DURING_TRIAL,
+            label="Mitgliedsnummer auch während der Probezeit vergeben",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description=(
+                "Wenn aktiv, bekommen auch Mitglieder in der Probezeit "
+                "(Genossenschaftsanteile oder Vertrag noch in Probephase) eine "
+                "Mitgliedsnummer. Bei einer Kündigung verfällt die Nummer "
+                "(sie wird nicht neu vergeben)."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=996,
         )

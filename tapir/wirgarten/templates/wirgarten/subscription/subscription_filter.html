@@ -65,7 +65,8 @@
                           class="material-icons">task_alt</span>
                 {% endif %}
             </td>
-            <td style="text-align:center">{{ entry.member.member_no|default:'-' }}</td>
+            {# US 4.3 (#535): use formatted_member_no to render prefix + padding. #}
+            <td style="text-align:center">{{ entry.member.formatted_member_no|default:'-' }}</td>
             <td>{{ entry.member.first_name }} {{ entry.member.last_name }}</td>
             <td>{{ entry.member.email }}</td>
             <td style="text-align:center">{{ entry.created_at|format_date }}</td>

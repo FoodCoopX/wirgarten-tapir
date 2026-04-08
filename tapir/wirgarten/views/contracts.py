@@ -256,7 +256,9 @@ class ExportSubscriptionList(View):
             for _ in range(sub.quantity):
                 writer.writerow(
                     [
-                        sub.member.member_no,
+                        # US 4.3 (#535): subscription CSV export uses the
+                        # formatted member number (incl. prefix/padding).
+                        sub.member.formatted_member_no,
                         sub.member.first_name,
                         sub.member.last_name,
                         sub.member.email,
