@@ -4,7 +4,6 @@ import TapirButton from "../components/TapirButton.tsx";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
-import SubscriptionChangeDatesModal from "./SubscriptionChangeDatesModal.tsx";
 import SubscriptionAddContractModal from "./SubscriptionAddContractModal.tsx";
 
 interface SubscriptionAddContractButtonProps {
