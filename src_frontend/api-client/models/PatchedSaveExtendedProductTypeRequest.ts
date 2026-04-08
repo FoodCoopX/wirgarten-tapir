@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { ExtendedProductTypeRequest } from "./ExtendedProductTypeRequest";
 import {
   ExtendedProductTypeRequestFromJSON,
-  ExtendedProductTypeRequestFromJSONTyped,
   ExtendedProductTypeRequestToJSON,
-  ExtendedProductTypeRequestToJSONTyped,
 } from "./ExtendedProductTypeRequest";
 
 /**

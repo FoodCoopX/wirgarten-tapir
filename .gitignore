@@ -117,3 +117,5 @@ tapir/filepond_stored_uploads/*
 !tapir/filepond_stored_uploads/.gitkeep
 tapir/filepond_temp_uploads/*
 !tapir/filepond_temp_uploads/.gitkeep
+
+.pnpm-store

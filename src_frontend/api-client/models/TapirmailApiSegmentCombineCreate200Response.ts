@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { TapirmailApiSegmentCombineCreate200ResponseRecipientsInner } from "./TapirmailApiSegmentCombineCreate200ResponseRecipientsInner";
 import {
   TapirmailApiSegmentCombineCreate200ResponseRecipientsInnerFromJSON,
-  TapirmailApiSegmentCombineCreate200ResponseRecipientsInnerFromJSONTyped,
   TapirmailApiSegmentCombineCreate200ResponseRecipientsInnerToJSON,
-  TapirmailApiSegmentCombineCreate200ResponseRecipientsInnerToJSONTyped,
 } from "./TapirmailApiSegmentCombineCreate200ResponseRecipientsInner";
 
 /**

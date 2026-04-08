@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { ChangeTypeEnum } from "./ChangeTypeEnum";
-import {
-  ChangeTypeEnumFromJSON,
-  ChangeTypeEnumFromJSONTyped,
-  ChangeTypeEnumToJSON,
-  ChangeTypeEnumToJSONTyped,
-} from "./ChangeTypeEnum";
+import { ChangeTypeEnumFromJSON, ChangeTypeEnumToJSON } from "./ChangeTypeEnum";
 
 /**
  *

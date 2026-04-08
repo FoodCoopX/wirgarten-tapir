@@ -12,7 +12,6 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   ExistingMemberPurchasesSharesRequestRequest,
   GetCoopShareTransactionsResponse,
@@ -35,6 +34,7 @@ import {
   PatchedMemberProfilePersonalDataRequestRequestToJSON,
   PatchedUpdateMemberBankDataRequestRequestToJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface CoopApiDeleteMemberDestroyRequest {
   memberId?: string;

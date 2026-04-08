@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { PickupLocation } from "./PickupLocation";
-import {
-  PickupLocationFromJSON,
-  PickupLocationFromJSONTyped,
-  PickupLocationToJSON,
-  PickupLocationToJSONTyped,
-} from "./PickupLocation";
+import { PickupLocationFromJSON, PickupLocationToJSON } from "./PickupLocation";
 
 /**
  *

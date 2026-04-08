@@ -12,7 +12,6 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   Counts,
   DisableLinkSerializerRequest,
@@ -45,6 +44,7 @@ import {
   WaitingListEntryRequestToJSON,
   WaitingListEntryUpdateRequestToJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface WaitingListApiDisableWaitingListLinkCreateRequest {
   disableLinkSerializerRequest: DisableLinkSerializerRequest;

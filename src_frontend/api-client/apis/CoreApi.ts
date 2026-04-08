@@ -12,7 +12,6 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   MemberExtraMailData,
   MemberMailCategoryData,
@@ -23,6 +22,7 @@ import {
   MemberMailCategoryDataFromJSON,
   MemberMailCategoryRequestRequestToJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface CoreApiMemberExtraEmailsCreateRequest {
   extraEmail?: string;

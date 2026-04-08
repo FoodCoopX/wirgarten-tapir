@@ -12,12 +12,11 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   BestellWizardCapacityCheckResponse,
-  CancellationData,
   CancelSubscriptionsRequestRequest,
   CancelSubscriptionsViewResponse,
+  CancellationData,
   ExtendedProduct,
   MemberDataToConfirm,
   MemberProfileCapacityCheckRequestRequest,
@@ -32,9 +31,9 @@ import type {
 } from "../models/index";
 import {
   BestellWizardCapacityCheckResponseFromJSON,
-  CancellationDataFromJSON,
   CancelSubscriptionsRequestRequestToJSON,
   CancelSubscriptionsViewResponseFromJSON,
+  CancellationDataFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
   MemberProfileCapacityCheckRequestRequestToJSON,
@@ -47,6 +46,7 @@ import {
   SubscriptionFromJSON,
   UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
   confirmCancellationIds: Array<string>;

@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { PickupLocationCapacityChangePoint } from "./PickupLocationCapacityChangePoint";
 import {
   PickupLocationCapacityChangePointFromJSON,
-  PickupLocationCapacityChangePointFromJSONTyped,
   PickupLocationCapacityChangePointToJSON,
-  PickupLocationCapacityChangePointToJSONTyped,
 } from "./PickupLocationCapacityChangePoint";
 
 /**

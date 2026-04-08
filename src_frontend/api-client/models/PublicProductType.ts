@@ -12,21 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { ProductTypeAccordionInBestellWizard } from "./ProductTypeAccordionInBestellWizard";
-import {
-  ProductTypeAccordionInBestellWizardFromJSON,
-  ProductTypeAccordionInBestellWizardFromJSONTyped,
-  ProductTypeAccordionInBestellWizardToJSON,
-  ProductTypeAccordionInBestellWizardToJSONTyped,
-} from "./ProductTypeAccordionInBestellWizard";
+import { ProductTypeAccordionInBestellWizardFromJSON } from "./ProductTypeAccordionInBestellWizard";
 import type { PublicProduct } from "./PublicProduct";
-import {
-  PublicProductFromJSON,
-  PublicProductFromJSONTyped,
-  PublicProductToJSON,
-  PublicProductToJSONTyped,
-} from "./PublicProduct";
+import { PublicProductFromJSON } from "./PublicProduct";
 
 /**
  *

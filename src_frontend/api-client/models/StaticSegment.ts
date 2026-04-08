@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { StaticSegmentRecipient } from "./StaticSegmentRecipient";
-import {
-  StaticSegmentRecipientFromJSON,
-  StaticSegmentRecipientFromJSONTyped,
-  StaticSegmentRecipientToJSON,
-  StaticSegmentRecipientToJSONTyped,
-} from "./StaticSegmentRecipient";
+import { StaticSegmentRecipientFromJSON } from "./StaticSegmentRecipient";
 
 /**
  *

@@ -12,7 +12,6 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   AvailableSegmentsResponse,
   BundledEmailConfiguration,
@@ -103,6 +102,7 @@ import {
   TemporaryUploadRequestToJSON,
   TriggerDefinitionFromJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface EmailConfigurationVersionSendTestEmailRequest {
   id: string;

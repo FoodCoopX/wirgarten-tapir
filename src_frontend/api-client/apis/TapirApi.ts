@@ -12,9 +12,9 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type { MemberExtraMailData } from "../models/index";
 import { MemberExtraMailDataFromJSON } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface TapirApiMemberExtraEmailConfirmRetrieveRequest {
   secret?: string;

@@ -17,16 +17,16 @@ import {
   LegalStatusEnumFromJSON,
   LegalStatusEnumToJSON,
 } from "./LegalStatusEnum";
-import type { SolidarityContributionCancellationData } from "./SolidarityContributionCancellationData";
-import {
-  SolidarityContributionCancellationDataFromJSON,
-  SolidarityContributionCancellationDataToJSON,
-} from "./SolidarityContributionCancellationData";
 import type { ProductForCancellation } from "./ProductForCancellation";
 import {
   ProductForCancellationFromJSON,
   ProductForCancellationToJSON,
 } from "./ProductForCancellation";
+import type { SolidarityContributionCancellationData } from "./SolidarityContributionCancellationData";
+import {
+  SolidarityContributionCancellationDataFromJSON,
+  SolidarityContributionCancellationDataToJSON,
+} from "./SolidarityContributionCancellationData";
 
 /**
  *

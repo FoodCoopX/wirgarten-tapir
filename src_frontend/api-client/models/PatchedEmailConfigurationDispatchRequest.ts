@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { EmailConfigurationVersionRequest } from "./EmailConfigurationVersionRequest";
 import {
   EmailConfigurationVersionRequestFromJSON,
-  EmailConfigurationVersionRequestFromJSONTyped,
   EmailConfigurationVersionRequestToJSON,
-  EmailConfigurationVersionRequestToJSONTyped,
 } from "./EmailConfigurationVersionRequest";
 
 /**

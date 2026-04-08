@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { JokerRestriction } from "./JokerRestriction";
 import {
   JokerRestrictionFromJSON,
-  JokerRestrictionFromJSONTyped,
   JokerRestrictionToJSON,
-  JokerRestrictionToJSONTyped,
 } from "./JokerRestriction";
 
 /**

@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { AutomatedExportCycleEnum } from "./AutomatedExportCycleEnum";
 import {
   AutomatedExportCycleEnumFromJSON,
-  AutomatedExportCycleEnumFromJSONTyped,
   AutomatedExportCycleEnumToJSON,
-  AutomatedExportCycleEnumToJSONTyped,
 } from "./AutomatedExportCycleEnum";
 
 /**

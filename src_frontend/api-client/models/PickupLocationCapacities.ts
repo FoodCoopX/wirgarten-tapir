@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { PickupLocationCapacityByShare } from "./PickupLocationCapacityByShare";
 import {
   PickupLocationCapacityByShareFromJSON,
-  PickupLocationCapacityByShareFromJSONTyped,
   PickupLocationCapacityByShareToJSON,
-  PickupLocationCapacityByShareToJSONTyped,
 } from "./PickupLocationCapacityByShare";
 
 /**

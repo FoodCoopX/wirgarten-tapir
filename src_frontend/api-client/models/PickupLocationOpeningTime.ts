@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { DayOfWeekEnum } from "./DayOfWeekEnum";
-import {
-  DayOfWeekEnumFromJSON,
-  DayOfWeekEnumFromJSONTyped,
-  DayOfWeekEnumToJSON,
-  DayOfWeekEnumToJSONTyped,
-} from "./DayOfWeekEnum";
+import { DayOfWeekEnumFromJSON, DayOfWeekEnumToJSON } from "./DayOfWeekEnum";
 
 /**
  *

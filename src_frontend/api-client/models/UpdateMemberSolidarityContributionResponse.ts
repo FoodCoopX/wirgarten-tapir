@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { SolidarityContribution } from "./SolidarityContribution";
 import {
   SolidarityContributionFromJSON,
-  SolidarityContributionFromJSONTyped,
   SolidarityContributionToJSON,
-  SolidarityContributionToJSONTyped,
 } from "./SolidarityContribution";
 
 /**

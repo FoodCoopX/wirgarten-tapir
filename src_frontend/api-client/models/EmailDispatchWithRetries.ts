@@ -12,20 +12,20 @@
  * Do not edit the class manually.
  */
 
-import type { EmailConfigurationDispatch } from "./EmailConfigurationDispatch";
-import {
-  EmailConfigurationDispatchFromJSON,
-  EmailConfigurationDispatchToJSON,
-} from "./EmailConfigurationDispatch";
+import type { BounceTypeEnum } from "./BounceTypeEnum";
+import { BounceTypeEnumFromJSON, BounceTypeEnumToJSON } from "./BounceTypeEnum";
 import type { DispatchStatusEnum } from "./DispatchStatusEnum";
 import {
   DispatchStatusEnumFromJSON,
   DispatchStatusEnumToJSON,
 } from "./DispatchStatusEnum";
+import type { EmailConfigurationDispatch } from "./EmailConfigurationDispatch";
+import {
+  EmailConfigurationDispatchFromJSON,
+  EmailConfigurationDispatchToJSON,
+} from "./EmailConfigurationDispatch";
 import type { EmailDispatch } from "./EmailDispatch";
 import { EmailDispatchFromJSON } from "./EmailDispatch";
-import type { BounceTypeEnum } from "./BounceTypeEnum";
-import { BounceTypeEnumFromJSON, BounceTypeEnumToJSON } from "./BounceTypeEnum";
 
 /**
  *
