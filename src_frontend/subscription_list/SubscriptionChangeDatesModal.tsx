@@ -289,7 +289,7 @@ const SubscriptionChangeDatesModal: React.FC<
                   className={"mb-2"}
                 >
                   <option value={"true"}>
-                    Am erstem Tag der Vertragsperiode
+                    Am letztem Tag der Vertragsperiode
                   </option>
                   <option value={"false"}>An einer bestimmter KW</option>
                 </Form.Select>
