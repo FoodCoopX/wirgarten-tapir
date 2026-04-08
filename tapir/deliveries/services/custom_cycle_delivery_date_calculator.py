@@ -1,8 +1,11 @@
 import datetime
 
+from tapir.deliveries.exceptions import TapirCustomCycleException
 from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_next_sunday
 from tapir.wirgarten.models import GrowingPeriod, ProductType
+from tapir.wirgarten.utils import format_date
 
 
 class CustomCycleDeliveryDateCalculator:
@@ -36,9 +39,20 @@ class CustomCycleDeliveryDateCalculator:
     @classmethod
     def get_date_from_calendar_week(cls, week: int, growing_period: GrowingPeriod):
         year = growing_period.start_date.year
-        date = datetime.date.fromisocalendar(year=year, week=week, day=1)
+        monday = datetime.date.fromisocalendar(year=year, week=week, day=1)
+        sunday = get_next_sunday(monday)
+        if sunday < growing_period.start_date:
+            monday = datetime.date.fromisocalendar(year=year + 1, week=week, day=1)
+            sunday = get_next_sunday(monday)
 
-        if date < growing_period.start_date:
-            date = datetime.date.fromisocalendar(year=year + 1, week=week, day=1)
+        if (
+            monday < growing_period.start_date
+            or monday > growing_period.end_date
+            or sunday < growing_period.start_date
+            or sunday > growing_period.end_date
+        ):
+            raise TapirCustomCycleException(
+                f"Die ganze Woche muss innerhalb der Vertragsperiode liegen. KW{week} geht von {format_date(monday)} zu {format_date(sunday)}"
+            )
 
-        return date
+        return monday

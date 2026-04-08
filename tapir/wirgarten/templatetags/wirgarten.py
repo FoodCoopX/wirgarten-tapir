@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django import template
 
+from tapir.utils.shortcuts import setlocale
 from tapir.wirgarten import utils
 from tapir.wirgarten.utils import get_now
 
@@ -34,6 +35,17 @@ def format_date(value: date | datetime | str):
             return None
     else:
         return None
+
+
+@register.filter(name="format_month_and_year")
+def format_month_and_year(value: date | datetime) -> str:
+    if type(value) is datetime:
+        value = value.date()
+
+    with setlocale("de_DE.UTF-8"):
+        result = f"{value.strftime("%B")} {value.year}"
+
+    return result
 
 
 @register.filter(name="format_currency")
