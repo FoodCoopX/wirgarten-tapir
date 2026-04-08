@@ -2,7 +2,7 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-Trigger: Transaktionale Mail, die an einem Mitglied versendet wird, wenn ein Admin durch die Mitgliederliste Genossenschaftsanteile von dieses Mitglied kündigt. <br /> <br />
+Trigger: Transaktionale Mail, die an einem Mitglied versendet wird, wenn ein Admin manuell Genossenschaftsanteile von dieses Mitglied kündigt. <br /> <br />
 Zweck: Kündigungsbestätigung für das Mitglied <br /> <br />
 Text-Vorschlag: Ihr könnt diesen kopieren und nach dem Laden eurer Vorlage einfügen. Ihr könnt diesen Text natürlich jederzeit nach euren Bedürfnissen anpassen. <br /> <br />
 
@@ -10,7 +10,16 @@ _____________________________________ <br /><br />
 
 "Moin {{Empfänger.Vorname}}, <br /><br />
 
-                <p>Noch kein Text-Inhalt definiert</p>
+hiermit bestätigen wir dir die Kündigung deiner Genossenschaftsanteile vom {{Eintragung von Kündigung von Geno-Anteilen.Kündigungsdatum}}. <br /><br />
+
+Anzahl der gekündigten Genossenschaftsanteile: {{Eintragung von Kündigung von Geno-Anteilen.Anzahl der gekündigten Geno-Anteile}} <br />
+Gesamtwert der gekündigten Genossenschaftsanteile: {{Eintragung von Kündigung von Geno-Anteilen.Gesamtwert gekündigte Geno-Anteile}} <br /><br />
+
+Deine Kündigung ist wirksam mit Ablauf des: {{Eintragung von Kündigung von Geno-Anteilen.Gesamtwert gekündigte Geno-Anteile}} <br /><br />
+
+Bitte beachte: Wenn du alle deine Genossenschaftsanteile gekündigt hast, endet auch die Mitgliedschaft in der Genossenschaft zum oben genannten Datum. <br /><br />
+
+(Hier im Idealfall Infos zur Auszahlung des Auseinandersetzungsguthabens eintragen, betriebsspezifisch). <br /><br />
 
 Liebe Grüße, <br />
 Dein {{Allgemein.Admin Name}} <br />
@@ -20,8 +29,11 @@ Dein {{Allgemein.Admin Name}} <br />
 ____________________ <br /><br /><br /><br />
 
 Folgende Token sind hier relevant: <br />
-{{Vertrag gekündigt.Vertragsliste}} <br />
-{{Vertrag gekündigt.Vertragsende}} <br />
+{{Eintragung von Kündigung von Geno-Anteilen.Kündigungsdatum}} <br />
+{{Eintragung von Kündigung von Geno-Anteilen.Wirksamkeitsdatum}} <br />
+{{Eintragung von Kündigung von Geno-Anteilen.Anzahl der gekündigten Geno-Anteile}} <br />
+{{Eintragung von Kündigung von Geno-Anteilen.Wert eines Geno-Anteils}} <br />
+{{Eintragung von Kündigung von Geno-Anteilen.Gesamtwert gekündigte Geno-Anteile}} <br />
             </mj-text>
         </mj-column>
     </mj-section>
