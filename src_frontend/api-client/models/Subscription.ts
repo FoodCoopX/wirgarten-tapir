@@ -12,21 +12,13 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { NoticePeriodUnitEnum } from "./NoticePeriodUnitEnum";
 import {
   NoticePeriodUnitEnumFromJSON,
-  NoticePeriodUnitEnumFromJSONTyped,
   NoticePeriodUnitEnumToJSON,
-  NoticePeriodUnitEnumToJSONTyped,
 } from "./NoticePeriodUnitEnum";
 import type { Product } from "./Product";
-import {
-  ProductFromJSON,
-  ProductFromJSONTyped,
-  ProductToJSON,
-  ProductToJSONTyped,
-} from "./Product";
+import { ProductFromJSON, ProductToJSON } from "./Product";
 
 /**
  *

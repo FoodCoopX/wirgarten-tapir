@@ -12,7 +12,6 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   BestellWizardBaseDataResponse,
   BestellWizardCapacityCheckRequestRequest,
@@ -33,6 +32,7 @@ import {
   OrderConfirmationResponseFromJSON,
   PublicProductPricesResponseFromJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface BestellWizardApiBestellWizardCapacityCheckCreateRequest {
   bestellWizardCapacityCheckRequestRequest: BestellWizardCapacityCheckRequestRequest;

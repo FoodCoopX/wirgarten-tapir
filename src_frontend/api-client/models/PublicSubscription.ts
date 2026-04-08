@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { PublicProductType } from "./PublicProductType";
-import {
-  PublicProductTypeFromJSON,
-  PublicProductTypeFromJSONTyped,
-  PublicProductTypeToJSON,
-  PublicProductTypeToJSONTyped,
-} from "./PublicProductType";
+import { PublicProductTypeFromJSON } from "./PublicProductType";
 
 /**
  *

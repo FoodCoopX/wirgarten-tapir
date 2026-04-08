@@ -12,7 +12,6 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   BuildCsvExportResponse,
   CsvExportModel,
@@ -33,6 +32,7 @@ import {
   PdfExportModelFromJSON,
   PdfExportModelRequestToJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface GenericExportsBuildCsvExportRetrieveRequest {
   csvExportId?: string;

@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { PaymentStatusEnum } from "./PaymentStatusEnum";
 import {
   PaymentStatusEnumFromJSON,
-  PaymentStatusEnumFromJSONTyped,
   PaymentStatusEnumToJSON,
-  PaymentStatusEnumToJSONTyped,
 } from "./PaymentStatusEnum";
 
 /**

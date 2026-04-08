@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { PickupLocationOpeningTime } from "./PickupLocationOpeningTime";
-import {
-  PickupLocationOpeningTimeFromJSON,
-  PickupLocationOpeningTimeFromJSONTyped,
-  PickupLocationOpeningTimeToJSON,
-  PickupLocationOpeningTimeToJSONTyped,
-} from "./PickupLocationOpeningTime";
+import { PickupLocationOpeningTimeFromJSON } from "./PickupLocationOpeningTime";
 
 /**
  *

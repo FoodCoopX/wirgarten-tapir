@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { TriggerFieldDefinition } from "./TriggerFieldDefinition";
 import {
   TriggerFieldDefinitionFromJSON,
-  TriggerFieldDefinitionFromJSONTyped,
   TriggerFieldDefinitionToJSON,
-  TriggerFieldDefinitionToJSONTyped,
 } from "./TriggerFieldDefinition";
 
 /**

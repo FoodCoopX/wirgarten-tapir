@@ -12,7 +12,6 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   CustomCycleDeliveryWeeksRequest,
   Delivery,
@@ -35,6 +34,7 @@ import {
   PatchedGrowingPeriodRequestToJSON,
   PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequestToJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface DeliveriesApiCancelDonationCreateRequest {
   donationId?: string;

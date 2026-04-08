@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { DeliveryCycleEnum } from "./DeliveryCycleEnum";
 import {
   DeliveryCycleEnumFromJSON,
-  DeliveryCycleEnumFromJSONTyped,
   DeliveryCycleEnumToJSON,
-  DeliveryCycleEnumToJSONTyped,
 } from "./DeliveryCycleEnum";
 
 /**

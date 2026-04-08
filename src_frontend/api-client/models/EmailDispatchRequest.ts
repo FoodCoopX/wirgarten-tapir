@@ -12,6 +12,8 @@
  * Do not edit the class manually.
  */
 
+import type { BounceTypeEnum } from "./BounceTypeEnum";
+import { BounceTypeEnumFromJSON, BounceTypeEnumToJSON } from "./BounceTypeEnum";
 import type { DispatchStatusEnum } from "./DispatchStatusEnum";
 import {
   DispatchStatusEnumFromJSON,
@@ -22,8 +24,6 @@ import {
   EmailConfigurationDispatchRequestFromJSON,
   EmailConfigurationDispatchRequestToJSON,
 } from "./EmailConfigurationDispatchRequest";
-import type { BounceTypeEnum } from "./BounceTypeEnum";
-import { BounceTypeEnumFromJSON, BounceTypeEnumToJSON } from "./BounceTypeEnum";
 
 /**
  *

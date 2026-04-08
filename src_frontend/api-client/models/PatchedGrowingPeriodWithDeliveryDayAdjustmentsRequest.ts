@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { DeliveryDayAdjustmentRequest } from "./DeliveryDayAdjustmentRequest";
 import {
   DeliveryDayAdjustmentRequestFromJSON,
-  DeliveryDayAdjustmentRequestFromJSONTyped,
   DeliveryDayAdjustmentRequestToJSON,
-  DeliveryDayAdjustmentRequestToJSONTyped,
 } from "./DeliveryDayAdjustmentRequest";
 
 /**

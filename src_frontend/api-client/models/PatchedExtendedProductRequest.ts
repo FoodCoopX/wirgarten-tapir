@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { ProductBasketSizeEquivalenceRequest } from "./ProductBasketSizeEquivalenceRequest";
 import {
   ProductBasketSizeEquivalenceRequestFromJSON,
-  ProductBasketSizeEquivalenceRequestFromJSONTyped,
   ProductBasketSizeEquivalenceRequestToJSON,
-  ProductBasketSizeEquivalenceRequestToJSONTyped,
 } from "./ProductBasketSizeEquivalenceRequest";
 
 /**

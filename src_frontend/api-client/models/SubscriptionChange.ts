@@ -12,21 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { ProductType } from "./ProductType";
-import {
-  ProductTypeFromJSON,
-  ProductTypeFromJSONTyped,
-  ProductTypeToJSON,
-  ProductTypeToJSONTyped,
-} from "./ProductType";
+import { ProductTypeFromJSON, ProductTypeToJSON } from "./ProductType";
 import type { Subscription } from "./Subscription";
-import {
-  SubscriptionFromJSON,
-  SubscriptionFromJSONTyped,
-  SubscriptionToJSON,
-  SubscriptionToJSONTyped,
-} from "./Subscription";
+import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 
 /**
  *

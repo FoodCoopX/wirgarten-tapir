@@ -12,7 +12,6 @@
  * Do not edit the class manually.
  */
 
-import * as runtime from "../runtime";
 import type {
   CabLoggedInUserChangeTargetsPaymentRhythmResponse,
   ExtendedMemberCredit,
@@ -29,6 +28,7 @@ import {
   MemberPaymentRhythmDataFromJSON,
   PaymentRhythmSerializerRequestToJSON,
 } from "../models/index";
+import * as runtime from "../runtime";
 
 export interface PaymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveRequest {
   memberId?: string;

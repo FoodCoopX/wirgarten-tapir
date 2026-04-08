@@ -17,13 +17,13 @@ import {
   EmailConfigurationFromJSON,
   EmailConfigurationToJSON,
 } from "./EmailConfiguration";
-import type { TriggerData } from "./TriggerData";
-import { TriggerDataFromJSON, TriggerDataToJSON } from "./TriggerData";
 import type { EmailConfigurationVersionStatusEnum } from "./EmailConfigurationVersionStatusEnum";
 import {
   EmailConfigurationVersionStatusEnumFromJSON,
   EmailConfigurationVersionStatusEnumToJSON,
 } from "./EmailConfigurationVersionStatusEnum";
+import type { TriggerData } from "./TriggerData";
+import { TriggerDataFromJSON, TriggerDataToJSON } from "./TriggerData";
 
 /**
  *

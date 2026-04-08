@@ -12,42 +12,22 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { PickupLocation } from "./PickupLocation";
-import {
-  PickupLocationFromJSON,
-  PickupLocationFromJSONTyped,
-  PickupLocationToJSON,
-  PickupLocationToJSONTyped,
-} from "./PickupLocation";
-import type { WaitingListProductWish } from "./WaitingListProductWish";
-import {
-  WaitingListProductWishFromJSON,
-  WaitingListProductWishFromJSONTyped,
-  WaitingListProductWishToJSON,
-  WaitingListProductWishToJSONTyped,
-} from "./WaitingListProductWish";
+import { PickupLocationFromJSON, PickupLocationToJSON } from "./PickupLocation";
 import type { Product } from "./Product";
-import {
-  ProductFromJSON,
-  ProductFromJSONTyped,
-  ProductToJSON,
-  ProductToJSONTyped,
-} from "./Product";
+import { ProductFromJSON, ProductToJSON } from "./Product";
 import type { Subscription } from "./Subscription";
-import {
-  SubscriptionFromJSON,
-  SubscriptionFromJSONTyped,
-  SubscriptionToJSON,
-  SubscriptionToJSONTyped,
-} from "./Subscription";
+import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 import type { WaitingListPickupLocationWish } from "./WaitingListPickupLocationWish";
 import {
   WaitingListPickupLocationWishFromJSON,
-  WaitingListPickupLocationWishFromJSONTyped,
   WaitingListPickupLocationWishToJSON,
-  WaitingListPickupLocationWishToJSONTyped,
 } from "./WaitingListPickupLocationWish";
+import type { WaitingListProductWish } from "./WaitingListProductWish";
+import {
+  WaitingListProductWishFromJSON,
+  WaitingListProductWishToJSON,
+} from "./WaitingListProductWish";
 
 /**
  *

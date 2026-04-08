@@ -19,6 +19,9 @@ if [ "$CURRENT_HASH" != "$PREV_HASH" ]; then
     -o ./src_frontend/api-client \
     --additional-properties=sortParamsByRequiredFlag=false,sortModelPropertiesByRequiredFlag=false
 
+  # We'd prefer not modifying the generated files. However, the generator includes some imports to files that don't exist.
+  # This causes "npm run build" to fail with errors like "error TS2724: '"./MemberCountry"' has no exported member named 'MemberCountryToJSONTyped'."
+  # So we run prettier with an import organizer plugin to automatically clean those imports.
   npx prettier --write --log-level error 'src_frontend/api-client/**/*.ts'
   echo "$CURRENT_HASH" > "$SCHEMA_HASH_FILE"
   echo "API client regenerated"

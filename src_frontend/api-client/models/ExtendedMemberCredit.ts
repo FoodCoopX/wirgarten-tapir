@@ -12,10 +12,10 @@
  * Do not edit the class manually.
  */
 
-import type { MemberCredit } from "./MemberCredit";
-import { MemberCreditFromJSON, MemberCreditToJSON } from "./MemberCredit";
 import type { Member } from "./Member";
 import { MemberFromJSON, MemberToJSON } from "./Member";
+import type { MemberCredit } from "./MemberCredit";
+import { MemberCreditFromJSON, MemberCreditToJSON } from "./MemberCredit";
 
 /**
  *

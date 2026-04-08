@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { DeliveryCycleEnum } from "./DeliveryCycleEnum";
+import {
+  DeliveryCycleEnumFromJSON,
+  DeliveryCycleEnumToJSON,
+} from "./DeliveryCycleEnum";
 import type { NoticePeriodUnitEnum } from "./NoticePeriodUnitEnum";
 import {
   NoticePeriodUnitEnumFromJSON,
@@ -22,11 +27,6 @@ import {
   ProductTypeAccordionInBestellWizardRequestFromJSON,
   ProductTypeAccordionInBestellWizardRequestToJSON,
 } from "./ProductTypeAccordionInBestellWizardRequest";
-import type { DeliveryCycleEnum } from "./DeliveryCycleEnum";
-import {
-  DeliveryCycleEnumFromJSON,
-  DeliveryCycleEnumToJSON,
-} from "./DeliveryCycleEnum";
 
 /**
  *

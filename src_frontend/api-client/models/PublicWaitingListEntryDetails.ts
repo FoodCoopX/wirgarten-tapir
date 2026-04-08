@@ -12,20 +12,15 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { PublicPickupLocation } from "./PublicPickupLocation";
 import {
   PublicPickupLocationFromJSON,
-  PublicPickupLocationFromJSONTyped,
   PublicPickupLocationToJSON,
-  PublicPickupLocationToJSONTyped,
 } from "./PublicPickupLocation";
 import type { PublicWaitingListProductWish } from "./PublicWaitingListProductWish";
 import {
   PublicWaitingListProductWishFromJSON,
-  PublicWaitingListProductWishFromJSONTyped,
   PublicWaitingListProductWishToJSON,
-  PublicWaitingListProductWishToJSONTyped,
 } from "./PublicWaitingListProductWish";
 
 /**

@@ -12,20 +12,15 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { SegmentDataRequest } from "./SegmentDataRequest";
 import {
   SegmentDataRequestFromJSON,
-  SegmentDataRequestFromJSONTyped,
   SegmentDataRequestToJSON,
-  SegmentDataRequestToJSONTyped,
 } from "./SegmentDataRequest";
 import type { TriggerDataRequest } from "./TriggerDataRequest";
 import {
   TriggerDataRequestFromJSON,
-  TriggerDataRequestFromJSONTyped,
   TriggerDataRequestToJSON,
-  TriggerDataRequestToJSONTyped,
 } from "./TriggerDataRequest";
 
 /**

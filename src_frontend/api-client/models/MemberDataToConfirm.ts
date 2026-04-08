@@ -12,27 +12,27 @@
  * Do not edit the class manually.
  */
 
-import type { PickupLocation } from "./PickupLocation";
-import { PickupLocationFromJSON, PickupLocationToJSON } from "./PickupLocation";
 import type { CoopShareTransaction } from "./CoopShareTransaction";
 import {
   CoopShareTransactionFromJSON,
   CoopShareTransactionToJSON,
 } from "./CoopShareTransaction";
-import type { SubscriptionChangeLogEntry } from "./SubscriptionChangeLogEntry";
-import {
-  SubscriptionChangeLogEntryFromJSON,
-  SubscriptionChangeLogEntryToJSON,
-} from "./SubscriptionChangeLogEntry";
+import type { Member } from "./Member";
+import { MemberFromJSON, MemberToJSON } from "./Member";
+import type { PickupLocation } from "./PickupLocation";
+import { PickupLocationFromJSON, PickupLocationToJSON } from "./PickupLocation";
+import type { Subscription } from "./Subscription";
+import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 import type { SubscriptionChange } from "./SubscriptionChange";
 import {
   SubscriptionChangeFromJSON,
   SubscriptionChangeToJSON,
 } from "./SubscriptionChange";
-import type { Subscription } from "./Subscription";
-import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
-import type { Member } from "./Member";
-import { MemberFromJSON, MemberToJSON } from "./Member";
+import type { SubscriptionChangeLogEntry } from "./SubscriptionChangeLogEntry";
+import {
+  SubscriptionChangeLogEntryFromJSON,
+  SubscriptionChangeLogEntryToJSON,
+} from "./SubscriptionChangeLogEntry";
 
 /**
  *

@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { UploadTypeEnum } from "./UploadTypeEnum";
-import {
-  UploadTypeEnumFromJSON,
-  UploadTypeEnumFromJSONTyped,
-  UploadTypeEnumToJSON,
-  UploadTypeEnumToJSONTyped,
-} from "./UploadTypeEnum";
+import { UploadTypeEnumFromJSON, UploadTypeEnumToJSON } from "./UploadTypeEnum";
 
 /**
  *

@@ -12,21 +12,21 @@
  * Do not edit the class manually.
  */
 
-import type { TriggerDataRequest } from "./TriggerDataRequest";
-import {
-  TriggerDataRequestFromJSON,
-  TriggerDataRequestToJSON,
-} from "./TriggerDataRequest";
-import type { EmailConfigurationVersionStatusEnum } from "./EmailConfigurationVersionStatusEnum";
-import {
-  EmailConfigurationVersionStatusEnumFromJSON,
-  EmailConfigurationVersionStatusEnumToJSON,
-} from "./EmailConfigurationVersionStatusEnum";
 import type { EmailConfigurationRequest } from "./EmailConfigurationRequest";
 import {
   EmailConfigurationRequestFromJSON,
   EmailConfigurationRequestToJSON,
 } from "./EmailConfigurationRequest";
+import type { EmailConfigurationVersionStatusEnum } from "./EmailConfigurationVersionStatusEnum";
+import {
+  EmailConfigurationVersionStatusEnumFromJSON,
+  EmailConfigurationVersionStatusEnumToJSON,
+} from "./EmailConfigurationVersionStatusEnum";
+import type { TriggerDataRequest } from "./TriggerDataRequest";
+import {
+  TriggerDataRequestFromJSON,
+  TriggerDataRequestToJSON,
+} from "./TriggerDataRequest";
 
 /**
  *

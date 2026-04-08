@@ -12,13 +12,13 @@
  * Do not edit the class manually.
  */
 
+import type { PickingModeEnum } from "./PickingModeEnum";
+import { PickingModeEnumFromJSON } from "./PickingModeEnum";
 import type { ProductBasketSizeEquivalence } from "./ProductBasketSizeEquivalence";
 import {
   ProductBasketSizeEquivalenceFromJSON,
   ProductBasketSizeEquivalenceToJSON,
 } from "./ProductBasketSizeEquivalence";
-import type { PickingModeEnum } from "./PickingModeEnum";
-import { PickingModeEnumFromJSON } from "./PickingModeEnum";
 
 /**
  *

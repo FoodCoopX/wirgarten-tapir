@@ -19,13 +19,13 @@ import {
 } from "./CoopShareTransaction";
 import type { Payment } from "./Payment";
 import { PaymentFromJSON, PaymentToJSON } from "./Payment";
-import type { Subscription } from "./Subscription";
-import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 import type { SolidarityContribution } from "./SolidarityContribution";
 import {
   SolidarityContributionFromJSON,
   SolidarityContributionToJSON,
 } from "./SolidarityContribution";
+import type { Subscription } from "./Subscription";
+import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
 
 /**
  *

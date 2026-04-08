@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from "../runtime";
 import type { ModeEnum } from "./ModeEnum";
-import {
-  ModeEnumFromJSON,
-  ModeEnumFromJSONTyped,
-  ModeEnumToJSON,
-  ModeEnumToJSONTyped,
-} from "./ModeEnum";
+import { ModeEnumFromJSON, ModeEnumToJSON } from "./ModeEnum";
 
 /**
  *

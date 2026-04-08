@@ -12,36 +12,36 @@
  * Do not edit the class manually.
  */
 
-import type { SolidarityStepPositionEnum } from "./SolidarityStepPositionEnum";
-import {
-  SolidarityStepPositionEnumFromJSON,
-  SolidarityStepPositionEnumToJSON,
-} from "./SolidarityStepPositionEnum";
-import type { PublicProductType } from "./PublicProductType";
-import {
-  PublicProductTypeFromJSON,
-  PublicProductTypeToJSON,
-} from "./PublicProductType";
-import type { BestellWizardStrings } from "./BestellWizardStrings";
-import {
-  BestellWizardStringsFromJSON,
-  BestellWizardStringsToJSON,
-} from "./BestellWizardStrings";
-import type { PublicPickupLocation } from "./PublicPickupLocation";
-import {
-  PublicPickupLocationFromJSON,
-  PublicPickupLocationToJSON,
-} from "./PublicPickupLocation";
-import type { PublicGrowingPeriod } from "./PublicGrowingPeriod";
-import {
-  PublicGrowingPeriodFromJSON,
-  PublicGrowingPeriodToJSON,
-} from "./PublicGrowingPeriod";
 import type { BestellWizardImages } from "./BestellWizardImages";
 import {
   BestellWizardImagesFromJSON,
   BestellWizardImagesToJSON,
 } from "./BestellWizardImages";
+import type { BestellWizardStrings } from "./BestellWizardStrings";
+import {
+  BestellWizardStringsFromJSON,
+  BestellWizardStringsToJSON,
+} from "./BestellWizardStrings";
+import type { PublicGrowingPeriod } from "./PublicGrowingPeriod";
+import {
+  PublicGrowingPeriodFromJSON,
+  PublicGrowingPeriodToJSON,
+} from "./PublicGrowingPeriod";
+import type { PublicPickupLocation } from "./PublicPickupLocation";
+import {
+  PublicPickupLocationFromJSON,
+  PublicPickupLocationToJSON,
+} from "./PublicPickupLocation";
+import type { PublicProductType } from "./PublicProductType";
+import {
+  PublicProductTypeFromJSON,
+  PublicProductTypeToJSON,
+} from "./PublicProductType";
+import type { SolidarityStepPositionEnum } from "./SolidarityStepPositionEnum";
+import {
+  SolidarityStepPositionEnumFromJSON,
+  SolidarityStepPositionEnumToJSON,
+} from "./SolidarityStepPositionEnum";
 
 /**
  *
