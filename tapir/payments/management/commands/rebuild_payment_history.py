@@ -31,6 +31,7 @@ class Command(BaseCommand):
             return
 
         Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
+        Payment.objects.update(transaction=None)
         PaymentTransaction.objects.all().delete()
 
         current_date = get_parameter_value(
