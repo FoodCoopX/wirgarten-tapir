@@ -112,13 +112,14 @@ EMAIL_PORT = env.str("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 if EMAIL_ENV == "dev":
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_HOST = "email_host"
     EMAIL_HOST_USER = "email_host_user"
     EMAIL_HOST_PASSWORD = "email_host_password"
     EMAIL_HOST_SENDER = "test_host_sender@example.com"
     EMAIL_BOUNCE_ADDRESS = "bounce@example.com"
     EMAIL_HOST_SENDER_NAME = "Test host sender"
+    EMAIL_FILE_PATH = BASE_DIR / "../emails_from_celery"
 elif EMAIL_ENV == "test":
     # Local SMTP
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
