@@ -1874,6 +1874,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpdateMemberSolidarityContributionResponse'
           description: ''
+  /subscriptions/api(/convert_weeks_to_date_for_subscription_change:
+    get:
+      operationId: subscriptions_api(_convert_weeks_to_date_for_subscription_change_retrieve
+      parameters:
+      - in: query
+        name: end_week
+        schema:
+          type: integer
+      - in: query
+        name: start_week
+        schema:
+          type: integer
+      - in: query
+        name: subscription_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertWeekToDateForSubscriptionChangesResponse'
+          description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
@@ -1928,13 +1957,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/subscription_date_changeRequest'
+              $ref: '#/components/schemas/SubscriptionDateChangeRequestRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/subscription_date_changeRequest'
+              $ref: '#/components/schemas/SubscriptionDateChangeRequestRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/subscription_date_changeRequest'
+              $ref: '#/components/schemas/SubscriptionDateChangeRequestRequest'
         required: true
       security:
       - tokenAuth: []
@@ -5806,6 +5835,18 @@ components:
         * `CANCELLED` - Kündigung
         * `RENEWED` - Verlängerung
         * `NOT_RENEWED` - Keine Verlängerung
+    ConvertWeekToDateForSubscriptionChangesResponse:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - start_date
     CoopShareTransaction:
       type: object
       properties:
@@ -10382,6 +10423,26 @@ components:
       - id
       - log_class_type
       - subscriptions
+    SubscriptionDateChangeRequestRequest:
+      type: object
+      properties:
+        start_date_is_on_period_start:
+          type: boolean
+        end_date_is_on_period_end:
+          type: boolean
+        start_week:
+          type: integer
+        end_week:
+          type: integer
+        subscription_id:
+          type: string
+          minLength: 1
+      required:
+      - end_date_is_on_period_end
+      - end_week
+      - start_date_is_on_period_start
+      - start_week
+      - subscription_id
     TemporaryUpload:
       type: object
       properties:
@@ -11032,22 +11093,6 @@ components:
           minLength: 1
       required:
       - entry_id
-    subscription_date_changeRequest:
-      type: object
-      properties:
-        start_date:
-          type: string
-          format: date
-        end_date:
-          type: string
-          format: date
-        subscription_id:
-          type: string
-          minLength: 1
-      required:
-      - end_date
-      - start_date
-      - subscription_id
   securitySchemes:
     DrfForwardAuthentication:
       type: http
