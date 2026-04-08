@@ -22,7 +22,7 @@ Don't hesitate to contact us if you are interested in using or contributing to T
 
 Use docker to quickly get a development server running on your machine. Run the following commands:
 ```sh
-docker-compose up -d
+docker compose up -d
 # Create tables
 docker compose exec web poetry run python manage.py migrate
 # Define the configuration parameters
