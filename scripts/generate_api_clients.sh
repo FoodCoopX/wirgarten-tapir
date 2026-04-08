@@ -19,7 +19,7 @@ if [ "$CURRENT_HASH" != "$PREV_HASH" ]; then
     -o ./src_frontend/api-client \
     --additional-properties=sortParamsByRequiredFlag=false,sortModelPropertiesByRequiredFlag=false
 
-  npx prettier --write 'src_frontend/api-client/**/*.ts' 2>/dev/null
+  npx prettier --write --log-level error 'src_frontend/api-client/**/*.ts'
   echo "$CURRENT_HASH" > "$SCHEMA_HASH_FILE"
   echo "API client regenerated"
 else
