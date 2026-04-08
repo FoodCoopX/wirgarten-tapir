@@ -16,6 +16,7 @@
 {% block card_header %}
     <h4 class="mb-0">{{ number_of_contracts }} {% translate 'Verträge' %}, {{ quantity_sum }} Anteile</h4>
     <span style="display: flex; flex-direction:row;">
+        <span id="subscription_add_contract_button" class="mx-1 p-0"></span>
         <span id="subscription_change_dates_button" class="mx-1 p-0"></span>
         {% if perms.accounts.manage %}
             {% include 'wirgarten/generic/action-button.html' with onclick='handleEditPrice()' disabled=True title='Betrag ändern' type='primary' icon='edit' class='needs-contract d-flex' %}
