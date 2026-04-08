@@ -794,6 +794,7 @@ class PaymentTransaction(TapirModel):
 
     file = models.ForeignKey(ExportedFile, on_delete=models.PROTECT)
     type = models.CharField(max_length=100)
+    month = models.DateField()
 
 
 class Payment(TapirModel):
