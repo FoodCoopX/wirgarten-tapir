@@ -42,6 +42,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     growing_period_id = serializers.CharField()
     solidarity_contribution = serializers.FloatField()
     distribution_channels = serializers.ListField(child=serializers.CharField())
+    feedback = serializers.CharField(allow_blank=True, required=False)
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):

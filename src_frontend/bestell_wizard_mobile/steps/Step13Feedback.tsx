@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { Form } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
@@ -7,8 +7,10 @@ import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 interface Step13FeedbackProps {
   settings: BestellWizardSettings;
   goToNextStep: () => void;
-  confirmOrder: () => void | undefined;
+  confirmOrder: (() => void | undefined) | undefined;
   confirmOrderLoading: boolean;
+  feedback: string;
+  setFeedback: (value: string) => void;
 }
 
 const Step13Feedback: React.FC<Step13FeedbackProps> = ({
@@ -16,21 +18,21 @@ const Step13Feedback: React.FC<Step13FeedbackProps> = ({
   goToNextStep,
   confirmOrder,
   confirmOrderLoading,
+  feedback,
+  setFeedback,
 }) => {
-  const [feedback, setFeedback] = useState("");
-
   return (
     <>
       <p
         className={"text-center"}
         dangerouslySetInnerHTML={getHtmlDescription(
-          settings.strings.step13Text +
-            "<br />Ist gerade nur als Platzhalder da, der Auswahl wird nicht gespeichert",
+          settings.strings.step13Text,
         )}
       />
       <Form.Group style={{ width: "100%" }}>
         <Form.Control
           as={"textarea"}
+          value={feedback}
           onChange={(event) => setFeedback(event.target.value)}
           placeholder={"Dein Feedback"}
         />

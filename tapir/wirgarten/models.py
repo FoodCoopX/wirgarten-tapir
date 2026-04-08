@@ -1257,3 +1257,9 @@ class MemberExtraEmailConfirmedLogEntry(LogEntry):
         self.email = email
 
         return self
+
+
+class OrderFeedback(models.Model):
+    member = models.ForeignKey("Member", on_delete=models.CASCADE)
+    feedback_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)

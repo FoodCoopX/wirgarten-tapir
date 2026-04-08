@@ -33,6 +33,7 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
     Product,
     CoopShareTransaction,
+    OrderFeedback,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -206,6 +207,9 @@ class UserGenerator:
                 cls.create_subscription_to_required_products(
                     member=member, products=required_products, cache=cache
                 )
+
+        if not member_without_subscriptions and random.random() < 0.3:
+            cls.generate_feedback_for_member(member)
 
         cls.create_coop_shares_for_user(member, min_coop_shares, cache)
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
@@ -453,3 +457,22 @@ class UserGenerator:
         if confirmation_date <= get_today(cache=cache):
             return confirmation_datetime
         return None
+
+    @classmethod
+    def generate_feedback_for_member(cls, member: Member):
+        feedback_options = [
+            "Super Qualität, bin sehr zufrieden!",
+            "Tolles Gemüse, immer wieder gerne.",
+            "Die Lieferung war pünktlich und die Produkte frisch.",
+            "Würde ich weiterempfehlen.",
+            "Gutes Angebot, könnte aber mehr Auswahl haben.",
+            "Alles super, bin Fan!",
+            "Qualität war diesmal nicht ganz so gut wie sonst.",
+            "Bin begeistert von der Organisation.",
+            "Toller Service, danke!",
+            "Freue mich auf die nächste Lieferung.",
+        ]
+        OrderFeedback.objects.create(
+            member=member,
+            feedback_text=random.choice(feedback_options),
+        )

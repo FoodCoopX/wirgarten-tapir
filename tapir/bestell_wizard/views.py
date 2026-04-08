@@ -93,6 +93,7 @@ from tapir.wirgarten.utils import (
     legal_status_is_cooperative,
     check_permission_or_self,
 )
+from tapir.wirgarten.models import OrderFeedback
 
 
 class BestellWizardView(TemplateView):
@@ -188,6 +189,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         responses={200: OrderConfirmationResponseSerializer},
         request=BestellWizardConfirmOrderRequestSerializer,
     )
+    @transaction.atomic
     def post(self, request):
         serializer = BestellWizardConfirmOrderRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -197,13 +199,14 @@ class BestellWizardConfirmOrderApiView(APIView):
             "error": None,
         }
         try:
-            member = None
-            with transaction.atomic():
-                member = self.validate_everything_and_apply_all_changes(
-                    validated_serializer_data=serializer.validated_data,
-                    request=request,
-                    cache=self.cache,
-                )
+            member = self.validate_everything_and_apply_all_changes(
+                validated_serializer_data=serializer.validated_data,
+                request=request,
+                cache=self.cache,
+            )
+            feedback = serializer.validated_data.get("feedback")
+            if feedback:
+                OrderFeedback.objects.create(member=member, feedback_text=feedback)
             if member is not None:
                 # The member creation does calls to KeycloakUserManager that are only applied after the transaction ends.
                 # In order to persist the changes that the KeycloakUserManager applies, we need to save manually one more time.

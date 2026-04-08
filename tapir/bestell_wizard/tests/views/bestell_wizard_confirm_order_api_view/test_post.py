@@ -40,6 +40,7 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
+    OrderFeedback,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -1026,3 +1027,45 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             solidarity_contribution.start_date,
         )
         self.assertEqual(growing_period.end_date, solidarity_contribution.end_date)
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_withFeedback_feedbackGetsSaved(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        feedback_text = "Great service, love the organic vegetables!"
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["feedback"] = feedback_text
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(response_content["order_confirmed"])
+
+        self.assertEqual(1, OrderFeedback.objects.count())
+        feedback = OrderFeedback.objects.get()
+        self.assertEqual(feedback_text, feedback.feedback_text)
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_withoutFeedback_noFeedbackCreated(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(
+                self.build_valid_post_data_for_an_order_without_waiting_list()
+            ),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(response_content["order_confirmed"])
+
+        self.assertEqual(0, OrderFeedback.objects.count())
