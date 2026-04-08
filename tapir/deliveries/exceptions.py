@@ -1,0 +1,2 @@
+class TapirCustomCycleException(Exception):
+    pass
