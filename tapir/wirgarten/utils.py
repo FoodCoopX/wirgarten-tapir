@@ -120,8 +120,8 @@ def get_debug_now(cache: dict | None = None) -> datetime.datetime:
 
 def format_subscription_list_html(subscriptions: list[Subscription]) -> str:
     subscriptions.sort(key=lambda subscription: subscription.product_id)
-    formatted_subscriptions = [f"- {sub.long_str()}" for sub in subscriptions]
-    return f"{'<br/>'.join(formatted_subscriptions)}"
+    formatted_subscriptions = [sub.long_str() for sub in subscriptions]
+    return f"<ul><li>{'</li><li>'.join(formatted_subscriptions)}</li></ul>"
 
 
 def legal_status_is_cooperative(cache):

@@ -764,7 +764,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
     def long_str(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name}; "
+            f"{self.quantity} × {self.product.name} {self.product.type.name} "
             + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
         )
 
