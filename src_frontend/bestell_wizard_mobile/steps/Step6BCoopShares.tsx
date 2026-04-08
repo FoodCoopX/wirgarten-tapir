@@ -24,6 +24,7 @@ interface Step6BCoopSharesProps {
   orderLoading: boolean;
   nextButtonText?: string;
   canChangeNumberOfShares: boolean;
+  forceHideStudentCheckbox: boolean;
 }
 
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
@@ -41,6 +42,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   orderLoading,
   nextButtonText,
   canChangeNumberOfShares,
+  forceHideStudentCheckbox,
 }) => {
   const [statuteRead, setStatuteRead] = useState(false);
   const [commitmentChecked, setCommitmentChecked] = useState(false);
@@ -187,7 +189,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
         </span>
       </small>
       <div className={"d-flex flex-column gap-2 mx-4"}>
-        {settings.studentStatusAllowed && (
+        {settings.studentStatusAllowed && !forceHideStudentCheckbox && (
           <>
             <TapirCheckbox
               checked={studentStatusEnabled}

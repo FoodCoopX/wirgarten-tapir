@@ -667,6 +667,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             canChangeNumberOfShares={
               !waitingListEntryDetails?.memberAlreadyExists
             }
+            forceHideStudentCheckbox={!isAtLeastOneProductOrdered(shoppingCart)}
           />
         );
       case "6c_coop_member_now":
