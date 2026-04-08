@@ -229,14 +229,6 @@ class BestellWizardConfirmOrderApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             validated_serializer_data["shopping_cart_order"], cache=cache
         )
-        member = None
-
-        if len(order) > 0 or validated_serializer_data["become_member_now"]:
-            member = cls.validate_and_fulfill_order(
-                request=request,
-                validated_serializer_data=validated_serializer_data,
-                cache=cache,
-            )
 
         order_waiting_list = (
             TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
@@ -244,6 +236,8 @@ class BestellWizardConfirmOrderApiView(APIView):
                 cache=cache,
             )
         )
+        member = None
+
         if (
             len(order_waiting_list) > 0
             or validated_serializer_data["become_member_now"] is False
@@ -253,7 +247,20 @@ class BestellWizardConfirmOrderApiView(APIView):
                 cls.validate_and_create_waiting_list_entry_potential_member(
                     validated_serializer_data=validated_serializer_data, cache=cache
                 )
-            else:
+
+        if len(order) > 0 or validated_serializer_data["become_member_now"]:
+            member = cls.validate_and_fulfill_order(
+                request=request,
+                validated_serializer_data=validated_serializer_data,
+                cache=cache,
+            )
+
+        if (
+            len(order_waiting_list) > 0
+            or validated_serializer_data["become_member_now"] is False
+            or len(validated_serializer_data["pickup_location_ids"]) > 1
+        ):
+            if member is not None:
                 cls.validate_and_create_waiting_list_entry_existing_member(
                     member=member,
                     validated_serializer_data=validated_serializer_data,
