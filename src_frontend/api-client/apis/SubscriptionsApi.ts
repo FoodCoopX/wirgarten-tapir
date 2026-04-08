@@ -17,6 +17,7 @@ import type {
   CancelSubscriptionsRequestRequest,
   CancelSubscriptionsViewResponse,
   CancellationData,
+  ConvertWeekToDateForSubscriptionChangesResponse,
   ExtendedProduct,
   MemberDataToConfirm,
   MemberProfileCapacityCheckRequestRequest,
@@ -26,7 +27,7 @@ import type {
   Product,
   PublicProductType,
   Subscription,
-  SubscriptionDateChangeRequest,
+  SubscriptionDateChangeRequestRequest,
   UpdateSubscriptionsRequestRequest,
 } from "../models/index";
 import {
@@ -34,6 +35,7 @@ import {
   CancelSubscriptionsRequestRequestToJSON,
   CancelSubscriptionsViewResponseFromJSON,
   CancellationDataFromJSON,
+  ConvertWeekToDateForSubscriptionChangesResponseFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
   MemberProfileCapacityCheckRequestRequestToJSON,
@@ -42,7 +44,7 @@ import {
   PatchedExtendedProductRequestToJSON,
   ProductFromJSON,
   PublicProductTypeFromJSON,
-  SubscriptionDateChangeRequestToJSON,
+  SubscriptionDateChangeRequestRequestToJSON,
   SubscriptionFromJSON,
   UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
@@ -55,8 +57,14 @@ export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
   confirmPurchaseIds: Array<string>;
 }
 
+export interface SubscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRequest {
+  endWeek?: number;
+  startWeek?: number;
+  subscriptionId?: string;
+}
+
 export interface SubscriptionsApiDatesChangeCreateRequest {
-  subscriptionDateChangeRequest: SubscriptionDateChangeRequest;
+  subscriptionDateChangeRequestRequest: SubscriptionDateChangeRequestRequest;
 }
 
 export interface SubscriptionsApiExtendedProductPartialUpdateRequest {
@@ -214,14 +222,81 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
   /**
    */
+  async subscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRaw(
+    requestParameters: SubscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<
+    runtime.ApiResponse<ConvertWeekToDateForSubscriptionChangesResponse>
+  > {
+    const queryParameters: any = {};
+
+    if (requestParameters["endWeek"] != null) {
+      queryParameters["end_week"] = requestParameters["endWeek"];
+    }
+
+    if (requestParameters["startWeek"] != null) {
+      queryParameters["start_week"] = requestParameters["startWeek"];
+    }
+
+    if (requestParameters["subscriptionId"] != null) {
+      queryParameters["subscription_id"] = requestParameters["subscriptionId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api(/convert_weeks_to_date_for_subscription_change`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      ConvertWeekToDateForSubscriptionChangesResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieve(
+    requestParameters: SubscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<ConvertWeekToDateForSubscriptionChangesResponse> {
+    const response =
+      await this.subscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
   async subscriptionsApiDatesChangeCreateRaw(
     requestParameters: SubscriptionsApiDatesChangeCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
-    if (requestParameters["subscriptionDateChangeRequest"] == null) {
+    if (requestParameters["subscriptionDateChangeRequestRequest"] == null) {
       throw new runtime.RequiredError(
-        "subscriptionDateChangeRequest",
-        'Required parameter "subscriptionDateChangeRequest" was null or undefined when calling subscriptionsApiDatesChangeCreate().',
+        "subscriptionDateChangeRequestRequest",
+        'Required parameter "subscriptionDateChangeRequestRequest" was null or undefined when calling subscriptionsApiDatesChangeCreate().',
       );
     }
 
@@ -251,8 +326,8 @@ export class SubscriptionsApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: SubscriptionDateChangeRequestToJSON(
-          requestParameters["subscriptionDateChangeRequest"],
+        body: SubscriptionDateChangeRequestRequestToJSON(
+          requestParameters["subscriptionDateChangeRequestRequest"],
         ),
       },
       initOverrides,
