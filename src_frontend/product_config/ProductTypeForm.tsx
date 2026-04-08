@@ -12,6 +12,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import { getNoticePeriodUnitDisplay } from "./getNoticePeriodUnitDispay.ts";
 import CustomCycleDeliveryWeeksInput from "./CustomCycleDeliveryWeeksInput.tsx";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { HTML_ALLOWED_TEXT } from "../utils/HTML_ALLOWED_TEXT.ts";
 
 interface ProductTypeFormProps {
   name: string;
@@ -465,6 +466,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                     value={descriptionBestellwizardLong}
                     as={"textarea"}
                   />
+                  <Form.Text>{HTML_ALLOWED_TEXT}</Form.Text>
                 </Form.Group>
               </Row>
               <Row className={"mt-4"}>

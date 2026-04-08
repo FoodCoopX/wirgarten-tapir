@@ -24,6 +24,7 @@ class TestCancelJokerView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, factories.NOW)
 
     @patch.object(TransactionalTrigger, "fire_action")

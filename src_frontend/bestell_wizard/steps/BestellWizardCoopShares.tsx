@@ -136,7 +136,9 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                 step={1}
                 value={selectedNumberOfCoopShares}
                 onChange={(event) =>
-                  setSelectedNumberOfCoopShares(parseInt(event.target.value))
+                  setSelectedNumberOfCoopShares(
+                    Number.parseInt(event.target.value),
+                  )
                 }
                 disabled={studentStatusEnabled}
               />

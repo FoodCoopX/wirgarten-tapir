@@ -3,7 +3,6 @@ import datetime
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.models import CoopShareTransaction
@@ -122,13 +121,9 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         data = {"member_id": member.id, "number_of_shares_to_add": 1}
         response = self.client.post(url, data)
 
-        self.assertStatusCode(response, HTTP_400_BAD_REQUEST)
-
-        self.assertEqual(
-            [
-                "The minimum final number of shares is 5, this member currently has 0, adding 1 is not enough."
-            ],
-            response.json(),
+        self.assert_change_not_confirmed_with_error(
+            response,
+            "The minimum final number of shares is 5, this member currently has 0, adding 1 is not enough.",
         )
 
         self.assertFalse(CoopShareTransaction.objects.exists())
@@ -147,12 +142,11 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         data = {"member_id": member.id, "number_of_shares_to_add": 10}
         response = self.client.post(url, data)
 
-        self.assertEqual(
-            [
-                "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
-            ],
-            response.json(),
+        self.assert_change_not_confirmed_with_error(
+            response,
+            "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist.",
         )
+
         self.assertEqual(1, CoopShareTransaction.objects.count())
 
     def test_post_normalMemberTriesToActAsAdmin_returns403AndDontPurchaseAnything(
@@ -256,9 +250,15 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         }
         response = self.client.post(url, data)
 
-        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(CoopShareTransaction.objects.exists())
-        self.assertEqual(
-            ["Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)"],
-            response.json(),
+        self.assert_change_not_confirmed_with_error(
+            response, "Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)"
         )
+        self.assertFalse(CoopShareTransaction.objects.exists())
+
+    def assert_change_not_confirmed_with_error(self, response, error: str):
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        response_content = response.json()
+
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(error, response_content["error"])

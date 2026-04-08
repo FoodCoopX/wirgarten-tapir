@@ -21,6 +21,7 @@ class TestCancelCoopMembership(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, datetime.datetime(year=2024, month=9, day=27))
 
     def test_cancelCoopMembership_default_deletesAllFutureSharePurchasesAndCreatesLogEntry(
@@ -57,7 +58,7 @@ class TestCancelCoopMembership(TapirIntegrationTest):
         self.assertEqual(member.email, log_entry.user.email)
         self.assertEqual(actor.email, log_entry.actor.email)
         self.assertEqual(transaction_3.quantity, log_entry.nb_shares)
-        self.assertEqual(transaction_3.valid_at, log_entry.shares_valid_at)
+        self.assertEqual(transaction_3.valid_at, log_entry.cancellation_valid_at)
 
     def test_cancelCoopMembership_default_paymentsGetUpdateCorrectly(
         self,

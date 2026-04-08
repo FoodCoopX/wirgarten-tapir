@@ -107,7 +107,7 @@ def _register_tokens():
             "Verteilstation - Name": PickupLocationMailTokenService.pickup_location_name,
             "Verteilstation - Adresse": PickupLocationMailTokenService.pickup_location_address,
             "Verteilstation - Zugangscode": PickupLocationMailTokenService.pickup_location_access_code,
-            "Verteilstation - Signal-Gruppe": PickupLocationMailTokenService.pickup_location_messenger_group_link,
+            "Verteilstation - Messenger-Gruppe": PickupLocationMailTokenService.pickup_location_messenger_group_link,
             "Verteilstation - Kontaktname": PickupLocationMailTokenService.pickup_location_contact_name,
             "Verteilstation - Photo-Link": PickupLocationMailTokenService.pickup_location_photo_link,
             "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
@@ -289,6 +289,19 @@ def _register_triggers():
         required=lambda: get_parameter_value(
             ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache={}
         ),
+    )
+
+    register_transactional_trigger(
+        name="Eintragung von Kündigung von Geno-Anteilen",
+        key=Events.CANCELLATION_OF_COOP_SHARES,
+        tokens={
+            "Kündigungsdatum": "date_where_the_cancellation_was_triggered",
+            "Wirksamkeitsdatum": "date_where_the_cancellation_is_active",
+            "Anzahl der gekündigten Geno-Anteile": "number_of_cancelled_shares",
+            "Wert eines Geno-Anteils": "value_of_a_single_share",
+            "Gesamtwert gekündigte Geno-Anteile": "value_of_all_cancelled_shares",
+        },
+        required=lambda: legal_status_is_cooperative(cache={}),
     )
 
 

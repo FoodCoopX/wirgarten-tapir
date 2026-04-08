@@ -1,9 +1,11 @@
 import { Step } from "../types/Step.ts";
-import {
-  isAtLeastOneOrderedProductWithDelivery
-} from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { PublicPickupLocation, PublicProductType, PublicWaitingListEntryDetails } from "../../api-client";
+import {
+  PublicPickupLocation,
+  PublicProductType,
+  PublicWaitingListEntryDetails,
+} from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";

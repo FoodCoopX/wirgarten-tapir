@@ -48,7 +48,7 @@ class CoopSharesCancelledLogEntry(LogEntry):
     template_name = "coop/log/coop_shares_cancelled_log_entry.html"
 
     nb_shares = models.IntegerField()
-    shares_valid_at = models.DateField()
+    cancellation_valid_at = models.DateField()
 
     @classmethod
     def populate_transaction(
@@ -57,5 +57,5 @@ class CoopSharesCancelledLogEntry(LogEntry):
         log_entry = cls()
         log_entry.populate(actor=actor, user=user)
         log_entry.nb_shares = coop_share_transaction.quantity
-        log_entry.shares_valid_at = coop_share_transaction.valid_at
+        log_entry.cancellation_valid_at = coop_share_transaction.valid_at
         return log_entry

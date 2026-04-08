@@ -6,7 +6,12 @@ import "../../fixed_header.css";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import { ExtendedPayment, MemberCredit, Payment, PaymentsApi } from "../../api-client";
+import {
+  ExtendedPayment,
+  MemberCredit,
+  Payment,
+  PaymentsApi,
+} from "../../api-client";
 import formatSubscription from "../../utils/formatSubscription.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";

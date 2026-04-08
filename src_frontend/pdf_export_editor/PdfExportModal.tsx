@@ -12,6 +12,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { CYCLE_OPTIONS } from "../csv_export_editor/CYCLE_OPTIONS.ts";
 
 interface PdfExportModalProps {
   show: boolean;
@@ -148,16 +149,6 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
       .finally(() => setLoading(false));
   }
 
-  function cycleOptions() {
-    return {
-      yearly: "Jährlich",
-      monthly: "Monatlich",
-      weekly: "Wöchentlich",
-      daily: "Täglich",
-      never: "nie",
-    };
-  }
-
   function onColumnClicked(column: ExportSegmentColumn) {
     if (!templateInputRef.current) return;
     const templateInput = templateInputRef.current;
@@ -183,11 +174,11 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
         templateInput.value.slice(
           templateInput.selectionStart - 1,
           templateInput.selectionStart,
-        ) !== "{"
+        ) === "{"
       ) {
-        toInsert = "{{" + toInsert;
-      } else {
         toInsert = "{" + toInsert;
+      } else {
+        toInsert = "{{" + toInsert;
       }
     }
 
@@ -201,11 +192,11 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
         templateInput.value.slice(
           templateInput.selectionStart,
           templateInput.selectionStart + 1,
-        ) !== "}"
+        ) === "}"
       ) {
-        toInsert += "}}";
-      } else {
         toInsert += "}";
+      } else {
+        toInsert += "}}";
       }
     }
 
@@ -247,9 +238,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
                           <option
                             key={segment.id}
                             value={segment.id}
-                            selected={
-                              exportSegment && segment.id == exportSegment.id
-                            }
+                            selected={segment.id == exportSegment?.id}
                           >
                             {segment.displayName}
                           </option>
@@ -327,19 +316,17 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
                             )
                           }
                         >
-                          {Object.entries(cycleOptions()).map(
-                            ([key, value]) => {
-                              return (
-                                <option
-                                  key={key}
-                                  value={key}
-                                  selected={exportCycle === key}
-                                >
-                                  {value}
-                                </option>
-                              );
-                            },
-                          )}
+                          {Object.entries(CYCLE_OPTIONS).map(([key, value]) => {
+                            return (
+                              <option
+                                key={key}
+                                value={key}
+                                selected={exportCycle === key}
+                              >
+                                {value}
+                              </option>
+                            );
+                          })}
                         </Form.Select>
                       </Form.Group>
                     </Col>
@@ -351,7 +338,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
                         <Form.Control
                           type={"number"}
                           onChange={(event) =>
-                            setExportDay(parseInt(event.target.value))
+                            setExportDay(Number.parseInt(event.target.value))
                           }
                           required={true}
                           value={exportDay}
@@ -401,25 +388,24 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {exportSegment &&
-                    exportSegment.columns.map((column) => {
-                      return (
-                        <tr>
-                          <td>{column.id}</td>
-                          <td>
-                            <TapirButton
-                              size={"sm"}
-                              icon={"new_label"}
-                              variant={"outline-primary"}
-                              onClick={() => onColumnClicked(column)}
-                              type={"button"}
-                            />
-                          </td>
-                          <td>{column.displayName}</td>
-                          <td>{column.description}</td>
-                        </tr>
-                      );
-                    })}
+                  {exportSegment?.columns.map((column) => {
+                    return (
+                      <tr key={column.id}>
+                        <td>{column.id}</td>
+                        <td>
+                          <TapirButton
+                            size={"sm"}
+                            icon={"new_label"}
+                            variant={"outline-primary"}
+                            onClick={() => onColumnClicked(column)}
+                            type={"button"}
+                          />
+                        </td>
+                        <td>{column.displayName}</td>
+                        <td>{column.description}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </Table>
             </Col>

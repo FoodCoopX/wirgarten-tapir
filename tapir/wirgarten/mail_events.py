@@ -49,3 +49,5 @@ class Events:
     ORDER_REVOKED = "order_revoked"
 
     EXTRA_MAIL_CONFIRMATION = "extra_mail_confirmation"
+
+    CANCELLATION_OF_COOP_SHARES = "cancellation_of_coop_shares"

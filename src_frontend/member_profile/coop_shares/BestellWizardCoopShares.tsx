@@ -17,6 +17,8 @@ import Step9BankingData from "../../bestell_wizard_mobile/steps/Step9BankingData
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { getEmptyPersonalData } from "../../bestell_wizard/utils/getEmptyPersonalData.ts";
 import BestellWizardMobileBase from "../../bestell_wizard_mobile/components/BestellWizardMobileBase.tsx";
+import { addToast } from "../../utils/addToast.ts";
+import { v4 as uuidv4 } from "uuid";
 
 interface BestellWizardCoopSharesProps {
   csrfToken: string;
@@ -113,7 +115,23 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
           asAdmin: false,
         },
       })
-      .then((redirectUrl) => location.assign(redirectUrl))
+      .then((response) => {
+        if (response.orderConfirmed) {
+          if (response.redirectUrl) {
+            location.assign(response.redirectUrl);
+          }
+        } else {
+          addToast(
+            {
+              title: "Fehler beim Bestellen der Geno-Anteile",
+              message: response.error ?? undefined,
+              variant: "danger",
+              id: uuidv4(),
+            },
+            setToastDatas,
+          );
+        }
+      })
       .catch((error) =>
         handleRequestError(
           error,

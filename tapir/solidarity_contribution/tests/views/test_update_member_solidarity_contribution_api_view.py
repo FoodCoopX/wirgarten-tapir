@@ -33,6 +33,7 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
         )
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, NOW)
 
     def test_post_normalMemberUpdatesContributionFromOtherMember_returns403(self):

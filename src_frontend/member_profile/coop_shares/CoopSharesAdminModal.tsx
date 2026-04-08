@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Form, Modal, OverlayTrigger, Popover } from "react-bootstrap";
+import { Form, Modal } from "react-bootstrap";
 import "dayjs/locale/de";
 import { useApi } from "../../hooks/useApi.ts";
 import { CoopApi } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import TapirDateInput from "../../components/TapirDateInput.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import { addToast } from "../../utils/addToast.ts";
+import { v4 as uuidv4 } from "uuid";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface CoopSharesAdminModalProps {
   memberId: string;
@@ -13,6 +17,7 @@ interface CoopSharesAdminModalProps {
   show: boolean;
   onHide: () => void;
   bestellWizardUrl: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
@@ -21,6 +26,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
   show,
   onHide,
   bestellWizardUrl,
+  setToastDatas,
 }) => {
   const coopApi = useApi(CoopApi, csrfToken);
   const [loading, setLoading] = useState(false);
@@ -44,42 +50,56 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
           startDate: startDate,
         },
       })
-      .then(() => location.reload())
+      .then((response) => {
+        if (response.orderConfirmed) {
+          location.reload();
+          return;
+        }
+
+        setLoading(false);
+        addToast(
+          {
+            title: "Fehler beim Hinzufügen der Geno-Anteile",
+            message: response.error ?? undefined,
+            variant: "danger",
+            id: uuidv4(),
+          },
+          setToastDatas,
+        );
+      })
       .catch((error) => {
         setLoading(false);
         handleRequestError(
           error,
           "Fehler bei der manueller Zeichnung der Geno-Anteile",
+          setToastDatas,
         );
       });
   }
 
   function buildTooltip() {
     return (
-      <Popover id="popover-basic" style={{ maxWidth: "500px" }}>
-        <Popover.Header as="h3">Erklärung</Popover.Header>
-        <Popover.Body>
-          <p>
-            Als Admin kannst du Genossenschaftsanteile manuell hinzufügen und
-            hinterlegen, wann der Beitritts- bzw. Zeichnungserklärung durch den
-            Vorstand zugestimmt wurde.
-          </p>
-          <p>
-            Du kannst zum einen in der Vergangenheit gezeichnete
-            Genossenschaftsanteile hinterlegen. Dies ist v.a. relevant wenn ihr
-            eure Mitglieder selbstständig anlegen / importieren wollt.
-          </p>
-          <p>
-            Du kannst aber auch für bereits bestehende Mitglieder die Zeichnung
-            von Genossenschaftsanteilen eintragen. Dies ist v.a. relevant, wenn
-            Mitglieder nicht selbstständig ihren Mitgliederbereich verwalten
-            können/wollen. Das Wirksamkeitsdatum der Zeichnung der
-            Genossenschaftsanteile ergibt sich hier aus den von euren
-            Konfigurationseinstellung abhängigen Regeln und kann nicht durch
-            euch festgelegt werden."
-          </p>
-        </Popover.Body>
-      </Popover>
+      <>
+        <p>
+          Als Admin kannst du Genossenschaftsanteile manuell hinzufügen und
+          hinterlegen, wann der Beitritts- bzw. Zeichnungserklärung durch den
+          Vorstand zugestimmt wurde.
+        </p>
+        <p>
+          Du kannst zum einen in der Vergangenheit gezeichnete
+          Genossenschaftsanteile hinterlegen. Dies ist v.a. relevant wenn ihr
+          eure Mitglieder selbstständig anlegen / importieren wollt.
+        </p>
+        <p>
+          Du kannst aber auch für bereits bestehende Mitglieder die Zeichnung
+          von Genossenschaftsanteilen eintragen. Dies ist v.a. relevant, wenn
+          Mitglieder nicht selbstständig ihren Mitgliederbereich verwalten
+          können/wollen. Das Wirksamkeitsdatum der Zeichnung der
+          Genossenschaftsanteile ergibt sich hier aus den von euren
+          Konfigurationseinstellung abhängigen Regeln und kann nicht durch euch
+          festgelegt werden.
+        </p>
+      </>
     );
   }
 
@@ -87,7 +107,17 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
     return (
       <Form>
         <Form.Group id={"start-date"}>
-          <Form.Label>Wirksamkeitsdatum</Form.Label>
+          <Form.Label>
+            <span className={"d-flex flex-row gap-2 align-items-center"}>
+              Wirksamkeitsdatum
+              <TapirHelpButton
+                buttonSize={"sm"}
+                text={
+                  "Das Wirksamkeitsdatum ist das Datum, an dem der Vorstand bzw. Generalversammlung (abhängig von der Satzung) der Beitritts- bzw Zeichnungserklärung zugestimmt hat. Bitte gib dieses Datum hier ein."
+                }
+              />
+            </span>
+          </Form.Label>
           <TapirDateInput date={startDate} setDate={setStartDate} />
         </Form.Group>
         <Form.Group id={"quantity"}>
@@ -134,13 +164,7 @@ const CoopSharesAdminModal: React.FC<CoopSharesAdminModalProps> = ({
           <h5 className={"mb-0"}>
             Genossenschaftsanteile als Admin hinzufügen
           </h5>
-          <OverlayTrigger
-            overlay={buildTooltip()}
-            trigger={"click"}
-            placement={"bottom"}
-          >
-            <TapirButton variant={"outline-secondary"} icon={"help"} />
-          </OverlayTrigger>
+          <TapirHelpButton text={buildTooltip()} />
         </div>
       </Modal.Header>
       <Modal.Body>{showForm ? buildForm() : buildChoice()}</Modal.Body>

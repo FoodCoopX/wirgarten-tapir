@@ -17,6 +17,7 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
+from tapir.wirgarten.models import CoopShareTransaction
 
 if TYPE_CHECKING:
     from tapir.wirgarten.models import (
@@ -118,6 +119,12 @@ class MemberColumnProvider:
                 display_name="Anteilshistorie",
                 description="",
                 get_value=cls.get_value_member_share_history,
+            ),
+            ExportSegmentColumn(
+                id="member_share_quantity_cancelled_in_previous_year",
+                display_name="Anzahl gekündigte Anteile im Vorjahr",
+                description="",
+                get_value=cls.get_value_member_share_quantity_cancelled_in_previous_year,
             ),
         ]
 
@@ -244,3 +251,20 @@ class MemberColumnProvider:
         if agg["quantity"] or not agg["max_valid_at"]:
             return ""
         return agg["max_valid_at"].strftime("%d.%m.%Y")
+
+    @classmethod
+    def get_value_member_share_quantity_cancelled_in_previous_year(
+        cls, member: Member, reference_datetime: datetime.datetime, _
+    ):
+        year = reference_datetime.year
+        timerange = (
+            datetime.date(year - 1, 1, 1),
+            datetime.date(year, 1, 1) - datetime.timedelta(milliseconds=1),
+        )
+        return -(
+            member.coopsharetransaction_set.filter(
+                transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
+                valid_at__range=timerange,
+            ).aggregate(quantity=Sum(F("quantity")))["quantity"]
+            or 0
+        )

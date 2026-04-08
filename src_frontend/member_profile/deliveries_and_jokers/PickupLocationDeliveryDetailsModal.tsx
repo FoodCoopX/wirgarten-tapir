@@ -47,7 +47,7 @@ const PickupLocationDeliveryDetailsModal: React.FC<
           )}
           {pickupLocation.messengerGroupLink && (
             <>
-              Signal Gruppe:{" "}
+              Messenger-Gruppe:{" "}
               <a href={pickupLocation.messengerGroupLink}>
                 {pickupLocation.messengerGroupLink}
               </a>

@@ -36,6 +36,8 @@ class ParameterKeys:
     PAYMENT_DEFAULT_RHYTHM = f"{PREFIX}.payment.default_rhythm"
     PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
+    PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
+    PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
     MEMBERS_CAN_SEE_OWN_PAYMENTS = (
         f"{PREFIX}.member.dashboard.members_can_see_own_payments"
     )
@@ -153,6 +155,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP3_TITLE = f"{PREFIX}.bestellwizard.step3.title"
     BESTELLWIZARD_STEP3_TEXT = f"{PREFIX}.bestellwizard.step3.text"
+    BESTELLWIZARD_STEP3_NAME_SUPPORTING_MEMBERSHIP = (
+        f"{PREFIX}.bestellwizard.step3.name_supporting_membership"
+    )
     BESTELLWIZARD_STEP3_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step3.background_image"
     )

@@ -90,3 +90,25 @@ class ParameterDefinitionsPayments:
             order_priority=order_priority,
         )
         order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_ORGANISATION_IBAN,
+            label="IBAN der Organisation",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Wird im Export der Lastschriften oben eingefügt, da für Umwandlung in XML-Datei notwendig.",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER,
+            label="Gläubiger-Identifikationsnummer",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Wird im Export der Lastschriften oben eingefügt, da für Umwandlung in XML-Datei notwendig.",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1

@@ -66,8 +66,8 @@ function buildNoticePeriodText(subscribedProduct: ProductForCancellation) {
   return (
     <p>
       Beachte: Nach Ablauf der Probezeit kannst du erst wieder unter
-      Berücksichtigung der regulären Kündigungsfrist von{" "}
-      {subscribedProduct.noticePeriodDuration} {unit} zum{" "}
+      Berücksichtigung der regulären Kündigungsfrist (
+      {subscribedProduct.noticePeriodDuration} {unit}) zum{" "}
       {formatDateNumeric(subscribedProduct.subscriptionEndDate)} kündigen.
     </p>
   );
@@ -115,8 +115,8 @@ function buildHelpText(
     <>
       <p>
         Du kannst deinen Vertrag bis zum{" "}
-        {formatDateTextLong(subscribedProduct.dateLimitForTrialCancellation)}
-        um 23.59 Uhr kündigen, damit dein Vertrag am{" "}
+        {formatDateTextLong(subscribedProduct.dateLimitForTrialCancellation)} um
+        23.59 Uhr kündigen, damit dein Vertrag am{" "}
         {formatDateTextLong(subscribedProduct.cancellationDate)} beendet wird.
       </p>
 

@@ -33,6 +33,7 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(
             self, now=datetime.datetime(year=1998, month=6, day=15)
         )

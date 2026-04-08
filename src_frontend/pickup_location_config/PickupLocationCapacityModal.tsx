@@ -17,6 +17,14 @@ interface ProductModalProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
+function parseIntOrUndefined(valueAstring: string): number | undefined {
+  const value = Number.parseInt(valueAstring);
+  if (Number.isNaN(value)) {
+    return undefined;
+  }
+  return value;
+}
+
 const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
   show,
   onHide,
@@ -103,14 +111,6 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
       }
     }
     setCapacitiesByShare(newCapacities);
-  }
-
-  function parseIntOrUndefined(valueAstring: string): number | undefined {
-    const value = parseInt(valueAstring);
-    if (isNaN(value)) {
-      return undefined;
-    }
-    return value;
   }
 
   function getFromByShare() {

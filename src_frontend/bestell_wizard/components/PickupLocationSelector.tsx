@@ -125,6 +125,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            referrerPolicy={"no-referrer-when-downgrade"}
           />
           {pickupLocations.map((pickupLocation) => (
             <Marker

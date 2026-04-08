@@ -32,6 +32,7 @@ class TestAutomaticConfirmationManager(TapirIntegrationTest):
         ).update(value=5)
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(self, datetime.datetime(year=2025, month=1, day=17))
         self.yesterday = self.now.date() - datetime.timedelta(days=1)
 

@@ -9,43 +9,43 @@
 h1 {
   line-height: 1.4 !important;
   font-size: 39px !important;
-  font-family: "DaxCondensed", sans-serif !important;
+  font-family: "UbuntuCondensed", sans-serif !important;
 }
 
 h2 {
   line-height: 1.4 !important;
   font-size: 33px !important;
-  font-family: "DaxCondensed", sans-serif !important;
+  font-family: "UbuntuCondensed", sans-serif !important;
 }
 
 h3 {
   line-height: 1.4 !important;
   font-size: 23px !important;
-  font-family: "DaxCondensed", sans-serif !important;
+  font-family: "UbuntuCondensed", sans-serif !important;
 }
 
 h4 {
   line-height: 1.4 !important;
   font-size: 20px !important;
-  font-family: "DaxCondensed", sans-serif !important;
+  font-family: "UbuntuCondensed", sans-serif !important;
 }
 
 h5 {
   line-height: 1.4 !important;
   font-size: 17px !important;
-  font-family: "DaxCondensed", sans-serif !important;
+  font-family: "UbuntuCondensed", sans-serif !important;
 }
 
 h6 {
   line-height: 1.4 !important;
   font-size: 16px !important;
-  font-family: "DaxCondensed", sans-serif !important;
+  font-family: "UbuntuCondensed", sans-serif !important;
 }
 
 body {
   font-size: 16px !important;
   line-height: 1.7 !important;
-  font-family: "DaxCondensed", sans-serif !important;
+  font-family: "UbuntuCondensed", sans-serif !important;
   color: var(--black);
 }
 
@@ -230,8 +230,8 @@ main {
 }
 
 @font-face {
-  font-family: "DaxCondensed";
+  font-family: "UbuntuCondensed";
   font-style: normal;
-  src: url("/static/core/themes/alfter/fonts/daxcondensed.woff2")
+  src: url("/static/core/themes/alfter/fonts/UbuntuCondensed-Regular.woff2")
     format("woff2");
 }

@@ -8,6 +8,8 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import CoopSharesAdminModal from "./CoopSharesAdminModal.tsx";
+import { ToastData } from "../../types/ToastData.ts";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 
 interface CoopSharesCardProps {
   memberId: string;
@@ -25,6 +27,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
   const [transactions, setTransactions] = useState<CoopShareTransaction[]>([]);
   const [bestellWizardUrl, setBestellWizardUrl] = useState("");
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     loadShareData();
@@ -39,7 +42,11 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
         setBestellWizardUrl(response.urlOfBestellWizard);
       })
       .catch((error) =>
-        handleRequestError(error, "Fehler beim Laden der Geno-Anteile"),
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Geno-Anteile",
+          setToastDatas,
+        ),
       )
       .finally(() => setLoading(false));
   }
@@ -157,8 +164,13 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
           show={showAdminModal}
           onHide={() => setShowAdminModal(false)}
           bestellWizardUrl={bestellWizardUrl}
+          setToastDatas={setToastDatas}
         />
       )}
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
     </>
   );
 };

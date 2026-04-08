@@ -239,6 +239,19 @@ class ParameterDefinitionsBestellwizard:
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP3_NAME_SUPPORTING_MEMBERSHIP,
+            label="Seite 3: Produktauswahl - Name für Fördermitgliedschaften",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Fördermitgliedschaft",
+            description="In der Produktauswahl-Seite (soll sie aktiviert sein), kann die interessierte Person ggf. kein "
+            "Produkt auswählen und nur eine Fördermitgliedschaft zeichnen. "
+            "Die Name für dieser Auswahl kann ich personalisiert werden.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP3_BACKGROUND_IMAGE,
             label="Seite 3: Produktauswahl - Hintergrundbild",
             datatype=TapirParameterDatatype.STRING,

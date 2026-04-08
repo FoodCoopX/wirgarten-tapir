@@ -1,4 +1,6 @@
+import csv
 import datetime
+import io
 import locale
 from collections.abc import Iterable
 from decimal import Decimal
@@ -16,12 +18,12 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.utils import format_date, get_now
+from tapir.wirgarten.utils import format_date, get_now, format_currency
 
 
 class PaymentExportBuilder:
-    KEY_NAME = "Name"
-    KEY_IBAN = "IBAN"
+    KEY_NAME = "Zahlungspflichtigen-Name"
+    KEY_IBAN = "Zahlungspflichtigen-IBAN"
     KEY_AMOUNT = "Betrag"
     KEY_VERWENDUNGSZWECK = "Verwendungszweck"
     KEY_MANDATE_REF = "Mandatsreferenz"
@@ -157,8 +159,8 @@ class PaymentExportBuilder:
             [
                 cls.KEY_NAME,
                 cls.KEY_IBAN,
-                cls.KEY_AMOUNT,
                 cls.KEY_VERWENDUNGSZWECK,
+                cls.KEY_AMOUNT,
                 cls.KEY_MANDATE_REF,
                 cls.KEY_MANDATE_DATE,
             ]
@@ -173,24 +175,46 @@ class PaymentExportBuilder:
                 {
                     cls.KEY_NAME: f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}",
                     cls.KEY_IBAN: payment.mandate_ref.member.iban,
-                    cls.KEY_AMOUNT: f"{payment.amount:n}",
+                    cls.KEY_AMOUNT: format_currency(payment.amount).replace(".", ""),
                     cls.KEY_VERWENDUNGSZWECK: verwendungszweck,
                     cls.KEY_MANDATE_REF: payment.mandate_ref.ref,
                     cls.KEY_MANDATE_DATE: format_date(
-                        payment.mandate_ref.member.sepa_consent
+                        payment.mandate_ref.member.sepa_consent.date()
                     ),
                 }
             )
 
         locale.setlocale(locale.LC_ALL, previous_locale)
 
+        file_content = "".join(output.csv_string)
+        file_content = cls.add_header(file_content, cache)
+
         return export_file(
             filename=f"{payment_type_display}-Einzahlungen",
             filetype=ExportedFile.FileType.CSV,
-            content=bytes("".join(output.csv_string), "utf-8"),
+            content=bytes(file_content, "utf-8"),
             send_email=True,
             cache=cache,
         )
+
+    @classmethod
+    def add_header(cls, file_content: str, cache: dict):
+        organisation_name = get_parameter_value(
+            key=ParameterKeys.SITE_NAME, cache=cache
+        )
+        iban = get_parameter_value(
+            key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, cache=cache
+        )
+        credential_identifier = get_parameter_value(
+            key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER, cache=cache
+        )
+
+        header = io.StringIO()
+        writer = csv.writer(header, delimiter=";", quoting=csv.QUOTE_ALL)
+        writer.writerow(["Basis-Lastschriften"])
+        writer.writerow([organisation_name, iban, credential_identifier])
+
+        return "".join([header.getvalue(), file_content])
 
     @classmethod
     def get_payment_type_display(cls, contract_payments: bool):

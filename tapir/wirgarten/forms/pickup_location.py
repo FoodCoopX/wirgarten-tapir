@@ -1,5 +1,5 @@
+import datetime
 import json
-from datetime import datetime
 from typing import List
 
 from dateutil.relativedelta import relativedelta
@@ -23,7 +23,6 @@ from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationOpeningTime,
-    Product,
     Subscription,
     Member,
 )
@@ -53,14 +52,9 @@ def get_pickup_locations_map_data(
 
 
 def build_capacity_dictionary_for_picking_mode_share(
-    capa, next_delivery_date: datetime.date, next_month: datetime.date, cache: dict
+    capa, next_month: datetime.date, cache: dict
 ):
     max_capa = capa["max_capacity"]
-    try:
-        base_product = Product.objects.get(type_id=capa["product_type_id"], base=True)
-    except Product.DoesNotExist:
-        return None
-
     current_capa = round(
         PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
             pickup_location=PickupLocation.objects.get(id=capa["pickup_location_id"]),
@@ -69,8 +63,7 @@ def build_capacity_dictionary_for_picking_mode_share(
             ),
             reference_date=next_month,
             cache=cache,
-        )
-        / float(get_product_price(base_product, next_delivery_date, cache).size),
+        ),
         2,
     )
 
@@ -82,8 +75,7 @@ def build_capacity_dictionary_for_picking_mode_share(
             ),
             reference_date=next_month,
             cache=cache,
-        )
-        / float(get_product_price(base_product, next_month, cache).size),
+        ),
         2,
     )
 
@@ -111,7 +103,6 @@ def pickup_location_to_dict(
     capabilities_for_pickup_location = [
         build_capacity_dictionary_for_picking_mode_share(
             capa=capa,
-            next_delivery_date=next_delivery_date,
             next_month=next_month,
             cache=cache,
         )
@@ -319,7 +310,7 @@ class PickupLocationEditForm(forms.Form):
             label=_("Zugangscode"), required=False
         )
         self.fields["messenger_group_link"] = forms.CharField(
-            label=_("Link zur Signal-Gruppe"), required=False
+            label=_("Link zur Messenger-Gruppe"), required=False
         )
         self.fields["contact_name"] = forms.CharField(
             label=_("Name der Abholort-Pat*innen"), required=False
@@ -442,8 +433,8 @@ class PickupLocationEditForm(forms.Form):
             for time in times:
                 try:
                     start, end = time.split("-")
-                    start_time = datetime.strptime(start, "%H:%M")
-                    end_time = datetime.strptime(end, "%H:%M")
+                    start_time = datetime.datetime.strptime(start, "%H:%M")
+                    end_time = datetime.datetime.strptime(end, "%H:%M")
                     if start_time >= end_time:
                         self.add_error(
                             field,

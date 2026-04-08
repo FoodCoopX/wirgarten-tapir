@@ -5,13 +5,12 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y libldap2-dev libsasl2-dev gettext locales
+RUN apt-get update -y && apt-get install -y gettext libldap2-dev libsasl2-dev  locales && apt-get clean
 RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
     apt-get update -y && apt install -y nodejs && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
     npm install -g mjml@4.14.1
 
 RUN sed -i '/de_DE.UTF-8/s/^# //g' /etc/locale.gen && locale-gen

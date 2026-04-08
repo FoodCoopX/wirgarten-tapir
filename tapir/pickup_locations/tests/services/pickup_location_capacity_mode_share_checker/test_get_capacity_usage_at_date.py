@@ -24,31 +24,37 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
-        member = MemberFactory.create()
+
         cls.pickup_location = PickupLocationFactory.create()
         cls.reference_date = datetime.date(year=2026, month=3, day=12)
-        MemberPickupLocationFactory.create(
-            pickup_location=cls.pickup_location,
-            member=member,
+
+        cls.product_type = ProductTypeFactory.create()
+        cls.product = ProductFactory.create(type=cls.product_type)
+
+        ProductPriceFactory.create(
+            product=cls.product,
+            size=2,
             valid_from=cls.reference_date - datetime.timedelta(days=1),
         )
-        cls.product_type = ProductTypeFactory.create()
-        product = ProductFactory.create(type=cls.product_type)
-        start_date = cls.reference_date - datetime.timedelta(days=1)
-        end_date = cls.reference_date + datetime.timedelta(days=1)
+
+    def setUp(self) -> None:
+        super().setUp()
+        member = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            pickup_location=self.pickup_location,
+            member=member,
+            valid_from=self.reference_date - datetime.timedelta(days=1),
+        )
+        start_date = self.reference_date - datetime.timedelta(days=1)
+        end_date = self.reference_date + datetime.timedelta(days=1)
         SubscriptionFactory.create(
-            product=product,
+            product=self.product,
             member=member,
             start_date=start_date,
             end_date=end_date,
             period__start_date=start_date,
             period__end_date=end_date,
             quantity=3,
-        )
-        ProductPriceFactory.create(
-            product=product,
-            size=2,
-            valid_from=cls.reference_date - datetime.timedelta(days=1),
         )
 
     def test_getCapacityUsageAtDate_memberNotAtPickupStation_memberNotIncludedInUsage(

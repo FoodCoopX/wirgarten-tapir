@@ -8,11 +8,32 @@ import { useApi } from "../hooks/useApi.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
+import { getParameterFromUrl } from "./get_parameter_from_url.ts";
 
 interface CustomCycleDeliveryWeeksInputProps {
   deliveryWeeks: CustomCycleDeliveryWeeks;
   setDeliveryWeeks: (weeks: CustomCycleDeliveryWeeks) => void;
   allGrowingPeriods: GrowingPeriod[];
+}
+
+function getDefaultSelectedGrowingPeriod(allGrowingPeriods: GrowingPeriod[]) {
+  const periodId = getParameterFromUrl("periodId");
+  if (periodId) {
+    for (const growingPeriod of allGrowingPeriods) {
+      if (growingPeriod.id === periodId) {
+        return growingPeriod;
+      }
+    }
+  }
+
+  const today = new Date();
+  for (const growingPeriod of allGrowingPeriods) {
+    if (growingPeriod.startDate <= today && today <= growingPeriod.endDate) {
+      return growingPeriod;
+    }
+  }
+
+  return allGrowingPeriods.at(-1);
 }
 
 const CustomCycleDeliveryWeeksInput: React.FC<
@@ -30,21 +51,14 @@ const CustomCycleDeliveryWeeksInput: React.FC<
   }>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [initialValueSet, setInitialValueSet] = useState(false);
-
   useEffect(() => {
     if (allGrowingPeriods.length === 0) {
       return;
     }
 
-    const today = new Date();
-    for (const growingPeriod of allGrowingPeriods) {
-      if (growingPeriod.startDate <= today && today <= growingPeriod.endDate) {
-        setSelectedGrowingPeriod(growingPeriod);
-        return;
-      }
-    }
-
-    setSelectedGrowingPeriod(allGrowingPeriods.at(-1));
+    setSelectedGrowingPeriod(
+      getDefaultSelectedGrowingPeriod(allGrowingPeriods),
+    );
   }, [allGrowingPeriods]);
 
   useEffect(() => {

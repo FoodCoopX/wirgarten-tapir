@@ -7,7 +7,7 @@ import {
   Product,
   WaitingListEntryDetails,
   WaitingListPickupLocationWish,
-  WaitingListProductWish
+  WaitingListProductWish,
 } from "../../api-client";
 import formatSubscription from "../../utils/formatSubscription.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";

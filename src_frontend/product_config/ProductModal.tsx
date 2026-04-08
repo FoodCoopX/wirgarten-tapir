@@ -22,6 +22,7 @@ import {
 } from "./get_parameter_from_url.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { HTML_ALLOWED_TEXT } from "../utils/HTML_ALLOWED_TEXT.ts";
 
 interface ProductModalProps {
   show: boolean;
@@ -229,7 +230,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                       setDescriptionInBestellWizard(e.target.value)
                     }
                   />
-                  <Form.Text>Beispiel: "für ca. eine Person"</Form.Text>
+                  <Form.Text>
+                    Beispiel: "für ca. eine Person". <br />
+                    {HTML_ALLOWED_TEXT}
+                  </Form.Text>
                 </Form.Group>
               </Col>
               <Col>

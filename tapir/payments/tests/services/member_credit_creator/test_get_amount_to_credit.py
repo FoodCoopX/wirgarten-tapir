@@ -10,9 +10,6 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
-from tapir.payments.services.month_payment_builder_subscriptions import (
-    MonthPaymentBuilderSubscriptions,
-)
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions

@@ -80,7 +80,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
 
         self.assertEqual("Musterstraße 1, 12345 Musterstadt", result)
 
-    def createTerminatedMemberWithShareHistory(self):
+    def create_terminated_member_with_share_history(self):
         member = MemberFactory.create()
         start = datetime.datetime(2024, 1, 1)
         # admission
@@ -99,7 +99,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         return member
 
     def test_getValueMemberShareQuantity_default_returnsMemberShareQuantity(self):
-        member = self.createTerminatedMemberWithShareHistory()
+        member = self.create_terminated_member_with_share_history()
 
         result = MemberColumnProvider.get_value_member_share_quantity(
             member, datetime.datetime(2023, 12, 1), {}
@@ -122,13 +122,13 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual(0, result)
 
     def test_getValueMemberAdmissionDate_default_returnsMemberAdmissionDate(self):
-        member = self.createTerminatedMemberWithShareHistory()
+        member = self.create_terminated_member_with_share_history()
 
         result = MemberColumnProvider.get_value_member_admission_date(member, None, {})
         self.assertEqual("01.01.2024", result)
 
     def test_getValueMemberTerminationDate_default_returnsMemberTerminationDate(self):
-        member = self.createTerminatedMemberWithShareHistory()
+        member = self.create_terminated_member_with_share_history()
 
         result = MemberColumnProvider.get_value_member_termination_date(
             member, None, {}
@@ -136,7 +136,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual("10.02.2024", result)
 
     def test_getValueMemberShareHistory_default_returnsMemberShareHistory(self):
-        member = self.createTerminatedMemberWithShareHistory()
+        member = self.create_terminated_member_with_share_history()
 
         result = MemberColumnProvider.get_value_member_share_history(
             member, datetime.datetime(2023, 12, 1), {}
@@ -224,3 +224,23 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual(
             "Gutschrift 2 genutzte Joker in Vertragsjahr 01.01.2025-03.01.2025", result
         )
+
+    def test_getValueMemberShareQuantityCancelledInPreviousYear_default_returnsMemberShareQuantityCancelledInPreviousYear(
+        self,
+    ):
+        member = self.create_terminated_member_with_share_history()
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2023, 12, 1), {}
+        )
+        self.assertEqual(0, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2024, 12, 31), {}
+        )
+        self.assertEqual(0, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2025, 1, 1), {}
+        )
+        self.assertEqual(42, result)

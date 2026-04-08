@@ -25,7 +25,7 @@ class TestBasketSizeCapacitiesServiceIntegration(TapirIntegrationTest):
     ):
         product = ProductFactory.create()
         result = BasketSizeCapacitiesService.get_basket_size_equivalences_for_product(
-            product
+            product, cache={}
         )
 
         self.assertEqual({"small": 0, "medium": 0}, result)
@@ -39,7 +39,7 @@ class TestBasketSizeCapacitiesServiceIntegration(TapirIntegrationTest):
         )
 
         result = BasketSizeCapacitiesService.get_basket_size_equivalences_for_product(
-            product
+            product, cache={}
         )
 
         self.assertEqual({"small": 12, "medium": 0}, result)
@@ -56,7 +56,7 @@ class TestBasketSizeCapacitiesServiceIntegration(TapirIntegrationTest):
         )
 
         result = BasketSizeCapacitiesService.get_basket_size_equivalences_for_product(
-            product
+            product, cache={}
         )
 
         self.assertEqual({"small": 12, "medium": 0}, result)

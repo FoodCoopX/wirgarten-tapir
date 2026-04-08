@@ -11,7 +11,7 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
 )
-from tapir.wirgarten.utils import get_today, get_now
+from tapir.wirgarten.utils import get_now, get_today
 
 
 class MemberSegmentProvider:
@@ -46,6 +46,13 @@ class MemberSegmentProvider:
                 display_name="Mitglieder die ein Vertrag seit über einem Jahr haben aber noch kein Geno-Anteil",
                 description="",
                 get_queryset=cls.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share,
+                get_available_columns=MemberColumnProvider.get_member_columns,
+            ),
+            ExportSegment(
+                id="members.with_cancelled_shares_in_previous_year",
+                display_name="Mitglieder mit gekündigte Anteile im Vorjahr",
+                description="",
+                get_queryset=cls.get_queryset_members_with_cancelled_shares_in_previous_year,
                 get_available_columns=MemberColumnProvider.get_member_columns,
             ),
         ]
@@ -135,4 +142,20 @@ class MemberSegmentProvider:
             )
         ).filter(
             id__in=set(members_with_an_active_subscription.values_list("id", flat=True))
+        )
+
+    @classmethod
+    def get_queryset_members_with_cancelled_shares_in_previous_year(
+        cls, reference_datetime: datetime.datetime
+    ):
+        from tapir.wirgarten.models import CoopShareTransaction, Member
+
+        year = reference_datetime.year
+        timerange = (
+            datetime.date(year - 1, 1, 1),
+            datetime.date(year, 1, 1) - datetime.timedelta(milliseconds=1),
+        )
+        return Member.objects.filter(
+            coopsharetransaction__transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
+            coopsharetransaction__valid_at__range=timerange,
         )

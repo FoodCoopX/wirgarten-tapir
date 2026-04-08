@@ -24,7 +24,6 @@ services:
       DJANGO_VITE_DEBUG: True
     depends_on:
       - db
-      - keycloak
       - redis
     ports:
       - "8000:8000"
@@ -84,5 +83,4 @@ services:
       - vite_node_modules:/app/node_modules
 
 volumes:
-  nginx-certs-volume:
   vite_node_modules:

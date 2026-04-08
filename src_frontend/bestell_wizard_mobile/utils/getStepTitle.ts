@@ -8,7 +8,7 @@ export function getStepTitle(
   switch (step) {
     case "1a_welcome":
       return settings.strings.step1aTitle;
-    case "1b_welcome":
+    case "1b_welcome_waiting_list":
       return settings.strings.step1bTitle;
     case "2_first_name":
       return settings.strings.step2Title;

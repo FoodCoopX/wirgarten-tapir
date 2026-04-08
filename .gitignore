@@ -20,7 +20,8 @@ media
 # Distribution / packaging
 .Python build/
 develop-eggs/
-dist/
+dist/*
+!dist/.gitkeep
 downloads/
 eggs/
 .eggs/
