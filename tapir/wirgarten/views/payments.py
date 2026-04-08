@@ -28,7 +28,6 @@ class PaymentTransactionListView(PermissionRequiredMixin, generic.list.ListView)
                 "file": t.file,
                 "type": t.type,
                 "payments": payments,
-                "month": t.month,
             }
 
         return list(

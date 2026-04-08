@@ -1,8 +1,6 @@
 import calendar
 import datetime
-import locale
 import os
-from contextlib import contextmanager
 from typing import Callable
 
 from django.shortcuts import redirect
@@ -67,12 +65,3 @@ def is_running_tests():
 
 def get_any_element_from_set(s: set):
     return next(iter(s))
-
-
-@contextmanager
-def setlocale(locale_name):
-    saved = locale.getlocale()
-    try:
-        yield locale.setlocale(locale.LC_ALL, locale_name)
-    finally:
-        locale.setlocale(locale.LC_ALL, saved)

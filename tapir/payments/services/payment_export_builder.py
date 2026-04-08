@@ -18,7 +18,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.utils import format_date, format_currency
+from tapir.wirgarten.utils import format_date, get_now, format_currency
 
 
 class PaymentExportBuilder:
@@ -31,9 +31,7 @@ class PaymentExportBuilder:
 
     @classmethod
     @transaction.atomic
-    def export_all_unexported_payments(
-        cls, reference_date: datetime.date, send_mail: bool, cache: dict
-    ):
+    def export_all_unexported_payments(cls, reference_date: datetime.date, cache: dict):
         payments = cls.get_unexported_payments(reference_date=reference_date)
         contract_payments, coop_share_payments = (
             cls.split_payments_by_contract_or_coop_shares(payments)
@@ -48,7 +46,6 @@ class PaymentExportBuilder:
             database_payments=contract_payments,
             is_contract_payments=True,
             reference_date=reference_date,
-            send_mail=send_mail,
             cache=cache,
         )
         cls.export_payments_if_necessary(
@@ -56,7 +53,6 @@ class PaymentExportBuilder:
             database_payments=coop_share_payments,
             is_contract_payments=False,
             reference_date=reference_date,
-            send_mail=send_mail,
             cache=cache,
         )
 
@@ -67,7 +63,6 @@ class PaymentExportBuilder:
         database_payments: Iterable[Payment],
         is_contract_payments: bool,
         reference_date: datetime.date,
-        send_mail: bool,
         cache: dict,
     ):
         if not cls.should_export_payments(
@@ -78,7 +73,6 @@ class PaymentExportBuilder:
         exported_file = cls.export_payments(
             combined_payments,
             contract_payments=is_contract_payments,
-            send_mail=send_mail,
             cache=cache,
         )
         cls.create_and_assign_transaction(
@@ -86,6 +80,7 @@ class PaymentExportBuilder:
             is_contract_payments=is_contract_payments,
             payments=database_payments,
             reference_date=reference_date,
+            cache=cache,
         )
 
     @classmethod
@@ -112,11 +107,17 @@ class PaymentExportBuilder:
         is_contract_payments: bool,
         payments: Iterable[Payment],
         reference_date: datetime.date,
+        cache: dict,
     ):
+        created_at = datetime.datetime.combine(
+            reference_date,
+            get_now(cache=cache).time(),
+            tzinfo=get_now(cache=cache).tzinfo,
+        )
         payment_transaction = PaymentTransaction.objects.create(
             file=file,
             type=cls.get_payment_type_display(is_contract_payments),
-            month=reference_date.replace(day=1),
+            created_at=created_at,
         )
         for payment in payments:
             payment.transaction = payment_transaction
@@ -149,7 +150,6 @@ class PaymentExportBuilder:
         cls,
         payments: Iterable[Payment],
         contract_payments: bool,
-        send_mail: bool,
         cache: dict,
     ):
         previous_locale = locale.getlocale()
@@ -193,7 +193,7 @@ class PaymentExportBuilder:
             filename=f"{payment_type_display}-Einzahlungen",
             filetype=ExportedFile.FileType.CSV,
             content=bytes(file_content, "utf-8"),
-            send_email=send_mail,
+            send_email=True,
             cache=cache,
         )
 
