@@ -33,9 +33,7 @@ class TestBackfillMemberNumbersCommand(TapirIntegrationTest):
         # ``MemberFactory.create(member_no=None)`` still auto-assigns via its
         # post_generation hook, so we have to null the field via raw UPDATE.
         members = [MemberFactory.create() for _ in range(count)]
-        Member.objects.filter(
-            pk__in=[m.pk for m in members]
-        ).update(member_no=None)
+        Member.objects.filter(pk__in=[m.pk for m in members]).update(member_no=None)
         for m in members:
             m.refresh_from_db()
         return members
