@@ -75,10 +75,9 @@
             <td style="text-align:center">{{ entry.quantity }}</td>
             <td style="text-align:right">
                 {% if entry.price_override %}
-                    <span title="{% translate 'Manuell editiert!' %}"><span style="font-size:1.25em;
-             color: var(--bs-warning)"
-      class="material-icons">warning</span></span>
-                    &nbsp;
+                    <span title="{% translate 'Manuell editiert!' %}">
+                        <span style="font-size:1.25em; color: var(--bs-warning)" class="material-icons">warning</span>
+                    </span>&nbsp;
                 {% endif %}
                 {{ entry.total_price | format_currency }} €
             </td>

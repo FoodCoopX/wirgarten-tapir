@@ -2,13 +2,13 @@
 <div style="display:grid; grid-template-columns: 1fr 1fr; grid-gap: 1em">
   <div style="margin-bottom:1em" class="list-group" id="id_pickup_location">
     {% for group_name, group_choices, group_index in widget.optgroups %}
-    {% if group_name %}
-    <div class="list-group-item list-group-item-primary">{{ group_name }}</div>
-    {% endif %}
-    {% for option in group_choices %}
-    <a href="#" class="list-group-item list-group-item-action" data-value="{{ option.value }}" {% if option.selected %}
-      aria-current="true" {% endif %}>{{ option.label|safe }}</a>
-    {% endfor %}
+      {% if group_name %}
+        <div class="list-group-item list-group-item-primary">{{ group_name }}</div>
+      {% endif %}
+      {% for option in group_choices %}
+        <a href="#" class="list-group-item list-group-item-action" data-value="{{ option.value }}" {% if option.selected %}
+             aria-current="true" {% endif %}>{{ option.label|safe }}</a>
+      {% endfor %}
     {% endfor %}
   </div>
   <script>

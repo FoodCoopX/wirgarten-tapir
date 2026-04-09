@@ -1,19 +1,19 @@
 {% extends 'wirgarten/generic/filter-list.html' %}
 
 {% block card_header %}
-<h4>Exported Files</h4>
+    <h4>Exported Files</h4>
 {% endblock %}
 
 {% block table_head %}
-<th>Dateiname</th>
-<th>Erstellt am</th>
+    <th>Dateiname</th>
+    <th>Erstellt am</th>
 {% endblock %}
 
 {% block table_body %}
-{% for file in object_list %}
-<tr id="{{file.id}}" class="tr-clickable tr-href" href="{% url 'wirgarten:exported_files_download' file.pk %}">
-    <td><strong>{{ file.name }}.{{file.type}}</strong></td>
-    <td>{{ file.created_at }}</td>
-</tr>
-{% endfor %}
+    {% for file in object_list %}
+        <tr id="{{file.id}}" class="tr-clickable tr-href" href="{% url 'wirgarten:exported_files_download' file.pk %}">
+            <td><strong>{{ file.name }}.{{file.type}}</strong></td>
+            <td>{{ file.created_at }}</td>
+        </tr>
+    {% endfor %}
 {% endblock %}
