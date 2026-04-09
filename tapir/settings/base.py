@@ -31,6 +31,7 @@ ENABLE_SILK_PROFILING = False
 
 # Application definition
 INSTALLED_APPS = [
+    "daphne",
     # Must come before contrib.auth to let the custom templates be discovered for auth views
     "tapir.accounts",
     "django.contrib.auth",
@@ -128,6 +129,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "tapir.wsgi.application"
+ASGI_APPLICATION = "tapir.asgi.application"
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
