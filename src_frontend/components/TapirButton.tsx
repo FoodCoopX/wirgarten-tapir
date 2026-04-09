@@ -13,6 +13,7 @@ interface TapirButtonProps {
   type?: "submit" | "reset" | "button";
   fontSize?: number;
   tooltip?: string;
+  tootlipPosition?: "top" | "bottom" | "left" | "right";
   iconPosition?: "left" | "right";
   rotateIcon?: string;
   className?: string;
@@ -72,8 +73,10 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       disabled={props.disabled || props.loading}
       type={props.type ?? "button"}
       title={props.tooltip}
+      data-bs-placement={props.tootlipPosition}
       className={props.className}
       ref={props.ref}
+      data-bs-toggle={"tooltip"}
     >
       {(props.iconPosition === "left" || !props.iconPosition) && buildIcon()}
       {props.text &&
