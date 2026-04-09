@@ -106,9 +106,7 @@ def get_cashflow_chart_data(request):
 
 def get_recent_feedbacks(limit: int = 10):
     return list(
-        OrderFeedback.objects.order_by("-created_at")[:limit]
-        .select_related("member")
-        .values(
+        OrderFeedback.objects.order_by("-created_at")[:limit].values(
             "feedback_text",
             "created_at",
             "member__first_name",
