@@ -7,7 +7,7 @@ import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 interface Step13FeedbackProps {
   settings: BestellWizardSettings;
   goToNextStep: () => void;
-  confirmOrder: (() => void | undefined) | undefined;
+  confirmOrder: (() => void);
   confirmOrderLoading: boolean;
   feedback: string;
   setFeedback: (value: string) => void;
