@@ -1259,7 +1259,6 @@ class MemberExtraEmailConfirmedLogEntry(LogEntry):
         return self
 
 
-class OrderFeedback(models.Model):
+class OrderFeedback(TapirModel):
     member = models.ForeignKey("Member", on_delete=models.CASCADE)
     feedback_text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
