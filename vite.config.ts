@@ -1,6 +1,6 @@
-import { defineConfig } from "vite";
-import { join, resolve } from "node:path";
 import react from "@vitejs/plugin-react-swc";
+import { join, resolve } from "node:path";
+import { defineConfig } from "vite";
 
 export default defineConfig(() => {
   const INPUT_DIR = "./src_frontend";
@@ -44,10 +44,6 @@ export default defineConfig(() => {
           dashboard: join(INPUT_DIR, "/dashboard/dashboard_entry.tsx"),
           waiting_list: join(INPUT_DIR, "/waiting_list/waiting_list_entry.tsx"),
           member_list: join(INPUT_DIR, "/member_list/member_list_entry.tsx"),
-          bestell_wizard: join(
-            INPUT_DIR,
-            "/bestell_wizard/bestell_wizard_entry.tsx",
-          ),
           bestell_wizard_mobile: join(
             INPUT_DIR,
             "/bestell_wizard_mobile/bestell_wizard_mobile_entry.tsx",

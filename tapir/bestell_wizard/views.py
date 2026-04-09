@@ -95,10 +95,6 @@ from tapir.wirgarten.utils import (
 )
 
 
-class BestellWizardView(TemplateView):
-    template_name = "bestell_wizard/bestell_wizard.html"
-
-
 class BestellWizardMobileView(TemplateView):
     template_name = "bestell_wizard/bestell_wizard_mobile.html"
 
