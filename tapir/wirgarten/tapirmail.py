@@ -212,6 +212,11 @@ def _register_triggers():
     register_transactional_trigger(
         name="Beitritt zur Genossenschaft",
         key=Events.MEMBERSHIP_ENTRY,
+        tokens={
+            "Anzahl gezeichnete Geschäftsanteile": "number_of_coop_shares",
+            "Wert Geno-Anteil": "price_of_a_share",
+            "Gesamtwert der gezeichneten Geschäftsanteile": "price_of_all_shares",
+        },
         required=lambda: legal_status_is_cooperative(cache={}),
     )
 
