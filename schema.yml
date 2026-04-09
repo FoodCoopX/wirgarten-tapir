@@ -5527,6 +5527,8 @@ components:
           type: string
         step4d_text:
           type: string
+        step4d_text_supporting_member:
+          type: string
         step5a_title:
           type: string
         step5a_text:
@@ -5632,6 +5634,7 @@ components:
       - step4b_waiting_list_modal_text
       - step4b_waiting_list_modal_title
       - step4d_text
+      - step4d_text_supporting_member
       - step4d_title
       - step5a_text
       - step5a_title

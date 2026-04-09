@@ -321,10 +321,22 @@ class ParameterDefinitionsBestellwizard:
 
         importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP4D_TEXT,
-            label="Seite 4D: Solidarbeitrag - Text",
+            label="Seite 4D: Solidarbeitrag - Text - Kein Fördermitglied",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Mit einer solidarischen Zahlung erlaubst du weniger finanzstarken Mitgliedern ebenfalls Mitgliedschaften in der Genossenschaft abzuschließen.",
-            description="",
+            description=HTML_ALLOWED_TEXT,
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP4D_TEXT_SUPPORTING_MEMBER,
+            label="Seite 4D: Solidarbeitrag - Text - Fördermitglied",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Mit einer solidarischen Zahlung erlaubst du weniger finanzstarken Mitgliedern ebenfalls Mitgliedschaften in der Genossenschaft abzuschließen.",
+            description="Dieser Text wird als alternativ zu 'Seite 4D: Solidarbeitrag - Text - Kein Fördermitglied' angezeigt wenn der Benutzer keine Produkte im Warenkorb hat. "
+            + HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )

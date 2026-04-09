@@ -171,6 +171,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP4D_TITLE = f"{PREFIX}.bestellwizard.step4d.title"
     BESTELLWIZARD_STEP4D_TEXT = f"{PREFIX}.bestellwizard.step4d.text"
+    BESTELLWIZARD_STEP4D_TEXT_SUPPORTING_MEMBER = (
+        f"{PREFIX}.bestellwizard.step4d.text_supporting_member"
+    )
     BESTELLWIZARD_STEP4D_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step4d.background_image"
     )
