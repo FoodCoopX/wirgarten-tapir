@@ -7,6 +7,8 @@ import {
   DeliveriesApi,
   GrowingPeriod,
   Member,
+  MemberPaymentRhythmData,
+  PaymentsApi,
   PickupLocation,
   PickupLocationsApi,
   Product,
@@ -33,9 +35,11 @@ const SubscriptionAddButtonModal: React.FC<
   const coopApi = useApi(CoopApi, csrfToken);
   const deliveriesApi = useApi(DeliveriesApi, csrfToken);
   const pickupApi = useApi(PickupLocationsApi, csrfToken)
+  const paymentsApi = useApi(PaymentsApi, csrfToken)
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription>();
   const [memberData, setMemberData] = useState<Member>();
+  const [paymentsData, setPaymentsData] = useState<MemberPaymentRhythmData>();
   const [productList, setProductList] = useState<Product[]>();
   const [periodList, setPeriodList] = useState<GrowingPeriod[]>();
   const [pickupLocationsList, setPickupLocationsList] = useState<PickupLocation[]>();
@@ -43,6 +47,7 @@ const SubscriptionAddButtonModal: React.FC<
   const [product, setProduct] = useState<Product>();
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date | null | undefined>();
+  const [paymentRhythm, setPaymentRhythm] = useState<string>();
   const [error, setError] = useState<string>();
 
   useEffect(() => {
@@ -146,6 +151,26 @@ const SubscriptionAddButtonModal: React.FC<
         .finally(() => setLoading(false));
     }, [show]);
 
+  useEffect(() => {
+    if (!show) return;
+
+    setLoading(true);
+
+    paymentsApi
+      .paymentsApiMemberPaymentRhythmDataRetrieve({ memberId: memberId })
+      .then((response) => {
+        setPaymentsData(response)
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der persönliche Daten",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, [show]);
+
 
   function getBodyContent() {
     if (loading) {
@@ -247,6 +272,30 @@ const SubscriptionAddButtonModal: React.FC<
                 ))}
               </Form.Select>
             </Form.Group>
+          )}
+        </Row>
+        <Row>
+          {paymentsData && (
+            <Form.Group>
+              <Form.Label>Zahlungsintervall </Form.Label>
+              {paymentsData.currentRhythm && (
+                // TODO: get German name from paymentsData.allowedRythms
+                  <Form.Label>: {paymentsData.currentRhythm}</Form.Label>
+              )}
+              {!paymentsData.currentRhythm && (
+                <Form.Select
+                  onChange={(event) => {
+                    // @ts-ignore
+                    setPaymentRhythm(Object.keys(paymentsData.allowedRhythms)[event.target.value]);
+                    console.log(paymentsData.currentRhythm)
+                  }}>
+                  // TODO: When selecting for the first time opt.id is undefined and the indexes dont seem to match
+                  {Object.values(paymentsData?.allowedRhythms).map((opt, index) => (
+                    <option key={opt} value={index}>{opt}</option>
+                  ))}
+                </Form.Select>
+              )}
+              </Form.Group>
           )}
         </Row>
       </>
