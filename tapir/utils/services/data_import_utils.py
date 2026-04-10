@@ -43,6 +43,11 @@ class DataImportUtils:
         if not v:
             return None
         d = parse_date(v)
+        if d is None:
+            try:
+                d = datetime.date.strptime(v, "%d.%m.%Y")
+            except ValueError:
+                return None
         return d
 
     @classmethod
