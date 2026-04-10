@@ -3,13 +3,16 @@ import datetime
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
-from rest_framework import status, permissions, viewsets, serializers
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import status, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.serializers import ProductSerializer, SubscriptionSerializer
+from tapir.deliveries.serializers import (
+    ProductSerializer,
+    SubscriptionSerializer,
+)
 from tapir.deliveries.services.subscription_price_type_decider import (
     SubscriptionPricingStrategyDecider,
 )
@@ -24,8 +27,13 @@ from tapir.subscriptions.serializers import (
     ExtendedProductSerializer,
     PublicProductTypeSerializer,
     OrderConfirmationResponseSerializer,
+    SubscriptionDateChangeRequestSerializer,
+    ConvertWeekToDateForSubscriptionChangesResponseSerializer,
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
+from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
+    SubscriptionChangeWeekToDateConverter,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission, OPTIONS_WEEKDAYS
 from tapir.wirgarten.models import (
@@ -37,7 +45,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_product_price,
 )
-from tapir.wirgarten.utils import get_now, get_today
+from tapir.wirgarten.utils import get_now, get_today, format_date
 
 
 class ExtendedProductView(APIView):
@@ -145,25 +153,37 @@ class SubscriptionDateChangeApiView(APIView):
 
     @extend_schema(
         responses={200: OrderConfirmationResponseSerializer},
-        request=inline_serializer(
-            name="subscription_date_change",
-            fields={
-                "start_date": serializers.DateField(),
-                "end_date": serializers.DateField(),
-                "subscription_id": serializers.CharField(),
-            },
-        ),
+        request=SubscriptionDateChangeRequestSerializer,
     )
     def post(self, request):
-        subscription_id = request.data.get("subscription_id")
-        subscription = get_object_or_404(Subscription, id=subscription_id)
+        serializer = SubscriptionDateChangeRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        start_date = datetime.datetime.strptime(
-            request.data.get("start_date"), "%Y-%m-%d"
-        ).date()
-        end_date = datetime.datetime.strptime(
-            request.data.get("end_date"), "%Y-%m-%d"
-        ).date()
+        subscription = get_object_or_404(
+            Subscription, id=serializer.validated_data["subscription_id"]
+        )
+
+        if serializer.validated_data["start_date_is_on_period_start"]:
+            start_date = subscription.period.start_date
+        else:
+            start_week = serializer.validated_data["start_week"]
+            start_date = (
+                SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
+                    week=start_week,
+                    growing_period=subscription.period,
+                    boundary="start",
+                )
+            )
+
+        if serializer.validated_data["end_date_is_on_period_end"]:
+            end_date = subscription.period.end_date
+        else:
+            end_week = serializer.validated_data["end_week"]
+            end_date = (
+                SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
+                    week=end_week, growing_period=subscription.period, boundary="end"
+                )
+            )
 
         try:
             self.validate_dates(
@@ -195,7 +215,7 @@ class SubscriptionDateChangeApiView(APIView):
 
             MemberCreditCreator.create_member_credit_if_necessary(
                 member=subscription.member,
-                product_type_id_or_soli=subscription.product.type_id,
+                product_type_id_or_soli=subscription.product.type.id,
                 reference_date=get_today(cache=self.cache),
                 comment="Vertragsdaten vom Admin durch der Vertragsliste angepasst.",
                 cache=self.cache,
@@ -223,6 +243,11 @@ class SubscriptionDateChangeApiView(APIView):
         end_date: datetime.date,
         cache: dict,
     ):
+        if start_date > end_date:
+            raise ValidationError(
+                f"Das Start-Datum ({format_date(start_date)}) muss vor dem End-Datum ({format_date(end_date)}) liegen."
+            )
+
         if subscription.start_date == start_date and subscription.end_date == end_date:
             raise ValidationError("Keine Änderungen")
 
@@ -249,3 +274,40 @@ class SubscriptionDateChangeApiView(APIView):
             raise ValidationError(
                 "Das neue End-Datum muss im gleiche Vertragsperiode liegen wie das alte"
             )
+
+
+class ConvertWeeksToDateForSubscriptionChangesApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: ConvertWeekToDateForSubscriptionChangesResponseSerializer},
+        parameters=[
+            OpenApiParameter(name="start_week", type=int),
+            OpenApiParameter(name="end_week", type=int),
+            OpenApiParameter(name="subscription_id", type=str),
+        ],
+    )
+    def get(self, request):
+        start_week = int(request.query_params.get("start_week"))
+        end_week = int(request.query_params.get("end_week"))
+        growing_period = get_object_or_404(
+            Subscription, id=request.query_params.get("subscription_id")
+        ).period
+
+        start_date = SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
+            week=start_week,
+            growing_period=growing_period,
+            boundary="start",
+        )
+
+        end_date = SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
+            week=end_week,
+            growing_period=growing_period,
+            boundary="end",
+        )
+
+        return Response(
+            ConvertWeekToDateForSubscriptionChangesResponseSerializer(
+                {"start_date": start_date, "end_date": end_date}
+            ).data
+        )

@@ -51,3 +51,5 @@ class Events:
     EXTRA_MAIL_CONFIRMATION = "extra_mail_confirmation"
 
     CANCELLATION_OF_COOP_SHARES = "cancellation_of_coop_shares"
+
+    EXISTING_MEMBER_BUYS_COOP_SHARES = "existing_member_buys_coop_shares"

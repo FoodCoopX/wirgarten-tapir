@@ -248,7 +248,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     addEventListener("beforeunload", handleBeforeUnload);
 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [shoppingCart]);
+  }, [shoppingCart, currentStep]);
 
   useEffect(() => {
     const element = document.getElementById(currentStep);

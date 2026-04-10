@@ -29,8 +29,8 @@
     </div>
 {% endblock %}
 {% block card_header %}
-    <h4>{{ filter.qs | length }} {% translate "Mitglieder" %}</h4>
-    <span style="display: flex; flex-direction:row;">
+    <h4 class="mb-0">{{ filter.qs | length }} {% translate "Mitglieder" %}</h4>
+    <span class="d-flex flex-row align-items-center">
         {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
         {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
         {% if show_cooperative_content %}

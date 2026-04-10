@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
-import TapirButton from "../components/TapirButton.tsx";
-import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
-import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
-import { useApi } from "../hooks/useApi.ts";
+import React, { useEffect, useState } from "react";
 import { CoopApi, Member } from "../api-client";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
+import TapirButton from "../components/TapirButton.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface MemberDeleteButtonProps {
@@ -72,6 +72,8 @@ const MemberDeleteButton: React.FC<MemberDeleteButtonProps> = ({
           setMemberId(memberId);
           setShowModal(true);
         }}
+        tooltip={"Mitglied löschen"}
+        tootlipPosition={"bottom"}
       />
       {memberId && (
         <ConfirmDeleteModal

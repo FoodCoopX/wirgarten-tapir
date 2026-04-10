@@ -212,6 +212,11 @@ def _register_triggers():
     register_transactional_trigger(
         name="Beitritt zur Genossenschaft",
         key=Events.MEMBERSHIP_ENTRY,
+        tokens={
+            "Anzahl gezeichnete Geschäftsanteile": "number_of_coop_shares",
+            "Wert Geno-Anteil": "price_of_a_share",
+            "Gesamtwert der gezeichneten Geschäftsanteile": "price_of_all_shares",
+        },
         required=lambda: legal_status_is_cooperative(cache={}),
     )
 
@@ -300,6 +305,20 @@ def _register_triggers():
             "Anzahl der gekündigten Geno-Anteile": "number_of_cancelled_shares",
             "Wert eines Geno-Anteils": "value_of_a_single_share",
             "Gesamtwert gekündigte Geno-Anteile": "value_of_all_cancelled_shares",
+        },
+        required=lambda: legal_status_is_cooperative(cache={}),
+    )
+
+    register_transactional_trigger(
+        name="Zeichnung von Geno-Anteile bei bestehendes Mitglied",
+        key=Events.EXISTING_MEMBER_BUYS_COOP_SHARES,
+        tokens={
+            "Anzahl gezeichneter Geschäftsanteile": "number_of_purchased_shares",
+            "Wert eines Geschäftsanteils": "price_of_a_share",
+            "Gesamtwert der gezeichneten geschäftsanteile": "price_of_the_purchased_shares",
+            "Wirksamkeitsdatum der neuen Anteile": "new_shares_valid_at",
+            "Gesamtanzahl der Geno-Anteile": "total_number_of_shares",
+            "Gesamtwert der insgesamt dann gehaltenen geschäftsanteile": "total_price_of_shares",
         },
         required=lambda: legal_status_is_cooperative(cache={}),
     )

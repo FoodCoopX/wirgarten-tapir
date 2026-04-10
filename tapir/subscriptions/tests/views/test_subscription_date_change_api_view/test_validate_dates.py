@@ -25,6 +25,15 @@ class TestValidateDates(SimpleTestCase):
                 cache=Mock(),
             )
 
+    def test_validateDates_startDateIsAfterEndDate_raisesError(self):
+        with self.assertRaises(ValidationError):
+            SubscriptionDateChangeApiView.validate_dates(
+                subscription=Mock(),
+                start_date=datetime.date(year=2022, month=9, day=17),
+                end_date=datetime.date(year=2022, month=7, day=28),
+                cache=Mock(),
+            )
+
     @patch("tapir.subscriptions.views.other.get_parameter_value")
     def test_validateDates_givenEndDateIsNotOnCorrectDay_raisesError(
         self, mock_get_parameter_value: Mock

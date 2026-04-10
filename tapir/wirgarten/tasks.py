@@ -29,6 +29,7 @@ from tapir.wirgarten.utils import (
     get_now,
     get_today,
     legal_status_is_cooperative,
+    format_currency,
 )
 
 
@@ -187,10 +188,21 @@ def generate_member_numbers(print_results=True, cache: dict = None):
             ):
                 continue
 
+            number_of_coop_shares = member.coop_shares_quantity
+            price_of_a_share = get_parameter_value(
+                key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
+            )
             TransactionalTrigger.fire_action(
                 TransactionalTriggerData(
                     key=Events.MEMBERSHIP_ENTRY,
                     recipient_id_in_base_queryset=member.id,
+                    token_data={
+                        "number_of_coop_shares": number_of_coop_shares,
+                        "price_of_a_share": format_currency(price_of_a_share),
+                        "price_of_all_shares": format_currency(
+                            number_of_coop_shares * price_of_a_share
+                        ),
+                    },
                 ),
             )
             if print_results:

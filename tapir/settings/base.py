@@ -164,7 +164,7 @@ WEASYPRINT_BASEURL = "/"
 AUTH_USER_MODEL = "accounts.TapirUser"
 LOGIN_REDIRECT_URL = "/"
 
-PHONENUMBER_DEFAULT_REGION = "DE"
+PHONENUMBER_DEFAULT_REGION = env.str("PHONENUMBER_DEFAULT_REGION", default="DE")
 
 LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
 
