@@ -14,7 +14,7 @@ const SubscriptionAddContractButton: React.FC<
   SubscriptionAddContractButtonProps
 > = ({ csrfToken }) => {
   const [showModal, setShowModal] = useState(false);
-  const [subscriptionId, setSubscriptionId] = useState();
+  const [memberId, setMemberId] = useState<string>();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   return (
@@ -23,21 +23,21 @@ const SubscriptionAddContractButton: React.FC<
         icon={"post_add"}
         variant={"outline-primary"}
         onClick={() => {
-          const subscriptionId = getParameterFromUrl("contract");
-          if (!subscriptionId) {
-            alert("Du musst erst den Vertrag auswählen.");
+          const memberId = getParameterFromUrl("member");
+          if (!memberId) {
+            alert("Du musst erst ein Mitglied auswählen. Du kannst rechts unter 'Mitglied' suchen, oder über die Mitgliederliste eines auswählen und auf 'Verträge anzeigen'.");
             return;
           }
-          setSubscriptionId(subscriptionId);
+          setMemberId(memberId);
           setShowModal(true);
         }}
         tooltip={"Vertrag hinzufügen"}
       />
-      {subscriptionId && (
+      {memberId && (
         <SubscriptionAddContractModal
           csrfToken={csrfToken}
           show={showModal}
-          subscriptionId={subscriptionId}
+          memberId={memberId}
           onHide={() => setShowModal(false)}
           setToastDatas={setToastDatas}
         />
