@@ -70,7 +70,7 @@ class TestCancelJokerView(TapirIntegrationTest):
             trigger_data=TransactionalTriggerData(
                 key="deliveries.joker_cancelled",
                 recipient_id_in_base_queryset=other_member.id,
-                token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
+                token_data={"joker_date": "01.05.2024"},
             )
         )
 
@@ -101,7 +101,7 @@ class TestCancelJokerView(TapirIntegrationTest):
             trigger_data=TransactionalTriggerData(
                 key="deliveries.joker_cancelled",
                 recipient_id_in_base_queryset=member.id,
-                token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
+                token_data={"joker_date": "01.05.2024"},
             ),
         )
 

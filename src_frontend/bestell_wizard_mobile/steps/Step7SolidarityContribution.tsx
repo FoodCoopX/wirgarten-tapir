@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import { Alert, Form } from "react-bootstrap";
-import { formatCurrency } from "../../utils/formatCurrency.ts";
-import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { PublicProductType } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import NextStepButton from "../components/NextStepButton.tsx";
+import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
 
 interface Step7SolidarityContributionProps {
   goToNextStep: () => void;
@@ -147,7 +148,14 @@ const Step7SolidarityContribution: React.FC<
   return (
     <div className={"d-flex flex-column gap-2 align-items-center"}>
       {settings.strings.step4dText && (
-        <p className={"text-center"}>{settings.strings.step4dText}</p>
+        <p
+          className={"text-center"}
+          dangerouslySetInnerHTML={{
+            __html: isAtLeastOneProductOrdered(shoppingCart)
+              ? settings.strings.step4dText
+              : settings.strings.step4dTextSupportingMember,
+          }}
+        />
       )}
       <div
         className={"d-flex flex-column gap-2 align-items-center"}
