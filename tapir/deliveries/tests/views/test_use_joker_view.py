@@ -69,7 +69,7 @@ class TestUseJokerView(TapirIntegrationTest):
             TransactionalTriggerData(
                 key="deliveries.joker_used",
                 recipient_id_in_base_queryset=other_member.id,
-                token_data={"joker_date": date},
+                token_data={"joker_date": "23.07.2024"},
             ),
         )
 
@@ -103,7 +103,7 @@ class TestUseJokerView(TapirIntegrationTest):
             TransactionalTriggerData(
                 key="deliveries.joker_used",
                 recipient_id_in_base_queryset=user.id,
-                token_data={"joker_date": date},
+                token_data={"joker_date": "23.07.2024"},
             ),
         )
 
