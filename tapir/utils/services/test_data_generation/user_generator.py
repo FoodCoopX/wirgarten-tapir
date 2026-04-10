@@ -460,6 +460,20 @@ class UserGenerator:
 
     @classmethod
     def generate_feedback_for_member(cls, member: Member):
+        cls._generate_feedback(
+            member=member,
+            waiting_list_entry=None,
+        )
+
+    @classmethod
+    def generate_feedback_for_waiting_list_entry(cls, waiting_list_entry):
+        cls._generate_feedback(
+            member=None,
+            waiting_list_entry=waiting_list_entry,
+        )
+
+    @classmethod
+    def _generate_feedback(cls, member: Member | None, waiting_list_entry):
         feedback_options = [
             "Super Qualität, bin sehr zufrieden!",
             "Tolles Gemüse, immer wieder gerne.",
@@ -471,8 +485,11 @@ class UserGenerator:
             "Bin begeistert von der Organisation.",
             "Toller Service, danke!",
             "Freue mich auf die nächste Lieferung.",
+            "Hoffe, bald Mitglied werden zu können!",
+            "Warteliste ist etwas lang, aber ich warte gerne.",
         ]
         OrderFeedback.objects.create(
             member=member,
+            waiting_list_entry=waiting_list_entry,
             feedback_text=random.choice(feedback_options),
         )

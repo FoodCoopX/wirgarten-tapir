@@ -1260,5 +1260,17 @@ class MemberExtraEmailConfirmedLogEntry(LogEntry):
 
 
 class OrderFeedback(TapirModel):
-    member = models.ForeignKey("Member", on_delete=models.CASCADE)
+    member = models.ForeignKey(
+        "Member", on_delete=models.CASCADE, null=True, blank=True
+    )
+    waiting_list_entry = models.ForeignKey(
+        "WaitingListEntry", on_delete=models.CASCADE, null=True, blank=True
+    )
     feedback_text = models.TextField()
+
+    def clean(self):
+        super().clean()
+        if not self.member and not self.waiting_list_entry:
+            raise ValidationError(
+                "OrderFeedback must have either a member or a waiting_list_entry."
+            )

@@ -81,7 +81,10 @@ class WaitingListGenerator:
 
         entries = WaitingListEntry.objects.bulk_create(entries)
 
-        for entry in entries:
+        waiting_list_entries_without_member = [e for e in entries if e.member is None]
+        random.shuffle(waiting_list_entries_without_member)
+        for entry in waiting_list_entries_without_member[:5]:
+            UserGenerator.generate_feedback_for_waiting_list_entry(entry)
             entry.created_at = get_now(cache=cache) - datetime.timedelta(
                 days=random.randint(0, 120),
                 hours=random.randint(0, 24),

@@ -200,14 +200,20 @@ class BestellWizardConfirmOrderApiView(APIView):
         try:
             member = None
             with transaction.atomic():
-                member = self.validate_everything_and_apply_all_changes(
-                    validated_serializer_data=serializer.validated_data,
-                    request=request,
-                    cache=self.cache,
+                member, waiting_list_entry = (
+                    self.validate_everything_and_apply_all_changes(
+                        validated_serializer_data=serializer.validated_data,
+                        request=request,
+                        cache=self.cache,
+                    )
                 )
                 feedback = serializer.validated_data.get("feedback")
                 if feedback:
-                    OrderFeedback.objects.create(member=member, feedback_text=feedback)
+                    OrderFeedback.objects.create(
+                        member=member,
+                        waiting_list_entry=waiting_list_entry,
+                        feedback_text=feedback,
+                    )
             if member is not None:
                 # The member creation does calls to KeycloakUserManager that are only applied after the transaction ends.
                 # In order to persist the changes that the KeycloakUserManager applies, we need to save manually one more time.
@@ -223,7 +229,7 @@ class BestellWizardConfirmOrderApiView(APIView):
     @classmethod
     def validate_everything_and_apply_all_changes(
         cls, validated_serializer_data: dict, request, cache: dict
-    ):
+    ) -> tuple[Member | None, WaitingListEntry | None]:
         if not validated_serializer_data["privacy_policy_read"]:
             raise ValidationError("Die Datenschutzklärung muss akzeptiert werden.")
 
@@ -231,6 +237,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             validated_serializer_data["shopping_cart_order"], cache=cache
         )
         member = None
+        waiting_list_entry = None
 
         if len(order) > 0 or validated_serializer_data["become_member_now"]:
             member = cls.validate_and_fulfill_order(
@@ -252,8 +259,10 @@ class BestellWizardConfirmOrderApiView(APIView):
             or len(validated_serializer_data["pickup_location_ids"]) > 1
         ):
             if member is None:
-                cls.validate_and_create_waiting_list_entry_potential_member(
-                    validated_serializer_data=validated_serializer_data, cache=cache
+                waiting_list_entry = (
+                    cls.validate_and_create_waiting_list_entry_potential_member(
+                        validated_serializer_data=validated_serializer_data, cache=cache
+                    )
                 )
             else:
                 cls.validate_and_create_waiting_list_entry_existing_member(
@@ -262,7 +271,7 @@ class BestellWizardConfirmOrderApiView(APIView):
                     cache=cache,
                 )
 
-        return member
+        return member, waiting_list_entry
 
     @classmethod
     def validate_and_fulfill_order(
@@ -291,7 +300,7 @@ class BestellWizardConfirmOrderApiView(APIView):
     @classmethod
     def validate_and_create_waiting_list_entry_potential_member(
         cls, validated_serializer_data: dict, cache: dict
-    ):
+    ) -> WaitingListEntry:
         waiting_list_order = (
             TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
                 shopping_cart=validated_serializer_data["shopping_cart_waiting_list"],
@@ -321,6 +330,7 @@ class BestellWizardConfirmOrderApiView(APIView):
                 last_name=validated_serializer_data["personal_data"]["last_name"],
             ),
         )
+        return entry
 
     @classmethod
     def validate_and_create_waiting_list_entry_existing_member(

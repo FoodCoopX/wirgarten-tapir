@@ -113,7 +113,11 @@ def get_recent_feedbacks(limit: int = 10):
             "member__last_name",
             "member__email",
             "member__phone_number",
-            "member__pk"
+            "member__pk",
+            "waiting_list_entry__first_name",
+            "waiting_list_entry__last_name",
+            "waiting_list_entry__email",
+            "waiting_list_entry__pk",
         )
     )
 
