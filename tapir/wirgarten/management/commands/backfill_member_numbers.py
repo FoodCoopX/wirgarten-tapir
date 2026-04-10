@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 if dry_run:
                     raise _DryRunRollback()
         except _DryRunRollback:
-            pass
+            pass  # Intentional: rollback atomic transaction in dry-run mode
 
         verb = "would be assigned" if dry_run else "assigned"
         self.stdout.write(
