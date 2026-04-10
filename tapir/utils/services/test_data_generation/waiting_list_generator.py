@@ -81,10 +81,7 @@ class WaitingListGenerator:
 
         entries = WaitingListEntry.objects.bulk_create(entries)
 
-        waiting_list_entries_without_member = [e for e in entries if e.member is None]
-        random.shuffle(waiting_list_entries_without_member)
-        for entry in waiting_list_entries_without_member[:5]:
-            UserGenerator.generate_feedback_for_waiting_list_entry(entry)
+        for entry in entries:
             entry.created_at = get_now(cache=cache) - datetime.timedelta(
                 days=random.randint(0, 120),
                 hours=random.randint(0, 24),
@@ -100,6 +97,11 @@ class WaitingListGenerator:
         WaitingListEntry.objects.bulk_update(
             entries, ["created_at", "privacy_consent", "desired_start_date"]
         )
+
+        waiting_list_entries_without_member = [e for e in entries if e.member is None]
+        random.shuffle(waiting_list_entries_without_member)
+        for entry in waiting_list_entries_without_member[:5]:
+            UserGenerator.generate_feedback_for_waiting_list_entry(entry)
 
         combinations_of_possible_changes = []
         for nb_changes in range(1, len(cls.POSSIBLE_CHANGES) + 1):
