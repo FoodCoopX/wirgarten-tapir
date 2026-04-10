@@ -396,35 +396,6 @@ class Member(TapirUser):
                 else None
             )
 
-    @classmethod
-    def generate_member_no(cls, max_member_number: int | None = None):
-        # Legacy helper: returns the next raw member number as an integer.
-        # For the new admin-configurable assignment logic (start value as a
-        # lower bound, format, trial toggle) see ``service.member_numbers``.
-        if max_member_number is None:
-            max_member_number = cls.objects.aggregate(models.Max("member_no"))[
-                "member_no__max"
-            ]
-        return (max_member_number or 0) + 1
-
-    @property
-    def formatted_member_no(self) -> str | None:
-        """
-        Return the member number formatted according to the admin
-        configuration (prefix + zero-padding). The database still stores
-        only the raw integer in ``member_no``; the format is rendered at
-        display time, so admins can change it at any time without a DB
-        migration.
-
-        Returns ``None`` when the member has no number yet, so templates
-        like ``{{ member.formatted_member_no|default:'-' }}`` keep working.
-        """
-        # Local import to avoid circular imports:
-        # ``service.member_numbers`` imports ``Member`` itself.
-        from tapir.wirgarten.service.member_numbers import format_member_no
-
-        return format_member_no(self.member_no)
-
     @transaction.atomic
     def save(self, *args, **kwargs):
         if "bypass_keycloak" not in kwargs:
@@ -547,10 +518,7 @@ class Member(TapirUser):
         return " + ".join(base_subscription_texts)
 
     def __str__(self):
-        # Use the formatted number (incl. prefix/padding) so members show up
-        # consistently with the configured display in the admin, in logs and
-        # in every ``str(member)`` call.
-        return f"[{self.formatted_member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
+        return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
 
     def get_extra_recipient_addresses(self, cache: dict):
         if not get_parameter_value(

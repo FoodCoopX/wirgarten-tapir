@@ -3,7 +3,7 @@ import typing
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from tapir.configuration.models import TapirParameterDatatype
-from tapir.configuration.parameter import ParameterMeta
+from tapir.configuration.parameter import ParameterMeta, get_parameter_value
 from tapir.wirgarten.constants import ParameterCategory, OPTIONS_WEEKDAYS
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.validators import validate_html
@@ -185,15 +185,6 @@ class ParameterDefinitionsMemberDashboard:
             order_priority=200,
         )
 
-        # ------------------------------------------------------------------
-        # US 4.3 (#535): Konfiguration der Mitgliedsnummer
-        # ------------------------------------------------------------------
-        # In der DB bleibt `Member.member_no` weiterhin ein Integer mit der
-        # reinen Zahl. Präfix/Länge/Zero-Padding werden erst bei der
-        # Darstellung angewandt (siehe `service.member_numbers.format_member_no`
-        # und `Member.formatted_member_no`).
-        # Der Admin kann das Format hier konfigurieren und bekommt im
-        # Parameter-View eine Live-Vorschau (JavaScript in parameter_view.html).
         importer.parameter_definition(
             key=ParameterKeys.MEMBER_NUMBER_PREFIX,
             label="Mitgliedsnummer: Präfix",
@@ -208,37 +199,25 @@ class ParameterDefinitionsMemberDashboard:
             order_priority=1000,
         )
 
+        # Zero-pad length: 0 means no padding, >0 pads to that many digits.
         importer.parameter_definition(
-            key=ParameterKeys.MEMBER_NUMBER_LENGTH,
-            label="Mitgliedsnummer: Anzahl Stellen",
+            key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH,
+            label="Mitgliedsnummer: Mindestanzahl Stellen (Zero-Padding)",
             datatype=TapirParameterDatatype.INTEGER,
-            initial_value=4,
+            initial_value=0,
             description=(
-                "Mindestanzahl der Ziffern. Wenn 'Mit Nullen auffüllen' aktiv ist, "
-                "wird die Zahl auf diese Länge links mit Nullen aufgefüllt. "
-                "Beispiel: Anzahl=4, Zahl=17, mit Nullen → '0017'; ohne Nullen → '17'."
+                "Mindestanzahl der Ziffern. Die Zahl wird auf diese Länge links "
+                "mit Nullen aufgefüllt. 0 = kein Auffüllen. "
+                "Beispiel: Wert=4, Zahl=17 → '0017'; Wert=4, Zahl=123456 → '123456'."
             ),
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=999,
             meta=ParameterMeta(
                 validators=[
-                    MinValueValidator(limit_value=1),
+                    MinValueValidator(limit_value=0),
                     MaxValueValidator(limit_value=20),
                 ]
             ),
-        )
-
-        importer.parameter_definition(
-            key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD,
-            label="Mitgliedsnummer: Mit Nullen links auffüllen",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=True,
-            description=(
-                "Wenn aktiv, wird die Zahl auf 'Anzahl Stellen' mit führenden "
-                "Nullen aufgefüllt."
-            ),
-            category=ParameterCategory.MEMBER_DASHBOARD,
-            order_priority=998,
         )
 
         importer.parameter_definition(
@@ -257,16 +236,19 @@ class ParameterDefinitionsMemberDashboard:
         )
 
         importer.parameter_definition(
-            key=ParameterKeys.MEMBER_NUMBER_ASSIGN_DURING_TRIAL,
-            label="Mitgliedsnummer auch während der Probezeit vergeben",
+            key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL,
+            label="Mitgliedsnummer erst nach Ablauf der Probezeit vergeben",
             datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=True,
+            initial_value=False,
             description=(
-                "Wenn aktiv, bekommen auch Mitglieder in der Probezeit "
-                "(Genossenschaftsanteile oder Vertrag noch in Probephase) eine "
-                "Mitgliedsnummer. Bei einer Kündigung verfällt die Nummer "
-                "(sie wird nicht neu vergeben)."
+                "Wenn aktiv, bekommen Mitglieder erst nach Ablauf der Probezeit "
+                "eine Mitgliedsnummer. Ansonsten wird die Nummer sofort vergeben."
             ),
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=996,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+                ),
+            ),
         )

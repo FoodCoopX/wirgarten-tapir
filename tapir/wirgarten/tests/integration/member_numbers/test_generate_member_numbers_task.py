@@ -58,7 +58,7 @@ class TestGenerateMemberNumbersTask(TapirIntegrationTest):
         return member
 
     def test_generateMemberNumbers_memberWithoutNumber_safetyNetAssignsNumber(self):
-        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ASSIGN_DURING_TRIAL, True)
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1)
         member = self._create_member_without_number()
 
@@ -70,7 +70,7 @@ class TestGenerateMemberNumbersTask(TapirIntegrationTest):
         self.mock_fire_action.assert_called_once()
 
     def test_generateMemberNumbers_memberAlreadyHasNumber_isNotTouched(self):
-        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ASSIGN_DURING_TRIAL, True)
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
         member = MemberFactory.create(member_no=42)
 
         generate_member_numbers(print_results=False)
@@ -92,7 +92,7 @@ class TestGenerateMemberNumbersTask(TapirIntegrationTest):
         self, mock_is_in_coop_trial, mock_get_subscriptions_in_trial_period
     ):
         # Suppress assignment while the member is still in a trial period.
-        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ASSIGN_DURING_TRIAL, False)
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, True)
         mock_is_in_coop_trial.return_value = True
         mock_get_subscriptions_in_trial_period.return_value = []
         member = self._create_member_without_number()

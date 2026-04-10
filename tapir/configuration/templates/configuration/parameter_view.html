@@ -93,71 +93,11 @@ divElement.addEventListener("scroll", function() {
 });
 
     </script>
-    <script>
-/*
- * US 4.3 (#535): live preview for the member-number format parameters.
- *
- * Renders a "Vorschau: …" hint underneath the prefix input that updates as
- * the admin edits prefix, length or zero-padding. The script is defensive:
- * it only activates if all three fields are present on the current page,
- * so it stays dormant on any other parameter view (and won't break if a
- * parameter is renamed — it simply no-ops).
- *
- * Implementation note: the configuration form already embeds a hidden
- * `<span name="param-key">…</span>` inside each field's description (see
- * tapir/configuration/forms.py). We use those spans to find the actual
- * <input>/<select> within the same `.single-parameter` wrapper. This way
- * we don't need to touch the forms.py rendering or add custom widgets.
- */
-(function () {
-    const PREFIX_KEY = "wirgarten.member.number.prefix";
-    const LENGTH_KEY = "wirgarten.member.number.length";
-    const ZEROPAD_KEY = "wirgarten.member.number.zero_pad";
-    const EXAMPLE_NUMBER = 17;
-
-    function findFieldByKey(key) {
-        const spans = document.querySelectorAll('span[name="param-key"]');
-        for (const span of spans) {
-            if (span.textContent.trim() === key) {
-                const parameterDiv = span.closest(".single-parameter");
-                if (!parameterDiv) return null;
-                return parameterDiv.querySelector("input, select, textarea");
-            }
-        }
-        return null;
-    }
-
-    const prefixField = findFieldByKey(PREFIX_KEY);
-    const lengthField = findFieldByKey(LENGTH_KEY);
-    const zeroPadField = findFieldByKey(ZEROPAD_KEY);
-
-    // Any missing field -> other page / renamed parameter. Stay silent.
-    if (!prefixField || !lengthField || !zeroPadField) return;
-
-    // Render the preview hint right below the prefix input so the admin
-    // sees the result next to the field they are editing.
-    const previewDiv = document.createElement("div");
-    previewDiv.className = "form-text";
-    previewDiv.style.marginTop = "0.5rem";
-    previewDiv.style.fontWeight = "500";
-    prefixField.closest(".single-parameter").appendChild(previewDiv);
-
-    function updatePreview() {
-        const prefix = prefixField.value || "";
-        const length = Math.max(1, parseInt(lengthField.value, 10) || 1);
-        const zeroPad = zeroPadField.checked;
-        const numStr = zeroPad
-            ? String(EXAMPLE_NUMBER).padStart(length, "0")
-            : String(EXAMPLE_NUMBER);
-        previewDiv.textContent = `Vorschau: ${prefix}${numStr}`;
-    }
-
-    [prefixField, lengthField, zeroPadField].forEach((field) => {
-        field.addEventListener("input", updatePreview);
-        field.addEventListener("change", updatePreview);
-    });
-    updatePreview();
-})();
-    </script>
+    <div id="member-number-preview-config"
+         data-prefix-key="{{ member_number_prefix_key }}"
+         data-length-key="{{ member_number_length_key }}"
+         data-preview-url="{% url 'configuration:member_number_preview' %}"
+         style="display:none"></div>
+    <script src="{% static 'configuration/js/member_number_preview.js' %}"></script>
     <script src="{% static 'configuration/js/search.js' %}"></script>
 {% endblock %}

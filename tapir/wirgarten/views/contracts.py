@@ -13,6 +13,7 @@ from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFi
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -256,9 +257,7 @@ class ExportSubscriptionList(View):
             for _ in range(sub.quantity):
                 writer.writerow(
                     [
-                        # US 4.3 (#535): subscription CSV export uses the
-                        # formatted member number (incl. prefix/padding).
-                        sub.member.formatted_member_no,
+                        MemberNumberService.format_member_no(sub.member.member_no),
                         sub.member.first_name,
                         sub.member.last_name,
                         sub.member.email,

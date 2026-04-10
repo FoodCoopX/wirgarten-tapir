@@ -11,6 +11,7 @@ from django.db.models import (
     Sum,
 )
 
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
@@ -138,11 +139,7 @@ class MemberColumnProvider:
 
     @classmethod
     def get_value_member_number(cls, member: Member, _, __):
-        # US 4.3 (#535): generic PDF exports should print the formatted
-        # number (prefix + padding) just like the member list UI.
-        # ``formatted_member_no`` returns None when the member has no
-        # number yet — fall back to an empty string to keep exports stable.
-        return member.formatted_member_no or ""
+        return MemberNumberService.format_member_no(member.member_no) or ""
 
     @classmethod
     def get_value_member_email_address(cls, member: Member, _, __):

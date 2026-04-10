@@ -21,7 +21,7 @@ class TestBackfillMemberNumbersCommand(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ASSIGN_DURING_TRIAL, True)
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1)
 
     @staticmethod

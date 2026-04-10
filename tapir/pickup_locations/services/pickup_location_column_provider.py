@@ -4,6 +4,7 @@ from tapir.generic_exports.services.export_segment_manager import ExportSegmentC
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.models import PickupLocation, Member
 
 
@@ -61,12 +62,8 @@ class PickupLocationColumnProvider:
 
         return "-".join(
             [
-                # US 4.3 (#535): render the formatted number here too, so
-                # pickup-location exports carry the admin-configured prefix
-                # and padding. ``formatted_member_no`` is always a str or
-                # None, which keeps the ``join`` happy (the previous code
-                # would have crashed if any member actually had a number).
-                member.formatted_member_no or "Nicht mitglied"
+                MemberNumberService.format_member_no(member.member_no)
+                or "Nicht mitglied"
                 for member in members_annotated_with_pickup_location.filter(
                     current_pickup_location_id=location.id
                 )

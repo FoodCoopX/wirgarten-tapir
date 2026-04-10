@@ -12,6 +12,7 @@ from tapir.wirgarten.forms.member import (
 from tapir.wirgarten.forms.subscription import (
     EditSubscriptionPriceForm,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
 from tapir.wirgarten.views.modal import get_form_modal
@@ -61,26 +62,16 @@ def get_member_personal_data_create_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form_class=PersonalDataForm,
-        handler=save_member_twice,
+        handler=create_member_and_assign_number,
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
     )
 
 
-def save_member_twice(member: Member):
+def create_member_and_assign_number(member: Member):
     member.save()
     member.save()
-    # US 4.3 (#535): Members that an admin creates manually don't go through
-    # the Bestell-Wizard, so nobody would assign them a member number until
-    # the nightly safety-net task runs. Do it right here instead — the
-    # member has no subscriptions or coop shares at this point, so the
-    # trial check will correctly report "not in trial" and the number gets
-    # assigned (subject to the admin-configured rules).
-    from tapir.wirgarten.service.member_numbers import (
-        assign_member_no_if_eligible,
-    )
-
-    assign_member_no_if_eligible(member)
+    MemberNumberService.assign_member_no_if_eligible(member)
 
 
 @require_http_methods(["GET", "POST"])
