@@ -275,3 +275,16 @@ class MemberSubscriptionDataSerializer(serializers.Serializer):
     product_types = PublicProductTypeSerializer(many=True)
     subscriptions = PublicSubscriptionSerializer(many=True)
     bestell_wizard_url_template = serializers.URLField()
+
+
+class SubscriptionDateChangeRequestSerializer(serializers.Serializer):
+    start_date_is_on_period_start = serializers.BooleanField()
+    end_date_is_on_period_end = serializers.BooleanField()
+    start_week = serializers.IntegerField()
+    end_week = serializers.IntegerField()
+    subscription_id = serializers.CharField()
+
+
+class ConvertWeekToDateForSubscriptionChangesResponseSerializer(serializers.Serializer):
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()

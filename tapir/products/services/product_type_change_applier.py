@@ -5,7 +5,7 @@ from tapir.products.services.product_type_change_validator import (
 )
 from tapir.products.services.tax_rate_service import TaxRateService
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
-from tapir.wirgarten.models import ProductType, ProductCapacity
+from tapir.wirgarten.models import ProductType, ProductCapacity, Payment
 
 
 class ProductTypeChangeApplier:
@@ -34,6 +34,9 @@ class ProductTypeChangeApplier:
         extended_data: dict,
         product_capacity: ProductCapacity,
     ):
+        old_name = product_type.name
+        new_name = extended_data["name"]
+
         for field in cls.direct_fields:
             setattr(product_type, field, extended_data[field])
 
@@ -61,6 +64,9 @@ class ProductTypeChangeApplier:
         cls.apply_custom_cycle_delivery_week_changes(
             extended_data=extended_data, product_type=product_type
         )
+
+        if old_name != new_name:
+            Payment.objects.filter(type=old_name).update(type=new_name)
 
     @classmethod
     def apply_custom_cycle_delivery_week_changes(

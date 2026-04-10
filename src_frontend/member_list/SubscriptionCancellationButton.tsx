@@ -1,9 +1,9 @@
-import React, { useState } from "react";
 import "dayjs/locale/de";
-import SubscriptionCancellationModal from "../member_profile/subscription_cancellation/SubscriptionCancellationModal";
+import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
-import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import SubscriptionCancellationModal from "../member_profile/subscription_cancellation/SubscriptionCancellationModal";
+import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { ToastData } from "../types/ToastData.ts";
 
 interface SubscriptionCancellationButtonProps {
@@ -31,6 +31,8 @@ const SubscriptionCancellationButton: React.FC<
           setMemberId(getParameterFromUrl("member"));
           setShowModal(true);
         }}
+        tooltip={"Verträge kündigen"}
+        tootlipPosition={"bottom"}
       />
       {memberId && (
         <SubscriptionCancellationModal

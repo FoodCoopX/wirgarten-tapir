@@ -32,6 +32,7 @@ models/CancelSubscriptionsRequestRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
 models/ChangeTypeEnum.ts
+models/ConvertWeekToDateForSubscriptionChangesResponse.ts
 models/CoopShareTransaction.ts
 models/CountryEnum.ts
 models/Counts.ts
@@ -188,7 +189,7 @@ models/StoredUploadRequest.ts
 models/Subscription.ts
 models/SubscriptionChange.ts
 models/SubscriptionChangeLogEntry.ts
-models/SubscriptionDateChangeRequest.ts
+models/SubscriptionDateChangeRequestRequest.ts
 models/TapirmailApiSegmentCombineCreate200Response.ts
 models/TapirmailApiSegmentCombineCreate200ResponseRecipientsInner.ts
 models/TemporaryUpload.ts

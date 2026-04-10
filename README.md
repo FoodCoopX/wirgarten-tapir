@@ -22,7 +22,7 @@ Don't hesitate to contact us if you are interested in using or contributing to T
 
 Use docker to quickly get a development server running on your machine. Run the following commands:
 ```sh
-docker-compose up -d
+docker compose up -d
 # Create tables
 docker compose exec web poetry run python manage.py migrate
 # Define the configuration parameters
@@ -55,7 +55,7 @@ The mocking happen during `setUp` and `setUpTestData` happens before `setUp`, th
 ## Formatting
 Python files are formatted with [Black](https://github.com/psf/black).
 
-Javascript and React files are formatted with [Prettier](https://prettier.io/).
+JavaScript and React files are formatted with [Prettier](https://prettier.io/).
 
 Django template files are formatted with [djLint](https://djlint.com/)
 
@@ -70,9 +70,33 @@ There are help scripts in the `/scripts` folder. You can do a full update with t
 docker compose exec web ./scripts/generate_api_schema.sh && docker compose exec vite ./scripts/generate_api_clients.sh
 ```
 
-## Legacy code
-Everything that is under tapir/wirgarten should be considered legacy code. If you need to change anything in there, 
-consider rewriting the part that you are changing and moving it to one of the other apps.
+## Style and conventions
+
+### Models
+Models should inherit from `tapir.core.models.TapirModel`:
+ - It uses nanoid instead of integer IDs, that makes sure we never use an ID from a model when getting another model, for example in tests.
+ - It has `created_at` and `updated_at` fields that help unterstand the state of production databases.
+
+As much as possible, model classes should contain only their own fields. Helper methods are OK if they only reference the fields of the given object.
+
+### Cache
+Many functions, especially service functions, take a `cache` parameter which is a normal python dictionary. 
+The goal of this cache is to avoid redundant database requests within one http request: in most of our views, DB requests are the most time-consuming part.
+The cache dictionary should be created at the origin point: for example in the view's `__init__` function or the first lines or the command. 
+Since this cache only lives for the duration of the request, in most cases it is not necessary to invalidate it. If you do need to invalidate, look at `tapir.utils.services.tapir_cache_manager.TapirCacheManager`
+Some functions have the cache parameter optional. This is only because they are called in legacy code, all new functions should have the cache parameter required if possible.
+For examples, see usages of `tapir.utils.services.tapir_cache.TapirCache`.
+
+### Service classes
+Most of the business logic code should be in service classes. You can find examples in tapir/*/services/.
+
+### Commits
+Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) for your commit messages. 
+When applicable, add the ID of the related GitHub issue in the commit message.
+
+### Legacy code
+Everything that is under tapir/wirgarten should be considered legacy code. It doesn't respect the conventions above. 
+If you need to change anything in there, consider rewriting the part that you are changing and moving it to one of the other apps.
 
 ## Class diagram
 
