@@ -2,7 +2,6 @@ import React from "react";
 import { Modal } from "react-bootstrap";
 import { PickupLocation, PickupLocationOpeningTime } from "../../api-client";
 import dayjs from "dayjs";
-import { match } from "assert";
 
 interface PickupLocationDeliveryDetailsModalProps {
   pickupLocation: PickupLocation;
