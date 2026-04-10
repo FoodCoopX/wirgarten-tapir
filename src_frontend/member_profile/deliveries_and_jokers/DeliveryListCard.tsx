@@ -129,7 +129,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   function pickupLocationCell(delivery: Delivery) {
     return (
       <div className={"d-flex flex-column align-items-center"}>
-         <strong>{delivery.pickupLocation.name}</strong>
+        <strong>{delivery.pickupLocation.name}</strong>
         <div style={{ width: "32px" }}>
           <TapirButton
             variant={"outline-secondary"}
