@@ -77,6 +77,7 @@ const PickupLocationDeliveryDetailsModal: React.FC<
             })}
           </ul>
         </p>
+        <img src={pickupLocation.photoLink} alt={pickupLocation.name}/>
       </Modal.Body>
     </Modal>
   );
