@@ -29,6 +29,7 @@ from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
+    OrderFeedback,
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
@@ -100,6 +101,24 @@ def get_cashflow_chart_data(request):
             "data": monthly_sums,
         },
         safe=True,
+    )
+
+
+def get_recent_feedbacks(limit: int = 10):
+    return list(
+        OrderFeedback.objects.order_by("-created_at")[:limit].values(
+            "feedback_text",
+            "created_at",
+            "member__first_name",
+            "member__last_name",
+            "member__email",
+            "member__phone_number",
+            "member__pk",
+            "waiting_list_entry__first_name",
+            "waiting_list_entry__last_name",
+            "waiting_list_entry__email",
+            "waiting_list_entry__pk",
+        )
     )
 
 
@@ -177,6 +196,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancellations_during_trial"] = len(
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
+        context["recent_feedbacks"] = get_recent_feedbacks()
 
         context["solidarity_overplus"] = SolidarityValidator.get_solidarity_excess(
             reference_date=get_today(cache=self.cache), cache=self.cache

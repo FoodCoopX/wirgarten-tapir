@@ -33,6 +33,7 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
     Product,
     CoopShareTransaction,
+    OrderFeedback,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -206,6 +207,9 @@ class UserGenerator:
                 cls.create_subscription_to_required_products(
                     member=member, products=required_products, cache=cache
                 )
+
+        if not member_without_subscriptions and random.random() < 0.3:
+            cls.generate_feedback_for_member(member)
 
         cls.create_coop_shares_for_user(member, min_coop_shares, cache)
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
@@ -453,3 +457,39 @@ class UserGenerator:
         if confirmation_date <= get_today(cache=cache):
             return confirmation_datetime
         return None
+
+    @classmethod
+    def generate_feedback_for_member(cls, member: Member):
+        cls._generate_feedback(
+            member=member,
+            waiting_list_entry=None,
+        )
+
+    @classmethod
+    def generate_feedback_for_waiting_list_entry(cls, waiting_list_entry):
+        cls._generate_feedback(
+            member=None,
+            waiting_list_entry=waiting_list_entry,
+        )
+
+    @classmethod
+    def _generate_feedback(cls, member: Member | None, waiting_list_entry):
+        feedback_options = [
+            "Super Qualität, bin sehr zufrieden!",
+            "Tolles Gemüse, immer wieder gerne.",
+            "Die Lieferung war pünktlich und die Produkte frisch.",
+            "Würde ich weiterempfehlen.",
+            "Gutes Angebot, könnte aber mehr Auswahl haben.",
+            "Alles super, bin Fan!",
+            "Qualität war diesmal nicht ganz so gut wie sonst.",
+            "Bin begeistert von der Organisation.",
+            "Toller Service, danke!",
+            "Freue mich auf die nächste Lieferung.",
+            "Hoffe, bald Mitglied werden zu können!",
+            "Warteliste ist etwas lang, aber ich warte gerne.",
+        ]
+        OrderFeedback.objects.create(
+            member=member,
+            waiting_list_entry=waiting_list_entry,
+            feedback_text=random.choice(feedback_options),
+        )

@@ -40,6 +40,7 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
+    OrderFeedback,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -255,6 +256,35 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(SolidarityContribution.objects.exists())
 
         mock_fire_action.assert_called_once()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_waitingListEntryWithFeedback_feedbackGetsLinkedToWaitingListEntry(
+        self, mock_fire_action: Mock
+    ):
+        feedback_text = "Would love to join as soon as there's capacity!"
+        data = self.build_valid_post_data_for_a_waiting_list_entry()
+        data["feedback"] = feedback_text
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should have been confirmed, error: {response_content['error']}",
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertEqual(1, WaitingListEntry.objects.count())
+        self.assertEqual(1, OrderFeedback.objects.count())
+
+        feedback = OrderFeedback.objects.get()
+        self.assertEqual(feedback_text, feedback.feedback_text)
+        self.assertIsNone(feedback.member)
+        self.assertEqual(WaitingListEntry.objects.get(), feedback.waiting_list_entry)
 
     def test_post_createNewMemberWithWaitingListEntryButWaitingListEntryIsInvalid_nothingCreated(
         self,
@@ -1026,3 +1056,49 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             solidarity_contribution.start_date,
         )
         self.assertEqual(growing_period.end_date, solidarity_contribution.end_date)
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_withFeedback_feedbackGetsSaved(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        feedback_text = "Great service, love the organic vegetables!"
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["feedback"] = feedback_text
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(response_content["order_confirmed"])
+
+        self.assertEqual(1, OrderFeedback.objects.count())
+        self.assertEqual(1, Member.objects.count())
+        member = Member.objects.get()
+        feedback = OrderFeedback.objects.get()
+        self.assertEqual(feedback_text, feedback.feedback_text)
+        self.assertEqual(member, feedback.member)
+        self.assertIsNone(feedback.waiting_list_entry)
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_withoutFeedback_noFeedbackCreated(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(
+                self.build_valid_post_data_for_an_order_without_waiting_list()
+            ),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(response_content["order_confirmed"])
+
+        self.assertEqual(0, OrderFeedback.objects.count())

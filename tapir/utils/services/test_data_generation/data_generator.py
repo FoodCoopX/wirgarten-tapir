@@ -34,6 +34,7 @@ from tapir.wirgarten.models import (
     PickupLocation,
     MemberPickupLocation,
     QuestionaireCancellationReasonResponse,
+    OrderFeedback,
 )
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
@@ -60,6 +61,7 @@ class DataGenerator:
             Payment,
             MandateReference,
             EmailChangeRequest,
+            OrderFeedback,
         ]
 
         for model_class in model_classes:
