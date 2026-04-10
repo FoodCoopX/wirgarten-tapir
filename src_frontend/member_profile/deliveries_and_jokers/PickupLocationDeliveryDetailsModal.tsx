@@ -13,7 +13,7 @@ const PickupLocationDeliveryDetailsModal: React.FC<
   PickupLocationDeliveryDetailsModalProps
 > = ({ pickupLocation, openingTimes, onHide }) => {
   return (
-    <Modal onHide={onHide} show={true} centered={true}>
+    <Modal size={"lg"} onHide={onHide} show={true} centered={true}>
       <Modal.Header closeButton>
         <Modal.Title>
           <h4>{pickupLocation.name}</h4>
@@ -77,6 +77,7 @@ const PickupLocationDeliveryDetailsModal: React.FC<
             })}
           </ul>
         </p>
+        <img src={pickupLocation.photoLink} style={{ maxWidth: 764 }} alt={pickupLocation.name}/>
       </Modal.Body>
     </Modal>
   );
