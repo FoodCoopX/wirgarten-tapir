@@ -16,9 +16,15 @@ RUN mkdir -p /etc/apt/keyrings && \
 RUN sed -i '/de_DE.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
+ARG DEV=false
 COPY ./pyproject.toml /app/pyproject.toml
 COPY ./poetry.lock /app/poetry.lock
-RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry install
+RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry
+RUN if [ "$DEV" = "true" ]; then \
+      poetry install --with dev --no-root; \
+    else \
+      poetry install --without dev --no-root; \
+    fi
 
 COPY tapir /app/tapir
 COPY manage.py /app/manage.py
