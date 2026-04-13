@@ -59,3 +59,9 @@ class CoopSharesCancelledLogEntry(LogEntry):
         log_entry.nb_shares = coop_share_transaction.quantity
         log_entry.cancellation_valid_at = coop_share_transaction.valid_at
         return log_entry
+
+    def get_context_data(self):
+        context_data = super().get_context_data()
+        # There is no nice way to take the negative of a context variable in django templates
+        context_data["amount_of_cancelled_shares"] = -self.nb_shares
+        return context_data
