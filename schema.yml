@@ -1906,37 +1906,20 @@ paths:
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
-      parameters:
-      - in: query
-        name: confirm_cancellation_ids
-        schema:
-          type: array
-          items:
-            type: string
-        required: true
-      - in: query
-        name: confirm_creation_ids
-        schema:
-          type: array
-          items:
-            type: string
-        required: true
-      - in: query
-        name: confirm_deletion_ids
-        schema:
-          type: array
-          items:
-            type: integer
-        required: true
-      - in: query
-        name: confirm_purchase_ids
-        schema:
-          type: array
-          items:
-            type: string
-        required: true
       tags:
       - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmSubscriptionChangesRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConfirmSubscriptionChangesRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConfirmSubscriptionChangesRequestRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -5849,6 +5832,33 @@ components:
         * `CANCELLED` - Kündigung
         * `RENEWED` - Verlängerung
         * `NOT_RENEWED` - Keine Verlängerung
+    ConfirmSubscriptionChangesRequestRequest:
+      type: object
+      properties:
+        confirm_cancellation_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        confirm_creation_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        confirm_purchase_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        confirm_deletion_ids:
+          type: array
+          items:
+            type: integer
+      required:
+      - confirm_cancellation_ids
+      - confirm_creation_ids
+      - confirm_deletion_ids
+      - confirm_purchase_ids
     ConvertWeekToDateForSubscriptionChangesResponse:
       type: object
       properties:

@@ -29,8 +29,7 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
     def test_post_loggedInAsNormalMember_returns403(self):
         self.client.force_login(MemberFactory.create())
 
-        url = reverse("subscriptions:confirm_subscription_changes")
-        response = self.client.post(url)
+        response = self._call_view_with_post_data()
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
@@ -43,9 +42,9 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
             cancellation_ts=self.now, cancellation_admin_confirmed=self.now
         )
 
-        url = reverse("subscriptions:confirm_subscription_changes")
-        url = f"{url}?confirm_cancellation_ids={subscription_1.id}&confirm_cancellation_ids={subscription_2.id}"
-        response = self.client.post(url)
+        response = self._call_view_with_post_data(
+            confirm_cancellation_ids=[subscription_1.id, subscription_2.id]
+        )
 
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
         subscription_1.refresh_from_db()
@@ -58,9 +57,10 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
         subscription_1 = SubscriptionFactory.create(cancellation_ts=self.now)
         subscription_2 = SubscriptionFactory.create(admin_confirmed=self.now)
 
-        url = reverse("subscriptions:confirm_subscription_changes")
-        url = f"{url}?confirm_cancellation_ids={subscription_1.id}&confirm_creation_ids={subscription_2.id}"
-        response = self.client.post(url)
+        response = self._call_view_with_post_data(
+            confirm_cancellation_ids=[subscription_1.id],
+            confirm_creation_ids=[subscription_2.id],
+        )
 
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
         self.assertFalse(
@@ -76,9 +76,9 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
         subscription = SubscriptionFactory.create(admin_confirmed=None)
         purchase = CoopShareTransactionFactory.create(admin_confirmed=self.now)
 
-        url = reverse("subscriptions:confirm_subscription_changes")
-        url = f"{url}?confirm_creation_ids={subscription.id}&confirm_purchase_ids={purchase.id}"
-        response = self.client.post(url)
+        response = self._call_view_with_post_data(
+            confirm_creation_ids=[subscription.id], confirm_purchase_ids=[purchase.id]
+        )
 
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
         self.assertFalse(
@@ -99,9 +99,9 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
             user=MemberFactory.create(),
         )
 
-        url = reverse("subscriptions:confirm_subscription_changes")
-        url = f"{url}?confirm_creation_ids={subscription.id}&confirm_deletion_ids={deletion.id}"
-        response = self.client.post(url)
+        response = self._call_view_with_post_data(
+            confirm_creation_ids=[subscription.id], confirm_deletion_ids=[deletion.id]
+        )
 
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
         self.assertFalse(
@@ -128,9 +128,12 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
             user=MemberFactory.create(),
         )
 
-        url = reverse("subscriptions:confirm_subscription_changes")
-        url = f"{url}?confirm_cancellation_ids={subscription_1.id}&confirm_creation_ids={subscription_2.id}&confirm_purchase_ids={purchase.id}&confirm_deletion_ids={deletion.id}"
-        response = self.client.post(url)
+        response = self._call_view_with_post_data(
+            confirm_cancellation_ids=[subscription_1.id],
+            confirm_creation_ids=[subscription_2.id],
+            confirm_purchase_ids=[purchase.id],
+            confirm_deletion_ids=[deletion.id],
+        )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
         subscription_1.refresh_from_db()
@@ -145,3 +148,20 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
         mock_send_confirmation_mail_if_necessary.assert_called_once_with(
             confirm_creation_ids=[subscription_2.id], confirm_purchase_ids=[purchase.id]
         )
+
+    def _call_view_with_post_data(
+        self,
+        confirm_cancellation_ids: list[str] = None,
+        confirm_creation_ids: list[str] = None,
+        confirm_purchase_ids: list[str] = None,
+        confirm_deletion_ids: list[int] = None,
+    ):
+        post_data = {
+            "confirm_cancellation_ids": confirm_cancellation_ids or [],
+            "confirm_creation_ids": confirm_creation_ids or [],
+            "confirm_purchase_ids": confirm_purchase_ids or [],
+            "confirm_deletion_ids": confirm_deletion_ids or [],
+        }
+
+        url = reverse("subscriptions:confirm_subscription_changes")
+        return self.client.post(url, data=post_data, content_type="application/json")

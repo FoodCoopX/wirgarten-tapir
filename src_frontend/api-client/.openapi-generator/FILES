@@ -32,6 +32,7 @@ models/CancelSubscriptionsRequestRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
 models/ChangeTypeEnum.ts
+models/ConfirmSubscriptionChangesRequestRequest.ts
 models/ConvertWeekToDateForSubscriptionChangesResponse.ts
 models/CoopShareTransaction.ts
 models/CountryEnum.ts

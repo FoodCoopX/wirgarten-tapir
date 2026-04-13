@@ -288,3 +288,10 @@ class SubscriptionDateChangeRequestSerializer(serializers.Serializer):
 class ConvertWeekToDateForSubscriptionChangesResponseSerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
+
+
+class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
+    confirm_cancellation_ids = serializers.ListField(child=serializers.CharField())
+    confirm_creation_ids = serializers.ListField(child=serializers.CharField())
+    confirm_purchase_ids = serializers.ListField(child=serializers.CharField())
+    confirm_deletion_ids = serializers.ListField(child=serializers.IntegerField())
