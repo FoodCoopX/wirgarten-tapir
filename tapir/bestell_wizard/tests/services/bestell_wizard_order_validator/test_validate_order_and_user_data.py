@@ -49,6 +49,11 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             payment_rhythm="test_payment_rhythm",
         )
 
+    @patch.object(
+        TapirOrderBuilder,
+        "build_tapir_order_from_shopping_cart_serializer",
+        autospec=True,
+    )
     @patch.object(BestellWizardOrderValidator, "is_contract_required", autospec=True)
     @patch.object(
         PersonalDataValidator, "validate_personal_data_new_member", autospec=True
@@ -57,6 +62,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
         self,
         mock_validate_personal_data_new_member: Mock,
         mock_is_contract_required: Mock,
+        mock_build_tapir_order_from_shopping_cart_serializer: Mock,
     ):
         data = {
             "personal_data": {
@@ -68,9 +74,12 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             "payment_rhythm": "test_payment_rhythm",
             "sepa_allowed": True,
             "contract_accepted": False,
+            "shopping_cart_order": {},
         }
         cache = Mock()
         mock_is_contract_required.return_value = True
+        order = Mock()
+        mock_build_tapir_order_from_shopping_cart_serializer.return_value = order
 
         with self.assertRaises(ValidationError) as error:
             BestellWizardOrderValidator.validate_order_and_user_data_and_distribution_channels(
@@ -90,7 +99,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             check_waiting_list=True,
             payment_rhythm="test_payment_rhythm",
         )
-        mock_is_contract_required.assert_called_once_with(cache=cache)
+        mock_is_contract_required.assert_called_once_with(order=order, cache=cache)
 
     @patch.object(
         BestellWizardOrderValidator, "validate_distribution_channels", autospec=True
@@ -149,7 +158,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             check_waiting_list=True,
             payment_rhythm="test_payment_rhythm",
         )
-        mock_is_contract_required.assert_called_once_with(cache=cache)
+        mock_is_contract_required.assert_called_once_with(order={}, cache=cache)
         mock_validate_order.assert_called_once_with(
             pickup_location_ids=pickup_location_ids,
             contract_start_date=contract_start_date,
@@ -221,7 +230,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             check_waiting_list=True,
             payment_rhythm="test_payment_rhythm",
         )
-        mock_is_contract_required.assert_called_once_with(cache=cache)
+        mock_is_contract_required.assert_called_once_with(order=order, cache=cache)
         mock_build_tapir_order_from_shopping_cart_serializer.assert_called_once_with(
             shopping_cart=shopping_cart, cache=cache
         )
@@ -300,7 +309,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             check_waiting_list=True,
             payment_rhythm="test_payment_rhythm",
         )
-        mock_is_contract_required.assert_called_once_with(cache=cache)
+        mock_is_contract_required.assert_called_once_with(order=order, cache=cache)
         mock_build_tapir_order_from_shopping_cart_serializer.assert_called_once_with(
             shopping_cart=shopping_cart, cache=cache
         )
@@ -386,7 +395,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             check_waiting_list=True,
             payment_rhythm="test_payment_rhythm",
         )
-        mock_is_contract_required.assert_called_once_with(cache=cache)
+        mock_is_contract_required.assert_called_once_with(order=order, cache=cache)
         mock_build_tapir_order_from_shopping_cart_serializer.assert_called_once_with(
             shopping_cart=shopping_cart, cache=cache
         )
@@ -480,7 +489,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             check_waiting_list=True,
             payment_rhythm="test_payment_rhythm",
         )
-        mock_is_contract_required.assert_called_once_with(cache=cache)
+        mock_is_contract_required.assert_called_once_with(order=order, cache=cache)
         mock_build_tapir_order_from_shopping_cart_serializer.assert_called_once_with(
             shopping_cart=shopping_cart, cache=cache
         )
@@ -581,7 +590,7 @@ class TestValidateOrderAndUserData(SimpleTestCase):
             check_waiting_list=True,
             payment_rhythm="test_payment_rhythm",
         )
-        mock_is_contract_required.assert_called_once_with(cache=cache)
+        mock_is_contract_required.assert_called_once_with(order=order, cache=cache)
         mock_build_tapir_order_from_shopping_cart_serializer.assert_called_once_with(
             shopping_cart=shopping_cart, cache=cache
         )
