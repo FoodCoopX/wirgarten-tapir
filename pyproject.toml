@@ -31,7 +31,7 @@ lxml= "^6.0.2"
 python-keycloak = "^7.1.1"
 unidecode = "^1.4.0"
 importlib-resources = "^6.5.2"
-tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1776074338/tapir_mail-0.0.0.dev1776074338-py3-none-any.whl" }
+tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1776085577/tapir_mail-0.0.0.dev1776085577-py3-none-any.whl" }
 djangorestframework = "^3.17.1"
 drf-spectacular = "^0.29.0"
 django-vite = "^3.1.0"
