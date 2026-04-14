@@ -120,6 +120,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
   distributionChannels: Array<string>;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  feedback?: string;
 }
 
 /**
@@ -220,6 +226,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(
     growingPeriodId: json["growing_period_id"],
     solidarityContribution: json["solidarity_contribution"],
     distributionChannels: json["distribution_channels"],
+    feedback: json["feedback"] == null ? undefined : json["feedback"],
   };
 }
 
@@ -254,5 +261,6 @@ export function BestellWizardConfirmOrderRequestRequestToJSONTyped(
     growing_period_id: value["growingPeriodId"],
     solidarity_contribution: value["solidarityContribution"],
     distribution_channels: value["distributionChannels"],
+    feedback: value["feedback"],
   };
 }

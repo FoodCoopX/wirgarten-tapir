@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Badge, Card, Col, Form, ListGroup, Row, Table } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
 import {
   MemberDataToConfirm,
   type SubscriptionChange,
   SubscriptionsApi,
 } from "../api-client";
-import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import ConfirmRevokeModal from "./ConfirmRevokeModal.tsx";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { getMinimumDate } from "../utils/getMinimumDate.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
+import ConfirmRevokeModal from "./ConfirmRevokeModal.tsx";
 
 interface ContractUpdatesCardProps {
   csrfToken: string;
@@ -253,10 +253,12 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
 
     subscriptionsApi
       .subscriptionsApiConfirmSubscriptionChangesCreate({
-        confirmCreationIds: getCreationIdsToConfirm(),
-        confirmCancellationIds: getCancellationIdsToConfirm(),
-        confirmPurchaseIds: getSharePurchaseIdsToConfirm(),
-        confirmDeletionIds: getDeletionIdsToConfirm(),
+        confirmSubscriptionChangesRequestRequest: {
+          confirmCreationIds: getCreationIdsToConfirm(),
+          confirmCancellationIds: getCancellationIdsToConfirm(),
+          confirmPurchaseIds: getSharePurchaseIdsToConfirm(),
+          confirmDeletionIds: getDeletionIdsToConfirm(),
+        },
       })
       .then(() => {
         setConfirmedChanges(new Set(selectedChanges));

@@ -215,7 +215,7 @@ class CancelJokerView(APIView):
             trigger_data=TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_JOKER_CANCELLED,
                 recipient_id_in_base_queryset=joker.member.id,
-                token_data={"joker_date": joker.date},
+                token_data={"joker_date": format_date(joker.date)},
             ),
         )
 
@@ -261,7 +261,7 @@ class CancelDeliveryDonationView(APIView):
             trigger_data=TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_DONATION_CANCELLED,
                 recipient_id_in_base_queryset=donation.member.id,
-                token_data={"donation_date": donation.date},
+                token_data={"donation_date": format_date(donation.date)},
             ),
         )
 
@@ -308,7 +308,7 @@ class UseJokerView(APIView):
             TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_JOKER_USED,
                 recipient_id_in_base_queryset=joker.member.id,
-                token_data={"joker_date": joker.date},
+                token_data={"joker_date": format_date(joker.date)},
             ),
         )
 

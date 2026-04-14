@@ -79,6 +79,14 @@ Models should inherit from `tapir.core.models.TapirModel`:
 
 As much as possible, model classes should contain only their own fields. Helper methods are OK if they only reference the fields of the given object.
 
+### Cache
+Many functions, especially service functions, take a `cache` parameter which is a normal python dictionary. 
+The goal of this cache is to avoid redundant database requests within one http request: in most of our views, DB requests are the most time-consuming part.
+The cache dictionary should be created at the origin point: for example in the view's `__init__` function or the first lines or the command. 
+Since this cache only lives for the duration of the request, in most cases it is not necessary to invalidate it. If you do need to invalidate, look at `tapir.utils.services.tapir_cache_manager.TapirCacheManager`
+Some functions have the cache parameter optional. This is only because they are called in legacy code, all new functions should have the cache parameter required if possible.
+For examples, see usages of `tapir.utils.services.tapir_cache.TapirCache`.
+
 ### Service classes
 Most of the business logic code should be in service classes. You can find examples in tapir/*/services/.
 

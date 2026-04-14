@@ -1,7 +1,9 @@
 import datetime
 from decimal import Decimal
 
-from tapir.coop.models import CoopSharesCancelledLogEntry
+from tapir.coop.models import (
+    CoopSharesCancelledDuringTrialLogEntry,
+)
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
@@ -53,12 +55,14 @@ class TestCancelCoopMembership(TapirIntegrationTest):
         self.assertIn(transaction_1, CoopShareTransaction.objects.all())
         self.assertIn(transaction_2, CoopShareTransaction.objects.all())
 
-        self.assertEqual(1, CoopSharesCancelledLogEntry.objects.count())
-        log_entry = CoopSharesCancelledLogEntry.objects.get()
+        self.assertEqual(1, CoopSharesCancelledDuringTrialLogEntry.objects.count())
+        log_entry = CoopSharesCancelledDuringTrialLogEntry.objects.get()
         self.assertEqual(member.email, log_entry.user.email)
         self.assertEqual(actor.email, log_entry.actor.email)
         self.assertEqual(transaction_3.quantity, log_entry.nb_shares)
-        self.assertEqual(transaction_3.valid_at, log_entry.cancellation_valid_at)
+        self.assertEqual(
+            transaction_3.valid_at, log_entry.shares_would_have_been_valid_at
+        )
 
     def test_cancelCoopMembership_default_paymentsGetUpdateCorrectly(
         self,

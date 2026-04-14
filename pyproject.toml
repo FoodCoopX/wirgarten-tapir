@@ -10,7 +10,7 @@ python = "^3.14"
 django = "^6.0.4"
 django-extensions = "^4.1"
 psycopg2-binary = "^2.9.10"
-django-tables2 = "^2.9.0"
+django-tables2 = "^3.0.0"
 django-filter = "^25.2"
 tablib = "^3.8.0"
 django-phonenumber-field = {version = "^5.2.0", extras = ["phonenumbers"]}
@@ -31,7 +31,7 @@ lxml= "^6.0.2"
 python-keycloak = "^7.1.1"
 unidecode = "^1.4.0"
 importlib-resources = "^6.5.2"
-tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1774347435/tapir_mail-0.0.0.dev1774347435-py3-none-any.whl" }
+tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1776085577/tapir_mail-0.0.0.dev1776085577-py3-none-any.whl" }
 djangorestframework = "^3.17.1"
 drf-spectacular = "^0.29.0"
 django-vite = "^3.1.0"

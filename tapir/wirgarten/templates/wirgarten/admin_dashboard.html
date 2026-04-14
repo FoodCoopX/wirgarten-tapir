@@ -225,6 +225,36 @@
                 </div>
             </a>
         </div>
+        {% if recent_feedbacks %}
+            <div class="dashboard-section-heading">
+                <hr />
+                Feedbacks
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <ul class="list-group list-group-flush">
+                    {% for feedback in recent_feedbacks %}
+                        <li class="list-group-item px-0">
+                            <div class="d-flex w-100 justify-content-between">
+                                {% if feedback.member__pk %}
+                                    <a href="{% url 'wirgarten:member_detail' feedback.member__pk %}">
+                                        <strong>{{ feedback.member__first_name }} {{ feedback.member__last_name }}</strong>
+                                    </a>
+                                {% else %}
+                                    <span><strong>{{ feedback.waiting_list_entry__first_name }} {{ feedback.waiting_list_entry__last_name }}</strong> <small class="text-muted">(Wartelisten-Eintrag)</small></span>
+                                {% endif %}
+                                <small class="text-muted">{{ feedback.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            {% if feedback.member__pk %}
+                                <small class="text-muted">{{ feedback.member__email }}{% if feedback.member__phone_number %} | {{ feedback.member__phone_number }}{% endif %}</small>
+                            {% else %}
+                                <small class="text-muted">{{ feedback.waiting_list_entry__email }}</small>
+                            {% endif %}
+                            <p class="mb-0 mt-1">{{ feedback.feedback_text }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
         </div>
         <script src="{% static 'wirgarten/js/chart.js' %}"></script>
         <script>

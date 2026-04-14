@@ -20,6 +20,7 @@ export * from "./CancellationData";
 export * from "./CancelSubscriptionsRequestRequest";
 export * from "./CancelSubscriptionsViewResponse";
 export * from "./ChangeTypeEnum";
+export * from "./ConfirmSubscriptionChangesRequestRequest";
 export * from "./ConvertWeekToDateForSubscriptionChangesResponse";
 export * from "./CoopShareTransaction";
 export * from "./CountryEnum";

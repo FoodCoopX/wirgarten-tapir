@@ -2,7 +2,9 @@ import datetime
 from decimal import Decimal
 
 from tapir.accounts.models import TapirUser
-from tapir.coop.models import CoopSharesCancelledLogEntry
+from tapir.coop.models import (
+    CoopSharesCancelledDuringTrialLogEntry,
+)
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.utils import get_today
 
@@ -62,7 +64,7 @@ class MembershipCancellationManager:
                 purchase.payment.save()
 
         for purchase in future_coop_share_purchases:
-            CoopSharesCancelledLogEntry.populate_transaction(
+            CoopSharesCancelledDuringTrialLogEntry.populate_transaction(
                 coop_share_transaction=purchase,
                 user=member,
                 actor=actor,

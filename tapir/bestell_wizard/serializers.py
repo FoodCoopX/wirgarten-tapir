@@ -42,6 +42,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     growing_period_id = serializers.CharField()
     solidarity_contribution = serializers.FloatField()
     distribution_channels = serializers.ListField(child=serializers.CharField())
+    feedback = serializers.CharField(allow_blank=True, required=False)
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
@@ -73,6 +74,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step4b_waiting_list_modal_text = serializers.CharField()
     step4d_title = serializers.CharField()
     step4d_text = serializers.CharField()
+    step4d_text_supporting_member = serializers.CharField()
     step5a_title = serializers.CharField()
     step5a_text = serializers.CharField()
     step5b_title = serializers.CharField()

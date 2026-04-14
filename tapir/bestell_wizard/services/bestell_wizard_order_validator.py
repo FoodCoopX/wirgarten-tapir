@@ -59,15 +59,15 @@ class BestellWizardOrderValidator:
         if not validated_serializer_data["sepa_allowed"]:
             raise ValidationError("SEPA-Mandat muss erlaubt sein")
 
-        if (
-            cls.is_contract_required(cache=cache)
-            and not validated_serializer_data["contract_accepted"]
-        ):
-            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
-
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_serializer_data["shopping_cart_order"], cache=cache
         )
+
+        if (
+            cls.is_contract_required(order=order, cache=cache)
+            and not validated_serializer_data["contract_accepted"]
+        ):
+            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
         if (
             cls.is_cancellation_policy_required(
@@ -121,7 +121,10 @@ class BestellWizardOrderValidator:
         return sum(order.values(), start=0) > 0 or solidarity_contribution > 0
 
     @classmethod
-    def is_contract_required(cls, cache: dict):
+    def is_contract_required(cls, order: TapirOrder, cache: dict):
+        if len(order) == 0:
+            return False
+
         return (
             get_parameter_value(
                 key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,

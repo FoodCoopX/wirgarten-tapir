@@ -22,6 +22,7 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 from tapir.subscriptions.models import SubscriptionsRevokedLogEntry
 from tapir.subscriptions.serializers import (
     MemberDataToConfirmSerializer,
+    ConfirmSubscriptionChangesRequestSerializer,
 )
 from tapir.subscriptions.services.order_confirmation_mail_sender import (
     OrderConfirmationMailSender,
@@ -261,28 +262,16 @@ class ConfirmSubscriptionChangesView(APIView):
 
     @extend_schema(
         responses={200: str},
-        parameters=[
-            OpenApiParameter(
-                name="confirm_cancellation_ids", type=str, required=True, many=True
-            ),
-            OpenApiParameter(
-                name="confirm_creation_ids", type=str, required=True, many=True
-            ),
-            OpenApiParameter(
-                name="confirm_purchase_ids", type=str, required=True, many=True
-            ),
-            OpenApiParameter(
-                name="confirm_deletion_ids", type=int, required=True, many=True
-            ),
-        ],
+        request=ConfirmSubscriptionChangesRequestSerializer,
     )
     @transaction.atomic
     def post(self, request: Request):
+        serializer = ConfirmSubscriptionChangesRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         cache = {}
 
-        confirm_cancellation_ids = request.query_params.getlist(
-            "confirm_cancellation_ids"
-        )
+        confirm_cancellation_ids = serializer.validated_data["confirm_cancellation_ids"]
         self.apply_confirmation(
             model=Subscription,
             ids_to_confirm=confirm_cancellation_ids,
@@ -291,7 +280,7 @@ class ConfirmSubscriptionChangesView(APIView):
             id_as_int=False,
         )
 
-        confirm_creation_ids = request.query_params.getlist("confirm_creation_ids")
+        confirm_creation_ids = serializer.validated_data["confirm_creation_ids"]
         self.apply_confirmation(
             model=Subscription,
             ids_to_confirm=confirm_creation_ids,
@@ -300,7 +289,7 @@ class ConfirmSubscriptionChangesView(APIView):
             id_as_int=False,
         )
 
-        confirm_purchase_ids = request.query_params.getlist("confirm_purchase_ids")
+        confirm_purchase_ids = serializer.validated_data["confirm_purchase_ids"]
         self.apply_confirmation(
             model=CoopShareTransaction,
             ids_to_confirm=confirm_purchase_ids,
@@ -309,7 +298,7 @@ class ConfirmSubscriptionChangesView(APIView):
             id_as_int=False,
         )
 
-        confirm_deletion_ids = request.query_params.getlist("confirm_deletion_ids")
+        confirm_deletion_ids = serializer.validated_data["confirm_deletion_ids"]
         self.apply_confirmation(
             model=SubscriptionChangeLogEntry,
             ids_to_confirm=confirm_deletion_ids,
@@ -333,9 +322,7 @@ class ConfirmSubscriptionChangesView(APIView):
         cache: dict,
         id_as_int: bool,
     ):
-        if id_as_int:
-            ids_to_confirm = [int(id_) for id_ in ids_to_confirm if id_.isnumeric()]
-        else:
+        if not id_as_int:
             ids_to_confirm = [
                 id_to_confirm.strip()
                 for id_to_confirm in ids_to_confirm
