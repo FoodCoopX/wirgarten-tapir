@@ -66,7 +66,7 @@
                                                     (
                                                     {{ cap.capacity_percent|format_percent }})
                                                 {% endif %}
-                                            &nbsp;&nbsp;&nbsp;<span style="color:{% if cap.next_capacity_diff.0 == '+' %}green{% else %}red{% endif %}">{{ cap.next_capacity_diff }}</span></small>
+                                                &nbsp;&nbsp;&nbsp;<span style="color:{% if cap.next_capacity_diff.0 == '+' %}green{% else %}red{% endif %}">{{ cap.next_capacity_diff }}</span></small>
                                             <br />
                                         {% endfor %}
                                     </td>
@@ -89,13 +89,13 @@
         </div>
     </div>
     <script>
-    const handleAddPickupLocation = () => {
-        FormModal.load('{% url 'wirgarten:pickup_locations_add' %}', 'Abholort hinzufügen');
-    }
+        const handleAddPickupLocation = () => {
+            FormModal.load('{% url 'wirgarten:pickup_locations_add' %}', 'Abholort hinzufügen');
+        }
 
-    const canDelete = {}
-    {% for pl in pickup_locations %}canDelete["{{pl.id}}"] = {{pl.members}} == 0;{% endfor %}
+        const canDelete = {}
+        {% for pl in pickup_locations %}canDelete["{{pl.id}}"] = {{pl.members}} == 0;{% endfor %}
 
-    initSelected();
+        initSelected();
     </script>
 {% endblock %}
