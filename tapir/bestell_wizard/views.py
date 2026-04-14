@@ -74,6 +74,7 @@ from tapir.waiting_list.services.waiting_list_entry_validator import (
     WaitingListEntryValidator,
 )
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.models import OrderFeedback
 from tapir.wirgarten.models import (
     ProductType,
     WaitingListEntry,
@@ -92,8 +93,8 @@ from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
     check_permission_or_self,
+    legal_status_is_association,
 )
-from tapir.wirgarten.models import OrderFeedback
 
 
 class BestellWizardMobileView(TemplateView):
@@ -235,7 +236,13 @@ class BestellWizardConfirmOrderApiView(APIView):
         member = None
         waiting_list_entry = None
 
-        if len(order) > 0 or validated_serializer_data["become_member_now"]:
+        become_member_now = validated_serializer_data["become_member_now"]
+        if not legal_status_is_cooperative(
+            cache=cache
+        ) and not legal_status_is_association(cache=cache):
+            become_member_now = False
+
+        if len(order) > 0 or become_member_now:
             member = cls.validate_and_fulfill_order(
                 request=request,
                 validated_serializer_data=validated_serializer_data,
@@ -251,7 +258,6 @@ class BestellWizardConfirmOrderApiView(APIView):
 
         if (
             len(order_waiting_list) > 0
-            or validated_serializer_data["become_member_now"] is False
             or len(validated_serializer_data["pickup_location_ids"]) > 1
         ):
             if member is None:

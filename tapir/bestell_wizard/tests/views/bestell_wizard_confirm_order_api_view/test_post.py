@@ -14,6 +14,7 @@ from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
 from tapir.configuration.models import TapirParameter
+from tapir.core.config import LEGAL_STATUS_COMPANY
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -580,40 +581,6 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(WaitingListEntry.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
-    def test_post_investingMemberOnWaitingList_createsWaitingListEntry(
-        self, mock_fire_action: Mock
-    ):
-        data = self.build_valid_post_data_for_a_waiting_list_entry()
-        data["shopping_cart_waiting_list"] = {}
-        data["pickup_location_ids"] = []
-        data["number_of_coop_shares"] = 7
-
-        response = self.client.post(
-            reverse("bestell_wizard:bestell_wizard_confirm_order"),
-            data=json.dumps(data),
-            content_type="application/json",
-        )
-
-        self.assertStatusCode(response, 200)
-        response_content = response.json()
-        self.assertTrue(
-            response_content["order_confirmed"],
-            f"Order should have been confirmed, error: {response_content["error"]}",
-        )
-
-        self.assertFalse(Member.objects.exists())
-
-        waiting_list_entry = self.assert_waiting_list_entry_is_correct(
-            shopping_cart_waiting_list={},
-            pickup_location_wishes=[],
-            mock_fire_action=mock_fire_action,
-        )
-        self.assertEqual(7, waiting_list_entry.number_of_coop_shares)
-        self.assertIsNone(waiting_list_entry.member_id)
-        self.assert_personal_data_is_valid_waiting_list(waiting_list_entry)
-        self.assertFalse(SolidarityContribution.objects.exists())
-
-    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_orderingAsStudent_noCoopShareCreated(self, mock_fire_action: Mock):
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
         data["student_status_enabled"] = True
@@ -1102,3 +1069,44 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertTrue(response_content["order_confirmed"])
 
         self.assertEqual(0, OrderFeedback.objects.count())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_waitingListEntryAndOrganizationTypeCompany_createsWaitingListEntryButNoMember(
+        self, mock_fire_action: Mock
+    ):
+        # This is a regression test for #1101 https://github.com/FoodCoopX/wirgarten-tapir/issues/1101
+        # When boing through the order wizard with all products on waiting list but becoming a member now, an error was sent from
+        # tapir.wirgarten.service.member.send_product_order_confirmation
+        # The problem was that the member got created: on companies there are no shares,
+        # there is no reason to create the member if the entire order is on waiting list
+
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).update(value=LEGAL_STATUS_COMPANY)
+
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_order"] = {}
+        data["shopping_cart_waiting_list"] = {self.product_1.id: 2}
+        data["become_member_now"] = True
+        ProductCapacity.objects.update(capacity=1)
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should have been confirmed, error: {response_content["error"]}",
+        )
+
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(Subscription.objects.exists())
+        self.assert_waiting_list_entry_is_correct(
+            shopping_cart_waiting_list=data["shopping_cart_waiting_list"],
+            pickup_location_wishes=data["pickup_location_ids"],
+            mock_fire_action=mock_fire_action,
+        )
