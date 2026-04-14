@@ -39,5 +39,5 @@ def member_email_verified(member: Member, cache: dict):
 
 
 @register.simple_tag()
-def formatted_member_no(member: Member):
-    return MemberNumberService.format_member_no(member.member_no) or "-"
+def formatted_member_number(member: Member):
+    return MemberNumberService.format_member_number(member.member_no, cache={}) or "-"

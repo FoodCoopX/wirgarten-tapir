@@ -169,7 +169,7 @@ def export_coop_member_list(request, **kwargs):
         ).order_by("timestamp")
 
         data = {
-            KEY_MEMBER_NO: MemberNumberService.format_member_no(entry.member_no),
+            KEY_MEMBER_NO: MemberNumberService.format_member_number(entry.member_no, cache=cache),
             KEY_FIRST_NAME: entry.first_name,
             KEY_LAST_NAME: entry.last_name,
             KEY_ADDRESS: entry.street,
@@ -221,7 +221,7 @@ def export_coop_member_list(request, **kwargs):
             map(
                 lambda x: f"Übertragung {format_currency(abs(x.quantity) * get_parameter_value(
                     ParameterKeys.COOP_SHARE_PRICE, cache=cache
-                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {MemberNumberService.format_member_no(x.transfer_member.member_no)})",
+                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {MemberNumberService.format_member_number(x.transfer_member.member_no, cache=cache)})",
                 transfers,
             )
         )
@@ -317,7 +317,7 @@ class ExportMembersView(View):
         for member in queryset:
             writer.writerow(
                 [
-                    MemberNumberService.format_member_no(member.member_no),
+                    MemberNumberService.format_member_number(member.member_no, cache=self.cache),
                     member.first_name,
                     member.last_name,
                     member.email,

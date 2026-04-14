@@ -11,7 +11,7 @@ urlpatterns = [
     ),
     path(
         "member-number-preview",
-        views.member_number_preview,
+        views.MemberNumberPreviewView.as_view(),
         name="member_number_preview",
     ),
 ]

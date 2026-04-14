@@ -126,7 +126,7 @@ class BestellWizardOrderFulfiller:
             member_id=member.id,
         )
 
-        MemberNumberService.assign_member_no_if_eligible(member, cache=cache)
+        MemberNumberService.assign_member_number_if_eligible(member, cache=cache)
 
         if coop_share_transaction is not None and len(subscriptions) == 0:
             send_investing_membership_confirmation(

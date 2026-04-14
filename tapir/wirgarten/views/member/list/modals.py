@@ -62,16 +62,16 @@ def get_member_personal_data_create_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form_class=PersonalDataForm,
-        handler=create_member_and_assign_number,
+        handler=save_member_and_assign_number,
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
     )
 
 
-def create_member_and_assign_number(member: Member):
+def save_member_and_assign_number(member: Member):
     member.save()
-    member.save()
-    MemberNumberService.assign_member_no_if_eligible(member)
+    cache = {}
+    MemberNumberService.assign_member_number_if_eligible(member, cache=cache)
 
 
 @require_http_methods(["GET", "POST"])

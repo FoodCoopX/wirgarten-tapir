@@ -60,10 +60,13 @@ class PickupLocationColumnProvider:
             Member.objects.all(), reference_datetime.date()
         )
 
+        cache = {}
         return "-".join(
             [
-                MemberNumberService.format_member_no(member.member_no)
-                or "Nicht mitglied"
+                MemberNumberService.format_member_number(
+                    member.member_no, cache=cache
+                )
+                or "Nicht Mitglied"
                 for member in members_annotated_with_pickup_location.filter(
                     current_pickup_location_id=location.id
                 )

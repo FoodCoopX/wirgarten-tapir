@@ -257,7 +257,7 @@ class ExportSubscriptionList(View):
             for _ in range(sub.quantity):
                 writer.writerow(
                     [
-                        MemberNumberService.format_member_no(sub.member.member_no),
+                        MemberNumberService.format_member_number(sub.member.member_no, cache=cache),
                         sub.member.first_name,
                         sub.member.last_name,
                         sub.member.email,

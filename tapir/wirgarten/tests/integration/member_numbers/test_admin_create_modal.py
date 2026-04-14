@@ -4,7 +4,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
-from tapir.wirgarten.views.member.list.modals import create_member_and_assign_number
+from tapir.wirgarten.views.member.list.modals import save_member_and_assign_number
 
 
 class TestAdminCreateModalMemberNumber(TapirIntegrationTest):
@@ -30,7 +30,7 @@ class TestAdminCreateModalMemberNumber(TapirIntegrationTest):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1)
         member = self._create_member_without_number()
 
-        create_member_and_assign_number(member)
+        save_member_and_assign_number(member)
 
         member.refresh_from_db()
         self.assertIsNotNone(member.member_no)

@@ -66,7 +66,7 @@
                           class="material-icons">task_alt</span>
                 {% endif %}
             </td>
-            <td style="text-align:center">{% formatted_member_no entry.member %}</td>
+            <td style="text-align:center">{% formatted_member_number entry.member %}</td>
             <td>{{ entry.member.first_name }} {{ entry.member.last_name }}</td>
             <td>{{ entry.member.email }}</td>
             <td style="text-align:center">{{ entry.created_at|format_date }}</td>

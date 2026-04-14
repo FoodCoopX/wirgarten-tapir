@@ -26,80 +26,80 @@ class TestMemberNumbersService(TapirIntegrationTest):
         return member
 
     # ------------------------------------------------------------------ #
-    # format_member_no
+    # format_member_number
     # ------------------------------------------------------------------ #
 
-    def test_formatMemberNo_withPrefixAndPadding_returnsFormattedString(self):
+    def test_formatMemberNumber_withPrefixAndPadding_returnsFormattedString(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
 
-        self.assertEqual("BT0017", MemberNumberService.format_member_no(17))
+        self.assertEqual("BT0017", MemberNumberService.format_member_number(17, cache={}))
 
-    def test_formatMemberNo_withoutPadding_returnsUnpaddedString(self):
+    def test_formatMemberNumber_withoutPadding_returnsUnpaddedString(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 0)
 
-        self.assertEqual("BT17", MemberNumberService.format_member_no(17))
+        self.assertEqual("BT17", MemberNumberService.format_member_number(17, cache={}))
 
-    def test_formatMemberNo_withoutPrefix_returnsOnlyNumber(self):
+    def test_formatMemberNumber_withoutPrefix_returnsOnlyNumber(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
 
-        self.assertEqual("0017", MemberNumberService.format_member_no(17))
+        self.assertEqual("0017", MemberNumberService.format_member_number(17, cache={}))
 
-    def test_formatMemberNo_withNoneInput_returnsNone(self):
-        self.assertIsNone(MemberNumberService.format_member_no(None))
+    def test_formatMemberNumber_withNoneInput_returnsNone(self):
+        self.assertIsNone(MemberNumberService.format_member_number(None, cache={}))
 
-    def test_formatMemberNo_numberLongerThanLength_returnsUntruncatedNumber(self):
+    def test_formatMemberNumber_numberLongerThanLength_returnsUntruncatedNumber(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 2)
 
-        self.assertEqual("12345", MemberNumberService.format_member_no(12345))
+        self.assertEqual("12345", MemberNumberService.format_member_number(12345, cache={}))
 
     # ------------------------------------------------------------------ #
-    # compute_next_member_no
+    # compute_next_member_number
     # ------------------------------------------------------------------ #
 
-    def test_computeNextMemberNo_noExistingMembers_returnsStartValue(self):
+    def test_computeNextMemberNumber_noExistingMembers_returnsStartValue(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1000)
         self.assertFalse(Member.objects.exists())
 
-        self.assertEqual(1000, MemberNumberService.compute_next_member_no())
+        self.assertEqual(1000, MemberNumberService.compute_next_member_number(cache={}))
 
-    def test_computeNextMemberNo_existingMemberBelowStartValue_returnsStartValue(self):
+    def test_computeNextMemberNumber_existingMemberBelowStartValue_returnsStartValue(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1000)
         MemberFactory.create(member_no=500)
 
-        self.assertEqual(1000, MemberNumberService.compute_next_member_no())
+        self.assertEqual(1000, MemberNumberService.compute_next_member_number(cache={}))
 
-    def test_computeNextMemberNo_existingMemberAboveStartValue_returnsMaxPlusOne(self):
+    def test_computeNextMemberNumber_existingMemberAboveStartValue_returnsMaxPlusOne(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1)
         MemberFactory.create(member_no=42)
 
-        self.assertEqual(43, MemberNumberService.compute_next_member_no())
+        self.assertEqual(43, MemberNumberService.compute_next_member_number(cache={}))
 
     # ------------------------------------------------------------------ #
-    # should_assign_member_no
+    # should_assign_member_number
     # ------------------------------------------------------------------ #
 
-    def test_shouldAssignMemberNo_memberAlreadyHasNumber_returnsFalse(self):
+    def test_shouldAssignMemberNumber_memberAlreadyHasNumber_returnsFalse(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
         member = MemberFactory.create(member_no=5)
 
-        self.assertFalse(MemberNumberService.should_assign_member_no(member))
+        self.assertFalse(MemberNumberService.should_assign_member_number(member, cache={}))
 
     @patch(
         "tapir.coop.services.membership_cancellation_manager."
         "MembershipCancellationManager.is_in_coop_trial"
     )
-    def test_shouldAssignMemberNo_onlyAfterTrialDisabledAndInTrial_returnsTrue(
+    def test_shouldAssignMemberNumber_onlyAfterTrialDisabledAndInTrial_returnsTrue(
         self, mock_is_in_coop_trial
     ):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
         mock_is_in_coop_trial.return_value = True
         member = self._create_member_without_number()
 
-        self.assertTrue(MemberNumberService.should_assign_member_no(member))
+        self.assertTrue(MemberNumberService.should_assign_member_number(member, cache={}))
 
     @patch(
         "tapir.subscriptions.services.trial_period_manager."
@@ -109,7 +109,7 @@ class TestMemberNumbersService(TapirIntegrationTest):
         "tapir.coop.services.membership_cancellation_manager."
         "MembershipCancellationManager.is_in_coop_trial"
     )
-    def test_shouldAssignMemberNo_onlyAfterTrialAndInCoopTrial_returnsFalse(
+    def test_shouldAssignMemberNumber_onlyAfterTrialAndInCoopTrial_returnsFalse(
         self, mock_is_in_coop_trial, mock_get_subscriptions_in_trial_period
     ):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, True)
@@ -117,7 +117,7 @@ class TestMemberNumbersService(TapirIntegrationTest):
         mock_get_subscriptions_in_trial_period.return_value = []
         member = self._create_member_without_number()
 
-        self.assertFalse(MemberNumberService.should_assign_member_no(member))
+        self.assertFalse(MemberNumberService.should_assign_member_number(member, cache={}))
 
     @patch(
         "tapir.coop.services.member_number_service.legal_status_is_cooperative",
@@ -131,7 +131,7 @@ class TestMemberNumbersService(TapirIntegrationTest):
         "tapir.coop.services.membership_cancellation_manager."
         "MembershipCancellationManager.is_in_coop_trial"
     )
-    def test_shouldAssignMemberNo_onlyAfterTrialAndInSubTrial_returnsFalse(
+    def test_shouldAssignMemberNumber_onlyAfterTrialAndInSubTrial_returnsFalse(
         self,
         mock_is_in_coop_trial,
         mock_get_subscriptions_in_trial_period,
@@ -142,7 +142,7 @@ class TestMemberNumbersService(TapirIntegrationTest):
         mock_get_subscriptions_in_trial_period.return_value = ["fake_sub"]
         member = self._create_member_without_number()
 
-        self.assertFalse(MemberNumberService.should_assign_member_no(member))
+        self.assertFalse(MemberNumberService.should_assign_member_number(member, cache={}))
 
     @patch(
         "tapir.subscriptions.services.trial_period_manager."
@@ -152,7 +152,7 @@ class TestMemberNumbersService(TapirIntegrationTest):
         "tapir.coop.services.membership_cancellation_manager."
         "MembershipCancellationManager.is_in_coop_trial"
     )
-    def test_shouldAssignMemberNo_onlyAfterTrialAndNotInTrial_returnsTrue(
+    def test_shouldAssignMemberNumber_onlyAfterTrialAndNotInTrial_returnsTrue(
         self, mock_is_in_coop_trial, mock_get_subscriptions_in_trial_period
     ):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, True)
@@ -160,42 +160,42 @@ class TestMemberNumbersService(TapirIntegrationTest):
         mock_get_subscriptions_in_trial_period.return_value = []
         member = self._create_member_without_number()
 
-        self.assertTrue(MemberNumberService.should_assign_member_no(member))
+        self.assertTrue(MemberNumberService.should_assign_member_number(member, cache={}))
 
     # ------------------------------------------------------------------ #
-    # assign_member_no_if_eligible
+    # assign_member_number_if_eligible
     # ------------------------------------------------------------------ #
 
-    def test_assignMemberNoIfEligible_eligible_assignsNumberAndReturnsTrue(self):
+    def test_assignMemberNumberIfEligible_eligible_assignsNumberAndReturnsTrue(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1)
         member = self._create_member_without_number()
 
-        result = MemberNumberService.assign_member_no_if_eligible(member)
+        result = MemberNumberService.assign_member_number_if_eligible(member, cache={})
 
         self.assertTrue(result)
         self.assertIsNotNone(member.member_no)
         member.refresh_from_db()
         self.assertEqual(1, member.member_no)
 
-    def test_assignMemberNoIfEligible_notEligible_doesNothingAndReturnsFalse(self):
+    def test_assignMemberNumberIfEligible_notEligible_doesNothingAndReturnsFalse(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
         member = MemberFactory.create(member_no=5)
 
-        result = MemberNumberService.assign_member_no_if_eligible(member)
+        result = MemberNumberService.assign_member_number_if_eligible(member, cache={})
 
         self.assertFalse(result)
         member.refresh_from_db()
         self.assertEqual(5, member.member_no)
 
-    def test_assignMemberNoIfEligible_respectsStartValue_usesStartValueAsLowerBound(
+    def test_assignMemberNumberIfEligible_respectsStartValue_usesStartValueAsLowerBound(
         self,
     ):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, False)
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 500)
         member = self._create_member_without_number()
 
-        result = MemberNumberService.assign_member_no_if_eligible(member)
+        result = MemberNumberService.assign_member_number_if_eligible(member, cache={})
 
         self.assertTrue(result)
         member.refresh_from_db()

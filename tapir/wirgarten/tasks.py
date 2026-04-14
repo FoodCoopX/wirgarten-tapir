@@ -183,7 +183,7 @@ def generate_member_numbers(print_results=True, cache: dict = None):
                 continue
 
         with transaction.atomic():
-            if not MemberNumberService.assign_member_no_if_eligible(
+            if not MemberNumberService.assign_member_number_if_eligible(
                 member, cache=cache
             ):
                 continue

@@ -13,11 +13,15 @@ from tapir.wirgarten.utils import legal_status_is_cooperative
 
 
 class MemberNumberService:
+    @staticmethod
+    def build_formatted_number(member_number: int, prefix: str, length: int) -> str:
+        return f"{prefix}{member_number:0{length}}"
+
     @classmethod
-    def format_member_no(
-        cls, member_no: int | None, cache: dict | None = None
+    def format_member_number(
+        cls, member_number: int | None, cache: dict
     ) -> str | None:
-        if member_no is None:
+        if member_number is None:
             return None
 
         prefix = get_parameter_value(ParameterKeys.MEMBER_NUMBER_PREFIX, cache=cache)
@@ -25,11 +29,10 @@ class MemberNumberService:
             ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, cache=cache
         )
 
-        number_str = f"{member_no:0{length}}"
-        return f"{prefix}{number_str}"
+        return cls.build_formatted_number(member_number, prefix, length)
 
     @classmethod
-    def compute_next_member_no(cls, cache: dict | None = None) -> int:
+    def compute_next_member_number(cls, cache: dict) -> int:
         start_value = get_parameter_value(
             ParameterKeys.MEMBER_NUMBER_START_VALUE, cache=cache
         )
@@ -38,11 +41,8 @@ class MemberNumberService:
 
     @classmethod
     def is_member_in_subscription_or_coop_trial(
-        cls, member, cache: dict | None = None
+        cls, member, cache: dict
     ) -> bool:
-        if cache is None:
-            cache = {}
-
         if MembershipCancellationManager.is_in_coop_trial(member):
             return True
 
@@ -52,12 +52,9 @@ class MemberNumberService:
         return len(trial_subs) > 0
 
     @classmethod
-    def should_assign_member_no(cls, member, cache: dict | None = None) -> bool:
+    def should_assign_member_number(cls, member, cache: dict) -> bool:
         if member.member_no is not None:
             return False
-
-        if cache is None:
-            cache = {}
 
         only_after_trial = get_parameter_value(
             ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, cache=cache
@@ -71,10 +68,10 @@ class MemberNumberService:
         return not cls.is_member_in_subscription_or_coop_trial(member, cache=cache)
 
     @classmethod
-    def assign_member_no_if_eligible(cls, member, cache: dict | None = None) -> bool:
-        if not cls.should_assign_member_no(member, cache=cache):
+    def assign_member_number_if_eligible(cls, member, cache: dict) -> bool:
+        if not cls.should_assign_member_number(member, cache=cache):
             return False
 
-        member.member_no = cls.compute_next_member_no(cache=cache)
+        member.member_no = cls.compute_next_member_number(cache=cache)
         member.save()
         return True
