@@ -169,7 +169,9 @@ def export_coop_member_list(request, **kwargs):
         ).order_by("timestamp")
 
         data = {
-            KEY_MEMBER_NO: MemberNumberService.format_member_number(entry.member_no, cache=cache),
+            KEY_MEMBER_NO: MemberNumberService.format_member_number(
+                entry.member_no, cache=cache
+            ),
             KEY_FIRST_NAME: entry.first_name,
             KEY_LAST_NAME: entry.last_name,
             KEY_ADDRESS: entry.street,
@@ -317,7 +319,9 @@ class ExportMembersView(View):
         for member in queryset:
             writer.writerow(
                 [
-                    MemberNumberService.format_member_number(member.member_no, cache=self.cache),
+                    MemberNumberService.format_member_number(
+                        member.member_no, cache=self.cache
+                    ),
                     member.first_name,
                     member.last_name,
                     member.email,

@@ -18,9 +18,7 @@ class MemberNumberPreviewView(PermissionRequiredMixin, View):
         try:
             length = int(request.GET.get("length", "0"))
         except (ValueError, TypeError):
-            return JsonResponse(
-                {"error": "Ungültiger Wert für 'length'."}, status=400
-            )
+            return JsonResponse({"error": "Ungültiger Wert für 'length'."}, status=400)
         example_numbers = [17, 1234, 123456]
         previews = [
             MemberNumberService.build_formatted_number(n, prefix, max(length, 0))

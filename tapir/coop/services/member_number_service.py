@@ -18,9 +18,7 @@ class MemberNumberService:
         return f"{prefix}{member_number:0{length}}"
 
     @classmethod
-    def format_member_number(
-        cls, member_number: int | None, cache: dict
-    ) -> str | None:
+    def format_member_number(cls, member_number: int | None, cache: dict) -> str | None:
         if member_number is None:
             return None
 
@@ -40,9 +38,7 @@ class MemberNumberService:
         return max(start_value, max_existing + 1)
 
     @classmethod
-    def is_member_in_subscription_or_coop_trial(
-        cls, member, cache: dict
-    ) -> bool:
+    def is_member_in_subscription_or_coop_trial(cls, member, cache: dict) -> bool:
         if MembershipCancellationManager.is_in_coop_trial(member):
             return True
 

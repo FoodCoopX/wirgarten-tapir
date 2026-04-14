@@ -139,7 +139,9 @@ class MemberColumnProvider:
 
     @classmethod
     def get_value_member_number(cls, member: Member, _, __):
-        return MemberNumberService.format_member_number(member.member_no, cache={}) or ""
+        return (
+            MemberNumberService.format_member_number(member.member_no, cache={}) or ""
+        )
 
     @classmethod
     def get_value_member_email_address(cls, member: Member, _, __):
