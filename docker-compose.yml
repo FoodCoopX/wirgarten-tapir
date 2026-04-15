@@ -48,7 +48,7 @@ services:
       context: .
       dockerfile: Dockerfile
     command: bash -c "poetry install &&
-                      poetry run celery -A tapir worker -l info"
+                      poetry run celery -A tapir worker -l info --pool=solo"
     volumes:
       - .:/app
     environment:
