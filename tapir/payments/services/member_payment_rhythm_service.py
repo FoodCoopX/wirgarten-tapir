@@ -162,6 +162,15 @@ class MemberPaymentRhythmService:
         return rhythm
 
     @classmethod
+    def get_rhythm_from_display_name(cls, display_name: str) -> str:
+        for choice in MemberPaymentRhythm.Rhythm.choices:
+            if choice[1] == display_name:
+                return choice[0]
+        raise ImproperlyConfigured(
+            f"Unknown display name for payment rhythm: {display_name}"
+        )
+
+    @classmethod
     def get_date_of_next_payment_rhythm_change(
         cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> datetime.date:
@@ -183,17 +192,18 @@ class MemberPaymentRhythmService:
         rhythm: str,
         valid_from: datetime.date,
         cache: dict,
-        actor: TapirUser,
+        actor: TapirUser | None,
     ):
-        MemberPaymentRhythmChangeLogEntry().populate_rhythm(
-            old_rhythm=MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=member, reference_date=get_today(cache=cache), cache=cache
-            ),
-            new_rhythm=rhythm,
-            valid_from=valid_from,
-            actor=actor,
-            user=member,
-        ).save()
+        if actor is not None:
+            MemberPaymentRhythmChangeLogEntry().populate_rhythm(
+                old_rhythm=MemberPaymentRhythmService.get_member_payment_rhythm(
+                    member=member, reference_date=get_today(cache=cache), cache=cache
+                ),
+                new_rhythm=rhythm,
+                valid_from=valid_from,
+                actor=actor,
+                user=member,
+            ).save()
 
         MemberPaymentRhythm.objects.filter(
             member=member, valid_from__gte=valid_from
