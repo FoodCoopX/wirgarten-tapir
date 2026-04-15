@@ -166,6 +166,7 @@ class PickListBuilder:
         subscriptions = (
             get_active_subscriptions(delivery_date, cache=cache)
             .filter(product__type_id=product_type.id)
+            .select_related("member", "product__type")
             .distinct()
         )
         subscriptions_by_pickup_location_name = {}
