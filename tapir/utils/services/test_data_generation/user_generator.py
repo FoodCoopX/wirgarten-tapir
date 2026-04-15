@@ -6,6 +6,7 @@ import random
 from math import floor
 from typing import List, Set
 
+from django.db.models import F
 from faker import Faker
 from tapir_mail.service.shortcuts import make_timezone_aware
 
@@ -132,6 +133,9 @@ class UserGenerator:
             members_that_need_a_pickup_location, organization=organization
         )
         generate_member_numbers(print_results=False)
+
+        # The creation date of subscriptions is used when generating payments , so we have to set a realistic date.
+        Subscription.objects.update(created_at=F("start_date"))
 
     @classmethod
     def generate_user(
