@@ -28,7 +28,7 @@ class TestBuildContexts(TapirIntegrationTest):
             MemberWithCoopSharesFactory.create(),
         ]
 
-        PdfExportBuilder.build_contexts(export, reference_datetime)
+        PdfExportBuilder.build_contexts(export, reference_datetime, cache={})
 
         self.assertEqual(2, mock_build_context_for_entry.call_count)
         mock_build_context_for_entry.assert_has_calls(
