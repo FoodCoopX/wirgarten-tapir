@@ -14,6 +14,9 @@ from tapir.utils.services.test_data_generation.pickup_location_generator import 
     PickupLocationGenerator,
 )
 from tapir.utils.services.test_data_generation.product_generator import ProductGenerator
+from tapir.utils.services.test_data_generation.solidarity_contribution_generator import (
+    SolidarityContributionGenerator,
+)
 from tapir.utils.services.test_data_generation.user_generator import UserGenerator
 from tapir.utils.services.test_data_generation.waiting_list_generator import (
     WaitingListGenerator,
@@ -89,6 +92,8 @@ class DataGenerator:
         JokerGenerator.generate_jokers()
         print("Creating waiting list...")
         WaitingListGenerator.generate_waiting_list(generate_test_data_for)
+        print("Creating Solidarity contributions...")
+        SolidarityContributionGenerator.generate_solidarity_contributions()
 
     @classmethod
     def generate_growing_periods(cls, generate_test_data_for: Organization):
