@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
@@ -19,7 +20,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
     PickupLocationCapacityModeShareChecker,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.constants import NO_DELIVERY
+from tapir.wirgarten.constants import NO_DELIVERY, HTML_ALLOWED_TEXT
 from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationOpeningTime,
@@ -321,7 +322,8 @@ class PickupLocationEditForm(forms.Form):
         self.fields["info"] = forms.CharField(
             label=_("Zusätzliche Informationen zur Abholung"),
             required=False,
-            help_text="z.B.: im Hinterhof",
+            help_text="z.B.: im Hinterhof. " + HTML_ALLOWED_TEXT,
+            widget=Textarea,
         )
 
         self.colspans = {
