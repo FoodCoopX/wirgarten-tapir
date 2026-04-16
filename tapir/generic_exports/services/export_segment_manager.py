@@ -1,8 +1,6 @@
 import datetime
 from dataclasses import dataclass
-from typing import Callable, List, Any
-
-from django.db.models import QuerySet
+from typing import Callable, List, Any, Iterable
 
 
 @dataclass
@@ -18,7 +16,7 @@ class ExportSegment:
     id: str
     display_name: str
     description: str
-    get_queryset: Callable[[datetime.datetime], QuerySet]
+    get_queryset: Callable[[datetime.datetime], Iterable]
     get_available_columns: Callable[[], List[ExportSegmentColumn]]
 
 
