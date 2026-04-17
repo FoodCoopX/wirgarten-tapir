@@ -14,20 +14,15 @@ from tapir.bakery.models import (
     PreferredLabel,
     StoveSession,
 )
-from tapir.bakery.utils import can_delete_instance
 
 
 class BreadLabelSerializer(serializers.ModelSerializer):
-    """Serializer for bread labels/categories"""
-
     class Meta:
         model = BreadLabel
         fields = "__all__"
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    """Serializer for ingredients"""
-
     can_be_deleted = serializers.SerializerMethodField()
 
     class Meta:
@@ -36,13 +31,10 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.BooleanField)
     def get_can_be_deleted(self, obj):
-        can_delete, _ = can_delete_instance(obj)
-        return can_delete
+        return not BreadContent.objects.filter(ingredient=obj).exists()
 
 
 class BreadContentSerializer(serializers.ModelSerializer):
-    """Serializer for bread content (ingredient amounts)"""
-
     ingredient_name = serializers.CharField(source="ingredient.name", read_only=True)
 
     class Meta:
@@ -51,8 +43,6 @@ class BreadContentSerializer(serializers.ModelSerializer):
 
 
 class BreadListSerializer(serializers.ModelSerializer):
-    """Serializer for bread list view (minimal data)"""
-
     capacity = serializers.IntegerField(read_only=True, required=False)
     delivery_count = serializers.IntegerField(read_only=True, required=False)
     available_capacity = serializers.IntegerField(read_only=True, required=False)
@@ -190,7 +180,7 @@ class PreferredBreadsBulkUpdateSerializer(serializers.Serializer):
     )
 
 
-class AbhollisteEntrySerializer(serializers.Serializer):
+class PickupListEntrySerializer(serializers.Serializer):
     member_id = serializers.CharField()
     member_name = serializers.CharField()
     total = serializers.IntegerField()
@@ -202,11 +192,11 @@ class AbhollisteEntrySerializer(serializers.Serializer):
     )
 
 
-class AbhollisteResponseSerializer(serializers.Serializer):
+class PickupListResponseSerializer(serializers.Serializer):
     bread_names = serializers.ListField(child=serializers.CharField())
     bread_totals = serializers.DictField(child=serializers.IntegerField())
     grand_total = serializers.IntegerField()
-    entries = AbhollisteEntrySerializer(many=True)
+    entries = PickupListEntrySerializer(many=True)
 
 
 class BreadCapacityUpdateItemSerializer(serializers.Serializer):

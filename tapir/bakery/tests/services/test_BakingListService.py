@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from tapir.bakery.services.backliste_service import BacklisteService
+from tapir.bakery.services.baking_list_service import BakingListService
 from tapir.bakery.tests.factories import (
     BreadFactory,
     BreadsPerPickupLocationPerWeekFactory,
@@ -11,7 +11,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_ke
 
 
 @patch("tapir.wirgarten.tests.factories.KeycloakUserManager.get_keycloak_client")
-class TestBacklisteService(TapirIntegrationTest):
+class TestBakingListService(TapirIntegrationTest):
     YEAR = 2026
     WEEK = 11
     DAY = 3
@@ -24,11 +24,11 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── No data ──────────────────────────────────────────────────────
 
-    def test_getBackliste_noData_returnsEmptyResult(self, mock_kc):
+    def test_getBakingList_noData_returnsEmptyResult(self, mock_kc):
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -40,7 +40,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Deliveries only (no baking) ─────────────────────────────────
 
-    def test_getBackliste_deliveriesOnly_showsDeliveriesAndZeroBaked(self, mock_kc):
+    def test_getBakingList_deliveriesOnly_showsDeliveriesAndZeroBaked(self, mock_kc):
         pl = PickupLocationFactory.create()
 
         BreadsPerPickupLocationPerWeekFactory.create(
@@ -52,11 +52,11 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService,
+            BakingListService,
             "get_pickup_location_ids_for_day",
             return_value=[pl.id],
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -71,7 +71,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Baking only (no deliveries) ─────────────────────────────────
 
-    def test_getBackliste_bakingOnly_showsBakedAndZeroDeliveries(self, mock_kc):
+    def test_getBakingList_bakingOnly_showsBakedAndZeroDeliveries(self, mock_kc):
         StoveSessionFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
@@ -83,9 +83,9 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -99,7 +99,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Deliveries + baking combined ────────────────────────────────
 
-    def test_getBackliste_deliveriesAndBaking_calculatesExtraCorrectly(self, mock_kc):
+    def test_getBakingList_deliveriesAndBaking_calculatesExtraCorrectly(self, mock_kc):
         pl = PickupLocationFactory.create()
 
         BreadsPerPickupLocationPerWeekFactory.create(
@@ -121,11 +121,11 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService,
+            BakingListService,
             "get_pickup_location_ids_for_day",
             return_value=[pl.id],
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -140,7 +140,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Multiple breads ─────────────────────────────────────────────
 
-    def test_getBackliste_multipleBreads_allAreListed(self, mock_kc):
+    def test_getBakingList_multipleBreads_allAreListed(self, mock_kc):
         pl = PickupLocationFactory.create()
 
         BreadsPerPickupLocationPerWeekFactory.create(
@@ -178,11 +178,11 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService,
+            BakingListService,
             "get_pickup_location_ids_for_day",
             return_value=[pl.id],
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -191,7 +191,7 @@ class TestBacklisteService(TapirIntegrationTest):
         self.assertEqual(result["total_baked"], 10)
         self.assertEqual(result["total_extra"], 2)
 
-    def test_getBackliste_multipleBreads_sortedAlphabetically(self, mock_kc):
+    def test_getBakingList_multipleBreads_sortedAlphabetically(self, mock_kc):
         pl = PickupLocationFactory.create()
 
         BreadsPerPickupLocationPerWeekFactory.create(
@@ -210,11 +210,11 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService,
+            BakingListService,
             "get_pickup_location_ids_for_day",
             return_value=[pl.id],
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -223,7 +223,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Multiple pickup locations for same day ──────────────────────
 
-    def test_getBackliste_multiplePickupLocationsForSameDay_sumsDeliveries(
+    def test_getBakingList_multiplePickupLocationsForSameDay_sumsDeliveries(
         self, mock_kc
     ):
         pl1 = PickupLocationFactory.create()
@@ -245,11 +245,11 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService,
+            BakingListService,
             "get_pickup_location_ids_for_day",
             return_value=[pl1.id, pl2.id],
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -258,7 +258,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Pickup location on different day is excluded ────────────────
 
-    def test_getBackliste_pickupLocationOnDifferentDay_excluded(self, mock_kc):
+    def test_getBakingList_pickupLocationOnDifferentDay_excluded(self, mock_kc):
         pl = PickupLocationFactory.create()
 
         BreadsPerPickupLocationPerWeekFactory.create(
@@ -271,9 +271,9 @@ class TestBacklisteService(TapirIntegrationTest):
 
         # Return empty list — this pickup location is NOT for self.DAY
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -282,7 +282,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Stove sessions on different day excluded ────────────────────
 
-    def test_getBackliste_stoveSessionOnDifferentDay_excluded(self, mock_kc):
+    def test_getBakingList_stoveSessionOnDifferentDay_excluded(self, mock_kc):
         other_day = self.DAY + 1 if self.DAY < 6 else 0
 
         StoveSessionFactory.create(
@@ -296,9 +296,9 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -307,7 +307,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Stove sessions on different week excluded ───────────────────
 
-    def test_getBackliste_stoveSessionOnDifferentWeek_excluded(self, mock_kc):
+    def test_getBakingList_stoveSessionOnDifferentWeek_excluded(self, mock_kc):
         StoveSessionFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK + 1,
@@ -319,9 +319,9 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -330,7 +330,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Stove session structure ─────────────────────────────────────
 
-    def test_getBackliste_singleStoveSession_returnsCorrectStructure(self, mock_kc):
+    def test_getBakingList_singleStoveSession_returnsCorrectStructure(self, mock_kc):
         StoveSessionFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
@@ -351,9 +351,9 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -368,7 +368,7 @@ class TestBacklisteService(TapirIntegrationTest):
         self.assertEqual(session["layers"][1]["bread_name"], "Dinkelkruste")
         self.assertEqual(session["layers"][1]["quantity"], 4)
 
-    def test_getBackliste_multipleStoveSessions_sortedBySessionNumber(self, mock_kc):
+    def test_getBakingList_multipleStoveSessions_sortedBySessionNumber(self, mock_kc):
         StoveSessionFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
@@ -389,9 +389,9 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -399,7 +399,7 @@ class TestBacklisteService(TapirIntegrationTest):
         self.assertEqual(result["stove_sessions"][0]["session"], 1)
         self.assertEqual(result["stove_sessions"][1]["session"], 2)
 
-    def test_getBackliste_stoveSessionLayers_sortedByLayerNumber(self, mock_kc):
+    def test_getBakingList_stoveSessionLayers_sortedByLayerNumber(self, mock_kc):
         StoveSessionFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
@@ -420,9 +420,9 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -432,7 +432,7 @@ class TestBacklisteService(TapirIntegrationTest):
 
     # ── Multiple stove sessions sum baked totals ────────────────────
 
-    def test_getBackliste_multipleSessions_bakeTotalsSumCorrectly(self, mock_kc):
+    def test_getBakingList_multipleSessions_bakeTotalsSumCorrectly(self, mock_kc):
         StoveSessionFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
@@ -453,9 +453,9 @@ class TestBacklisteService(TapirIntegrationTest):
         )
 
         with patch.object(
-            BacklisteService, "get_pickup_location_ids_for_day", return_value=[]
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
-            result = BacklisteService.get_backliste(
+            result = BakingListService.get_baking_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 

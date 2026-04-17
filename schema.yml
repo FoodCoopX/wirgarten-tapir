@@ -3,12 +3,12 @@ info:
   title: ''
   version: 0.0.0
 paths:
-  /bakery/abholliste/:
+  /bakery/pickup-list/:
     get:
-      operationId: bakery_abholliste_retrieve
+      operationId: bakery_pickup_list_retrieve
       description: Returns a list of members with their bread deliveries for a specific
         week and pickup location. Includes delivery counts and preferred bread indicators.
-      summary: Get Abholliste for a specific pickup location
+      summary: Get pickup list for a specific pickup location
       parameters:
       - in: query
         name: delivery_week
@@ -36,7 +36,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AbhollisteResponse'
+                $ref: '#/components/schemas/PickupListResponse'
           description: ''
   /bakery/api/bakery/solver/apply/:
     post:
@@ -7271,7 +7271,7 @@ paths:
           description: No response body
 components:
   schemas:
-    AbhollisteEntry:
+    PickupListEntry:
       type: object
       properties:
         member_id:
@@ -7305,7 +7305,7 @@ components:
       - member_name
       - total
       - total_assigned
-    AbhollisteResponse:
+    PickupListResponse:
       type: object
       properties:
         bread_names:
@@ -7321,7 +7321,7 @@ components:
         entries:
           type: array
           items:
-            $ref: '#/components/schemas/AbhollisteEntry'
+            $ref: '#/components/schemas/PickupListEntry'
       required:
       - bread_names
       - bread_totals

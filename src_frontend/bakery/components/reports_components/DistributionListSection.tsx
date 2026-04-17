@@ -9,7 +9,7 @@ interface LocationTotals {
   totalExtra: number;
 }
 
-interface VerteillisteSectionProps {
+interface DistributionListSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   isLoading: boolean;
@@ -22,7 +22,7 @@ interface VerteillisteSectionProps {
   onEmail: () => void;
 }
 
-export const VerteillisteSection: React.FC<VerteillisteSectionProps> = ({
+export const DistributionListSection: React.FC<DistributionListSectionProps> = ({
   isOpen, onToggle, isLoading, hasPreview, hasSolverResults,
   locationBreads, locationTotals, distBreadNames, pdfUrl, onEmail,
 }) => {

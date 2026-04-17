@@ -3,7 +3,7 @@
 {% block header %}{% endblock %}
 
 {% block content %}
-{% for item in all_abhollisten %}
+{% for item in all_pickup_lists %}
 <div {% if not forloop.first %}style="page-break-before: always;"{% endif %}>
   <div class="report-header"><h1>{{ item.pickup_location_name }}</h1>
  <h1>Abhol-Liste - KW {{ week }}</h1>
@@ -12,7 +12,7 @@
 </div>
 
   {% with bread_names=item.bread_names entries=item.entries bread_totals=item.bread_totals grand_total=item.grand_total %}
-    {% include "bakery/pdfs/_abholliste_table.html" %}
+    {% include "bakery/pdfs/_pickup_list_table.html" %}
   {% endwith %}
 </div>
 {% endfor %}

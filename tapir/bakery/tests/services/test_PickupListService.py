@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from tapir.bakery.services.abholliste_service import AbhollisteService
+from tapir.bakery.services.pickup_list_service import PickupListService
 from tapir.bakery.tests.factories import (
     BreadDeliveryFactory,
     BreadFactory,
@@ -16,7 +16,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_ke
 
 
 @patch("tapir.wirgarten.tests.factories.KeycloakUserManager.get_keycloak_client")
-class TestAbhollisteService(TapirIntegrationTest):
+class TestPickupListService(TapirIntegrationTest):
     YEAR = 2026
     WEEK = 11
 
@@ -43,8 +43,8 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── No data ──────────────────────────────────────────────────────
 
-    def test_getAbholliste_noDeliveriesExist_returnsEmptyResult(self, mock_kc):
-        result = AbhollisteService.get_abholliste(
+    def test_getPickupList_noDeliveriesExist_returnsEmptyResult(self, mock_kc):
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -57,11 +57,11 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Single delivery ──────────────────────────────────────────────
 
-    def test_getAbholliste_oneDeliveryWithBread_returnsCorrectCounts(self, mock_kc):
+    def test_getPickupList_oneDeliveryWithBread_returnsCorrectCounts(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         self._create_delivery(subscription, bread=self.roggenbrot)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -76,7 +76,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self.assertEqual(result["grand_total"], 1)
         self.assertEqual(result["bread_totals"]["Roggenbrot"], 1)
 
-    def test_getAbholliste_deliveryWithNoBreadAssigned_countsTotalButNotAssigned(
+    def test_getPickupList_deliveryWithNoBreadAssigned_countsTotalButNotAssigned(
         self, mock_kc
     ):
         _member, subscription = self._create_member_with_subscription(
@@ -84,7 +84,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         )
         self._create_delivery(subscription, bread=None)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -98,7 +98,7 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Multiple members / breads ────────────────────────────────────
 
-    def test_getAbholliste_multipleMembersMultipleBreads_totalsAreCorrect(
+    def test_getPickupList_multipleMembersMultipleBreads_totalsAreCorrect(
         self, mock_kc
     ):
         _anna, sub_anna = self._create_member_with_subscription(
@@ -113,7 +113,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self._create_delivery(sub_ben, bread=self.roggenbrot)
         self._create_delivery(sub_ben, bread=self.roggenbrot)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -126,7 +126,7 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Sorting ──────────────────────────────────────────────────────
 
-    def test_getAbholliste_multipleMembers_entriesSortedByMemberName(self, mock_kc):
+    def test_getPickupList_multipleMembers_entriesSortedByMemberName(self, mock_kc):
         _ben, sub_ben = self._create_member_with_subscription(
             first_name="Ben", last_name="Schmidt"
         )
@@ -137,7 +137,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self._create_delivery(sub_ben, bread=self.roggenbrot)
         self._create_delivery(sub_anna, bread=self.dinkelkruste)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -146,12 +146,12 @@ class TestAbhollisteService(TapirIntegrationTest):
         names = [e["member_name"] for e in result["entries"]]
         self.assertEqual(names, sorted(names, key=str.lower))
 
-    def test_getAbholliste_breadNamesAreSortedAlphabetically(self, mock_kc):
+    def test_getPickupList_breadNamesAreSortedAlphabetically(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         self._create_delivery(subscription, bread=self.roggenbrot)
         self._create_delivery(subscription, bread=self.dinkelkruste)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -161,7 +161,7 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Display name ─────────────────────────────────────────────────
 
-    def test_getAbholliste_memberWithLastName_displaysInitialAndFirstName(
+    def test_getPickupList_memberWithLastName_displaysInitialAndFirstName(
         self, mock_kc
     ):
         _member, subscription = self._create_member_with_subscription(
@@ -169,7 +169,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         )
         self._create_delivery(subscription, bread=self.roggenbrot)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -177,13 +177,13 @@ class TestAbhollisteService(TapirIntegrationTest):
 
         self.assertEqual(result["entries"][0]["member_name"], "M., Anna")
 
-    def test_getAbholliste_memberWithNoLastName_displaysFirstNameOnly(self, mock_kc):
+    def test_getPickupList_memberWithNoLastName_displaysFirstNameOnly(self, mock_kc):
         _member, subscription = self._create_member_with_subscription(
             first_name="Anna", last_name=""
         )
         self._create_delivery(subscription, bread=self.roggenbrot)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -191,13 +191,13 @@ class TestAbhollisteService(TapirIntegrationTest):
 
         self.assertEqual(result["entries"][0]["member_name"], "Anna")
 
-    def test_getAbholliste_memberWithNoName_displaysUnbekannt(self, mock_kc):
+    def test_getPickupList_memberWithNoName_displaysUnbekannt(self, mock_kc):
         _member, subscription = self._create_member_with_subscription(
             first_name="", last_name=""
         )
         self._create_delivery(subscription, bread=self.roggenbrot)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -207,7 +207,7 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Preferred breads ─────────────────────────────────────────────
 
-    def test_getAbholliste_preferredBreadNotDelivered_breadPreferredIsTrue(
+    def test_getPickupList_preferredBreadNotDelivered_breadPreferredIsTrue(
         self, mock_kc
     ):
         member, subscription = self._create_member_with_subscription()
@@ -223,7 +223,7 @@ class TestAbhollisteService(TapirIntegrationTest):
             bread=self.dinkelkruste,
         )
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -233,7 +233,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self.assertTrue(entry["bread_preferred"]["Dinkelkruste"])
         self.assertFalse(entry["bread_preferred"]["Roggenbrot"])
 
-    def test_getAbholliste_preferredBreadIsDelivered_breadPreferredIsFalse(
+    def test_getPickupList_preferredBreadIsDelivered_breadPreferredIsFalse(
         self, mock_kc
     ):
         member, subscription = self._create_member_with_subscription()
@@ -242,7 +242,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         pref = PreferredBreadFactory.create(member=member)
         pref.breads.add(self.roggenbrot)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -251,7 +251,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         entry = result["entries"][0]
         self.assertFalse(entry["bread_preferred"]["Roggenbrot"])
 
-    def test_getAbholliste_memberWithNoPreferences_allBreadPreferredAreFalse(
+    def test_getPickupList_memberWithNoPreferences_allBreadPreferredAreFalse(
         self, mock_kc
     ):
         _member, subscription = self._create_member_with_subscription()
@@ -264,7 +264,7 @@ class TestAbhollisteService(TapirIntegrationTest):
             bread=self.dinkelkruste,
         )
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -274,7 +274,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self.assertFalse(entry["bread_preferred"]["Roggenbrot"])
         self.assertFalse(entry["bread_preferred"]["Dinkelkruste"])
 
-    def test_getAbholliste_memberPrefersMultipleBreads_onlyUndeliveredShowAsPreferred(
+    def test_getPickupList_memberPrefersMultipleBreads_onlyUndeliveredShowAsPreferred(
         self, mock_kc
     ):
         member, subscription = self._create_member_with_subscription()
@@ -297,7 +297,7 @@ class TestAbhollisteService(TapirIntegrationTest):
             bread=vollkornbrot,
         )
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -312,7 +312,7 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Bread names ──────────────────────────────────────────────────
 
-    def test_getAbholliste_breadNamesIncludeAssignedAndDelivered(self, mock_kc):
+    def test_getPickupList_breadNamesIncludeAssignedAndDelivered(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         self._create_delivery(subscription, bread=self.roggenbrot)
 
@@ -323,7 +323,7 @@ class TestAbhollisteService(TapirIntegrationTest):
             bread=self.dinkelkruste,
         )
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -332,7 +332,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self.assertIn("Roggenbrot", result["bread_names"])
         self.assertIn("Dinkelkruste", result["bread_names"])
 
-    def test_getAbholliste_onlyAssignedBreadsNoDeliveries_breadNamesStillPresent(
+    def test_getPickupList_onlyAssignedBreadsNoDeliveries_breadNamesStillPresent(
         self, mock_kc
     ):
         BreadsPerPickupLocationPerWeekFactory.create(
@@ -342,7 +342,7 @@ class TestAbhollisteService(TapirIntegrationTest):
             bread=self.roggenbrot,
         )
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -354,7 +354,7 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Filtering ────────────────────────────────────────────────────
 
-    def test_getAbholliste_differentPickupLocation_doesNotIncludeThoseDeliveries(
+    def test_getPickupList_differentPickupLocation_doesNotIncludeThoseDeliveries(
         self, mock_kc
     ):
         other_location = PickupLocationFactory.create()
@@ -368,7 +368,7 @@ class TestAbhollisteService(TapirIntegrationTest):
             bread=self.roggenbrot,
         )
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -377,7 +377,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self.assertEqual(result["entries"], [])
         self.assertEqual(result["grand_total"], 0)
 
-    def test_getAbholliste_differentWeek_doesNotIncludeThoseDeliveries(self, mock_kc):
+    def test_getPickupList_differentWeek_doesNotIncludeThoseDeliveries(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         BreadDeliveryFactory.create(
             year=self.YEAR,
@@ -387,7 +387,7 @@ class TestAbhollisteService(TapirIntegrationTest):
             bread=self.roggenbrot,
         )
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -396,7 +396,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self.assertEqual(result["entries"], [])
         self.assertEqual(result["grand_total"], 0)
 
-    def test_getAbholliste_differentYear_doesNotIncludeThoseDeliveries(self, mock_kc):
+    def test_getPickupList_differentYear_doesNotIncludeThoseDeliveries(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         BreadDeliveryFactory.create(
             year=2025,
@@ -406,7 +406,7 @@ class TestAbhollisteService(TapirIntegrationTest):
             bread=self.roggenbrot,
         )
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -417,12 +417,12 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Breads list per entry ────────────────────────────────────────
 
-    def test_getAbholliste_sameMemberMultipleBreads_breadsListIsComplete(self, mock_kc):
+    def test_getPickupList_sameMemberMultipleBreads_breadsListIsComplete(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         delivery1 = self._create_delivery(subscription, bread=self.roggenbrot)
         delivery2 = self._create_delivery(subscription, bread=self.dinkelkruste)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -439,12 +439,12 @@ class TestAbhollisteService(TapirIntegrationTest):
         bread_names = {b["bread_name"] for b in bread_list}
         self.assertEqual(bread_names, {"Roggenbrot", "Dinkelkruste"})
 
-    def test_getAbholliste_unassignedDelivery_breadsListDoesNotIncludeIt(self, mock_kc):
+    def test_getPickupList_unassignedDelivery_breadsListDoesNotIncludeIt(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         assigned = self._create_delivery(subscription, bread=self.roggenbrot)
         self._create_delivery(subscription, bread=None)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -457,12 +457,12 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Same bread multiple times ────────────────────────────────────
 
-    def test_getAbholliste_sameBreadTwice_breadCountIsTwo(self, mock_kc):
+    def test_getPickupList_sameBreadTwice_breadCountIsTwo(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         self._create_delivery(subscription, bread=self.roggenbrot)
         self._create_delivery(subscription, bread=self.roggenbrot)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -476,11 +476,11 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Member ID ────────────────────────────────────────────────────
 
-    def test_getAbholliste_entryContainsCorrectMemberId(self, mock_kc):
+    def test_getPickupList_entryContainsCorrectMemberId(self, mock_kc):
         member, subscription = self._create_member_with_subscription()
         self._create_delivery(subscription, bread=self.roggenbrot)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,
@@ -490,7 +490,7 @@ class TestAbhollisteService(TapirIntegrationTest):
 
     # ── Mixed assigned and unassigned across members ─────────────────
 
-    def test_getAbholliste_mixedAssignedAndUnassigned_grandTotalCountsAll(
+    def test_getPickupList_mixedAssignedAndUnassigned_grandTotalCountsAll(
         self, mock_kc
     ):
         _anna, sub_anna = self._create_member_with_subscription(
@@ -504,7 +504,7 @@ class TestAbhollisteService(TapirIntegrationTest):
         self._create_delivery(sub_anna, bread=None)
         self._create_delivery(sub_ben, bread=self.dinkelkruste)
 
-        result = AbhollisteService.get_abholliste(
+        result = PickupListService.get_pickup_list(
             year=self.YEAR,
             week=self.WEEK,
             pickup_location_id=self.pickup_location.id,

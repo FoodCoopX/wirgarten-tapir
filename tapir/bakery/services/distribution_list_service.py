@@ -7,9 +7,9 @@ from tapir.pickup_locations.models import PickupLocation
 from tapir.wirgarten.models import PickupLocationOpeningTime
 
 
-class VerteillisteService:
+class DistributionListService:
     @staticmethod
-    def get_verteilliste(year: int, week: int, day: int) -> dict[str, Any]:
+    def get_distribution_list(year: int, week: int, day: int) -> dict[str, Any]:
         # Efficient query: get pickup locations with their first delivery day
         first_day_subquery = (
             PickupLocationOpeningTime.objects.filter(pickup_location=OuterRef("pk"))

@@ -21,22 +21,22 @@ class TestPdfViews(TapirIntegrationTest):
         self.member = MemberFactory.create(is_superuser=True)
         self.client.force_login(self.member)
 
-    def test_backliste_unauthenticated_redirects(self):
+    def test_baking_list_unauthenticated_redirects(self):
         self.client.logout()
         url = reverse(
-            "bakery:backliste_pdf", kwargs={"year": YEAR, "week": WEEK, "day": DAY}
+            "bakery:baking_list_pdf", kwargs={"year": YEAR, "week": WEEK, "day": DAY}
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
 
     @patch("tapir.bakery.views_pdfs.weasyprint.HTML")
-    @patch("tapir.bakery.views_pdfs.BacklisteService.get_backliste")
-    def test_backliste_returns_pdf(self, mock_service, mock_html):
+    @patch("tapir.bakery.views_pdfs.BakingListService.get_baking_list")
+    def test_baking_list_returns_pdf(self, mock_service, mock_html):
         mock_service.return_value = {"sessions": [], "bread_quantities": []}
         mock_html.return_value.write_pdf.return_value = b"%PDF-fake"
 
         url = reverse(
-            "bakery:backliste_pdf", kwargs={"year": YEAR, "week": WEEK, "day": DAY}
+            "bakery:baking_list_pdf", kwargs={"year": YEAR, "week": WEEK, "day": DAY}
         )
         response = self.client.get(url)
 
@@ -44,9 +44,9 @@ class TestPdfViews(TapirIntegrationTest):
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertIn("Backliste", response["Content-Disposition"])
 
-    def test_abholliste_invalidPickupLocation_returns404(self):
+    def test_pickup_list_invalidPickupLocation_returns404(self):
         url = reverse(
-            "bakery:abholliste_pdf",
+            "bakery:pickup_list_pdf",
             kwargs={
                 "year": YEAR,
                 "week": WEEK,
@@ -58,9 +58,9 @@ class TestPdfViews(TapirIntegrationTest):
         self.assertEqual(response.status_code, 404)
 
     @patch("tapir.bakery.views_pdfs.weasyprint.HTML")
-    def test_abhollisten_all_noData_returns404(self, mock_html):
+    def test_pickup_lists_all_noData_returns404(self, mock_html):
         url = reverse(
-            "bakery:pdf_abhollisten_all",
+            "bakery:pdf_pickup_lists_all",
             kwargs={"year": YEAR, "week": WEEK, "day": DAY},
         )
         response = self.client.get(url)

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { BakeryApi, PickupLocationsApi } from '../../api-client';
 import { useApi } from '../../hooks/useApi';
-import type { AbhollisteResponse, PickupLocation, SolverPreviewDetailResponse } from '../../api-client/models';
+import type { PickupListResponse, PickupLocation, SolverPreviewDetailResponse } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import { RunSolverCard, MetricsCard, YearWeekSelectorCard } from '../components/cards';
 import {
   SectionToggle,
-  BacklisteSection,
-  OfenplanSection,
-  VerteillisteSection,
-  AbhollisteSection,
+  BakingListSection,
+  OvenPlanSection,
+  DistributionListSection,
+  PickupListSection,
 } from '../components/reports_components';
 import '../styles/bakery_styles.css';
 
@@ -55,9 +55,9 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const [breadCountsByDay, setBreadCountsByDay] = useState<Record<number, BreadCount[]>>({});
   const [stoveSessionsByDay, setStoveSessionsByDay] = useState<Record<number, StoveSessionGrouped[]>>({});
   const [previewByDay, setPreviewByDay] = useState<Record<number, SolverPreviewDetailResponse>>({});
-  const [abhollisteByDayByLocation, setAbhollisteByDayByLocation] = useState<Record<number, Record<string, AbhollisteResponse>>>({});
+  const [pickupListByDayByLocation, setPickupListByDayByLocation] = useState<Record<number, Record<string, PickupListResponse>>>({});
   const [selectedPickupLocationByDay, setSelectedPickupLocationByDay] = useState<Record<number, string>>({});
-  const [abhollisteLoadingByDay, setAbhollisteLoadingByDay] = useState<Record<number, boolean>>({});
+  const [pickupListLoadingByDay, setPickupListLoadingByDay] = useState<Record<number, boolean>>({});
   const [checkedByDay, setCheckedByDay] = useState<Record<number, Record<string, boolean>>>({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
@@ -74,7 +74,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const handleApplied = () => {
     setPreviewByDay({});
     loadSolverResults();
-    loadAllAbhollisten();
+    loadAllPickupLists();
   };
 
   const handlePickupLocationChange = (day: number, id: string) => {
@@ -98,17 +98,17 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     setPreviewByDay({});
     setBreadCountsByDay({});
     setStoveSessionsByDay({});
-    setAbhollisteByDayByLocation({});
+    setPickupListByDayByLocation({});
     setSelectedPickupLocationByDay({});
     setCheckedByDay({});
     loadSolverResults();
-    loadAllAbhollisten();
+    loadAllPickupLists();
   }, [year, week, initialDataLoaded]);
 
   useEffect(() => { loadSolverResults(); }, [year, week, deliveryDays, allPickupLocations]);
 
   useEffect(() => {
-    if (deliveryDays.length > 0 && allPickupLocations.length > 0) loadAllAbhollisten();
+    if (deliveryDays.length > 0 && allPickupLocations.length > 0) loadAllPickupLists();
   }, [year, week, deliveryDays, allPickupLocations]);
 
   const loadInitialData = async () => {
@@ -165,19 +165,19 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     }
   };
 
-  const loadAllAbhollisten = async () => {
-    setAbhollisteLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: true }), {}));
-    const data: Record<number, Record<string, AbhollisteResponse>> = {};
+  const loadAllPickupLists = async () => {
+    setPickupListLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: true }), {}));
+    const data: Record<number, Record<string, PickupListResponse>> = {};
     for (const day of deliveryDays) {
       data[day] = {};
       await Promise.all(getPickupLocationsForDay(day).map(async (pl) => {
         try {
-          data[day][pl.id!] = await bakeryApi.bakeryAbhollisteRetrieve({ year, deliveryWeek: week, pickupLocationId: pl.id! });
+          data[day][pl.id!] = await bakeryApi.bakeryPickupListRetrieve({ year, deliveryWeek: week, pickupLocationId: pl.id! });
         } catch { data[day][pl.id!] = null as any; }
       }));
     }
-    setAbhollisteByDayByLocation(data);
-    setAbhollisteLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: false }), {}));
+    setPickupListByDayByLocation(data);
+    setPickupListLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: false }), {}));
   };
 
   // --- Compute derived data per day ---
@@ -210,7 +210,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       ? preview.stoveSessions.map(s => ({ session: s.session, layers: s.layers.map(l => ({ layer: l.layer, breadName: l.breadName || null, quantity: l.quantity })) }))
       : daySessions;
 
-    // Verteilliste data
+    // Distribution list data
     const locationBreads: Record<string, Record<string, { baked: number; ordered: number; extra: number }>> = {};
     const locationTotals: Record<string, { totalBaked: number; totalOrdered: number; totalExtra: number }> = {};
     const hasSolverResults = !!preview || dayCounts.length > 0;
@@ -231,12 +231,12 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         });
       }
 
-      const dayAbhollisten = abhollisteByDayByLocation[day] || {};
-      Object.entries(dayAbhollisten).forEach(([locationId, abhollisteData]) => {
-        if (!abhollisteData) return;
+      const dayPickupLists = pickupListByDayByLocation[day] || {};
+      Object.entries(dayPickupLists).forEach(([locationId, pickupListData]) => {
+        if (!pickupListData) return;
         const location = allPickupLocations.find(pl => pl.id === locationId);
         if (!location) return;
-        const bt = abhollisteData.breadTotals as unknown as Record<string, number>;
+        const bt = pickupListData.breadTotals as unknown as Record<string, number>;
         if (bt) orderedByLoc[location.name] = { ...bt };
       });
 
@@ -251,13 +251,13 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         });
       });
     } else {
-      const dayAbhollisten = abhollisteByDayByLocation[day] || {};
-      Object.entries(dayAbhollisten).forEach(([locationId, abhollisteData]) => {
-        if (!abhollisteData) return;
+      const dayPickupLists = pickupListByDayByLocation[day] || {};
+      Object.entries(dayPickupLists).forEach(([locationId, pickupListData]) => {
+        if (!pickupListData) return;
         const location = allPickupLocations.find(pl => pl.id === locationId);
         if (!location) return;
-        const bt = abhollisteData.breadTotals as unknown as Record<string, number>;
-        const grandTotal = abhollisteData.grandTotal ?? 0;
+        const bt = pickupListData.breadTotals as unknown as Record<string, number>;
+        const grandTotal = pickupListData.grandTotal ?? 0;
         locationBreads[location.name] = {};
         let locTotalOrdered = 0;
         if (bt) {
@@ -326,16 +326,16 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                   </div>
 
                   <div className="card-body">
-                    <BacklisteSection
-                      isOpen={isSectionOpen(`backliste-${day}`)}
-                      onToggle={() => toggleSection(`backliste-${day}`)}
+                    <BakingListSection
+                      isOpen={isSectionOpen(`baking-list-${day}`)}
+                      onToggle={() => toggleSection(`baking-list-${day}`)}
                       allBreadNames={d.allBreadNames}
                       breadDeliveries={d.breadDeliveries}
                       breadBaked={d.breadBaked}
                       totalDeliveries={d.totalDeliveries}
                       totalBaked={d.totalBaked}
                       totalExtra={d.totalExtra}
-                      pdfUrl={`/bakery/pdf/backliste/${year}/${week}/${day}/`}
+                      pdfUrl={`/bakery/pdf/baking-list/${year}/${week}/${day}/`}
                       hasPreview={hasPreview}
                       onEmail={() => {}}
                     />
@@ -356,40 +356,40 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                     </div>
                     <hr />
 
-                    <OfenplanSection
-                      isOpen={isSectionOpen(`ofenplan-${day}`)}
-                      onToggle={() => toggleSection(`ofenplan-${day}`)}
+                    <OvenPlanSection
+                      isOpen={isSectionOpen(`oven-plan-${day}`)}
+                      onToggle={() => toggleSection(`oven-plan-${day}`)}
                       displaySessions={d.displaySessions}
                     />
                     <hr />
 
-                    <VerteillisteSection
-                      isOpen={isSectionOpen(`verteilliste-${day}`)}
-                      onToggle={() => toggleSection(`verteilliste-${day}`)}
-                      isLoading={abhollisteLoadingByDay[day] || false}
+                    <DistributionListSection
+                      isOpen={isSectionOpen(`distribution-list-${day}`)}
+                      onToggle={() => toggleSection(`distribution-list-${day}`)}
+                      isLoading={pickupListLoadingByDay[day] || false}
                       hasPreview={hasPreview}
                       hasSolverResults={d.hasSolverResults}
                       locationBreads={d.locationBreads}
                       locationTotals={d.locationTotals}
                       distBreadNames={d.distBreadNames}
-                      pdfUrl={`/bakery/pdf/verteilliste/${year}/${week}/${day}/`}
+                      pdfUrl={`/bakery/pdf/distribution-list/${year}/${week}/${day}/`}
                       onEmail={() => {}}
                     />
                     <hr />
 
-                    <AbhollisteSection
-                      isOpen={isSectionOpen(`abholliste-${day}`)}
-                      onToggle={() => toggleSection(`abholliste-${day}`)}
-                      isLoading={abhollisteLoadingByDay[day] || false}
+                    <PickupListSection
+                      isOpen={isSectionOpen(`pickup-list-${day}`)}
+                      onToggle={() => toggleSection(`pickup-list-${day}`)}
+                      isLoading={pickupListLoadingByDay[day] || false}
                       hasPreview={hasPreview}
                       dayPickupLocations={getPickupLocationsForDay(day)}
                       selectedLocation={selectedLocation}
                       onPickupLocationChange={(id) => handlePickupLocationChange(day, id)}
-                      abhollisteData={abhollisteByDayByLocation[day]?.[selectedLocation] || null}
+                      pickupListData={pickupListByDayByLocation[day]?.[selectedLocation] || null}
                       checkedMembers={checkedByDay[day] || {}}
                       onCheckToggle={(memberId) => handleCheckToggle(day, memberId)}
-                      pdfUrl={selectedLocation ? `/bakery/pdf/abholliste/${year}/${week}/${day}/${selectedLocation}/` : null}
-                      allPdfUrl={`/bakery/pdf/abholliste-alle/${year}/${week}/${day}/`}
+                      pdfUrl={selectedLocation ? `/bakery/pdf/pickup-list/${year}/${week}/${day}/${selectedLocation}/` : null}
+                      allPdfUrl={`/bakery/pdf/pickup-lists-all/${year}/${week}/${day}/`}
                       onEmail={() => {}}
                     />
                   </div>

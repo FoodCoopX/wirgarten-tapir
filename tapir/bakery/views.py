@@ -17,8 +17,8 @@ from tapir.bakery.models import (
     PreferredBread,
 )
 from tapir.bakery.serializers import (
-    AbhollisteResponseSerializer,
     AvailableBreadsForDeliveryListResponseSerializer,
+    PickupListResponseSerializer,
     PreferenceSatisfactionResponseSerializer,
     SolverApplyRequestSerializer,
     SolverApplyResponseSerializer,
@@ -29,7 +29,7 @@ from tapir.bakery.serializers import (
     ToggleBreadRequestSerializer,
     ToggleBreadResponseSerializer,
 )
-from tapir.bakery.services.abholliste_service import AbhollisteService
+from tapir.bakery.services.pickup_list_service import PickupListService
 from tapir.bakery.utils import parse_week_params
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -138,11 +138,11 @@ class AvailableBreadsForDeliveryListView(APIView):
             )
 
 
-class AbhollisteView(APIView):
+class PickupListView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="Get Abholliste for a specific pickup location",
+        summary="Get pickup list for a specific pickup location",
         description="Returns a list of members with their bread deliveries for a specific week and pickup location. "
         "Includes delivery counts and preferred bread indicators.",
         parameters=[
@@ -162,7 +162,7 @@ class AbhollisteView(APIView):
                 required=True,
             ),
         ],
-        responses={200: AbhollisteResponseSerializer},
+        responses={200: PickupListResponseSerializer},
         tags=["bakery"],
     )
     def get(self, request):
@@ -174,8 +174,10 @@ class AbhollisteView(APIView):
 
         pickup_location_id = request.query_params.get("pickup_location_id")
 
-        data = AbhollisteService.get_abholliste(year, delivery_week, pickup_location_id)
-        serializer = AbhollisteResponseSerializer(data)
+        data = PickupListService.get_pickup_list(
+            year, delivery_week, pickup_location_id
+        )
+        serializer = PickupListResponseSerializer(data)
         return Response(serializer.data)
 
 

@@ -84,49 +84,7 @@ def _run_solver(
     )
     diagnostics.extend(pre_diagnostics)
 
-    pre_errors = [d for d in pre_diagnostics if d.level == "error"]
-    if pre_errors:
-        print("\n" + "=" * 80)
-        print("⚠️  PRE-SOLVE DIAGNOSTICS FOUND LIKELY ISSUES:")
-        print("=" * 80)
-        for d in pre_errors:
-            print(f"  {d}")
-        print()
-
-    # ── Debug output ──────────────────────────────────────────────────
-
     total_deliveries = sum(loc.total_deliveries for loc in pickup_locations)
-
-    print("=" * 80)
-    print("SOLVER INPUT DEBUG")
-    print("=" * 80)
-    print(f"Available breads: {len(available_breads)}")
-    for b in available_breads:
-        print(f"  - {b.name} (id={b.bread_id})")
-        print(f"    pieces_per_layer: {b.pieces_per_stove_layer}")
-        print(f"    can_span_sessions: {b.can_span_sessions}")
-        if b.fixed_pieces is not None:
-            print(f"    fixed_pieces: {b.fixed_pieces}")
-        else:
-            print(f"    min/max: {b.min_pieces}/{b.max_pieces}")
-        print(f"    min_remaining: {b.min_remaining_pieces}")
-    print(f"\nPickup locations: {len(pickup_locations)}")
-    for loc in pickup_locations:
-        print(
-            f"  - {loc.name} (id={loc.location_id}): {loc.total_deliveries} deliveries"
-        )
-        if loc.fixed_demand:
-            print(f"    Fixed demand: {loc.fixed_demand}")
-    print(f"\nTotal deliveries: {total_deliveries}")
-    print(f"Stove layers: {stove_layers}")
-
-    if member_preferences:
-        total_prefs = sum(len(mp["preferred_bread_ids"]) for mp in member_preferences)
-        print(
-            f"\nPreference data: {len(member_preferences)} members, {total_prefs} total entries"
-        )
-    else:
-        print("\nNo preference data — distribution will not be preference-aware.")
 
     # ── Build model ───────────────────────────────────────────────────
 
@@ -160,9 +118,6 @@ def _run_solver(
     collector = BreadSolutionCollector(max_solutions, make_extractor(v))
     solve_status = solver.solve(model, collector)
 
-    print(f"\nSolver status: {solver.status_name(solve_status)}")
-    print(f"Raw solutions found: {len(collector.solutions)}")
-
     # ── Handle solver status ──────────────────────────────────────────
 
     if solve_status == cp_model.INFEASIBLE:
@@ -178,7 +133,6 @@ def _run_solver(
                 ),
             )
         )
-        _print_diagnostics_summary(diagnostics)
         return [], diagnostics, "infeasible"
 
     if solve_status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
@@ -195,51 +149,20 @@ def _run_solver(
                 ),
             )
         )
-        _print_diagnostics_summary(diagnostics)
         return [], diagnostics, "error"
 
     if not collector.solutions:
-        _print_diagnostics_summary(diagnostics)
         return [], diagnostics, "no_solutions"
 
     # ── Extract & print solutions ─────────────────────────────────────
 
     solutions = collector.get_best_solutions()
-    print(f"Good distinct solutions: {len(solutions)}")
 
     if not solutions:
-        _print_diagnostics_summary(diagnostics)
         return [], diagnostics, "no_solutions"
-
-    bread_map = v["bread_map"]
-    for i, sol in enumerate(solutions):
-        print(f"\n  Solution {i}: objective={sol.get('_objective', 'N/A')}")
-        for b_id in v["bread_ids"]:
-            bq = sol["bread_quantities"][b_id]
-            rq = sol["remaining_quantities"][b_id]
-            print(
-                f"    {bread_map[b_id].name}: "
-                f"{bq} baked, {bq - rq} delivered, {rq} remaining"
-            )
-        print(f"  Sessions used: {len(sol['stove_sessions'])}")
-        for j, sess in enumerate(sol["stove_sessions"], 1):
-            layers_str = []
-            for lay_info in sess:
-                if lay_info is None:
-                    layers_str.append("empty")
-                else:
-                    b_id, qty = lay_info
-                    layers_str.append(f"{bread_map[b_id].name}×{qty}")
-            print(f"    Session {j}: {', '.join(layers_str)}")
-        if sol.get("members_with_preferences", 0) > 0:
-            met = sol["members_satisfied"]
-            total = sol["members_with_preferences"]
-            pct = (met / total * 100) if total else 0
-            print(f"  Preference satisfaction: {met}/{total} members ({pct:.1f}%)")
 
     result_status = "optimal" if solve_status == cp_model.OPTIMAL else "feasible"
 
-    _print_diagnostics_summary(diagnostics)
     return solutions, diagnostics, result_status
 
 
@@ -331,34 +254,3 @@ def solve_bread_planning_all(
         sol["diagnostics"] = diagnostics_dicts
 
     return {"solutions": solutions, "diagnostics": diagnostics_dicts}
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _print_diagnostics_summary(diagnostics: list[SolverDiagnostic]):
-    """Print diagnostics to stdout."""
-    if not diagnostics:
-        return
-    errors = [d for d in diagnostics if d.level == "error"]
-    warnings = [d for d in diagnostics if d.level == "warning"]
-    infos = [d for d in diagnostics if d.level == "info"]
-
-    print("\n" + "=" * 80)
-    print("DIAGNOSTICS SUMMARY")
-    print("=" * 80)
-    if errors:
-        print(f"\n{len(errors)} error(s):")
-        for d in errors:
-            print(f"  {d}")
-    if warnings:
-        print(f"\n{len(warnings)} warning(s):")
-        for d in warnings:
-            print(f"  {d}")
-    if infos:
-        print(f"\n{len(infos)} info(s):")
-        for d in infos:
-            print(f"  {d}")
-    print()

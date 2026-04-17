@@ -2,9 +2,9 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from tapir.bakery.views import (
-    AbhollisteView,
     AvailableBreadsForDeliveryListView,
     ConfigurationParametersView,
+    PickupListView,
     PreferenceSatisfactionMetricsView,
     PreferredBreadStatisticsView,
     SolverApplyView,
@@ -12,10 +12,10 @@ from tapir.bakery.views import (
     SolverPreviewView,
 )
 from tapir.bakery.views_pdfs import (
-    abholliste_pdf,
-    abhollisten_all_pdf,
-    backliste_pdf,
-    verteilliste_pdf,
+    baking_list_pdf,
+    distribution_list_pdf,
+    pickup_list_pdf,
+    pickup_lists_all_pdf,
 )
 from tapir.bakery.views_templates import (
     ChooseBreadsView,
@@ -45,7 +45,7 @@ urlpatterns = [
         AvailableBreadsForDeliveryListView.as_view(),
         name="breads-for-delivery-list",
     ),
-    path("abholliste/", AbhollisteView.as_view(), name="abholliste"),
+    path("pickup-list/", PickupListView.as_view(), name="pickup-list"),
     path(
         "ingredients-labels-breads/",
         IngredientsLabelsBreadsView.as_view(),
@@ -74,24 +74,24 @@ urlpatterns = [
     ),
     # PDF exports
     path(
-        "pdf/backliste/<int:year>/<int:week>/<int:day>/",
-        backliste_pdf,
-        name="backliste_pdf",
+        "pdf/baking-list/<int:year>/<int:week>/<int:day>/",
+        baking_list_pdf,
+        name="baking_list_pdf",
     ),
     path(
-        "pdf/verteilliste/<int:year>/<int:week>/<int:day>/",
-        verteilliste_pdf,
-        name="verteilliste_pdf",
+        "pdf/distribution-list/<int:year>/<int:week>/<int:day>/",
+        distribution_list_pdf,
+        name="distribution_list_pdf",
     ),
     path(
-        "pdf/abholliste/<int:year>/<int:week>/<int:day>/<str:pickup_location_id>/",
-        abholliste_pdf,
-        name="abholliste_pdf",
+        "pdf/pickup-list/<int:year>/<int:week>/<int:day>/<str:pickup_location_id>/",
+        pickup_list_pdf,
+        name="pickup_list_pdf",
     ),
     path(
-        "pdf/abholliste-alle/<int:year>/<int:week>/<int:day>/",
-        abhollisten_all_pdf,
-        name="pdf_abhollisten_all",
+        "pdf/pickup-lists-all/<int:year>/<int:week>/<int:day>/",
+        pickup_lists_all_pdf,
+        name="pdf_pickup_lists_all",
     ),
     path(
         "api/preferred-bread-statistics/",

@@ -7,13 +7,13 @@ interface StoveSessionGrouped {
   layers: { layer: number; breadName: string | null; quantity: number }[];
 }
 
-interface OfenplanSectionProps {
+interface OvenPlanSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   displaySessions: StoveSessionGrouped[];
 }
 
-export const OfenplanSection: React.FC<OfenplanSectionProps> = ({ isOpen, onToggle, displaySessions }) => (
+export const OvenPlanSection: React.FC<OvenPlanSectionProps> = ({ isOpen, onToggle, displaySessions }) => (
   <div className="mb-3">
     <SectionToggle isOpen={isOpen} onToggle={onToggle} title="Ofenplan" icon="local_fire_department" />
     <p className="text-muted small mb-2">Belegung der Ofengänge</p>

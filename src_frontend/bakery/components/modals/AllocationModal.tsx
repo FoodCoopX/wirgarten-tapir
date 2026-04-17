@@ -179,6 +179,36 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
   if (!isOpen) return null;
 
+  const sumValues = (values: string[]): number => {
+    return values.reduce((sum, val) => {
+      if (val === 'x') return Infinity;
+      if (val === '' || isNaN(Number(val))) return sum;
+      return sum + Number(val);
+    }, 0);
+  };
+
+  const getRowSum = (locationId: string): number => {
+    return sumValues(activeBreads.map(bread => allocations[locationId]?.[bread.id!] || ''));
+  };
+
+  const getColSum = (breadId: string): number => {
+    return sumValues(pickupLocations.map(location => allocations[location.id]?.[breadId] || ''));
+  };
+
+  const getTotalSum = (): number => {
+    return pickupLocations.reduce((total, location) => {
+      const locationSum = sumValues(breads.map(bread => allocations[location.id]?.[bread.id!] || ''));
+      if (locationSum === Infinity) return Infinity;
+      return total + locationSum;
+    }, 0);
+  };
+
+  const formatSum = (sum: number): string => {
+    if (sum === Infinity) return '∞';
+    if (sum === 0) return '-';
+    return String(sum);
+  };
+
   const getModalClass = () => {
     const count = activeBreads.length;
     if (count <= 2) return 'modal-lg';      // ~992px
@@ -267,12 +297,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                             </thead>
                             <tbody>
                               {pickupLocations.map(location => {
-                                const rowSum = activeBreads.reduce((sum, bread) => {
-                                  const val = allocations[location.id]?.[bread.id!] || '';
-                                  if (val === 'x') return Infinity;
-                                  if (val === '' || isNaN(Number(val))) return sum;
-                                  return sum + Number(val);
-                                }, 0);
+                                const rowSum = getRowSum(location.id);
 
                                 return (
                                   <tr key={location.id}>
@@ -298,7 +323,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                                       className="text-center align-middle fw-bold bg-bakery-cream"
                                       style={{ fontSize: '14px' }}
                                     >
-                                      {rowSum === Infinity ? '∞' : rowSum === 0 ? '-' : rowSum}
+                                      {formatSum(rowSum)}
                                     </td>
                                   </tr>
                                 );
@@ -307,39 +332,20 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
                             <tfoot>
                               <tr className="bg-bakery-cream">
                                 <td className="fw-bold bg-bakery-cream">Σ Gesamt</td>
-                                {activeBreads.map(bread => {
-                                  const colSum = pickupLocations.reduce((sum, location) => {
-                                    const val = allocations[location.id]?.[bread.id!] || '';
-                                    if (val === 'x') return Infinity;
-                                    if (val === '' || isNaN(Number(val))) return sum;
-                                    return sum + Number(val);
-                                  }, 0);
-
-                                  return (
+                                {activeBreads.map(bread => (
                                     <td
                                       key={bread.id}
                                       className="text-center fw-bold align-middle bg-bakery-cream"
                                       style={{  fontSize: '14px' }}
                                     >
-                                      {colSum === Infinity ? '∞' : colSum === 0 ? '-' : colSum}
+                                      {formatSum(getColSum(bread.id!))}
                                     </td>
-                                  );
-                                })}
+                                ))}
                                 <td
                                   className="text-center fw-bold align-middle bg-bakery-primary text-white"
                                   style={{ fontSize: '14px' }}
                                 >
-                                  {(() => {
-                                    const totalSum = pickupLocations.reduce((total, location) => {
-                                      return breads.reduce((sum, bread) => {
-                                        const val = allocations[location.id]?.[bread.id!] || '';
-                                        if (val === 'x') return Infinity;
-                                        if (val === '' || isNaN(Number(val))) return sum;
-                                        return sum + Number(val);
-                                      }, total);
-                                    }, 0);
-                                    return totalSum === Infinity ? '∞' : totalSum === 0 ? '-' : totalSum;
-                                  })()}
+                                  {formatSum(getTotalSum())}
                                 </td>
                               </tr>
                             </tfoot>

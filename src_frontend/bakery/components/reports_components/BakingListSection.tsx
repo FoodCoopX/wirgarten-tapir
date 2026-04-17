@@ -3,7 +3,7 @@ import { SectionToggle } from './SectionToggle';
 import { ActionButtons } from './ActionButtons';
 import '../../styles/bakery_styles.css';
 
-interface BacklisteSectionProps {
+interface BakingListSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   allBreadNames: string[];
@@ -17,7 +17,7 @@ interface BacklisteSectionProps {
   onEmail: () => void;
 }
 
-export const BacklisteSection: React.FC<BacklisteSectionProps> = ({
+export const BakingListSection: React.FC<BakingListSectionProps> = ({
   isOpen, onToggle, allBreadNames, breadDeliveries, breadBaked,
   totalDeliveries, totalBaked, totalExtra, pdfUrl, hasPreview, onEmail,
 }) => (

@@ -5,9 +5,9 @@ from tapir.bakery.models import (
 )
 
 
-class AbhollisteService:
+class PickupListService:
     @staticmethod
-    def get_abholliste(year: int, week: int, pickup_location_id: str) -> dict:
+    def get_pickup_list(year: int, week: int, pickup_location_id: str) -> dict:
         """
         Returns:
         {
@@ -32,29 +32,61 @@ class AbhollisteService:
         }
         Sorted by member_name.
         """
-        # 1. Get all bread types assigned to this pickup location for this week
+        assigned_bread_names = PickupListService._get_assigned_bread_names(
+            year, week, pickup_location_id
+        )
+        members_data, member_ids = PickupListService._collect_member_data(
+            year, week, pickup_location_id
+        )
+        preferred_by_member = PickupListService._get_preferred_breads(member_ids)
+
+        delivery_bread_names = set()
+        for entry in members_data.values():
+            delivery_bread_names.update(entry["bread_counts"].keys())
+        all_bread_names = sorted(set(assigned_bread_names) | delivery_bread_names)
+
+        PickupListService._apply_preferences(
+            members_data, preferred_by_member, all_bread_names
+        )
+
+        entries = sorted(members_data.values(), key=lambda x: x["member_name"].lower())
+        bread_totals, grand_total = PickupListService._compute_totals(
+            entries, all_bread_names
+        )
+
+        return {
+            "bread_names": all_bread_names,
+            "entries": entries,
+            "bread_totals": bread_totals,
+            "grand_total": grand_total,
+        }
+
+    @staticmethod
+    def _get_assigned_bread_names(
+        year: int, week: int, pickup_location_id: str
+    ) -> list[str]:
         assigned_breads = BreadsPerPickupLocationPerWeek.objects.filter(
             year=year,
             delivery_week=week,
             pickup_location_id=pickup_location_id,
         ).select_related("bread")
 
-        assigned_bread_names = sorted(
-            set(bc.bread.name for bc in assigned_breads if bc.bread)
-        )
+        return sorted(set(bc.bread.name for bc in assigned_breads if bc.bread))
 
-        # 2. Get all deliveries for this location
+    @staticmethod
+    def _collect_member_data(
+        year: int, week: int, pickup_location_id: str
+    ) -> tuple[dict, set]:
         deliveries = BreadDelivery.objects.filter(
             year=year,
             delivery_week=week,
             pickup_location_id=pickup_location_id,
-            joker_taken=False,  # Exclude jokers from the abholliste
+            joker_taken=False,
         ).select_related(
             "subscription__member",
             "bread",
         )
 
-        # 3. Collect all member data from deliveries
         member_ids = set()
         members_data = {}
 
@@ -64,20 +96,9 @@ class AbhollisteService:
             member_ids.add(member.id)
 
             if member_id not in members_data:
-                pseudonym = getattr(member, "pseudonym", None)
-                if pseudonym:
-                    display_name = pseudonym
-                else:
-                    last_name = getattr(member, "last_name", "")
-                    first_name = getattr(member, "first_name", "")
-                    if last_name:
-                        display_name = f"{last_name[0]}., {first_name}"
-                    else:
-                        display_name = first_name or "Unbekannt"
-
                 members_data[member_id] = {
                     "member_id": member_id,
-                    "member_name": display_name,
+                    "member_name": PickupListService._get_display_name(member),
                     "bread_counts": {},
                     "bread_preferred": {},
                     "total": 0,
@@ -85,10 +106,8 @@ class AbhollisteService:
                     "breads": [],
                 }
 
-            # Count every delivery slot for the member
             members_data[member_id]["total"] += 1
 
-            # Track assigned breads separately
             bread_name = delivery.bread.name if delivery.bread else None
             if bread_name:
                 members_data[member_id]["bread_counts"][bread_name] = (
@@ -102,7 +121,21 @@ class AbhollisteService:
                     }
                 )
 
-        # 4. Get preferred breads for all members with deliveries
+        return members_data, member_ids
+
+    @staticmethod
+    def _get_display_name(member) -> str:
+        pseudonym = getattr(member, "pseudonym", None)
+        if pseudonym:
+            return pseudonym
+        last_name = getattr(member, "last_name", "")
+        first_name = getattr(member, "first_name", "")
+        if last_name:
+            return f"{last_name[0]}., {first_name}"
+        return first_name or "Unbekannt"
+
+    @staticmethod
+    def _get_preferred_breads(member_ids: set) -> dict[str, set[str]]:
         preferred_by_member = {}
         if member_ids:
             preferred_entries = PreferredBread.objects.filter(
@@ -113,16 +146,14 @@ class AbhollisteService:
                 preferred_by_member[str(pref.member_id)] = set(
                     b.name for b in pref.breads.all()
                 )
+        return preferred_by_member
 
-        # 5. Also collect bread names from deliveries (in case solver hasn't run)
-        delivery_bread_names = set()
-        for entry in members_data.values():
-            delivery_bread_names.update(entry["bread_counts"].keys())
-
-        # Combine: assigned breads + any bread names from deliveries
-        all_bread_names = sorted(set(assigned_bread_names) | delivery_bread_names)
-
-        # 6. Build bread_preferred for each member
+    @staticmethod
+    def _apply_preferences(
+        members_data: dict,
+        preferred_by_member: dict[str, set[str]],
+        all_bread_names: list[str],
+    ):
         for member_id, entry in members_data.items():
             member_prefs = preferred_by_member.get(member_id, set())
             for bread_name in all_bread_names:
@@ -130,20 +161,14 @@ class AbhollisteService:
                 is_preferred = bread_name in member_prefs
                 entry["bread_preferred"][bread_name] = is_preferred and not has_delivery
 
-        # 7. Compute totals
-        entries = sorted(members_data.values(), key=lambda x: x["member_name"].lower())
-
+    @staticmethod
+    def _compute_totals(
+        entries: list[dict], all_bread_names: list[str]
+    ) -> tuple[dict, int]:
         bread_totals = {}
         for bread_name in all_bread_names:
             bread_totals[bread_name] = sum(
                 e["bread_counts"].get(bread_name, 0) for e in entries
             )
-
         grand_total = sum(e["total"] for e in entries)
-
-        return {
-            "bread_names": all_bread_names,
-            "entries": entries,
-            "bread_totals": bread_totals,
-            "grand_total": grand_total,
-        }
+        return bread_totals, grand_total

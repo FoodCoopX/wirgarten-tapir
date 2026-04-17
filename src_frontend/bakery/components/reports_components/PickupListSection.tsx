@@ -1,10 +1,10 @@
 import React from 'react';
 import { SectionToggle } from './SectionToggle';
 import { ActionButtons } from './ActionButtons';
-import type { AbhollisteResponse, PickupLocation } from '../../../api-client/models';
+import type { PickupListResponse, PickupLocation } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
 
-interface AbhollisteSectionProps {
+interface PickupListSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   isLoading: boolean;
@@ -12,7 +12,7 @@ interface AbhollisteSectionProps {
   dayPickupLocations: PickupLocation[];
   selectedLocation: string;
   onPickupLocationChange: (id: string) => void;
-  abhollisteData: AbhollisteResponse | null;
+  pickupListData: PickupListResponse | null;
   checkedMembers: Record<string, boolean>;
   onCheckToggle: (memberId: string) => void;
   pdfUrl: string | null;
@@ -20,9 +20,9 @@ interface AbhollisteSectionProps {
   onEmail: () => void;
 }
 
-export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
+export const PickupListSection: React.FC<PickupListSectionProps> = ({
   isOpen, onToggle, isLoading, hasPreview, dayPickupLocations,
-  selectedLocation, onPickupLocationChange, abhollisteData,
+  selectedLocation, onPickupLocationChange, pickupListData,
   checkedMembers, onCheckToggle, pdfUrl, allPdfUrl, onEmail,
 }) => (
   <div>
@@ -61,7 +61,7 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
             <div className="spinner-border spinner-border-sm spinner-bakery-primary" />
             <p className="mt-1 text-muted small">Lade Abholliste...</p>
           </div>
-        ) : selectedLocation && abhollisteData?.entries?.length ? (
+        ) : selectedLocation && pickupListData?.entries?.length ? (
           <>
             <div className="table-responsive mb-3 mt-3">
               <table className="table table-sm table-bordered" style={{ fontSize: '0.8rem' }}>
@@ -73,13 +73,13 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                     <th className="text-center" style={{ width: '30px' }}>
                       <span className="material-icons" style={{ fontSize: '14px' }}>check</span>
                     </th>
-                    {abhollisteData.breadNames.map(name => (
+                    {pickupListData.breadNames.map(name => (
                       <th key={name} className="text-center th-vertical">{name}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {abhollisteData.entries.map((entry: any, index: number) => {
+                  {pickupListData.entries.map((entry: any, index: number) => {
                     const memberId = entry.memberId || entry.member_id;
                     const memberName = entry.memberName || entry.member_name;
                     const total = entry.total ?? 0;
@@ -102,7 +102,7 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                             style={{ cursor: 'pointer' }}
                           />
                         </td>
-                        {abhollisteData.breadNames.map(name => {
+                        {pickupListData.breadNames.map(name => {
                           const count = breadCounts[name] || 0;
                           const preferred = breadPreferred[name] || false;
                           return (
@@ -117,11 +117,11 @@ export const AbhollisteSection: React.FC<AbhollisteSectionProps> = ({
                   <tr className="total-row-brown fw-bold">
                     <td />
                     <td>Gesamt</td>
-                    <td className="text-center">{abhollisteData.grandTotal}</td>
+                    <td className="text-center">{pickupListData.grandTotal}</td>
                     <td />
-                    {abhollisteData.breadNames.map(name => (
+                    {pickupListData.breadNames.map(name => (
                       <td key={name} className="text-center">
-                        {(abhollisteData.breadTotals as unknown as Record<string, number>)[name] || 0}
+                        {(pickupListData.breadTotals as unknown as Record<string, number>)[name] || 0}
                       </td>
                     ))}
                   </tr>

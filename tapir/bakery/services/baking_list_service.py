@@ -7,7 +7,7 @@ from tapir.pickup_locations.models import PickupLocation
 from tapir.wirgarten.models import PickupLocationOpeningTime
 
 
-class BacklisteService:
+class BakingListService:
     @staticmethod
     def get_pickup_location_ids_for_day(day: int) -> list[str]:
         """Get pickup location IDs that have their first opening time on the given day."""
@@ -27,7 +27,7 @@ class BacklisteService:
         )
 
     @staticmethod
-    def get_backliste(year: int, week: int, day: int) -> dict[str, Any]:
+    def get_baking_list(year: int, week: int, day: int) -> dict[str, Any]:
         """
         Returns:
         {
@@ -41,7 +41,7 @@ class BacklisteService:
             ],
         }
         """
-        location_ids = BacklisteService.get_pickup_location_ids_for_day(day)
+        location_ids = BakingListService.get_pickup_location_ids_for_day(day)
 
         bread_counts = BreadsPerPickupLocationPerWeek.objects.filter(
             year=year,

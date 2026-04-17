@@ -446,7 +446,6 @@ class UserGenerator:
         # Update BreadDelivery pickup locations since bulk_create skips signals
         from tapir.bakery.models import BreadDelivery
 
-        print("Updating BreadDelivery pickup locations...")
         updated_count = 0
         for mpl in member_pickup_locations:
             count = BreadDelivery.objects.filter(
@@ -454,7 +453,6 @@ class UserGenerator:
                 pickup_location__isnull=True,
             ).update(pickup_location=mpl.pickup_location)
             updated_count += count
-        print(f"Updated {updated_count} BreadDelivery records with pickup locations")
 
     @classmethod
     def get_confirmation_datetime(cls, reference_date: datetime.date, cache: dict):

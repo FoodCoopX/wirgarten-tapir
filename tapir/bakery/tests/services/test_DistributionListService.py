@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from tapir.bakery.services.verteilliste_service import VerteillisteService
+from tapir.bakery.services.distribution_list_service import DistributionListService
 from tapir.bakery.tests.factories import (
     BreadDeliveryFactory,
     BreadFactory,
@@ -15,7 +15,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_ke
 
 
 @patch("tapir.wirgarten.tests.factories.KeycloakUserManager.get_keycloak_client")
-class TestVerteillisteService(TapirIntegrationTest):
+class TestDistributionListService(TapirIntegrationTest):
     YEAR = 2026
     WEEK = 11
     DAY = 3
@@ -31,7 +31,7 @@ class TestVerteillisteService(TapirIntegrationTest):
         return SubscriptionFactory.create(member=member)
 
     def _run_with_locations(self, locations):
-        """Run get_verteilliste with patched pickup locations."""
+        """Run get_distribution_list with patched pickup locations."""
         mock_locations = []
         for loc in locations:
             mock_loc = MagicMock()
@@ -41,10 +41,10 @@ class TestVerteillisteService(TapirIntegrationTest):
             mock_locations.append(mock_loc)
 
         with patch(
-            "tapir.bakery.services.verteilliste_service.PickupLocation.objects"
+            "tapir.bakery.services.distribution_list_service.PickupLocation.objects"
         ) as mock_qs:
             mock_qs.all.return_value = mock_locations
-            return VerteillisteService.get_verteilliste(
+            return DistributionListService.get_distribution_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 
@@ -52,12 +52,12 @@ class TestVerteillisteService(TapirIntegrationTest):
     # NO DATA
     # ══════════════════════════════════════════════════════════════════
 
-    def test_getVerteilliste_noData_returnsEmptyResult(self, mock_kc):
+    def test_getDistributionList_noData_returnsEmptyResult(self, mock_kc):
         with patch(
-            "tapir.bakery.services.verteilliste_service.PickupLocation.objects"
+            "tapir.bakery.services.distribution_list_service.PickupLocation.objects"
         ) as mock_qs:
             mock_qs.all.return_value = []
-            result = VerteillisteService.get_verteilliste(
+            result = DistributionListService.get_distribution_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
 

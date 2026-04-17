@@ -5,9 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 
-from tapir.bakery.services.abholliste_service import AbhollisteService
-from tapir.bakery.services.backliste_service import BacklisteService
-from tapir.bakery.services.verteilliste_service import VerteillisteService
+from tapir.bakery.services.baking_list_service import BakingListService
+from tapir.bakery.services.distribution_list_service import DistributionListService
+from tapir.bakery.services.pickup_list_service import PickupListService
 from tapir.pickup_locations.models import PickupLocation
 
 DAY_LABELS = {
@@ -46,25 +46,25 @@ def _render_pdf_response(
 
 
 @login_required
-def backliste_pdf(request, year: int, week: int, day: int):
+def baking_list_pdf(request, year: int, week: int, day: int):
     context = _build_base_context(year, week, day, "Backliste")
-    context.update(BacklisteService.get_backliste(year, week, day))
+    context.update(BakingListService.get_baking_list(year, week, day))
 
     filename = f"Backliste_KW{week}_{year}_{context['day_label']}.pdf"
-    return _render_pdf_response("bakery/pdfs/backliste.html", context, filename)
+    return _render_pdf_response("bakery/pdfs/baking_list.html", context, filename)
 
 
 @login_required
-def verteilliste_pdf(request, year: int, week: int, day: int):
+def distribution_list_pdf(request, year: int, week: int, day: int):
     context = _build_base_context(year, week, day, "Verteilliste")
-    context.update(VerteillisteService.get_verteilliste(year, week, day))
+    context.update(DistributionListService.get_distribution_list(year, week, day))
 
     filename = f"Verteilliste_KW{week}_{year}_{context['day_label']}.pdf"
-    return _render_pdf_response("bakery/pdfs/verteilliste.html", context, filename)
+    return _render_pdf_response("bakery/pdfs/distribution_list.html", context, filename)
 
 
 @login_required
-def abholliste_pdf(request, year: int, week: int, day: int, pickup_location_id: str):
+def pickup_list_pdf(request, year: int, week: int, day: int, pickup_location_id: str):
     context = _build_base_context(year, week, day, "Abholliste")
 
     try:
@@ -73,27 +73,27 @@ def abholliste_pdf(request, year: int, week: int, day: int, pickup_location_id: 
         return HttpResponse("Abholstation nicht gefunden.", status=404)
 
     context["pickup_location_name"] = pickup_location.name
-    context.update(AbhollisteService.get_abholliste(year, week, pickup_location_id))
+    context.update(PickupListService.get_pickup_list(year, week, pickup_location_id))
 
     filename = (
         f"Abholliste_KW{week}_{year}_{context['day_label']}_{pickup_location.name}.pdf"
     )
-    return _render_pdf_response("bakery/pdfs/abholliste.html", context, filename)
+    return _render_pdf_response("bakery/pdfs/pickup_list.html", context, filename)
 
 
 @login_required
-def abhollisten_all_pdf(request, year: int, week: int, day: int):
+def pickup_lists_all_pdf(request, year: int, week: int, day: int):
     context = _build_base_context(year, week, day, "Abhollisten – Alle Abholstationen")
 
     pickup_locations = sorted(
         [pl for pl in PickupLocation.objects.all() if pl.delivery_day == day],
         key=lambda pl: pl.name,
     )
-    all_abhollisten = []
+    all_pickup_lists = []
     for pl in pickup_locations:
-        data = AbhollisteService.get_abholliste(year, week, str(pl.id))
+        data = PickupListService.get_pickup_list(year, week, str(pl.id))
         if data["entries"]:
-            all_abhollisten.append(
+            all_pickup_lists.append(
                 {
                     "pickup_location_name": pl.name,
                     "bread_names": data["bread_names"],
@@ -103,10 +103,10 @@ def abhollisten_all_pdf(request, year: int, week: int, day: int):
                 }
             )
 
-    if not all_abhollisten:
+    if not all_pickup_lists:
         return HttpResponse("Keine Abhollisten für diesen Tag.", status=404)
 
-    context["all_abhollisten"] = all_abhollisten
+    context["all_pickup_lists"] = all_pickup_lists
 
     filename = f"Abhollisten_alle_KW{week}_{year}_{context['day_label']}.pdf"
-    return _render_pdf_response("bakery/pdfs/abhollisten_all.html", context, filename)
+    return _render_pdf_response("bakery/pdfs/pickup_lists_all.html", context, filename)

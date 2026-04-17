@@ -275,14 +275,14 @@ class TestAvailableBreadsForDeliveryListViewPost(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class TestAbhollisteView(TapirIntegrationTest):
+class TestPickupListView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         super().setUp()
-        self.url = reverse("bakery:abholliste")
+        self.url = reverse("bakery:pickup-list")
 
     def test_get_noDeliveries_returnsEmptyEntries(self):
         self.client.force_login(MemberFactory.create())

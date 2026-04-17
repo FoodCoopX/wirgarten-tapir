@@ -42,9 +42,7 @@ class Bread(TapirModel):
     description = models.TextField(
         blank=True, help_text="Description text for the bread"
     )
-    weight = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
+    weight = models.FloatField(
         validators=[MinValueValidator(0)],
         help_text="Weight in grams",
     )
@@ -108,19 +106,17 @@ class BreadContent(TapirModel):
         on_delete=models.PROTECT,
         related_name="bread_uses",
     )
-    amount = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
+    amount = models.FloatField(
         validators=[MinValueValidator(0)],
         help_text="Amount in grams or percentage",
     )
     sort_order = models.PositiveIntegerField(default=0)
 
-    def __str__(self):
-        return f"{self.bread.name} - {self.ingredient.name}"
-
     class Meta:
         unique_together = ("bread", "ingredient")
+
+    def __str__(self):
+        return f"{self.bread.name} - {self.ingredient.name}"
 
 
 class BreadCapacityPickupLocation(TapirModel):
@@ -133,10 +129,9 @@ class BreadCapacityPickupLocation(TapirModel):
     pickup_location = models.ForeignKey(
         PickupLocation,
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         related_name="bread_capacities",
-        help_text="The pickup location this capacity applies to (redundant but useful for queries)",
     )
     bread = models.ForeignKey(
         "Bread",
@@ -145,17 +140,17 @@ class BreadCapacityPickupLocation(TapirModel):
     )
     capacity = models.PositiveIntegerField(
         validators=[MinValueValidator(0)],
-        help_text="Maximum number of breads of this label that can be delivered to this pickup location on this delivery day",
+        help_text="Maximum number of breads of this type that can be delivered to this pickup location on this delivery day",
     )
-
-    def __str__(self):
-        return f"{self.bread.name} @ {self.pickup_location} (Week {self.delivery_week}/{self.year})"
 
     class Meta:
         unique_together = ("pickup_location", "year", "delivery_week", "bread")
         indexes = [
             models.Index(fields=["pickup_location", "year", "delivery_week"]),
         ]
+
+    def __str__(self):
+        return f"{self.bread.name} @ {self.pickup_location} {self.capacity} (Week {self.delivery_week}/{self.year})"
 
 
 class AvailableBreadsForDeliveryDay(TapirModel):
@@ -168,24 +163,24 @@ class AvailableBreadsForDeliveryDay(TapirModel):
         "Bread", on_delete=models.CASCADE, related_name="delivery_days"
     )
 
-    def __str__(self):
-        return f"{self.bread.name} - Day {self.delivery_day} (Week {self.delivery_week}/{self.year})"
-
     class Meta:
         unique_together = ("year", "delivery_week", "delivery_day", "bread")
         indexes = [
             models.Index(fields=["year", "delivery_week", "delivery_day"]),
         ]
 
-
-class PreferredLabel(TapirModel):
-    member = models.OneToOneField(
-        Member, on_delete=models.CASCADE, related_name="preferred_labels"
-    )
-    labels = models.ManyToManyField("BreadLabel", related_name="preferred_by_members")
-
     def __str__(self):
-        return f"Preferred labels for {self.member}"
+        return f"{self.bread.name} - Day {self.delivery_day} (Week {self.delivery_week}/{self.year})"
+
+
+# class PreferredLabel(TapirModel):
+#     member = models.OneToOneField(
+#         Member, on_delete=models.CASCADE, related_name="preferred_labels"
+#     )
+#     labels = models.ManyToManyField("BreadLabel", related_name="preferred_by_members")
+
+#     def __str__(self):
+#         return f"Preferred labels for {self.member}"
 
 
 class BreadDelivery(TapirModel):
@@ -212,6 +207,23 @@ class BreadDelivery(TapirModel):
     )
     joker_taken = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ["year", "delivery_week", "slot_number"]
+        indexes = [
+            models.Index(
+                fields=["year", "delivery_week"]
+            ),  # Query all deliveries for a week
+            models.Index(
+                fields=["subscription", "year", "delivery_week"]
+            ),  # Query subscription deliveries for a week
+            models.Index(
+                fields=["pickup_location", "year", "delivery_week"]
+            ),  # Pickup list query
+            models.Index(
+                fields=["year", "delivery_week", "bread"]
+            ),  # Aggregate bread counts
+        ]
+
     def clean(self):
         super().clean()
         if self.bread and self.pickup_location:
@@ -235,23 +247,6 @@ class BreadDelivery(TapirModel):
         if not skip_validation:
             self.full_clean()
         super().save(*args, **kwargs)
-
-    class Meta:
-        ordering = ["year", "delivery_week", "slot_number"]
-        indexes = [
-            models.Index(
-                fields=["year", "delivery_week"]
-            ),  # Query all deliveries for a week
-            models.Index(
-                fields=["subscription", "year", "delivery_week"]
-            ),  # Query subscription deliveries for a week
-            models.Index(
-                fields=["pickup_location", "year", "delivery_week"]
-            ),  # Abholliste query
-            models.Index(
-                fields=["year", "delivery_week", "bread"]
-            ),  # Aggregate bread counts
-        ]
 
     def __str__(self):
         return f"Delivery {self.subscription} - Week {self.delivery_week}/{self.year} #{self.slot_number}"
@@ -306,14 +301,14 @@ class BreadsPerPickupLocationPerWeek(TapirModel):
     )
     count = models.PositiveIntegerField(default=0)
 
-    def __str__(self):
-        return f"{self.bread.name} @ {self.pickup_location} (Week {self.delivery_week}/{self.year}): {self.count}"
-
     class Meta:
         indexes = [
             models.Index(fields=["pickup_location", "year", "delivery_week"]),
         ]
         unique_together = ["pickup_location", "year", "delivery_week", "bread"]
+
+    def __str__(self):
+        return f"{self.bread.name} @ {self.pickup_location} (Week {self.delivery_week}/{self.year}): {self.count}"
 
 
 class StoveSession(TapirModel):
@@ -332,10 +327,6 @@ class StoveSession(TapirModel):
     )
     quantity = models.PositiveIntegerField(default=0)
 
-    def __str__(self):
-        bread_name = self.bread.name if self.bread else "Empty"
-        return f"Session {self.session_number} Layer {self.layer_number} - {bread_name}"
-
     class Meta:
         ordering = ["session_number", "layer_number"]
         unique_together = [
@@ -345,6 +336,10 @@ class StoveSession(TapirModel):
             "session_number",
             "layer_number",
         ]
+
+    def __str__(self):
+        bread_name = self.bread.name if self.bread else "Empty"
+        return f"Session {self.session_number} Layer {self.layer_number} - {bread_name}"
 
 
 class PreferenceSatisfactionLogging(TapirModel):
@@ -362,11 +357,11 @@ class PreferenceSatisfactionLogging(TapirModel):
         help_text="Percentage of deliveries that matched at least one preferred bread label",
     )
 
-    def __str__(self):
-        return f"Satisfaction {self.pickup_location} Day {self.delivery_day} (Week {self.delivery_week}/{self.year}): {self.percentage_satisfied}%"
-
     class Meta:
         unique_together = ["year", "delivery_week", "delivery_day", "pickup_location"]
+
+    def __str__(self):
+        return f"Satisfaction {self.pickup_location} Day {self.delivery_day} (Week {self.delivery_week}/{self.year}): {self.percentage_satisfied}%"
 
 
 # this model is only filled in case there are overrides to the defaults in the bread model
@@ -401,11 +396,11 @@ class BreadSpecificsPerDeliveryDay(TapirModel):
         help_text="If set, exactly this number of pieces should be baked for this bread on this delivery day (overrides min/max)",
     )
 
-    def __str__(self):
-        return f"{self.bread.name} specifics for Day {self.delivery_day} (Week {self.delivery_week}/{self.year})"
-
     class Meta:
         indexes = [
             models.Index(fields=["year", "delivery_week", "delivery_day"]),
         ]
         unique_together = ["year", "delivery_week", "delivery_day", "bread"]
+
+    def __str__(self):
+        return f"{self.bread.name} specifics for Day {self.delivery_day} (Week {self.delivery_week}/{self.year})"
