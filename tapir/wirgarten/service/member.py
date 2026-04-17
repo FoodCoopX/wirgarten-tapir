@@ -372,14 +372,16 @@ def send_contract_change_confirmation(
 
 
 def send_investing_membership_confirmation(
-    member_id: str, coop_share_transaction: CoopShareTransaction
+    member_id: str,
+    coop_share_transaction: CoopShareTransaction,
+    solidarity_contribution: SolidarityContribution | None,
 ):
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
             key=Events.REGISTER_MEMBERSHIP_ONLY,
             recipient_id_in_base_queryset=member_id,
             token_data=TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
-                coop_share_transaction
+                coop_share_transaction, solidarity_contribution
             ),
         ),
     )
@@ -430,17 +432,9 @@ def send_product_order_confirmation(
                     else "Keine Lieferung"
                 ),
                 "contract_list": format_subscription_list_html(list(subs)),
-                "solidarity_contribution_amount": format_currency(
-                    solidarity_contribution.amount if solidarity_contribution else 0
-                ),
-                "solidarity_contribution_start_date": (
-                    format_date(solidarity_contribution.start_date)
-                    if solidarity_contribution
-                    else "Kein Datum"
-                ),
             }
             | TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
-                coop_share_transaction
+                coop_share_transaction, solidarity_contribution
             ),
         ),
     )

@@ -125,9 +125,11 @@ class BestellWizardOrderFulfiller:
             member_id=member.id,
         )
 
-        if coop_share_transaction is not None and len(subscriptions) == 0:
+        if len(subscriptions) == 0:
             send_investing_membership_confirmation(
-                member_id=member.id, coop_share_transaction=coop_share_transaction
+                member_id=member.id,
+                coop_share_transaction=coop_share_transaction,
+                solidarity_contribution=solidarity_contribution,
             )
         else:
             send_product_order_confirmation(
