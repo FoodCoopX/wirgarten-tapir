@@ -1,5 +1,6 @@
 import React from 'react';
 import { GeoAlt } from 'react-bootstrap-icons';
+import TapirButton from '../../../components/TapirButton';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import '../../styles/bakery_styles.css';
@@ -70,13 +71,14 @@ export const CompactPickupLocationCard: React.FC<CompactPickupLocationCardProps>
           </div>
 
           {onEdit && (
-            <button
-              className="btn btn-sm btn-outline-secondary dark-brown-button"
+            <TapirButton
+              variant=""
+              className="dark-brown-button"
+              size="sm"
+              text="Ändern"
               onClick={onEdit}
               disabled={disabled}
-            >
-              Ändern
-            </button>
+            />
           )}
         </div>
       </div>

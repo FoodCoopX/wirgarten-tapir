@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, InfoCircle, StarFill } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
+import TapirButton from '../../../components/TapirButton';
 import { BakeryApi } from '../../../api-client';
 import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
 import { PreferredBreadsModal } from '../modals/PreferredBreadsModal';
@@ -96,14 +97,15 @@ export const ChoosePreferredBreadsCard: React.FC<ChoosePreferredBreadsCardProps>
               Deine Lieblingsbrote
             </h5>
            
-            <button
-              className="btn btn-sm dark-brown-button"
+            <TapirButton
+              variant=""
+              className="dark-brown-button"
+              size="sm"
+              icon="star"
+              text={preferredBreads.length > 0 ? 'Bearbeiten' : 'Auswählen'}
               onClick={() => setIsModalOpen(true)}
               disabled={loading}
-            >
-              <Star size={16} className="me-1" />
-              {preferredBreads.length > 0 ? 'Bearbeiten' : 'Auswählen'}
-            </button>
+            />
           </div>
          
         </div>

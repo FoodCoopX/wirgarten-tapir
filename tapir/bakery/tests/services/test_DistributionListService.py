@@ -43,7 +43,7 @@ class TestDistributionListService(TapirIntegrationTest):
         with patch(
             "tapir.bakery.services.distribution_list_service.PickupLocation.objects"
         ) as mock_qs:
-            mock_qs.all.return_value = mock_locations
+            mock_qs.annotate.return_value.filter.return_value = mock_locations
             return DistributionListService.get_distribution_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
@@ -56,7 +56,7 @@ class TestDistributionListService(TapirIntegrationTest):
         with patch(
             "tapir.bakery.services.distribution_list_service.PickupLocation.objects"
         ) as mock_qs:
-            mock_qs.all.return_value = []
+            mock_qs.annotate.return_value.filter.return_value = []
             result = DistributionListService.get_distribution_list(
                 year=self.YEAR, week=self.WEEK, day=self.DAY
             )
@@ -498,27 +498,27 @@ class TestDistributionListService(TapirIntegrationTest):
     # ── With solver: multiple solver entries same location same bread sum ─
 
     def test_withSolver_multipleSolverEntriesSameBread_sumsBaked(self, mock_kc):
-        pl = PickupLocationFactory.create(name="Hofladen")
+        pl1 = PickupLocationFactory.create(name="Hofladen")
+        pl2 = PickupLocationFactory.create(name="Marktstand")
 
         BreadsPerPickupLocationPerWeekFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
-            pickup_location=pl,
+            pickup_location=pl1,
             bread=self.roggenbrot,
             count=3,
         )
         BreadsPerPickupLocationPerWeekFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
-            pickup_location=pl,
+            pickup_location=pl2,
             bread=self.roggenbrot,
             count=7,
         )
 
-        result = self._run_with_locations([pl])
+        result = self._run_with_locations([pl1, pl2])
 
-        loc = result["locations"][0]
-        self.assertEqual(loc["breads"]["Roggenbrot"]["baked"], 10)
+        self.assertEqual(result["bread_totals"]["Roggenbrot"]["baked"], 10)
 
     # ══════════════════════════════════════════════════════════════════
     # FILTERING — different day/week excluded

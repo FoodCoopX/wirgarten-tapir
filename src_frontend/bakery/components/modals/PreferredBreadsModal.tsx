@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { InfoCircle, StarFill } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
+import TapirButton from '../../../components/TapirButton';
 import { BakeryApi } from '../../../api-client';
+import { handleRequestError } from '../../../utils/handleRequestError';
 import type { BreadList, BreadLabel, BreadContent } from '../../../api-client/models';
 import { SingleBreadCard } from '../cards';
 import '../../styles/bakery_styles.css';
@@ -93,8 +95,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
         }
       })
       .catch((error) => {
-        console.error('Failed to load breads:', error);
-        alert('Fehler beim Laden der Brote');
+        handleRequestError(error, 'Fehler beim Laden der Brote');
       })
       .finally(() => {
         setLoading(false);
@@ -129,8 +130,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
         onClose();
       })
       .catch((error) => {
-        console.error('Failed to save preferred breads:', error);
-        alert('Fehler beim Speichern der Lieblingsbrote');
+        handleRequestError(error, 'Fehler beim Speichern der Lieblingsbrote');
       })
       .finally(() => {
         setSaving(false);
@@ -222,29 +222,20 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
               <div className="me-auto text-muted small">
                 {selectedBreadIds.size} / {MAX_PREFERRED_BREADS} {selectedBreadIds.size === 1 ? 'Brot' : 'Brote'} ausgewählt
               </div>
-              <button
-                type="button"
-                className="btn btn-secondary"
+              <TapirButton
+                variant="secondary"
+                text="Abbrechen"
                 onClick={onClose}
                 disabled={saving}
-              >
-                Abbrechen
-              </button>
-              <button
-                type="button"
-                className="btn dark-brown-button"
+              />
+              <TapirButton
+                variant=""
+                className="dark-brown-button"
+                text="Speichern"
+                icon="save"
                 onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" />
-                    Speichert...
-                  </>
-                ) : (
-                  'Speichern'
-                )}
-              </button>
+                loading={saving}
+              />
             </div>
           </div>
         </div>

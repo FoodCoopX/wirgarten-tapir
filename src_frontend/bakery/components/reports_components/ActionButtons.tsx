@@ -1,4 +1,5 @@
 import React from 'react';
+import TapirButton from '../../../components/TapirButton';
 
 interface ActionButtonsProps {
   pdfUrl: string | null;
@@ -27,18 +28,8 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ pdfUrl, label, has
         {label} als PDF herunterladen
       </a>
     ) : (
-      <button className="btn btn-sm dark-brown-button" disabled>
-        <span className="material-icons me-2" style={{ fontSize: '16px', verticalAlign: 'middle' }}>download</span>
-        {label} als PDF herunterladen
-      </button>
+      <TapirButton variant="" className="dark-brown-button" size="sm" icon="download" text={`${label} als PDF herunterladen`} disabled />
     )}
-    <button
-      className="btn btn-sm btn-outline-secondary"
-      onClick={onEmail}
-      disabled={true}
-    >
-      <span className="material-icons me-2" style={{ fontSize: '16px', verticalAlign: 'middle' }}>email</span>
-      {label} per email senden
-    </button>
+    <TapirButton variant="outline-secondary" size="sm" icon="email" text={`${label} per email senden`} onClick={onEmail} disabled />
   </div>
 );

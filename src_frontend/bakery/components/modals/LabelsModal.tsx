@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
+import { handleRequestError } from '../../../utils/handleRequestError';
 import type { BreadLabel, BreadList } from '../../../api-client/models';
+import TapirButton from '../../../components/TapirButton';
 
 interface BreadLabelsModalProps {
   bread: BreadList;
@@ -47,8 +49,7 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
         setAvailableLabels(activeLabels);
       })
       .catch((error) => {
-        console.error('Failed to load data:', error);
-        alert('Fehler beim Laden der Daten');
+        handleRequestError(error, 'Fehler beim Laden der Daten');
       })
       .finally(() => {
         setLoading(false);
@@ -74,8 +75,7 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
       .catch((error) => {
         // Revert on failure
         setAssignedLabelIds(assignedLabelIds);
-        console.error('Failed to update labels:', error);
-        alert('Fehler beim Aktualisieren der Labels');
+        handleRequestError(error, 'Fehler beim Aktualisieren der Labels');
       });
   };
 
@@ -194,9 +194,7 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
         </div>
 
         <div className="p-3 border-top d-flex justify-content-end" style={{ borderRadius: '0 0 8px 8px' }}>
-          <button type="button" className="btn btn-secondary dark-brown-button" onClick={onClose}>
-            Speichern & Schließen
-          </button>
+          <TapirButton variant="" className="dark-brown-button" text="Speichern & Schließen" icon="save" onClick={onClose} />
         </div>
       </div>
     </div>

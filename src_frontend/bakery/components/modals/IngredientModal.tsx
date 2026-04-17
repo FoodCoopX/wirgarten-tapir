@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Ingredient, IngredientRequest } from '../../../api-client/models';
+import TapirButton from '../../../components/TapirButton';
 import '../../styles/bakery_styles.css';
 
 interface IngredientModalProps {
@@ -107,12 +108,8 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
             </div>
             
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Abbrechen
-              </button>
-              <button type="submit" className="btn btn-bakery-ingredients">
-                Speichern & Schließen
-              </button>
+              <TapirButton variant="secondary" text="Abbrechen" onClick={onClose} />
+              <TapirButton variant="" className="btn-bakery-ingredients" text="Speichern & Schließen" icon="save" type="submit" />
             </div>
           </form>
         </div>

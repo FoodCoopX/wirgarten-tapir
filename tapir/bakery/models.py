@@ -4,9 +4,6 @@ from django.db import models
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from tapir.bakery.services.breaddelivery_service import (
-    ensure_bread_deliveries_for_member,
-)
 from tapir.core.models import TapirModel
 from tapir.wirgarten.models import (
     Member,
@@ -244,6 +241,11 @@ class BreadDelivery(TapirModel):
 
 @receiver(post_save, sender="wirgarten.Subscription")
 def on_subscription_saved(sender, instance, created, **kwargs):
+
+    from tapir.bakery.services.breaddelivery_service import (
+        ensure_bread_deliveries_for_member,
+    )
+
     if instance.product.type.delivery_cycle != "weekly":
         return
     if not instance.start_date or not instance.end_date:
@@ -253,16 +255,28 @@ def on_subscription_saved(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender="wirgarten.MemberPickupLocation")
 def on_pickup_location_saved(sender, instance, created, **kwargs):
+    from tapir.bakery.services.breaddelivery_service import (
+        ensure_bread_deliveries_for_member,
+    )
+
     ensure_bread_deliveries_for_member(instance.member)
 
 
 @receiver(post_save, sender="deliveries.Joker")
 def on_joker_saved(sender, instance, **kwargs):
+    from tapir.bakery.services.breaddelivery_service import (
+        ensure_bread_deliveries_for_member,
+    )
+
     ensure_bread_deliveries_for_member(instance.member)
 
 
 @receiver(post_delete, sender="deliveries.Joker")
 def on_joker_deleted(sender, instance, **kwargs):
+    from tapir.bakery.services.breaddelivery_service import (
+        ensure_bread_deliveries_for_member,
+    )
+
     ensure_bread_deliveries_for_member(instance.member)
 
 

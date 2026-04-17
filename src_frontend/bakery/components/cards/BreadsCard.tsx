@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BreadModal } from '../modals/BreadModal';
 import { BreadContentsModal } from '../modals/BreadContentsModal';
 import { LabelsModal } from '../modals/LabelsModal';
-import { Plus, Pencil, ListUl, Tag, Search, XLg, Camera, EggFried } from 'react-bootstrap-icons';
+import { Pencil, ListUl, Tag, Search, XLg, Camera, EggFried } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
+import TapirButton from '../../../components/TapirButton';
 import { useApi } from '../../../hooks/useApi';
+import { handleRequestError } from '../../../utils/handleRequestError';
 import type { BreadList, BreadListRequest } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
 
@@ -35,8 +37,7 @@ useEffect(() => {
         setBreads(data);
       })
       .catch((error) => {
-        console.error('Failed to load breads:', error);
-        alert('Fehler beim Laden der Brote');
+        handleRequestError(error, 'Fehler beim Laden der Brote');
       })
       .finally(() => {
         setLoading(false);
@@ -90,8 +91,7 @@ useEffect(() => {
         loadBreads();
       })
       .catch((error) => {
-        console.error('Failed to upload image:', error);
-        alert('Fehler beim Hochladen des Bildes');
+        handleRequestError(error, 'Fehler beim Hochladen des Bildes');
       });
   };
 
@@ -112,8 +112,7 @@ useEffect(() => {
         setEditingBread(null);
       })
       .catch((error) => {
-        console.error('Failed to save bread:', error);
-        alert('Fehler beim Speichern des Brots');
+        handleRequestError(error, 'Fehler beim Speichern des Brots');
       });
   };
 
@@ -158,12 +157,15 @@ useEffect(() => {
                 nur aktive
               </label>
             </div>
-            <button 
-              className="btn btn-sm py-0 d-inline-flex align-items-center gap-1 dark-brown-button" 
+            <TapirButton
+              variant=""
+              className="dark-brown-button"
+              size="sm"
+              icon="add"
+              text="neu"
               onClick={handleCreate}
-            >
-              <Plus size={16} /> neu
-            </button>
+              style={{ paddingTop: 0, paddingBottom: 0 }}
+            />
           </div>
         </div>
         
@@ -179,16 +181,12 @@ useEffect(() => {
               {searchTerm ? (
                 <>
                   <p>Keine Brote gefunden für "{searchTerm}".</p>
-                  <button className="btn btn-sm btn-outline-secondary" onClick={() => setSearchTerm('')}>
-                    Filter zurücksetzen
-                  </button>
+                  <TapirButton variant="outline-secondary" size="sm" text="Filter zurücksetzen" onClick={() => setSearchTerm('')} />
                 </>
               ) : (
                 <>
                   <p>Noch keine Brote vorhanden.</p>
-                  <button className="btn btn-sm btn-outline-secondary" onClick={handleCreate}>
-                    Erstes Brot hinzufügen
-                  </button>
+                  <TapirButton variant="outline-secondary" size="sm" text="Erstes Brot hinzufügen" onClick={handleCreate} />
                 </>
               )}
             </div>

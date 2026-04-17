@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
+import { handleRequestError } from '../../../utils/handleRequestError';
+import TapirButton from '../../../components/TapirButton';
 import { PlusLg, XLg, Trash } from 'react-bootstrap-icons';
 import type { BreadLabel, BreadList, BreadListRequest } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
@@ -63,8 +65,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
         setAvailableLabels(data);
       })
       .catch((error) => {
-        console.error('Failed to load labels:', error);
-        alert('Fehler beim Laden der Labels');
+        handleRequestError(error, 'Fehler beim Laden der Labels');
       })
       .finally(() => {
         setLoading(false);
@@ -403,12 +404,8 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
             </div>
             
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Abbrechen
-              </button>
-              <button type="submit" className="btn dark-brown-button">
-                Speichern & Schließen
-              </button>
+              <TapirButton variant="secondary" text="Abbrechen" onClick={onClose} />
+              <TapirButton variant="" className="dark-brown-button" text="Speichern & Schließen" icon="save" type="submit" />
             </div>
           </form>
         </div>

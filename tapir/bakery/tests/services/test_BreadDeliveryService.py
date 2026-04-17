@@ -7,7 +7,11 @@ from tapir.bakery.services.breaddelivery_service import (
     ensure_bread_deliveries_for_member,
     get_weeks_in_range,
 )
-from tapir.bakery.tests.factories import BreadDeliveryFactory, BreadFactory
+from tapir.bakery.tests.factories import (
+    BreadCapacityPickupLocationFactory,
+    BreadDeliveryFactory,
+    BreadFactory,
+)
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
@@ -398,7 +402,7 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
         MemberPickupLocationFactory.create(
             member=member,
             pickup_location=pl_new,
-            valid_from=FROZEN_DATE - datetime.timedelta(days=1),
+            valid_from=FROZEN_DATE - datetime.timedelta(days=14),
         )
 
         ensure_bread_deliveries_for_member(member)
@@ -550,6 +554,12 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
         # Assign a bread to the delivery
         bread = BreadFactory.create(name="Roggenbrot")
         delivery = BreadDelivery.objects.filter(subscription=sub).first()
+        BreadCapacityPickupLocationFactory.create(
+            year=delivery.year,
+            delivery_week=delivery.delivery_week,
+            pickup_location=delivery.pickup_location,
+            bread=bread,
+        )
         delivery.bread = bread
         delivery.save()
 

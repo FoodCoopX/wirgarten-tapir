@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BakeryApi } from '../../../api-client';
 import { Plus, Pencil, Trash, Check, X, ToggleOn, ToggleOff } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
+import { handleRequestError } from '../../../utils/handleRequestError';
 import type { BreadLabel, BreadLabelRequest } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
 
@@ -28,8 +29,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
         setLabels(data);
       })
       .catch((error) => {
-        console.error('Failed to load labels:', error);
-        alert('Fehler beim Laden der Labels');
+        handleRequestError(error, 'Fehler beim Laden der Labels');
       })
       .finally(() => {
         setLoading(false);
@@ -50,8 +50,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
         loadLabels();
       })
       .catch((error) => {
-        console.error('Failed to create label:', error);
-        alert('Fehler beim Erstellen des Labels');
+        handleRequestError(error, 'Fehler beim Erstellen des Labels');
       });
   };
 
@@ -73,8 +72,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
         setEditingName('');
       })
       .catch((error) => {
-        console.error('Failed to update label:', error);
-        alert('Fehler beim Aktualisieren des Labels');
+        handleRequestError(error, 'Fehler beim Aktualisieren des Labels');
       });
   };
 
@@ -91,8 +89,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
         setLabels(prev => prev.filter(l => l.id !== id));
       })
       .catch((error) => {
-        console.error('Failed to delete label:', error);
-        alert('Fehler beim L\u00f6schen des Labels');
+        handleRequestError(error, 'Fehler beim Löschen des Labels');
       });
   };
 
@@ -111,8 +108,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
         setLabels(prev => prev.map(l => 
           l.id === label.id ? { ...l, isActive: label.isActive } : l
         ));
-        console.error('Failed to toggle label:', error);
-        alert('Fehler beim Aktualisieren des Labels');
+        handleRequestError(error, 'Fehler beim Aktualisieren des Labels');
       });
   };
 

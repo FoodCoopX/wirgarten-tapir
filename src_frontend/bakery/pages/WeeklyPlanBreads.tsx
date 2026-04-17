@@ -3,7 +3,9 @@ import { YearWeekSelectorCard } from '../components/cards';
 import { AllocationModal, DailySettingsModal } from '../components/modals';
 import { InfoCircle } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../api-client';
+import TapirButton from '../../components/TapirButton';
 import { useApi } from '../../hooks/useApi';
+import { handleRequestError } from '../../utils/handleRequestError';
 import type { BreadList } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -84,8 +86,7 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
         setDays(dayConfigs);
       })
       .catch((error) => {
-        console.error('Failed to load initial data:', error);
-        alert('Fehler beim Laden der Daten');
+        handleRequestError(error, 'Fehler beim Laden der Daten');
       })
       .finally(() => {
         setLoading(false);
@@ -156,14 +157,13 @@ const toggleBread = (dayIndex: number, breadId: string) => {
     },
   })
     .catch((error) => {
-      console.error('Failed to toggle bread:', error);
       // Revert optimistic update
       newDays[dayIndex] = {
         ...newDays[dayIndex],
         breads: { ...newDays[dayIndex].breads, [breadId]: currentState },
       };
       setDays([...newDays]);
-      alert('Fehler beim Speichern');
+      handleRequestError(error, 'Fehler beim Speichern');
     })
     .finally(() => {
       setSaving(false);
@@ -294,13 +294,13 @@ const toggleBread = (dayIndex: number, breadId: string) => {
                   </small>
                 </div>
                 <div className="card-footer">
-                  <button
-                    className="btn btn-bakery-brown w-100"
+                  <TapirButton
+                    variant=""
+                    className="btn-bakery-brown w-100"
+                    text="Abholorten max. Mengen zuweisen"
                     onClick={() => handleOpenModal(dayConfig.day, dayConfig.label)}
                     disabled={loading}
-                  >
-                    Abholorten max. Mengen zuweisen
-                  </button>
+                  />
                    
                   <DailySettingsModal
                     year={year}

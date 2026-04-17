@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Plus, Trash } from 'react-bootstrap-icons';
+import { Trash } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
+import TapirButton from '../../../components/TapirButton';
 import { useApi } from '../../../hooks/useApi';
+import { handleRequestError } from '../../../utils/handleRequestError';
 import type { Ingredient, BreadContent, BreadContentRequest, BreadList } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
 
@@ -43,8 +45,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
         setAvailableIngredients(ingredientsData);
       })
       .catch((error) => {
-        console.error('Failed to load data:', error);
-        alert('Fehler beim Laden der Daten');
+        handleRequestError(error, 'Fehler beim Laden der Daten');
       })
       .finally(() => {
         setLoading(false);
@@ -70,8 +71,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
         setAmount('100');
       })
       .catch((error) => {
-        console.error('Failed to add ingredient:', error);
-        alert('Fehler beim Hinzufügen der Zutat');
+        handleRequestError(error, 'Fehler beim Hinzufügen der Zutat');
       });
   };
 
@@ -84,8 +84,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
         setContents(prev => prev.filter(c => c.id !== contentId));
       })
       .catch((error) => {
-        console.error('Failed to delete content:', error);
-        alert('Fehler beim Löschen der Zutat');
+        handleRequestError(error, 'Fehler beim Löschen der Zutat');
       });
   };
 
@@ -186,14 +185,13 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
                       />
                     </div>
                     <div className="col-md-2">
-                      <button
-                        type="button"
-                        className="btn w-100 d-inline-flex align-items-center justify-content-center dark-brown-button"
+                      <TapirButton
+                        variant=""
+                        className="dark-brown-button w-100"
+                        icon="add"
                         onClick={handleAdd}
                         disabled={!selectedIngredient}
-                      >
-                        <Plus size={16} />
-                      </button>
+                      />
                     </div>
                   </div>
                 </div>
@@ -237,9 +235,7 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
         </div>
 
         <div className="p-3 border-top d-flex justify-content-end" style={{ borderRadius: '0 0 8px 8px' }}>
-          <button type="button" className="btn btn-secondary dark-brown-button" onClick={onClose}>
-            Speichern & Schließen
-          </button>
+          <TapirButton variant="" className="dark-brown-button" text="Speichern & Schließen" icon="save" onClick={onClose} />
         </div>
       </div>
     </div>

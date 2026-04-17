@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { IngredientModal } from '../modals/IngredientModal';
-import { Plus, Pencil, Trash } from 'react-bootstrap-icons';
+import { Pencil, Trash } from 'react-bootstrap-icons';
 import { BakeryApi, Configuration } from '../../../api-client';
+import TapirButton from '../../../components/TapirButton';
 import { useApi } from '../../../hooks/useApi';
+import { handleRequestError } from '../../../utils/handleRequestError';
 import type { Ingredient, IngredientRequest } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
 
@@ -31,8 +33,7 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
         setIngredients(data);
       })
       .catch((error) => {
-        console.error('Failed to load ingredients:', error);
-        alert('Fehler beim Laden der Zutaten');
+        handleRequestError(error, 'Fehler beim Laden der Zutaten');
       })
       .finally(() => {
         setLoading(false);
@@ -70,8 +71,7 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
         setEditingIngredient(null);
       })
       .catch((error) => {
-        console.error('Failed to save ingredient:', error);
-        alert('Fehler beim Speichern der Zutat');
+        handleRequestError(error, 'Fehler beim Speichern der Zutat');
       });
   };
 
@@ -83,8 +83,7 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
         loadIngredients();
       })
       .catch((error) => {
-        console.error('Failed to delete ingredient:', error);
-        alert('Fehler beim Löschen der Zutat');
+        handleRequestError(error, 'Fehler beim Löschen der Zutat');
       });
   };
 
@@ -106,12 +105,15 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
                 nur aktive
               </label>
             </div>
-            <button 
-              className="btn btn-sm py-0 btn-bakery-ingredients" 
+            <TapirButton
+              variant=""
+              className="btn-bakery-ingredients"
+              size="sm"
+              icon="add"
+              text="neu"
               onClick={handleCreate}
-            >
-              <Plus size={16} />              neu
-            </button>
+              style={{ paddingTop: 0, paddingBottom: 0 }}
+            />
           </div>
         </div>
         
@@ -127,16 +129,12 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
               {showOnlyActive ? (
                 <>
                   <p>Keine aktiven Zutaten vorhanden.</p>
-                  <button className="btn btn-sm btn-outline-secondary" onClick={() => setShowOnlyActive(false)}>
-                    Alle anzeigen
-                  </button>
+                  <TapirButton variant="outline-secondary" size="sm" text="Alle anzeigen" onClick={() => setShowOnlyActive(false)} />
                 </>
               ) : (
                 <>
                   <p>Noch keine Zutaten vorhanden.</p>
-                  <button className="btn btn-sm btn-outline-secondary" onClick={handleCreate}>
-                    Erste Zutat hinzufügen
-                  </button>
+                  <TapirButton variant="outline-secondary" size="sm" text="Erste Zutat hinzufügen" onClick={handleCreate} />
                 </>
               )}
             </div>

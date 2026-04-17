@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { InfoCircle, ArrowRepeat } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
+import TapirButton from '../../../components/TapirButton';
 import { useApi } from '../../../hooks/useApi';
+import { handleRequestError } from '../../../utils/handleRequestError';
 import type { BreadList, BreadSpecificsPerDeliveryDay } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
 
@@ -95,8 +97,7 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
         setInitialSpecifics(JSON.parse(JSON.stringify(initial)));
       })
       .catch((error) => {
-        console.error('Failed to load bread specifics:', error);
-        alert('Fehler beim Laden der Tageseinstellungen');
+        handleRequestError(error, 'Fehler beim Laden der Tageseinstellungen');
       })
       .finally(() => {
         setLoading(false);
@@ -176,8 +177,7 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
         setShow(false);
       })
       .catch((error) => {
-        console.error('Failed to save bread specifics:', error);
-        alert('Fehler beim Speichern der Tageseinstellungen');
+        handleRequestError(error, 'Fehler beim Speichern der Tageseinstellungen');
       })
       .finally(() => {
         setSaving(false);
@@ -186,19 +186,15 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
 
   return (
     <>
-      <button
-        className="btn btn-sm w-100 mt-2 btn-bakery-primary"
-        style={{ border: '1px solid rgba(255,255,255,0.4)' }}
+      <TapirButton
+        variant=""
+        className="btn-bakery-primary w-100 mt-2"
+        size="sm"
+        icon="settings"
+        text="Tageseinstellungen"
         onClick={() => setShow(true)}
-      >
-        <span
-          className="material-icons me-2"
-          style={{ fontSize: '16px', verticalAlign: 'middle' }}
-        >
-          settings
-        </span>
-        Tageseinstellungen
-      </button>
+        style={{ border: '1px solid rgba(255,255,255,0.4)' }}
+      />
 
       {show && (
         <>
@@ -329,29 +325,20 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
                 </div>
 
                 <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary d-inline-flex align-items-center gap-1"
+                  <TapirButton
+                    variant="secondary"
+                    text="Abbrechen"
                     onClick={() => setShow(false)}
                     disabled={saving}
-                  >
-                    Abbrechen
-                  </button>
-                  <button
-                    type="button"
-                    className="btn d-inline-flex align-items-center gap-1 dark-brown-button"
+                  />
+                  <TapirButton
+                    variant=""
+                    className="dark-brown-button"
+                    text="Speichern & Schließen"
+                    icon="save"
                     onClick={handleSaveAndClose}
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm" />
-                        Speichert...
-                      </>
-                    ) : (
-                      <>Speichern &amp; Schließen</>
-                    )}
-                  </button>
+                    loading={saving}
+                  />
                 </div>
               </div>
             </div>

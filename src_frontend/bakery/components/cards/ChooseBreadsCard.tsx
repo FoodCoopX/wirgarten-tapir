@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
+import { handleRequestError } from '../../../utils/handleRequestError';
 import type { BreadList, BreadContent, BreadDelivery, BreadLabel } from '../../../api-client/models';
 import { YearWeekSelectorCard } from './YearWeekSelectorCard';
 import { BreadSelectionModal } from '../modals/BreadSelectionModal';
 import PickupLocationChangeModal from '../../../member_profile/deliveries_and_jokers/PickupLocationChangeModal';
 import { CompactBreadCard } from './CompactBreadCard';
 import { CompactPickupLocationCard } from './CompactPickupLocationCard';
+import TapirButton from '../../../components/TapirButton';
 import dayjs from 'dayjs';
 import isoWeek from "dayjs/plugin/isoWeek";
 import '../../styles/bakery_styles.css';
@@ -239,8 +241,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
         loadData();
       })
       .catch((error) => {
-        console.error('Failed to remove bread:', error);
-        alert('L\u00f6schen des Brotes fehlgeschlagen');
+        handleRequestError(error, 'Löschen des Brotes fehlgeschlagen');
       })
       .finally(() => {
         setSaving(null);
@@ -360,13 +361,14 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                         <div className="d-flex align-items-center justify-content-between p-3 border rounded bg-bakery-gray-light">
                           <span className="text-muted">Noch nicht gewählt</span>
                           {canEditThisLocation && (
-                            <button
-                              className="btn btn-sm btn-outline-secondary dark-brown-button"
+                            <TapirButton
+                              variant=""
+                              className="dark-brown-button"
+                              size="sm"
+                              text="Auswählen"
                               onClick={() => setEditingLocation(delivery.id!)}
                               disabled={saving === delivery.id || !canChangePickupLocation}
-                            >
-                              Auswählen
-                            </button>
+                            />
                           )}
                         </div>
                         {!canChangePickupLocation && canEditThisLocation && (
@@ -418,13 +420,14 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
                       <>
                         <div className="d-flex align-items-center justify-content-between p-3 border rounded bg-bakery-gray-light">
                           <span className="text-muted">Noch nicht gewählt</span>
-                          <button
-                            className="btn btn-sm btn-outline-secondary dark-brown-button"
+                          <TapirButton
+                            variant=""
+                            className="dark-brown-button"
+                            size="sm"
+                            text="Auswählen"
                             onClick={() => setModalOpen(delivery.id!)}
                             disabled={!delivery.pickupLocation || saving === delivery.id || isAfterBreadDeadline}
-                          >
-                            Auswählen
-                          </button>
+                          />
                         </div>
                         {isAfterBreadDeadline && (
                           <div className="alert alert-danger mt-2 mb-0 py-1 px-2">

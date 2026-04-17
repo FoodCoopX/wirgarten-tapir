@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BakeryApi, PickupLocationsApi } from '../../api-client';
 import { useApi } from '../../hooks/useApi';
+import { handleRequestError } from '../../utils/handleRequestError';
 import type { PickupListResponse, PickupLocation, SolverPreviewDetailResponse } from '../../api-client/models';
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -123,8 +124,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         setInitialDataLoaded(true);
       })
       .catch((error) => {
-        console.error('Failed to load initial data:', error);
-        alert('Fehler beim Laden der Daten');
+        handleRequestError(error, 'Fehler beim Laden der Daten');
       })
       .finally(() => {
         setLoading(false);

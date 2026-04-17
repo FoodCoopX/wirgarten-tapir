@@ -1,6 +1,7 @@
 import React from 'react';
 import { EggFried } from 'react-bootstrap-icons';
 import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
+import TapirButton from '../../../components/TapirButton';
 import '../../styles/bakery_styles.css';
 
 interface CompactBreadCardProps {
@@ -51,22 +52,24 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
                 {showActions && (
                   <div className="d-flex gap-1">
                     {onEdit && (
-                      <button
-                        className="btn btn-sm dark-brown-button btn-compact-action"
+                      <TapirButton
+                        variant=""
+                        className="dark-brown-button btn-compact-action"
+                        size="sm"
+                        text="Ändern"
                         onClick={onEdit}
                         disabled={disabled}
-                      >
-                        Ändern
-                      </button>
+                      />
                     )}
                     {onRemove && (
-                      <button
-                        className="btn btn-sm btn-outline-danger btn-compact-action"
+                      <TapirButton
+                        variant="outline-danger"
+                        className="btn-compact-action"
+                        size="sm"
+                        text="Entfernen"
                         onClick={onRemove}
                         disabled={disabled}
-                      >
-                        Entfernen
-                      </button>
+                      />
                     )}
                   </div>
                 )}
