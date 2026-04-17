@@ -71,7 +71,7 @@ class TestSignals(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-    @patch("tapir.bakery.models.ensure_bread_deliveries_for_member")
+    @patch("tapir.bakery.services.breaddelivery_service.ensure_bread_deliveries_for_member")
     def test_subscription_save_triggers_bread_delivery_creation(self, mock_ensure):
         member = MemberFactory.create()
         sub = SubscriptionFactory.create(member=member)
@@ -80,7 +80,7 @@ class TestSignals(TapirIntegrationTest):
         if sub.product.type.delivery_cycle == "weekly":
             mock_ensure.assert_called_with(member)
 
-    @patch("tapir.bakery.models.ensure_bread_deliveries_for_member")
+    @patch("tapir.bakery.services.breaddelivery_service.ensure_bread_deliveries_for_member")
     def test_pickup_location_change_triggers_bread_delivery_update(self, mock_ensure):
         from tapir.wirgarten.models import MemberPickupLocation
 
