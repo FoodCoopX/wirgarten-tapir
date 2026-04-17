@@ -7,7 +7,6 @@ from tapir.bakery.models import (
     BreadLabel,
     BreadSpecificsPerDeliveryDay,
     PreferredBread,
-    PreferredLabel,
 )
 from tapir.bakery.tests.factories import (
     BreadCapacityPickupLocationFactory,
@@ -580,74 +579,6 @@ class TestBreadDeliveryViewSet(TapirIntegrationTest):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-
-
-# ──────────────────────────────────────────────────────────────────────
-# PreferredLabelViewSet
-# ──────────────────────────────────────────────────────────────────────
-class TestPreferredLabelViewSet(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls):
-        ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def setUp(self):
-        super().setUp()
-        self.member = MemberFactory.create(is_superuser=True)
-        self.client.force_login(self.member)
-
-    def test_list_filterByMember(self):
-        label = BreadLabelFactory.create(name="Vollkorn")
-        pref = PreferredLabel.objects.create(member=self.member)
-        pref.labels.add(label)
-
-        other = MemberFactory.create()
-        PreferredLabel.objects.create(member=other)
-
-        response = self.client.get(
-            reverse("bakery:preferred-labels-list"),
-            {"member_id": str(self.member.id)},
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-
-    def test_bulkUpdate_replacesLabels(self):
-        label1 = BreadLabelFactory.create(name="Vollkorn")
-        label2 = BreadLabelFactory.create(name="Sauerteig")
-        PreferredLabel.objects.create(member=self.member)
-
-        response = self.client.post(
-            reverse(
-                "bakery:preferred-labels-bulk-update",
-                kwargs={"pk": self.member.id},
-            ),
-            {"labels": [str(label1.id), str(label2.id)]},
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        pref = PreferredLabel.objects.get(member=self.member)
-        self.assertEqual(
-            set(pref.labels.values_list("id", flat=True)), {label1.id, label2.id}
-        )
-
-    def test_bulkUpdate_emptyList_clearsLabels(self):
-        label = BreadLabelFactory.create(name="Vollkorn")
-        pref = PreferredLabel.objects.create(member=self.member)
-        pref.labels.add(label)
-
-        response = self.client.post(
-            reverse(
-                "bakery:preferred-labels-bulk-update",
-                kwargs={"pk": self.member.id},
-            ),
-            data={"labels": []},
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        pref.refresh_from_db()
-        self.assertEqual(pref.labels.count(), 0)
 
 
 # ──────────────────────────────────────────────────────────────────────

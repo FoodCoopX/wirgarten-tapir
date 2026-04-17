@@ -33,7 +33,6 @@ from tapir.bakery.viewsets import (
     BreadViewSet,
     IngredientViewSet,
     PreferredBreadViewSet,
-    PreferredLabelViewSet,
     StoveSessionViewSet,
 )
 
@@ -131,11 +130,7 @@ router.register(
     BreadCapacityPickupLocationViewSet,
     basename="bread_capacity_pickup_location",
 )
-router.register(
-    r"preferred-labels",
-    PreferredLabelViewSet,
-    basename="preferred-labels",
-)
+
 router.register(r"preferred-breads", PreferredBreadViewSet, basename="preferred-breads")
 router.register(
     r"bread-deliveries",

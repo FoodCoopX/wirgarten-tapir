@@ -173,16 +173,6 @@ class AvailableBreadsForDeliveryDay(TapirModel):
         return f"{self.bread.name} - Day {self.delivery_day} (Week {self.delivery_week}/{self.year})"
 
 
-# class PreferredLabel(TapirModel):
-#     member = models.OneToOneField(
-#         Member, on_delete=models.CASCADE, related_name="preferred_labels"
-#     )
-#     labels = models.ManyToManyField("BreadLabel", related_name="preferred_by_members")
-
-#     def __str__(self):
-#         return f"Preferred labels for {self.member}"
-
-
 class BreadDelivery(TapirModel):
     year = models.PositiveIntegerField()
     delivery_week = models.PositiveIntegerField()

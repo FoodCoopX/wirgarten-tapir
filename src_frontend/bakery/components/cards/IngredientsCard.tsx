@@ -24,17 +24,19 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
     loadIngredients();
   }, []);
 
-  const loadIngredients = async () => {
+  const loadIngredients = () => {
     setLoading(true);
-    try {
-      const data = await bakeryApi.bakeryIngredientsList({});
-      setIngredients(data);
-    } catch (error) {
-      console.error('Failed to load ingredients:', error);
-      alert('Fehler beim Laden der Zutaten');
-    } finally {
-      setLoading(false);
-    }
+    bakeryApi.bakeryIngredientsList({})
+      .then((data) => {
+        setIngredients(data);
+      })
+      .catch((error) => {
+        console.error('Failed to load ingredients:', error);
+        alert('Fehler beim Laden der Zutaten');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const filteredIngredients = ingredients.filter(ingredient => {
@@ -51,38 +53,39 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
     setShowModal(true);
   };
 
-  const handleSave = async (ingredient: IngredientRequest) => {
-    try {
-      if (editingIngredient) {
-        await bakeryApi.bakeryIngredientsPartialUpdate({
+  const handleSave = (ingredient: IngredientRequest) => {
+    const promise = editingIngredient
+      ? bakeryApi.bakeryIngredientsPartialUpdate({
           id: editingIngredient.id!,
           patchedIngredientRequest: ingredient
-        });
-      } else {
-        await bakeryApi.bakeryIngredientsCreate({
+        })
+      : bakeryApi.bakeryIngredientsCreate({
           ingredientRequest: ingredient
         });
-      }
 
-      await loadIngredients();
-      setShowModal(false);
-      setEditingIngredient(null);
-    } catch (error) {
-      console.error('Failed to save ingredient:', error);
-      alert('Fehler beim Speichern der Zutat');
-    }
+    promise
+      .then(() => {
+        loadIngredients();
+        setShowModal(false);
+        setEditingIngredient(null);
+      })
+      .catch((error) => {
+        console.error('Failed to save ingredient:', error);
+        alert('Fehler beim Speichern der Zutat');
+      });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm('Zutat wirklich löschen?')) return;
 
-    try {
-      await bakeryApi.bakeryIngredientsDestroy({ id });
-      await loadIngredients();
-    } catch (error) {
-      console.error('Failed to delete ingredient:', error);
-      alert('Fehler beim Löschen der Zutat');
-    }
+    bakeryApi.bakeryIngredientsDestroy({ id })
+      .then(() => {
+        loadIngredients();
+      })
+      .catch((error) => {
+        console.error('Failed to delete ingredient:', error);
+        alert('Fehler beim Löschen der Zutat');
+      });
   };
 
   return (

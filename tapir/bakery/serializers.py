@@ -11,7 +11,6 @@ from tapir.bakery.models import (
     BreadsPerPickupLocationPerWeek,
     Ingredient,
     PreferredBread,
-    PreferredLabel,
     StoveSession,
 )
 
@@ -146,17 +145,6 @@ class ToggleBreadResponseSerializer(serializers.Serializer):
     bread_id = serializers.CharField()
 
 
-class PreferredLabelSerializer(serializers.ModelSerializer):
-    member_id = serializers.CharField(source="member.id", read_only=True)
-    labels = serializers.PrimaryKeyRelatedField(
-        queryset=BreadLabel.objects.all(), many=True
-    )
-
-    class Meta:
-        model = PreferredLabel
-        fields = ["id", "member_id", "labels"]
-
-
 class PreferredBreadSerializer(serializers.ModelSerializer):
     member_id = serializers.CharField(source="member.id", read_only=True)
     breads = serializers.PrimaryKeyRelatedField(queryset=Bread.objects.all(), many=True)
@@ -164,13 +152,6 @@ class PreferredBreadSerializer(serializers.ModelSerializer):
     class Meta:
         model = PreferredBread
         fields = ["id", "member_id", "breads"]
-
-
-class PreferredLabelBulkUpdateSerializer(serializers.Serializer):
-    labels = serializers.ListField(
-        child=serializers.CharField(),
-        help_text="List of BreadLabel IDs to set as preferred for the member.",
-    )
 
 
 class PreferredBreadsBulkUpdateSerializer(serializers.Serializer):

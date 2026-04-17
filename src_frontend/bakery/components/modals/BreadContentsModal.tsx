@@ -32,57 +32,61 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
   }, []);
 
 
-  const loadData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      const [contentsData, ingredientsData] = await Promise.all([
-        bakeryApi.bakeryBreadcontentsList({ bread: bread.id! }),
-        bakeryApi.bakeryIngredientsList()
-      ]);
-      setContents(contentsData);
-      setAvailableIngredients(ingredientsData);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      alert('Fehler beim Laden der Daten');
-    } finally {
-      setLoading(false);
-    }
+    Promise.all([
+      bakeryApi.bakeryBreadcontentsList({ bread: bread.id! }),
+      bakeryApi.bakeryIngredientsList()
+    ])
+      .then(([contentsData, ingredientsData]) => {
+        setContents(contentsData);
+        setAvailableIngredients(ingredientsData);
+      })
+      .catch((error) => {
+        console.error('Failed to load data:', error);
+        alert('Fehler beim Laden der Daten');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!selectedIngredient) return;
 
     const payload: BreadContentRequest = {
       bread: bread.id!,
       ingredient: selectedIngredient,
-      amount: amount,
+      amount: Number(amount),
       sortOrder: contents.length,
     };
 
-    try {
-      await bakeryApi.bakeryBreadcontentsCreate({
-        breadContentRequest: payload
+    bakeryApi.bakeryBreadcontentsCreate({
+      breadContentRequest: payload
+    })
+      .then(() => {
+        loadData();
+        setSelectedIngredient('');
+        setAmount('100');
+      })
+      .catch((error) => {
+        console.error('Failed to add ingredient:', error);
+        alert('Fehler beim Hinzufügen der Zutat');
       });
-      await loadData();
-      setSelectedIngredient('');
-      setAmount('100');
-    } catch (error) {
-      console.error('Failed to add ingredient:', error);
-      alert('Fehler beim Hinzufügen der Zutat');
-    }
   };
 
-  const handleDelete = async (contentId: string) => {
+  const handleDelete = (contentId: string) => {
     
-    try {
-      await bakeryApi.bakeryBreadcontentsDestroy({
-        id: contentId
+    bakeryApi.bakeryBreadcontentsDestroy({
+      id: contentId
+    })
+      .then(() => {
+        setContents(prev => prev.filter(c => c.id !== contentId));
+      })
+      .catch((error) => {
+        console.error('Failed to delete content:', error);
+        alert('Fehler beim Löschen der Zutat');
       });
-      setContents(prev => prev.filter(c => c.id !== contentId));
-    } catch (error) {
-      console.error('Failed to delete content:', error);
-      alert('Fehler beim Löschen der Zutat');
-    }
   };
 
 

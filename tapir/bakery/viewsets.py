@@ -16,7 +16,6 @@ from tapir.bakery.models import (
     BreadsPerPickupLocationPerWeek,
     Ingredient,
     PreferredBread,
-    PreferredLabel,
     StoveSession,
 )
 from tapir.bakery.serializers import (
@@ -33,8 +32,6 @@ from tapir.bakery.serializers import (
     IngredientSerializer,
     PreferredBreadsBulkUpdateSerializer,
     PreferredBreadSerializer,
-    PreferredLabelBulkUpdateSerializer,
-    PreferredLabelSerializer,
     StoveSessionSerializer,
 )
 from tapir.bakery.utils import str_to_bool
@@ -481,54 +478,6 @@ class BreadDeliveryViewSet(viewsets.ModelViewSet):
 
             # Capacity is available, proceed with update
             return super().partial_update(request, *args, **kwargs)
-
-
-@extend_schema(
-    tags=["bakery"],
-    description="Manage preferred bread labels for a member.",
-    request=PreferredLabelSerializer,
-    responses={200: PreferredLabelSerializer},
-)
-class PreferredLabelViewSet(viewsets.ModelViewSet):
-    queryset = PreferredLabel.objects.all()
-    serializer_class = PreferredLabelSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="member_id",
-                type=str,
-                description="Filter by member ID",
-                required=False,
-            ),
-        ]
-    )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
-    def get_queryset(self):
-        # Optionally filter by member
-        member_id = self.request.query_params.get("member_id")
-        if member_id:
-            return self.queryset.filter(member__id=member_id)
-        return self.queryset
-
-    @extend_schema(
-        request=PreferredLabelBulkUpdateSerializer,
-        responses={200: PreferredLabelBulkUpdateSerializer},
-        description="Bulk update preferred bread labels for a member. Replaces all labels for the member with the provided list.",
-        tags=["bakery"],
-    )
-    @action(detail=True, methods=["post"], url_path="bulk-update")
-    def bulk_update(self, request, pk=None):
-        serializer = PreferredLabelBulkUpdateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        labels = serializer.validated_data["labels"]
-        preferred, _ = PreferredLabel.objects.get_or_create(member_id=pk)
-
-        preferred.labels.set(labels)
-        return Response(serializer.data)
 
 
 @extend_schema(

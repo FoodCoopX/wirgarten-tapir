@@ -1,7 +1,5 @@
 /* tslint:disable */
 /* eslint-disable */
-export * from './AbhollisteEntry';
-export * from './AbhollisteResponse';
 export * from './AssignmentLogEntry';
 export * from './AssignmentLogEntryStatusEnum';
 export * from './AutomatedExportCycleEnum';
@@ -148,7 +146,6 @@ export * from './PatchedMailCategoryRequest';
 export * from './PatchedPdfExportModelRequest';
 export * from './PatchedPickupLocationCapacitiesRequest';
 export * from './PatchedPreferredBreadRequest';
-export * from './PatchedPreferredLabelRequest';
 export * from './PatchedSaveExtendedProductTypeRequest';
 export * from './PatchedStaticSegmentRecipientRequest';
 export * from './PatchedStaticSegmentRequest';
@@ -162,6 +159,8 @@ export * from './PdfExportModel';
 export * from './PdfExportModelRequest';
 export * from './PersonalDataRequest';
 export * from './PickingModeEnum';
+export * from './PickupListEntry';
+export * from './PickupListResponse';
 export * from './PickupLocation';
 export * from './PickupLocationCapacities';
 export * from './PickupLocationCapacityByShare';
@@ -178,10 +177,6 @@ export * from './PreferredBread';
 export * from './PreferredBreadRequest';
 export * from './PreferredBreadsBulkUpdate';
 export * from './PreferredBreadsBulkUpdateRequest';
-export * from './PreferredLabel';
-export * from './PreferredLabelBulkUpdate';
-export * from './PreferredLabelBulkUpdateRequest';
-export * from './PreferredLabelRequest';
 export * from './PreferredLanguageEnum';
 export * from './Product';
 export * from './ProductBasketSizeEquivalence';

@@ -22,24 +22,25 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
     loadMetrics();
   }, [year, week, deliveryDay]);
 
-  const loadMetrics = async () => {
+  const loadMetrics = () => {
     setLoading(true);
     setError(null);
     
-    try {
-      const response = await bakeryApi.bakeryMetricsSatisfactionRetrieve({
-        year,
-        deliveryWeek: week,
-        deliveryDay,
+    bakeryApi.bakeryMetricsSatisfactionRetrieve({
+      year,
+      deliveryWeek: week,
+      deliveryDay,
+    })
+      .then((response) => {
+        setData(response);
+      })
+      .catch((err) => {
+        console.error('Failed to load metrics:', err);
+        setError('Fehler beim Laden der Metriken');
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      
-      setData(response);
-    } catch (err) {
-      console.error('Failed to load metrics:', err);
-      setError('Fehler beim Laden der Metriken');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const toggleLocation = (locationId: string) => {

@@ -72,34 +72,35 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
     };
   }, [show, saving, specifics, initialSpecifics]);
 
-  const loadData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      const existing = await bakeryApi.bakeryBreadSpecificsList({
-        year,
-        deliveryWeek: week,
-        deliveryDay: day,
-      });
+    bakeryApi.bakeryBreadSpecificsList({
+      year,
+      deliveryWeek: week,
+      deliveryDay: day,
+    })
+      .then((existing) => {
+        const initial: SpecificsData = {};
+        activeBreads.forEach((bread) => {
+          const entry = existing.find((e: BreadSpecificsPerDeliveryDay) => e.bread === bread.id);
+          initial[bread.id!] = {
+            minPieces: entry?.minPieces != null ? String(entry.minPieces) : '',
+            maxPieces: entry?.maxPieces != null ? String(entry.maxPieces) : '',
+            minRemainingPieces: entry?.minRemainingPieces != null ? String(entry.minRemainingPieces) : '',
+            fixedPieces: entry?.fixedPieces != null ? String(entry.fixedPieces) : '',
+          };
+        });
 
-      const initial: SpecificsData = {};
-      activeBreads.forEach((bread) => {
-        const entry = existing.find((e: BreadSpecificsPerDeliveryDay) => e.bread === bread.id);
-        initial[bread.id!] = {
-          minPieces: entry?.minPieces != null ? String(entry.minPieces) : '',
-          maxPieces: entry?.maxPieces != null ? String(entry.maxPieces) : '',
-          minRemainingPieces: entry?.minRemainingPieces != null ? String(entry.minRemainingPieces) : '',
-          fixedPieces: entry?.fixedPieces != null ? String(entry.fixedPieces) : '',
-        };
+        setSpecifics(initial);
+        setInitialSpecifics(JSON.parse(JSON.stringify(initial)));
+      })
+      .catch((error) => {
+        console.error('Failed to load bread specifics:', error);
+        alert('Fehler beim Laden der Tageseinstellungen');
+      })
+      .finally(() => {
+        setLoading(false);
       });
-
-      setSpecifics(initial);
-      setInitialSpecifics(JSON.parse(JSON.stringify(initial)));
-    } catch (error) {
-      console.error('Failed to load bread specifics:', error);
-      alert('Fehler beim Laden der Tageseinstellungen');
-    } finally {
-      setLoading(false);
-    }
   };
 
    const getPlaceholder = (bread: BreadList, field: keyof SpecificsData[string]): string => {
@@ -127,54 +128,60 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
     }));
   };
 
-  const handleSaveAndClose = async () => {
+  const handleSaveAndClose = () => {
     setSaving(true);
-    try {
-      const updates: Array<{
-        bread: string;
-        minPieces: number | null;
-        maxPieces: number | null;
-        minRemainingPieces: number | null;
-        fixedPieces: number | null;
-      }> = [];
 
-      Object.entries(specifics).forEach(([breadId, values]) => {
-        const initial = initialSpecifics[breadId];
-        const changed =
-          values.minPieces !== initial?.minPieces ||
-          values.maxPieces !== initial?.maxPieces ||
-          values.minRemainingPieces !== initial?.minRemainingPieces ||
-          values.fixedPieces !== initial?.fixedPieces;
+    const updates: Array<{
+      bread: string;
+      minPieces: number | null;
+      maxPieces: number | null;
+      minRemainingPieces: number | null;
+      fixedPieces: number | null;
+    }> = [];
 
-        if (changed) {
-          updates.push({
-            bread: breadId,
-            minPieces: values.minPieces === '' ? null : Number(values.minPieces),
-            maxPieces: values.maxPieces === '' ? null : Number(values.maxPieces),
-            minRemainingPieces: values.minRemainingPieces === '' ? null : Number(values.minRemainingPieces),
-            fixedPieces: values.fixedPieces === '' ? null : Number(values.fixedPieces),
-          });
-        }
-      });
+    Object.entries(specifics).forEach(([breadId, values]) => {
+      const initial = initialSpecifics[breadId];
+      const changed =
+        values.minPieces !== initial?.minPieces ||
+        values.maxPieces !== initial?.maxPieces ||
+        values.minRemainingPieces !== initial?.minRemainingPieces ||
+        values.fixedPieces !== initial?.fixedPieces;
 
-      if (updates.length > 0) {
-        await bakeryApi.bakeryBreadSpecificsBulkUpdateCreate({
-          breadSpecificsPerDeliveryDayBulkUpdateRequest: {
-            year,
-            deliveryWeek: week,
-            deliveryDay: day,
-            updates,
-          },
+      if (changed) {
+        updates.push({
+          bread: breadId,
+          minPieces: values.minPieces === '' ? null : Number(values.minPieces),
+          maxPieces: values.maxPieces === '' ? null : Number(values.maxPieces),
+          minRemainingPieces: values.minRemainingPieces === '' ? null : Number(values.minRemainingPieces),
+          fixedPieces: values.fixedPieces === '' ? null : Number(values.fixedPieces),
         });
       }
+    });
 
+    if (updates.length === 0) {
       setShow(false);
-    } catch (error) {
-      console.error('Failed to save bread specifics:', error);
-      alert('Fehler beim Speichern der Tageseinstellungen');
-    } finally {
       setSaving(false);
+      return;
     }
+
+    bakeryApi.bakeryBreadSpecificsBulkUpdateCreate({
+      breadSpecificsPerDeliveryDayBulkUpdateRequest: {
+        year,
+        deliveryWeek: week,
+        deliveryDay: day,
+        updates,
+      },
+    })
+      .then(() => {
+        setShow(false);
+      })
+      .catch((error) => {
+        console.error('Failed to save bread specifics:', error);
+        alert('Fehler beim Speichern der Tageseinstellungen');
+      })
+      .finally(() => {
+        setSaving(false);
+      });
   };
 
   return (

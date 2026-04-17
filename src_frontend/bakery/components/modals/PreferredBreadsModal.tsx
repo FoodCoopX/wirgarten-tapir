@@ -56,49 +56,49 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
     };
   }, [isOpen, saving, selectedBreadIds]);
 
-  const loadData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      const [breadsData, preferredData, labels, contents] = await Promise.all([
-        bakeryApi.bakeryBreadsListList({}),
-        bakeryApi.bakeryPreferredBreadsList({ memberId }),
-        bakeryApi.bakeryLabelsList(),
-        bakeryApi.bakeryBreadcontentsList(),
+    Promise.all([
+      bakeryApi.bakeryBreadsListList({}),
+      bakeryApi.bakeryPreferredBreadsList({ memberId }),
+      bakeryApi.bakeryLabelsList(),
+      bakeryApi.bakeryBreadcontentsList(),
+    ])
+      .then(([breadsData, preferredData, labels, contents]) => {
+        setBreads(breadsData.filter(b => b.isActive !== false));
 
-      ]);
-
-      setBreads(breadsData.filter(b => b.isActive !== false));
-
-      const labelMapping = labels.reduce((acc, label) => {
-        if (label.id) {
-          acc[label.id] = label;
-        }
-        return acc;
-      }, {} as { [labelId: string]: BreadLabel });
-      setLabelsMap(labelMapping);
-
-      const contentMapping = contents.reduce((acc, content) => {
-        const breadId = content.bread;
-        if (breadId) {
-          if (!acc[breadId]) {
-            acc[breadId] = [];
+        const labelMapping = labels.reduce((acc, label) => {
+          if (label.id) {
+            acc[label.id] = label;
           }
-          acc[breadId].push(content);
+          return acc;
+        }, {} as { [labelId: string]: BreadLabel });
+        setLabelsMap(labelMapping);
+
+        const contentMapping = contents.reduce((acc, content) => {
+          const breadId = content.bread;
+          if (breadId) {
+            if (!acc[breadId]) {
+              acc[breadId] = [];
+            }
+            acc[breadId].push(content);
+          }
+          return acc;
+        }, {} as { [breadId: string]: BreadContent[] });
+        setContentsMap(contentMapping);
+
+
+        if (preferredData.length > 0 && preferredData[0].breads) {
+          setSelectedBreadIds(new Set(preferredData[0].breads));
         }
-        return acc;
-      }, {} as { [breadId: string]: BreadContent[] });
-      setContentsMap(contentMapping);
-
-
-      if (preferredData.length > 0 && preferredData[0].breads) {
-        setSelectedBreadIds(new Set(preferredData[0].breads));
-      }
-    } catch (error) {
-      console.error('Failed to load breads:', error);
-      alert('Fehler beim Laden der Brote');
-    } finally {
-      setLoading(false);
-    }
+      })
+      .catch((error) => {
+        console.error('Failed to load breads:', error);
+        alert('Fehler beim Laden der Brote');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
    const toggleBread = (breadId: string) => {
@@ -117,22 +117,24 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
     
     setSelectedBreadIds(newSelected);
   };
-  const handleSave = async () => {
+  const handleSave = () => {
     setSaving(true);
-    try {
-      await bakeryApi.bakeryPreferredBreadsBulkUpdateCreate({
-        id: memberId,
-        preferredBreadsBulkUpdateRequest: {
-          breads: Array.from(selectedBreadIds),
-        },
+    bakeryApi.bakeryPreferredBreadsBulkUpdateCreate({
+      id: memberId,
+      preferredBreadsBulkUpdateRequest: {
+        breads: Array.from(selectedBreadIds),
+      },
+    })
+      .then(() => {
+        onClose();
+      })
+      .catch((error) => {
+        console.error('Failed to save preferred breads:', error);
+        alert('Fehler beim Speichern der Lieblingsbrote');
+      })
+      .finally(() => {
+        setSaving(false);
       });
-      onClose();
-    } catch (error) {
-      console.error('Failed to save preferred breads:', error);
-      alert('Fehler beim Speichern der Lieblingsbrote');
-    } finally {
-      setSaving(false);
-    }
   };
 
   if (!isOpen) return null;

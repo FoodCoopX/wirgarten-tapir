@@ -89,7 +89,7 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [detail, setDetail] = useState<SolverPreviewDetailResponse | null>(null);
 
-  const handleRunPreview = async () => {
+  const handleRunPreview = () => {
     setRunning(true);
     setError(null);
     setDiagnostics([]);
@@ -97,81 +97,90 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
     setDetail(null);
     setSelectedIndex(0);
 
-    try {
-      const response = await bakeryApi.bakeryApiBakerySolverPreviewCreate({
-        solverPreviewRequestRequest: {
-          year,
-          deliveryWeek,
-          deliveryDay,
-          maxSolutions: 10,
-        },
-      });
-      setPreviewResponse(response);
-      setDiagnostics((response as any).diagnostics || []);
-
-      // Auto-load detail for first solution
-      if (response.totalSolutions > 0) {
-        await loadDetail(0);
-      }
-     } catch (err: any) {
-      let message = 'Solver fehlgeschlagen';
-      let diags: SolverDiagnostic[] = [];
-
-      // The openapi-generator client wraps the response — try multiple paths
-      try {
-        const body = err?.response ? await err.response.json() : err?.body;
-        if (body) {
-          message = body.error || message;
-          diags = body.diagnostics || [];
-        }
-      } catch {
-        // If response parsing fails, try direct properties
-        message = err?.body?.error || err?.message || message;
-        diags = err?.body?.diagnostics || [];
-      }
-
-      setError(message);
-      setDiagnostics(diags);
-    } finally {
-      setRunning(false);
-    }
-  };
-
-  const loadDetail = async (index: number) => {
-    setSelectedIndex(index);
-    try {
-      const detailResponse = await bakeryApi.bakeryApiBakerySolverPreviewDetailRetrieve({
+    bakeryApi.bakeryApiBakerySolverPreviewCreate({
+      solverPreviewRequestRequest: {
         year,
         deliveryWeek,
         deliveryDay,
-        solutionIndex: index,
+        maxSolutions: 10,
+      },
+    })
+      .then((response) => {
+        setPreviewResponse(response);
+        setDiagnostics((response as any).diagnostics || []);
+
+        // Auto-load detail for first solution
+        if (response.totalSolutions > 0) {
+          loadDetail(0);
+        }
+      })
+      .catch((err: any) => {
+        let message = 'Solver fehlgeschlagen';
+        let diags: SolverDiagnostic[] = [];
+
+        // The openapi-generator client wraps the response — try multiple paths
+        if (err?.response) {
+          err.response.json()
+            .then((body: any) => {
+              if (body) {
+                setError(body.error || message);
+                setDiagnostics(body.diagnostics || []);
+              }
+            })
+            .catch(() => {
+              setError(err?.body?.error || err?.message || message);
+              setDiagnostics(err?.body?.diagnostics || []);
+            });
+        } else {
+          message = err?.body?.error || err?.message || message;
+          diags = err?.body?.diagnostics || [];
+          setError(message);
+          setDiagnostics(diags);
+        }
+      })
+      .finally(() => {
+        setRunning(false);
       });
-      setDetail(detailResponse);
-      onPreviewDetail?.(detailResponse);
-    } catch (err: any) {
-      setError(`Fehler beim Laden von Lösung ${index + 1}`);
-    }
   };
 
-  const handleApply = async () => {
+  const loadDetail = (index: number) => {
+    setSelectedIndex(index);
+    bakeryApi.bakeryApiBakerySolverPreviewDetailRetrieve({
+      year,
+      deliveryWeek,
+      deliveryDay,
+      solutionIndex: index,
+    })
+      .then((detailResponse) => {
+        setDetail(detailResponse);
+        onPreviewDetail?.(detailResponse);
+      })
+      .catch((err: any) => {
+        setError(`Fehler beim Laden von L\u00f6sung ${index + 1}`);
+      });
+  };
+
+  const handleApply = () => {
     setApplying(true);
     setError(null);
-    try {
-      await bakeryApi.bakeryApiBakerySolverApplyCreate({
-        solverApplyRequestRequest: {
-          year,
-          deliveryWeek,
-          deliveryDay,
-          solutionIndex: selectedIndex,
-        },
+    bakeryApi.bakeryApiBakerySolverApplyCreate({
+      solverApplyRequestRequest: {
+        year,
+        deliveryWeek,
+        deliveryDay,
+        solutionIndex: selectedIndex,
+      },
+    })
+      .then(() => {
+        onApplied?.();
+      })
+      .catch((err: any) => {
+        const message = err?.body?.error || err?.message || 'Anwenden fehlgeschlagen';
+        setError(message);
+      })
+      .finally(() => {
+        setApplying(false);
       });
-      onApplied?.();
-    } catch (err: any) {
-      const message = err?.body?.error || err?.message || 'Anwenden fehlgeschlagen';
-      setError(message);
-    } finally {
-      setApplying(false);
-    }
   };
 
   return (

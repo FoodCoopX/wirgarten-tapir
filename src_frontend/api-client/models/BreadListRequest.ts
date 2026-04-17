@@ -14,7 +14,7 @@
 
 import { mapValues } from '../runtime';
 /**
- * Serializer for bread list view (minimal data)
+ * 
  * @export
  * @interface BreadListRequest
  */
@@ -45,10 +45,10 @@ export interface BreadListRequest {
     description?: string;
     /**
      * Weight in grams
-     * @type {string}
+     * @type {number}
      * @memberof BreadListRequest
      */
-    weight: string;
+    weight: number;
     /**
      * List of possible pieces per stove layer (e.g., [10, 11, 12] or [22, 24])
      * @type {any}

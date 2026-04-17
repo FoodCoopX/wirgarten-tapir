@@ -28,33 +28,34 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
     };
   }, []);
 
-  const loadData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      const [breadData, labelsData] = await Promise.all([
-        bakeryApi.bakeryBreadsListRetrieve({ id: bread.id! }),
-        bakeryApi.bakeryLabelsList()
-      ]);
+    Promise.all([
+      bakeryApi.bakeryBreadsListRetrieve({ id: bread.id! }),
+      bakeryApi.bakeryLabelsList()
+    ])
+      .then(([breadData, labelsData]) => {
+        // Extract label IDs — handle both string[] and object[] formats
+        const labelIds: string[] = Array.isArray(breadData.labels) 
+          ? breadData.labels.map((label: any) => typeof label === 'object' ? label.id : String(label))
+          : [];
+        
 
-      // Extract label IDs — handle both string[] and object[] formats
-      const labelIds: string[] = Array.isArray(breadData.labels) 
-        ? breadData.labels.map((label: any) => typeof label === 'object' ? label.id : String(label))
-        : [];
-      
-
-      const activeLabels = labelsData.filter(label => label.isActive !== false);
-      
-      setAssignedLabelIds(labelIds);
-      setAvailableLabels(activeLabels);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      alert('Fehler beim Laden der Daten');
-    } finally {
-      setLoading(false);
-    }
+        const activeLabels = labelsData.filter(label => label.isActive !== false);
+        
+        setAssignedLabelIds(labelIds);
+        setAvailableLabels(activeLabels);
+      })
+      .catch((error) => {
+        console.error('Failed to load data:', error);
+        alert('Fehler beim Laden der Daten');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  const handleToggleLabel = async (labelId: string) => {
+  const handleToggleLabel = (labelId: string) => {
     const isAssigned = assignedLabelIds.includes(labelId);
     const newLabelIds = isAssigned
       ? assignedLabelIds.filter(id => id !== labelId)
@@ -63,18 +64,19 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({ bread, csrfToken,
     // Optimistic update
     setAssignedLabelIds(newLabelIds);
 
-    try {
-      await bakeryApi.bakeryBreadsListPartialUpdate({
-        id: bread.id!,
-        patchedBreadListRequest: { labels: newLabelIds }
+    bakeryApi.bakeryBreadsListPartialUpdate({
+      id: bread.id!,
+      patchedBreadListRequest: { labels: newLabelIds }
+    })
+      .then(() => {
+        if (onUpdate) onUpdate();
+      })
+      .catch((error) => {
+        // Revert on failure
+        setAssignedLabelIds(assignedLabelIds);
+        console.error('Failed to update labels:', error);
+        alert('Fehler beim Aktualisieren der Labels');
       });
-      if (onUpdate) onUpdate();
-    } catch (error) {
-      // Revert on failure
-      setAssignedLabelIds(assignedLabelIds);
-      console.error('Failed to update labels:', error);
-      alert('Fehler beim Aktualisieren der Labels');
-    }
   };
 
   const modalContent = (

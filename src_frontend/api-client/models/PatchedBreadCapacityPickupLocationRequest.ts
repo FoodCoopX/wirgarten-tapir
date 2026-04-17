@@ -38,17 +38,17 @@ export interface PatchedBreadCapacityPickupLocationRequest {
      */
     deliveryWeek?: number;
     /**
-     * Maximum number of breads of this label that can be delivered to this pickup location on this delivery day
+     * Maximum number of breads of this type that can be delivered to this pickup location on this delivery day
      * @type {number}
      * @memberof PatchedBreadCapacityPickupLocationRequest
      */
     capacity?: number;
     /**
-     * The pickup location this capacity applies to (redundant but useful for queries)
+     * 
      * @type {string}
      * @memberof PatchedBreadCapacityPickupLocationRequest
      */
-    pickupLocation?: string | null;
+    pickupLocation?: string;
     /**
      * 
      * @type {string}

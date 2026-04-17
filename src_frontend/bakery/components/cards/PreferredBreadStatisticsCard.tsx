@@ -35,34 +35,38 @@ export const PreferredBreadStatisticsCard: React.FC<PreferredBreadStatisticsCard
     loadStats();
   }, [year, week, deliveryDay]);
 
-  const loadStats = async () => {
+  const loadStats = () => {
     setLoading(true);
     setError(null);
-    try {
-      const res = await fetch(
-        `/bakery/api/preferred-bread-statistics/?year=${year}&delivery_week=${week}&delivery_day=${deliveryDay}`,
-        {
-          headers: { 'X-CSRFToken': csrfToken },
-          credentials: 'same-origin',
-        }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setStats({
-        totalMembers: data.total_members,
-        membersWithPreferences: data.members_with_preferences,
-        membersWithoutPreferences: data.members_without_preferences,
-        breads: (data.breads || []).map((b: any) => ({
-          breadName: b.bread_name,
-          count: b.count,
-          percentage: b.percentage,
-        })),
+    fetch(
+      `/bakery/api/preferred-bread-statistics/?year=${year}&delivery_week=${week}&delivery_day=${deliveryDay}`,
+      {
+        headers: { 'X-CSRFToken': csrfToken },
+        credentials: 'same-origin',
+      }
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        setStats({
+          totalMembers: data.total_members,
+          membersWithPreferences: data.members_with_preferences,
+          membersWithoutPreferences: data.members_without_preferences,
+          breads: (data.breads || []).map((b: any) => ({
+            breadName: b.bread_name,
+            count: b.count,
+            percentage: b.percentage,
+          })),
+        });
+      })
+      .catch((e: any) => {
+        setError(e.message || 'Fehler beim Laden');
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    } catch (e: any) {
-      setError(e.message || 'Fehler beim Laden');
-    } finally {
-      setLoading(false);
-    }
   };
 
   if (loading) {

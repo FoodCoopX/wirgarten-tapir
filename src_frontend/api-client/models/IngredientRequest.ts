@@ -14,7 +14,7 @@
 
 import { mapValues } from '../runtime';
 /**
- * Serializer for ingredients
+ * 
  * @export
  * @interface IngredientRequest
  */

@@ -18,7 +18,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
   const [formData, setFormData] = useState<BreadListRequest>({
     name: '',
     description: '',
-    weight: '500',
+    weight: 500,
     isActive: true,
     labels: [] as string[],
     piecesPerStoveLayer: [],
@@ -42,7 +42,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
       setFormData({
         name: bread.name,
         description: bread.description || '',
-        weight: String(bread.weight),
+        weight: Number(bread.weight),
         isActive: bread.isActive,
         labels: labelIds,
         piecesPerStoveLayer: bread.piecesPerStoveLayer || [],
@@ -56,17 +56,19 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
     }
   }, [bread]);
 
-  const loadLabels = async () => {
+  const loadLabels = () => {
     setLoading(true);
-    try {
-      const data = await bakeryApi.bakeryLabelsList();
-      setAvailableLabels(data);
-    } catch (error) {
-      console.error('Failed to load labels:', error);
-      alert('Fehler beim Laden der Labels');
-    } finally {
-      setLoading(false);
-    }
+    bakeryApi.bakeryLabelsList()
+      .then((data) => {
+        setAvailableLabels(data);
+      })
+      .catch((error) => {
+        console.error('Failed to load labels:', error);
+        alert('Fehler beim Laden der Labels');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -97,7 +99,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
   const removePiecesPerLayer = (value: number) => {
     setFormData(prev => ({
       ...prev,
-      piecesPerStoveLayer: (prev.piecesPerStoveLayer || []).filter((v): v is number => typeof v === 'number' && v !== value)
+      piecesPerStoveLayer: (prev.piecesPerStoveLayer || []).filter((v: number) => v !== value)
     }));
   };
 
@@ -145,7 +147,7 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                       className="form-control"
                       id="weight"
                       value={formData.weight}
-                      onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, weight: Number(e.target.value) })}
                       required
                       min="0"
                       step="10"
@@ -293,7 +295,6 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                       </div>
                        <div className="d-flex flex-wrap gap-2">
                         {(formData.piecesPerStoveLayer || [])
-                          .filter((v): v is number => typeof v === 'number')
                           .map((value: number) => (
                           <span
                             key={value}

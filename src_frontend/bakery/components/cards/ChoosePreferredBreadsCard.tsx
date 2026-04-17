@@ -32,51 +32,48 @@ export const ChoosePreferredBreadsCard: React.FC<ChoosePreferredBreadsCardProps>
     // eslint-disable-next-line
   }, [memberId]);
 
-  const loadData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      // Load breads
-      const breadsData = await bakeryApi.bakeryBreadsListList({ isActive: true });
-      setAllBreads(breadsData);
-
-      // Load labels
-      const labels = await bakeryApi.bakeryLabelsList();
-      const labelMapping = labels.reduce((acc, label) => {
-        if (label.id) {
-          acc[label.id] = label;
-        }
-        return acc;
-      }, {} as { [labelId: string]: BreadLabel });
-      setLabelsMap(labelMapping);
-
-      // Load contents for all breads
-      const contentsResults = await Promise.all(
-        breadsData.map(async (bread) => {
-          try {
-            const contents = await bakeryApi.bakeryBreadsListContentsList({ id: bread.id! });
-            return { breadId: bread.id, contents };
-          } catch {
-            return { breadId: bread.id, contents: [] };
+    bakeryApi.bakeryBreadsListList({ isActive: true })
+      .then((breadsData) => {
+        setAllBreads(breadsData);
+        return Promise.all([
+          bakeryApi.bakeryLabelsList(),
+          Promise.all(
+            breadsData.map((bread) =>
+              bakeryApi.bakeryBreadsListContentsList({ id: bread.id! })
+                .then((contents) => ({ breadId: bread.id, contents }))
+                .catch(() => ({ breadId: bread.id, contents: [] as BreadContent[] }))
+            )
+          ),
+          bakeryApi.bakeryPreferredBreadsList({ memberId }),
+        ] as const);
+      })
+      .then(([labels, contentsResults, preferredData]) => {
+        const labelMapping = labels.reduce((acc, label) => {
+          if (label.id) {
+            acc[label.id] = label;
           }
-        })
-      );
+          return acc;
+        }, {} as { [labelId: string]: BreadLabel });
+        setLabelsMap(labelMapping);
 
-      const map: { [breadId: string]: BreadContent[] } = {};
-      contentsResults.forEach(({ breadId, contents }) => {
-        map[breadId!] = [...contents].sort((a, b) => Number(b.amount) - Number(a.amount));
+        const map: { [breadId: string]: BreadContent[] } = {};
+        contentsResults.forEach(({ breadId, contents }) => {
+          map[breadId!] = [...contents].sort((a, b) => Number(b.amount) - Number(a.amount));
+        });
+        setContentsMap(map);
+
+        if (preferredData.length > 0 && preferredData[0].breads) {
+          setPreferredBreadIds(new Set(preferredData[0].breads));
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load data:', error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      setContentsMap(map);
-
-      // Load preferred breads
-      const preferredData = await bakeryApi.bakeryPreferredBreadsList({ memberId });
-      if (preferredData.length > 0 && preferredData[0].breads) {
-        setPreferredBreadIds(new Set(preferredData[0].breads));
-      }
-    } catch (error) {
-      console.error('Failed to load data:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleModalClose = () => {

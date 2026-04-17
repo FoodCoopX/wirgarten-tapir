@@ -60,10 +60,10 @@ export interface BreadDetail {
     description?: string;
     /**
      * Weight in grams
-     * @type {string}
+     * @type {number}
      * @memberof BreadDetail
      */
-    weight: string;
+    weight: number;
     /**
      * 
      * @type {Array<BreadLabel>}

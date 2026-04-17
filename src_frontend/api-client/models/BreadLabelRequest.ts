@@ -14,7 +14,7 @@
 
 import { mapValues } from '../runtime';
 /**
- * Serializer for bread labels/categories
+ * 
  * @export
  * @interface BreadLabelRequest
  */

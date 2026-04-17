@@ -65,44 +65,43 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
     }
   }, [year, week, allBreads.length, days.length]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = () => {
     setLoading(true);
-    try {
-      const [breadsData, deliveryDaysData] = await Promise.all([
-        bakeryApi.bakeryBreadsListList({}),
-        bakeryApi.pickupLocationsApiDeliveryDaysRetrieve(),
-      ]);
+    Promise.all([
+      bakeryApi.bakeryBreadsListList({}),
+      bakeryApi.pickupLocationsApiDeliveryDaysRetrieve(),
+    ])
+      .then(([breadsData, deliveryDaysData]) => {
+        setAllBreads(breadsData.filter((b: BreadList) => b.isActive !== false));
 
-      setAllBreads(breadsData.filter((b: BreadList) => b.isActive !== false));
+        const dayConfigs: DayConfig[] = deliveryDaysData.days.map((dayNumber: number) => ({
+          day: dayNumber,
+          label: DAY_LABELS[dayNumber] || `Tag ${dayNumber}`,
+          dayNumber: dayNumber,
+          breads: {},
+        }));
 
-      const dayConfigs: DayConfig[] = deliveryDaysData.days.map((dayNumber: number) => ({
-        day: dayNumber,
-        label: DAY_LABELS[dayNumber] || `Tag ${dayNumber}`,
-        dayNumber: dayNumber,
-        breads: {},
-      }));
-
-      setDays(dayConfigs);
-    } catch (error) {
-      console.error('Failed to load initial data:', error);
-      alert('Fehler beim Laden der Daten');
-    } finally {
-      setLoading(false);
-    }
+        setDays(dayConfigs);
+      })
+      .catch((error) => {
+        console.error('Failed to load initial data:', error);
+        alert('Fehler beim Laden der Daten');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  const loadDayConfigs = async () => {
+  const loadDayConfigs = () => {
     setLoading(true);
-    try {
-      const updatedDays = await Promise.all(
-        days.map(async (dayConfig) => {
-          try {
-            const response = await bakeryApi.bakeryAvailableBreadsForDeliveryRetrieve({
-              year,
-              deliveryWeek: week,
-              deliveryDay: dayConfig.day,
-            } as any);
-
+    Promise.all(
+      days.map((dayConfig) =>
+        bakeryApi.bakeryAvailableBreadsForDeliveryRetrieve({
+          year,
+          deliveryWeek: week,
+          deliveryDay: dayConfig.day,
+        } as any)
+          .then((response) => {
             const availableBreadIds = new Set((response as any).breads.map((b: any) => b.id));
 
             const breads: Record<string, boolean> = {};
@@ -111,27 +110,30 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
             });
 
             return { ...dayConfig, breads };
-          } catch (error) {
+          })
+          .catch((error) => {
             console.error(`Failed to load config for day ${dayConfig.day}:`, error);
             const breads: Record<string, boolean> = {};
             allBreads.forEach(bread => {
               breads[bread.id!] = false;
             });
             return { ...dayConfig, breads };
-          }
-        })
-      );
-
-      setDays(updatedDays);
-    } catch (error) {
-      console.error('Failed to load day configs:', error);
-    } finally {
-      setLoading(false);
-    }
+          })
+      )
+    )
+      .then((updatedDays) => {
+        setDays(updatedDays);
+      })
+      .catch((error) => {
+        console.error('Failed to load day configs:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
 
-const toggleBread = async (dayIndex: number, breadId: string) => {
+const toggleBread = (dayIndex: number, breadId: string) => {
   const newDays = [...days];
   const currentState = newDays[dayIndex].breads[breadId] ?? false;
   const newState = !currentState;
@@ -144,28 +146,28 @@ const toggleBread = async (dayIndex: number, breadId: string) => {
   setDays(newDays);
 
   setSaving(true);
-  try {
-    await bakeryApi.bakeryAvailableBreadsForDeliveryCreate({
-      toggleBreadRequestRequest: {
-        year,
-        deliveryWeek: week,
-        deliveryDay: newDays[dayIndex].day,
-        breadId,
-        isActive: newState,
-      },
+  bakeryApi.bakeryAvailableBreadsForDeliveryCreate({
+    toggleBreadRequestRequest: {
+      year,
+      deliveryWeek: week,
+      deliveryDay: newDays[dayIndex].day,
+      breadId,
+      isActive: newState,
+    },
+  })
+    .catch((error) => {
+      console.error('Failed to toggle bread:', error);
+      // Revert optimistic update
+      newDays[dayIndex] = {
+        ...newDays[dayIndex],
+        breads: { ...newDays[dayIndex].breads, [breadId]: currentState },
+      };
+      setDays([...newDays]);
+      alert('Fehler beim Speichern');
+    })
+    .finally(() => {
+      setSaving(false);
     });
-  } catch (error) {
-    console.error('Failed to toggle bread:', error);
-    // Revert optimistic update
-    newDays[dayIndex] = {
-      ...newDays[dayIndex],
-      breads: { ...newDays[dayIndex].breads, [breadId]: currentState },
-    };
-    setDays([...newDays]);
-    alert('Fehler beim Speichern');
-  } finally {
-    setSaving(false);
-  }
 };
 
   const handleOpenModal = (day: number, label: string) => {

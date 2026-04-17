@@ -11,7 +11,6 @@ from tapir.bakery.models import (
     BreadsPerPickupLocationPerWeek,
     Ingredient,
     PreferredBread,
-    PreferredLabel,
     StoveSession,
 )
 from tapir.wirgarten.tests.factories import (
@@ -88,13 +87,6 @@ class AvailableBreadsForDeliveryDayFactory(factory.django.DjangoModelFactory):
     delivery_week = factory.Faker("random_int", min=1, max=53)
     delivery_day = factory.Faker("random_int", min=0, max=6)
     bread = factory.SubFactory(BreadFactory)
-
-
-class PreferredLabelFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = PreferredLabel
-
-    member = factory.SubFactory(MemberFactory)
 
 
 class BreadDeliveryFactory(factory.django.DjangoModelFactory):

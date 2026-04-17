@@ -65,22 +65,22 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     // eslint-disable-next-line
   }, [selectedWeek, selectedYear, deliveries, lastChoosingDayBeforeBaking, bakingDayBeforeDelivery]);
 
-  const loadParameters = async () => {
-    try {
-      const params = await bakeryApi.bakeryApiConfigurationParametersRetrieve();
-      
-      const lastChoosingParam = params.find(
-        p => p.key === 'wirgarten.bakery.last_choosing_day_before_baking_day'
-      );
-      const bakingDayParam = params.find(
-        p => p.key === 'wirgarten.bakery.baking_day_before_delivery_day'
-      );
+  const loadParameters = () => {
+    bakeryApi.bakeryApiConfigurationParametersRetrieve()
+      .then((params) => {
+        const lastChoosingParam = params.find(
+          p => p.key === 'wirgarten.bakery.last_choosing_day_before_baking_day'
+        );
+        const bakingDayParam = params.find(
+          p => p.key === 'wirgarten.bakery.baking_day_before_delivery_day'
+        );
 
-      setLastChoosingDayBeforeBaking(Number(lastChoosingParam?.value || 0));
-      setBakingDayBeforeDelivery(Number(bakingDayParam?.value || 0));
-    } catch (error) {
-      console.error('Failed to load parameters:', error);
-    }
+        setLastChoosingDayBeforeBaking(Number(lastChoosingParam?.value || 0));
+        setBakingDayBeforeDelivery(Number(bakingDayParam?.value || 0));
+      })
+      .catch((error) => {
+        console.error('Failed to load parameters:', error);
+      });
   };
 
   const calculateDeadlines = () => {
@@ -136,114 +136,115 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
     }
   };
 
-  const loadData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      const allBreads = await bakeryApi.bakeryBreadsListList({ isActive: true });
-      setBreads(allBreads);
-
-      // Load labels
-      const labels = await bakeryApi.bakeryLabelsList();
-      const labelMapping = labels.reduce((acc, label) => {
-        if (label.id) {
-          acc[label.id] = label;
-        }
-        return acc;
-      }, {} as { [labelId: string]: BreadLabel });
-      setLabelsMap(labelMapping);
-
-      const contentsResults = await Promise.all(
-        allBreads.map(async (bread) => {
-          try {
-            const contents = await bakeryApi.bakeryBreadsListContentsList({ id: bread.id! });
-            return { breadId: bread.id, contents };
-          } catch {
-            return { breadId: bread.id, contents: [] };
+    bakeryApi.bakeryBreadsListList({ isActive: true })
+      .then((allBreads) => {
+        setBreads(allBreads);
+        return Promise.all([
+          bakeryApi.bakeryLabelsList(),
+          Promise.all(
+            allBreads.map((bread) =>
+              bakeryApi.bakeryBreadsListContentsList({ id: bread.id! })
+                .then((contents) => ({ breadId: bread.id, contents }))
+                .catch(() => ({ breadId: bread.id, contents: [] as BreadContent[] }))
+            )
+          ),
+          bakeryApi.bakeryBreadDeliveriesList({
+            memberId,
+            year: selectedYear,
+            deliveryWeek: selectedWeek,
+          }),
+        ] as const);
+      })
+      .then(([labels, contentsResults, breadDeliveries]) => {
+        const labelMapping = labels.reduce((acc, label) => {
+          if (label.id) {
+            acc[label.id] = label;
           }
-        })
-      );
+          return acc;
+        }, {} as { [labelId: string]: BreadLabel });
+        setLabelsMap(labelMapping);
 
-      const map: { [breadId: string]: BreadContent[] } = {};
-      contentsResults.forEach(({ breadId, contents }) => {
-        map[breadId!] = [...contents].sort((a, b) => Number(b.amount) - Number(a.amount));
+        const map: { [breadId: string]: BreadContent[] } = {};
+        contentsResults.forEach(({ breadId, contents }) => {
+          map[breadId!] = [...contents].sort((a, b) => Number(b.amount) - Number(a.amount));
+        });
+        setContentsMap(map);
+
+        const sortedDeliveries = [...breadDeliveries].sort((a, b) => 
+          (a.slotNumber || 0) - (b.slotNumber || 0)
+        );
+        setDeliveries(sortedDeliveries);
+      })
+      .catch((error) => {
+        console.error('Failed to load data:', error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      setContentsMap(map);
-
-      const breadDeliveries = await bakeryApi.bakeryBreadDeliveriesList({
-        memberId,
-        year: selectedYear,
-        deliveryWeek: selectedWeek,
-      });
-
-      const sortedDeliveries = [...breadDeliveries].sort((a, b) => 
-        (a.slotNumber || 0) - (b.slotNumber || 0)
-      );
-
-      setDeliveries(sortedDeliveries);
-      setLoading(false);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      setLoading(false);
-    }
   };
 
-  const handlePickupLocationChanged = async () => {
+  const handlePickupLocationChanged = () => {
     setEditingLocation(null);
-    await loadData();
+    loadData();
   };
 
-  const handleBreadSelected = async (deliveryId: string, breadId: string) => {
+  const handleBreadSelected = (deliveryId: string, breadId: string) => {
     const delivery = deliveries.find(d => d.id === deliveryId);
     if (!delivery || !delivery.pickupLocation) return;
 
     setSaving(deliveryId);
-    try {
-      await bakeryApi.bakeryBreadDeliveriesPartialUpdate({
-        id: deliveryId,
-        patchedBreadDeliveryRequest: {
-          bread: breadId,
-        },
-      });
-
-      setModalOpen(null);
-      await loadData();
-    } catch (error: any) {
-      console.error('Failed to save bread selection:', error);
-      // Handle capacity error (400 response)
-      if (error?.response?.status === 400) {
-        try {
-          const errorData = await error.response.json();
-          alert(errorData.error || 'Dieses Brot ist leider nicht mehr verfügbar. Bitte wähle ein anderes Brot.');
-        } catch {
-          alert('Dieses Brot ist leider nicht mehr verfügbar. Bitte wähle ein anderes Brot.');
+    bakeryApi.bakeryBreadDeliveriesPartialUpdate({
+      id: deliveryId,
+      patchedBreadDeliveryRequest: {
+        bread: breadId,
+      },
+    })
+      .then(() => {
+        setModalOpen(null);
+        loadData();
+      })
+      .catch((error: any) => {
+        console.error('Failed to save bread selection:', error);
+        // Handle capacity error (400 response)
+        if (error?.response?.status === 400) {
+          error.response.json()
+            .then((errorData: any) => {
+              alert(errorData.error || 'Dieses Brot ist leider nicht mehr verfügbar. Bitte wähle ein anderes Brot.');
+            })
+            .catch(() => {
+              alert('Dieses Brot ist leider nicht mehr verfügbar. Bitte wähle ein anderes Brot.');
+            });
+          // Refresh the modal to show updated availability
+          setModalRefreshKey(prev => prev + 1);
+        } else {
+          alert('Speichern des Brotes fehlgeschlagen');
         }
-        // Refresh the modal to show updated availability
-        setModalRefreshKey(prev => prev + 1);
-      } else {
-        alert('Speichern des Brotes fehlgeschlagen');
-      }
-    } finally {
-      setSaving(null);
-    }
+      })
+      .finally(() => {
+        setSaving(null);
+      });
   };
 
-  const handleRemoveBread = async (deliveryId: string) => {
+  const handleRemoveBread = (deliveryId: string) => {
     setSaving(deliveryId);
-    try {
-      await bakeryApi.bakeryBreadDeliveriesPartialUpdate({
-        id: deliveryId,
-        patchedBreadDeliveryRequest: {
-          bread: null,
-        },
+    bakeryApi.bakeryBreadDeliveriesPartialUpdate({
+      id: deliveryId,
+      patchedBreadDeliveryRequest: {
+        bread: null,
+      },
+    })
+      .then(() => {
+        loadData();
+      })
+      .catch((error) => {
+        console.error('Failed to remove bread:', error);
+        alert('L\u00f6schen des Brotes fehlgeschlagen');
+      })
+      .finally(() => {
+        setSaving(null);
       });
-
-      await loadData();
-    } catch (error) {
-      console.error('Failed to remove bread:', error);
-      alert('Löschen des Brotes fehlgeschlagen');
-    } finally {
-      setSaving(null);
-    }
   };
 
   const getBreadDetails = (breadId: string | null) => {

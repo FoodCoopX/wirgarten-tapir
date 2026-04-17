@@ -21,35 +21,38 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
     loadLabels();
   }, []);
 
-  const loadLabels = async () => {
+  const loadLabels = () => {
     setLoading(true);
-    try {
-      const data = await bakeryApi.bakeryLabelsList();
-      setLabels(data);
-    } catch (error) {
-      console.error('Failed to load labels:', error);
-      alert('Fehler beim Laden der Labels');
-    } finally {
-      setLoading(false);
-    }
+    bakeryApi.bakeryLabelsList()
+      .then((data) => {
+        setLabels(data);
+      })
+      .catch((error) => {
+        console.error('Failed to load labels:', error);
+        alert('Fehler beim Laden der Labels');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLabelName.trim()) return;
 
-    try {
-      const payload: BreadLabelRequest = { 
-        name: newLabelName, 
-        isActive: true 
-      };
-      await bakeryApi.bakeryLabelsCreate({ breadLabelRequest: payload });
-      setNewLabelName('');
-      await loadLabels();
-    } catch (error) {
-      console.error('Failed to create label:', error);
-      alert('Fehler beim Erstellen des Labels');
-    }
+    const payload: BreadLabelRequest = { 
+      name: newLabelName, 
+      isActive: true 
+    };
+    bakeryApi.bakeryLabelsCreate({ breadLabelRequest: payload })
+      .then(() => {
+        setNewLabelName('');
+        loadLabels();
+      })
+      .catch((error) => {
+        console.error('Failed to create label:', error);
+        alert('Fehler beim Erstellen des Labels');
+      });
   };
 
   const handleStartEdit = (label: BreadLabel) => {
@@ -57,22 +60,22 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
     setEditingName(label.name);
   };
 
-  const handleSaveEdit = async (id: string) => {
+  const handleSaveEdit = (id: string) => {
     if (!editingName.trim()) return;
 
-    try {
-      await bakeryApi.bakeryLabelsPartialUpdate({
-        id,
-        patchedBreadLabelRequest: { name: editingName }
+    bakeryApi.bakeryLabelsPartialUpdate({
+      id,
+      patchedBreadLabelRequest: { name: editingName }
+    })
+      .then(() => {
+        setLabels(prev => prev.map(l => l.id === id ? { ...l, name: editingName } : l));
+        setEditingId(null);
+        setEditingName('');
+      })
+      .catch((error) => {
+        console.error('Failed to update label:', error);
+        alert('Fehler beim Aktualisieren des Labels');
       });
-      // Optimistic update
-      setLabels(prev => prev.map(l => l.id === id ? { ...l, name: editingName } : l));
-      setEditingId(null);
-      setEditingName('');
-    } catch (error) {
-      console.error('Failed to update label:', error);
-      alert('Fehler beim Aktualisieren des Labels');
-    }
   };
 
   const handleCancelEdit = () => {
@@ -80,38 +83,37 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
     setEditingName('');
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Label wirklich löschen?')) return;
+  const handleDelete = (id: string) => {
+    if (!confirm('Label wirklich l\u00f6schen?')) return;
 
-    try {
-      await bakeryApi.bakeryLabelsDestroy({ id });
-      // Optimistic update
-      setLabels(prev => prev.filter(l => l.id !== id));
-    } catch (error) {
-      console.error('Failed to delete label:', error);
-      alert('Fehler beim Löschen des Labels');
-    }
+    bakeryApi.bakeryLabelsDestroy({ id })
+      .then(() => {
+        setLabels(prev => prev.filter(l => l.id !== id));
+      })
+      .catch((error) => {
+        console.error('Failed to delete label:', error);
+        alert('Fehler beim L\u00f6schen des Labels');
+      });
   };
 
-  const handleToggleActive = async (label: BreadLabel) => {
+  const handleToggleActive = (label: BreadLabel) => {
     // Optimistic update first — no flicker
     setLabels(prev => prev.map(l => 
       l.id === label.id ? { ...l, isActive: !l.isActive } : l
     ));
 
-    try {
-      await bakeryApi.bakeryLabelsPartialUpdate({
-        id: label.id!,
-        patchedBreadLabelRequest: { isActive: !label.isActive }
+    bakeryApi.bakeryLabelsPartialUpdate({
+      id: label.id!,
+      patchedBreadLabelRequest: { isActive: !label.isActive }
+    })
+      .catch((error) => {
+        // Revert on failure
+        setLabels(prev => prev.map(l => 
+          l.id === label.id ? { ...l, isActive: label.isActive } : l
+        ));
+        console.error('Failed to toggle label:', error);
+        alert('Fehler beim Aktualisieren des Labels');
       });
-    } catch (error) {
-      // Revert on failure
-      setLabels(prev => prev.map(l => 
-        l.id === label.id ? { ...l, isActive: label.isActive } : l
-      ));
-      console.error('Failed to toggle label:', error);
-      alert('Fehler beim Aktualisieren des Labels');
-    }
   };
 
   return (

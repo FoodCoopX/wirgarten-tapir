@@ -39,33 +39,35 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
     loadData();
   }, [pickupLocationId, selectedWeek, selectedYear]);
 
-  const loadData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      const breadsWithCapacity = await bakeryApi.bakeryBreadsListList({
+    Promise.all([
+      bakeryApi.bakeryBreadsListList({
         isActive: true,
         pickupLocationId,
         year: selectedYear,
         week: selectedWeek,
+      }),
+      bakeryApi.bakeryLabelsList(),
+    ])
+      .then(([breadsWithCapacity, labels]) => {
+        const labelMapping = labels.reduce((acc, label) => {
+          if (label.id) {
+            acc[label.id] = label;
+          }
+          return acc;
+        }, {} as { [labelId: string]: BreadLabel });
+        
+        setLabelsMap(labelMapping);
+        setAvailableBreads(breadsWithCapacity);
+      })
+      .catch((error) => {
+        console.error('Failed to load data:', error);
+        setAvailableBreads([]);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      
-      const labels = await bakeryApi.bakeryLabelsList();
-      
-      const labelMapping = labels.reduce((acc, label) => {
-        if (label.id) {
-          acc[label.id] = label;
-        }
-        return acc;
-      }, {} as { [labelId: string]: BreadLabel });
-      
-      setLabelsMap(labelMapping);
-      setAvailableBreads(breadsWithCapacity);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      setAvailableBreads([]);
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (

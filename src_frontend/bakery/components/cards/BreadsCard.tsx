@@ -28,17 +28,19 @@ useEffect(() => {
     loadBreads();
   }, []);
 
-  const loadBreads = async () => {
+  const loadBreads = () => {
     setLoading(true);
-    try {
-      const data = await bakeryApi.bakeryBreadsListList({});
-      setBreads(data);
-    } catch (error) {
-      console.error('Failed to load breads:', error);
-      alert('Fehler beim Laden der Brote');
-    } finally {
-      setLoading(false);
-    }
+    bakeryApi.bakeryBreadsListList({})
+      .then((data) => {
+        setBreads(data);
+      })
+      .catch((error) => {
+        console.error('Failed to load breads:', error);
+        alert('Fehler beim Laden der Brote');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const filteredBreads = breads.filter(bread => {
@@ -71,47 +73,48 @@ useEffect(() => {
     fileInputRefs.current[breadId]?.click();
   };
 
-  const handleImageUpload = async (breadId: string, file: File) => {
+  const handleImageUpload = (breadId: string, file: File) => {
     const formData = new FormData();
     formData.append('picture', file);
 
-    try {
-      await bakeryApi.bakeryBreadsListPartialUpdateRaw({
-        id: breadId,
-        patchedBreadListRequest: {} as any,
-      }, {
-        body: formData,
-        headers: {
-          'X-CSRFToken': csrfToken,
-        },
-      } as any);
-      await loadBreads();
-    } catch (error) {
-      console.error('Failed to upload image:', error);
-      alert('Fehler beim Hochladen des Bildes');
-    }
+    bakeryApi.bakeryBreadsListPartialUpdateRaw({
+      id: breadId,
+      patchedBreadListRequest: {} as any,
+    }, {
+      body: formData,
+      headers: {
+        'X-CSRFToken': csrfToken,
+      },
+    } as any)
+      .then(() => {
+        loadBreads();
+      })
+      .catch((error) => {
+        console.error('Failed to upload image:', error);
+        alert('Fehler beim Hochladen des Bildes');
+      });
   };
 
-  const handleSaveBread = async (bread: BreadListRequest) => {
-    try {
-      if (editingBread) {
-        await bakeryApi.bakeryBreadsListPartialUpdate({
+  const handleSaveBread = (bread: BreadListRequest) => {
+    const promise = editingBread
+      ? bakeryApi.bakeryBreadsListPartialUpdate({
           id: editingBread.id!,
           patchedBreadListRequest: bread
-        });
-      } else {
-        await bakeryApi.bakeryBreadsListCreate({
+        })
+      : bakeryApi.bakeryBreadsListCreate({
           breadListRequest: bread
         });
-      }
 
-      await loadBreads();
-      setShowBreadModal(false);
-      setEditingBread(null);
-    } catch (error) {
-      console.error('Failed to save bread:', error);
-      alert('Fehler beim Speichern des Brots');
-    }
+    promise
+      .then(() => {
+        loadBreads();
+        setShowBreadModal(false);
+        setEditingBread(null);
+      })
+      .catch((error) => {
+        console.error('Failed to save bread:', error);
+        alert('Fehler beim Speichern des Brots');
+      });
   };
 
 

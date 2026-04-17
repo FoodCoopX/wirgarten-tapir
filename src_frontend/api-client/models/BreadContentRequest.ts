@@ -14,7 +14,7 @@
 
 import { mapValues } from '../runtime';
 /**
- * Serializer for bread content (ingredient amounts)
+ * 
  * @export
  * @interface BreadContentRequest
  */
@@ -27,10 +27,10 @@ export interface BreadContentRequest {
     id?: string;
     /**
      * Amount in grams or percentage
-     * @type {string}
+     * @type {number}
      * @memberof BreadContentRequest
      */
-    amount: string;
+    amount: number;
     /**
      * 
      * @type {number}

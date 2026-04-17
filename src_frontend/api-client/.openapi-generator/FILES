@@ -13,8 +13,6 @@ apis/TapirmailApi.ts
 apis/WaitingListApi.ts
 apis/index.ts
 index.ts
-models/AbhollisteEntry.ts
-models/AbhollisteResponse.ts
 models/AssignmentLogEntry.ts
 models/AssignmentLogEntryStatusEnum.ts
 models/AutomatedExportCycleEnum.ts
@@ -161,7 +159,6 @@ models/PatchedMailCategoryRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedPickupLocationCapacitiesRequest.ts
 models/PatchedPreferredBreadRequest.ts
-models/PatchedPreferredLabelRequest.ts
 models/PatchedSaveExtendedProductTypeRequest.ts
 models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
@@ -175,6 +172,8 @@ models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
 models/PersonalDataRequest.ts
 models/PickingModeEnum.ts
+models/PickupListEntry.ts
+models/PickupListResponse.ts
 models/PickupLocation.ts
 models/PickupLocationCapacities.ts
 models/PickupLocationCapacityByShare.ts
@@ -191,10 +190,6 @@ models/PreferredBread.ts
 models/PreferredBreadRequest.ts
 models/PreferredBreadsBulkUpdate.ts
 models/PreferredBreadsBulkUpdateRequest.ts
-models/PreferredLabel.ts
-models/PreferredLabelBulkUpdate.ts
-models/PreferredLabelBulkUpdateRequest.ts
-models/PreferredLabelRequest.ts
 models/PreferredLanguageEnum.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts

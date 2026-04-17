@@ -4,7 +4,6 @@ import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import type { 
   BreadList, 
-  BreadCapacityPickupLocation, 
   PickupLocationsByDeliveryDayResponse 
 } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
@@ -38,7 +37,6 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
 
-  const [breads, setBreads] = useState<BreadList[]>(activeBreads);
   const [pickupLocations, setPickupLocations] = useState<PickupLocationsByDeliveryDayResponse['pickupLocations']>([]);
   const [loading, setLoading] = useState(true);
   const [allocations, setAllocations] = useState<AllocationData>({});
@@ -71,48 +69,53 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     };
   }, [isOpen, saving, allocations, initialAllocations]);
 
-  const loadData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      const dayOfWeek = day;
+   
 
-      const locationsResponse = await bakeryApi.pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({ dayOfWeek });
+    bakeryApi.pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({ dayOfWeek : day })
+      .then((locationsResponse) => {
+        setPickupLocations(locationsResponse.pickupLocations);
 
-      setPickupLocations(locationsResponse.pickupLocations);
+        // Load existing capacities for these pickup locations
+        const locationIds = locationsResponse.pickupLocations.map(s => s.id);
+        
+        if (locationIds.length === 0) {
+          const initial: AllocationData = {};
+          setAllocations(initial);
+          setInitialAllocations(JSON.parse(JSON.stringify(initial)));
+          return;
+        }
 
-      // Load existing capacities for these pickup locations
-      const locationIds = locationsResponse.pickupLocations.map(s => s.id);
-      let capacities: BreadCapacityPickupLocation[] = [];
-      
-      if (locationIds.length > 0) {
-        capacities = await bakeryApi.bakeryBreadCapacityPickupLocationList({
+        return bakeryApi.bakeryBreadCapacityPickupLocationList({
           year,
           week,
           pickupLocationIds: locationIds,
-        });
-      }
+        }).then((capacities) => {
+          // Initialize allocations (locations × breads)
+          const initial: AllocationData = {};
+          locationsResponse.pickupLocations.forEach(location => {
+            initial[location.id] = {};
+            activeBreads.forEach(bread => {
+              const existingCapacity = capacities.find(
+                (c) => c.pickupLocation === location.id && c.bread === bread.id
+              );
+              initial[location.id][bread.id!] =
+                existingCapacity ? String(existingCapacity.capacity) : '';
+            });
+          });
 
-      // Initialize allocations (locations × breads)
-      const initial: AllocationData = {};
-      locationsResponse.pickupLocations.forEach(location => {
-        initial[location.id] = {};
-        activeBreads.forEach(bread => {  // ✅ use activeBreads
-          const existingCapacity = capacities.find(
-            (c) => c.pickupLocation === location.id && c.bread === bread.id
-          );
-          initial[location.id][bread.id!] =
-            existingCapacity ? String(existingCapacity.capacity) : '';
+          setAllocations(initial);
+          setInitialAllocations(JSON.parse(JSON.stringify(initial)));
         });
+      })
+      .catch((error) => {
+        console.error('Failed to load data:', error);
+        alert('Fehler beim Laden der Daten');
+      })
+      .finally(() => {
+        setLoading(false);
       });
-
-      setAllocations(initial);
-      setInitialAllocations(JSON.parse(JSON.stringify(initial)));
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      alert('Fehler beim Laden der Daten');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleCellChange = (stationId: string, breadId: string, value: string) => {
@@ -131,50 +134,56 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     }));
   };
 
-  const handleSaveAndClose = async () => {
+  const handleSaveAndClose = () => {
     setSaving(true);
-    try {
-      const updates: Array<{
-        pickupLocation: string;  
-        bread: string;
-        capacity: number | null;
-      }> = [];
 
-      // Compare current allocations with initial allocations
-      Object.entries(allocations).forEach(([stationId, breadAllocs]) => {
-        Object.entries(breadAllocs).forEach(([breadId, value]) => {
-          const initialValue = initialAllocations[stationId]?.[breadId] || '';
+    const updates: Array<{
+      pickupLocation: string;  
+      bread: string;
+      capacity: number | null;
+    }> = [];
 
-          // Only save if value changed
-          if (value !== initialValue) {
-            const capacityValue = value === '' || value === 'x' ? null : Number(value);
-            
-            updates.push({
-              pickupLocation: stationId,  
-              bread: breadId,
-              capacity: capacityValue,
-            });
-          }
-        });
+    // Compare current allocations with initial allocations
+    Object.entries(allocations).forEach(([stationId, breadAllocs]) => {
+      Object.entries(breadAllocs).forEach(([breadId, value]) => {
+        const initialValue = initialAllocations[stationId]?.[breadId] || '';
+
+        // Only save if value changed
+        if (value !== initialValue) {
+          const capacityValue = value === '' || value === 'x' ? null : Number(value);
+          
+          updates.push({
+            pickupLocation: stationId,  
+            bread: breadId,
+            capacity: capacityValue,
+          });
+        }
       });
+    });
 
-      if (updates.length > 0) {
-        await bakeryApi.bakeryBreadCapacityPickupLocationBulkUpdateCreate({
-          breadCapacityBulkUpdateRequest: {
-            year,
-            deliveryWeek: week,
-            updates,
-          },
-        });
-      }
-
+    if (updates.length === 0) {
       onClose();
-    } catch (error) {
-      console.error('Failed to save capacities:', error);
-      alert('Fehler beim Speichern der Mengen');
-    } finally {
       setSaving(false);
+      return;
     }
+
+    bakeryApi.bakeryBreadCapacityPickupLocationBulkUpdateCreate({
+      breadCapacityBulkUpdateRequest: {
+        year,
+        deliveryWeek: week,
+        updates,
+      },
+    })
+      .then(() => {
+        onClose();
+      })
+      .catch((error) => {
+        console.error('Failed to save capacities:', error);
+        alert('Fehler beim Speichern der Mengen');
+      })
+      .finally(() => {
+        setSaving(false);
+      });
   };
 
   if (!isOpen) return null;
@@ -197,7 +206,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
   const getTotalSum = (): number => {
     return pickupLocations.reduce((total, location) => {
-      const locationSum = sumValues(breads.map(bread => allocations[location.id]?.[bread.id!] || ''));
+      const locationSum = sumValues(activeBreads.map(bread => allocations[location.id]?.[bread.id!] || ''));
       if (locationSum === Infinity) return Infinity;
       return total + locationSum;
     }, 0);
@@ -211,14 +220,14 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
   const getModalClass = () => {
     const count = activeBreads.length;
-    if (count <= 2) return 'modal-lg';      // ~992px
-    if (count <= 4) return 'modal-xl';      // ~1140px
-    return '';                               // full width with custom style
+    if (count <= 2) return 'modal-lg';      
+    if (count <= 4) return 'modal-xl';      
+    return '';                               
   };
 
   const getModalStyle = () => {
     if (activeBreads.length > 4) {
-      return { maxWidth: '95vw' };          // 95% viewport width for many breads
+      return { maxWidth: '95vw' };          
     }
     return {};
   };

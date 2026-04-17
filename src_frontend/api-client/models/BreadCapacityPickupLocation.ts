@@ -56,17 +56,17 @@ export interface BreadCapacityPickupLocation {
      */
     deliveryWeek: number;
     /**
-     * Maximum number of breads of this label that can be delivered to this pickup location on this delivery day
+     * Maximum number of breads of this type that can be delivered to this pickup location on this delivery day
      * @type {number}
      * @memberof BreadCapacityPickupLocation
      */
     capacity: number;
     /**
-     * The pickup location this capacity applies to (redundant but useful for queries)
+     * 
      * @type {string}
      * @memberof BreadCapacityPickupLocation
      */
-    pickupLocation?: string | null;
+    pickupLocation: string;
     /**
      * 
      * @type {string}
@@ -85,6 +85,7 @@ export function instanceOfBreadCapacityPickupLocation(value: object): value is B
     if (!('year' in value) || value['year'] === undefined) return false;
     if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
     if (!('capacity' in value) || value['capacity'] === undefined) return false;
+    if (!('pickupLocation' in value) || value['pickupLocation'] === undefined) return false;
     if (!('bread' in value) || value['bread'] === undefined) return false;
     return true;
 }
@@ -106,7 +107,7 @@ export function BreadCapacityPickupLocationFromJSONTyped(json: any, ignoreDiscri
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
         'capacity': json['capacity'],
-        'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
+        'pickupLocation': json['pickup_location'],
         'bread': json['bread'],
     };
 }

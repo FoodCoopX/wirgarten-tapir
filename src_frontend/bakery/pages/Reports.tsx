@@ -111,73 +111,97 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     if (deliveryDays.length > 0 && allPickupLocations.length > 0) loadAllPickupLists();
   }, [year, week, deliveryDays, allPickupLocations]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = () => {
     setLoading(true);
-    try {
-      const [deliveryDaysData, pickupLocations] = await Promise.all([
-        bakeryApi.pickupLocationsApiDeliveryDaysRetrieve(),
-        pickupLocationsApi.pickupLocationsPickupLocationsList(),
-      ]);
-      setDeliveryDays(deliveryDaysData.days);
-      setAllPickupLocations(pickupLocations);
-      setInitialDataLoaded(true);
-    } catch (error) {
-      console.error('Failed to load initial data:', error);
-      alert('Fehler beim Laden der Daten');
-    } finally {
-      setLoading(false);
-    }
+    Promise.all([
+      bakeryApi.pickupLocationsApiDeliveryDaysRetrieve(),
+      pickupLocationsApi.pickupLocationsPickupLocationsList(),
+    ])
+      .then(([deliveryDaysData, pickupLocations]) => {
+        setDeliveryDays(deliveryDaysData.days);
+        setAllPickupLocations(pickupLocations);
+        setInitialDataLoaded(true);
+      })
+      .catch((error) => {
+        console.error('Failed to load initial data:', error);
+        alert('Fehler beim Laden der Daten');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  const loadSolverResults = async () => {
+  const loadSolverResults = () => {
     if (deliveryDays.length === 0 || allPickupLocations.length === 0) return;
-    try {
-      const allBreadCounts = await bakeryApi.bakeryBreadsPerPickupLocationPerWeekList({ year, deliveryWeek: week });
-      const countsByDay: Record<number, BreadCount[]> = {};
-      for (const entry of allBreadCounts) {
-        const pl = allPickupLocations.find(p => p.id === String(entry.pickupLocation));
-        if (!pl || pl.deliveryDay == null) continue;
-        countsByDay[pl.deliveryDay] ??= [];
-        countsByDay[pl.deliveryDay].push({
-          breadId: String(entry.bread), breadName: entry.breadName || 'Unbekannt',
-          pickupLocationId: String(entry.pickupLocation), pickupLocationName: pl.name, count: entry.count!,
-        });
-      }
-      setBreadCountsByDay(countsByDay);
+    bakeryApi.bakeryBreadsPerPickupLocationPerWeekList({ year, deliveryWeek: week })
+      .then((allBreadCounts) => {
+        const countsByDay: Record<number, BreadCount[]> = {};
+        for (const entry of allBreadCounts) {
+          const pl = allPickupLocations.find(p => p.id === String(entry.pickupLocation));
+          if (!pl || pl.deliveryDay == null) continue;
+          countsByDay[pl.deliveryDay] ??= [];
+          countsByDay[pl.deliveryDay].push({
+            breadId: String(entry.bread), breadName: entry.breadName || 'Unbekannt',
+            pickupLocationId: String(entry.pickupLocation), pickupLocationName: pl.name, count: entry.count!,
+          });
+        }
+        setBreadCountsByDay(countsByDay);
 
-      const sessionsByDay: Record<number, StoveSessionGrouped[]> = {};
-      for (const day of deliveryDays) {
-        try {
-          const sessions = await bakeryApi.bakeryStoveSessionsList({ year, deliveryWeek: week, deliveryDay: day });
-          const grouped: Record<number, StoveSessionGrouped> = {};
-          for (const s of sessions) {
-            grouped[s.sessionNumber] ??= { session: s.sessionNumber, layers: [] };
-            grouped[s.sessionNumber].layers.push({ layer: s.layerNumber, breadName: s.breadName || null, quantity: s.quantity! });
-          }
-          const sorted = Object.values(grouped).sort((a, b) => a.session - b.session);
-          sorted.forEach(s => s.layers.sort((a, b) => a.layer - b.layer));
-          if (sorted.length > 0) sessionsByDay[day] = sorted;
-        } catch { /* no sessions */ }
-      }
-      setStoveSessionsByDay(sessionsByDay);
-    } catch (error) {
-      console.error('Failed to load solver results:', error);
-    }
+        return Promise.all(
+          deliveryDays.map((day) =>
+            bakeryApi.bakeryStoveSessionsList({ year, deliveryWeek: week, deliveryDay: day })
+              .then((sessions) => {
+                const grouped: Record<number, StoveSessionGrouped> = {};
+                for (const s of sessions) {
+                  grouped[s.sessionNumber] ??= { session: s.sessionNumber, layers: [] };
+                  grouped[s.sessionNumber].layers.push({ layer: s.layerNumber, breadName: s.breadName || null, quantity: s.quantity! });
+                }
+                const sorted = Object.values(grouped).sort((a, b) => a.session - b.session);
+                sorted.forEach(s => s.layers.sort((a, b) => a.layer - b.layer));
+                return { day, sessions: sorted };
+              })
+              .catch(() => ({ day, sessions: [] as StoveSessionGrouped[] }))
+          )
+        );
+      })
+      .then((sessionResults) => {
+        if (sessionResults) {
+          const sessionsByDay: Record<number, StoveSessionGrouped[]> = {};
+          sessionResults.forEach(({ day, sessions }) => {
+            if (sessions.length > 0) sessionsByDay[day] = sessions;
+          });
+          setStoveSessionsByDay(sessionsByDay);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load solver results:', error);
+      });
   };
 
-  const loadAllPickupLists = async () => {
+  const loadAllPickupLists = () => {
     setPickupListLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: true }), {}));
-    const data: Record<number, Record<string, PickupListResponse>> = {};
-    for (const day of deliveryDays) {
-      data[day] = {};
-      await Promise.all(getPickupLocationsForDay(day).map(async (pl) => {
-        try {
-          data[day][pl.id!] = await bakeryApi.bakeryPickupListRetrieve({ year, deliveryWeek: week, pickupLocationId: pl.id! });
-        } catch { data[day][pl.id!] = null as any; }
-      }));
-    }
-    setPickupListByDayByLocation(data);
-    setPickupListLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: false }), {}));
+    Promise.all(
+      deliveryDays.map((day) =>
+        Promise.all(
+          getPickupLocationsForDay(day).map((pl) =>
+            bakeryApi.bakeryPickupListRetrieve({ year, deliveryWeek: week, pickupLocationId: pl.id! })
+              .then((result) => ({ day, plId: pl.id!, result }))
+              .catch(() => ({ day, plId: pl.id!, result: null as any }))
+          )
+        )
+      )
+    )
+      .then((allResults) => {
+        const data: Record<number, Record<string, PickupListResponse>> = {};
+        for (const dayResults of allResults) {
+          for (const { day, plId, result } of dayResults) {
+            data[day] ??= {};
+            data[day][plId] = result;
+          }
+        }
+        setPickupListByDayByLocation(data);
+        setPickupListLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: false }), {}));
+      });
   };
 
   // --- Compute derived data per day ---
