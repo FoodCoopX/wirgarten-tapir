@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Modal } from 'react-bootstrap';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import { handleRequestError } from '../../../utils/handleRequestError';
@@ -108,18 +109,15 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
   const unassignedLabels = availableLabels.filter(label => !formData.labels!.includes(label.id!));
 
   return (
-    <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-lg">
-        <div className="modal-content">
-          <div className="modal-header header-darkbrown-on-sahara">
-            <h5 className="modal-title">
-              {bread ? 'Brot bearbeiten' : 'Neues Brot'}
-            </h5>
-            <button type="button" className="btn-close" onClick={onClose}></button>
-          </div>
+    <Modal show onHide={onClose} size="lg" centered>
+      <Modal.Header closeButton className="header-darkbrown-on-sahara">
+        <Modal.Title>
+          <h5 className="mb-0">{bread ? 'Brot bearbeiten' : 'Neues Brot'}</h5>
+        </Modal.Title>
+      </Modal.Header>
           
-          <form onSubmit={handleSubmit}>
-            <div className="modal-body">
+      <form onSubmit={handleSubmit}>
+        <Modal.Body>
               <div className="row">
                 <div className="col-md-8">
                   <div className="mb-3">
@@ -401,15 +399,13 @@ export const BreadModal: React.FC<BreadModalProps> = ({ bread, csrfToken, onSave
                   </div>
                 
               </div>
-            </div>
+        </Modal.Body>
             
             <div className="modal-footer">
               <TapirButton variant="secondary" text="Abbrechen" onClick={onClose} />
               <TapirButton variant="" className="dark-brown-button" text="Speichern & Schließen" icon="save" type="submit" />
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import { Modal } from 'react-bootstrap';
 import { Trash } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
 import TapirButton from '../../../components/TapirButton';
@@ -26,12 +26,6 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
     loadData();
   }, [bread.id]);
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
 
 
   const loadData = () => {
@@ -89,60 +83,13 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
   };
 
 
-  const modalContent = (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem',
-      }}
-    >
-      {/* Backdrop */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          zIndex: 9999,
-        }}
-        onClick={onClose}
-      />
+  return (
+    <Modal show onHide={onClose} size="lg" centered>
+      <Modal.Header closeButton className="header-darkbrown-on-sahara">
+        <Modal.Title>Inhaltsstoffe: {bread.name}</Modal.Title>
+      </Modal.Header>
 
-      {/* Modal Content */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 10000,
-          width: '100%',
-          maxWidth: '800px',
-          maxHeight: '85vh',
-          overflow: 'auto',
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-        }}
-      >
-        <div 
-          className="p-3 d-flex justify-content-between align-items-center header-darkbrown-on-sahara" 
-          style={{ borderRadius: '8px 8px 0 0' }}
-        >
-          <h5 className="mb-0">
-            Inhaltsstoffe: {bread.name}
-          </h5>
-          <button type="button" className="btn-close" onClick={onClose}></button>
-        </div>
-
-        <div className="p-4">
+      <Modal.Body>
           {loading ? (
             <div className="text-center py-4">
               <div className="spinner-border text-bakery-primary-dark" role="status">
@@ -232,14 +179,11 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({ bread, c
               )}
             </>
           )}
-        </div>
+      </Modal.Body>
 
-        <div className="p-3 border-top d-flex justify-content-end" style={{ borderRadius: '0 0 8px 8px' }}>
-          <TapirButton variant="" className="dark-brown-button" text="Speichern & Schließen" icon="save" onClick={onClose} />
-        </div>
-      </div>
-    </div>
+      <Modal.Footer>
+        <TapirButton variant="" className="dark-brown-button" text="Speichern & Schließen" icon="save" onClick={onClose} />
+      </Modal.Footer>
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalContent, document.body);
 };

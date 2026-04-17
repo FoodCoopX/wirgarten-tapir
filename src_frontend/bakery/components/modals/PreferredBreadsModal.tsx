@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Modal } from 'react-bootstrap';
 import { InfoCircle, StarFill } from 'react-bootstrap-icons';
 import { useApi } from '../../../hooks/useApi';
 import TapirButton from '../../../components/TapirButton';
@@ -43,9 +44,6 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
       if (e.key === 'Enter' && !saving) {
         e.preventDefault();
         handleSave();
-      }
-      if (e.key === 'Escape') {
-        onClose();
       }
     };
 
@@ -137,38 +135,19 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
       });
   };
 
-  if (!isOpen) return null;
 
   return (
-    <>
-      <div
-        className="modal-backdrop fade show"
-        onClick={onClose}
-        style={{ zIndex: 1040 }}
-      />
-      <div
-        className="modal fade show d-block"
-        tabIndex={-1}
-        style={{ zIndex: 1050 }}
-      >
-        <div className="modal-dialog modal-xl modal-dialog-scrollable">
-          <div className="modal-content">
-            <div
-              className="modal-header header-white-on-middle-brown"
-            >
-              <h5 className="modal-title">
-                <StarFill size={20} className="me-2" />
-                Lieblingsbrote auswählen
-              </h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                onClick={onClose}
-                disabled={saving}
-              />
-            </div>
+    <Modal show={isOpen} onHide={onClose} size="xl" scrollable>
+      <Modal.Header closeButton className="header-white-on-middle-brown">
+        <Modal.Title>
+          <h5 className="mb-0">
+            <StarFill size={20} className="me-2" />
+            Lieblingsbrote auswählen
+          </h5>
+        </Modal.Title>
+      </Modal.Header>
 
-            <div className="modal-body p-4">
+      <Modal.Body className="p-4">
               {loading ? (
                 <div className="text-center py-5">
                   <div className="spinner-border spinner-bakery-primary" />
@@ -216,9 +195,9 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
                   </div>
                 </>
               )}
-            </div>
+      </Modal.Body>
 
-            <div className="modal-footer">
+            <Modal.Footer>
               <div className="me-auto text-muted small">
                 {selectedBreadIds.size} / {MAX_PREFERRED_BREADS} {selectedBreadIds.size === 1 ? 'Brot' : 'Brote'} ausgewählt
               </div>
@@ -236,10 +215,7 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
                 onClick={handleSave}
                 loading={saving}
               />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+            </Modal.Footer>
+    </Modal>
   );
 };

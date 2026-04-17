@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
-from tapir.configuration.models import TapirParameter
+from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import SidebarLinkGroup
 from tapir.subscriptions.views.confirmations import (
     MemberDataToConfirmApiView,
@@ -155,12 +155,7 @@ def add_admin_links(groups, request, cache: dict):
 
         groups.append(members_group)
 
-    try:
-        bakery_enabled = TapirParameter.objects.get(
-            key=ParameterKeys.BAKERY_A_ENABLED
-        ).get_value()
-    except TapirParameter.DoesNotExist:
-        bakery_enabled = False
+    bakery_enabled = get_parameter_value(ParameterKeys.BAKERY_A_ENABLED)
 
     if bakery_enabled:
         bakery_group = SidebarLinkGroup(name=_("Bäckerei"))

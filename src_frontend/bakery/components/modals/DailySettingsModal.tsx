@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Modal } from 'react-bootstrap';
 import { InfoCircle, ArrowRepeat } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
 import TapirButton from '../../../components/TapirButton';
@@ -59,9 +60,6 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
       if (e.key === 'Enter' && !saving) {
         e.preventDefault();
         handleSaveAndClose();
-      }
-      if (e.key === 'Escape') {
-        setShow(false);
       }
     };
 
@@ -196,58 +194,46 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
         style={{ border: '1px solid rgba(255,255,255,0.4)' }}
       />
 
-      {show && (
-        <>
-          <div
-            className="modal-backdrop fade show"
-            onClick={() => setShow(false)}
-            style={{ zIndex: 1040 }}
-          />
-          <div
-            className="modal fade show d-block"
-            tabIndex={-1}
-            style={{ zIndex: 1050 }}
-          >
-            <div
-              className={`modal-dialog ${activeBreads.length > 6 ? '' : 'modal-xl'} modal-dialog-centered modal-dialog-scrollable`}
-              style={activeBreads.length > 6 ? { maxWidth: '95vw' } : {}}
-            >
-              <div className="modal-content">
-                <div className="modal-header header-white-on-middle-brown">
-                  <h5 className="modal-title">
-                    <span
-                      className="material-icons me-2"
-                      style={{ fontSize: '20px', verticalAlign: 'middle' }}
-                    >
-                      settings
-                    </span>
-                    Tageseinstellungen — {dayLabel}, KW {week}/{year}
-                  </h5>
-                  {saving && (
-                    <span className="badge bg-warning ms-2">
-                      <ArrowRepeat size={14} className="me-1 spinner-grow-sm" />
-                      Speichert...
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white"
-                    onClick={() => setShow(false)}
-                  />
-                </div>
+      <Modal
+        show={show}
+        onHide={() => setShow(false)}
+        size={activeBreads.length > 6 ? undefined : 'xl'}
+        centered
+        scrollable
+        style={activeBreads.length > 6 ? { maxWidth: '95vw' } : {}}
+      >
+        <Modal.Header closeButton className="header-white-on-middle-brown">
+          <Modal.Title>
+            <h5 className="mb-0">
+              <span
+                className="material-icons me-2"
+                style={{ fontSize: '20px', verticalAlign: 'middle' }}
+              >
+                settings
+              </span>
+              Tageseinstellungen — {dayLabel}, KW {week}/{year}
+            </h5>
+          </Modal.Title>
+          {saving && (
+            <span className="badge bg-warning ms-2">
+              <ArrowRepeat size={14} className="me-1 spinner-grow-sm" />
+              Speichert...
+            </span>
+          )}
+        </Modal.Header>
 
-                <div className="modal-body p-3">
-                  {loading ? (
-                    <div className="text-center py-5">
-                      <div className="spinner-border spinner-bakery-primary" />
-                      <p className="mt-2 text-muted">Lade Daten...</p>
-                    </div>
-                  ) : activeBreads.length === 0 ? (
-                    <div className="alert alert-info d-flex align-items-center" role="alert">
-                      <InfoCircle size={20} className="me-2" />
-                      Keine Brote für diesen Tag verfügbar. Aktiviere zuerst Brote im Wochenplan.
-                    </div>
-                  ) : (
+        <Modal.Body className="p-3">
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border spinner-bakery-primary" />
+              <p className="mt-2 text-muted">Lade Daten...</p>
+            </div>
+          ) : activeBreads.length === 0 ? (
+            <div className="alert alert-info d-flex align-items-center" role="alert">
+              <InfoCircle size={20} className="me-2" />
+              Keine Brote für diesen Tag verfügbar. Aktiviere zuerst Brote im Wochenplan.
+            </div>
+          ) : (
                     <div className="card">
                       <div className="card-body p-0">
                         <div className="table-responsive">
@@ -322,29 +308,25 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
                       </div>
                     </div>
                   )}
-                </div>
+        </Modal.Body>
 
-                <div className="modal-footer">
-                  <TapirButton
-                    variant="secondary"
-                    text="Abbrechen"
-                    onClick={() => setShow(false)}
-                    disabled={saving}
-                  />
-                  <TapirButton
-                    variant=""
-                    className="dark-brown-button"
-                    text="Speichern & Schließen"
-                    icon="save"
-                    onClick={handleSaveAndClose}
-                    loading={saving}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+        <Modal.Footer>
+          <TapirButton
+            variant="secondary"
+            text="Abbrechen"
+            onClick={() => setShow(false)}
+            disabled={saving}
+          />
+          <TapirButton
+            variant=""
+            className="dark-brown-button"
+            text="Speichern & Schließen"
+            icon="save"
+            onClick={handleSaveAndClose}
+            loading={saving}
+          />
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

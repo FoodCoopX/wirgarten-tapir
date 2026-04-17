@@ -3,6 +3,7 @@ import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
 import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
 import { SingleBreadCard } from '../cards';
+import { Modal } from 'react-bootstrap';
 import '../../styles/bakery_styles.css';
 
 interface BreadSelectionModalProps {
@@ -71,34 +72,12 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
   };
 
   return (
-    <>
-      <div 
-        className="modal-backdrop fade show" 
-        onClick={onClose}
-        style={{ zIndex: 1050 }}
-      />
+    <Modal show onHide={onClose} size="xl" scrollable centered>
+      <Modal.Header closeButton className="header-darkbrown-on-sahara">
+        <Modal.Title>Brot auswählen für {pickupLocationName}</Modal.Title>
+      </Modal.Header>
 
-      <div 
-        className="modal fade show d-block" 
-        tabIndex={-1}
-        style={{ zIndex: 1055 }}
-      >
-        <div className="modal-dialog modal-xl modal-dialog-scrollable">
-          <div className="modal-content">
-            <div 
-              className="modal-header header-darkbrown-on-sahara" 
-            >
-              <h5 className="modal-title">
-                Brot auswählen für {pickupLocationName}
-              </h5>
-              <button 
-                type="button" 
-                className="btn-close" 
-                onClick={onClose}
-              />
-            </div>
-
-            <div className="modal-body modal-body-bakery">
+      <Modal.Body className="modal-body-bakery">
               {loading ? (
                 <div className="text-center py-5">
                   <div className="spinner-border spinner-bakery" />
@@ -144,10 +123,7 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
                   )}
                 </>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+      </Modal.Body>
+    </Modal>
   );
 };

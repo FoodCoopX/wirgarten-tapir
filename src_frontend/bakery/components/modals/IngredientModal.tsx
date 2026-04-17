@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Ingredient, IngredientRequest } from '../../../api-client/models';
 import TapirButton from '../../../components/TapirButton';
+import { Modal } from 'react-bootstrap';
 import '../../styles/bakery_styles.css';
 
 interface IngredientModalProps {
@@ -38,18 +39,13 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
   };
 
   return (
-    <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog">
-        <div className="modal-content">
-          <div className="modal-header header-bakery-ingredients">
-            <h5 className="modal-title">
-              {ingredient ? 'Zutat bearbeiten' : 'Neue Zutat'}
-            </h5>
-            <button type="button" className="btn-close" onClick={onClose}></button>
-          </div>
+    <Modal show onHide={onClose} centered>
+      <Modal.Header closeButton className="header-bakery-ingredients">
+        <Modal.Title>{ingredient ? 'Zutat bearbeiten' : 'Neue Zutat'}</Modal.Title>
+      </Modal.Header>
           
-          <form onSubmit={handleSubmit}>
-            <div className="modal-body">
+      <form onSubmit={handleSubmit}>
+        <Modal.Body>
               <div className="mb-3">
                 <label htmlFor="name" className="form-label fw-bold">
                   Name <span className="text-danger">*</span>
@@ -105,15 +101,13 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                   aktiv
                 </label>
               </div>
-            </div>
+        </Modal.Body>
             
-            <div className="modal-footer">
-              <TapirButton variant="secondary" text="Abbrechen" onClick={onClose} />
-              <TapirButton variant="" className="btn-bakery-ingredients" text="Speichern & Schließen" icon="save" type="submit" />
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+        <Modal.Footer>
+          <TapirButton variant="secondary" text="Abbrechen" onClick={onClose} />
+          <TapirButton variant="" className="btn-bakery-ingredients" text="Speichern & Schließen" icon="save" type="submit" />
+        </Modal.Footer>
+      </form>
+    </Modal>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Modal } from 'react-bootstrap';
 import { InfoCircle, ExclamationTriangle } from 'react-bootstrap-icons';
 import { BakeryApi } from '../../../api-client';
 import { useApi } from '../../../hooks/useApi';
@@ -6,13 +7,13 @@ import { handleRequestError } from '../../../utils/handleRequestError';
 import TapirButton from '../../../components/TapirButton';
 import type { 
   BreadList, 
-  PickupLocationsByDeliveryDayResponse 
+  PickupLocationDeliveryDay,
 } from '../../../api-client/models';
 import '../../styles/bakery_styles.css';
 
 interface AllocationTableProps {
   activeBreads: BreadList[];
-  pickupLocations: PickupLocationsByDeliveryDayResponse['pickupLocations'];
+  pickupLocations: PickupLocationDeliveryDay[];
   allocations: AllocationData;
   onCellChange: (pickupLocationId: string, breadId: string, value: string) => void;
 }
@@ -25,7 +26,7 @@ const AllocationTable: React.FC<AllocationTableProps> = ({
 }) => {
   const sumValues = (values: string[]): number => {
     return values.reduce((sum, val) => {
-      if (val === '' || isNaN(Number(val))) return sum;
+      if (val === '' || Number.isNaN(Number(val))) return sum;
       return sum + Number(val);
     }, 0);
   };
@@ -157,11 +158,10 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
 
-  const [pickupLocations, setPickupLocations] = useState<PickupLocationsByDeliveryDayResponse['pickupLocations']>([]);
+  const [pickupLocations, setPickupLocations] = useState<PickupLocationDeliveryDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [allocations, setAllocations] = useState<AllocationData>({});
   const [saving, setSaving] = useState(false);
-  const [initialAllocations, setInitialAllocations] = useState<AllocationData>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -174,9 +174,6 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       e.preventDefault();
       handleSaveAndClose();
     }
-    if (e.key === 'Escape') {
-      onClose();
-    }
   };
 
   const loadData = () => {
@@ -187,35 +184,22 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       .then((locationsResponse) => {
         setPickupLocations(locationsResponse.pickupLocations);
 
-        // Load existing capacities for these pickup locations
         const locationIds = locationsResponse.pickupLocations.map(s => s.id);
-        
-        
-        const initial: AllocationData = {};
-        setAllocations(initial);
-        setInitialAllocations(JSON.parse(JSON.stringify(initial)));
-          
 
         return bakeryApi.bakeryBreadCapacityPickupLocationList({
           year,
           week,
           pickupLocationIds: locationIds,
         }).then((capacities) => {
-          // Initialize allocations (locations × breads)
           const initial: AllocationData = {};
           locationsResponse.pickupLocations.forEach(location => {
             initial[location.id] = {};
-            activeBreads.forEach(bread => {
-              const existingCapacity = capacities.find(
-                (c) => c.pickupLocation === location.id && c.bread === bread.id
-              );
-              initial[location.id][bread.id!] =
-                existingCapacity ? String(existingCapacity.capacity) : '';
-            });
+          });
+          capacities.forEach((capacity) => {
+            initial[capacity.pickupLocation][capacity.bread] = String(capacity.capacity);
           });
 
           setAllocations(initial);
-          setInitialAllocations(JSON.parse(JSON.stringify(initial)));
         });
       })
       .catch((error) => {
@@ -228,7 +212,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
 
   const handleCellChange = (pickupLocationId: string, breadId: string, value: string) => {
     const sanitized = value.trim();
-    if (sanitized !== '' && isNaN(Number(sanitized))) {
+    if (sanitized !== '' && Number.isNaN(Number(sanitized))) {
       return;
     }
 
@@ -250,29 +234,15 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       capacity: number | null;
     }> = [];
 
-    // Compare current allocations with initial allocations
     Object.entries(allocations).forEach(([pickupLocationId, breadAllocs]) => {
       Object.entries(breadAllocs).forEach(([breadId, value]) => {
-        const initialValue = initialAllocations[pickupLocationId]?.[breadId] || '';
-
-        // Only save if value changed
-        if (value !== initialValue) {
-          const capacityValue = value === '' ? null : Number(value);
-          
-          updates.push({
-            pickupLocation: pickupLocationId,
-            bread: breadId,
-            capacity: capacityValue,
-          });
-        }
+        updates.push({
+          pickupLocation: pickupLocationId,
+          bread: breadId,
+          capacity: value === '' ? null : Number(value),
+        });
       });
     });
-
-    if (updates.length === 0) {
-      onClose();
-      setSaving(false);
-      return;
-    }
 
     bakeryApi.bakeryBreadCapacityPickupLocationBulkUpdateCreate({
       breadCapacityBulkUpdateRequest: {
@@ -292,7 +262,12 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       });
   };
 
-  if (!isOpen) return null;
+  const getModalSize = (): 'lg' | 'xl' | undefined => {
+    const count = activeBreads.length;
+    if (count <= 2) return 'lg';
+    if (count <= 4) return 'xl';
+    return undefined;
+  };
 
   const renderModalBodyContent = () => {
     if (loading) {
@@ -332,79 +307,46 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     );
   };
 
-  const getModalClass = () => {
-    const count = activeBreads.length;
-    if (count <= 2) return 'modal-lg';      
-    if (count <= 4) return 'modal-xl';      
-    return '';                               
-  };
-
-  const getModalStyle = () => {
-    if (activeBreads.length > 4) {
-      return { maxWidth: '95vw' };          
-    }
-    return {};
-  };
-
   return (
-    <>
-      <div
-        className="modal-backdrop fade show"
-        onClick={onClose}
-        style={{ zIndex: 1040 }}
-      />
-      <div
-        className="modal fade show d-block"
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        style={{ zIndex: 1050 }}
-      >
-        <div 
-          className={`modal-dialog ${getModalClass()} modal-dialog-centered modal-dialog-scrollable`}
-          style={getModalStyle()}
-        >
-          <div className="modal-content">
-            <div
-              className="modal-header header-white-on-middle-brown"
-            >
-              <h5 className="modal-title">
-                Mengen zuweisen - {dayLabel}, KW {week}/{year}
-              </h5>
-             
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                onClick={onClose}
-              />
-            </div>
+    <Modal
+      show={isOpen}
+      onHide={onClose}
+      size={activeBreads.length > 4 ? undefined : getModalSize()}
+      fullscreen={activeBreads.length > 4 || undefined}
+      centered
+      scrollable
+      onKeyDown={handleKeyDown}
+    >
+      <Modal.Header closeButton className="header-white-on-middle-brown">
+        <Modal.Title>
+          <h5 className="mb-0">Mengen zuweisen - {dayLabel}, KW {week}/{year}</h5>
+        </Modal.Title>
+      </Modal.Header>
 
-            <div className="modal-body p-3">
-              {renderModalBodyContent()}
-            </div>
+      <Modal.Body className="p-3">
+        {renderModalBodyContent()}
+      </Modal.Body>
 
-            <div className="modal-footer">
-              <TapirButton
-                variant="secondary"
-                text="Abbrechen"
-                icon="close"
-                onClick={onClose}
-                disabled={saving}
-                size="sm"
-              />
-              <TapirButton
-                variant=""
-                className="dark-brown-button"
-                text="Speichern & Schließen"
-                icon="save"
-                onClick={handleSaveAndClose}
-                disabled={saving}
-                loading={saving}
-                size="sm"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+      <Modal.Footer>
+        <TapirButton
+          variant="secondary"
+          text="Abbrechen"
+          icon="close"
+          onClick={onClose}
+          disabled={saving}
+          size="sm"
+        />
+        <TapirButton
+          variant=""
+          className="dark-brown-button"
+          text="Speichern & Schließen"
+          icon="save"
+          onClick={handleSaveAndClose}
+          disabled={saving}
+          loading={saving}
+          size="sm"
+        />
+      </Modal.Footer>
+    </Modal>
   );
 };
