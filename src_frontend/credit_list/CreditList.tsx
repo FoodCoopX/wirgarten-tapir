@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { Card, Col, Form, ListGroup, Row } from "react-bootstrap";
-import TapirButton from "../components/TapirButton.tsx";
-import { ToastData } from "../types/ToastData.ts";
-import TapirToastContainer from "../components/TapirToastContainer.tsx";
-import { useApi } from "../hooks/useApi.ts";
-import { ExtendedMemberCredit, PaymentsApi } from "../api-client";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import CreditListTable from "./CreditListTable.tsx";
 import dayjs from "dayjs";
 import LocaleData from "dayjs/plugin/localeData";
+import React, { useEffect, useState } from "react";
+import { Card, Col, Form, ListGroup, Row } from "react-bootstrap";
+import { ExtendedMemberCredit, PaymentsApi } from "../api-client";
+import TapirButton from "../components/TapirButton.tsx";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 import CreateMemberCreditModal from "./CreateMemberCreditModal.tsx";
+import CreditListTable from "./CreditListTable.tsx";
 
 interface CreditListProps {
   csrfToken: string;
@@ -52,6 +52,11 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
       .finally(() => setLoading(false));
   }
 
+  const totalAmount = extendedMemberCredits.reduce(
+    (sum, credit) => sum + credit.credit.amount,
+    0,
+  );
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -70,6 +75,9 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                   icon={"add_circle"}
                   onClick={() => setShowCreateModal(true)}
                 />
+              </div>
+              <div className={"mt-2 text-muted"}>
+                Offene Gutschriften gesamt: {totalAmount.toFixed(2)} EUR
               </div>
             </Card.Header>
             <ListGroup>
