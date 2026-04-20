@@ -7,6 +7,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { formatCurrency } from "../utils/formatCurrency.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import CreateMemberCreditModal from "./CreateMemberCreditModal.tsx";
 import CreditListTable from "./CreditListTable.tsx";
@@ -77,7 +78,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                 />
               </div>
               <div className={"mt-2 text-muted"}>
-                Offene Gutschriften gesamt: {totalAmount.toFixed(2)} EUR
+                Offene Gutschriften gesamt: {formatCurrency(totalAmount)}
               </div>
             </Card.Header>
             <ListGroup>
