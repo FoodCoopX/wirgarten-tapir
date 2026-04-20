@@ -1,10 +1,14 @@
 import datetime
 
+from tapir.configuration.models import TapirParameter
+from tapir.deliveries.config import DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE
+from tapir.deliveries.tests.factories import DeliveryDonationFactory
 from tapir.pickup_locations.services.pickup_location_column_provider import (
     PickupLocationColumnProvider,
 )
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS
 from tapir.wirgarten.models import MemberPickupLocation
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
@@ -112,4 +116,58 @@ class TestPickupLocationColumnProvider(TapirIntegrationTest):
                 },
             ],
             result,
+        )
+
+    def test_getValuePickupLocationDeliveriesCurrentWeek_deliveryIsDonation_donationShowsOnCorrectLocaiton(
+        self,
+    ):
+        member_pickup_location = PickupLocationFactory.create()
+        donation_pickup_location = PickupLocationFactory.create()
+        TapirParameter.objects.filter(
+            key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION
+        ).update(value=donation_pickup_location.id)
+        TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DONATION_MODE).update(
+            value=DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE
+        )
+
+        product_type_weekly = ProductTypeFactory.create(delivery_cycle=WEEKLY[0])
+        product = ProductFactory.create(type=product_type_weekly)
+        ProductPriceFactory.create(
+            product=product, valid_from=datetime.date(year=2009, month=1, day=1)
+        )
+        subscription = SubscriptionFactory.create(
+            period__start_date=datetime.date(year=2009, month=1, day=1),
+            product=product,
+        )
+        MemberPickupLocation.objects.create(
+            member=subscription.member,
+            valid_from=datetime.date(year=2009, month=1, day=1),
+            pickup_location=member_pickup_location,
+        )
+        DeliveryDonationFactory.create(
+            member=subscription.member,
+            date=datetime.datetime(year=2009, month=5, day=7),
+        )
+
+        cache = {}
+        result = PickupLocationColumnProvider.get_value_pickup_location_deliveries_current_week(
+            location=member_pickup_location,
+            reference_datetime=datetime.datetime(year=2009, month=5, day=7),
+            cache=cache,
+        )
+
+        self.assertEqual(
+            0,
+            len(result),
+        )
+
+        result = PickupLocationColumnProvider.get_value_pickup_location_deliveries_current_week(
+            location=donation_pickup_location,
+            reference_datetime=datetime.datetime(year=2009, month=5, day=7),
+            cache=cache,
+        )
+
+        self.assertEqual(
+            1,
+            len(result),
         )

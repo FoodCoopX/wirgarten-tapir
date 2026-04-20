@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.pick_list_builder import PickListBuilder
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
@@ -11,6 +12,7 @@ from tapir.subscriptions.services.subscription_delivered_in_week_checked import 
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import PickupLocation, Member, Subscription
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_product_price
 
 
@@ -77,7 +79,11 @@ class PickupLocationColumnProvider:
                 subscription=subscription,
                 delivery_date=reference_datetime.date(),
                 cache=cache,
-                skip_donation_check=False,
+                skip_donation_check=get_parameter_value(
+                    key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION,
+                    cache=cache,
+                )
+                == location.id,
             )
         ]
 
