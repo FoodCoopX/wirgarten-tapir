@@ -47,7 +47,7 @@ class TestMonthlySalesSegmentProvider(TapirIntegrationTest):
             SubscriptionFactory.create(  # this one should cover the full month
                 product__type=subscription_1.product.type,
                 period=growing_period,
-                start_date=datetime.date(year=2025, month=4, day=21),
+                start_date=datetime.date(year=2025, month=3, day=17),
                 quantity=1,
             )
         )
@@ -63,8 +63,8 @@ class TestMonthlySalesSegmentProvider(TapirIntegrationTest):
             price=15,
         )
 
-        result = MonthlySalesSegmentProvider.get_list_monthly_sales(
-            reference_datetime=datetime.datetime(year=2025, month=4, day=15, hour=12)
+        result = MonthlySalesSegmentProvider.get_list_monthly_sales_previous_month(
+            reference_datetime=datetime.datetime(year=2025, month=4, day=1, hour=12)
         )
 
         data_for_subscriptions = result[0]
