@@ -1,5 +1,7 @@
 import datetime
+from zoneinfo import ZoneInfo
 
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 
 from tapir.generic_exports.models import (
@@ -73,10 +75,10 @@ class AutomatedExportsManager:
             return cls.get_datetime_of_latest_weekly_export(export)
         if export.automated_export_cycle == AutomatedExportCycle.DAILY:
             return cls.get_datetime_of_latest_daily_export(export)
-        return None
+        raise ImproperlyConfigured(f"Unknown export cycle: {export}")
 
     @classmethod
-    def get_datetime_of_latest_yearly_export(cls, export: CsvExport):
+    def get_datetime_of_latest_yearly_export(cls, export: CsvExport | PdfExport):
         now = get_now()
         start_of_year = now.replace(month=1, day=1)
         result = start_of_year + datetime.timedelta(
@@ -89,7 +91,7 @@ class AutomatedExportsManager:
         return result.replace(year=result.year - 1)
 
     @classmethod
-    def get_datetime_of_latest_monthly_export(cls, export: CsvExport):
+    def get_datetime_of_latest_monthly_export(cls, export: CsvExport | PdfExport):
         now = get_now()
         start_of_month = now.replace(day=1)
         result = start_of_month + datetime.timedelta(
@@ -109,7 +111,7 @@ class AutomatedExportsManager:
         return result
 
     @classmethod
-    def get_datetime_of_latest_weekly_export(cls, export: CsvExport):
+    def get_datetime_of_latest_weekly_export(cls, export: CsvExport | PdfExport):
         now = get_now()
         start_of_week = now - datetime.timedelta(days=now.weekday())
         result = start_of_week + datetime.timedelta(
@@ -127,7 +129,7 @@ class AutomatedExportsManager:
         return result
 
     @classmethod
-    def get_datetime_of_latest_daily_export(cls, export: CsvExport):
+    def get_datetime_of_latest_daily_export(cls, export: CsvExport | PdfExport):
         now = get_now()
         result = cls.set_time(now, export.automated_export_hour)
         if result < now:
@@ -137,4 +139,6 @@ class AutomatedExportsManager:
 
     @classmethod
     def set_time(cls, dt: datetime.datetime, time: datetime.time):
-        return dt.replace(hour=time.hour, minute=time.minute)
+        return dt.astimezone(ZoneInfo("Europe/Berlin")).replace(
+            hour=time.hour, minute=time.minute
+        )
