@@ -99,10 +99,12 @@ function buildHelpText(
           {formatDateTextLong(subscribedProduct.cancellationDate)} beendet wird.
           Wenn du deine komplette Probezeit nutzen willst, dann kündige in der
           letzten Lieferwoche bis zum{" "}
-          {subscribedProduct.dateLimitForTrialCancellation.toLocaleDateString(
-            "de-DE",
-            { weekday: "long" },
-          )}{" "}
+          {subscribedProduct.dateLimitForTrialCancellation
+            ? subscribedProduct.dateLimitForTrialCancellation.toLocaleDateString(
+                "de-DE",
+                { weekday: "long" },
+              )
+            : "Kein Datum"}{" "}
           um 23.59 Uhr.
         </p>
 

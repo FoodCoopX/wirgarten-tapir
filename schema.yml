@@ -9481,7 +9481,6 @@ components:
           format: date
       required:
       - cancellation_date
-      - date_limit_for_trial_cancellation
       - is_in_trial
       - last_day_of_notice_period
       - notice_period_duration

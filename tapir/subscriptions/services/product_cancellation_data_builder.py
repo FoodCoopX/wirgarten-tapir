@@ -64,7 +64,7 @@ class ProductCancellationDataBuilder:
     @classmethod
     def get_date_limit_for_trial_cancellation(
         cls, product_subscriptions: list[Subscription], cache: dict
-    ):
+    ) -> datetime.date | None:
         if get_parameter_value(
             key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
         ):
@@ -86,13 +86,18 @@ class ProductCancellationDataBuilder:
     @classmethod
     def get_date_limit_for_trial_cancellation_fixed_mode(
         cls, product_subscriptions: list[Subscription], cache: dict
-    ):
-        end_of_trial_period = min(
+    ) -> datetime.date | None:
+        last_days_of_trial = [
             TrialPeriodManager.get_last_day_of_trial_period(
                 contract=subscription, cache=cache
             )
             for subscription in product_subscriptions
-        )
+        ]
+
+        if all(day is None for day in last_days_of_trial):
+            return None
+
+        end_of_trial_period = min(last_days_of_trial)
         return DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
             end_of_trial_period, cache=cache
         )
