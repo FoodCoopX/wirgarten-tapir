@@ -760,7 +760,7 @@ class SendWaitingListLinkApiView(APIView):
     @staticmethod
     def build_waiting_list_link(entry_id: str, link_key: uuid.UUID) -> str:
         url = reverse("waiting_list:waiting_list_confirm")
-        return f"{url}?entry_id={entry_id}&link_key={link_key}"
+        return f"{settings.SITE_URL}{url}?entry_id={entry_id}&link_key={link_key}"
 
     @classmethod
     def send_mail(cls, waiting_list_entry: WaitingListEntry):
