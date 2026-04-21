@@ -67,8 +67,10 @@ def get_today(cache: dict | None = None) -> datetime.date:
 
 def get_now(cache: dict | None = None) -> datetime.datetime:
     if is_debug_instance():
-        return get_debug_now(cache)
-    return timezone.now()
+        now = get_debug_now(cache)
+    else:
+        now = timezone.now()
+    return now.astimezone(ZoneInfo("Europe/Berlin"))
 
 
 def get_debug_now(cache: dict | None = None) -> datetime.datetime:
