@@ -17,6 +17,7 @@ import type {
   CancelSubscriptionsRequestRequest,
   CancelSubscriptionsViewResponse,
   CancellationData,
+  ConfirmSubscriptionChangesRequestRequest,
   ConvertWeekToDateForSubscriptionChangesResponse,
   ExtendedProduct,
   MemberDataToConfirm,
@@ -35,6 +36,7 @@ import {
   CancelSubscriptionsRequestRequestToJSON,
   CancelSubscriptionsViewResponseFromJSON,
   CancellationDataFromJSON,
+  ConfirmSubscriptionChangesRequestRequestToJSON,
   ConvertWeekToDateForSubscriptionChangesResponseFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
@@ -51,10 +53,7 @@ import {
 import * as runtime from "../runtime";
 
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
-  confirmCancellationIds: Array<string>;
-  confirmCreationIds: Array<string>;
-  confirmDeletionIds: Array<number>;
-  confirmPurchaseIds: Array<string>;
+  confirmSubscriptionChangesRequestRequest: ConfirmSubscriptionChangesRequestRequest;
 }
 
 export interface SubscriptionsApiConvertWeeksToDateForSubscriptionChangeRetrieveRequest {
@@ -123,57 +122,18 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     requestParameters: SubscriptionsApiConfirmSubscriptionChangesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<string>> {
-    if (requestParameters["confirmCancellationIds"] == null) {
+    if (requestParameters["confirmSubscriptionChangesRequestRequest"] == null) {
       throw new runtime.RequiredError(
-        "confirmCancellationIds",
-        'Required parameter "confirmCancellationIds" was null or undefined when calling subscriptionsApiConfirmSubscriptionChangesCreate().',
-      );
-    }
-
-    if (requestParameters["confirmCreationIds"] == null) {
-      throw new runtime.RequiredError(
-        "confirmCreationIds",
-        'Required parameter "confirmCreationIds" was null or undefined when calling subscriptionsApiConfirmSubscriptionChangesCreate().',
-      );
-    }
-
-    if (requestParameters["confirmDeletionIds"] == null) {
-      throw new runtime.RequiredError(
-        "confirmDeletionIds",
-        'Required parameter "confirmDeletionIds" was null or undefined when calling subscriptionsApiConfirmSubscriptionChangesCreate().',
-      );
-    }
-
-    if (requestParameters["confirmPurchaseIds"] == null) {
-      throw new runtime.RequiredError(
-        "confirmPurchaseIds",
-        'Required parameter "confirmPurchaseIds" was null or undefined when calling subscriptionsApiConfirmSubscriptionChangesCreate().',
+        "confirmSubscriptionChangesRequestRequest",
+        'Required parameter "confirmSubscriptionChangesRequestRequest" was null or undefined when calling subscriptionsApiConfirmSubscriptionChangesCreate().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters["confirmCancellationIds"] != null) {
-      queryParameters["confirm_cancellation_ids"] =
-        requestParameters["confirmCancellationIds"];
-    }
-
-    if (requestParameters["confirmCreationIds"] != null) {
-      queryParameters["confirm_creation_ids"] =
-        requestParameters["confirmCreationIds"];
-    }
-
-    if (requestParameters["confirmDeletionIds"] != null) {
-      queryParameters["confirm_deletion_ids"] =
-        requestParameters["confirmDeletionIds"];
-    }
-
-    if (requestParameters["confirmPurchaseIds"] != null) {
-      queryParameters["confirm_purchase_ids"] =
-        requestParameters["confirmPurchaseIds"];
-    }
-
     const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
 
     if (this.configuration && this.configuration.apiKey) {
       headerParameters["Authorization"] =
@@ -195,6 +155,9 @@ export class SubscriptionsApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
+        body: ConfirmSubscriptionChangesRequestRequestToJSON(
+          requestParameters["confirmSubscriptionChangesRequestRequest"],
+        ),
       },
       initOverrides,
     );

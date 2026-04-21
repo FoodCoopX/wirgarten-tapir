@@ -98,6 +98,11 @@ class WaitingListGenerator:
             entries, ["created_at", "privacy_consent", "desired_start_date"]
         )
 
+        waiting_list_entries_without_member = [e for e in entries if e.member is None]
+        random.shuffle(waiting_list_entries_without_member)
+        for entry in waiting_list_entries_without_member[:5]:
+            UserGenerator.generate_feedback_for_waiting_list_entry(entry)
+
         combinations_of_possible_changes = []
         for nb_changes in range(1, len(cls.POSSIBLE_CHANGES) + 1):
             combinations_of_possible_changes.extend(

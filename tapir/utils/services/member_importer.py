@@ -1,4 +1,10 @@
+import datetime
+
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_UPDATED,
@@ -14,6 +20,7 @@ from tapir.wirgarten.models import (
     Member,
     MemberPickupLocation,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class MemberImporter:
@@ -64,9 +71,51 @@ class MemberImporter:
         )
         solidarity_updated = cls.update_solidarity_contribution(member=member, row=row)
 
-        if member_attributes_updated or pickup_location_updated or solidarity_updated:
+        payment_rhythm_updated = cls.update_payment_rhythm_if_necessary(
+            member=member,
+            reference_date=DataImportUtils.to_date(row["consent_sepa"]),
+            rhythm_from_import=row.get("Zahlungsintervall", None),
+        )
+
+        if (
+            member_attributes_updated
+            or pickup_location_updated
+            or solidarity_updated
+            or payment_rhythm_updated
+        ):
             return MEMBER_IMPORT_STATUS_UPDATED
         return MEMBER_IMPORT_STATUS_SKIPPED
+
+    @classmethod
+    def update_payment_rhythm_if_necessary(
+        cls, member, rhythm_from_import: str | None, reference_date: datetime.date
+    ):
+        current_payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+            member=member, cache={}, reference_date=reference_date
+        )
+
+        if rhythm_from_import is None or rhythm_from_import == "":
+            target_payment_rhythm = get_parameter_value(
+                ParameterKeys.PAYMENT_DEFAULT_RHYTHM, cache={}
+            )
+        else:
+            target_payment_rhythm = (
+                MemberPaymentRhythmService.get_rhythm_from_display_name(
+                    display_name=rhythm_from_import
+                )
+            )
+
+        if current_payment_rhythm == target_payment_rhythm:
+            return False
+
+        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
+            member=member,
+            rhythm=target_payment_rhythm,
+            valid_from=reference_date,
+            actor=None,
+            cache={},
+        )
+        return True
 
     @classmethod
     def update_member_attributes_and_save_member_without_keycloak(
@@ -272,6 +321,12 @@ class MemberImporter:
         target_amount = DataImportUtils.safe_float(row.get("Solidarpreis in EUR"))
         if target_amount != 0:
             cls.create_solidarity_contribution(member, row, target_amount)
+
+        cls.update_payment_rhythm_if_necessary(
+            member=member,
+            reference_date=DataImportUtils.to_date(row["consent_sepa"]),
+            rhythm_from_import=row.get("Zahlungsintervall", None),
+        )
 
         MemberImportedLogEntry().populate(model=member, actor=None, user=member).save()
 

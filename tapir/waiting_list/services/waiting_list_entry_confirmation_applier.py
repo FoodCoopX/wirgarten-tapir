@@ -23,7 +23,7 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 )
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.waiting_list.models import WaitingListChangeConfirmedLogEntry
-from tapir.wirgarten.models import WaitingListEntry, Member
+from tapir.wirgarten.models import WaitingListEntry, Member, OrderFeedback
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.utils import get_now, get_today
 
@@ -98,6 +98,10 @@ class WaitingListEntryConfirmationApplier:
                 member=member,
                 cache=cache,
             )
+        )
+
+        OrderFeedback.objects.filter(waiting_list_entry=waiting_list_entry).update(
+            waiting_list_entry=None, member=member
         )
 
         waiting_list_entry.delete()

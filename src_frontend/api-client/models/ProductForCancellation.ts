@@ -55,7 +55,7 @@ export interface ProductForCancellation {
    * @type {Date}
    * @memberof ProductForCancellation
    */
-  dateLimitForTrialCancellation: Date;
+  dateLimitForTrialCancellation?: Date;
   /**
    *
    * @type {number}
@@ -92,11 +92,6 @@ export function instanceOfProductForCancellation(
   )
     return false;
   if (
-    !("dateLimitForTrialCancellation" in value) ||
-    value["dateLimitForTrialCancellation"] === undefined
-  )
-    return false;
-  if (
     !("noticePeriodDuration" in value) ||
     value["noticePeriodDuration"] === undefined
   )
@@ -129,9 +124,10 @@ export function ProductForCancellationFromJSONTyped(
     isInTrial: json["is_in_trial"],
     cancellationDate: new Date(json["cancellation_date"]),
     lastDayOfNoticePeriod: new Date(json["last_day_of_notice_period"]),
-    dateLimitForTrialCancellation: new Date(
-      json["date_limit_for_trial_cancellation"],
-    ),
+    dateLimitForTrialCancellation:
+      json["date_limit_for_trial_cancellation"] == null
+        ? undefined
+        : new Date(json["date_limit_for_trial_cancellation"]),
     noticePeriodDuration: json["notice_period_duration"],
     noticePeriodUnit: NoticePeriodUnitEnumFromJSON(json["notice_period_unit"]),
     subscriptionEndDate: new Date(json["subscription_end_date"]),
@@ -158,9 +154,10 @@ export function ProductForCancellationToJSONTyped(
     last_day_of_notice_period: value["lastDayOfNoticePeriod"]
       .toISOString()
       .substring(0, 10),
-    date_limit_for_trial_cancellation: value["dateLimitForTrialCancellation"]
-      .toISOString()
-      .substring(0, 10),
+    date_limit_for_trial_cancellation:
+      value["dateLimitForTrialCancellation"] == null
+        ? undefined
+        : value["dateLimitForTrialCancellation"].toISOString().substring(0, 10),
     notice_period_duration: value["noticePeriodDuration"],
     notice_period_unit: NoticePeriodUnitEnumToJSON(value["noticePeriodUnit"]),
     subscription_end_date: value["subscriptionEndDate"]

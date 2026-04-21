@@ -180,12 +180,12 @@
         const renewSameBtn = document.getElementById("renewSameConditionsBtn");
         const checkbox = document.getElementById('id_sepa-payment-consent');
 
-         if (checkbox.checked) {
-          renewChangeConditionsBtn.removeAttribute('disabled');
-          renewSameConditionsBtn.removeAttribute('disabled');
+        if (checkbox.checked) {
+            renewChangeConditionsBtn.removeAttribute('disabled');
+            renewSameConditionsBtn.removeAttribute('disabled');
         } else {
-          renewChangeConditionsBtn.setAttribute('disabled', 'disabled');
-          renewSameConditionsBtn.setAttribute('disabled', 'disabled');
+            renewChangeConditionsBtn.setAttribute('disabled', 'disabled');
+            renewSameConditionsBtn.setAttribute('disabled', 'disabled');
         }
     }
 
@@ -215,8 +215,8 @@
             passwordChangedConfirmationElem.style.display = 'block';
         }
 
-       Tapir.replaceUrlParams({})
-   };
+        Tapir.replaceUrlParams({})
+    };
 
     const handleCancellation = () => {
         ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich nicht verlängern?', 'Dein Vertrag läuft noch bis zum <b>{{contract_end_date}}</b> und wird nicht weiter verlängert.', 'Ernteanteil nicht verlängern', 'danger', () => {
@@ -226,15 +226,15 @@
 
     const handleRenewal = () => {
         {% if next_available_product_types %}
-        const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
-        if ({{next_available_product_types|safe}}.includes("{{base_product_type_name}}")) {
-            renewalModal.show()
-        }
-        else {
-            handleShowWaitlist();
-        }
+            const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
+            if ({{next_available_product_types|safe}}.includes("{{base_product_type_name}}")) {
+                renewalModal.show()
+            }
+            else {
+                handleShowWaitlist();
+            }
         {% endif %}
-        
+
     }
 
     const handleRenewSameConditions = () => {
@@ -244,11 +244,11 @@
     }
 
     const handleRenewChangeConditions = () => {
-         const btn = document.getElementById('renewChangeConditionsBtn');
-         btn.disabled=true;
-         const modalInstance = bootstrap.Modal.getInstance(document.getElementById("renew-modal"));
-         modalInstance.hide();
+        const btn = document.getElementById('renewChangeConditionsBtn');
+        btn.disabled=true;
+        const modalInstance = bootstrap.Modal.getInstance(document.getElementById("renew-modal"));
+        modalInstance.hide();
 
-         FormModal.load('{% url 'wirgarten:member_renew_changed_conditions' object.pk %}', "Bitte wähle deine neuen Konditionen");
+        FormModal.load('{% url 'wirgarten:member_renew_changed_conditions' object.pk %}', "Bitte wähle deine neuen Konditionen");
     }
 </script>

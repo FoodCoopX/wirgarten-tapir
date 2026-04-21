@@ -12,7 +12,7 @@ Its features include:
 - Delivery locations and capacity management
 - And more
 
-It is developed by [Théo](https://seriousdino.org/) for [FoodCoopX](https://foodcoopx.de/).
+The development is lead mainly by [Théo](https://seriousdino.org/) for [FoodCoopX](https://foodcoopx.de/).
 
 The backend code is written with Python and Django, the frontend code is a mix of Django templates and React.
 
@@ -57,7 +57,7 @@ Python files are formatted with [Black](https://github.com/psf/black).
 
 JavaScript and React files are formatted with [Prettier](https://prettier.io/).
 
-Django template files are formatted with [djLint](https://djlint.com/)
+Django template files are formatted with [DjHTML](https://github.com/rtts/djhtml)
 
 ## Frontend API clients
 API Requests made from the React frontend use API clients. Here are the steps to get updated API clients:

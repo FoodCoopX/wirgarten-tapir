@@ -24,6 +24,7 @@ class GlobalCapacityChecker:
         member_id: str | None,
         subscription_start_date: datetime.date,
         cache: dict,
+        check_waiting_list_entries: bool = True,
     ):
         product_type_ids = {
             product.type_id for product in order_with_all_product_types.keys()
@@ -39,7 +40,7 @@ class GlobalCapacityChecker:
                 member_id=member_id,
                 subscription_start_date=subscription_start_date,
                 product_type_id=product_type_id,
-                check_waiting_list_entries=True,
+                check_waiting_list_entries=check_waiting_list_entries,
                 cache=cache,
             )
             if not enough:

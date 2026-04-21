@@ -5,15 +5,22 @@ from django.core.exceptions import ImproperlyConfigured
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.log.models import LogEntry
+from tapir.payments.models import MemberCredit
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.configuration_generator import (
     ConfigurationGenerator,
 )
 from tapir.utils.services.test_data_generation.joker_generator import JokerGenerator
+from tapir.utils.services.test_data_generation.member_credit_generator import (
+    MemberCreditGenerator,
+)
 from tapir.utils.services.test_data_generation.pickup_location_generator import (
     PickupLocationGenerator,
 )
 from tapir.utils.services.test_data_generation.product_generator import ProductGenerator
+from tapir.utils.services.test_data_generation.solidarity_contribution_generator import (
+    SolidarityContributionGenerator,
+)
 from tapir.utils.services.test_data_generation.user_generator import UserGenerator
 from tapir.utils.services.test_data_generation.waiting_list_generator import (
     WaitingListGenerator,
@@ -34,6 +41,7 @@ from tapir.wirgarten.models import (
     PickupLocation,
     MemberPickupLocation,
     QuestionaireCancellationReasonResponse,
+    OrderFeedback,
 )
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
@@ -60,6 +68,8 @@ class DataGenerator:
             Payment,
             MandateReference,
             EmailChangeRequest,
+            OrderFeedback,
+            MemberCredit,
         ]
 
         for model_class in model_classes:
@@ -87,6 +97,10 @@ class DataGenerator:
         JokerGenerator.generate_jokers()
         print("Creating waiting list...")
         WaitingListGenerator.generate_waiting_list(generate_test_data_for)
+        print("Creating Solidarity contributions...")
+        SolidarityContributionGenerator.generate_solidarity_contributions()
+        print("Creating member credits...")
+        MemberCreditGenerator.generate_member_credits()
 
     @classmethod
     def generate_growing_periods(cls, generate_test_data_for: Organization):

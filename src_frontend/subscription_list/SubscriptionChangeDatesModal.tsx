@@ -40,7 +40,11 @@ const HEADER_HELP_TEXT = (
 
 const END_DATE_HELP_TEXT = (
   <>
-    <p>Das neue Vertragsende-Datum muss immer ein Sonntag sein.</p>
+    <p>
+      Das neue Vertragsende-Datum muss immer ein Sonntag sei, wenn du die Option
+      "In einer bestimmten KW" wählst. Alternativ kannst du auch das
+      Vertragsperioden-Enddatum auswählen.
+    </p>
     <p>
       Wenn das neue Vertragsende-Datum vor dem Ende der Vertragsperiode liegt,
       wird der Vertrag als gekündigt markiert und nicht mehr verlängert. Sofern
@@ -243,7 +247,7 @@ const SubscriptionChangeDatesModal: React.FC<
                     Start-Datum
                     <TapirHelpButton
                       text={
-                        "Das neue Vertragsstart-Datum muss immer ein Montag sein."
+                        'Das neue Vertragsstart-Datum muss immer ein Montag sein, wenn du die Option "In einer bestimmten KW" wählst. Alternativ kannst du das Vertragsperioden-Startdatum auswählen.'
                       }
                       buttonSize={"sm"}
                     />
@@ -259,7 +263,7 @@ const SubscriptionChangeDatesModal: React.FC<
                   <option value={"true"}>
                     Am erstem Tag der Vertragsperiode
                   </option>
-                  <option value={"false"}>An einer bestimmter KW</option>
+                  <option value={"false"}>In einer bestimmten KW</option>
                 </Form.Select>
                 {!startDateIsPeriodStart && (
                   <SubscriptionChangeDatesWeekInput
@@ -291,7 +295,7 @@ const SubscriptionChangeDatesModal: React.FC<
                   <option value={"true"}>
                     Am letztem Tag der Vertragsperiode
                   </option>
-                  <option value={"false"}>An einer bestimmter KW</option>
+                  <option value={"false"}>In einer bestimmten KW</option>
                 </Form.Select>
                 {!endDateIsPeriodEnd && (
                   <SubscriptionChangeDatesWeekInput
@@ -317,7 +321,7 @@ const SubscriptionChangeDatesModal: React.FC<
           }
           style={{ width: "100%" }}
         >
-          <Modal.Title>Vertragsstart-anpassen/Sonderkündigung</Modal.Title>
+          <Modal.Title>Vertragslaufzeit anpassen / Sonderkündigung</Modal.Title>
           <TapirHelpButton text={HEADER_HELP_TEXT} />
         </span>
       </Modal.Header>

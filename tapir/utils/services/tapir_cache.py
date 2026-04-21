@@ -216,6 +216,12 @@ class TapirCache:
         )
 
     @classmethod
+    def get_all_product_types(cls, cache: dict):
+        return get_from_cache_or_compute(
+            cache, "all_product_types", lambda: set(ProductType.objects.order_by("id"))
+        )
+
+    @classmethod
     def get_subscriptions_by_product_type(cls, cache: dict):
         key = "subscriptions_by_product_type"
         TapirCacheManager.register_key_in_category(

@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
 from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.products.serializers import (
@@ -59,7 +60,9 @@ class ExtendedProductTypeApiView(APIView):
             ),
             "show_jokers": get_parameter_value(
                 ParameterKeys.JOKERS_ENABLED, cache=self.cache
-            ),
+            )
+            or get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE)
+            != DELIVERY_DONATION_MODE_DISABLED,
             "show_association_membership": legal_status_is_association(
                 cache=self.cache
             ),

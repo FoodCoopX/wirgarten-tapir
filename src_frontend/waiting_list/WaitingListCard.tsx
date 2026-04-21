@@ -17,6 +17,7 @@ import {
   Product,
   SubscriptionsApi,
   WaitingListApi,
+  WaitingListApiListListCanBeFulfilledEnum,
   WaitingListApiListListEntryTypeEnum,
   WaitingListApiListListMemberTypeEnum,
   WaitingListApiListListOrderByEnum,
@@ -61,6 +62,8 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     useState("");
   const [filterPickupLocationWish, setFilterPickupLocationWish] = useState("");
   const [filterProductWish, setFilterProductWish] = useState("");
+  const [filterCanBeFulfilled, setFilterCanBeFulfilled] =
+    useState<WaitingListApiListListCanBeFulfilledEnum>("any");
   const [orderBy, setOrderBy] =
     useState<WaitingListApiListListOrderByEnum>("-created_at");
   const [counts, setCounts] = useState<Counts>();
@@ -132,6 +135,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     filterCurrentPickupLocation,
     filterPickupLocationWish,
     filterProductWish,
+    filterCanBeFulfilled,
     orderBy,
   ]);
 
@@ -148,6 +152,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
         currentPickupLocationId: filterCurrentPickupLocation,
         pickupLocationWish: filterPickupLocationWish,
         productWish: filterProductWish,
+        canBeFulfilled: filterCanBeFulfilled,
         orderBy: orderBy,
       })
       .then((paginatedData) => {
@@ -321,6 +326,23 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                             {product.type.name}: {product.name}
                           </option>
                         ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Erfüllbarkeit:</Form.Label>
+                      <Form.Select
+                        onChange={(event) =>
+                          setFilterCanBeFulfilled(
+                            event.target
+                              .value as WaitingListApiListListCanBeFulfilledEnum,
+                          )
+                        }
+                      >
+                        <option value="any">Alle</option>
+                        <option value="fulfillable">Erfüllbar</option>
+                        <option value="not_fulfillable">Nicht erfüllbar</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>

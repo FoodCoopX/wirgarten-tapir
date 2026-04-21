@@ -1,14 +1,14 @@
+import "dayjs/locale/de";
 import React, { Dispatch, SetStateAction } from "react";
 import { Form, Modal } from "react-bootstrap";
-import "dayjs/locale/de";
 import {
   ProductForCancellation,
   SolidarityContributionCancellationData,
 } from "../../../api-client";
 import TapirButton from "../../../components/TapirButton.tsx";
-import { formatDateText } from "../../../utils/formatDateText.ts";
 import TapirHelpButton from "../../../components/TapirHelpButton.tsx";
 import { formatDateNumeric } from "../../../utils/formatDateNumeric.ts";
+import { formatDateText } from "../../../utils/formatDateText.ts";
 import { formatDateTextLong } from "../../../utils/formatDateTextLong.ts";
 
 interface CancellationStepSubscriptionsProps {
@@ -99,10 +99,12 @@ function buildHelpText(
           {formatDateTextLong(subscribedProduct.cancellationDate)} beendet wird.
           Wenn du deine komplette Probezeit nutzen willst, dann kündige in der
           letzten Lieferwoche bis zum{" "}
-          {subscribedProduct.dateLimitForTrialCancellation.toLocaleDateString(
-            "de-DE",
-            { weekday: "long" },
-          )}{" "}
+          {subscribedProduct.dateLimitForTrialCancellation
+            ? subscribedProduct.dateLimitForTrialCancellation.toLocaleDateString(
+                "de-DE",
+                { weekday: "long" },
+              )
+            : "Kein Datum"}{" "}
           um 23.59 Uhr.
         </p>
 

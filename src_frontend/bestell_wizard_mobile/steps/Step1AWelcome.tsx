@@ -1,6 +1,6 @@
 import React from "react";
-import TapirButton from "../../components/TapirButton.tsx";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step1AIntroProps {
@@ -14,7 +14,9 @@ const Step1AWelcome: React.FC<Step1AIntroProps> = ({
 }) => {
   return (
     <>
-      {settings.strings.step1aText && <p>{settings.strings.step1aText}</p>}
+      {settings.strings.step1aText && (
+        <p className={"text-center"}>{settings.strings.step1aText}</p>
+      )}
       <TapirButton
         variant={BUTTON_VARIANT}
         text={"Starten"}

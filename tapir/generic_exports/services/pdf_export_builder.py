@@ -11,6 +11,7 @@ from tapir.generic_exports.services.export_segment_manager import (
     ExportSegmentManager,
 )
 from tapir.wirgarten.models import ExportedFile
+from tapir.wirgarten.utils import get_today
 
 
 class PdfExportBuilder:
@@ -22,14 +23,15 @@ class PdfExportBuilder:
     def create_exported_files(
         cls, pdf_export: PdfExport, reference_datetime: datetime.datetime
     ):
-        contexts = cls.build_contexts(pdf_export, reference_datetime)
+        cache = {}
+        contexts = cls.build_contexts(pdf_export, reference_datetime, cache=cache)
 
         if pdf_export.generate_one_file_for_every_segment_entry:
             return [
                 cls.create_single_file(
                     pdf_export,
                     reference_datetime,
-                    context,
+                    context | {"today": get_today(cache=cache)},
                 )
                 for context in contexts
             ]
@@ -38,20 +40,18 @@ class PdfExportBuilder:
             cls.create_single_file(
                 pdf_export,
                 reference_datetime,
-                {"entries": contexts},
+                {"entries": contexts, "today": get_today(cache=cache)},
             )
         ]
 
     @classmethod
-    def build_contexts(cls, pdf_export, reference_datetime):
+    def build_contexts(cls, pdf_export, reference_datetime, cache: dict):
         segment = ExportSegmentManager.get_segment_by_id(pdf_export.export_segment_id)
         used_column_ids = [
             column.id
             for column in segment.get_available_columns()
             if column.id in pdf_export.template
         ]
-
-        cache = {}
 
         return [
             cls.build_context_for_entry(

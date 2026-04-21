@@ -44,6 +44,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         for mock in mocks:
             mock.assert_not_called()
 
+    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
+    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -68,6 +70,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
+        mock_legal_status_is_association: Mock,
+        mock_legal_status_is_cooperative: Mock,
     ):
         shopping_cart_order = Mock()
         cache = Mock()
@@ -76,14 +80,17 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         validated_serializer_data = {
             "privacy_policy_read": True,
             "shopping_cart_order": shopping_cart_order,
-            "become_member_now": None,
+            "become_member_now": True,
             "shopping_cart_waiting_list": {},
             "growing_period_id": growing_period.id,
             "pickup_location_ids": [],
         }
 
+        mock_legal_status_is_association.return_value = False
+        mock_legal_status_is_cooperative.return_value = True
+
         mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
-            lambda data, cache: ({Mock: 2} if data == shopping_cart_order else {})
+            lambda data, cache: ({Mock(): 2} if data == shopping_cart_order else {})
         )
 
         BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
@@ -103,6 +110,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
 
+    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
+    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         BestellWizardConfirmOrderApiView,
         "validate_and_create_waiting_list_entry_existing_member",
@@ -121,6 +130,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_fulfill_order: Mock,
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
+        mock_legal_status_is_association: Mock,
+        mock_legal_status_is_cooperative: Mock,
     ):
         cache = Mock()
         request = Mock()
@@ -133,6 +144,9 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             "growing_period_id": growing_period.id,
             "pickup_location_ids": [],
         }
+
+        mock_legal_status_is_association.return_value = False
+        mock_legal_status_is_cooperative.return_value = True
 
         BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
             validated_serializer_data=validated_serializer_data,
@@ -148,6 +162,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_create_waiting_list_entry_potential_member.assert_not_called()
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
 
+    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
+    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -172,6 +188,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
+        mock_legal_status_is_association: Mock,
+        mock_legal_status_is_cooperative: Mock,
     ):
         shopping_cart_order = Mock()
         shopping_cart_waiting_list = Mock()
@@ -185,6 +203,9 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             "shopping_cart_waiting_list": shopping_cart_waiting_list,
             "growing_period_id": growing_period.id,
         }
+
+        mock_legal_status_is_association.return_value = False
+        mock_legal_status_is_cooperative.return_value = True
 
         mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
             lambda data, cache: (
@@ -210,6 +231,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         )
         mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()
 
+    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
+    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
     @patch.object(
         TapirOrderBuilder,
         "build_tapir_order_from_shopping_cart_serializer",
@@ -234,6 +257,8 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         mock_validate_and_create_waiting_list_entry_potential_member: Mock,
         mock_validate_and_create_waiting_list_entry_existing_member: Mock,
         mock_build_tapir_order_from_shopping_cart_serializer: Mock,
+        mock_legal_status_is_association: Mock,
+        mock_legal_status_is_cooperative: Mock,
     ):
         shopping_cart_order = Mock()
         shopping_cart_waiting_list = Mock()
@@ -251,8 +276,11 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             "pickup_location_ids": pickup_location_ids,
         }
 
-        mock_build_tapir_order_from_shopping_cart_serializer.return_value = {Mock: 2}
+        mock_build_tapir_order_from_shopping_cart_serializer.return_value = {Mock(): 2}
         mock_validate_and_fulfill_order.return_value = member
+
+        mock_legal_status_is_association.return_value = False
+        mock_legal_status_is_cooperative.return_value = True
 
         BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
             validated_serializer_data=validated_serializer_data,
@@ -277,3 +305,63 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
             validated_serializer_data=validated_serializer_data,
             cache=cache,
         )
+
+    @patch.object(
+        TapirOrderBuilder,
+        "build_tapir_order_from_shopping_cart_serializer",
+        autospec=True,
+    )
+    @patch("tapir.bestell_wizard.views.legal_status_is_cooperative", autospec=True)
+    @patch("tapir.bestell_wizard.views.legal_status_is_association", autospec=True)
+    @patch.object(
+        BestellWizardConfirmOrderApiView,
+        "validate_and_create_waiting_list_entry_existing_member",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView,
+        "validate_and_create_waiting_list_entry_potential_member",
+        autospec=True,
+    )
+    @patch.object(
+        BestellWizardConfirmOrderApiView, "validate_and_fulfill_order", autospec=True
+    )
+    def test_validateEverythingAndApplyAllChanges_orderIsEmptyAndBecomeMemberNowIsTrueButLegalStatusIsCompany_callsCreateWaitingListEntryOnly(
+        self,
+        mock_validate_and_fulfill_order: Mock,
+        mock_validate_and_create_waiting_list_entry_potential_member: Mock,
+        mock_validate_and_create_waiting_list_entry_existing_member: Mock,
+        mock_legal_status_is_association: Mock,
+        mock_legal_status_is_cooperative: Mock,
+        mock_build_tapir_order_from_shopping_cart_serializer: Mock,
+    ):
+        cache = Mock()
+        request = Mock()
+        growing_period = GrowingPeriodFactory.build()
+        shopping_cart_waiting_list = {Mock(): 2}
+        validated_serializer_data = {
+            "privacy_policy_read": True,
+            "shopping_cart_order": {},
+            "become_member_now": True,
+            "shopping_cart_waiting_list": shopping_cart_waiting_list,
+            "growing_period_id": growing_period.id,
+            "pickup_location_ids": [],
+        }
+
+        mock_build_tapir_order_from_shopping_cart_serializer.side_effect = (
+            lambda shopping_cart, cache: ({Mock(): 2} if len(shopping_cart) > 0 else {})
+        )
+        mock_legal_status_is_association.return_value = False
+        mock_legal_status_is_cooperative.return_value = False
+
+        BestellWizardConfirmOrderApiView.validate_everything_and_apply_all_changes(
+            validated_serializer_data=validated_serializer_data,
+            request=request,
+            cache=cache,
+        )
+
+        mock_validate_and_fulfill_order.assert_not_called()
+        mock_validate_and_create_waiting_list_entry_potential_member.assert_called_once_with(
+            validated_serializer_data=validated_serializer_data, cache=cache
+        )
+        mock_validate_and_create_waiting_list_entry_existing_member.assert_not_called()

@@ -97,3 +97,32 @@ class ProductCancellationDataBuilderGetDateLimitForTrialCancellationFixedMode(
         mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
             mock_trial_end_early, cache=cache
         )
+
+    @patch.object(
+        TrialPeriodManager,
+        "get_last_day_of_trial_period",
+        autospec=True,
+    )
+    def test_getDateLimitForTrialCancellationFixedMode_noneOfTheSubscriptionIsOnTrial_usesEarliestTrialEnd(
+        self,
+        mock_get_last_day_of_trial_period: Mock,
+    ):
+        cache = {}
+        mock_subscription_a = Mock()
+        mock_subscription_b = Mock()
+        mock_get_last_day_of_trial_period.return_value = None
+
+        result = ProductCancellationDataBuilder.get_date_limit_for_trial_cancellation_fixed_mode(
+            product_subscriptions=[mock_subscription_a, mock_subscription_b],
+            cache=cache,
+        )
+
+        self.assertIsNone(result)
+        self.assertEqual(2, mock_get_last_day_of_trial_period.call_count)
+        mock_get_last_day_of_trial_period.assert_has_calls(
+            [
+                call(contract=mock_subscription_a, cache=cache),
+                call(contract=mock_subscription_b, cache=cache),
+            ],
+            any_order=True,
+        )

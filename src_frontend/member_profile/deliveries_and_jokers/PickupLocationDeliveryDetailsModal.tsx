@@ -1,7 +1,7 @@
+import dayjs from "dayjs";
 import React from "react";
 import { Modal } from "react-bootstrap";
 import { PickupLocation, PickupLocationOpeningTime } from "../../api-client";
-import dayjs from "dayjs";
 
 interface PickupLocationDeliveryDetailsModalProps {
   pickupLocation: PickupLocation;
@@ -13,7 +13,7 @@ const PickupLocationDeliveryDetailsModal: React.FC<
   PickupLocationDeliveryDetailsModalProps
 > = ({ pickupLocation, openingTimes, onHide }) => {
   return (
-    <Modal onHide={onHide} show={true} centered={true}>
+    <Modal size={"lg"} onHide={onHide} show={true} centered={true}>
       <Modal.Header closeButton>
         <Modal.Title>
           <h4>{pickupLocation.name}</h4>
@@ -35,7 +35,8 @@ const PickupLocationDeliveryDetailsModal: React.FC<
         <p>
           {pickupLocation.info && (
             <>
-              Information: {pickupLocation.info}
+              Information:{" "}
+              <span dangerouslySetInnerHTML={{ __html: pickupLocation.info }} />
               <br />
             </>
           )}
@@ -77,6 +78,11 @@ const PickupLocationDeliveryDetailsModal: React.FC<
             })}
           </ul>
         </p>
+        <img
+          src={pickupLocation.photoLink}
+          style={{ maxWidth: 764 }}
+          alt={pickupLocation.name}
+        />
       </Modal.Body>
     </Modal>
   );

@@ -36,7 +36,7 @@ class ProductForCancellationSerializer(serializers.Serializer):
     is_in_trial = serializers.BooleanField()
     cancellation_date = serializers.DateField()
     last_day_of_notice_period = serializers.DateField()
-    date_limit_for_trial_cancellation = serializers.DateField()
+    date_limit_for_trial_cancellation = serializers.DateField(required=False)
     notice_period_duration = serializers.IntegerField()
     notice_period_unit = serializers.ChoiceField(choices=NOTICE_PERIOD_UNIT_OPTIONS)
     subscription_end_date = serializers.DateField()
@@ -288,3 +288,10 @@ class SubscriptionDateChangeRequestSerializer(serializers.Serializer):
 class ConvertWeekToDateForSubscriptionChangesResponseSerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
+
+
+class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
+    confirm_cancellation_ids = serializers.ListField(child=serializers.CharField())
+    confirm_creation_ids = serializers.ListField(child=serializers.CharField())
+    confirm_purchase_ids = serializers.ListField(child=serializers.CharField())
+    confirm_deletion_ids = serializers.ListField(child=serializers.IntegerField())

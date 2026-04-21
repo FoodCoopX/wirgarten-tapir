@@ -145,6 +145,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [productPricesController, setProductPricesController] =
     useState<AbortController>();
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -511,6 +512,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           growingPeriodId: selectedGrowingPeriod!.id!,
           solidarityContribution: solidarityContribution,
           distributionChannels: [...selectedDistributionChannels],
+          feedback: feedback,
         },
       })
       .then(handleOrderResponse)
@@ -795,6 +797,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             confirmOrder={onConfirmOrder}
             confirmOrderLoading={confirmOrderLoading}
+            feedback={feedback}
+            setFeedback={setFeedback}
           />
         );
       case "14_confirmation":

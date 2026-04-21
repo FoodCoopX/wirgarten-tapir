@@ -86,6 +86,6 @@ class TestGetDateFromWeekObject(SimpleTestCase):
             )
 
         self.assertEqual(
-            "Die ganze Woche muss innerhalb der Vertragsperiode liegen. KW40 geht von 28.09.2026 zu 04.10.2026",
+            "Die ganze Woche muss innerhalb der Vertragsperiode liegen. KW40 geht vom 28.09.2026 bis zum 04.10.2026",
             str(error.exception),
         )

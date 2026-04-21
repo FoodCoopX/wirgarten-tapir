@@ -3,35 +3,35 @@
 {% load wirgarten %}
 
 {% block card_header %}
-<h4>{{tasks | length}} Tasks</h4>
+    <h4>{{tasks | length}} Tasks</h4>
 {% endblock %}
 
 {% block table_head %}
-<tr>
-    <th>Status</th>
-    <th data-sort="eta">ETA</th>
-    <th data-sort="name">Name</th>
-    <th data-sort="args">args</th>
-    <th data-sort="kwargs">kwargs</th>
-    <th data-sort="created_at">Created</th>
-    <th data-sort="updated_at">Updated</th>
-    <th data-sort="id">ID</th>
-</tr>
+    <tr>
+        <th>Status</th>
+        <th data-sort="eta">ETA</th>
+        <th data-sort="name">Name</th>
+        <th data-sort="args">args</th>
+        <th data-sort="kwargs">kwargs</th>
+        <th data-sort="created_at">Created</th>
+        <th data-sort="updated_at">Updated</th>
+        <th data-sort="id">ID</th>
+    </tr>
 {% endblock %}
 
 {% block table_body %}
-{% for task in tasks %}
+    {% for task in tasks %}
 
-<tr id="task-{{task.id}}" class="tr-clickable">
-    <td>{{ task.status }}</td>
-    <td>{{ task.eta | format_date }}</td>
-    <td>{{ task.name }}</td>
-    <td>{{ task.args }}</td>
-    <td>{{ task.kwargs }}</td>
-    <td>{{ task.created_at | format_date }}</td>
-    <td>{{ task.updated_at | format_date }}</td>
-    <td>{{ task.id }}</td>
-</tr>
+        <tr id="task-{{task.id}}" class="tr-clickable">
+            <td>{{ task.status }}</td>
+            <td>{{ task.eta | format_date }}</td>
+            <td>{{ task.name }}</td>
+            <td>{{ task.args }}</td>
+            <td>{{ task.kwargs }}</td>
+            <td>{{ task.created_at | format_date }}</td>
+            <td>{{ task.updated_at | format_date }}</td>
+            <td>{{ task.id }}</td>
+        </tr>
 
-{% endfor %}
+    {% endfor %}
 {% endblock %}

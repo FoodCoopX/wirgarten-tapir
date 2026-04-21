@@ -1906,37 +1906,20 @@ paths:
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
-      parameters:
-      - in: query
-        name: confirm_cancellation_ids
-        schema:
-          type: array
-          items:
-            type: string
-        required: true
-      - in: query
-        name: confirm_creation_ids
-        schema:
-          type: array
-          items:
-            type: string
-        required: true
-      - in: query
-        name: confirm_deletion_ids
-        schema:
-          type: array
-          items:
-            type: integer
-        required: true
-      - in: query
-        name: confirm_purchase_ids
-        schema:
-          type: array
-          items:
-            type: string
-        required: true
       tags:
       - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmSubscriptionChangesRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConfirmSubscriptionChangesRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConfirmSubscriptionChangesRequestRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -4736,6 +4719,15 @@ paths:
       operationId: waiting_list_api_list_list
       parameters:
       - in: query
+        name: can_be_fulfilled
+        schema:
+          type: string
+          enum:
+          - any
+          - fulfillable
+          - not_fulfillable
+        required: true
+      - in: query
         name: category
         schema:
           type: string
@@ -5394,6 +5386,8 @@ components:
           items:
             type: string
             minLength: 1
+        feedback:
+          type: string
       required:
       - become_member_now
       - cancellation_policy_read
@@ -5838,6 +5832,33 @@ components:
         * `CANCELLED` - Kündigung
         * `RENEWED` - Verlängerung
         * `NOT_RENEWED` - Keine Verlängerung
+    ConfirmSubscriptionChangesRequestRequest:
+      type: object
+      properties:
+        confirm_cancellation_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        confirm_creation_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        confirm_purchase_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        confirm_deletion_ids:
+          type: array
+          items:
+            type: integer
+      required:
+      - confirm_cancellation_ids
+      - confirm_creation_ids
+      - confirm_deletion_ids
+      - confirm_purchase_ids
     ConvertWeekToDateForSubscriptionChangesResponse:
       type: object
       properties:
@@ -9460,7 +9481,6 @@ components:
           format: date
       required:
       - cancellation_date
-      - date_limit_for_trial_cancellation
       - is_in_trial
       - last_day_of_notice_period
       - notice_period_duration
@@ -10842,6 +10862,8 @@ components:
           format: uri
         payment_rhythm:
           type: string
+        can_be_fulfilled:
+          type: boolean
       required:
       - city
       - comment

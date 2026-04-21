@@ -52,8 +52,8 @@
                                 <td style="text-align:center">
                                     {% if payment.edited and not payment.amount == payment.calculated_amount %}
                                         <span title="{% translate 'Manuell editiert!' %}"><span style="font-size:1.25em;
-             color: var(--bs-warning)"
-      class="material-icons">warning</span></span>
+                                                                                                       color: var(--bs-warning)"
+                                                                                                class="material-icons">warning</span></span>
                                         <small>
                                             <del>{{ payment.calculated_amount }}</del>
                                         </small>
@@ -142,25 +142,25 @@
         </div>
     </div>
     <script>
-    const now = moment();
-    let diff, date;
+        const now = moment();
+        let diff, date;
 
-    {% for payment in payments %}
-    date = moment("{{payment.due_date|date:'Y-m-d'}}");
-    diff = now.to(date);
-    document.getElementById("datediff-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}").innerText = diff;
-    document.getElementById("date-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}").innerText = date.format("LL");
-    {% endfor %}
+        {% for payment in payments %}
+            date = moment("{{payment.due_date|date:'Y-m-d'}}");
+            diff = now.to(date);
+            document.getElementById("datediff-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}").innerText = diff;
+            document.getElementById("date-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}").innerText = date.format("LL");
+        {% endfor %}
 
-    const loadEditForm = (memberId, mandateRefId, paymentDueDate, calculatedAmount, memberFullName, paymentType) => {
-        formDiv = document.getElementById("edit-payment");
-        detailsDiv = document.getElementById("edit-payment-details");
-        formElem = document.getElementById("edit-payment-form");
+        const loadEditForm = (memberId, mandateRefId, paymentDueDate, calculatedAmount, memberFullName, paymentType) => {
+            formDiv = document.getElementById("edit-payment");
+            detailsDiv = document.getElementById("edit-payment-details");
+            formElem = document.getElementById("edit-payment-form");
 
-        const url = `/tapir/payments/${memberId}/edit/${mandateRefId.replaceAll('/', '~')}/${paymentDueDate}?amount=${calculatedAmount}&type=${paymentType}`
-        formElem.action = url
+            const url = `/tapir/payments/${memberId}/edit/${mandateRefId.replaceAll('/', '~')}/${paymentDueDate}?amount=${calculatedAmount}&type=${paymentType}`
+            formElem.action = url
 
-        fetch(url).then((form) => {
+            fetch(url).then((form) => {
                 form.text().then(html => formDiv.innerHTML = html)
                 detailsDiv.innerHTML = `<table class="table">
                                             <tr>
@@ -180,25 +180,25 @@
                                                 <td>${calculatedAmount} € <small><i>{% translate '(berechnet)' %}</i></small></td>
                                             </tr>
                                         </table>`
-                });
-            };
+            });
+        };
 
 
 // stripe table by due_date
-document.addEventListener('DOMContentLoaded', function() {
-    var tableRows = document.querySelectorAll('tr.single-payment');
-    var prevValue = null;
-    var currentBgColor = '#f8f9fa'; // Initial background color
-    tableRows.forEach(function(row) {
-        var currentValue = row.getAttribute('data-date'); 
-        console.log(currentValue)
-        if (prevValue !== null && currentValue !== prevValue) {
-            currentBgColor = (currentBgColor === '#f8f9fa') ? '#ffffff' : '#f8f9fa'; // Toggle color
-        }
-        row.style.backgroundColor = currentBgColor;
-        prevValue = currentValue;
-    });
-});
+        document.addEventListener('DOMContentLoaded', function() {
+            var tableRows = document.querySelectorAll('tr.single-payment');
+            var prevValue = null;
+            var currentBgColor = '#f8f9fa'; // Initial background color
+            tableRows.forEach(function(row) {
+                var currentValue = row.getAttribute('data-date');
+                console.log(currentValue)
+                if (prevValue !== null && currentValue !== prevValue) {
+                    currentBgColor = (currentBgColor === '#f8f9fa') ? '#ffffff' : '#f8f9fa'; // Toggle color
+                }
+                row.style.backgroundColor = currentBgColor;
+                prevValue = currentValue;
+            });
+        });
 
     </script>
 {% endblock %}

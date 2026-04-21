@@ -65,32 +65,32 @@
         </div>
     </div>
     <script>
-const params = Tapir.getUrlParams()
-if (params.success) {
-    var toastEl = document.querySelector('.toast')
-    var toast = new bootstrap.Toast(toastEl)
+        const params = Tapir.getUrlParams()
+        if (params.success) {
+            var toastEl = document.querySelector('.toast')
+            var toast = new bootstrap.Toast(toastEl)
 
-    toast.show()
+            toast.show()
 
-    setTimeout(function() {
-      toast.hide();
-    }, 10000);
+            setTimeout(function() {
+                toast.hide();
+            }, 10000);
 
-    params.success=undefined;
-    Tapir.replaceUrlParams(params);
-}
+            params.success=undefined;
+            Tapir.replaceUrlParams(params);
+        }
 
-const divElement = document.getElementById("config-view");
-if(params.pos){
-    divElement.scrollTop = params.pos;
-}
+        const divElement = document.getElementById("config-view");
+        if(params.pos){
+            divElement.scrollTop = params.pos;
+        }
 
-divElement.addEventListener("scroll", function() {
-  const yScrollPosition = divElement.scrollTop;
-  const params = Tapir.getUrlParams();
-  params.pos=yScrollPosition;
-  Tapir.replaceUrlParams(params);
-});
+        divElement.addEventListener("scroll", function() {
+            const yScrollPosition = divElement.scrollTop;
+            const params = Tapir.getUrlParams();
+            params.pos=yScrollPosition;
+            Tapir.replaceUrlParams(params);
+        });
 
     </script>
     <div id="member-number-preview-config"

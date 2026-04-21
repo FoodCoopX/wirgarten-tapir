@@ -221,6 +221,12 @@ export interface WaitingListEntryDetails {
    * @memberof WaitingListEntryDetails
    */
   paymentRhythm?: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof WaitingListEntryDetails
+   */
+  canBeFulfilled?: boolean;
 }
 
 /**
@@ -338,6 +344,8 @@ export function WaitingListEntryDetailsFromJSONTyped(
     link: json["link"] == null ? undefined : json["link"],
     paymentRhythm:
       json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
+    canBeFulfilled:
+      json["can_be_fulfilled"] == null ? undefined : json["can_be_fulfilled"],
   };
 }
 
@@ -417,5 +425,6 @@ export function WaitingListEntryDetailsToJSONTyped(
         : value["linkSentDate"].toISOString(),
     link: value["link"],
     payment_rhythm: value["paymentRhythm"],
+    can_be_fulfilled: value["canBeFulfilled"],
   };
 }

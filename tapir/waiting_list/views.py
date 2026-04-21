@@ -30,8 +30,16 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
+)
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
+from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
+from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
@@ -118,6 +126,12 @@ class WaitingListApiView(APIView):
             OpenApiParameter(name="pickup_location_wish", type=str, required=True),
             OpenApiParameter(name="product_wish", type=str, required=True),
             OpenApiParameter(
+                name="can_be_fulfilled",
+                type=str,
+                enum=["any", "fulfillable", "not_fulfillable"],
+                required=True,
+            ),
+            OpenApiParameter(
                 name="order_by",
                 type=str,
                 required=True,
@@ -142,6 +156,7 @@ class WaitingListApiView(APIView):
             "current_pickup_location_id",
             "pickup_location_wish",
             "product_wish",
+            "can_be_fulfilled",
         ]
         for filter_name in filters:
             parameter = request.query_params.get(filter_name)
@@ -237,6 +252,26 @@ class WaitingListApiView(APIView):
         return entries.filter(product_wishes__in=wishes)
 
     @classmethod
+    def filter_by_can_be_fulfilled(
+        cls, value: str, entries: QuerySet[WaitingListEntry]
+    ):
+        if not value or value == "any":
+            return entries
+
+        cache = {}
+        filtered_entries = []
+        for entry in entries:
+            can_be_fulfilled = cls.check_if_entry_can_be_fulfilled(
+                entry=entry, cache=cache
+            )
+            if value == "fulfillable" and can_be_fulfilled:
+                filtered_entries.append(entry.id)
+            elif value == "not_fulfillable" and not can_be_fulfilled:
+                filtered_entries.append(entry.id)
+
+        return entries.filter(id__in=filtered_entries)
+
+    @classmethod
     def order_by_coop_entry_date(
         cls, entries: QuerySet[WaitingListEntry], descending: bool
     ):
@@ -319,6 +354,8 @@ class WaitingListApiView(APIView):
                 entry.id, entry.confirmation_link_key
             )
 
+        can_be_fulfilled = cls.check_if_entry_can_be_fulfilled(entry=entry, cache=cache)
+
         return {
             "id": entry.id,
             "link_key": entry.confirmation_link_key,
@@ -355,7 +392,55 @@ class WaitingListApiView(APIView):
             "account_owner": account_owner,
             "iban": iban,
             "payment_rhythm": payment_rhythm,
+            "can_be_fulfilled": can_be_fulfilled,
         }
+
+    @classmethod
+    def check_if_entry_can_be_fulfilled(cls, entry: WaitingListEntry, cache: dict):
+        pickup_location_wishes = entry.pickup_location_wishes.all()
+
+        if not pickup_location_wishes or not entry.product_wishes.all():
+            return False
+
+        order: TapirOrder = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
+            entry
+        )
+
+        reference_date = (
+            entry.desired_start_date
+            if entry.desired_start_date
+            else get_today(cache=cache)
+        )
+        subscription_start = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=reference_date,
+            apply_buffer_time=False,
+            cache=cache,
+        )
+
+        product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
+            order_with_all_product_types=order,
+            member_id=entry.member_id if entry.member else None,
+            subscription_start_date=subscription_start,
+            cache=cache,
+            check_waiting_list_entries=False,
+        )
+
+        if product_type_ids_without_enough_capacity:
+            return False
+
+        for pickup_location_wish in pickup_location_wishes:
+            has_capacity = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+                pickup_location=pickup_location_wish.pickup_location,
+                order=order,
+                already_registered_member=entry.member,
+                subscription_start=subscription_start,
+                cache=cache,
+                check_waiting_list_entries=False,
+            )
+            if has_capacity:
+                return True
+
+        return False
 
     @staticmethod
     def remove_renewals(subscriptions: list[Subscription], cache: dict):
@@ -675,7 +760,7 @@ class SendWaitingListLinkApiView(APIView):
     @staticmethod
     def build_waiting_list_link(entry_id: str, link_key: uuid.UUID) -> str:
         url = reverse("waiting_list:waiting_list_confirm")
-        return f"{url}?entry_id={entry_id}&link_key={link_key}"
+        return f"{settings.SITE_URL}{url}?entry_id={entry_id}&link_key={link_key}"
 
     @classmethod
     def send_mail(cls, waiting_list_entry: WaitingListEntry):

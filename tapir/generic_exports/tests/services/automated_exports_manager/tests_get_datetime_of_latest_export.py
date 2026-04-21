@@ -1,5 +1,6 @@
 from unittest.mock import patch, Mock
 
+from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
 
 from tapir.generic_exports.models import AutomatedExportCycle
@@ -89,14 +90,14 @@ class TestGetDatetimeOfLatestExport(SimpleTestCase):
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_weekly_export")
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_monthly_export")
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_yearly_export")
-    def test_getDatetimeOfLatestExport_exportIsNever_returnsNone(
+    def test_getDatetimeOfLatestExport_exportIsNever_raisesError(
         self, mock_yearly: Mock, mock_monthly: Mock, mock_weekly: Mock, mock_daily: Mock
     ):
         export = Mock()
         export.automated_export_cycle = AutomatedExportCycle.NEVER
 
-        result = AutomatedExportsManager.get_datetime_of_latest_export(export)
+        with self.assertRaises(ImproperlyConfigured):
+            AutomatedExportsManager.get_datetime_of_latest_export(export)
 
-        self.assertIsNone(result)
         for mock in [mock_yearly, mock_monthly, mock_weekly, mock_daily]:
             mock.assert_not_called()
