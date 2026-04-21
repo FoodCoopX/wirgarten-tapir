@@ -214,6 +214,4 @@ def generate_member_numbers(cache: dict = None):
                 continue
 
             _fire_membership_entry_trigger(member, cache)
-            logger.info(
-                f"generate_member_numbers: generated member_no for {member}"
-            )
+            logger.info(f"generate_member_numbers: generated member_no for {member}")

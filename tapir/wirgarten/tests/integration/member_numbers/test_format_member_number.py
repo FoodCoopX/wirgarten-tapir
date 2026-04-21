@@ -21,17 +21,13 @@ class TestFormatMemberNumber(TapirIntegrationTest):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 0)
 
-        self.assertEqual(
-            "BT17", MemberNumberService.format_member_number(17, cache={})
-        )
+        self.assertEqual("BT17", MemberNumberService.format_member_number(17, cache={}))
 
     def test_formatMemberNumber_withoutPrefix_returnsOnlyNumber(self):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
 
-        self.assertEqual(
-            "0017", MemberNumberService.format_member_number(17, cache={})
-        )
+        self.assertEqual("0017", MemberNumberService.format_member_number(17, cache={}))
 
     def test_formatMemberNumber_withNoneInput_returnsNone(self):
         self.assertIsNone(MemberNumberService.format_member_number(None, cache={}))

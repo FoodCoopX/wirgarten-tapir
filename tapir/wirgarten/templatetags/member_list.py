@@ -42,4 +42,6 @@ def member_email_verified(member: Member, cache: dict):
 def formatted_member_number(member: Member, cache=None):
     if cache is None:
         cache = {}
-    return MemberNumberService.format_member_number(member.member_no, cache=cache) or "-"
+    return (
+        MemberNumberService.format_member_number(member.member_no, cache=cache) or "-"
+    )

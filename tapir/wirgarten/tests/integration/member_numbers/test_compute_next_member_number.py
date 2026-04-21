@@ -15,9 +15,7 @@ class TestComputeNextMemberNumber(TapirIntegrationTest):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1000)
         self.assertFalse(Member.objects.exists())
 
-        self.assertEqual(
-            1000, MemberNumberService.compute_next_member_number(cache={})
-        )
+        self.assertEqual(1000, MemberNumberService.compute_next_member_number(cache={}))
 
     def test_computeNextMemberNumber_existingMemberBelowStartValue_returnsStartValue(
         self,
@@ -25,9 +23,7 @@ class TestComputeNextMemberNumber(TapirIntegrationTest):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1000)
         MemberFactory.create(member_no=500)
 
-        self.assertEqual(
-            1000, MemberNumberService.compute_next_member_number(cache={})
-        )
+        self.assertEqual(1000, MemberNumberService.compute_next_member_number(cache={}))
 
     def test_computeNextMemberNumber_existingMemberAboveStartValue_returnsMaxPlusOne(
         self,
@@ -35,6 +31,4 @@ class TestComputeNextMemberNumber(TapirIntegrationTest):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_START_VALUE, 1)
         MemberFactory.create(member_no=42)
 
-        self.assertEqual(
-            43, MemberNumberService.compute_next_member_number(cache={})
-        )
+        self.assertEqual(43, MemberNumberService.compute_next_member_number(cache={}))

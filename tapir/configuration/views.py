@@ -22,9 +22,7 @@ class MemberNumberPreviewView(APIView):
             return Response({"error": "Ungültiger Wert für 'length'."}, status=400)
         example_numbers = [17, 1234, 123456]
         previews = [
-            MemberNumberService.build_formatted_number(
-                number, prefix, max(length, 0)
-            )
+            MemberNumberService.build_formatted_number(number, prefix, max(length, 0))
             for number in example_numbers
         ]
         return Response({"previews": previews})
