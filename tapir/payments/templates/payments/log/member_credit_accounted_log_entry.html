@@ -1,0 +1,6 @@
+{% load wirgarten %} Gutschrift gebucht: <br />
+<ul>
+  {% for key, value in values %} {% if key == "accounted_on" %}
+    <li>Buchungsdatum: {{ value }}</li>
+  {% endif %} {% endfor %}
+</ul>

@@ -7946,6 +7946,10 @@ components:
           maxLength: 1024
         comment:
           type: string
+        accounted_on:
+          type: string
+          format: date-time
+          nullable: true
         member:
           type: string
       required:

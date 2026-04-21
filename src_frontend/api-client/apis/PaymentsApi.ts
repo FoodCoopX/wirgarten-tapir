@@ -16,6 +16,7 @@ import type {
   CabLoggedInUserChangeTargetsPaymentRhythmResponse,
   ExtendedMemberCredit,
   FuturePaymentsResponse,
+  MemberCreditAccountRequest,
   MemberCreditCreateRequest,
   MemberPaymentRhythmData,
   PaymentRhythmSerializerRequest,
@@ -24,6 +25,7 @@ import {
   CabLoggedInUserChangeTargetsPaymentRhythmResponseFromJSON,
   ExtendedMemberCreditFromJSON,
   FuturePaymentsResponseFromJSON,
+  MemberCreditAccountRequestToJSON,
   MemberCreditCreateRequestToJSON,
   MemberPaymentRhythmDataFromJSON,
   PaymentRhythmSerializerRequestToJSON,
@@ -37,6 +39,11 @@ export interface PaymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveReq
 export interface PaymentsApiCreditListFilteredListRequest {
   monthFilter?: number;
   yearFilter?: number;
+  showAll?: boolean;
+}
+
+export interface PaymentsApiMemberCreditAccountRequest {
+  memberCreditAccountRequest: MemberCreditAccountRequest;
 }
 
 export interface PaymentsApiMemberCreditCreateCreateRequest {
@@ -136,6 +143,10 @@ export class PaymentsApi extends runtime.BaseAPI {
 
     if (requestParameters["yearFilter"] != null) {
       queryParameters["year_filter"] = requestParameters["yearFilter"];
+    }
+
+    if (requestParameters["showAll"] != null) {
+      queryParameters["show_all"] = requestParameters["showAll"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -242,6 +253,65 @@ export class PaymentsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<string> {
     const response = await this.paymentsApiMemberCreditCreateCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMemberCreditAccountRaw(
+    requestParameters: PaymentsApiMemberCreditAccountRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization");
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/member_credit_account`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MemberCreditAccountRequestToJSON(
+          requestParameters["memberCreditAccountRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async paymentsApiMemberCreditAccount(
+    requestParameters: PaymentsApiMemberCreditAccountRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.paymentsApiMemberCreditAccountRaw(
       requestParameters,
       initOverrides,
     );

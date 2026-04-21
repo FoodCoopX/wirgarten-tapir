@@ -25,6 +25,8 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
   >([]);
   const [monthFilter, setMonthFilter] = useState<number>(-1);
   const [yearFilter, setYearFilter] = useState<number | undefined>();
+  const [showAll, setShowAll] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   dayjs.locale("de");
@@ -32,7 +34,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
 
   useEffect(() => {
     loadCredits();
-  }, [monthFilter, yearFilter]);
+  }, [monthFilter, yearFilter, showAll]);
 
   function loadCredits() {
     setLoading(true);
@@ -41,6 +43,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
       .paymentsApiCreditListFilteredList({
         monthFilter: monthFilter,
         yearFilter: yearFilter,
+        showAll: showAll,
       })
       .then(setExtendedMemberCredits)
       .catch((error) =>
@@ -51,6 +54,36 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
         ),
       )
       .finally(() => setLoading(false));
+  }
+
+  function handleSelectionChange(id: string, checked: boolean) {
+    const newSelected = new Set(selectedIds);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedIds(newSelected);
+  }
+
+  function accountSelectedCredits() {
+    if (selectedIds.size === 0) return;
+
+    api
+      .paymentsApiMemberCreditAccount({
+        memberCreditAccountRequest: { creditIds: Array.from(selectedIds) },
+      })
+      .then(() => {
+        setSelectedIds(new Set());
+        loadCredits();
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Buchen der Gutschriften",
+          setToastDatas,
+        ),
+      );
   }
 
   const totalAmount = extendedMemberCredits.reduce(
@@ -121,11 +154,36 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                     </Form.Group>
                   </Col>
                 </Row>
+                <Row>
+                  <Col>
+                    <Form.Group>
+                      <Form.Check
+                        type="checkbox"
+                        id="showAllCredits"
+                        label="Bereits gebuchte Gutschriften anzeigen"
+                        checked={showAll}
+                        onChange={(e) => setShowAll(e.target.checked)}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
               </ListGroup.Item>
               <ListGroup.Item>
+                {selectedIds.size > 0 && (
+                  <div className="mb-2">
+                    <TapirButton
+                      variant="primary"
+                      text={`${selectedIds.size} ausgewählte buchen`}
+                      icon="check_circle"
+                      onClick={accountSelectedCredits}
+                    />
+                  </div>
+                )}
                 <CreditListTable
                   extendedMemberCredits={extendedMemberCredits}
                   loading={loading}
+                  selectedIds={selectedIds}
+                  onSelectionChange={handleSelectionChange}
                 />
               </ListGroup.Item>
             </ListGroup>

@@ -2,12 +2,14 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.views.generic import TemplateView
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.serializers import ListField
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -15,6 +17,7 @@ from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
     MemberCreditCreatedLogEntry,
+    MemberCreditAccountedLogEntry,
 )
 from tapir.payments.serializers import (
     MemberPaymentRhythmDataSerializer,
@@ -393,10 +396,20 @@ class MemberCreditListApiView(APIView):
         parameters=[
             OpenApiParameter(name="month_filter", type=int, required=False),
             OpenApiParameter(name="year_filter", type=int, required=False),
+            OpenApiParameter(
+                name="show_all",
+                type=bool,
+                required=False,
+                description="Show all credits",
+            ),
         ],
     )
     def get(self, request):
         member_credits = MemberCredit.objects.order_by("-due_date")
+
+        show_all = request.query_params.get("show_all", "false").lower() == "true"
+        if not show_all:
+            member_credits = member_credits.filter(accounted_on__isnull=True)
 
         month_filter = request.query_params.get("month_filter", None)
         if month_filter is not None and int(month_filter) > 0:
@@ -450,6 +463,33 @@ class MemberCreditCreateApiView(APIView):
         ).save()
 
         return Response("OK")
+
+
+class MemberCreditAccountApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        request=inline_serializer(
+            name="MemberCreditAccountRequest",
+            fields={
+                "credit_ids": ListField(child=serializers.CharField()),
+            },
+        ),
+    )
+    def post(self, request):
+        credit_ids = request.data.get("credit_ids", [])
+        credits_to_account = list(
+            MemberCredit.objects.filter(id__in=credit_ids, accounted_on__isnull=True)
+        )
+        now = timezone.now()
+        for credit in credits_to_account:
+            credit.accounted_on = now
+            credit.save()
+            MemberCreditAccountedLogEntry().populate(
+                model=credit, user=credit.member, actor=request.user
+            ).save()
+        return Response(f"OK ({len(credits_to_account)} gebucht)")
 
 
 class CabLoggedInUserChangeTargetsPaymentRhythm(APIView):

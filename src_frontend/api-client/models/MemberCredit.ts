@@ -62,6 +62,12 @@ export interface MemberCredit {
   comment: string;
   /**
    *
+   * @type {Date}
+   * @memberof MemberCredit
+   */
+  accountedOn?: Date | null;
+  /**
+   *
    * @type {string}
    * @memberof MemberCredit
    */
@@ -101,6 +107,8 @@ export function MemberCreditFromJSONTyped(
     dueDate: new Date(json["due_date"]),
     purpose: json["purpose"],
     comment: json["comment"],
+    accountedOn:
+      json["accounted_on"] == null ? undefined : new Date(json["accounted_on"]),
     member: json["member"],
   };
 }
@@ -123,6 +131,10 @@ export function MemberCreditToJSONTyped(
     due_date: value["dueDate"].toISOString().substring(0, 10),
     purpose: value["purpose"],
     comment: value["comment"],
+    accounted_on:
+      value["accountedOn"] == null
+        ? undefined
+        : (value["accountedOn"] as any).toISOString(),
     member: value["member"],
   };
 }

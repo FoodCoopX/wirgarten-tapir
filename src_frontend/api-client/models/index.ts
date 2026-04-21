@@ -77,6 +77,7 @@ export * from "./Member";
 export * from "./MemberBankDataResponse";
 export * from "./MemberCountry";
 export * from "./MemberCredit";
+export * from "./MemberCreditAccountRequest";
 export * from "./MemberCreditCreateRequest";
 export * from "./MemberDataToConfirm";
 export * from "./MemberExtraEmail";
