@@ -138,9 +138,9 @@ class MemberColumnProvider:
         return member.last_name
 
     @classmethod
-    def get_value_member_number(cls, member: Member, _, __):
+    def get_value_member_number(cls, member: Member, _, cache):
         return (
-            MemberNumberService.format_member_number(member.member_no, cache={}) or ""
+            MemberNumberService.format_member_number(member.member_no, cache=cache) or ""
         )
 
     @classmethod

@@ -38,17 +38,14 @@ class MemberNumberService:
         return max(start_value, max_existing + 1)
 
     @classmethod
-    def is_member_in_subscription_or_coop_trial(cls, member, cache: dict) -> bool:
-        if MembershipCancellationManager.is_in_coop_trial(member):
-            return True
-
+    def is_member_in_subscription_trial(cls, member: Member, cache: dict) -> bool:
         trial_subs = TrialPeriodManager.get_subscriptions_in_trial_period(
             member_id=member.id, cache=cache
         )
         return len(trial_subs) > 0
 
     @classmethod
-    def should_assign_member_number(cls, member, cache: dict) -> bool:
+    def should_assign_member_number(cls, member: Member, cache: dict) -> bool:
         if member.member_no is not None:
             return False
 
@@ -61,10 +58,10 @@ class MemberNumberService:
         if legal_status_is_cooperative(cache=cache):
             return not MembershipCancellationManager.is_in_coop_trial(member)
 
-        return not cls.is_member_in_subscription_or_coop_trial(member, cache=cache)
+        return not cls.is_member_in_subscription_trial(member, cache=cache)
 
     @classmethod
-    def assign_member_number_if_eligible(cls, member, cache: dict) -> bool:
+    def assign_member_number_if_eligible(cls, member: Member, cache: dict) -> bool:
         if not cls.should_assign_member_number(member, cache=cache):
             return False
 

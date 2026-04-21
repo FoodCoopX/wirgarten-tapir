@@ -53,14 +53,13 @@ class PickupLocationColumnProvider:
 
     @classmethod
     def get_value_pickup_location_member_ids(
-        cls, location: PickupLocation, reference_datetime: datetime.datetime, _
+        cls, location: PickupLocation, reference_datetime: datetime.datetime, cache
     ):
 
         members_annotated_with_pickup_location = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_id_at_date(
             Member.objects.all(), reference_datetime.date()
         )
 
-        cache = {}
         return "-".join(
             [
                 MemberNumberService.format_member_number(member.member_no, cache=cache)

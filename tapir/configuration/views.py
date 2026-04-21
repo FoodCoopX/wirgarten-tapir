@@ -1,8 +1,9 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
-from django.http import JsonResponse
 from django.urls import reverse_lazy
-from django.views import generic, View
+from django.views import generic
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from tapir.configuration.forms import ParameterForm
 from tapir.configuration.models import TapirParameter
@@ -10,21 +11,23 @@ from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class MemberNumberPreviewView(PermissionRequiredMixin, View):
-    permission_required = "coop.manage"
+class MemberNumberPreviewView(APIView):
+    permission_classes = []
 
     def get(self, request):
         prefix = request.GET.get("prefix", "")
         try:
             length = int(request.GET.get("length", "0"))
-        except (ValueError, TypeError):
-            return JsonResponse({"error": "Ungültiger Wert für 'length'."}, status=400)
+        except ValueError:
+            return Response({"error": "Ungültiger Wert für 'length'."}, status=400)
         example_numbers = [17, 1234, 123456]
         previews = [
-            MemberNumberService.build_formatted_number(n, prefix, max(length, 0))
-            for n in example_numbers
+            MemberNumberService.build_formatted_number(
+                number, prefix, max(length, 0)
+            )
+            for number in example_numbers
         ]
-        return JsonResponse({"previews": previews})
+        return Response({"previews": previews})
 
 
 class ParameterView(PermissionRequiredMixin, generic.FormView):

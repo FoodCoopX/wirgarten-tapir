@@ -130,7 +130,7 @@ class UserGenerator:
         cls.link_members_to_pickup_location(
             members_that_need_a_pickup_location, organization=organization
         )
-        generate_member_numbers(print_results=False)
+        generate_member_numbers()
 
     @classmethod
     def generate_user(

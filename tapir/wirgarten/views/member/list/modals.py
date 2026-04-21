@@ -71,7 +71,8 @@ def get_member_personal_data_create_form(request, **kwargs):
 def save_member_and_assign_number(member: Member):
     member.save()
     cache = {}
-    MemberNumberService.assign_member_number_if_eligible(member, cache=cache)
+    if not MemberNumberService.assign_member_number_if_eligible(member, cache=cache):
+        member.save()  # second save persists keycloak ID (#947)
 
 
 @require_http_methods(["GET", "POST"])

@@ -26,7 +26,7 @@
 
     function updatePreview() {
         const prefix = prefixField.value || "";
-        const length = parseInt(lengthField.value, 10) || 0;
+        const length = Number.parseInt(lengthField.value, 10) || 0;
 
         const url = previewUrl + "?prefix=" + encodeURIComponent(prefix) + "&length=" + length;
         fetch(url)

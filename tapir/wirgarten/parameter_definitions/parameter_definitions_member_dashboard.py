@@ -199,7 +199,6 @@ class ParameterDefinitionsMemberDashboard:
             order_priority=1000,
         )
 
-        # Zero-pad length: 0 means no padding, >0 pads to that many digits.
         importer.parameter_definition(
             key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH,
             label="Mitgliedsnummer: Mindestanzahl Stellen (Zero-Padding)",

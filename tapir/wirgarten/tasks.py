@@ -1,3 +1,5 @@
+import logging
+
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -31,6 +33,8 @@ from tapir.wirgarten.utils import (
     legal_status_is_cooperative,
     format_currency,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -164,48 +168,52 @@ def send_email_member_contract_end_reminder(member_id: str):
         )
 
 
+def _fire_membership_entry_trigger(member: Member, cache: dict):
+    number_of_coop_shares = member.coop_shares_quantity
+    price_of_a_share = get_parameter_value(
+        key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
+    )
+    TransactionalTrigger.fire_action(
+        TransactionalTriggerData(
+            key=Events.MEMBERSHIP_ENTRY,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "number_of_coop_shares": number_of_coop_shares,
+                "price_of_a_share": format_currency(price_of_a_share),
+                "price_of_all_shares": format_currency(
+                    number_of_coop_shares * price_of_a_share
+                ),
+            },
+        ),
+    )
+
+
 @shared_task
-def generate_member_numbers(print_results=True, cache: dict = None):
+def generate_member_numbers(cache: dict = None):
     """
-    Catches members that don't have a number yet, e.g. because the trial
-    toggle suppressed assignment and their trial has ended since. Fires
-    the MEMBERSHIP_ENTRY mail trigger on success.
+    Assigns member numbers to members that don't have one yet.
+    Handles members whose trial period has ended (when MEMBER_NUMBER_ONLY_AFTER_TRIAL
+    is enabled) and catches any members that slipped through immediate assignment.
+    Fires the MEMBERSHIP_ENTRY mail trigger on success.
     """
     if cache is None:
         cache = {}
     members = Member.objects.filter(member_no__isnull=True)
     today = get_today(cache=cache)
 
-    for member in members:
-        if legal_status_is_cooperative(cache=cache):
-            coop_entry_date = member.coop_entry_date
-            if coop_entry_date is None or coop_entry_date > today:
-                continue
+    with transaction.atomic():
+        for member in members:
+            if legal_status_is_cooperative(cache=cache):
+                coop_entry_date = member.coop_entry_date
+                if coop_entry_date is None or coop_entry_date > today:
+                    continue
 
-        with transaction.atomic():
             if not MemberNumberService.assign_member_number_if_eligible(
                 member, cache=cache
             ):
                 continue
 
-            number_of_coop_shares = member.coop_shares_quantity
-            price_of_a_share = get_parameter_value(
-                key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
+            _fire_membership_entry_trigger(member, cache)
+            logger.info(
+                f"generate_member_numbers: generated member_no for {member}"
             )
-            TransactionalTrigger.fire_action(
-                TransactionalTriggerData(
-                    key=Events.MEMBERSHIP_ENTRY,
-                    recipient_id_in_base_queryset=member.id,
-                    token_data={
-                        "number_of_coop_shares": number_of_coop_shares,
-                        "price_of_a_share": format_currency(price_of_a_share),
-                        "price_of_all_shares": format_currency(
-                            number_of_coop_shares * price_of_a_share
-                        ),
-                    },
-                ),
-            )
-            if print_results:
-                print(
-                    f"[task] generate_member_numbers: generated member_no for {member}"
-                )

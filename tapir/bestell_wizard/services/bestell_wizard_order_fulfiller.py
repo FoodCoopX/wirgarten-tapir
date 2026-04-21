@@ -126,8 +126,6 @@ class BestellWizardOrderFulfiller:
             member_id=member.id,
         )
 
-        MemberNumberService.assign_member_number_if_eligible(member, cache=cache)
-
         if coop_share_transaction is not None and len(subscriptions) == 0:
             send_investing_membership_confirmation(
                 member_id=member.id, coop_share_transaction=coop_share_transaction
@@ -170,9 +168,11 @@ class BestellWizardOrderFulfiller:
                 first_name=personal_data["first_name"],
             )
 
-        return Member.objects.create(
+        member = Member.objects.create(
             **personal_data, **contracts_signed, is_student=is_student
         )
+        MemberNumberService.assign_member_number_if_eligible(member, cache=cache)
+        return member
 
     @classmethod
     def create_coop_shares(

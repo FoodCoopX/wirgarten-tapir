@@ -82,7 +82,7 @@
         <tr id="member-{{ member.id }}"
             onClick="handleSelectMember('{{ member.id }}', '{{ member.has_trial_contracts }}'.toLowerCase())"
             class="tr-clickable member-row">
-            <td class="text-center">{% formatted_member_number member %}</td>
+            <td class="text-center">{% formatted_member_number member cache %}</td>
             <td>{{ member.first_name }}</td>
             <td>{{ member.last_name }}</td>
             <td>
