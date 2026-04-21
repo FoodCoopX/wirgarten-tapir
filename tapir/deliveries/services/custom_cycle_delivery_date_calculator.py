@@ -52,7 +52,7 @@ class CustomCycleDeliveryDateCalculator:
             or sunday > growing_period.end_date
         ):
             raise TapirCustomCycleException(
-                f"Die ganze Woche muss innerhalb der Vertragsperiode liegen. KW{week} geht von {format_date(monday)} zu {format_date(sunday)}"
+                f"Die ganze Woche muss innerhalb der Vertragsperiode liegen. KW{week} geht vom {format_date(monday)} bis zum {format_date(sunday)}"
             )
 
         return monday
