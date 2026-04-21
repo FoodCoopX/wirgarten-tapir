@@ -12,7 +12,7 @@ class WaitingListEntryFactory(factory.django.DjangoModelFactory[WaitingListEntry
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     email = factory.Faker("email")
-    phone_number = factory.Faker("phone_number")
+    phone_number = factory.Faker("phone_number", locale="de")
     street = factory.Faker("street_address")
     postcode = factory.Faker("postcode")
     city = factory.Faker("city")

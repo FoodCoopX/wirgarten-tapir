@@ -999,7 +999,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
     def assert_mail_event_has_been_triggered(self, mock_fire_action: Mock, key: str):
         mock_fire_action.assert_called()
         for call in mock_fire_action.mock_calls:
-            trigger_data: TransactionalTriggerData = call[1][0]
+            trigger_data: TransactionalTriggerData = call.kwargs["trigger_data"]
             if trigger_data.key == key:
                 return
 

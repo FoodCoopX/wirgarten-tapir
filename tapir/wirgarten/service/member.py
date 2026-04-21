@@ -377,7 +377,7 @@ def send_investing_membership_confirmation(
     solidarity_contribution: SolidarityContribution | None,
 ):
     TransactionalTrigger.fire_action(
-        TransactionalTriggerData(
+        trigger_data=TransactionalTriggerData(
             key=Events.REGISTER_MEMBERSHIP_ONLY,
             recipient_id_in_base_queryset=member_id,
             token_data=TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
@@ -416,7 +416,7 @@ def send_product_order_confirmation(
         first_pickup_date = min(first_pickup_date, next_delivery_date)
 
     TransactionalTrigger.fire_action(
-        TransactionalTriggerData(
+        trigger_data=TransactionalTriggerData(
             key=(
                 Events.WAITING_LIST_ORDER_CONFIRMATION
                 if from_waiting_list
