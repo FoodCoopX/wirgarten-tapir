@@ -28,7 +28,15 @@ class ExtendedPaymentSerializer(serializers.Serializer):
 class MemberCreditSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberCredit
-        fields = "__all__"
+        fields = [
+            "id",
+            "member",
+            "amount",
+            "purpose",
+            "comment",
+            "due_date",
+            "accounted_on",
+        ]
 
     amount = serializers.FloatField()
 
