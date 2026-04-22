@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% load core %}
+
+{% block content %}
+    <div class="container mt-4">
+        <p>Es gab einen Fehler beim Versuch dich in Tapir einzuloggen. Bitte versuche es nochmal in dem du dieses Link verfolgst: <a href="{% base_url %}">{% base_url %}</a><br />Du wirst in ein paar Sekunden automatisch weitergeleitet.</p>
+        <p>Soll dieser Fehler öfters auftretten, prüf bitte welche Link in deinem Browser gespeichert ist: es soll genau den sein: {% base_url %}</p>
+    </div>
+    <script>
+        setTimeout(function () {
+            globalThis.location.href = "{% base_url %}";
+        }, 5000);
+    </script>
+{% endblock content %}

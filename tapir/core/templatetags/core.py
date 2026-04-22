@@ -179,3 +179,8 @@ def javascript_environment_variables(context):
 def get_proper_elided_page_range(p, number):
     paginator = Paginator(p.object_list, p.per_page)
     return paginator.get_elided_page_range(number=number)
+
+
+@register.simple_tag
+def base_url():
+    return settings.SITE_URL
