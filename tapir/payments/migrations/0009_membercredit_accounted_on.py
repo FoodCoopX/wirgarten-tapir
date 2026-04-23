@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="membercredit",
-            name="accounted_on",
+            name="settled_on",
             field=models.DateTimeField(blank=True, default=None, null=True),
         ),
         migrations.CreateModel(
-            name="MemberCreditAccountedLogEntry",
+            name="MemberCreditSettledLogEntry",
             fields=[
                 (
                     "logentry_ptr",

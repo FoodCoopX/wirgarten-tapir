@@ -31,7 +31,7 @@ const CreditListTable: React.FC<CreditListTableProps> = ({
           <th>Wert</th>
           <th>Kommentar</th>
           <th>Datum</th>
-          <th>Gebucht am</th>
+          <th>Beglichen am</th>
         </tr>
       </thead>
       <tbody>
@@ -52,7 +52,9 @@ const CreditListTable: React.FC<CreditListTableProps> = ({
             return (
               <tr
                 key={creditId}
-                className={extendedMemberCredit.credit.accountedOn ? "table-success" : ""}
+                className={
+                  extendedMemberCredit.credit.settledOn ? "table-success" : ""
+                }
               >
                 <td>
                   <Form.Check
@@ -61,7 +63,7 @@ const CreditListTable: React.FC<CreditListTableProps> = ({
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       onSelectionChange(creditId, e.target.checked)
                     }
-                    disabled={!!extendedMemberCredit.credit.accountedOn}
+                    disabled={!!extendedMemberCredit.credit.settledOn}
                   />
                 </td>
                 <td>{extendedMemberCredit.mandateRef}</td>
@@ -80,8 +82,8 @@ const CreditListTable: React.FC<CreditListTableProps> = ({
                   {formatDateNumeric(extendedMemberCredit.credit.dueDate)}
                 </td>
                 <td>
-                  {extendedMemberCredit.credit.accountedOn
-                    ? formatDateNumeric(extendedMemberCredit.credit.accountedOn)
+                  {extendedMemberCredit.credit.settledOn
+                    ? formatDateNumeric(extendedMemberCredit.credit.settledOn)
                     : "-"}
                 </td>
               </tr>

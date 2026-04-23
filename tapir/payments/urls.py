@@ -36,9 +36,9 @@ urlpatterns = [
         name="member_credit_create",
     ),
     path(
-        "api/member_credit_account",
-        views.MemberCreditAccountApiView.as_view(),
-        name="member_credit_account",
+        "api/member_credit_settle",
+        views.MemberCreditSettleApiView.as_view(),
+        name="member_credit_settle",
     ),
     path(
         "api/can_logged_in_user_change_targets_payment_rhythm",

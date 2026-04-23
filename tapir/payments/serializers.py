@@ -35,7 +35,7 @@ class MemberCreditSerializer(serializers.ModelSerializer):
             "purpose",
             "comment",
             "due_date",
-            "accounted_on",
+            "settled_on",
         ]
 
     amount = serializers.FloatField()

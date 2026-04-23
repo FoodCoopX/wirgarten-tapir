@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.urls import reverse
 
-from tapir.payments.models import MemberCredit, MemberCreditAccountedLogEntry
+from tapir.payments.models import MemberCredit, MemberCreditSettledLogEntry
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -102,12 +102,12 @@ class TestMemberCreditLogEntries(TapirIntegrationTest):
         self.assertEqual("c2", response_content[0]["credit"]["comment"])
         self.assertEqual("c1", response_content[1]["credit"]["comment"])
 
-    def test_get_showAllFalse_returnsOnlyUnaccountedCredits(self):
+    def test_get_showAllFalse_returnsOnlyUnsettledCredits(self):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
         credit = MemberCredit.objects.first()
-        credit.accounted_on = datetime.datetime.now(datetime.timezone.utc)
+        credit.settled_on = datetime.datetime.now(datetime.timezone.utc)
         credit.save()
 
         url = reverse("payments:credit_list_filtered")
@@ -118,14 +118,14 @@ class TestMemberCreditLogEntries(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(2, len(response_content))
         for item in response_content:
-            self.assertIsNone(item["credit"].get("accountedOn"))
+            self.assertIsNone(item["credit"].get("settledOn"))
 
     def test_get_showAllTrue_returnsAllCredits(self):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
         credit = MemberCredit.objects.first()
-        credit.accounted_on = datetime.datetime.now(datetime.timezone.utc)
+        credit.settled_on = datetime.datetime.now(datetime.timezone.utc)
         credit.save()
 
         url = reverse("payments:credit_list_filtered")
@@ -147,7 +147,7 @@ class TestMemberCreditAccountApiView(TapirIntegrationTest):
         self.client.force_login(member)
 
         response = self.client.post(
-            reverse("payments:member_credit_account"),
+            reverse("payments:member_credit_settle"),
             data={"credit_ids": []},
             content_type="application/json",
         )
@@ -167,9 +167,9 @@ class TestMemberCreditAccountApiView(TapirIntegrationTest):
             comment="Test comment",
         )
 
-        self.assertIsNone(credit.accounted_on)
+        self.assertIsNone(credit.settled_on)
 
-        url = reverse("payments:member_credit_account")
+        url = reverse("payments:member_credit_settle")
         response = self.client.post(
             url,
             data={"credit_ids": [credit.id]},
@@ -180,9 +180,9 @@ class TestMemberCreditAccountApiView(TapirIntegrationTest):
         self.assertIn("1 gebucht", response.json())
 
         credit.refresh_from_db()
-        self.assertIsNotNone(credit.accounted_on)
+        self.assertIsNotNone(credit.settled_on)
 
-        log_entries = MemberCreditAccountedLogEntry.objects.all()
+        log_entries = MemberCreditSettledLogEntry.objects.all()
         self.assertEqual(1, log_entries.count())
         db_log_entry = log_entries.first()
         self.assertEqual(member.email, db_log_entry.user.email)

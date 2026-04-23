@@ -35,7 +35,7 @@ class MemberCreditGenerator:
                         ]
                     )
                     comment = f"Test-Gutschrift {random.randint(1000, 9999)}"
-                    accounted_on = (
+                    settled_on = (
                         timezone.make_aware(
                             datetime.datetime.combine(today, datetime.time(0, 0))
                             + datetime.timedelta(days=random.randint(1, 30))
@@ -50,7 +50,7 @@ class MemberCreditGenerator:
                             amount=amount,
                             purpose=purpose,
                             comment=comment,
-                            accounted_on=accounted_on,
+                            settled_on=settled_on,
                         )
                     )
 

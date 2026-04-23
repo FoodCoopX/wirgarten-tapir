@@ -70,8 +70,8 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
     if (selectedIds.size === 0) return;
 
     api
-      .paymentsApiMemberCreditAccount({
-        memberCreditAccountRequest: { creditIds: Array.from(selectedIds) },
+      .paymentsApiMemberCreditSettleCreate({
+        memberCreditSettleRequest: { creditIds: Array.from(selectedIds) },
       })
       .then(() => {
         setSelectedIds(new Set());

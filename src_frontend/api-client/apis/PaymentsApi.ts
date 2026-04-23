@@ -16,8 +16,8 @@ import type {
   CabLoggedInUserChangeTargetsPaymentRhythmResponse,
   ExtendedMemberCredit,
   FuturePaymentsResponse,
-  MemberCreditAccountRequest,
   MemberCreditCreateRequest,
+  MemberCreditSettleRequest,
   MemberPaymentRhythmData,
   PaymentRhythmSerializerRequest,
 } from "../models/index";
@@ -25,8 +25,8 @@ import {
   CabLoggedInUserChangeTargetsPaymentRhythmResponseFromJSON,
   ExtendedMemberCreditFromJSON,
   FuturePaymentsResponseFromJSON,
-  MemberCreditAccountRequestToJSON,
   MemberCreditCreateRequestToJSON,
+  MemberCreditSettleRequestToJSON,
   MemberPaymentRhythmDataFromJSON,
   PaymentRhythmSerializerRequestToJSON,
 } from "../models/index";
@@ -38,16 +38,16 @@ export interface PaymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveReq
 
 export interface PaymentsApiCreditListFilteredListRequest {
   monthFilter?: number;
-  yearFilter?: number;
   showAll?: boolean;
-}
-
-export interface PaymentsApiMemberCreditAccountRequest {
-  memberCreditAccountRequest: MemberCreditAccountRequest;
+  yearFilter?: number;
 }
 
 export interface PaymentsApiMemberCreditCreateCreateRequest {
   memberCreditCreateRequest: MemberCreditCreateRequest;
+}
+
+export interface PaymentsApiMemberCreditSettleCreateRequest {
+  memberCreditSettleRequest: MemberCreditSettleRequest;
 }
 
 export interface PaymentsApiMemberFuturePaymentsRetrieveRequest {
@@ -141,12 +141,12 @@ export class PaymentsApi extends runtime.BaseAPI {
       queryParameters["month_filter"] = requestParameters["monthFilter"];
     }
 
-    if (requestParameters["yearFilter"] != null) {
-      queryParameters["year_filter"] = requestParameters["yearFilter"];
-    }
-
     if (requestParameters["showAll"] != null) {
       queryParameters["show_all"] = requestParameters["showAll"];
+    }
+
+    if (requestParameters["yearFilter"] != null) {
+      queryParameters["year_filter"] = requestParameters["yearFilter"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -261,10 +261,17 @@ export class PaymentsApi extends runtime.BaseAPI {
 
   /**
    */
-  async paymentsApiMemberCreditAccountRaw(
-    requestParameters: PaymentsApiMemberCreditAccountRequest,
+  async paymentsApiMemberCreditSettleCreateRaw(
+    requestParameters: PaymentsApiMemberCreditSettleCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<string>> {
+    if (requestParameters["memberCreditSettleRequest"] == null) {
+      throw new runtime.RequiredError(
+        "memberCreditSettleRequest",
+        'Required parameter "memberCreditSettleRequest" was null or undefined when calling paymentsApiMemberCreditSettleCreate().',
+      );
+    }
+
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -273,7 +280,7 @@ export class PaymentsApi extends runtime.BaseAPI {
 
     if (this.configuration && this.configuration.apiKey) {
       headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization");
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
     }
 
     if (
@@ -287,12 +294,12 @@ export class PaymentsApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/payments/api/member_credit_account`,
+        path: `/payments/api/member_credit_settle`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: MemberCreditAccountRequestToJSON(
-          requestParameters["memberCreditAccountRequest"],
+        body: MemberCreditSettleRequestToJSON(
+          requestParameters["memberCreditSettleRequest"],
         ),
       },
       initOverrides,
@@ -307,11 +314,11 @@ export class PaymentsApi extends runtime.BaseAPI {
 
   /**
    */
-  async paymentsApiMemberCreditAccount(
-    requestParameters: PaymentsApiMemberCreditAccountRequest,
+  async paymentsApiMemberCreditSettleCreate(
+    requestParameters: PaymentsApiMemberCreditSettleCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<string> {
-    const response = await this.paymentsApiMemberCreditAccountRaw(
+    const response = await this.paymentsApiMemberCreditSettleCreateRaw(
       requestParameters,
       initOverrides,
     );

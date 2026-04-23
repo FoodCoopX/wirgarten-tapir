@@ -90,6 +90,7 @@ models/MemberBankDataResponse.ts
 models/MemberCountry.ts
 models/MemberCredit.ts
 models/MemberCreditCreateRequest.ts
+models/MemberCreditSettleRequest.ts
 models/MemberDataToConfirm.ts
 models/MemberExtraEmail.ts
 models/MemberExtraMailData.ts

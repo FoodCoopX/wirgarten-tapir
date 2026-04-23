@@ -17,7 +17,7 @@ from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
     MemberCreditCreatedLogEntry,
-    MemberCreditAccountedLogEntry,
+    MemberCreditSettledLogEntry,
 )
 from tapir.payments.serializers import (
     MemberPaymentRhythmDataSerializer,
@@ -409,7 +409,7 @@ class MemberCreditListApiView(APIView):
 
         show_all = request.query_params.get("show_all", "false").lower() == "true"
         if not show_all:
-            member_credits = member_credits.filter(accounted_on__isnull=True)
+            member_credits = member_credits.filter(settled_on__isnull=True)
 
         month_filter = request.query_params.get("month_filter", None)
         if month_filter is not None and int(month_filter) > 0:
@@ -465,13 +465,13 @@ class MemberCreditCreateApiView(APIView):
         return Response("OK")
 
 
-class MemberCreditAccountApiView(APIView):
+class MemberCreditSettleApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
         responses={200: str},
         request=inline_serializer(
-            name="MemberCreditAccountRequest",
+            name="MemberCreditSettle",
             fields={
                 "credit_ids": ListField(child=serializers.CharField()),
             },
@@ -480,13 +480,13 @@ class MemberCreditAccountApiView(APIView):
     def post(self, request):
         credit_ids = request.data.get("credit_ids", [])
         credits_to_account = list(
-            MemberCredit.objects.filter(id__in=credit_ids, accounted_on__isnull=True)
+            MemberCredit.objects.filter(id__in=credit_ids, settled_on__isnull=True)
         )
         now = timezone.now()
         for credit in credits_to_account:
-            credit.accounted_on = now
+            credit.settled_on = now
             credit.save()
-            MemberCreditAccountedLogEntry().populate(
+            MemberCreditSettledLogEntry().populate(
                 model=credit, user=credit.member, actor=request.user
             ).save()
         return Response(f"OK ({len(credits_to_account)} gebucht)")
