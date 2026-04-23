@@ -1,0 +1,6 @@
+{% load wirgarten %} Gutschrift als beglichen markiert: <br />
+<ul>
+  {% for key, value in values %} {% if key == "settled_on" %}
+    <li>{{ value|format_date }}</li>
+  {% endif %} {% endfor %}
+</ul>

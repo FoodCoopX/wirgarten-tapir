@@ -69,7 +69,12 @@ class MemberCredit(TapirModel):
     amount = models.DecimalField(decimal_places=2, max_digits=8)
     purpose = models.CharField(max_length=1024)
     comment = models.TextField()
+    settled_on = models.DateTimeField(null=True, blank=True, default=None)
 
 
 class MemberCreditCreatedLogEntry(ModelLogEntry):
     template_name = "payments/log/member_credit_created_log_entry.html"
+
+
+class MemberCreditSettledLogEntry(ModelLogEntry):
+    template_name = "payments/log/member_credit_settled_log_entry.html"

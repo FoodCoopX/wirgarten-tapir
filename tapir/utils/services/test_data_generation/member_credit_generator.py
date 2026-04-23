@@ -1,6 +1,8 @@
 import datetime
 import random
 
+from django.utils import timezone
+
 from tapir.payments.models import MemberCredit
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_today
@@ -33,6 +35,14 @@ class MemberCreditGenerator:
                         ]
                     )
                     comment = f"Test-Gutschrift {random.randint(1000, 9999)}"
+                    settled_on = (
+                        timezone.make_aware(
+                            datetime.datetime.combine(today, datetime.time(0, 0))
+                            + datetime.timedelta(days=random.randint(1, 30))
+                        )
+                        if random.random() < 0.25
+                        else None
+                    )
                     credits_to_create.append(
                         MemberCredit(
                             due_date=due_date,
@@ -40,6 +50,7 @@ class MemberCreditGenerator:
                             amount=amount,
                             purpose=purpose,
                             comment=comment,
+                            settled_on=settled_on,
                         )
                     )
 

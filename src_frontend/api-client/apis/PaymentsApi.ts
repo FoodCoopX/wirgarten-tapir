@@ -17,6 +17,7 @@ import type {
   ExtendedMemberCredit,
   FuturePaymentsResponse,
   MemberCreditCreateRequest,
+  MemberCreditSettleRequest,
   MemberPaymentRhythmData,
   PaymentRhythmSerializerRequest,
 } from "../models/index";
@@ -25,6 +26,7 @@ import {
   ExtendedMemberCreditFromJSON,
   FuturePaymentsResponseFromJSON,
   MemberCreditCreateRequestToJSON,
+  MemberCreditSettleRequestToJSON,
   MemberPaymentRhythmDataFromJSON,
   PaymentRhythmSerializerRequestToJSON,
 } from "../models/index";
@@ -36,11 +38,16 @@ export interface PaymentsApiCanLoggedInUserChangeTargetsPaymentRhythmRetrieveReq
 
 export interface PaymentsApiCreditListFilteredListRequest {
   monthFilter?: number;
+  showAll?: boolean;
   yearFilter?: number;
 }
 
 export interface PaymentsApiMemberCreditCreateCreateRequest {
   memberCreditCreateRequest: MemberCreditCreateRequest;
+}
+
+export interface PaymentsApiMemberCreditSettleCreateRequest {
+  memberCreditSettleRequest: MemberCreditSettleRequest;
 }
 
 export interface PaymentsApiMemberFuturePaymentsRetrieveRequest {
@@ -132,6 +139,10 @@ export class PaymentsApi extends runtime.BaseAPI {
 
     if (requestParameters["monthFilter"] != null) {
       queryParameters["month_filter"] = requestParameters["monthFilter"];
+    }
+
+    if (requestParameters["showAll"] != null) {
+      queryParameters["show_all"] = requestParameters["showAll"];
     }
 
     if (requestParameters["yearFilter"] != null) {
@@ -242,6 +253,72 @@ export class PaymentsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<string> {
     const response = await this.paymentsApiMemberCreditCreateCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMemberCreditSettleCreateRaw(
+    requestParameters: PaymentsApiMemberCreditSettleCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (requestParameters["memberCreditSettleRequest"] == null) {
+      throw new runtime.RequiredError(
+        "memberCreditSettleRequest",
+        'Required parameter "memberCreditSettleRequest" was null or undefined when calling paymentsApiMemberCreditSettleCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/member_credit_settle`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MemberCreditSettleRequestToJSON(
+          requestParameters["memberCreditSettleRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async paymentsApiMemberCreditSettleCreate(
+    requestParameters: PaymentsApiMemberCreditSettleCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.paymentsApiMemberCreditSettleCreateRaw(
       requestParameters,
       initOverrides,
     );
