@@ -154,7 +154,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                     </Form.Group>
                   </Col>
                 </Row>
-                <Row>
+                <Row className={"mt-2"}>
                   <Col>
                     <Form.Group>
                       <Form.Check
