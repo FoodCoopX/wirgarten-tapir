@@ -3,8 +3,8 @@
 
 {% block content %}
     <div class="container mt-4">
-        <p>Es gab einen Fehler beim Versuch dich in Tapir einzuloggen. Bitte versuche es nochmal in dem du dieses Link verfolgst: <a href="{% base_url %}">{% base_url %}</a><br />Du wirst in ein paar Sekunden automatisch weitergeleitet.</p>
-        <p>Soll dieser Fehler öfters auftretten, prüf bitte welche Link in deinem Browser gespeichert ist: es soll genau den sein: {% base_url %}</p>
+        <p>Es gab einen Fehler beim Log-In. Bitte verwende folgenden Link zum Einloggen. Du wirst in ein paar Sekunden weitergeleitet.</p>
+        <p>Sollte dieser Fehler häufiger auftreten, dann prüfe bitte, welchen Link du ggf. gespeichert hast und verwendest. Nutze in Zukunft diesen Link:  <a href="{% base_url %}">{% base_url %}</a></p>
     </div>
     <script>
         setTimeout(function () {
