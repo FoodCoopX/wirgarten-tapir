@@ -50,7 +50,10 @@ const CreditListTable: React.FC<CreditListTableProps> = ({
             const creditId: string = extendedMemberCredit.credit.id ?? "";
             const isSelected = selectedIds.has(creditId);
             return (
-              <tr key={creditId}>
+              <tr
+                key={creditId}
+                className={extendedMemberCredit.credit.accountedOn ? "table-success" : ""}
+              >
                 <td>
                   <Form.Check
                     type="checkbox"
