@@ -103,12 +103,22 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                 }
               >
                 <h5 className={"mb-0"}>Gutschriften</h5>
-                <TapirButton
-                  variant={"outline-primary"}
-                  text={"Gutschrift erzeugen"}
-                  icon={"add_circle"}
-                  onClick={() => setShowCreateModal(true)}
-                />
+                <div className="d-flex gap-2">
+                  {selectedIds.size > 0 && (
+                    <TapirButton
+                      variant="primary"
+                      text={`${selectedIds.size} ausgewählte buchen`}
+                      icon="check_circle"
+                      onClick={accountSelectedCredits}
+                    />
+                  )}
+                  <TapirButton
+                    variant={"outline-primary"}
+                    text={"Gutschrift erzeugen"}
+                    icon={"add_circle"}
+                    onClick={() => setShowCreateModal(true)}
+                  />
+                </div>
               </div>
               <div className={"mt-2 text-muted"}>
                 Offene Gutschriften gesamt: {formatCurrency(totalAmount)}
@@ -160,7 +170,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                       <Form.Check
                         type="checkbox"
                         id="showAllCredits"
-                        label="Bereits gebuchte Gutschriften anzeigen"
+                        label="Bereits beglichene Gutschriften anzeigen"
                         checked={showAll}
                         onChange={(e) => setShowAll(e.target.checked)}
                       />
@@ -169,16 +179,6 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item>
-                {selectedIds.size > 0 && (
-                  <div className="mb-2">
-                    <TapirButton
-                      variant="primary"
-                      text={`${selectedIds.size} ausgewählte buchen`}
-                      icon="check_circle"
-                      onClick={accountSelectedCredits}
-                    />
-                  </div>
-                )}
                 <CreditListTable
                   extendedMemberCredits={extendedMemberCredits}
                   loading={loading}

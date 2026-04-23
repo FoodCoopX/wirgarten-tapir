@@ -1,6 +1,6 @@
-{% load wirgarten %} Gutschrift gebucht: <br />
+{% load wirgarten %} Gutschrift als beglichen markiert: <br />
 <ul>
   {% for key, value in values %} {% if key == "accounted_on" %}
-    <li>Buchungsdatum: {{ value }}</li>
+    <li>{{ value }}</li>
   {% endif %} {% endfor %}
 </ul>
