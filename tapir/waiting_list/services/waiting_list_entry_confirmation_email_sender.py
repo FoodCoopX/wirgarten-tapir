@@ -46,7 +46,7 @@ class WaitingListEntryConfirmationEmailSender:
         pickup_location_list = f"<ol><li>{pickup_location_list}</li></ol>"
 
         TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
+            trigger_data=TransactionalTriggerData(
                 key=Events.CONFIRMATION_REGISTRATION_IN_WAITING_LIST,
                 recipient_id_in_base_queryset=existing_member_id,
                 recipient_outside_of_base_queryset=potential_member_info,

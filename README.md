@@ -36,6 +36,18 @@ You can log in as admin with username `roberto.cortes@example.com` and password 
 
 You can log in as any user using the same pattern: `[name]@example.come` as username and `[name]` as password 
 
+
+## Contributing & GitHub issues
+You are very welcome to try Tapir locally with the "Getting started" instructions above and do your own thing. 
+The current documentation being basically just this README, you may need extra guidance to get started. Don't hesitate to contact us so that we can give you an introduction.
+
+If you're looking for something to work on, filter the issues using the [Ready to be worked on](https://github.com/FoodCoopX/wirgarten-tapir/issues?q=state%3Aopen%20label%3A%22Ready%20to%20be%20worked%20on%22) label.
+Those issues should have a good enough description to get you started. Don't hesitate to ask more questions on the issue directly if needed. 
+If you just, also assign either Theo (for technical questions) or Marcus (for requirements questions) to the issue, so that they know they have to react. They'll assign the issue back to you when the answer is there.
+
+You're of course free to check the other issues and ask questions about them, but we aware that they may not make sense if you're not involved in the daily Tapir life.
+We don't have an internal tool to track tasks yet, so we use the GitHub issues as our todo-list. Hopefully the labels will be enough to let you sort through the mess. 
+
 ## Tests
 Tests are run with `pytest`:
 ```shell

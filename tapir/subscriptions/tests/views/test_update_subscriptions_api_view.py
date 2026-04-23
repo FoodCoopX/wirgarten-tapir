@@ -196,13 +196,6 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
 
         self.assertFalse(Subscription.objects.exists())
 
-    def assert_order_confirmed(self, response_content: dict):
-        self.assertTrue(
-            response_content["order_confirmed"],
-            f"Order should be confirmed, error: {response_content["error"]}",
-        )
-        self.assertIsNone(response_content["error"])
-
     def send_request_and_assert_response_200(self, data: dict):
         response = self.send_request_and_assert_status_code(
             data=data, status_code=status.HTTP_200_OK

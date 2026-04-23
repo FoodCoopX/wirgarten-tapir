@@ -1,16 +1,16 @@
-import { Step } from "../types/Step.ts";
-import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import {
   PublicPickupLocation,
   PublicProductType,
   PublicWaitingListEntryDetails,
 } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
-import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
+import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { Step } from "../types/Step.ts";
+import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
+import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
 
 export function buildSteps(
   settings: BestellWizardSettings,
@@ -36,6 +36,7 @@ export function buildSteps(
     shouldIncludeStepGrowingPeriodChoice(
       selectedProductTypes,
       settings.growingPeriodChoices,
+      waitingListEntryDetails,
     )
   ) {
     newSteps.push("3b_growing_period_choice");

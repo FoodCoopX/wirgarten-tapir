@@ -442,6 +442,7 @@ class BestellWizardBaseDataApiView(APIView):
         earliest_contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=available_growing_periods[0],
+                reference_date=get_today(cache=self.cache),
                 apply_buffer_time=True,
                 cache=self.cache,
             )
