@@ -349,7 +349,7 @@ class WaitingListApiView(APIView):
                 member=entry.member, reference_date=get_today(cache=cache), cache=cache
             )
         link = None
-        if settings.DEBUG and entry.confirmation_link_key:
+        if entry.confirmation_link_key:
             link = SendWaitingListLinkApiView.build_waiting_list_link(
                 entry.id, entry.confirmation_link_key
             )
