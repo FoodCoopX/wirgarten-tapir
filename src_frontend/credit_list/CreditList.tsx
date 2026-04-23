@@ -66,7 +66,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
     setSelectedIds(newSelected);
   }
 
-  function accountSelectedCredits() {
+  function markSelectedCreditsAsSettled() {
     if (selectedIds.size === 0) return;
 
     api
@@ -107,9 +107,9 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                   {selectedIds.size > 0 && (
                     <TapirButton
                       variant="primary"
-                      text={`${selectedIds.size} ausgewählte buchen`}
+                      text={`${selectedIds.size} als beglichen markieren`}
                       icon="check_circle"
-                      onClick={accountSelectedCredits}
+                      onClick={markSelectedCreditsAsSettled}
                     />
                   )}
                   <TapirButton
