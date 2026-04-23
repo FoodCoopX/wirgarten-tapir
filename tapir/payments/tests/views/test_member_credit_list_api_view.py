@@ -136,6 +136,24 @@ class TestMemberCreditLogEntries(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(3, len(response_content))
 
+
+class TestMemberCreditAccountApiView(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def test_get_normalMemberTriesToAccount_returns403(self):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+
+        response = self.client.post(
+            reverse("payments:member_credit_account"),
+            data={"credit_ids": []},
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 403)
+
     def test_post_accountCredits_booksTheCreditAndAddsLogEntry(self):
         admin_member = MemberFactory.create(is_superuser=True)
         member = MemberFactory.create()
