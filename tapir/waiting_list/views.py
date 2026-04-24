@@ -406,14 +406,9 @@ class WaitingListApiView(APIView):
             entry
         )
 
-        reference_date = (
-            entry.desired_start_date
-            if entry.desired_start_date
-            else get_today(cache=cache)
-        )
         subscription_start = (
             WaitingListEntryConfirmationApplier.get_contract_start_date(
-                reference_date=reference_date, cache=cache
+                waiting_list_entry=entry, cache=cache
             )
         )
 

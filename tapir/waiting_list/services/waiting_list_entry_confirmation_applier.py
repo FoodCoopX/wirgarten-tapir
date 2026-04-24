@@ -71,7 +71,7 @@ class WaitingListEntryConfirmationApplier:
             reference_date = get_today(cache=cache)
 
         contract_start_date = cls.get_contract_start_date(
-            reference_date=reference_date, cache=cache
+            waiting_list_entry=waiting_list_entry, cache=cache
         )
 
         cls.apply_pickup_location_changes(
@@ -132,8 +132,11 @@ class WaitingListEntryConfirmationApplier:
 
     @classmethod
     def get_contract_start_date(
-        cls, reference_date: datetime.date, cache: dict
+        cls, waiting_list_entry: WaitingListEntry, cache: dict
     ) -> datetime.date:
+        reference_date = waiting_list_entry.desired_start_date
+        if reference_date is None:
+            reference_date = get_today(cache=cache)
 
         growing_periods = GrowingPeriodChoiceProvider.get_available_growing_periods(
             reference_date=reference_date, cache=cache
