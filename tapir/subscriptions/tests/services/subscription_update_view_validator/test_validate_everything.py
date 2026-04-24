@@ -19,6 +19,7 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(SimpleTestCase):
 
         return {
             "sepa_allowed": True,
+            "cancellation_policy_read": True,
             "order": self.mock_order,
             "product_type": self.mock_product_type,
             "contract_start_date": self.mock_contract_start_date,
@@ -31,9 +32,16 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(SimpleTestCase):
             "cache": self.mock_cache,
         }
 
-    def test_validateEverything_epaNotAllowed_raisesValidationError(self):
+    def test_validateEverything_sepaNotAllowed_raisesValidationError(self):
         params = self.build_default_params()
         params["sepa_allowed"] = False
+
+        with self.assertRaises(ValidationError):
+            SubscriptionUpdateViewValidator.validate_everything(**params)
+
+    def test_validateEverything_cancellationPolicyNotRead_raisesValidationError(self):
+        params = self.build_default_params()
+        params["cancellation_policy_read"] = False
 
         with self.assertRaises(ValidationError):
             SubscriptionUpdateViewValidator.validate_everything(**params)

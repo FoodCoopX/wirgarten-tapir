@@ -5598,6 +5598,8 @@ components:
           type: string
         step10_text_student:
           type: string
+        step_10_single_product_type_hint:
+          type: string
         step11_title:
           type: string
         step11_privacy_policy_label:
@@ -5681,6 +5683,7 @@ components:
       - step8_title
       - step9_payment_rhythm_modal_text
       - step9_title
+      - step_10_single_product_type_hint
       - student_checkbox_explanation_text
     BlankEnum:
       enum:
@@ -10685,6 +10688,8 @@ components:
             type: integer
         sepa_allowed:
           type: boolean
+        cancellation_policy_read:
+          type: boolean
         pickup_location_id:
           type: string
           minLength: 1
@@ -10700,6 +10705,7 @@ components:
           minLength: 1
       required:
       - account_owner
+      - cancellation_policy_read
       - growing_period_id
       - iban
       - member_id

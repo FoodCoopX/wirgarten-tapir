@@ -569,6 +569,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step9_title": ParameterKeys.BESTELLWIZARD_STEP9_TITLE,
             "step9_payment_rhythm_modal_text": ParameterKeys.BESTELLWIZARD_STEP9_PAYMENT_RHYTHM_MODAL_TEXT,
             "step10_title": ParameterKeys.BESTELLWIZARD_STEP10_TITLE,
+            "step_10_single_product_type_hint": ParameterKeys.BESTELLWIZARD_STEP10_SINGLE_PRODUCT_TYPE_HINT,
             "step11_title": ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
             "step11_privacy_policy_label": ParameterKeys.BESTELLWIZARD_PRIVACY_POLICY_LABEL,
             "step11_privacy_policy_text": ParameterKeys.BESTELLWIZARD_PRIVACY_POLICY_EXPLANATION,

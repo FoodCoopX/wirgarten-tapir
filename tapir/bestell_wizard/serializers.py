@@ -96,6 +96,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step10_title = serializers.CharField()
     step10_flag_student = serializers.CharField()
     step10_text_student = serializers.CharField()
+    step_10_single_product_type_hint = serializers.CharField()
     step11_title = serializers.CharField()
     step11_privacy_policy_label = serializers.CharField()
     step11_privacy_policy_text = serializers.CharField()

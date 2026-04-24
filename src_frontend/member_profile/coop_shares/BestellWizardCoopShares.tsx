@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { Spinner } from "react-bootstrap";
 
+import { v4 as uuidv4 } from "uuid";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { useApi } from "../../hooks/useApi.ts";
 import { BestellWizardApi, CoopApi } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { buildEmptySettings } from "../../bestell_wizard/utils/buildEmptySettings.ts";
-import { ToastData } from "../../types/ToastData.ts";
-import { Step } from "../../bestell_wizard_mobile/types/Step.ts";
-import { buildSettings } from "../../bestell_wizard/utils/buildSettings.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import StepGenericIntro from "../../bestell_wizard_mobile/steps/StepGenericIntro.tsx";
-import Step6BCoopShares from "../../bestell_wizard_mobile/steps/Step6BCoopShares.tsx";
-import Step9BankingData from "../../bestell_wizard_mobile/steps/Step9BankingData.tsx";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import { buildEmptySettings } from "../../bestell_wizard/utils/buildEmptySettings.ts";
+import { buildSettings } from "../../bestell_wizard/utils/buildSettings.ts";
 import { getEmptyPersonalData } from "../../bestell_wizard/utils/getEmptyPersonalData.ts";
 import BestellWizardMobileBase from "../../bestell_wizard_mobile/components/BestellWizardMobileBase.tsx";
+import Step6BCoopShares from "../../bestell_wizard_mobile/steps/Step6BCoopShares.tsx";
+import Step9BankingData from "../../bestell_wizard_mobile/steps/Step9BankingData.tsx";
+import StepGenericIntro from "../../bestell_wizard_mobile/steps/StepGenericIntro.tsx";
+import { Step } from "../../bestell_wizard_mobile/types/Step.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface BestellWizardCoopSharesProps {
   csrfToken: string;
@@ -204,6 +204,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
               step === steps.at(-1) ? getConfirmButtonText() : undefined
             }
             canChangePaymentRhythm={false}
+            autoFillAccountOwnerFromName={false}
           />
         );
       case "loading":

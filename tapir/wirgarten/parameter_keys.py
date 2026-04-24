@@ -217,6 +217,9 @@ class ParameterKeys:
     BESTELLWIZARD_STEP10_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step10.background_image"
     )
+    BESTELLWIZARD_STEP10_SINGLE_PRODUCT_TYPE_HINT = (
+        f"{PREFIX}.bestellwizard.step10.single_product_type_hint"
+    )
     BESTELLWIZARD_STEP11_TITLE = f"{PREFIX}.bestellwizard.step11.title"
     BESTELLWIZARD_STEP11_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step11.background_image"
