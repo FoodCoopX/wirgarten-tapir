@@ -34,9 +34,6 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
     PickupLocationCapacityGeneralChecker,
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
-from tapir.subscriptions.services.contract_start_date_calculator import (
-    ContractStartDateCalculator,
-)
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
@@ -414,10 +411,10 @@ class WaitingListApiView(APIView):
             if entry.desired_start_date
             else get_today(cache=cache)
         )
-        subscription_start = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=reference_date,
-            apply_buffer_time=False,
-            cache=cache,
+        subscription_start = (
+            WaitingListEntryConfirmationApplier.get_contract_start_date(
+                reference_date=reference_date, cache=cache
+            )
         )
 
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
