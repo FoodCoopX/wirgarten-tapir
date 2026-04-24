@@ -71,6 +71,9 @@ JavaScript and React files are formatted with [Prettier](https://prettier.io/).
 
 Django template files are formatted with [DjHTML](https://github.com/rtts/djhtml)
 
+Install the pre-commit hooks to make sure that the files you commit are properly formatted: `poetry run pre-commit install`.
+It should be possible to configure your IDE of choice to run the formatting automatically on save, at least for Black and Prettier. Look in their respective documentation.
+
 ## Frontend API clients
 API Requests made from the React frontend use API clients. Here are the steps to get updated API clients:
 - Annotate your API view with [Spectacular](https://github.com/tfranzel/drf-spectacular) (search for `@extend_schema(` for examples)
