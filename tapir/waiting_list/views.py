@@ -38,6 +38,9 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
+from tapir.subscriptions.services.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
+)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
@@ -703,15 +706,16 @@ class WaitingListCreateEntryExistingMemberView(APIView):
             )
 
         with transaction.atomic():
+            growing_periods = GrowingPeriodChoiceProvider.get_available_growing_periods(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
             entry = WaitingListEntryCreator.create_entry_existing_member(
                 order=order,
                 pickup_location_ids_in_priority_order=serializer.validated_data[
                     "pickup_location_ids"
                 ],
                 member=member,
-                growing_period_id=TapirCache.get_growing_period_at_date(
-                    reference_date=get_today(cache=self.cache), cache=self.cache
-                ).id,
+                growing_period_id=growing_periods[0].id,
                 cache=self.cache,
             )
             WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
@@ -721,7 +725,7 @@ class WaitingListCreateEntryExistingMemberView(APIView):
 
         return Response(
             OrderConfirmationResponseSerializer(
-                {"order_confirmed": True, "error": ""}
+                {"order_confirmed": True, "error": None}
             ).data
         )
 

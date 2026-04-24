@@ -75,7 +75,7 @@ class WaitingListEntryCreator:
             member_id=member_id,
         )
 
-        if member_id is None:
+        if personal_data is not None:
             cls.set_personal_data_from_validated_data(waiting_list_entry, personal_data)
 
         waiting_list_entry.save()
