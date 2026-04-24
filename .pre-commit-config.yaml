@@ -15,3 +15,10 @@ repos:
     rev: "1.30.0"
     hooks:
       - id: django-upgrade
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: npx prettier --write --ignore-unknown
+        language: system
+        files: \.(js|jsx|ts|tsx)$
