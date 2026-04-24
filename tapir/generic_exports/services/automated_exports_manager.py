@@ -19,7 +19,7 @@ from tapir.wirgarten.utils import get_now
 
 class AutomatedExportsManager:
     @classmethod
-    def do_automated_csv_exports(cls):
+    def do_automated_csv_exports(cls, cache: dict):
         for export in CsvExport.objects.exclude(
             automated_export_cycle=AutomatedExportCycle.NEVER
         ):
@@ -30,19 +30,19 @@ class AutomatedExportsManager:
                 export_definition=export, datetime__date=datetime_of_last_export.date()
             ).exists():
                 continue
-            cls.do_single_csv_export(export, datetime_of_last_export)
+            cls.do_single_csv_export(export, datetime_of_last_export, cache=cache)
 
     @classmethod
     @transaction.atomic
-    def do_single_csv_export(cls, export, reference_datetime):
+    def do_single_csv_export(cls, export, reference_datetime, cache: dict):
         file = CsvExportBuilder.create_exported_file(export, reference_datetime)
         result = AutomatedCsvExportResult.objects.create(
             export_definition=export, datetime=reference_datetime, file=file
         )
-        ExportMailSender.send_mails_for_export([result])
+        ExportMailSender.send_mails_for_export([result], cache=cache)
 
     @classmethod
-    def do_automated_pdf_exports(cls):
+    def do_automated_pdf_exports(cls, cache: dict):
         for export in PdfExport.objects.exclude(
             automated_export_cycle=AutomatedExportCycle.NEVER
         ):
@@ -51,11 +51,11 @@ class AutomatedExportsManager:
                 export_definition=export, datetime__date=datetime_of_last_export.date()
             ).exists():
                 continue
-            cls.do_single_pdf_export(export, datetime_of_last_export)
+            cls.do_single_pdf_export(export, datetime_of_last_export, cache=cache)
 
     @classmethod
     @transaction.atomic
-    def do_single_pdf_export(cls, export, reference_datetime):
+    def do_single_pdf_export(cls, export, reference_datetime, cache: dict):
         files = PdfExportBuilder.create_exported_files(export, reference_datetime)
         results = [
             AutomatedPdfExportResult.objects.create(
@@ -63,7 +63,7 @@ class AutomatedExportsManager:
             )
             for file in files
         ]
-        ExportMailSender.send_mails_for_export(results)
+        ExportMailSender.send_mails_for_export(results, cache=cache)
 
     @classmethod
     def get_datetime_of_latest_export(cls, export: CsvExport | PdfExport):

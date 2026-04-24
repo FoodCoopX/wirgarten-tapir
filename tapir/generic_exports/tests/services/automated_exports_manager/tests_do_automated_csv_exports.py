@@ -19,7 +19,7 @@ class TestDoAutomatedCsvExports(TapirIntegrationTest):
     ):
         CsvExportFactory.create(automated_export_cycle=AutomatedExportCycle.NEVER)
 
-        AutomatedExportsManager.do_automated_csv_exports()
+        AutomatedExportsManager.do_automated_csv_exports(cache={})
 
         mock_get_datetime_of_latest_export.assert_not_called()
         mock_do_single_csv_export.assert_not_called()
@@ -40,7 +40,7 @@ class TestDoAutomatedCsvExports(TapirIntegrationTest):
             file=ExportedFileFactory.create(),
         )
 
-        AutomatedExportsManager.do_automated_csv_exports()
+        AutomatedExportsManager.do_automated_csv_exports(cache={})
 
         mock_get_datetime_of_latest_export.assert_called_once_with(export)
         mock_do_single_csv_export.assert_not_called()
@@ -60,8 +60,11 @@ class TestDoAutomatedCsvExports(TapirIntegrationTest):
             datetime=target_date - datetime.timedelta(days=1),
             file=ExportedFileFactory.create(),
         )
+        cache = Mock()
 
-        AutomatedExportsManager.do_automated_csv_exports()
+        AutomatedExportsManager.do_automated_csv_exports(cache=cache)
 
         mock_get_datetime_of_latest_export.assert_called_once_with(export)
-        mock_do_single_csv_export.assert_called_once_with(export, target_date)
+        mock_do_single_csv_export.assert_called_once_with(
+            export, target_date, cache=cache
+        )
