@@ -15,7 +15,6 @@ from tapir.wirgarten.utils import get_now
 
 
 class MandateReferenceProvider:
-
     @classmethod
     def get_or_create_mandate_reference(
         cls, member: Member, cache: dict, reference_datetime: datetime.datetime = None
