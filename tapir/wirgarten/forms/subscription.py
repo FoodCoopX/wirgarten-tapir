@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
@@ -50,7 +51,6 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.member import (
     change_pickup_location,
-    get_or_create_mandate_ref,
     send_product_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
@@ -327,13 +327,14 @@ class BaseProductForm(forms.Form):
         member_id: str = None,
     ):
         member_id = member_id or self.member_id
-
+        member = Member.objects.get(id=member_id)
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(member_id, cache=self.cache)
+            mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+                member, cache=self.cache
+            )
         now = get_now(cache=self.cache)
 
         self.subscriptions = []
-        member = Member.objects.get(id=member_id)
         existing_trial_end_date = cancel_or_delete_subscriptions(
             member=member,
             start_date=self.start_date,
@@ -735,8 +736,11 @@ class AdditionalProductForm(forms.Form):
             if not self.member_id:
                 raise ValueError("member_id must be set")
             member_id = self.member_id
+        member = Member.objects.get(id=member_id)
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(member_id)
+            mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+                member, cache=self.cache
+            )
         now = get_now(cache=self.cache)
 
         if not hasattr(self, "growing_period"):
@@ -750,7 +754,7 @@ class AdditionalProductForm(forms.Form):
         self.start_date = max(self.start_date, self.growing_period.start_date)
 
         existing_trial_end_date = cancel_or_delete_subscriptions(
-            Member.objects.get(id=member_id),
+            member,
             self.start_date,
             self.product_type,
             actor=None,

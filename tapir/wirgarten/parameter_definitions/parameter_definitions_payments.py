@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -110,5 +111,29 @@ class ParameterDefinitionsPayments:
             description="Wird im Export der Lastschriften oben eingefügt, da für Umwandlung in XML-Datei notwendig.",
             category=ParameterCategory.PAYMENT,
             order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_MANDATE_REFERENCE_PATTERN,
+            label="Mandatsreferenz-Muster",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Nach welchem Muster die Mandatsreferenz generiert werden soll. <br /> "
+            "Damit es immer einzigartig ist müssen mindestens einer dieser Token verwendet werden: {mitgliedsnummer_kurz}, {mitgliedsnummer_lang}, {mitgliedsnummer_ohne_prefix}, {zufall}. <br />"
+            "Die Tokens {vorname} und {nachname} nehmen jeweils nur die erste 5 Buchstaben. <br />"
+            "Soll dieses Parameter geändert werden, bleiben bestehende Mandatsreferenzen unverändert.",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                vars_hint=[
+                    MandateReferenceProvider.TOKEN_FIRST_NAME,
+                    MandateReferenceProvider.TOKEN_LAST_NAME,
+                    MandateReferenceProvider.TOKEN_MEMBER_NUMBER_SHORT,
+                    MandateReferenceProvider.TOKEN_MEMBER_NUMBER_LONG,
+                    MandateReferenceProvider.TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX,
+                    MandateReferenceProvider.TOKEN_RANDOM,
+                ]
+            ),
         )
         order_priority -= 1

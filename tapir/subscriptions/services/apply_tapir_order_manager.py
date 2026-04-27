@@ -2,6 +2,7 @@ import datetime
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
@@ -17,7 +18,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
-    get_or_create_mandate_ref,
     send_contract_change_confirmation,
     send_product_order_confirmation,
 )
@@ -106,7 +106,9 @@ class ApplyTapirOrderManager:
                     start_date=contract_start_date,
                     end_date=contract_end_date,
                     cancellation_ts=None,
-                    mandate_ref=get_or_create_mandate_ref(member=member, cache=cache),
+                    mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                        member=member, cache=cache
+                    ),
                     consent_ts=now,
                     withdrawal_consent_ts=now,
                     trial_disabled=trial_disabled,
