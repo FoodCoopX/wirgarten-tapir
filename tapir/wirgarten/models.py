@@ -646,6 +646,9 @@ class MandateReference(models.Model):
     class Meta:
         indexes = [Index(fields=["member"], name="idx_mandatereference_mamber")]
 
+    def __str__(self):
+        return f"{self.member}: {self.ref}, {format_date(self.start_ts)}"
+
 
 class Payable:
     """

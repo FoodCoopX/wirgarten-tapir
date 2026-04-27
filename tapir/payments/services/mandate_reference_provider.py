@@ -24,7 +24,10 @@ class MandateReferenceProvider:
             reference_datetime = get_now(cache=cache)
 
         def compute() -> dict[str, list[MandateReference]]:
-            new_cache = dict.fromkeys(Member.objects.values_list("id", flat=True), [])
+            new_cache = {
+                member_id: []
+                for member_id in Member.objects.values_list("id", flat=True)
+            }
             for mandate_reference in MandateReference.objects.select_related(
                 "member"
             ).order_by("-start_ts"):
@@ -43,14 +46,14 @@ class MandateReferenceProvider:
             # If a mandate reference already exists, we should use it even if it's validity starts after the reference_datetime
             return mandate_refs[0]
 
-        mandate_ref = cls._create_mandate_ref(member=member, cache=cache)
+        mandate_ref = cls.create_mandate_ref(member=member, cache=cache)
         if mandate_ref_cache is not None:
             mandate_ref_cache[member.id].append(mandate_ref)
 
         return mandate_ref
 
     @classmethod
-    def _create_mandate_ref(cls, member: Member, cache: dict):
+    def create_mandate_ref(cls, member: Member, cache: dict):
         ref = cls.build_mandate_ref(
             member=member,
             pattern=get_parameter_value(
