@@ -15,8 +15,26 @@ from tapir.wirgarten.utils import get_now
 
 
 class MandateReferenceProvider:
+    CACHE_KEY = "mandate_ref_cache"
+
     @classmethod
     def get_or_create_mandate_reference(
+        cls, member: Member, cache: dict, reference_datetime: datetime.datetime = None
+    ) -> MandateReference:
+        mandate_ref = cls.get_mandate_ref(
+            member=member, cache=cache, reference_datetime=reference_datetime
+        )
+        if mandate_ref:
+            return mandate_ref
+
+        mandate_ref = cls.create_mandate_ref(member=member, cache=cache)
+        mandate_ref_cache = cache.get(cls.CACHE_KEY)
+        mandate_ref_cache[member.id].insert(0, mandate_ref)
+
+        return mandate_ref
+
+    @classmethod
+    def get_mandate_ref(
         cls, member: Member, cache: dict, reference_datetime: datetime.datetime = None
     ):
         if reference_datetime is None:
@@ -45,10 +63,7 @@ class MandateReferenceProvider:
             # If a mandate reference already exists, we should use it even if it's validity starts after the reference_datetime
             return mandate_refs[0]
 
-        mandate_ref = cls.create_mandate_ref(member=member, cache=cache)
-        mandate_ref_cache[member.id].insert(0, mandate_ref)
-
-        return mandate_ref
+        return None
 
     @classmethod
     def create_mandate_ref(cls, member: Member, cache: dict):
