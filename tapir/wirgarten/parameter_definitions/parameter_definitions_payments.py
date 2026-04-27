@@ -118,7 +118,7 @@ class ParameterDefinitionsPayments:
             key=ParameterKeys.PAYMENT_MANDATE_REFERENCE_PATTERN,
             label="Mandatsreferenz-Muster",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="",
+            initial_value="{nachname}{vorname}/{zufall}",
             description="Nach welchem Muster die Mandatsreferenz generiert werden soll. <br /> "
             "Damit es immer einzigartig ist müssen mindestens einer dieser Token verwendet werden: {mitgliedsnummer_kurz}, {mitgliedsnummer_lang}, {mitgliedsnummer_ohne_prefix}, {zufall}. <br />"
             "Die Tokens {vorname} und {nachname} nehmen jeweils nur die erste 5 Buchstaben. <br />"
