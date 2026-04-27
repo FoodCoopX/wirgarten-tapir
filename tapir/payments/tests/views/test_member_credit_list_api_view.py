@@ -100,3 +100,37 @@ class TestMemberCreditListApiView(TapirIntegrationTest):
 
         self.assertEqual("c2", response_content[0]["credit"]["comment"])
         self.assertEqual("c1", response_content[1]["credit"]["comment"])
+
+    def test_get_showAllFalse_returnsOnlyUnsettledCredits(self):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+
+        credit = MemberCredit.objects.first()
+        credit.settled_on = datetime.datetime.now(datetime.timezone.utc)
+        credit.save()
+
+        url = reverse("payments:credit_list_filtered")
+        url = f"{url}?show_all=false"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertEqual(2, len(response_content))
+        for item in response_content:
+            self.assertIsNone(item["credit"].get("settledOn"))
+
+    def test_get_showAllTrue_returnsAllCredits(self):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+
+        credit = MemberCredit.objects.first()
+        credit.settled_on = datetime.datetime.now(datetime.timezone.utc)
+        credit.save()
+
+        url = reverse("payments:credit_list_filtered")
+        url = f"{url}?show_all=true"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertEqual(3, len(response_content))

@@ -44,6 +44,12 @@ export interface UpdateSubscriptionsRequestRequest {
   sepaAllowed: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof UpdateSubscriptionsRequestRequest
+   */
+  cancellationPolicyRead: boolean;
+  /**
+   *
    * @type {string}
    * @memberof UpdateSubscriptionsRequestRequest
    */
@@ -87,6 +93,11 @@ export function instanceOfUpdateSubscriptionsRequestRequest(
     return false;
   if (!("sepaAllowed" in value) || value["sepaAllowed"] === undefined)
     return false;
+  if (
+    !("cancellationPolicyRead" in value) ||
+    value["cancellationPolicyRead"] === undefined
+  )
+    return false;
   if (!("growingPeriodId" in value) || value["growingPeriodId"] === undefined)
     return false;
   if (!("accountOwner" in value) || value["accountOwner"] === undefined)
@@ -113,6 +124,7 @@ export function UpdateSubscriptionsRequestRequestFromJSONTyped(
     productTypeId: json["product_type_id"],
     shoppingCart: json["shopping_cart"],
     sepaAllowed: json["sepa_allowed"],
+    cancellationPolicyRead: json["cancellation_policy_read"],
     pickupLocationId:
       json["pickup_location_id"] == null
         ? undefined
@@ -144,6 +156,7 @@ export function UpdateSubscriptionsRequestRequestToJSONTyped(
     product_type_id: value["productTypeId"],
     shopping_cart: value["shoppingCart"],
     sepa_allowed: value["sepaAllowed"],
+    cancellation_policy_read: value["cancellationPolicyRead"],
     pickup_location_id: value["pickupLocationId"],
     growing_period_id: value["growingPeriodId"],
     account_owner: value["accountOwner"],

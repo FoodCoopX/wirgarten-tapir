@@ -107,6 +107,7 @@ class PickupLocationColumnProvider:
 
         return [
             {
+                "member_no": subscription.member.member_no,
                 "last_name": subscription.member.last_name,
                 "first_name": subscription.member.first_name,
                 "phone_number": subscription.member.phone_number,

@@ -1349,6 +1349,11 @@ paths:
         schema:
           type: integer
       - in: query
+        name: show_all
+        schema:
+          type: boolean
+        description: Show all credits
+      - in: query
         name: year_filter
         schema:
           type: integer
@@ -1383,6 +1388,34 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/MemberCreditCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /payments/api/member_credit_settle:
+    post:
+      operationId: payments_api_member_credit_settle_create
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreditSettleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberCreditSettleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberCreditSettleRequest'
         required: true
       security:
       - tokenAuth: []
@@ -5565,6 +5598,8 @@ components:
           type: string
         step10_text_student:
           type: string
+        step_10_single_product_type_hint:
+          type: string
         step11_title:
           type: string
         step11_privacy_policy_label:
@@ -5648,6 +5683,7 @@ components:
       - step8_title
       - step9_payment_rhythm_modal_text
       - step9_title
+      - step_10_single_product_type_hint
       - student_checkbox_explanation_text
     BlankEnum:
       enum:
@@ -7927,35 +7963,29 @@ components:
         id:
           type: string
           maxLength: 10
+        member:
+          type: string
         amount:
           type: number
           format: double
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        due_date:
-          type: string
-          format: date
         purpose:
           type: string
           maxLength: 1024
         comment:
           type: string
-        member:
+        due_date:
           type: string
+          format: date
+        settled_on:
+          type: string
+          format: date-time
+          nullable: true
       required:
       - amount
       - comment
-      - created_at
       - due_date
       - member
       - purpose
-      - updated_at
     MemberCreditCreateRequest:
       type: object
       properties:
@@ -7980,6 +8010,16 @@ components:
       - due_date
       - member_id
       - purpose
+    MemberCreditSettleRequest:
+      type: object
+      properties:
+        credit_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+      - credit_ids
     MemberDataToConfirm:
       type: object
       properties:
@@ -10648,6 +10688,8 @@ components:
             type: integer
         sepa_allowed:
           type: boolean
+        cancellation_policy_read:
+          type: boolean
         pickup_location_id:
           type: string
           minLength: 1
@@ -10663,6 +10705,7 @@ components:
           minLength: 1
       required:
       - account_owner
+      - cancellation_policy_read
       - growing_period_id
       - iban
       - member_id

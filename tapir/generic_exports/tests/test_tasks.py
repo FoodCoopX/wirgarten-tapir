@@ -15,5 +15,5 @@ class TestTasks(SimpleTestCase):
         self, mock_do_automated_csv_exports: Mock, mock_do_automated_pdf_exports: Mock
     ):
         tasks.do_automated_exports()
-        mock_do_automated_csv_exports.assert_called_once_with()
-        mock_do_automated_pdf_exports.assert_called_once_with()
+        mock_do_automated_csv_exports.assert_called_once()
+        mock_do_automated_pdf_exports.assert_called_once()

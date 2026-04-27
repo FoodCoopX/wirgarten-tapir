@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Spinner } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
+import { v4 as uuidv4 } from "uuid";
+import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
+import "../../tapir/core/static/core/css/base.css";
 import {
   BestellWizardApi,
   CoopApi,
@@ -11,60 +13,58 @@ import {
   PublicWaitingListEntryDetails,
   WaitingListApi,
 } from "../api-client";
-import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
-import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
-import { ToastData } from "../types/ToastData.ts";
-import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
-import Step1AWelcome from "./steps/Step1AWelcome.tsx";
-import Step2FirstName from "./steps/Step2FirstName.tsx";
 import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
-import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
-import Step1BWelcome from "./steps/Step1BWelcome.tsx";
-import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
-import "../../tapir/core/static/core/css/base.css";
-import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
-import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
-import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
+import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
+import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
+import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
 import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { Phase } from "./types/Phase.ts";
-import StepGenericIntro from "./steps/StepGenericIntro.tsx";
-import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
-import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
-import Step8PersonalData from "./steps/Step8PersonalData.tsx";
-import Step9BankingData from "./steps/Step9BankingData.tsx";
-import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
 import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
+import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
+import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
+import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
+import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { addToast } from "../utils/addToast.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { updateProductPrices } from "../utils/updateProductPrices.ts";
+import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
+import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
 import Step11Legal from "./steps/Step11Legal.tsx";
-import { Step } from "./types/Step.ts";
 import Step12Channel from "./steps/Step12Channel.tsx";
 import Step13Feedback from "./steps/Step13Feedback.tsx";
-import Step14Confirmation from "./steps/Step14Confirmation.tsx";
-import { getPhase } from "./utils/getPhase.ts";
-import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
-import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
-import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
-import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
-import { buildSteps } from "./utils/buildSteps.ts";
-import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
-import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
-import { PickupLocationTab } from "./types/PickupLocationTab.ts";
-import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import Step14BConfirmationWaitingList from "./steps/Step14BConfirmationWaitingList.tsx";
+import Step14Confirmation from "./steps/Step14Confirmation.tsx";
+import Step1AWelcome from "./steps/Step1AWelcome.tsx";
+import Step1BWelcome from "./steps/Step1BWelcome.tsx";
+import Step2FirstName from "./steps/Step2FirstName.tsx";
 import Step3BGrowingPeriodChoice from "./steps/Step3BGrowingPeriodChoice.tsx";
-import { updateProductPrices } from "../utils/updateProductPrices.ts";
-import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
-import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
-import { addToast } from "../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
-import { updateWaitingList } from "./utils/updateWaitingList.ts";
-import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
-import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
+import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
+import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
+import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
+import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
+import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
+import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
+import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
+import Step8PersonalData from "./steps/Step8PersonalData.tsx";
+import Step9BankingData from "./steps/Step9BankingData.tsx";
+import StepGenericIntro from "./steps/StepGenericIntro.tsx";
+import { Phase } from "./types/Phase.ts";
+import { PickupLocationTab } from "./types/PickupLocationTab.ts";
+import { Step } from "./types/Step.ts";
+import { buildSteps } from "./utils/buildSteps.ts";
+import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
+import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
+import { updateWaitingList } from "./utils/updateWaitingList.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
@@ -728,6 +728,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             isOrderStep={false}
             orderLoading={false}
             canChangePaymentRhythm={true}
+            autoFillAccountOwnerFromName={true}
           />
         );
       case "10_summary":

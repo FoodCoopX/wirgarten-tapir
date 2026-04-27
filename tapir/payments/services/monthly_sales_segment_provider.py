@@ -1,7 +1,5 @@
 import datetime
 
-from icecream import ic
-
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
 from tapir.payments.monthly_sales_data import MonthlySalesData
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
@@ -45,7 +43,6 @@ class MonthlySalesSegmentProvider:
         subscriptions_by_product_type = TapirCache.get_subscriptions_by_product_type(
             cache=cache
         )
-        ic(first_of_previous_month, end_of_previous_month)
 
         for product_type in TapirCache.get_all_product_types(cache=cache):
             all_sales_data.append(

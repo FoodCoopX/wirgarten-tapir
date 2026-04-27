@@ -118,11 +118,13 @@ class UpdateSubscriptionsApiView(APIView):
         iban = serializer.validated_data.get("iban", "").strip()
         payment_rhythm = serializer.validated_data.get("payment_rhythm", None)
         sepa_allowed = serializer.validated_data["sepa_allowed"]
+        cancellation_policy_read = serializer.validated_data["cancellation_policy_read"]
 
         try:
             logged_in_user_is_admin = request.user.has_perm(Permission.Accounts.MANAGE)
             SubscriptionUpdateViewValidator.validate_everything(
                 sepa_allowed=sepa_allowed,
+                cancellation_policy_read=cancellation_policy_read,
                 order=order,
                 product_type=product_type,
                 contract_start_date=contract_start_date,

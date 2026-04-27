@@ -32,6 +32,7 @@ class SubscriptionUpdateViewValidator:
     def validate_everything(
         cls,
         sepa_allowed: bool,
+        cancellation_policy_read: bool,
         order: TapirOrder,
         product_type: ProductType,
         contract_start_date: datetime.date,
@@ -45,6 +46,9 @@ class SubscriptionUpdateViewValidator:
     ):
         if not sepa_allowed:
             raise ValidationError("Das SEPA-Mandat muss ermächtigt sein.")
+
+        if not cancellation_policy_read:
+            raise ValidationError("Die Widerrufsbelehrung muss akzeptiert sein")
 
         cls.validate_all_products_belong_to_product_type(
             order=order, product_type_id=product_type.id, cache=cache

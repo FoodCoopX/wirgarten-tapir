@@ -51,6 +51,7 @@ class TestPickupLocationColumnProvider(TapirIntegrationTest):
             period__start_date=datetime.date(year=2009, month=1, day=1),
             product=product,
             member__last_name="Roger",
+            member__member_no=1027,
         )
         MemberPickupLocation.objects.create(
             member=subscription_valid_1.member,
@@ -61,6 +62,7 @@ class TestPickupLocationColumnProvider(TapirIntegrationTest):
             period__start_date=datetime.date(year=2009, month=1, day=1),
             product=product,
             member__last_name="Albert",
+            member__member_no=12,
         )
         MemberPickupLocation.objects.create(
             member=subscription_valid_2.member,
@@ -97,6 +99,7 @@ class TestPickupLocationColumnProvider(TapirIntegrationTest):
         self.assertEqual(
             [
                 {
+                    "member_no": 12,
                     "last_name": "Albert",
                     "first_name": subscription_valid_2.member.first_name,
                     "phone_number": subscription_valid_2.member.phone_number,
@@ -106,6 +109,7 @@ class TestPickupLocationColumnProvider(TapirIntegrationTest):
                     "quantity": subscription_valid_2.quantity,
                 },
                 {
+                    "member_no": 1027,
                     "last_name": "Roger",
                     "first_name": subscription_valid_1.member.first_name,
                     "phone_number": subscription_valid_1.member.phone_number,

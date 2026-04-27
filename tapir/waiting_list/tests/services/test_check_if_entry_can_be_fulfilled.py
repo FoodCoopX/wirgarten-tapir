@@ -3,13 +3,13 @@ import datetime
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.waiting_list.views import WaitingListApiView
 from tapir.wirgarten.constants import WEEKLY
-from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.models import (
     WaitingListProductWish,
     WaitingListPickupLocationWish,
     ProductCapacity,
     PickupLocationCapability,
 )
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     ProductFactory,
     PickupLocationFactory,
@@ -149,6 +149,26 @@ class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
         result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
 
         self.assertFalse(result)
+
+    def test_checkIfEntryCanBeFulfilled_noGrowingPeriodCoveringToday_stillReturnsTrue(
+        self,
+    ):
+        # Regression test for #1150 https://github.com/FoodCoopX/wirgarten-tapir/issues/1150
+        mock_timezone(self, datetime.datetime(year=2024, month=12, day=15))
+
+        entry = WaitingListEntryFactory.create()
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=self.product, quantity=1
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=self.pickup_location,
+            priority=1,
+        )
+
+        result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
+
+        self.assertTrue(result)
 
     def test_checkIfEntryCanBeFulfilled_multiplePickupLocationWishesOneWithCapacity_returnsTrue(
         self,

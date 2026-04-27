@@ -26,7 +26,7 @@ def validate_format_string(value: str, allowed_vars: list[str]):
         ].strip()  # if object, use only the part before the first dot
         if match not in allowed_vars:
             raise ValidationError(
-                f"Unknown variable '{match}'! Known variables: {allowed_vars}"
+                f"Unbekannter Token '{match}'! Gültige Tokens: {allowed_vars}"
             )
 
 

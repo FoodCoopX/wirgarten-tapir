@@ -25,11 +25,14 @@ class TestDoSingleCsvExport(TapirIntegrationTest):
         mock_create_exported_file.return_value = created_file
         export_result = Mock()
         mock_result_objects.create.return_value = export_result
+        cache = Mock()
 
-        AutomatedExportsManager.do_single_csv_export(export, reference_datetime)
+        AutomatedExportsManager.do_single_csv_export(
+            export, reference_datetime, cache=cache
+        )
 
         mock_create_exported_file.assert_called_once_with(export, reference_datetime)
         mock_result_objects.create.assert_called_once_with(
             export_definition=export, datetime=reference_datetime, file=created_file
         )
-        mock_send_mails_for_export.assert_called_once_with([export_result])
+        mock_send_mails_for_export.assert_called_once_with([export_result], cache=cache)

@@ -245,6 +245,12 @@ export interface BestellWizardStrings {
    * @type {string}
    * @memberof BestellWizardStrings
    */
+  step10SingleProductTypeHint: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
   step11Title: string;
   /**
    *
@@ -439,6 +445,11 @@ export function instanceOfBestellWizardStrings(
     value["step10TextStudent"] === undefined
   )
     return false;
+  if (
+    !("step10SingleProductTypeHint" in value) ||
+    value["step10SingleProductTypeHint"] === undefined
+  )
+    return false;
   if (!("step11Title" in value) || value["step11Title"] === undefined)
     return false;
   if (
@@ -539,6 +550,7 @@ export function BestellWizardStringsFromJSONTyped(
     step10Title: json["step10_title"],
     step10FlagStudent: json["step10_flag_student"],
     step10TextStudent: json["step10_text_student"],
+    step10SingleProductTypeHint: json["step_10_single_product_type_hint"],
     step11Title: json["step11_title"],
     step11PrivacyPolicyLabel: json["step11_privacy_policy_label"],
     step11PrivacyPolicyText: json["step11_privacy_policy_text"],
@@ -607,6 +619,7 @@ export function BestellWizardStringsToJSONTyped(
     step10_title: value["step10Title"],
     step10_flag_student: value["step10FlagStudent"],
     step10_text_student: value["step10TextStudent"],
+    step_10_single_product_type_hint: value["step10SingleProductTypeHint"],
     step11_title: value["step11Title"],
     step11_privacy_policy_label: value["step11PrivacyPolicyLabel"],
     step11_privacy_policy_text: value["step11PrivacyPolicyText"],

@@ -69,6 +69,7 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
             "product_type_id": self.product_1.type.id,
             "shopping_cart": {self.product_1.id: 3, self.product_2.id: 2},
             "sepa_allowed": True,
+            "cancellation_policy_read": True,
             "pickup_location_id": self.pickup_location.id,
             "growing_period_id": self.growing_period.id,
             "account_owner": "new account owner",
@@ -165,6 +166,24 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
         mock_apply_changes.assert_not_called()
         self.assertFalse(Subscription.objects.exists())
 
+    @patch.object(SubscriptionUpdateViewChangeApplier, "apply_changes", autospec=True)
+    def test_post_cancellationPolicyNotRead_noChangesApplied(
+        self, mock_apply_changes: Mock
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        data = self.build_valid_post_data_for_member(member.id)
+        data["cancellation_policy_read"] = False
+
+        response_content = self.send_request_and_assert_response_200(data=data)
+
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Die Widerrufsbelehrung muss akzeptiert sein", response_content["error"]
+        )
+        mock_apply_changes.assert_not_called()
+        self.assertFalse(Subscription.objects.exists())
+
     def test_post_adminDoesChangesForAnotherMember_returns200(self):
         user = MemberFactory.create(is_superuser=True)
         target = MemberFactory.create()
@@ -195,13 +214,6 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
         )
 
         self.assertFalse(Subscription.objects.exists())
-
-    def assert_order_confirmed(self, response_content: dict):
-        self.assertTrue(
-            response_content["order_confirmed"],
-            f"Order should be confirmed, error: {response_content["error"]}",
-        )
-        self.assertIsNone(response_content["error"])
 
     def send_request_and_assert_response_200(self, data: dict):
         response = self.send_request_and_assert_status_code(

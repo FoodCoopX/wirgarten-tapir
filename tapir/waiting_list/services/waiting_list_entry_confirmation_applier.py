@@ -21,9 +21,16 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.subscriptions.services.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
+)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.waiting_list.models import WaitingListChangeConfirmedLogEntry
-from tapir.wirgarten.models import WaitingListEntry, Member, OrderFeedback
+from tapir.wirgarten.models import (
+    WaitingListEntry,
+    Member,
+    OrderFeedback,
+)
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.utils import get_now, get_today
 
@@ -63,10 +70,8 @@ class WaitingListEntryConfirmationApplier:
         if reference_date is None:
             reference_date = get_today(cache=cache)
 
-        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=reference_date,
-            apply_buffer_time=False,
-            cache=cache,
+        contract_start_date = cls.get_contract_start_date(
+            waiting_list_entry=waiting_list_entry, cache=cache
         )
 
         cls.apply_pickup_location_changes(
@@ -124,6 +129,25 @@ class WaitingListEntryConfirmationApplier:
                 cache=cache,
                 actor=actor,
             )
+
+    @classmethod
+    def get_contract_start_date(
+        cls, waiting_list_entry: WaitingListEntry, cache: dict
+    ) -> datetime.date:
+        reference_date = waiting_list_entry.desired_start_date
+        if reference_date is None:
+            reference_date = get_today(cache=cache)
+
+        growing_periods = GrowingPeriodChoiceProvider.get_available_growing_periods(
+            reference_date=reference_date, cache=cache
+        )
+        return (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_periods[0],
+                apply_buffer_time=False,
+                cache=cache,
+            )
+        )
 
     @classmethod
     def create_member(

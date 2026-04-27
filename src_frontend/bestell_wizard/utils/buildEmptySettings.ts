@@ -67,6 +67,7 @@ export function buildEmptySettings(): BestellWizardSettings {
       step10Title: "",
       step10FlagStudent: "",
       step10TextStudent: "",
+      step10SingleProductTypeHint: "",
       step11Title: "",
       step11PrivacyPolicyLabel: "",
       step11PrivacyPolicyText: "",

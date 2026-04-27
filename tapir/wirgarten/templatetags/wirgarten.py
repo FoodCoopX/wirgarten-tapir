@@ -32,9 +32,13 @@ def format_date(value: date | datetime | str):
         try:
             return utils.format_date(datetime.strptime(value, "%Y-%m-%d").date())
         except ValueError:
-            return None
-    else:
-        return None
+            pass
+        try:
+            return utils.format_date(datetime.fromisoformat(value))
+        except ValueError:
+            pass
+
+    return None
 
 
 @register.filter(name="format_month_and_year")

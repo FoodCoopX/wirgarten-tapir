@@ -11,7 +11,9 @@ from tapir.wirgarten.service.email import send_email, Attachment
 class ExportMailSender:
     @classmethod
     def send_mails_for_export(
-        cls, export_results: List[AutomatedCsvExportResult | AutomatedPdfExportResult]
+        cls,
+        export_results: List[AutomatedCsvExportResult | AutomatedPdfExportResult],
+        cache: dict,
     ):
         # results are assumed to come all from the same definition
         export_definition = export_results[0].export_definition
@@ -32,4 +34,5 @@ class ExportMailSender:
             subject=f"Automatisiertes Export aus Tapir: {export_definition.name}",
             content=f"Anbei die Dateien: {';'.join([export_result.file.name for export_result in export_results])}",
             attachments=attachments,
+            cache=cache,
         )

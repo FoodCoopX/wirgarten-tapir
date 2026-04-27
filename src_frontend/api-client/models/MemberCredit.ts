@@ -26,28 +26,16 @@ export interface MemberCredit {
   id?: string;
   /**
    *
+   * @type {string}
+   * @memberof MemberCredit
+   */
+  member: string;
+  /**
+   *
    * @type {number}
    * @memberof MemberCredit
    */
   amount: number;
-  /**
-   *
-   * @type {Date}
-   * @memberof MemberCredit
-   */
-  readonly createdAt: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof MemberCredit
-   */
-  readonly updatedAt: Date;
-  /**
-   *
-   * @type {Date}
-   * @memberof MemberCredit
-   */
-  dueDate: Date;
   /**
    *
    * @type {string}
@@ -62,23 +50,27 @@ export interface MemberCredit {
   comment: string;
   /**
    *
-   * @type {string}
+   * @type {Date}
    * @memberof MemberCredit
    */
-  member: string;
+  dueDate: Date;
+  /**
+   *
+   * @type {Date}
+   * @memberof MemberCredit
+   */
+  settledOn?: Date | null;
 }
 
 /**
  * Check if a given object implements the MemberCredit interface.
  */
 export function instanceOfMemberCredit(value: object): value is MemberCredit {
+  if (!("member" in value) || value["member"] === undefined) return false;
   if (!("amount" in value) || value["amount"] === undefined) return false;
-  if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
-  if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
-  if (!("dueDate" in value) || value["dueDate"] === undefined) return false;
   if (!("purpose" in value) || value["purpose"] === undefined) return false;
   if (!("comment" in value) || value["comment"] === undefined) return false;
-  if (!("member" in value) || value["member"] === undefined) return false;
+  if (!("dueDate" in value) || value["dueDate"] === undefined) return false;
   return true;
 }
 
@@ -95,13 +87,13 @@ export function MemberCreditFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
+    member: json["member"],
     amount: json["amount"],
-    createdAt: new Date(json["created_at"]),
-    updatedAt: new Date(json["updated_at"]),
-    dueDate: new Date(json["due_date"]),
     purpose: json["purpose"],
     comment: json["comment"],
-    member: json["member"],
+    dueDate: new Date(json["due_date"]),
+    settledOn:
+      json["settled_on"] == null ? undefined : new Date(json["settled_on"]),
   };
 }
 
@@ -110,7 +102,7 @@ export function MemberCreditToJSON(json: any): MemberCredit {
 }
 
 export function MemberCreditToJSONTyped(
-  value?: Omit<MemberCredit, "created_at" | "updated_at"> | null,
+  value?: MemberCredit | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -119,10 +111,14 @@ export function MemberCreditToJSONTyped(
 
   return {
     id: value["id"],
+    member: value["member"],
     amount: value["amount"],
-    due_date: value["dueDate"].toISOString().substring(0, 10),
     purpose: value["purpose"],
     comment: value["comment"],
-    member: value["member"],
+    due_date: value["dueDate"].toISOString().substring(0, 10),
+    settled_on:
+      value["settledOn"] == null
+        ? undefined
+        : (value["settledOn"] as any).toISOString(),
   };
 }

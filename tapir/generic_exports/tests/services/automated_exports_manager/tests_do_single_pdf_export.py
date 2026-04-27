@@ -25,8 +25,11 @@ class TestDoSinglePdfExport(TapirIntegrationTest):
         create_exported_files.return_value = created_files
         export_results = [Mock(), Mock(), Mock()]
         mock_result_objects.create.side_effect = export_results
+        cache = Mock()
 
-        AutomatedExportsManager.do_single_pdf_export(export, reference_datetime)
+        AutomatedExportsManager.do_single_pdf_export(
+            export, reference_datetime, cache=cache
+        )
         create_exported_files.assert_called_once_with(export, reference_datetime)
         self.assertEqual(3, mock_result_objects.create.call_count)
         mock_result_objects.create.assert_has_calls(
@@ -36,4 +39,4 @@ class TestDoSinglePdfExport(TapirIntegrationTest):
             ]
         )
 
-        mock_send_mails_for_export.assert_called_once_with(export_results)
+        mock_send_mails_for_export.assert_called_once_with(export_results, cache=cache)

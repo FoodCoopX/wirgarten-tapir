@@ -635,6 +635,19 @@ class ParameterDefinitionsBestellwizard:
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP10_SINGLE_PRODUCT_TYPE_HINT,
+            label="Seite 10: Zusammenfassung - Hinweis bei einzelner Vertragsart",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Wird angezeigt, wenn die Zusammenfassung nur eine einzelne Vertragsart betrifft (z.B. beim Bearbeiten eines bestehenden Vertrags). Wenn leer, wird kein Hinweis angezeigt. "
+            + HTML_ALLOWED_TEXT,
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
             label="Seite 11: Widerruf und Datenschutz - Titel",
             datatype=TapirParameterDatatype.STRING,

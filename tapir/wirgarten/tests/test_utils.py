@@ -39,6 +39,13 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
             f"Unexpected status code, response content : {response.content.decode()}",
         )
 
+    def assert_order_confirmed(self, response_content: dict):
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should be confirmed, error: {response_content["error"]}",
+        )
+        self.assertIsNone(response_content["error"])
+
 
 class TapirUnitTest(TapirFactoryMixin, SimpleTestCase):
     def setUp(self) -> None:
