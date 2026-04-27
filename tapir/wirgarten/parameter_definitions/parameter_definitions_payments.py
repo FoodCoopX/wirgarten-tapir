@@ -5,7 +5,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
-from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
+from tapir.payments.services.mandate_reference_pattern_validator import (
+    MandateReferencePatternValidator,
+)
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -127,13 +129,14 @@ class ParameterDefinitionsPayments:
             order_priority=order_priority,
             meta=ParameterMeta(
                 vars_hint=[
-                    MandateReferenceProvider.TOKEN_FIRST_NAME,
-                    MandateReferenceProvider.TOKEN_LAST_NAME,
-                    MandateReferenceProvider.TOKEN_MEMBER_NUMBER_SHORT,
-                    MandateReferenceProvider.TOKEN_MEMBER_NUMBER_LONG,
-                    MandateReferenceProvider.TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX,
-                    MandateReferenceProvider.TOKEN_RANDOM,
-                ]
+                    MandateReferencePatternValidator.TOKEN_FIRST_NAME,
+                    MandateReferencePatternValidator.TOKEN_LAST_NAME,
+                    MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_SHORT,
+                    MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_LONG,
+                    MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX,
+                    MandateReferencePatternValidator.TOKEN_RANDOM,
+                ],
+                validators=[MandateReferencePatternValidator.validate_pattern],
             ),
         )
         order_priority -= 1

@@ -5,6 +5,9 @@ from django.core.exceptions import ImproperlyConfigured
 from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.mandate_reference_pattern_validator import (
+    MandateReferencePatternValidator,
+)
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import Member, MandateReference
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -12,14 +15,6 @@ from tapir.wirgarten.utils import get_now
 
 
 class MandateReferenceProvider:
-    MANDATE_REF_LENGTH = 35
-    MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    TOKEN_FIRST_NAME = "vorname"
-    TOKEN_LAST_NAME = "nachname"
-    TOKEN_MEMBER_NUMBER_SHORT = "mitgliedsnummer_kurz"
-    TOKEN_MEMBER_NUMBER_LONG = "mitgliedsnummer_lang"
-    TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX = "mitgliedsnummer_ohne_prefix"
-    TOKEN_RANDOM = "zufall"
 
     @classmethod
     def get_or_create_mandate_reference(
@@ -72,47 +67,54 @@ class MandateReferenceProvider:
             cls._validate_member_number_is_not_required(member=member, pattern=pattern)
 
         for token in [
-            cls.TOKEN_MEMBER_NUMBER_LONG,
-            cls.TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX,
+            MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_LONG,
+            MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX,
         ]:
             if token in pattern:
                 raise NotImplementedError("Waiting for US 4.3, PR #1084")
 
         pattern = pattern.replace(
-            cls._get_token_with_braces(cls.TOKEN_FIRST_NAME),
+            MandateReferencePatternValidator.get_token_with_braces(
+                MandateReferencePatternValidator.TOKEN_FIRST_NAME
+            ),
             unidecode(member.first_name[:5]),
         )
         pattern = pattern.replace(
-            cls._get_token_with_braces(cls.TOKEN_LAST_NAME),
+            MandateReferencePatternValidator.get_token_with_braces(
+                MandateReferencePatternValidator.TOKEN_LAST_NAME
+            ),
             unidecode(member.last_name[:5]),
         )
         pattern = pattern.replace(
-            cls._get_token_with_braces(cls.TOKEN_MEMBER_NUMBER_SHORT),
+            MandateReferencePatternValidator.get_token_with_braces(
+                MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_SHORT
+            ),
             str(member.member_no),
         )
 
-        target_length = cls.MANDATE_REF_LENGTH - len(
-            pattern.replace(cls._get_token_with_braces(cls.TOKEN_RANDOM), "")
+        target_length = MandateReferencePatternValidator.MANDATE_REF_LENGTH - len(
+            pattern.replace(
+                MandateReferencePatternValidator.get_token_with_braces(
+                    MandateReferencePatternValidator.TOKEN_RANDOM
+                ),
+                "",
+            )
         )
         pattern = pattern.replace(
-            "{zufall}", nanoid.generate(cls.MANDATE_REF_ALPHABET, target_length)
+            "{zufall}",
+            nanoid.generate(
+                MandateReferencePatternValidator.RANDOM_TOKEN_ALPHABET, target_length
+            ),
         )
 
         return pattern.upper()
 
     @classmethod
     def _validate_member_number_is_not_required(cls, pattern: str, member: Member):
-        tokens_that_require_a_member_number = [
-            cls.TOKEN_MEMBER_NUMBER_SHORT,
-            cls.TOKEN_MEMBER_NUMBER_LONG,
-            cls.TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX,
-        ]
-        for token in tokens_that_require_a_member_number:
-            if cls._get_token_with_braces(token) in pattern:
+        for (
+            token
+        ) in MandateReferencePatternValidator.TOKENS_THAT_REQUIRE_A_MEMBER_NUMBER:
+            if MandateReferencePatternValidator.get_token_with_braces(token) in pattern:
                 raise ImproperlyConfigured(
                     f"The pattern for mandate references is {pattern}, which uses a member number, but the given member does not have a member number: {member}"
                 )
-
-    @staticmethod
-    def _get_token_with_braces(token: str):
-        return f"{{{token}}}"
