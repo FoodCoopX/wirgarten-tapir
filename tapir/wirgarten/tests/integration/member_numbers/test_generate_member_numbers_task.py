@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -61,13 +61,13 @@ class TestGenerateMemberNumbersTask(TapirIntegrationTest):
         self.mock_fire_action.assert_not_called()
 
     @patch.object(
-        TrialPeriodManager,
-        "get_subscriptions_in_trial_period",
+        MemberNumberService,
+        "is_member_in_subscription_trial",
         autospec=True,
-        return_value=["fake_sub"],
+        return_value=True,
     )
     def test_generateMemberNumbers_trialToggleOffAndMemberInTrial_memberStaysWithoutNumber(
-        self, _mock_get_subscriptions
+        self, _mock_is_member_in_subscription_trial
     ):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, True)
         member = self._create_member_without_number()

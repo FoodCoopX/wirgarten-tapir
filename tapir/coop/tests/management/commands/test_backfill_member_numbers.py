@@ -17,9 +17,9 @@ class TestBackfillMemberNumbersCommand(TapirIntegrationTest):
     @staticmethod
     def _create_members_without_number(count: int) -> list[Member]:
         members = MemberFactory.create_batch(count)
-        pks = [m.pk for m in members]
-        Member.objects.filter(pk__in=pks).update(member_no=None)
-        return list(Member.objects.filter(pk__in=pks))
+        ids = [m.id for m in members]
+        Member.objects.filter(id__in=ids).update(member_no=None)
+        return list(Member.objects.filter(id__in=ids))
 
     def test_backfillMemberNumbers_membersWithoutNumber_allGetNumbers(self):
         members = self._create_members_without_number(3)
@@ -27,11 +27,11 @@ class TestBackfillMemberNumbersCommand(TapirIntegrationTest):
         call_command("backfill_member_numbers")
 
         refreshed = {
-            m.pk: m.member_no
-            for m in Member.objects.filter(pk__in=[m.pk for m in members])
+            m.id: m.member_no
+            for m in Member.objects.filter(id__in=[m.id for m in members])
         }
-        for pk, number in refreshed.items():
-            self.assertIsNotNone(number, f"Member {pk} should have a number")
+        for member_id, number in refreshed.items():
+            self.assertIsNotNone(number, f"Member {member_id} should have a number")
         self.assertEqual(3, len(set(refreshed.values())))
 
     def test_backfillMemberNumbers_dryRun_nothingChanges(self):
@@ -39,7 +39,7 @@ class TestBackfillMemberNumbersCommand(TapirIntegrationTest):
 
         call_command("backfill_member_numbers", "--dry-run")
 
-        refreshed = Member.objects.filter(pk__in=[m.pk for m in members])
+        refreshed = Member.objects.filter(id__in=[m.id for m in members])
         for member in refreshed:
             self.assertIsNone(member.member_no)
 
@@ -48,15 +48,15 @@ class TestBackfillMemberNumbersCommand(TapirIntegrationTest):
 
         call_command("backfill_member_numbers")
         first_run = {
-            m.pk: m.member_no
-            for m in Member.objects.filter(pk__in=[m.pk for m in members])
+            m.id: m.member_no
+            for m in Member.objects.filter(id__in=[m.id for m in members])
         }
         for number in first_run.values():
             self.assertIsNotNone(number)
 
         call_command("backfill_member_numbers")
         second_run = {
-            m.pk: m.member_no
-            for m in Member.objects.filter(pk__in=[m.pk for m in members])
+            m.id: m.member_no
+            for m in Member.objects.filter(id__in=[m.id for m in members])
         }
         self.assertEqual(first_run, second_run)

@@ -211,6 +211,7 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
                         )
                     )
         context["subscriptions_trial_end_dates"] = subscriptions_trial_end_dates
+        context["cache"] = cache
 
         return context
 
@@ -227,6 +228,7 @@ class ExportSubscriptionList(View):
         # Get queryset based on filters and ordering
         filter_class = SubscriptionListFilter
         queryset = filter_class(request.GET, queryset=self.get_queryset()).qs
+        cache = {}
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")

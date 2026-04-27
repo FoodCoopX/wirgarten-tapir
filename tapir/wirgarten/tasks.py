@@ -30,7 +30,6 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
-    legal_status_is_cooperative,
     format_currency,
 )
 
@@ -199,15 +198,9 @@ def generate_member_numbers(cache: dict = None):
     if cache is None:
         cache = {}
     members = Member.objects.filter(member_no__isnull=True)
-    today = get_today(cache=cache)
 
     with transaction.atomic():
         for member in members:
-            if legal_status_is_cooperative(cache=cache):
-                coop_entry_date = member.coop_entry_date
-                if coop_entry_date is None or coop_entry_date > today:
-                    continue
-
             if not MemberNumberService.assign_member_number_if_eligible(
                 member, cache=cache
             ):
