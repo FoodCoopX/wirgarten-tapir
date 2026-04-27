@@ -5,6 +5,7 @@ from django.views import generic
 
 from tapir.configuration.forms import ParameterForm
 from tapir.configuration.models import TapirParameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class ParameterView(PermissionRequiredMixin, generic.FormView):
@@ -30,3 +31,10 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
             )
 
         return response
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data["mandate_reference_pattern_key"] = (
+            ParameterKeys.PAYMENT_MANDATE_REFERENCE_PATTERN
+        )
+        return context_data

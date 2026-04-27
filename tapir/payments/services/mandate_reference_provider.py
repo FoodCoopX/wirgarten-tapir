@@ -94,9 +94,11 @@ class MandateReferenceProvider:
         target_length = cls.MANDATE_REF_LENGTH - len(
             pattern.replace(cls._get_token_with_braces(cls.TOKEN_RANDOM), "")
         )
-        return pattern.replace(
+        pattern = pattern.replace(
             "{zufall}", nanoid.generate(cls.MANDATE_REF_ALPHABET, target_length)
         )
+
+        return pattern.upper()
 
     @classmethod
     def _validate_member_number_is_not_required(cls, pattern: str, member: Member):
