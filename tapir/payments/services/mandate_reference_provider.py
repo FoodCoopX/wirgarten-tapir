@@ -47,8 +47,7 @@ class MandateReferenceProvider:
             return mandate_refs[0]
 
         mandate_ref = cls.create_mandate_ref(member=member, cache=cache)
-        if mandate_ref_cache is not None:
-            mandate_ref_cache[member.id].append(mandate_ref)
+        mandate_ref_cache[member.id].insert(0, mandate_ref)
 
         return mandate_ref
 
@@ -60,6 +59,7 @@ class MandateReferenceProvider:
                 key=ParameterKeys.PAYMENT_MANDATE_REFERENCE_PATTERN, cache=cache
             ),
         )
+
         return MandateReference.objects.create(
             ref=ref, member=member, start_ts=get_now(cache=cache)
         )
@@ -104,7 +104,9 @@ class MandateReferenceProvider:
             )
         )
         pattern = pattern.replace(
-            "{zufall}",
+            MandateReferencePatternValidator.get_token_with_braces(
+                MandateReferencePatternValidator.TOKEN_RANDOM
+            ),
             nanoid.generate(
                 MandateReferencePatternValidator.RANDOM_TOKEN_ALPHABET, target_length
             ),

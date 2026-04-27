@@ -532,6 +532,8 @@ class CabLoggedInUserChangeTargetsPaymentRhythm(APIView):
 
 
 class MandateReferencePreviewApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
     @extend_schema(
         responses={200: MandateReferencePreviewResponseSerializer},
         parameters=[OpenApiParameter(name="pattern", type=str)],

@@ -33,7 +33,7 @@ class MandateReferencePatternValidator:
         cls.validate_member_numbers_can_only_be_used_if_they_are_always_assigned(
             pattern
         )
-        cls.validate_pattern_doesnt_container_illegal_characters(pattern)
+        cls.validate_pattern_doesnt_contains_illegal_characters(pattern)
 
     @classmethod
     def validate_pattern_contains_at_least_one_unique_token(cls, pattern: str):
@@ -64,7 +64,7 @@ class MandateReferencePatternValidator:
             )
 
     @classmethod
-    def validate_pattern_doesnt_container_illegal_characters(cls, pattern: str):
+    def validate_pattern_doesnt_contains_illegal_characters(cls, pattern: str):
         for token in cls.ALL_TOKENS:
             pattern = pattern.replace(cls.get_token_with_braces(token), "")
 

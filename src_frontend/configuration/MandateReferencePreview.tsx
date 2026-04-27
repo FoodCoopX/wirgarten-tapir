@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Record } from "react-bootstrap-icons";
 import { PaymentsApi } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";

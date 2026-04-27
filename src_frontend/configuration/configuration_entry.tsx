@@ -11,7 +11,7 @@ if (configElement) {
   ) as HTMLInputElement;
 
   const previewDiv = document.createElement("div");
-  inputElement?.parentElement?.insertBefore(previewDiv, inputElement);
+  inputElement.insertAdjacentElement("afterend", previewDiv);
 
   const root = createRoot(previewDiv);
   root.render(<MandateReferencePreview inputField={inputElement} />);
