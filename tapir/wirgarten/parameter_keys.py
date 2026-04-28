@@ -38,6 +38,17 @@ class ParameterKeys:
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
     PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
     PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
+    PAYMENT_INTENDED_USE_ENABLE_CUSTOM = f"{PREFIX}.payment.intended_use.enable_custom"
+    PAYMENT_INTENDED_USE_COOP_SHARES = f"{PREFIX}.payment.intended_use.coop_shares"
+    PAYMENT_INTENDED_USE_MONTHLY_INVOICE = (
+        f"{PREFIX}.payment.intended_use.monthly_invoice"
+    )
+    PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY = (
+        f"{PREFIX}.payment.intended_use.soli_contribution_only"
+    )
+    PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE = (
+        f"{PREFIX}.payment.intended_use.multiple_month_invoice"
+    )
     MEMBERS_CAN_SEE_OWN_PAYMENTS = (
         f"{PREFIX}.member.dashboard.members_can_see_own_payments"
     )

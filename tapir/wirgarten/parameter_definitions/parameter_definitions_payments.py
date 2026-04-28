@@ -4,10 +4,11 @@ import typing
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from tapir.configuration.models import TapirParameterDatatype
-from tapir.configuration.parameter import ParameterMeta
+from tapir.configuration.parameter import ParameterMeta, get_parameter_value
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import legal_status_is_cooperative
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.parameters import (
@@ -110,5 +111,81 @@ class ParameterDefinitionsPayments:
             description="Wird im Export der Lastschriften oben eingefügt, da für Umwandlung in XML-Datei notwendig.",
             category=ParameterCategory.PAYMENT,
             order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM,
+            label="Personalisierte Verwendungszwecke aktivieren",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES,
+            label="Verwendungszweck für Genoanteilsbuchungen",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                )
+                and legal_status_is_cooperative(cache=cache)
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE,
+            label="Verwendungszweck für Beitragsabbuchungen regulär",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                )
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY,
+            label="Verwendungszweck für Beitragsabbuchungen wenn Fördermitglied",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                )
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE,
+            label="Verwendungszweck für Beitragsabbuchungen erstmalig",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Wird verwendet typischerweise in der Probezeit, wenn eine Buchung mehr Monate abdeckt als normal.",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                )
+            ),
         )
         order_priority -= 1
