@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
@@ -9,7 +9,7 @@ from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class ProductCancellationDataBuilderGetDateLimitForTrialCancellation(SimpleTestCase):
+class ProductCancellationDataBuilderGetDateLimitForTrialCancellation(TapirUnitTest):
     @patch.object(
         ProductCancellationDataBuilder,
         "get_date_limit_for_trial_cancellation_fixed_mode",

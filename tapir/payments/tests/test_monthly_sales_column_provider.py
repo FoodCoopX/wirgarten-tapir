@@ -1,7 +1,7 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.monthly_sales_data import MonthlySalesData
 from tapir.payments.services.monthly_sales_column_provider import (
@@ -9,7 +9,7 @@ from tapir.payments.services.monthly_sales_column_provider import (
 )
 
 
-class TestMonthlySalesColumnProvider(SimpleTestCase):
+class TestMonthlySalesColumnProvider(TapirUnitTest):
     def test_getValueProductTypeName_default_returnsName(self):
         data = MonthlySalesData(sales=Mock(), contract_type_name="test name")
 

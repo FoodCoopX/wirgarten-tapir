@@ -1,14 +1,13 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
-
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
+class TestJokerManagementServiceCanJokerBeUsedInWeek(TapirUnitTest):
     @staticmethod
     def setup_mocks_so_that_joker_can_be_used(
         mock_can_joker_be_used_relative_to_restrictions: Mock,

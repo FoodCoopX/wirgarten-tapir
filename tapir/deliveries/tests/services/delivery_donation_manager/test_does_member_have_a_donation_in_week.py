@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.config import (
     DELIVERY_DONATION_MODE_DISABLED,
@@ -15,7 +15,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import MemberFactory
 
 
-class TestDoesMemberHaveADonationInWeek(SimpleTestCase):
+class TestDoesMemberHaveADonationInWeek(TapirUnitTest):
     def test_doesMemberHaveADonationInWeek_donationsAreDisabled_returnsFalse(self):
         cache = {}
         mock_parameter_value(

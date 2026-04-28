@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -10,7 +10,7 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestGetRenewedSubscriptionTrialDate(SimpleTestCase):
+class TestGetRenewedSubscriptionTrialDate(TapirUnitTest):
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
     )

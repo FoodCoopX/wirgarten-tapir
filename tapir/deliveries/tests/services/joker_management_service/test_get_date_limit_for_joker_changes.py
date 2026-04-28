@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
@@ -8,7 +8,7 @@ from tapir.deliveries.services.date_limit_for_delivery_change_calculator import 
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 
 
-class TestJokerManagementServiceGetDateLimitForJokerChanges(SimpleTestCase):
+class TestJokerManagementServiceGetDateLimitForJokerChanges(TapirUnitTest):
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
         "calculate_date_limit_for_delivery_changes_in_week",

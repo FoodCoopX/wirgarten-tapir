@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import Mock, patch, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.subscriptions.services.subscription_cancellation_manager import (
@@ -11,7 +11,7 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestGetEarliestPossibleCancellationDateForSolidarityContribution(SimpleTestCase):
+class TestGetEarliestPossibleCancellationDateForSolidarityContribution(TapirUnitTest):
     @patch.object(
         TrialPeriodManager, "get_earliest_trial_cancellation_date", autospec=True
     )

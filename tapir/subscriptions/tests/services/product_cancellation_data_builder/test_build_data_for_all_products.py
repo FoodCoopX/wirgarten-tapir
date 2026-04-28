@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
@@ -8,7 +8,7 @@ from tapir.subscriptions.services.product_cancellation_data_builder import (
 from tapir.wirgarten.tests.factories import ProductFactory
 
 
-class TestProductCancellationDataBuilderBuildDataForAllProducts(SimpleTestCase):
+class TestProductCancellationDataBuilderBuildDataForAllProducts(TapirUnitTest):
     maxDiff = 2000
 
     @patch.object(

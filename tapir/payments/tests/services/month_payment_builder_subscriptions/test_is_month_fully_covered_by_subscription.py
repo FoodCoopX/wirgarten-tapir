@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
@@ -8,7 +8,7 @@ from tapir.payments.services.month_payment_builder_subscriptions import (
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
-class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
+class TestIsMonthFullyCoveredBySubscription(TapirUnitTest):
     def test_isMonthFullyCoveredBySubscription_givenMonthIsBeforeSubscription_returnsFalse(
         self,
     ):

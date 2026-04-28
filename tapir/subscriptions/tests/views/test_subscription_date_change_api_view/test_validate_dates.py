@@ -2,7 +2,7 @@ import datetime
 from unittest.mock import Mock, patch
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.views.other import SubscriptionDateChangeApiView
 from tapir.utils.services.tapir_cache import TapirCache
@@ -10,7 +10,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import SubscriptionFactory, GrowingPeriodFactory
 
 
-class TestValidateDates(SimpleTestCase):
+class TestValidateDates(TapirUnitTest):
     def test_validateDates_givenDatesAreTheSameAsSubscription_raisesError(self):
         subscription = SubscriptionFactory.build(
             start_date=datetime.date(year=2022, month=5, day=17),

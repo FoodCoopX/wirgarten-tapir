@@ -2,14 +2,14 @@ import datetime
 from unittest.mock import Mock
 
 from django.core.exceptions import ImproperlyConfigured
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
     SubscriptionChangeWeekToDateConverter,
 )
 
 
-class TestGetDateFromCalendarWeek(SimpleTestCase):
+class TestGetDateFromCalendarWeek(TapirUnitTest):
     @staticmethod
     def create_growing_period(start_date, end_date):
         growing_period = Mock()

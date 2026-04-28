@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.coop.services.membership_cancellation_manager import (
@@ -10,7 +10,7 @@ from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestShouldAssignMemberNumber(SimpleTestCase):
+class TestShouldAssignMemberNumber(TapirUnitTest):
     def test_shouldAssignMemberNumber_memberAlreadyHasNumber_returnsFalse(self):
         member = Mock()
         member.member_no = 5

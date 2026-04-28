@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
@@ -14,7 +14,7 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 
 
-class TestGetCurrentAndRenewedSolidarityContributions(SimpleTestCase):
+class TestGetCurrentAndRenewedSolidarityContributions(TapirUnitTest):
 
     def setUp(self):
         # The contribution for january should be included even if it starts not on the 1st of the month, see #893 https://github.com/FoodCoopX/wirgarten-tapir/issues/893#issuecomment-3977453120

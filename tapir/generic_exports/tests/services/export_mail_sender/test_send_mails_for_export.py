@@ -1,12 +1,12 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports.services.export_mail_sender import ExportMailSender
 from tapir.wirgarten.service.email import Attachment
 
 
-class TestSendMailForExport(SimpleTestCase):
+class TestSendMailForExport(TapirUnitTest):
     @patch("tapir.generic_exports.services.export_mail_sender.send_email")
     def test_sendMailsForExport_noRecipients_sendMailsNotCalled(
         self, mock_send_email: Mock

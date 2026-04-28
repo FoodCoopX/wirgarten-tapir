@@ -1,13 +1,13 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports.services.pdf_export_builder import PdfExportBuilder
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestCreateExportedFiles(SimpleTestCase):
+class TestCreateExportedFiles(TapirUnitTest):
     @patch.object(PdfExportBuilder, "create_single_file")
     @patch.object(PdfExportBuilder, "build_contexts")
     def test_createExportedFiles_generateSingleExport_createsOneFile(

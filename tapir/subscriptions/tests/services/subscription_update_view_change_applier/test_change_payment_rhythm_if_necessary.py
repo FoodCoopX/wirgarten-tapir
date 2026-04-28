@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -21,7 +21,7 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
     "get_date_of_next_payment_rhythm_change",
     autospec=True,
 )
-class TestChangePaymentRhythmIfNecessary(SimpleTestCase):
+class TestChangePaymentRhythmIfNecessary(TapirUnitTest):
     def setUp(self):
         super().setUp()
         self.now = mock_timezone(

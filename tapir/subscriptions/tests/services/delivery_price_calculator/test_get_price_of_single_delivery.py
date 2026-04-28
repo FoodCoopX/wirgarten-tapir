@@ -1,14 +1,14 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
 
 
-class TestGetPriceOfSingleDelivery(SimpleTestCase):
+class TestGetPriceOfSingleDelivery(TapirUnitTest):
     @patch.object(DeliveryPriceCalculator, "get_number_of_months_in_growing_period")
     @patch("tapir.subscriptions.services.delivery_price_calculator.get_product_price")
     def test_getPriceOfSingleDelivery_default_returnsCorrectPrice(

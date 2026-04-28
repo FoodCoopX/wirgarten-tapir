@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -8,7 +8,7 @@ from tapir.payments.services.member_payment_rhythm_service import (
 )
 
 
-class TestIsStartOfRhythmPeriod(SimpleTestCase):
+class TestIsStartOfRhythmPeriod(TapirUnitTest):
     @patch.object(
         MemberPaymentRhythmService, "get_month_index_relative_to_growing_period"
     )

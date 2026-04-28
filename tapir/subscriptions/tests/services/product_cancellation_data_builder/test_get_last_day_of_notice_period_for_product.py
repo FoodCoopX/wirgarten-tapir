@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import Mock, call, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.product_cancellation_data_builder import (
@@ -10,7 +10,7 @@ from tapir.subscriptions.services.product_cancellation_data_builder import (
 
 
 class ProductCancellationDataBuilderGetLastDayOfNoticePeriodForProduct(
-    SimpleTestCase,
+    TapirUnitTest,
 ):
     @patch.object(
         NoticePeriodManager,

@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
@@ -14,7 +14,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
-class TestGetCurrentAndRenewedSubscriptions(SimpleTestCase):
+class TestGetCurrentAndRenewedSubscriptions(TapirUnitTest):
     @patch.object(TrialPeriodManager, "is_contract_in_trial", autospec=True)
     @patch.object(
         AutomaticSubscriptionRenewalService,

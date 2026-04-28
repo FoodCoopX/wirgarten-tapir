@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.subscription_update_view_validator import (
@@ -9,7 +9,7 @@ from tapir.subscriptions.services.subscription_update_view_validator import (
 )
 
 
-class TestSubscriptionUpdateViewValidatorValidateEverything(SimpleTestCase):
+class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
     def build_default_params(self):
         self.mock_order = Mock()
         self.mock_product_type = Mock()

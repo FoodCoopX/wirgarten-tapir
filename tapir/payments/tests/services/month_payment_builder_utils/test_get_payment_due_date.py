@@ -1,14 +1,14 @@
 import datetime
 from unittest.mock import Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestMonthPaymentBuilderUtilsGetPaymentDueDate(SimpleTestCase):
+class TestMonthPaymentBuilderUtilsGetPaymentDueDate(TapirUnitTest):
     def test_getPaymentDueDate_contractsOnTrialAllCreatedAfterDueDate_returnsDueDateOneMonthAfterInputDate(
         self,
     ):

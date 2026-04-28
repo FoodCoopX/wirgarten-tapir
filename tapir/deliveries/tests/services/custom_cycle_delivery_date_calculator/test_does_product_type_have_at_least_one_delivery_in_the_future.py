@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
     CustomCycleDeliveryDateCalculator,
@@ -9,7 +9,7 @@ from tapir.deliveries.tests.factories import CustomCycleScheduledDeliveryWeekFac
 from tapir.wirgarten.tests.factories import ProductTypeFactory, GrowingPeriodFactory
 
 
-class TestDoesProductTypeHaveAtLeastOneDeliveryInTheFuture(SimpleTestCase):
+class TestDoesProductTypeHaveAtLeastOneDeliveryInTheFuture(TapirUnitTest):
     def test_doesProductTypeHaveAtLeastOneDeliveryInTheFuture_noDeliveriesDefined_returnFalse(
         self,
     ):

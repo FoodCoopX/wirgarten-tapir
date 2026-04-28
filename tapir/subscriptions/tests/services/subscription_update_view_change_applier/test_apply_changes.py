@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.pickup_locations.services.member_pickup_location_getter import (
@@ -33,7 +33,7 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
 @patch.object(
     MemberPickupLocationGetter, "get_member_pickup_location_id", autospec=True
 )
-class TestSubscriptionUpdateViewChangeApplierApplyChanges(SimpleTestCase):
+class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
     def setUp(self):
         super().setUp()
         self.now = mock_timezone(

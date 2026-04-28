@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.subscription_update_view_validator import (
     SubscriptionUpdateViewValidator,
@@ -11,7 +11,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 
 @patch.object(TapirCache, "get_product_by_id", autospec=True)
 class TestSubscriptionUpdateViewValidatorValidateAllProductsBelongToProductType(
-    SimpleTestCase,
+    TapirUnitTest,
 ):
     def test_validateAllProductsBelongToProductType_emptyOrder_noErrorRaised(
         self,

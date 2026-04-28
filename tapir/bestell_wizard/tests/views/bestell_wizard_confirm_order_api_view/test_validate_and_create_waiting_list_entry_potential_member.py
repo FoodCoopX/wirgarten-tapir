@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
@@ -16,7 +16,7 @@ from tapir.waiting_list.services.waiting_list_entry_validator import (
 )
 
 
-class TestValidateAndCreateWaitingListEntryPotentialMember(SimpleTestCase):
+class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
     @patch.object(
         WaitingListEntryConfirmationEmailSender, "send_confirmation_mail", autospec=True
     )

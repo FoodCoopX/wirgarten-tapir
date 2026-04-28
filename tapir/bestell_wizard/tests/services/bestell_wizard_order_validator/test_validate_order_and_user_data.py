@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
@@ -13,7 +13,7 @@ from tapir.solidarity_contribution.services.solidarity_validator import (
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 
 
-class TestValidateOrderAndUserData(SimpleTestCase):
+class TestValidateOrderAndUserData(TapirUnitTest):
     @patch.object(
         PersonalDataValidator, "validate_personal_data_new_member", autospec=True
     )

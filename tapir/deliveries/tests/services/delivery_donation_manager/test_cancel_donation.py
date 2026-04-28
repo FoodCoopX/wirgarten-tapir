@@ -1,11 +1,11 @@
 from unittest.mock import Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 
 
-class TestCancelDonation(SimpleTestCase):
+class TestCancelDonation(TapirUnitTest):
     def test_cancelDonation_default_callsDelete(self):
         donation = Mock()
 
