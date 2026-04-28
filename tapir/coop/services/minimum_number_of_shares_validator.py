@@ -2,6 +2,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import legal_status_is_cooperative
 
 
 class MinimumNumberOfSharesValidator:
@@ -9,6 +10,9 @@ class MinimumNumberOfSharesValidator:
     def get_minimum_number_of_shares_for_order(
         ordered_products_id_to_quantity_map: dict, cache: dict
     ):
+        if not legal_status_is_cooperative(cache=cache):
+            return 0
+
         min_number_of_shares_from_order = sum(
             [
                 TapirCache.get_product_by_id(

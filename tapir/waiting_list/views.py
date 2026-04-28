@@ -81,7 +81,12 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
+from tapir.wirgarten.utils import (
+    get_today,
+    get_now,
+    check_permission_or_self,
+    legal_status_is_cooperative,
+)
 
 
 class WaitingListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -614,12 +619,15 @@ class PublicWaitingListCreateEntryPotentialMemberView(APIView):
             shopping_cart=serializer.validated_data["shopping_cart"],
             cache=self.cache,
         )
+
+        number_of_coop_shares = serializer.validated_data["number_of_coop_shares"]
+        if not legal_status_is_cooperative(cache=self.cache):
+            number_of_coop_shares = 0
+
         try:
             WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
                 order=order,
-                number_of_coop_shares=serializer.validated_data[
-                    "number_of_coop_shares"
-                ],
+                number_of_coop_shares=number_of_coop_shares,
                 email=serializer.validated_data["email"],
                 cache=self.cache,
             )

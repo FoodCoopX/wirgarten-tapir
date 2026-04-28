@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 
 from tapir.configuration.models import TapirParameter
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.coop.views import ExistingMemberPurchasesSharesApiView
 from tapir.wirgarten.models import CoopShareTransaction, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -43,3 +44,13 @@ class TestValidateNumberOfShares(TapirIntegrationTest):
             ExistingMemberPurchasesSharesApiView.validate_number_of_shares(
                 number_of_shares_to_add=2, member=Member.objects.get(), cache={}
             )
+
+    def test_validateNumberOfShares_legalStatusIsNotCooperative_doesNothing(self):
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).update(value=LEGAL_STATUS_ASSOCIATION)
+        self.create_member_and_transactions()
+
+        ExistingMemberPurchasesSharesApiView.validate_number_of_shares(
+            number_of_shares_to_add=0, member=Member.objects.get(), cache={}
+        )
