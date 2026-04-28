@@ -544,18 +544,19 @@ class MandateReferencePreviewApiView(APIView):
             first_name="Maximilian", last_name="Mustermann", member_no=123456
         )
         pattern = request.query_params.get("pattern")
+        cache = {}
 
         try:
             data = {
                 self._build_member_preview(
                     member_a
                 ): MandateReferenceProvider.build_mandate_ref(
-                    member=member_a, pattern=pattern
+                    member=member_a, pattern=pattern, cache=cache
                 ),
                 self._build_member_preview(
                     member_b
                 ): MandateReferenceProvider.build_mandate_ref(
-                    member=member_b, pattern=pattern
+                    member=member_b, pattern=pattern, cache=cache
                 ),
             }
         except Exception as error:

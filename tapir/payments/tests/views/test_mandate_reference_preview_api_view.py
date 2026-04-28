@@ -40,15 +40,3 @@ class TestMandateReferencePreviewApiView(TapirIntegrationTest):
             },
             response_content["previews"],
         )
-
-    def test_get_buildMandateRefRaises_returnsErrorMessage(self):
-        admin = MemberFactory.create(is_superuser=True)
-        self.client.force_login(admin)
-
-        url = reverse("payments:mandate_reference_preview")
-        response = self.client.get(f"{url}?pattern={{mitgliedsnummer_lang}}")
-
-        self.assertStatusCode(response, 200)
-        body = response.json()
-        self.assertEqual({}, body["previews"])
-        self.assertEqual("Waiting for US 4.3, PR #1084", body["error"])

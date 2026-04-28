@@ -26,7 +26,7 @@ class Command(BaseCommand):
             )
             if old_reference is not None:
                 new_reference = MandateReferenceProvider.build_mandate_ref(
-                    member=member, pattern=pattern
+                    member=member, pattern=pattern, cache=cache
                 )
                 if old_reference.ref == new_reference:
                     continue

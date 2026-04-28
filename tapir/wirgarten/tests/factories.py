@@ -122,6 +122,7 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference
         lambda o: MandateReferenceProvider.build_mandate_ref(
             member=o.member,
             pattern="{vorname}.{nachname}/MANDATE_REF_FOR_TEST/{zufall}",
+            cache={},
         )
     )
     member = factory.SubFactory(MemberFactory)

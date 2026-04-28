@@ -1,5 +1,8 @@
 from django.core.exceptions import ValidationError
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.parameter_keys import ParameterKeys
+
 
 class MandateReferencePatternValidator:
     MANDATE_REF_LENGTH = 35
@@ -51,8 +54,6 @@ class MandateReferencePatternValidator:
     def validate_member_numbers_can_only_be_used_if_they_are_always_assigned(
         cls, pattern: str
     ):
-        # TODO: to be implemented one US 4.3, PR #1084 is merged
-        return
         if any(
             cls.get_token_with_braces(token) in pattern
             for token in cls.TOKENS_THAT_REQUIRE_A_MEMBER_NUMBER

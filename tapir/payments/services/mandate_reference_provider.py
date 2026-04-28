@@ -5,6 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.mandate_reference_pattern_validator import (
     MandateReferencePatternValidator,
 )
@@ -72,6 +73,7 @@ class MandateReferenceProvider:
             pattern=get_parameter_value(
                 key=ParameterKeys.PAYMENT_MANDATE_REFERENCE_PATTERN, cache=cache
             ),
+            cache=cache,
         )
 
         return MandateReference.objects.create(
@@ -79,36 +81,50 @@ class MandateReferenceProvider:
         )
 
     @classmethod
-    def build_mandate_ref(cls, member: Member, pattern: str):
+    def build_mandate_ref(cls, member: Member, pattern: str, cache: dict):
         if member.member_no is None:
             cls._validate_member_number_is_not_required(member=member, pattern=pattern)
 
-        for token in [
-            MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_LONG,
-            MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX,
-        ]:
-            if token in pattern:
-                raise NotImplementedError("Waiting for US 4.3, PR #1084")
+        replacements = {
+            MandateReferencePatternValidator.TOKEN_FIRST_NAME: lambda: unidecode(
+                member.first_name[:5]
+            ),
+            MandateReferencePatternValidator.TOKEN_LAST_NAME: lambda: unidecode(
+                member.last_name[:5]
+            ),
+            MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_SHORT: lambda: str(
+                member.member_no
+            ),
+            MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_LONG: lambda: MemberNumberService.format_member_number(
+                member_number=member.member_no, cache=cache
+            ),
+            MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_WITHOUT_PREFIX: lambda: MemberNumberService.build_formatted_number(
+                member_number=member.member_no,
+                prefix="",
+                length=get_parameter_value(
+                    ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, cache=cache
+                ),
+            ),
+            MandateReferencePatternValidator.TOKEN_RANDOM: lambda: cls._fill_with_random_characters(
+                pattern
+            ),
+        }
 
-        pattern = pattern.replace(
-            MandateReferencePatternValidator.get_token_with_braces(
-                MandateReferencePatternValidator.TOKEN_FIRST_NAME
-            ),
-            unidecode(member.first_name[:5]),
-        )
-        pattern = pattern.replace(
-            MandateReferencePatternValidator.get_token_with_braces(
-                MandateReferencePatternValidator.TOKEN_LAST_NAME
-            ),
-            unidecode(member.last_name[:5]),
-        )
-        pattern = pattern.replace(
-            MandateReferencePatternValidator.get_token_with_braces(
-                MandateReferencePatternValidator.TOKEN_MEMBER_NUMBER_SHORT
-            ),
-            str(member.member_no),
-        )
+        for token, provider in replacements.items():
+            token_with_braces = MandateReferencePatternValidator.get_token_with_braces(
+                token
+            )
+            if token_with_braces not in pattern:
+                continue
+            pattern = pattern.replace(
+                MandateReferencePatternValidator.get_token_with_braces(token),
+                provider() or "",
+            )
 
+        return pattern.upper()
+
+    @classmethod
+    def _fill_with_random_characters(cls, pattern: str):
         target_length = MandateReferencePatternValidator.MANDATE_REF_LENGTH - len(
             pattern.replace(
                 MandateReferencePatternValidator.get_token_with_braces(
@@ -117,16 +133,9 @@ class MandateReferenceProvider:
                 "",
             )
         )
-        pattern = pattern.replace(
-            MandateReferencePatternValidator.get_token_with_braces(
-                MandateReferencePatternValidator.TOKEN_RANDOM
-            ),
-            nanoid.generate(
-                MandateReferencePatternValidator.RANDOM_TOKEN_ALPHABET, target_length
-            ),
+        return nanoid.generate(
+            MandateReferencePatternValidator.RANDOM_TOKEN_ALPHABET, target_length
         )
-
-        return pattern.upper()
 
     @classmethod
     def _validate_member_number_is_not_required(cls, pattern: str, member: Member):
