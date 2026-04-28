@@ -26,6 +26,12 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
         configure_mail_module()
         mock_keycloak(self)
 
+    @staticmethod
+    def _set_parameter(key: str, value) -> None:
+        from tapir.configuration.models import TapirParameter
+
+        TapirParameter.objects.filter(key=key).update(value=str(value))
+
     def assertStatusCode(self, response, expected_status_code):
         self.assertEqual(
             expected_status_code,

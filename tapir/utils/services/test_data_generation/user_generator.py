@@ -130,7 +130,7 @@ class UserGenerator:
         cls.link_members_to_pickup_location(
             members_that_need_a_pickup_location, organization=organization
         )
-        generate_member_numbers(print_results=False)
+        generate_member_numbers()
 
         # The creation date of subscriptions is used when generating payments , so we have to set a realistic date.
         Subscription.objects.update(created_at=F("start_date"))

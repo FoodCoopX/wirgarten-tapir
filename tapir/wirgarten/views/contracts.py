@@ -13,6 +13,7 @@ from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFi
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -210,6 +211,7 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
                         )
                     )
         context["subscriptions_trial_end_dates"] = subscriptions_trial_end_dates
+        context["cache"] = cache
 
         return context
 
@@ -226,6 +228,7 @@ class ExportSubscriptionList(View):
         # Get queryset based on filters and ordering
         filter_class = SubscriptionListFilter
         queryset = filter_class(request.GET, queryset=self.get_queryset()).qs
+        cache = {}
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")
@@ -256,7 +259,9 @@ class ExportSubscriptionList(View):
             for _ in range(sub.quantity):
                 writer.writerow(
                     [
-                        sub.member.member_no,
+                        MemberNumberService.format_member_number(
+                            sub.member.member_no, cache=cache
+                        ),
                         sub.member.first_name,
                         sub.member.last_name,
                         sub.member.email,

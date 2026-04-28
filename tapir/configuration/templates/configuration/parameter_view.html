@@ -97,6 +97,12 @@
         });
 
     </script>
+    <div id="member-number-preview-config"
+         data-prefix-key="{{ member_number_prefix_key }}"
+         data-length-key="{{ member_number_length_key }}"
+         data-preview-url="{% url 'configuration:member_number_preview' %}"
+         style="display:none"></div>
+    <script src="{% static 'configuration/js/member_number_preview.js' %}"></script>
     <script src="{% static 'configuration/js/search.js' %}"></script>
     <div id="mandate-reference-preview-config"
          data-parameter-key="{{ mandate_reference_pattern_key }}"

@@ -396,14 +396,6 @@ class Member(TapirUser):
                 else None
             )
 
-    @classmethod
-    def generate_member_no(cls, max_member_number: int | None = None):
-        if max_member_number is None:
-            max_member_number = cls.objects.aggregate(models.Max("member_no"))[
-                "member_no__max"
-            ]
-        return (max_member_number or 0) + 1
-
     @transaction.atomic
     def save(self, *args, **kwargs):
         if "bypass_keycloak" not in kwargs:
@@ -526,7 +518,7 @@ class Member(TapirUser):
         return " + ".join(base_subscription_texts)
 
     def __str__(self):
-        return f"[{self.member_no if self.member_no else '---'}] {self.first_name} {self.last_name} ({self.email})"
+        return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
 
     def get_extra_recipient_addresses(self, cache: dict):
         if not get_parameter_value(
