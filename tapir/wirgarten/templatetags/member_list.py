@@ -3,6 +3,7 @@ from django import template
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today
@@ -35,3 +36,12 @@ def pickup_location_warning(member: Member, cache: dict):
 @register.simple_tag()
 def member_email_verified(member: Member, cache: dict):
     return member.email_verified(cache)
+
+
+@register.simple_tag()
+def formatted_member_number(member: Member, cache=None):
+    if cache is None:
+        cache = {}
+    return (
+        MemberNumberService.format_member_number(member.member_no, cache=cache) or "-"
+    )

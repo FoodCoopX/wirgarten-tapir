@@ -1,7 +1,9 @@
 import typing
 
+from django.core.validators import MaxValueValidator, MinValueValidator
+
 from tapir.configuration.models import TapirParameterDatatype
-from tapir.configuration.parameter import ParameterMeta
+from tapir.configuration.parameter import ParameterMeta, get_parameter_value
 from tapir.wirgarten.constants import ParameterCategory, OPTIONS_WEEKDAYS
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.validators import validate_html
@@ -181,4 +183,71 @@ class ParameterDefinitionsMemberDashboard:
             "Wenn es eingeschaltet ist, können die Mitglieder deren Verträge selber anpassen, dafür nur 'nach Oben' (Höhere Solidarbeitrag, größere Anteil-Größe...)'",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=200,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_PREFIX,
+            label="Mitgliedsnummer: Präfix",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description=(
+                "Präfix, der bei der Anzeige jeder Mitgliedsnummer vorangestellt "
+                "wird. In der Datenbank wird nur die reine Zahl gespeichert. "
+                "Beispiel: 'BT' ergibt 'BT0017'."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=1000,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH,
+            label="Mitgliedsnummer: Mindestanzahl Stellen (Zero-Padding)",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=0,
+            description=(
+                "Mindestanzahl der Ziffern. Die Zahl wird auf diese Länge links "
+                "mit Nullen aufgefüllt. 0 = kein Auffüllen. "
+                "Beispiel: Wert=4, Zahl=17 → '0017'; Wert=4, Zahl=123456 → '123456'."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=999,
+            meta=ParameterMeta(
+                validators=[
+                    MinValueValidator(limit_value=0),
+                    MaxValueValidator(limit_value=20),
+                ]
+            ),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_START_VALUE,
+            label="Mitgliedsnummer: Startwert des Zählers",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=1,
+            description=(
+                "Ab welchem Wert der Zähler beginnt. Wirkt als untere Schranke: "
+                "Neue Nummern sind mindestens so hoch wie dieser Wert. "
+                "Sind bereits höhere Nummern vergeben, wird MAX+1 verwendet."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=997,
+            meta=ParameterMeta(validators=[MinValueValidator(limit_value=1)]),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL,
+            label="Mitgliedsnummer erst nach Ablauf der Probezeit vergeben",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description=(
+                "Wenn aktiv, bekommen Mitglieder erst nach Ablauf der Probezeit "
+                "eine Mitgliedsnummer. Ansonsten wird die Nummer sofort vergeben."
+            ),
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=996,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+                ),
+            ),
         )

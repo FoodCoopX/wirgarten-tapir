@@ -7,6 +7,7 @@ from tapir.generic_exports.services.export_segment_manager import ExportSegmentC
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.subscriptions.services.subscription_delivered_in_week_checked import (
     SubscriptionDeliveredInWeekChecker,
 )
@@ -135,7 +136,7 @@ class PickupLocationColumnProvider:
 
     @classmethod
     def get_value_pickup_location_member_ids(
-        cls, location: PickupLocation, reference_datetime: datetime.datetime, _
+        cls, location: PickupLocation, reference_datetime: datetime.datetime, cache
     ):
 
         members_annotated_with_pickup_location = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_id_at_date(
@@ -144,7 +145,8 @@ class PickupLocationColumnProvider:
 
         return "-".join(
             [
-                str(member.member_no) or "Nicht mitglied"
+                MemberNumberService.format_member_number(member.member_no, cache=cache)
+                or "Nicht Mitglied"
                 for member in members_annotated_with_pickup_location.filter(
                     current_pickup_location_id=location.id
                 )

@@ -1,3 +1,5 @@
+import logging
+
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -7,6 +9,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.pick_list_builder import PickListBuilder
 from tapir.wirgarten.mail_events import Events
@@ -27,9 +30,10 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
-    legal_status_is_cooperative,
     format_currency,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -163,46 +167,44 @@ def send_email_member_contract_end_reminder(member_id: str):
         )
 
 
+def _fire_membership_entry_trigger(member: Member, cache: dict):
+    number_of_coop_shares = member.coop_shares_quantity
+    price_of_a_share = get_parameter_value(
+        key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
+    )
+    TransactionalTrigger.fire_action(
+        TransactionalTriggerData(
+            key=Events.MEMBERSHIP_ENTRY,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "number_of_coop_shares": number_of_coop_shares,
+                "price_of_a_share": format_currency(price_of_a_share),
+                "price_of_all_shares": format_currency(
+                    number_of_coop_shares * price_of_a_share
+                ),
+            },
+        ),
+    )
+
+
 @shared_task
-def generate_member_numbers(print_results=True, cache: dict = None):
+def generate_member_numbers(cache: dict = None):
+    """
+    Assigns member numbers to members that don't have one yet.
+    Handles members whose trial period has ended (when MEMBER_NUMBER_ONLY_AFTER_TRIAL
+    is enabled) and catches any members that slipped through immediate assignment.
+    Fires the MEMBERSHIP_ENTRY mail trigger on success.
+    """
     if cache is None:
         cache = {}
     members = Member.objects.filter(member_no__isnull=True)
-    today = get_today(cache=cache)
-    members_to_update = []
-    next_member_number = Member.generate_member_no()
-    for member in members:
-        if legal_status_is_cooperative(cache=cache):
-            coop_entry_date = member.coop_entry_date
-            if coop_entry_date is None or coop_entry_date > today:
-                continue
-
-        member.member_no = next_member_number
-        next_member_number = Member.generate_member_no(next_member_number)
-        members_to_update.append(member)
 
     with transaction.atomic():
-        Member.objects.bulk_update(members_to_update, ["member_no"])
+        for member in members:
+            if not MemberNumberService.assign_member_number_if_eligible(
+                member, cache=cache
+            ):
+                continue
 
-        for member in members_to_update:
-            number_of_coop_shares = member.coop_shares_quantity
-            price_of_a_share = get_parameter_value(
-                key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
-            )
-            TransactionalTrigger.fire_action(
-                TransactionalTriggerData(
-                    key=Events.MEMBERSHIP_ENTRY,
-                    recipient_id_in_base_queryset=member.id,
-                    token_data={
-                        "number_of_coop_shares": number_of_coop_shares,
-                        "price_of_a_share": format_currency(price_of_a_share),
-                        "price_of_all_shares": format_currency(
-                            number_of_coop_shares * price_of_a_share
-                        ),
-                    },
-                ),
-            )
-            if print_results:
-                print(
-                    f"[task] generate_member_numbers: generated member_no for {member}"
-                )
+            _fire_membership_entry_trigger(member, cache)
+            logger.info(f"generate_member_numbers: generated member_no for {member}")

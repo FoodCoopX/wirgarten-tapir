@@ -11,6 +11,7 @@ from django.db.models import (
     Sum,
 )
 
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
@@ -137,8 +138,11 @@ class MemberColumnProvider:
         return member.last_name
 
     @classmethod
-    def get_value_member_number(cls, member: Member, _, __):
-        return str(member.member_no)
+    def get_value_member_number(cls, member: Member, _, cache):
+        return (
+            MemberNumberService.format_member_number(member.member_no, cache=cache)
+            or ""
+        )
 
     @classmethod
     def get_value_member_email_address(cls, member: Member, _, __):

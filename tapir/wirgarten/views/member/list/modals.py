@@ -12,6 +12,7 @@ from tapir.wirgarten.forms.member import (
 from tapir.wirgarten.forms.subscription import (
     EditSubscriptionPriceForm,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
 from tapir.wirgarten.views.modal import get_form_modal
@@ -61,15 +62,17 @@ def get_member_personal_data_create_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form_class=PersonalDataForm,
-        handler=save_member_twice,
+        handler=save_member_and_assign_number,
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
     )
 
 
-def save_member_twice(member: Member):
+def save_member_and_assign_number(member: Member):
     member.save()
-    member.save()
+    cache = {}
+    if not MemberNumberService.assign_member_number_if_eligible(member, cache=cache):
+        member.save()  # second save persists keycloak ID (#947)
 
 
 @require_http_methods(["GET", "POST"])
