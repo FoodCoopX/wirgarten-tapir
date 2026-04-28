@@ -8,6 +8,7 @@ from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.models import CoopSharesPurchasedLogEntry
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.utils.shortcuts import is_running_tests
 from tapir.wirgarten.models import (
     Member,
@@ -17,7 +18,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.email import send_email
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.utils import get_now, format_date
 
 
@@ -31,7 +31,9 @@ class CoopSharePurchaseHandler:
         cache: dict,
         actor: TapirUser | None,
     ):
-        mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache=cache
+        )
 
         payment = cls.create_or_update_payment(
             shares_valid_at=shares_valid_at,

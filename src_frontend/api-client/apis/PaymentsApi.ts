@@ -16,6 +16,7 @@ import type {
   CabLoggedInUserChangeTargetsPaymentRhythmResponse,
   ExtendedMemberCredit,
   FuturePaymentsResponse,
+  MandateReferencePreviewResponse,
   MemberCreditCreateRequest,
   MemberCreditSettleRequest,
   MemberPaymentRhythmData,
@@ -25,6 +26,7 @@ import {
   CabLoggedInUserChangeTargetsPaymentRhythmResponseFromJSON,
   ExtendedMemberCreditFromJSON,
   FuturePaymentsResponseFromJSON,
+  MandateReferencePreviewResponseFromJSON,
   MemberCreditCreateRequestToJSON,
   MemberCreditSettleRequestToJSON,
   MemberPaymentRhythmDataFromJSON,
@@ -40,6 +42,10 @@ export interface PaymentsApiCreditListFilteredListRequest {
   monthFilter?: number;
   showAll?: boolean;
   yearFilter?: number;
+}
+
+export interface PaymentsApiMandateReferencePreviewRetrieveRequest {
+  pattern?: string;
 }
 
 export interface PaymentsApiMemberCreditCreateCreateRequest {
@@ -187,6 +193,62 @@ export class PaymentsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Array<ExtendedMemberCredit>> {
     const response = await this.paymentsApiCreditListFilteredListRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMandateReferencePreviewRetrieveRaw(
+    requestParameters: PaymentsApiMandateReferencePreviewRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MandateReferencePreviewResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["pattern"] != null) {
+      queryParameters["pattern"] = requestParameters["pattern"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/mandate_reference_preview`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MandateReferencePreviewResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiMandateReferencePreviewRetrieve(
+    requestParameters: PaymentsApiMandateReferencePreviewRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MandateReferencePreviewResponse> {
+    const response = await this.paymentsApiMandateReferencePreviewRetrieveRaw(
       requestParameters,
       initOverrides,
     );

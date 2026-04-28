@@ -1372,6 +1372,27 @@ paths:
                 items:
                   $ref: '#/components/schemas/ExtendedMemberCredit'
           description: ''
+  /payments/api/mandate_reference_preview:
+    get:
+      operationId: payments_api_mandate_reference_preview_retrieve
+      parameters:
+      - in: query
+        name: pattern
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandateReferencePreviewResponse'
+          description: ''
   /payments/api/member_credit_create:
     post:
       operationId: payments_api_member_credit_create_create
@@ -7810,6 +7831,18 @@ components:
       - available_for_external_recipients
       - mode
       - name
+    MandateReferencePreviewResponse:
+      type: object
+      properties:
+        previews:
+          type: object
+          additionalProperties:
+            type: string
+        error:
+          type: string
+      required:
+      - error
+      - previews
     Member:
       type: object
       properties:

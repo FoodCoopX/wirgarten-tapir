@@ -80,3 +80,8 @@ class CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(
 ):
     can_change = serializers.BooleanField()
     current_rhythm = serializers.CharField()
+
+
+class MandateReferencePreviewResponseSerializer(serializers.Serializer):
+    previews = serializers.DictField(child=serializers.CharField())
+    error = serializers.CharField()

@@ -4,6 +4,7 @@ from unittest.mock import patch, Mock, call
 
 from django.test import SimpleTestCase
 
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -30,8 +31,9 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
     )
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
-    @patch(
-        "tapir.payments.services.month_payment_builder_utils.get_or_create_mandate_ref",
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
         autospec=True,
     )
     @patch.object(
@@ -44,7 +46,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
@@ -56,7 +58,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.return_value = range_end
         member = MemberFactory.build()
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 10
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=7, day=13)
@@ -125,7 +127,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache
         )
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_get_already_paid_amount.assert_called_once_with(
@@ -158,8 +160,10 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
-    @patch(
-        "tapir.payments.services.month_payment_builder_utils.get_or_create_mandate_ref"
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
@@ -167,7 +171,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
@@ -179,7 +183,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.return_value = range_end
         member = MemberFactory.build()
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 17.5
         mock_get_total_to_pay.return_value = 17.5
         mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
@@ -217,7 +221,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache
         )
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_get_already_paid_amount.assert_called_once_with(
@@ -243,8 +247,10 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
-    @patch(
-        "tapir.payments.services.month_payment_builder_utils.get_or_create_mandate_ref"
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
@@ -252,7 +258,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
@@ -264,7 +270,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.return_value = range_end
         member = MemberFactory.build()
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 20
         mock_get_total_to_pay.return_value = 17.5
         mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
@@ -302,7 +308,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache
         )
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_get_already_paid_amount.assert_called_once_with(
@@ -328,8 +334,10 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
-    @patch(
-        "tapir.payments.services.month_payment_builder_utils.get_or_create_mandate_ref"
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
@@ -337,7 +345,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
@@ -349,7 +357,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.return_value = range_end
         member = MemberFactory.build()
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 20
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=7, day=13)
@@ -415,7 +423,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache
         )
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_get_already_paid_amount.assert_called_once_with(
@@ -448,8 +456,10 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
-    @patch(
-        "tapir.payments.services.month_payment_builder_utils.get_or_create_mandate_ref"
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
@@ -457,7 +467,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
@@ -469,7 +479,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.return_value = range_end
         member = MemberFactory.build()
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 10
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=7, day=13)
@@ -537,7 +547,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache
         )
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_get_already_paid_amount.assert_called_once_with(
@@ -570,8 +580,10 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
-    @patch(
-        "tapir.payments.services.month_payment_builder_utils.get_or_create_mandate_ref"
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
@@ -579,7 +591,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
@@ -621,7 +633,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache
         )
-        mock_get_or_create_mandate_ref.assert_not_called()
+        mock_get_or_create_mandate_reference.assert_not_called()
         mock_get_already_paid_amount.assert_not_called()
         mock_get_total_to_pay.assert_not_called()
         mock_get_payment_due_date_on_month.assert_not_called()
@@ -633,8 +645,10 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
-    @patch(
-        "tapir.payments.services.month_payment_builder_utils.get_or_create_mandate_ref"
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
@@ -642,7 +656,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
@@ -654,7 +668,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.return_value = range_end
         member = MemberFactory.build()
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 0
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=6, day=5)
@@ -724,7 +738,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache
         )
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_get_already_paid_amount.assert_called_once_with(
@@ -755,8 +769,10 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
 
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
-    @patch(
-        "tapir.payments.services.month_payment_builder_utils.get_or_create_mandate_ref"
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
     )
     @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
     @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
@@ -764,7 +780,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         self,
         mock_get_first_day_of_rhythm_period: Mock,
         mock_get_last_day_of_rhythm_period: Mock,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
     ):
@@ -774,7 +790,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.return_value = range_end
         member = MemberFactory.build()
         mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 10
         mock_get_total_to_pay.return_value = 17.5
 
@@ -843,7 +859,7 @@ class TestBuildPaymentForContractAndMember(SimpleTestCase):
         mock_get_last_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache
         )
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_get_already_paid_amount.assert_called_once_with(

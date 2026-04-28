@@ -5,6 +5,7 @@ from datetime import timedelta
 import factory
 from dateutil.relativedelta import relativedelta
 
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
@@ -24,7 +25,6 @@ from tapir.wirgarten.models import (
     ProductPrice,
     PickupLocationCapability,
 )
-from tapir.wirgarten.service.payment import generate_mandate_ref
 
 NOW = datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc)
 
@@ -118,7 +118,13 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference
     class Meta:
         model = MandateReference
 
-    ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member))
+    ref = factory.LazyAttribute(
+        lambda o: MandateReferenceProvider.build_mandate_ref(
+            member=o.member,
+            pattern="{vorname}.{nachname}/MANDATE_REF_FOR_TEST/{zufall}",
+            cache={},
+        )
+    )
     member = factory.SubFactory(MemberFactory)
     start_ts = NOW - relativedelta(months=1)
 

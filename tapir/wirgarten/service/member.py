@@ -30,12 +30,10 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
-from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     CoopShareTransaction,
-    MandateReference,
     Member,
     MemberPickupLocation,
     PickupLocation,
@@ -47,7 +45,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
-from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
@@ -175,53 +172,8 @@ def cancel_coop_shares(
     )
 
 
-def create_mandate_ref(member: str | Member, cache: dict | None = None):
-    """
-    Generates and persists a new mandate reference for a member.
-
-    :param member: the member
-    """
-
-    if isinstance(member, str):
-        member = Member.objects.get(id=member)
-    ref = generate_mandate_ref(member)
-    return MandateReference.objects.create(
-        ref=ref, member=member, start_ts=get_now(cache)
-    )
-
-
 def resolve_member_id(member: str | Member | TapirUser) -> str:
     return member.id if type(member) is not str and member.id else member
-
-
-le_sum = 0
-
-
-def get_or_create_mandate_ref(
-    member: str | Member,
-    cache: dict | None = None,
-) -> MandateReference:
-    """
-    Returns the existing mandate ref for a member of creates a new one if none exists.
-    """
-
-    member_id = resolve_member_id(member)
-
-    def compute():
-        return {
-            mandate_ref.member_id: mandate_ref
-            for mandate_ref in MandateReference.objects.select_related("member")
-        }
-
-    mandate_ref_cache = get_from_cache_or_compute(cache, "mandate_ref_cache", compute)
-    mandate_ref = mandate_ref_cache.get(member_id, None)
-    if mandate_ref is not None:
-        return mandate_ref
-
-    mandate_ref = create_mandate_ref(member_id, cache)
-    if mandate_ref_cache is not None:
-        mandate_ref_cache[member_id] = mandate_ref
-    return mandate_ref
 
 
 def create_wait_list_entry(

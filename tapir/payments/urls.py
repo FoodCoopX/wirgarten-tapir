@@ -45,4 +45,9 @@ urlpatterns = [
         views.CabLoggedInUserChangeTargetsPaymentRhythm.as_view(),
         name="can_logged_in_user_change_targets_payment_rhythm",
     ),
+    path(
+        "api/mandate_reference_preview",
+        views.MandateReferencePreviewApiView.as_view(),
+        name="mandate_reference_preview",
+    ),
 ]

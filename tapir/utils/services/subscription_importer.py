@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -14,7 +15,6 @@ from tapir.utils.exceptions import TapirDataImportException
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, GrowingPeriod, Product, Subscription
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.utils import get_today
 
 
@@ -42,7 +42,9 @@ class SubscriptionImporter:
                 f"No growing period (=Vertragsperiode) found that contains the given contract start date ({start_date}) for member number {member_no}"
             )
 
-        mandate_ref = get_or_create_mandate_ref(member)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member, cache={}
+        )
 
         product_name = DataImportUtils.normalize_cell(row.get("product"))
         product_type_name = DataImportUtils.normalize_cell(row.get("product_type"))

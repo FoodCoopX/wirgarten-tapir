@@ -38,6 +38,7 @@ class ParameterKeys:
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
     PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
     PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
+    PAYMENT_MANDATE_REFERENCE_PATTERN = f"{PREFIX}.payment.mandate_reference.pattern"
     MEMBERS_CAN_SEE_OWN_PAYMENTS = (
         f"{PREFIX}.member.dashboard.members_can_see_own_payments"
     )

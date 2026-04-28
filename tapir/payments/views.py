@@ -8,8 +8,8 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serial
 from rest_framework import serializers, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.serializers import ListField
+from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -25,7 +25,9 @@ from tapir.payments.serializers import (
     ExtendedMemberCreditSerializer,
     MemberCreditCreateSerializer,
     CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer,
+    MandateReferencePreviewResponseSerializer,
 )
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -50,7 +52,6 @@ from tapir.wirgarten.models import (
     Member,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.utils import check_permission_or_self, get_today
 
 
@@ -424,7 +425,7 @@ class MemberCreditListApiView(APIView):
                 "credit": credit,
                 "member": credit.member,
                 "member_url": credit.member.get_absolute_url(),
-                "mandate_ref": get_or_create_mandate_ref(
+                "mandate_ref": MandateReferenceProvider.get_or_create_mandate_reference(
                     member=credit.member, cache=self.cache
                 ).ref,
             }
@@ -528,3 +529,49 @@ class CabLoggedInUserChangeTargetsPaymentRhythm(APIView):
         return Response(
             CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(data).data
         )
+
+
+class MandateReferencePreviewApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: MandateReferencePreviewResponseSerializer},
+        parameters=[OpenApiParameter(name="pattern", type=str)],
+    )
+    def get(self, request):
+        member_a = Member(first_name="John", last_name="Doe", member_no=17)
+        member_b = Member(
+            first_name="Maximilian", last_name="Mustermann", member_no=123456
+        )
+        pattern = request.query_params.get("pattern")
+        cache = {}
+
+        try:
+            data = {
+                self._build_member_preview(
+                    member_a
+                ): MandateReferenceProvider.build_mandate_ref(
+                    member=member_a, pattern=pattern, cache=cache
+                ),
+                self._build_member_preview(
+                    member_b
+                ): MandateReferenceProvider.build_mandate_ref(
+                    member=member_b, pattern=pattern, cache=cache
+                ),
+            }
+        except Exception as error:
+            return Response(
+                MandateReferencePreviewResponseSerializer(
+                    {"previews": {}, "error": str(error)}
+                ).data
+            )
+
+        return Response(
+            MandateReferencePreviewResponseSerializer(
+                {"previews": data, "error": ""}
+            ).data
+        )
+
+    @staticmethod
+    def _build_member_preview(member: Member) -> str:
+        return f"{member.first_name} {member.last_name} #{member.member_no}"

@@ -2,8 +2,6 @@ from collections import OrderedDict
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
-from nanoid import generate
-from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.services.tapir_cache import TapirCache
@@ -14,26 +12,6 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import get_today
-
-MANDATE_REF_LENGTH = 35
-MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-
-def generate_mandate_ref(member: Member):
-    """
-    Generates a new mandate reference string.
-
-    UUUUUUUUUU/XXXXXXXXXXXXXXXXXXXXXXXX
-
-    U = User Name
-    X = Random String
-
-    """
-
-    cleaned_name = unidecode(f"{member.last_name[:5]}{member.first_name[:5]}")
-    prefix = f"{cleaned_name}/".upper()
-
-    return f"""{prefix}{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix))}"""
 
 
 def get_next_payment_date(reference_date: date = None, cache: dict = None):
