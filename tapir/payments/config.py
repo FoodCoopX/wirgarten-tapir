@@ -1,1 +1,20 @@
 PAYMENT_TYPE_COOP_SHARES = "Genossenschaftsanteile"
+
+
+class IntendedUseTokens:
+    FIRST_NAME = "vorname"
+    LAST_NAME = "nachname"
+    MEMBER_NUMBER_SHORT = "mitgliedsnummer_kurz"
+    MEMBER_NUMBER_LONG = "mitgliedsnummer_lang"
+    MEMBER_NUMBER_WITHOUT_PREFIX = "mitgliedsnummer_ohne_prefix"
+    NUMBER_OF_COOP_SHARES = "anzahl_geno_anteile"
+    COOP_ENTRY_DATE = "beitrittsdatum"
+    PRICE_SINGLE_SHARE = "preis_einzelne_geno_anteil"
+    MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI = "monatsbeitrag_ohne_soli"
+    MONTHLY_PRICE_CONTRACTS_WITH_SOLI = "monatsbeitrag_mit_soli"
+    MONTHLY_PRICE_JUST_SOLI = "monatsbeitrag_nur_soli"
+    TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI = "gesamtbeitrag_ohne_soli"
+    TOTAL_PRICE_CONTRACTS_WITH_SOLI = "gesamtbeitrag_mit_soli"
+    TOTAL_PRICE_JUST_SOLI = "gesamtbeitrag_nur_soli"
+    CONTRACT_LIST = "vertragsliste"
+    PAYMENT_RHYTHM = "zahlungsintervall"
