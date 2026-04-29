@@ -39,6 +39,16 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
         context["member_number_length_key"] = (
             ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH
         )
+        context["intended_use_contract_keys"] = ",".join(
+            [
+                ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE,
+                ParameterKeys.PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE,
+                ParameterKeys.PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY,
+            ]
+        )
+        context["intended_use_coop_shares_keys"] = (
+            ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES
+        )
         return context
 
     def get_success_url(self, **kwargs):
