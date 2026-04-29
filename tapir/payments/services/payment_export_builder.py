@@ -132,8 +132,22 @@ class PaymentExportBuilder:
                 combined_payments[payment.mandate_ref] = Payment(
                     mandate_ref=payment.mandate_ref,
                     amount=Decimal(0),
+                    subscription_payment_range_start=payment.subscription_payment_range_start,
+                    subscription_payment_range_end=payment.subscription_payment_range_end,
                 )
             combined_payments[payment.mandate_ref].amount += payment.amount
+            combined_payments[payment.mandate_ref].subscription_payment_range_start = (
+                min(
+                    combined_payments[
+                        payment.mandate_ref
+                    ].subscription_payment_range_start,
+                    payment.subscription_payment_range_start,
+                )
+            )
+            combined_payments[payment.mandate_ref].subscription_payment_range_end = max(
+                combined_payments[payment.mandate_ref].subscription_payment_range_end,
+                payment.subscription_payment_range_end,
+            )
 
         return combined_payments.values()
 

@@ -80,3 +80,12 @@ class CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(
 ):
     can_change = serializers.BooleanField()
     current_rhythm = serializers.CharField()
+
+
+class PaymentIntendedUsePreviewResponseSerializer(serializers.Serializer):
+    previewsNew = serializers.ListField(child=serializers.CharField())
+    previewsOld = serializers.ListField(child=serializers.CharField())
+    error = serializers.CharField()
+    tokens = serializers.ListSerializer(child=serializers.CharField())
+    payments = PaymentSerializer(many=True)
+    members = MemberSerializer(many=True)

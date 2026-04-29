@@ -4,14 +4,14 @@ import IntendedUseEditorModal from "./IntendedUseEditorModal.tsx";
 
 interface IntendedUseEditorBaseProps {
   isContract: boolean;
-  inputField: HTMLInputElement;
-  parameterKey: string;
+  inputField: HTMLTextAreaElement;
+  title: string;
 }
 
 const IntendedUseEditorBase: React.FC<IntendedUseEditorBaseProps> = ({
   isContract,
   inputField,
-  parameterKey,
+  title,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [currentPattern, setCurrentPattern] = useState("");
@@ -21,8 +21,11 @@ const IntendedUseEditorBase: React.FC<IntendedUseEditorBaseProps> = ({
   }, [inputField]);
 
   useEffect(() => {
+    inputField.rows = 4;
     inputField.addEventListener("input", onPatternChanged);
     inputField.addEventListener("change", onPatternChanged);
+
+    onPatternChanged();
 
     return () => {
       inputField.removeEventListener("input", onPatternChanged);
@@ -48,9 +51,10 @@ const IntendedUseEditorBase: React.FC<IntendedUseEditorBaseProps> = ({
         onHide={() => {
           setShowModal(false);
         }}
-        parameterKey={parameterKey}
-        currentPattern={currentPattern}
-        setCurrentPattern={setCurrentPattern}
+        title={title}
+        outerPattern={currentPattern}
+        setOuterPattern={setCurrentPattern}
+        isContract={isContract}
       />
     </>
   );

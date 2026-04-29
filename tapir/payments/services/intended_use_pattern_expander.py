@@ -23,52 +23,9 @@ class IntendedUsePatternExpander:
     MIN_TOKEN_LENGTH = 5
 
     @classmethod
-    def expand_pattern_contracts(
-        cls, pattern: str, member: Member, payment: Payment, cache: dict
-    ):
-        result = cls.expand_common_tokens(pattern=pattern, member=member, cache=cache)
-        return cls.expand_contract_tokens(
-            pattern=result, member=member, payment=payment, cache=cache
-        )
-
-    @classmethod
-    def expand_pattern_coop_shares_bought(
-        cls, pattern: str, member: Member, number_of_shares: int, cache: dict
-    ):
-        result = cls.expand_common_tokens(pattern=pattern, member=member, cache=cache)
-        return cls.expand_coop_shares_tokens(
-            pattern=result,
-            member=member,
-            number_of_shares=number_of_shares,
-            cache=cache,
-        )
-
-    @classmethod
-    def expand_common_tokens(cls, pattern: str, member: Member, cache: dict):
-        replacements = {
-            IntendedUseTokens.FIRST_NAME: lambda: member.first_name,
-            IntendedUseTokens.LAST_NAME: lambda: member.last_name,
-            IntendedUseTokens.MEMBER_NUMBER_SHORT: lambda: str(member.member_no),
-            IntendedUseTokens.MEMBER_NUMBER_LONG: lambda: MemberNumberService.format_member_number(
-                member_number=member.member_no, cache=cache
-            )
-            or "",
-            IntendedUseTokens.MEMBER_NUMBER_WITHOUT_PREFIX: lambda: MemberNumberService.build_formatted_number(
-                member_number=member.member_no,
-                prefix="",
-                length=get_parameter_value(
-                    key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, cache=cache
-                ),
-            ),
-        }
-
-        return cls.apply_replacements(pattern, replacements)
-
-    @classmethod
-    def expand_contract_tokens(
-        cls, pattern: str, member: Member, payment: Payment, cache: dict
-    ):
+    def expand_pattern_contracts(cls, pattern: str, payment: Payment, cache: dict):
         reference_date = payment.subscription_payment_range_end
+        member = payment.mandate_ref.member
 
         subscriptions = Subscription.objects.filter(
             member=member,
@@ -99,7 +56,7 @@ class IntendedUsePatternExpander:
         rhythm_price_without_solidarity = monthly_price_without_solidarity * nb_months
         rhythm_price_just_solidarity = monthly_price_just_solidarity * nb_months
 
-        replacements = {
+        replacements = cls.get_common_token_replacers(member=member, cache=cache) | {
             IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: lambda: format_currency(
                 monthly_price_without_solidarity
             ),
@@ -129,10 +86,10 @@ class IntendedUsePatternExpander:
         return cls.apply_replacements(pattern, replacements)
 
     @classmethod
-    def expand_coop_shares_tokens(
+    def expand_pattern_coop_shares_bought(
         cls, pattern: str, member: Member, number_of_shares: int, cache: dict
     ):
-        replacements = {
+        replacements = cls.get_common_token_replacers(member=member, cache=cache) | {
             IntendedUseTokens.NUMBER_OF_COOP_SHARES: lambda: str(number_of_shares),
             IntendedUseTokens.COOP_ENTRY_DATE: lambda: format_date(
                 MembershipCancellationManager.get_coop_entry_date(member)
@@ -143,6 +100,25 @@ class IntendedUsePatternExpander:
         }
 
         return cls.apply_replacements(pattern, replacements)
+
+    @classmethod
+    def get_common_token_replacers(cls, member: Member, cache: dict):
+        return {
+            IntendedUseTokens.FIRST_NAME: lambda: member.first_name,
+            IntendedUseTokens.LAST_NAME: lambda: member.last_name,
+            IntendedUseTokens.MEMBER_NUMBER_SHORT: lambda: str(member.member_no),
+            IntendedUseTokens.MEMBER_NUMBER_LONG: lambda: MemberNumberService.format_member_number(
+                member_number=member.member_no, cache=cache
+            )
+            or "",
+            IntendedUseTokens.MEMBER_NUMBER_WITHOUT_PREFIX: lambda: MemberNumberService.build_formatted_number(
+                member_number=member.member_no,
+                prefix="",
+                length=get_parameter_value(
+                    key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, cache=cache
+                ),
+            ),
+        }
 
     @staticmethod
     def _get_token_with_braces(token: str):

@@ -137,7 +137,8 @@ class ParameterDefinitionsPayments:
                 show_only_when=lambda cache: get_parameter_value(
                     ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
                 )
-                and legal_status_is_cooperative(cache=cache)
+                and legal_status_is_cooperative(cache=cache),
+                textarea=True,
             ),
         )
         order_priority -= 1
@@ -153,7 +154,8 @@ class ParameterDefinitionsPayments:
             meta=ParameterMeta(
                 show_only_when=lambda cache: get_parameter_value(
                     ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
-                )
+                ),
+                textarea=True,
             ),
         )
         order_priority -= 1
@@ -169,7 +171,8 @@ class ParameterDefinitionsPayments:
             meta=ParameterMeta(
                 show_only_when=lambda cache: get_parameter_value(
                     ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
-                )
+                ),
+                textarea=True,
             ),
         )
         order_priority -= 1
@@ -185,7 +188,8 @@ class ParameterDefinitionsPayments:
             meta=ParameterMeta(
                 show_only_when=lambda cache: get_parameter_value(
                     ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
-                )
+                ),
+                textarea=True,
             ),
         )
         order_priority -= 1

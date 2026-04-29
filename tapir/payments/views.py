@@ -1,3 +1,6 @@
+import datetime
+import random
+
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db.models import Q
@@ -8,11 +11,12 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serial
 from rest_framework import serializers, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.serializers import ListField
+from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES, IntendedUseTokens
 from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
@@ -25,6 +29,10 @@ from tapir.payments.serializers import (
     ExtendedMemberCreditSerializer,
     MemberCreditCreateSerializer,
     CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer,
+    PaymentIntendedUsePreviewResponseSerializer,
+)
+from tapir.payments.services.intended_use_pattern_expander import (
+    IntendedUsePatternExpander,
 )
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -33,6 +41,7 @@ from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
+from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
     AutomaticSolidarityContributionRenewalService,
 )
@@ -48,6 +57,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     MandateReference,
     Member,
+    Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
@@ -527,4 +537,148 @@ class CabLoggedInUserChangeTargetsPaymentRhythm(APIView):
 
         return Response(
             CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(data).data
+        )
+
+
+class PaymentIntendedUsePreviewContractsApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: PaymentIntendedUsePreviewResponseSerializer},
+        parameters=[
+            OpenApiParameter(name="pattern_old", type=str, required=True),
+            OpenApiParameter(name="pattern_new", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        pattern_old = request.query_params.get("pattern_old", "")
+        pattern_new = request.query_params.get("pattern_new", "")
+        cache = {}
+
+        payments = self._get_random_payments(
+            cache=cache, key_type=request.query_params.get("key_type")
+        )
+
+        response_data = {
+            "previewsOld": ["" for _ in payments],
+            "previewsNew": ["" for _ in payments],
+            "error": "",
+            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.CONTRACT_TOKENS),
+            "payments": payments,
+            "members": [payment.mandate_ref.member for payment in payments],
+        }
+        try:
+            response_data["previewsOld"] = [
+                IntendedUsePatternExpander.expand_pattern_contracts(
+                    pattern=pattern_old, payment=payment, cache=cache
+                )
+                for payment in payments
+            ]
+            response_data["previewsNew"] = [
+                IntendedUsePatternExpander.expand_pattern_contracts(
+                    pattern=pattern_new, payment=payment, cache=cache
+                )
+                for payment in payments
+            ]
+        except Exception as error:
+            response_data["error"] = str(error)
+
+        return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
+
+    @classmethod
+    def _get_random_payments(cls, cache: dict, key_type: str):
+        min_date = Subscription.objects.order_by("start_date").first().start_date
+        max_date = min(
+            Subscription.objects.order_by("start_date").last().start_date,
+            get_today(cache=cache),
+        )
+        random_date = min_date + datetime.timedelta(
+            days=random.randint(0, (max_date - min_date).days)
+        )
+        payments = Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).filter(
+            due_date__year=random_date.year, due_date__month=random_date.month
+        )
+
+        combined_payments = list(
+            PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
+                payments=list(payments)
+            )
+        )
+        payments = random.choices(combined_payments, k=min(len(combined_payments), 5))
+        return sorted(
+            payments,
+            key=lambda payment: (
+                payment.mandate_ref.member.member_no,
+                payment.mandate_ref.member.last_name,
+            ),
+        )
+
+
+class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: PaymentIntendedUsePreviewResponseSerializer},
+        parameters=[
+            OpenApiParameter(name="pattern_old", type=str, required=True),
+            OpenApiParameter(name="pattern_new", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        pattern_old = request.query_params.get("pattern_old", "")
+        pattern_new = request.query_params.get("pattern_new", "")
+        cache = {}
+
+        payments = self._get_random_payments(cache=cache)
+
+        response_data = {
+            "previewsOld": ["" for _ in payments],
+            "previewsNew": ["" for _ in payments],
+            "error": "",
+            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.COOP_SHARE_TOKENS),
+            "payments": payments,
+            "members": [payment.mandate_ref.member for payment in payments],
+        }
+        try:
+            response_data["previewsOld"] = [
+                IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
+                    pattern=pattern_old,
+                    member=payment.mandate_ref.member,
+                    number_of_shares=round(
+                        payment.amount
+                        / get_parameter_value(
+                            ParameterKeys.COOP_SHARE_PRICE, cache=cache
+                        )
+                    ),
+                    cache=cache,
+                )
+                for payment in payments
+            ]
+            response_data["previewsNew"] = [
+                IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
+                    pattern=pattern_new,
+                    member=payment.mandate_ref.member,
+                    number_of_shares=round(
+                        payment.amount
+                        / get_parameter_value(
+                            ParameterKeys.COOP_SHARE_PRICE, cache=cache
+                        )
+                    ),
+                    cache=cache,
+                )
+                for payment in payments
+            ]
+        except Exception as error:
+            response_data["error"] = str(error)
+
+        return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
+
+    @classmethod
+    def _get_random_payments(cls, cache: dict):
+        return (
+            Payment.objects.filter(type=PAYMENT_TYPE_COOP_SHARES)
+            .select_related("mandate_ref__member")
+            .order_by("?")[:5]
         )

@@ -184,6 +184,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /config/member-number-preview:
+    get:
+      operationId: config_member_number_preview_retrieve
+      tags:
+      - config
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          description: No response body
   /coop/api/delete_member:
     delete:
       operationId: coop_api_delete_member_destroy
@@ -1371,6 +1383,60 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ExtendedMemberCredit'
+          description: ''
+  /payments/api/intended_use_preview_contracts:
+    get:
+      operationId: payments_api_intended_use_preview_contracts_retrieve
+      parameters:
+      - in: query
+        name: pattern_new
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: pattern_old
+        schema:
+          type: string
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntendedUsePreviewResponse'
+          description: ''
+  /payments/api/intended_use_preview_coop_shares:
+    get:
+      operationId: payments_api_intended_use_preview_coop_shares_retrieve
+      parameters:
+      - in: query
+        name: pattern_new
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: pattern_old
+        schema:
+          type: string
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntendedUsePreviewResponse'
           description: ''
   /payments/api/member_credit_create:
     post:
@@ -9056,6 +9122,38 @@ components:
       - mandate_ref
       - type
       - updated_at
+    PaymentIntendedUsePreviewResponse:
+      type: object
+      properties:
+        previewsNew:
+          type: array
+          items:
+            type: string
+        previewsOld:
+          type: array
+          items:
+            type: string
+        error:
+          type: string
+        tokens:
+          type: array
+          items:
+            type: string
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+      required:
+      - error
+      - members
+      - payments
+      - previewsNew
+      - previewsOld
+      - tokens
     PaymentStatusEnum:
       enum:
       - PAID

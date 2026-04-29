@@ -6,17 +6,21 @@ const configElement = document.getElementById("payment-intended-use-config");
 if (configElement) {
   const contractKeys = configElement.dataset.contractKeys?.split(",") ?? [];
   for (const parameterKey of contractKeys) {
-    console.log(parameterKey);
-    createEditorRoot(parameterKey);
+    createEditorRoot(parameterKey, true);
+  }
+
+  const coopKeys = configElement.dataset.coopSharesKeys?.split(",") ?? [];
+  for (const parameterKey of coopKeys) {
+    createEditorRoot(parameterKey, false);
   }
 } else {
   alert("Failed to render payment intended use editor");
 }
 
-function createEditorRoot(parameterKey: string) {
+function createEditorRoot(parameterKey: string, isContract: boolean) {
   const inputElement = document.getElementById(
     "id_" + parameterKey,
-  ) as HTMLInputElement;
+  ) as HTMLTextAreaElement;
 
   const previewDiv = document.createElement("div");
 
@@ -32,8 +36,8 @@ function createEditorRoot(parameterKey: string) {
   root.render(
     <IntendedUseEditorBase
       inputField={inputElement}
-      isContract={true}
-      parameterKey={parameterKey}
+      isContract={isContract}
+      title={inputElement.labels[0].innerText}
     />,
   );
 }
