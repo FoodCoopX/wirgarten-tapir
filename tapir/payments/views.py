@@ -555,9 +555,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         pattern_new = request.query_params.get("pattern_new", "")
         cache = {}
 
-        payments = self._get_random_payments(
-            cache=cache, key_type=request.query_params.get("key_type")
-        )
+        payments = self._get_random_payments(cache=cache)
 
         response_data = {
             "previewsOld": ["" for _ in payments],
@@ -587,7 +585,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
 
     @classmethod
-    def _get_random_payments(cls, cache: dict, key_type: str):
+    def _get_random_payments(cls, cache: dict):
         min_date = Subscription.objects.order_by("start_date").first().start_date
         max_date = min(
             Subscription.objects.order_by("start_date").last().start_date,
@@ -605,7 +603,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
                 payments=list(payments)
             )
         )
-        payments = random.choices(combined_payments, k=min(len(combined_payments), 5))
+        payments = random.sample(combined_payments, k=min(len(combined_payments), 5))
         return sorted(
             payments,
             key=lambda payment: (

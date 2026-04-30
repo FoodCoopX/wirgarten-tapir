@@ -126,15 +126,16 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
           </tr>
         </thead>
         <tbody>
-          {payments.map((payment, index) => (
-            <tr key={members[index].id!}>
+          {members.map((member, index) => (
+            <tr key={member.id!}>
               <td>
-                {formatCurrency(payment.amount)},{" "}
-                {formatDateNumeric(payment.subscriptionPaymentRangeStart)}
+                {formatCurrency(payments[index].amount)},{" "}
+                {formatDateNumeric(
+                  payments[index].subscriptionPaymentRangeStart,
+                )}
               </td>
               <td>
-                {members[index].firstName} {members[index].lastName} #
-                {members[index].memberNo}
+                {member.firstName} {member.lastName} #{member.memberNo}
               </td>
               <td>{buildPreview(outerPreviews[index])}</td>
               <td>{buildPreview(innerPreviews[index])}</td>
