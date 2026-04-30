@@ -62,11 +62,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
-from tapir.wirgarten.tests.factories import (
-    MemberFactory,
-    PaymentFactory,
-    SubscriptionFactory,
-)
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     get_today,
@@ -603,7 +598,11 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
 
     @classmethod
     def _get_random_payments(cls, cache: dict):
-        min_date = Subscription.objects.order_by("start_date").first().start_date
+        first_subscription = Subscription.objects.order_by("start_date").first()
+        if first_subscription is None:
+            return []
+
+        min_date = first_subscription.start_date
         max_date = min(
             Subscription.objects.order_by("start_date").last().start_date,
             get_today(cache=cache),
@@ -634,10 +633,8 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
     ):
         fake_members = [
-            MemberFactory.build(
-                first_name="John", last_name="Doe", member_no=14, id=14
-            ),
-            MemberFactory.build(
+            Member(first_name="John", last_name="Doe", member_no=14, id=14),
+            Member(
                 first_name="Maximilian",
                 last_name="Mustermann",
                 member_no=123456,
@@ -680,8 +677,9 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             }
 
             response_data["members"].insert(0, fake_member)
-            payment = PaymentFactory.build(
-                mandate_ref__member=fake_member,
+            payment = Payment(
+                mandate_ref=MandateReference(member=fake_member),
+                amount=100,
                 subscription_payment_range_start=(
                     today - datetime.timedelta(days=120)
                 ).replace(day=1),
@@ -723,9 +721,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             product_type=product_type, cache=cache, shortest=short_version
         )
         quantity = 1 if short_version else 13
-        contract_list = SubscriptionFactory.build(
-            product=product, quantity=quantity
-        ).short_str()
+        contract_list = Subscription(product=product, quantity=quantity).short_str()
 
         if short_version or len(product_types) == 1:
             return contract_list
@@ -736,8 +732,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         )
         quantity = 17
         contract_list += (
-            ", "
-            + SubscriptionFactory.build(product=product, quantity=quantity).short_str()
+            ", " + Subscription(product=product, quantity=quantity).short_str()
         )
 
         return contract_list
@@ -828,10 +823,8 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
     ):
         fake_members = [
-            MemberFactory.build(first_name="John", last_name="Doe", member_no=14),
-            MemberFactory.build(
-                first_name="Maximilian", last_name="Mustermann", member_no=123456
-            ),
+            Member(first_name="John", last_name="Doe", member_no="14"),
+            Member(first_name="Maximilian", last_name="Mustermann", member_no="123456"),
         ]
 
         token_value_overrides = {
@@ -840,7 +833,10 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
 
         for fake_member in fake_members:
             response_data["members"].insert(0, fake_member)
-            response_data["payments"].insert(0, PaymentFactory.build())
+            response_data["payments"].insert(
+                0,
+                Payment(mandate_ref=MandateReference(member=fake_member), amount=100),
+            )
             number_of_shares = 1 if fake_member.first_name == "John" else 123
 
             response_data["previews_old"].insert(
