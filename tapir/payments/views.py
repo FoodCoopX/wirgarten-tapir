@@ -590,7 +590,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
                 )
                 for payment in payments
             ]
-            self.add_fake_data(
+            self._add_fake_data(
                 response_data=response_data,
                 pattern_old=pattern_old,
                 pattern_new=pattern_new,
@@ -630,7 +630,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         )
 
     @classmethod
-    def add_fake_data(
+    def _add_fake_data(
         cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
     ):
         fake_members = [
@@ -669,7 +669,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
                 IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: format_currency(
                     -5 if is_short_member else 300
                 ),
-                IntendedUseTokens.CONTRACT_LIST: cls.build_fake_contract_list(
+                IntendedUseTokens.CONTRACT_LIST: cls._build_fake_contract_list(
                     short_version=is_short_member, cache=cache
                 ),
                 IntendedUseTokens.PAYMENT_RHYTHM: (
@@ -710,7 +710,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             )
 
     @classmethod
-    def build_fake_contract_list(cls, short_version: bool, cache: dict):
+    def _build_fake_contract_list(cls, short_version: bool, cache: dict):
         product_types = TapirCache.get_all_product_types(cache=cache)
         product_types = sorted(
             product_types,
@@ -719,7 +719,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         )
 
         product_type = product_types[0]
-        product = cls.get_product_with_according_to_name_length(
+        product = cls._get_product_with_according_to_name_length(
             product_type=product_type, cache=cache, shortest=short_version
         )
         quantity = 1 if short_version else 13
@@ -731,18 +731,19 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             return contract_list
 
         product_type = product_types[1]
-        product = cls.get_product_with_according_to_name_length(
+        product = cls._get_product_with_according_to_name_length(
             product_type=product_type, cache=cache, shortest=short_version
         )
         quantity = 17
-        contract_list += SubscriptionFactory.build(
-            product=product, quantity=quantity
-        ).short_str()
+        contract_list += (
+            ", "
+            + SubscriptionFactory.build(product=product, quantity=quantity).short_str()
+        )
 
         return contract_list
 
     @classmethod
-    def get_product_with_according_to_name_length(
+    def _get_product_with_according_to_name_length(
         cls, product_type: ProductType, cache: dict, shortest: bool
     ):
         products = TapirCache.get_products_with_product_type(
@@ -784,14 +785,14 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         }
         try:
             response_data["previews_old"] = [
-                self.build_preview(payment=payment, pattern=pattern_old, cache=cache)
+                self._build_preview(payment=payment, pattern=pattern_old, cache=cache)
                 for payment in payments
             ]
             response_data["previews_new"] = [
-                self.build_preview(payment=payment, pattern=pattern_new, cache=cache)
+                self._build_preview(payment=payment, pattern=pattern_new, cache=cache)
                 for payment in payments
             ]
-            self.add_fake_data(
+            self._add_fake_data(
                 response_data=response_data,
                 pattern_old=pattern_old,
                 pattern_new=pattern_new,
@@ -803,7 +804,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
 
     @classmethod
-    def build_preview(cls, payment: Payment, pattern: str, cache: dict):
+    def _build_preview(cls, payment: Payment, pattern: str, cache: dict):
         return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
             pattern=pattern,
             member=payment.mandate_ref.member,
@@ -823,7 +824,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         )
 
     @classmethod
-    def add_fake_data(
+    def _add_fake_data(
         cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
     ):
         fake_members = [

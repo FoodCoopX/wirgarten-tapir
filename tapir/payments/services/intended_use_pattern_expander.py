@@ -1,5 +1,4 @@
 import datetime
-from webbrowser import parse_args
 
 from django.core.exceptions import ValidationError
 
@@ -39,10 +38,8 @@ class IntendedUsePatternExpander:
         reference_date = payment.subscription_payment_range_end
         member = payment.mandate_ref.member
 
-        subscriptions = Subscription.objects.filter(
-            member_id=member.id,
-            start_date__lte=payment.subscription_payment_range_end,
-            end_date__gte=payment.subscription_payment_range_start,
+        subscriptions = IntendedUsePatternExpander.get_relevant_subscriptions(
+            member, payment
         )
 
         monthly_price_without_solidarity = sum(
@@ -57,7 +54,7 @@ class IntendedUsePatternExpander:
             )
         )
 
-        replacements = cls.get_common_token_replacers(member=member, cache=cache) | {
+        replacements = cls._get_common_token_replacers(member=member, cache=cache) | {
             IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: lambda: format_currency(
                 monthly_price_without_solidarity
             ),
@@ -69,19 +66,19 @@ class IntendedUsePatternExpander:
             ),
             IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: lambda: format_currency(
                 monthly_price_without_solidarity
-                * cls.get_nb_months(
+                * cls._get_nb_months(
                     member=member, reference_date=reference_date, cache=cache
                 )
             ),
             IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: lambda: format_currency(
                 (monthly_price_without_solidarity + monthly_price_just_solidarity)
-                * cls.get_nb_months(
+                * cls._get_nb_months(
                     member=member, reference_date=reference_date, cache=cache
                 )
             ),
             IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: lambda: format_currency(
                 monthly_price_just_solidarity
-                * cls.get_nb_months(
+                * cls._get_nb_months(
                     member=member, reference_date=reference_date, cache=cache
                 )
             ),
@@ -97,12 +94,20 @@ class IntendedUsePatternExpander:
             ),
         }
 
-        return cls.apply_replacements(
+        return cls._apply_replacements(
             pattern, replacements, token_value_overrides=token_value_overrides
         )
 
     @classmethod
-    def get_nb_months(cls, member: Member, reference_date: datetime.date, cache: dict):
+    def get_relevant_subscriptions(cls, member: Member, payment: Payment):
+        return Subscription.objects.filter(
+            member_id=member.id,
+            start_date__lte=payment.subscription_payment_range_end,
+            end_date__gte=payment.subscription_payment_range_start,
+        )
+
+    @classmethod
+    def _get_nb_months(cls, member: Member, reference_date: datetime.date, cache: dict):
         payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
             member=member,
             reference_date=reference_date,
@@ -124,7 +129,7 @@ class IntendedUsePatternExpander:
         if token_value_overrides is None:
             token_value_overrides = {}
 
-        replacements = cls.get_common_token_replacers(member=member, cache=cache) | {
+        replacements = cls._get_common_token_replacers(member=member, cache=cache) | {
             IntendedUseTokens.NUMBER_OF_COOP_SHARES: lambda: str(number_of_shares),
             IntendedUseTokens.COOP_ENTRY_DATE: lambda: format_date(
                 MembershipCancellationManager.get_coop_entry_date(member)
@@ -134,10 +139,10 @@ class IntendedUsePatternExpander:
             ),
         }
 
-        return cls.apply_replacements(pattern, replacements, token_value_overrides)
+        return cls._apply_replacements(pattern, replacements, token_value_overrides)
 
     @classmethod
-    def get_common_token_replacers(cls, member: Member, cache: dict):
+    def _get_common_token_replacers(cls, member: Member, cache: dict):
         return {
             IntendedUseTokens.SITE_NAME: lambda: get_parameter_value(
                 key=ParameterKeys.SITE_NAME, cache=cache
@@ -163,7 +168,7 @@ class IntendedUsePatternExpander:
         return f"{{{token}}}"
 
     @classmethod
-    def apply_replacements(
+    def _apply_replacements(
         cls,
         pattern,
         replacements: TokenReplacers,
@@ -173,7 +178,7 @@ class IntendedUsePatternExpander:
         expanded_lines = []
         for pattern_line in pattern_lines:
             expanded_lines.append(
-                cls.apply_replacements_for_line(
+                cls._apply_replacements_for_line(
                     line=pattern_line,
                     replacements=replacements,
                     token_value_overrides=token_value_overrides,
@@ -183,14 +188,14 @@ class IntendedUsePatternExpander:
         return "\n".join(expanded_lines)
 
     @classmethod
-    def apply_replacements_for_line(
+    def _apply_replacements_for_line(
         cls,
         line: str,
         replacements: TokenReplacers,
         token_value_overrides: dict[str, str],
     ):
         current_max_token_length = cls.MAX_LENGTH_PER_LINE
-        result = cls.apply_replacements_for_line_with_max_length(
+        result = cls._apply_replacements_for_line_with_max_length(
             line=line,
             replacements=replacements,
             max_length=current_max_token_length,
@@ -203,7 +208,7 @@ class IntendedUsePatternExpander:
                     f"Diese Zeile: '{line}' ist zu lang wenn die Tokens expandiert sind."
                 )
 
-            result = cls.apply_replacements_for_line_with_max_length(
+            result = cls._apply_replacements_for_line_with_max_length(
                 line=line,
                 replacements=replacements,
                 max_length=current_max_token_length,
@@ -212,7 +217,7 @@ class IntendedUsePatternExpander:
         return result
 
     @classmethod
-    def apply_replacements_for_line_with_max_length(
+    def _apply_replacements_for_line_with_max_length(
         cls,
         line: str,
         replacements: TokenReplacers,
