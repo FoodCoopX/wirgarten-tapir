@@ -1,3 +1,5 @@
+import datetime
+
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
@@ -89,4 +91,17 @@ class ConfigurationGenerator:
         coop_min_shares = {Organization.BIOTOP: 1}
         TapirParameter.objects.filter(key=ParameterKeys.COOP_MIN_SHARES).update(
             value=coop_min_shares.get(organization, 2)
+        )
+
+        if organization == Organization.BIOTOP:
+            TapirParameter.objects.filter(
+                key=ParameterKeys.MEMBER_NUMBER_PREFIX
+            ).update(value="BT")
+        TapirParameter.objects.filter(
+            key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH
+        ).update(value=4)
+
+        today = datetime.date.today()
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_START_DATE).update(
+            value=(today - datetime.timedelta(days=365)).replace(day=1)
         )

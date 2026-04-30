@@ -1,4 +1,5 @@
 apis/BestellWizardApi.ts
+apis/ConfigApi.ts
 apis/CoopApi.ts
 apis/CoreApi.ts
 apis/DeliveriesApi.ts
@@ -138,6 +139,7 @@ models/PatchedTemporaryUploadRequest.ts
 models/PatchedUpdateMemberBankDataRequestRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/Payment.ts
+models/PaymentIntendedUsePreviewResponse.ts
 models/PaymentRhythmSerializerRequest.ts
 models/PaymentStatusEnum.ts
 models/PdfExportModel.ts

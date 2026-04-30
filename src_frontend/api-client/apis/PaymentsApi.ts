@@ -19,6 +19,7 @@ import type {
   MemberCreditCreateRequest,
   MemberCreditSettleRequest,
   MemberPaymentRhythmData,
+  PaymentIntendedUsePreviewResponse,
   PaymentRhythmSerializerRequest,
 } from "../models/index";
 import {
@@ -28,6 +29,7 @@ import {
   MemberCreditCreateRequestToJSON,
   MemberCreditSettleRequestToJSON,
   MemberPaymentRhythmDataFromJSON,
+  PaymentIntendedUsePreviewResponseFromJSON,
   PaymentRhythmSerializerRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -40,6 +42,16 @@ export interface PaymentsApiCreditListFilteredListRequest {
   monthFilter?: number;
   showAll?: boolean;
   yearFilter?: number;
+}
+
+export interface PaymentsApiIntendedUsePreviewContractsRetrieveRequest {
+  patternNew: string;
+  patternOld: string;
+}
+
+export interface PaymentsApiIntendedUsePreviewCoopSharesRetrieveRequest {
+  patternNew: string;
+  patternOld: string;
 }
 
 export interface PaymentsApiMemberCreditCreateCreateRequest {
@@ -190,6 +202,156 @@ export class PaymentsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiIntendedUsePreviewContractsRetrieveRaw(
+    requestParameters: PaymentsApiIntendedUsePreviewContractsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PaymentIntendedUsePreviewResponse>> {
+    if (requestParameters["patternNew"] == null) {
+      throw new runtime.RequiredError(
+        "patternNew",
+        'Required parameter "patternNew" was null or undefined when calling paymentsApiIntendedUsePreviewContractsRetrieve().',
+      );
+    }
+
+    if (requestParameters["patternOld"] == null) {
+      throw new runtime.RequiredError(
+        "patternOld",
+        'Required parameter "patternOld" was null or undefined when calling paymentsApiIntendedUsePreviewContractsRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["patternNew"] != null) {
+      queryParameters["pattern_new"] = requestParameters["patternNew"];
+    }
+
+    if (requestParameters["patternOld"] != null) {
+      queryParameters["pattern_old"] = requestParameters["patternOld"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/intended_use_preview_contracts`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PaymentIntendedUsePreviewResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiIntendedUsePreviewContractsRetrieve(
+    requestParameters: PaymentsApiIntendedUsePreviewContractsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PaymentIntendedUsePreviewResponse> {
+    const response =
+      await this.paymentsApiIntendedUsePreviewContractsRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiIntendedUsePreviewCoopSharesRetrieveRaw(
+    requestParameters: PaymentsApiIntendedUsePreviewCoopSharesRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PaymentIntendedUsePreviewResponse>> {
+    if (requestParameters["patternNew"] == null) {
+      throw new runtime.RequiredError(
+        "patternNew",
+        'Required parameter "patternNew" was null or undefined when calling paymentsApiIntendedUsePreviewCoopSharesRetrieve().',
+      );
+    }
+
+    if (requestParameters["patternOld"] == null) {
+      throw new runtime.RequiredError(
+        "patternOld",
+        'Required parameter "patternOld" was null or undefined when calling paymentsApiIntendedUsePreviewCoopSharesRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["patternNew"] != null) {
+      queryParameters["pattern_new"] = requestParameters["patternNew"];
+    }
+
+    if (requestParameters["patternOld"] != null) {
+      queryParameters["pattern_old"] = requestParameters["patternOld"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/intended_use_preview_coop_shares`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PaymentIntendedUsePreviewResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiIntendedUsePreviewCoopSharesRetrieve(
+    requestParameters: PaymentsApiIntendedUsePreviewCoopSharesRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PaymentIntendedUsePreviewResponse> {
+    const response =
+      await this.paymentsApiIntendedUsePreviewCoopSharesRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

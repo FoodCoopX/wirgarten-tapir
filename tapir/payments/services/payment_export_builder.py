@@ -81,6 +81,7 @@ class PaymentExportBuilder:
             send_mail=send_mail,
             cache=cache,
         )
+
         cls.create_and_assign_transaction(
             file=exported_file,
             is_contract_payments=is_contract_payments,
@@ -95,7 +96,7 @@ class PaymentExportBuilder:
         payment_type_display = cls.get_payment_type_display(is_contract_payments)
         last_transaction = (
             PaymentTransaction.objects.filter(
-                type=payment_type_display, created_at__lte=reference_date
+                type=payment_type_display, month__lte=reference_date
             )
             .order_by("created_at")
             .last()
@@ -103,7 +104,7 @@ class PaymentExportBuilder:
         if last_transaction is None:
             return True
 
-        return reference_date.month != last_transaction.created_at.month
+        return reference_date.month != last_transaction.month.month
 
     @classmethod
     def create_and_assign_transaction(
@@ -132,8 +133,22 @@ class PaymentExportBuilder:
                 combined_payments[payment.mandate_ref] = Payment(
                     mandate_ref=payment.mandate_ref,
                     amount=Decimal(0),
+                    subscription_payment_range_start=payment.subscription_payment_range_start,
+                    subscription_payment_range_end=payment.subscription_payment_range_end,
                 )
             combined_payments[payment.mandate_ref].amount += payment.amount
+            combined_payments[payment.mandate_ref].subscription_payment_range_start = (
+                min(
+                    combined_payments[
+                        payment.mandate_ref
+                    ].subscription_payment_range_start,
+                    payment.subscription_payment_range_start,
+                )
+            )
+            combined_payments[payment.mandate_ref].subscription_payment_range_end = max(
+                combined_payments[payment.mandate_ref].subscription_payment_range_end,
+                payment.subscription_payment_range_end,
+            )
 
         return combined_payments.values()
 
