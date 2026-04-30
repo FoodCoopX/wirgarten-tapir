@@ -42,6 +42,7 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
         context["intended_use_contract_keys"] = ",".join(
             [
                 ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE,
+                ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE_SOLIDARITY_SUPPORTED,
                 ParameterKeys.PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE,
                 ParameterKeys.PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY,
             ]

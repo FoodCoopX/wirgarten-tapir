@@ -2,6 +2,7 @@ import datetime
 
 import factory.random
 from django.core.exceptions import ImproperlyConfigured
+from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.log.models import LogEntry
@@ -101,6 +102,9 @@ class DataGenerator:
         SolidarityContributionGenerator.generate_solidarity_contributions()
         print("Creating member credits...")
         MemberCreditGenerator.generate_member_credits()
+        print("Creating payment history...")
+        call_command("rebuild_payment_history", "--no-confirm")
+        print("Test data generation done")
 
     @classmethod
     def generate_growing_periods(cls, generate_test_data_for: Organization):

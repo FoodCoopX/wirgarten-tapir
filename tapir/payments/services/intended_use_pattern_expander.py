@@ -104,6 +104,9 @@ class IntendedUsePatternExpander:
     @classmethod
     def get_common_token_replacers(cls, member: Member, cache: dict):
         return {
+            IntendedUseTokens.SITE_NAME: lambda: get_parameter_value(
+                key=ParameterKeys.SITE_NAME, cache=cache
+            ),
             IntendedUseTokens.FIRST_NAME: lambda: member.first_name,
             IntendedUseTokens.LAST_NAME: lambda: member.last_name,
             IntendedUseTokens.MEMBER_NUMBER_SHORT: lambda: str(member.member_no),

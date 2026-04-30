@@ -43,6 +43,9 @@ class ParameterKeys:
     PAYMENT_INTENDED_USE_MONTHLY_INVOICE = (
         f"{PREFIX}.payment.intended_use.monthly_invoice"
     )
+    PAYMENT_INTENDED_USE_MONTHLY_INVOICE_SOLIDARITY_SUPPORTED = (
+        f"{PREFIX}.payment.intended_use.monthly_invoice_solidarity_supported"
+    )
     PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY = (
         f"{PREFIX}.payment.intended_use.soli_contribution_only"
     )

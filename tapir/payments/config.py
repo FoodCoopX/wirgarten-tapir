@@ -2,6 +2,7 @@ PAYMENT_TYPE_COOP_SHARES = "Genossenschaftsanteile"
 
 
 class IntendedUseTokens:
+    SITE_NAME = "betriebsname"
     FIRST_NAME = "vorname"
     LAST_NAME = "nachname"
     MEMBER_NUMBER_SHORT = "mitgliedsnummer_kurz"
@@ -20,6 +21,7 @@ class IntendedUseTokens:
     PAYMENT_RHYTHM = "zahlungsintervall"
 
     COMMON_TOKENS = [
+        SITE_NAME,
         FIRST_NAME,
         LAST_NAME,
         MEMBER_NUMBER_SHORT,

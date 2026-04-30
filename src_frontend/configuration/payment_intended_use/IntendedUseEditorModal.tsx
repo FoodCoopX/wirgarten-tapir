@@ -180,21 +180,31 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
 
   return (
     <Modal show={show} onHide={onHide} centered={false} size={"xl"}>
-      <Modal.Header closeButton={true}>
+      <Modal.Header>
         <span
           className={"d-flex justify-content-between"}
           style={{ width: "100%" }}
         >
           <ModalTitle>{title}</ModalTitle>
-          <TapirButton
-            icon={"check"}
-            text={"Verwenden"}
-            onClick={() => {
-              setOuterPattern(innerPattern);
-              onHide();
-            }}
-            variant={"outline-secondary"}
-          />
+          <span className={"d-flex gap-2"}>
+            <TapirButton
+              icon={"check"}
+              text={"Übernehmen"}
+              onClick={() => {
+                setOuterPattern(innerPattern);
+                onHide();
+              }}
+              variant={"outline-primary"}
+            />
+            <TapirButton
+              icon={"cancel"}
+              text={"Nicht übernehmen"}
+              onClick={() => {
+                onHide();
+              }}
+              variant={"outline-secondary"}
+            />
+          </span>
         </span>
       </Modal.Header>
       <Modal.Body>
