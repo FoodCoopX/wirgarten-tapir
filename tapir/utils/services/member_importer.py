@@ -250,6 +250,16 @@ class MemberImporter:
     def update_solidarity_contribution(cls, member: Member, row: dict[str, str]):
         target_amount = DataImportUtils.safe_float(row.get("Solidarpreis in EUR"))
 
+        solidarity_contribution = SolidarityContribution.objects.filter(
+            member=member
+        ).first()
+        if target_amount == 0:
+            if not solidarity_contribution:
+                return False
+
+            SolidarityContribution.objects.filter(member=member).delete()
+            return True
+
         target_start_date = DataImportUtils.to_date(row.get("Solidarpreis Start_Date"))
         target_start_date = target_start_date or member.created_at.date()
 
@@ -260,16 +270,6 @@ class MemberImporter:
                 reference_date=target_start_date, cache={}
             ).end_date
         )
-
-        solidarity_contribution = SolidarityContribution.objects.filter(
-            member=member
-        ).first()
-        if target_amount == 0:
-            if not solidarity_contribution:
-                return False
-
-            SolidarityContribution.objects.filter(member=member).delete()
-            return True
 
         if not solidarity_contribution:
             SolidarityContribution.objects.create(
