@@ -52,6 +52,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
   const [payments, setPayments] = useState<Payment[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const innerInputFieldRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController>(undefined);
 
   function onChange(event: React.ChangeEvent<HTMLInputElement>) {
     setInnerPattern(event.target.value);
@@ -73,6 +74,11 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
   }, [innerPattern, show]);
 
   function fetchPreviews() {
+    abortControllerRef.current?.abort();
+
+    const localController = new AbortController();
+    abortControllerRef.current = localController;
+
     setLoading(true);
 
     const requestData = {
@@ -82,24 +88,28 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
 
     let promise;
     if (isContract) {
-      promise =
-        paymentsApi.paymentsApiIntendedUsePreviewContractsRetrieve(requestData);
+      promise = paymentsApi.paymentsApiIntendedUsePreviewContractsRetrieve(
+        requestData,
+        { signal: localController.signal },
+      );
     } else {
-      promise =
-        paymentsApi.paymentsApiIntendedUsePreviewCoopSharesRetrieve(
-          requestData,
-        );
+      promise = paymentsApi.paymentsApiIntendedUsePreviewCoopSharesRetrieve(
+        requestData,
+        { signal: localController.signal },
+      );
     }
     promise
       .then((response) => {
+        setMembers(response.members);
         setInnerPreviews(response.previewsNew);
         setOuterPreviews(response.previewsOld);
         setError(response.error);
         setTokens(response.tokens);
         setPayments(response.payments);
-        setMembers(response.members);
       })
       .catch((error) => {
+        if (error.cause?.name === "AbortError") return;
+
         handleRequestError(
           error,
           "Fehler beim Laden der Vorschau für Verwendungszwecke",
@@ -116,7 +126,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
     }
 
     return (
-      <Table responsive striped bordered>
+      <Table responsive hover bordered>
         <thead>
           <tr>
             <th>{loading ? <Spinner size={"sm"} /> : "Zahlung"}</th>
@@ -124,22 +134,41 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
             <th>Vorschau Alt</th>
             <th>Vorschau Neu</th>
           </tr>
+          <tr>
+            <th colSpan={4} className={"text-center"}>
+              Beispiel-Daten
+            </th>
+          </tr>
         </thead>
         <tbody>
           {members.map((member, index) => (
-            <tr key={member.id!}>
-              <td>
-                {formatCurrency(payments[index].amount)},{" "}
-                {formatDateNumeric(
-                  payments[index].subscriptionPaymentRangeStart,
-                )}
-              </td>
-              <td>
-                {member.firstName} {member.lastName} #{member.memberNo}
-              </td>
-              <td>{buildPreview(outerPreviews[index])}</td>
-              <td>{buildPreview(innerPreviews[index])}</td>
-            </tr>
+            <>
+              {index === 2 && (
+                <tr>
+                  <th colSpan={4} className={"text-center"}>
+                    Echte Daten
+                  </th>
+                </tr>
+              )}
+              <tr key={member.id!}>
+                <td>
+                  {formatCurrency(payments[index].amount)}
+                  {isContract && (
+                    <>
+                      {", "}
+                      {formatDateNumeric(
+                        payments[index].subscriptionPaymentRangeStart,
+                      )}
+                    </>
+                  )}
+                </td>
+                <td>
+                  {member.firstName} {member.lastName} #{member.memberNo}
+                </td>
+                <td>{buildPreview(outerPreviews[index])}</td>
+                <td>{buildPreview(innerPreviews[index])}</td>
+              </tr>
+            </>
           ))}
         </tbody>
         <tfoot>
@@ -188,7 +217,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
           <ModalTitle>{title}</ModalTitle>
           <span className={"d-flex gap-2"}>
             <TapirButton
-              icon={"check"}
+              icon={"check_circle"}
               text={"Übernehmen"}
               onClick={() => {
                 setOuterPattern(innerPattern);

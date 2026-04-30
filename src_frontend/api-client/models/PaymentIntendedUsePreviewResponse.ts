@@ -92,8 +92,8 @@ export function PaymentIntendedUsePreviewResponseFromJSONTyped(
     return json;
   }
   return {
-    previewsNew: json["previewsNew"],
-    previewsOld: json["previewsOld"],
+    previewsNew: json["previews_new"],
+    previewsOld: json["previews_old"],
     error: json["error"],
     tokens: json["tokens"],
     payments: (json["payments"] as Array<any>).map(PaymentFromJSON),
@@ -116,8 +116,8 @@ export function PaymentIntendedUsePreviewResponseToJSONTyped(
   }
 
   return {
-    previewsNew: value["previewsNew"],
-    previewsOld: value["previewsOld"],
+    previews_new: value["previewsNew"],
+    previews_old: value["previewsOld"],
     error: value["error"],
     tokens: value["tokens"],
     payments: (value["payments"] as Array<any>).map(PaymentToJSON),

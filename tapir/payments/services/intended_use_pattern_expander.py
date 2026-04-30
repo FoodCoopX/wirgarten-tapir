@@ -1,3 +1,6 @@
+import datetime
+from webbrowser import parse_args
+
 from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
@@ -23,12 +26,21 @@ class IntendedUsePatternExpander:
     MIN_TOKEN_LENGTH = 5
 
     @classmethod
-    def expand_pattern_contracts(cls, pattern: str, payment: Payment, cache: dict):
+    def expand_pattern_contracts(
+        cls,
+        pattern: str,
+        payment: Payment,
+        cache: dict,
+        token_value_overrides: dict[str, str] = None,
+    ):
+        if token_value_overrides is None:
+            token_value_overrides = {}
+
         reference_date = payment.subscription_payment_range_end
         member = payment.mandate_ref.member
 
         subscriptions = Subscription.objects.filter(
-            member=member,
+            member_id=member.id,
             start_date__lte=payment.subscription_payment_range_end,
             end_date__gte=payment.subscription_payment_range_start,
         )
@@ -45,17 +57,6 @@ class IntendedUsePatternExpander:
             )
         )
 
-        payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
-            member=member,
-            reference_date=reference_date,
-            cache=cache,
-        )
-        nb_months = MemberPaymentRhythmService.get_number_of_months_paid_in_advance(
-            rhythm=payment_rhythm
-        )
-        rhythm_price_without_solidarity = monthly_price_without_solidarity * nb_months
-        rhythm_price_just_solidarity = monthly_price_just_solidarity * nb_months
-
         replacements = cls.get_common_token_replacers(member=member, cache=cache) | {
             IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: lambda: format_currency(
                 monthly_price_without_solidarity
@@ -67,28 +68,62 @@ class IntendedUsePatternExpander:
                 monthly_price_just_solidarity
             ),
             IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: lambda: format_currency(
-                rhythm_price_without_solidarity
+                monthly_price_without_solidarity
+                * cls.get_nb_months(
+                    member=member, reference_date=reference_date, cache=cache
+                )
             ),
             IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: lambda: format_currency(
-                rhythm_price_without_solidarity + rhythm_price_just_solidarity
+                (monthly_price_without_solidarity + monthly_price_just_solidarity)
+                * cls.get_nb_months(
+                    member=member, reference_date=reference_date, cache=cache
+                )
             ),
             IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: lambda: format_currency(
-                rhythm_price_just_solidarity
+                monthly_price_just_solidarity
+                * cls.get_nb_months(
+                    member=member, reference_date=reference_date, cache=cache
+                )
             ),
             IntendedUseTokens.CONTRACT_LIST: lambda: ", ".join(
                 subscription.short_str() for subscription in subscriptions
             ),
             IntendedUseTokens.PAYMENT_RHYTHM: lambda: MemberPaymentRhythmService.get_rhythm_display_name(
-                rhythm=payment_rhythm
+                rhythm=MemberPaymentRhythmService.get_member_payment_rhythm(
+                    member=member,
+                    reference_date=reference_date,
+                    cache=cache,
+                )
             ),
         }
 
-        return cls.apply_replacements(pattern, replacements)
+        return cls.apply_replacements(
+            pattern, replacements, token_value_overrides=token_value_overrides
+        )
+
+    @classmethod
+    def get_nb_months(cls, member: Member, reference_date: datetime.date, cache: dict):
+        payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+            member=member,
+            reference_date=reference_date,
+            cache=cache,
+        )
+        return MemberPaymentRhythmService.get_number_of_months_paid_in_advance(
+            rhythm=payment_rhythm
+        )
 
     @classmethod
     def expand_pattern_coop_shares_bought(
-        cls, pattern: str, member: Member, number_of_shares: int, cache: dict
+        cls,
+        pattern: str,
+        member: Member,
+        number_of_shares: int,
+        cache: dict,
+        token_value_overrides: dict = None,
     ):
+        if token_value_overrides is None:
+            token_value_overrides = {}
+
         replacements = cls.get_common_token_replacers(member=member, cache=cache) | {
             IntendedUseTokens.NUMBER_OF_COOP_SHARES: lambda: str(number_of_shares),
             IntendedUseTokens.COOP_ENTRY_DATE: lambda: format_date(
@@ -99,7 +134,7 @@ class IntendedUsePatternExpander:
             ),
         }
 
-        return cls.apply_replacements(pattern, replacements)
+        return cls.apply_replacements(pattern, replacements, token_value_overrides)
 
     @classmethod
     def get_common_token_replacers(cls, member: Member, cache: dict):
@@ -128,23 +163,38 @@ class IntendedUsePatternExpander:
         return f"{{{token}}}"
 
     @classmethod
-    def apply_replacements(cls, pattern, replacements: TokenReplacers):
-        pattern_lines = pattern.split("\n")
+    def apply_replacements(
+        cls,
+        pattern,
+        replacements: TokenReplacers,
+        token_value_overrides: dict[str, str],
+    ):
+        pattern_lines = pattern.strip().split("\n")
         expanded_lines = []
         for pattern_line in pattern_lines:
             expanded_lines.append(
                 cls.apply_replacements_for_line(
-                    line=pattern_line, replacements=replacements
+                    line=pattern_line,
+                    replacements=replacements,
+                    token_value_overrides=token_value_overrides,
                 )
             )
 
         return "\n".join(expanded_lines)
 
     @classmethod
-    def apply_replacements_for_line(cls, line: str, replacements: TokenReplacers):
+    def apply_replacements_for_line(
+        cls,
+        line: str,
+        replacements: TokenReplacers,
+        token_value_overrides: dict[str, str],
+    ):
         current_max_token_length = cls.MAX_LENGTH_PER_LINE
         result = cls.apply_replacements_for_line_with_max_length(
-            line=line, replacements=replacements, max_length=current_max_token_length
+            line=line,
+            replacements=replacements,
+            max_length=current_max_token_length,
+            token_value_overrides=token_value_overrides,
         )
         while len(result) > cls.MAX_LENGTH_PER_LINE:
             current_max_token_length -= 1
@@ -157,12 +207,17 @@ class IntendedUsePatternExpander:
                 line=line,
                 replacements=replacements,
                 max_length=current_max_token_length,
+                token_value_overrides=token_value_overrides,
             )
         return result
 
     @classmethod
     def apply_replacements_for_line_with_max_length(
-        cls, line: str, replacements: TokenReplacers, max_length: int
+        cls,
+        line: str,
+        replacements: TokenReplacers,
+        max_length: int,
+        token_value_overrides: dict[str, str],
     ):
         result = line
         for token, provider in replacements.items():
@@ -170,5 +225,10 @@ class IntendedUsePatternExpander:
             if token_with_braces not in result:
                 continue
 
-            result = result.replace(token_with_braces, provider()[:max_length])
+            if token in token_value_overrides:
+                value = token_value_overrides[token]
+            else:
+                value = provider()
+
+            result = result.replace(token_with_braces, value[:max_length])
         return result

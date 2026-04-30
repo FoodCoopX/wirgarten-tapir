@@ -9125,11 +9125,11 @@ components:
     PaymentIntendedUsePreviewResponse:
       type: object
       properties:
-        previewsNew:
+        previews_new:
           type: array
           items:
             type: string
-        previewsOld:
+        previews_old:
           type: array
           items:
             type: string
@@ -9151,8 +9151,8 @@ components:
       - error
       - members
       - payments
-      - previewsNew
-      - previewsOld
+      - previews_new
+      - previews_old
       - tokens
     PaymentStatusEnum:
       enum:

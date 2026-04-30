@@ -50,7 +50,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_first_of_next_month
+from tapir.utils.shortcuts import get_first_of_next_month, get_last_day_of_month
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Payment,
@@ -58,10 +58,21 @@ from tapir.wirgarten.models import (
     MandateReference,
     Member,
     Subscription,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
-from tapir.wirgarten.utils import check_permission_or_self, get_today
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    PaymentFactory,
+    SubscriptionFactory,
+)
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    get_today,
+    format_date,
+    format_currency,
+)
 
 
 class GetFutureMemberPaymentsApiView(APIView):
@@ -558,8 +569,8 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         payments = self._get_random_payments(cache=cache)
 
         response_data = {
-            "previewsOld": ["" for _ in payments],
-            "previewsNew": ["" for _ in payments],
+            "previews_old": ["" for _ in payments],
+            "previews_new": ["" for _ in payments],
             "error": "",
             "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
             + sorted(IntendedUseTokens.CONTRACT_TOKENS),
@@ -567,18 +578,24 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             "members": [payment.mandate_ref.member for payment in payments],
         }
         try:
-            response_data["previewsOld"] = [
+            response_data["previews_old"] = [
                 IntendedUsePatternExpander.expand_pattern_contracts(
                     pattern=pattern_old, payment=payment, cache=cache
                 )
                 for payment in payments
             ]
-            response_data["previewsNew"] = [
+            response_data["previews_new"] = [
                 IntendedUsePatternExpander.expand_pattern_contracts(
                     pattern=pattern_new, payment=payment, cache=cache
                 )
                 for payment in payments
             ]
+            self.add_fake_data(
+                response_data=response_data,
+                pattern_old=pattern_old,
+                pattern_new=pattern_new,
+                cache=cache,
+            )
         except Exception as error:
             response_data["error"] = str(error)
 
@@ -612,6 +629,132 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             ),
         )
 
+    @classmethod
+    def add_fake_data(
+        cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
+    ):
+        fake_members = [
+            MemberFactory.build(
+                first_name="John", last_name="Doe", member_no=14, id=14
+            ),
+            MemberFactory.build(
+                first_name="Maximilian",
+                last_name="Mustermann",
+                member_no=123456,
+                id=123456,
+            ),
+        ]
+
+        today = get_today(cache=cache)
+
+        for fake_member in fake_members:
+            is_short_member = fake_member.first_name == "John"
+
+            token_value_overrides = {
+                IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
+                    10 if is_short_member else 100
+                ),
+                IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITH_SOLI: format_currency(
+                    5 if is_short_member else 150
+                ),
+                IntendedUseTokens.MONTHLY_PRICE_JUST_SOLI: format_currency(
+                    -5 if is_short_member else 50
+                ),
+                IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
+                    10 if is_short_member else 1200
+                ),
+                IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: format_currency(
+                    5 if is_short_member else 900
+                ),
+                IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: format_currency(
+                    -5 if is_short_member else 300
+                ),
+                IntendedUseTokens.CONTRACT_LIST: cls.build_fake_contract_list(
+                    short_version=is_short_member, cache=cache
+                ),
+                IntendedUseTokens.PAYMENT_RHYTHM: (
+                    MemberPaymentRhythm.Rhythm.MONTHLY.label
+                    if is_short_member
+                    else MemberPaymentRhythm.Rhythm.QUARTERLY.label
+                ),
+            }
+
+            response_data["members"].insert(0, fake_member)
+            payment = PaymentFactory.build(
+                mandate_ref__member=fake_member,
+                subscription_payment_range_start=(
+                    today - datetime.timedelta(days=120)
+                ).replace(day=1),
+                subscription_payment_range_end=get_last_day_of_month(
+                    today - datetime.timedelta(days=30)
+                ),
+            )
+            response_data["payments"].insert(0, payment)
+            response_data["previews_old"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_contracts(
+                    pattern=pattern_old,
+                    payment=payment,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+            response_data["previews_new"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_contracts(
+                    pattern=pattern_new,
+                    payment=payment,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+
+    @classmethod
+    def build_fake_contract_list(cls, short_version: bool, cache: dict):
+        product_types = TapirCache.get_all_product_types(cache=cache)
+        product_types = sorted(
+            product_types,
+            key=lambda product_type: product_type.name,
+            reverse=not short_version,
+        )
+
+        product_type = product_types[0]
+        product = cls.get_product_with_according_to_name_length(
+            product_type=product_type, cache=cache, shortest=short_version
+        )
+        quantity = 1 if short_version else 13
+        contract_list = SubscriptionFactory.build(
+            product=product, quantity=quantity
+        ).short_str()
+
+        if short_version or len(product_types) == 1:
+            return contract_list
+
+        product_type = product_types[1]
+        product = cls.get_product_with_according_to_name_length(
+            product_type=product_type, cache=cache, shortest=short_version
+        )
+        quantity = 17
+        contract_list += SubscriptionFactory.build(
+            product=product, quantity=quantity
+        ).short_str()
+
+        return contract_list
+
+    @classmethod
+    def get_product_with_according_to_name_length(
+        cls, product_type: ProductType, cache: dict, shortest: bool
+    ):
+        products = TapirCache.get_products_with_product_type(
+            cache=cache, product_type_id=product_type.id
+        )
+        products = sorted(
+            products,
+            key=lambda product: product.name,
+            reverse=not shortest,
+        )
+        return products[0]
+
 
 class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
@@ -631,8 +774,8 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         payments = self._get_random_payments(cache=cache)
 
         response_data = {
-            "previewsOld": ["" for _ in payments],
-            "previewsNew": ["" for _ in payments],
+            "previews_old": ["" for _ in payments],
+            "previews_new": ["" for _ in payments],
             "error": "",
             "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
             + sorted(IntendedUseTokens.COOP_SHARE_TOKENS),
@@ -640,43 +783,82 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
             "members": [payment.mandate_ref.member for payment in payments],
         }
         try:
-            response_data["previewsOld"] = [
-                IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
-                    pattern=pattern_old,
-                    member=payment.mandate_ref.member,
-                    number_of_shares=round(
-                        payment.amount
-                        / get_parameter_value(
-                            ParameterKeys.COOP_SHARE_PRICE, cache=cache
-                        )
-                    ),
-                    cache=cache,
-                )
+            response_data["previews_old"] = [
+                self.build_preview(payment=payment, pattern=pattern_old, cache=cache)
                 for payment in payments
             ]
-            response_data["previewsNew"] = [
-                IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
-                    pattern=pattern_new,
-                    member=payment.mandate_ref.member,
-                    number_of_shares=round(
-                        payment.amount
-                        / get_parameter_value(
-                            ParameterKeys.COOP_SHARE_PRICE, cache=cache
-                        )
-                    ),
-                    cache=cache,
-                )
+            response_data["previews_new"] = [
+                self.build_preview(payment=payment, pattern=pattern_new, cache=cache)
                 for payment in payments
             ]
+            self.add_fake_data(
+                response_data=response_data,
+                pattern_old=pattern_old,
+                pattern_new=pattern_new,
+                cache=cache,
+            )
         except Exception as error:
             response_data["error"] = str(error)
 
         return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
 
     @classmethod
+    def build_preview(cls, payment: Payment, pattern: str, cache: dict):
+        return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
+            pattern=pattern,
+            member=payment.mandate_ref.member,
+            number_of_shares=round(
+                payment.amount
+                / get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            ),
+            cache=cache,
+        )
+
+    @classmethod
     def _get_random_payments(cls, cache: dict):
-        return (
+        return list(
             Payment.objects.filter(type=PAYMENT_TYPE_COOP_SHARES)
             .select_related("mandate_ref__member")
             .order_by("?")[:5]
         )
+
+    @classmethod
+    def add_fake_data(
+        cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
+    ):
+        fake_members = [
+            MemberFactory.build(first_name="John", last_name="Doe", member_no=14),
+            MemberFactory.build(
+                first_name="Maximilian", last_name="Mustermann", member_no=123456
+            ),
+        ]
+
+        token_value_overrides = {
+            IntendedUseTokens.COOP_ENTRY_DATE: format_date(get_today(cache=cache)),
+        }
+
+        for fake_member in fake_members:
+            response_data["members"].insert(0, fake_member)
+            response_data["payments"].insert(0, PaymentFactory.build())
+            number_of_shares = 1 if fake_member.first_name == "John" else 123
+
+            response_data["previews_old"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
+                    pattern=pattern_old,
+                    member=fake_member,
+                    number_of_shares=number_of_shares,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+            response_data["previews_new"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
+                    pattern=pattern_new,
+                    member=fake_member,
+                    number_of_shares=number_of_shares,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
