@@ -13,6 +13,7 @@ from tapir_mail.service.shortcuts import make_timezone_aware
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -37,9 +38,6 @@ from tapir.wirgarten.models import (
     OrderFeedback,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import (
-    get_or_create_mandate_ref,
-)
 from tapir.wirgarten.tasks import generate_member_numbers
 from tapir.wirgarten.utils import get_today
 
@@ -244,7 +242,9 @@ class UserGenerator:
         products_from_base_type: List[Product],
         additional_products: List[Product],
     ):
-        mandate_ref = get_or_create_mandate_ref(member, cache=cache)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member, cache=cache
+        )
         future_growing_period = cls.get_future_growing_period(cache=cache)
         start_date = cls.get_random_date_in_range_biased_towards_lower_end(
             member.date_joined.date(), future_growing_period.end_date
@@ -385,7 +385,9 @@ class UserGenerator:
             end_date=None,
             period=None,
             quantity=1,
-            mandate_ref=get_or_create_mandate_ref(member, cache=cache),
+            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                member, cache=cache
+            ),
             admin_confirmed=cls.get_confirmation_datetime(
                 growing_period.start_date, cache=cache
             ),

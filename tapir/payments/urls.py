@@ -46,6 +46,11 @@ urlpatterns = [
         name="can_logged_in_user_change_targets_payment_rhythm",
     ),
     path(
+        "api/mandate_reference_preview",
+        views.MandateReferencePreviewApiView.as_view(),
+        name="mandate_reference_preview",
+    ),
+    path(
         "api/intended_use_preview_contracts",
         views.PaymentIntendedUsePreviewContractsApiView.as_view(),
         name="intended_use_preview_contracts",

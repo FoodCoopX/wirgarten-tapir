@@ -5,6 +5,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.models import CoopSharesPurchasedLogEntry
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import mock_timezone
@@ -16,10 +17,14 @@ class TestBuyCooperativeShares(TapirUnitTest):
     @patch.object(CoopSharePurchaseHandler, "send_warning_mail_if_necessary")
     @patch.object(CoopShareTransaction, "objects")
     @patch.object(CoopSharePurchaseHandler, "create_or_update_payment")
-    @patch("tapir.coop.services.coop_share_purchase_handler.get_or_create_mandate_ref")
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
+    )
     def test_buyCooperativeShares_default_createPaymentAndSharesAndSendsMail(
         self,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_create_or_update_payment: Mock,
         mock_coop_share_transaction_objects: Mock,
         mock_send_warning_mail_if_necessary: Mock,
@@ -33,7 +38,7 @@ class TestBuyCooperativeShares(TapirUnitTest):
         shares_valid_at = datetime.date(year=2024, month=2, day=13)
         cache = {}
         mandate_ref = Mock()
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         payment = Mock()
         mock_create_or_update_payment.return_value = payment
         transaction = Mock()
@@ -49,7 +54,7 @@ class TestBuyCooperativeShares(TapirUnitTest):
             actor=actor,
         )
 
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_create_or_update_payment.assert_called_once_with(
@@ -86,10 +91,14 @@ class TestBuyCooperativeShares(TapirUnitTest):
     @patch.object(CoopSharePurchaseHandler, "send_warning_mail_if_necessary")
     @patch.object(CoopShareTransaction, "objects")
     @patch.object(CoopSharePurchaseHandler, "create_or_update_payment")
-    @patch("tapir.coop.services.coop_share_purchase_handler.get_or_create_mandate_ref")
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
+    )
     def test_buyCooperativeShares_memberSepaConsentIsAlreadySetToNow_dontSaveMember(
         self,
-        mock_get_or_create_mandate_ref: Mock,
+        mock_get_or_create_mandate_reference: Mock,
         mock_create_or_update_payment: Mock,
         mock_coop_share_transaction_objects: Mock,
         mock_send_warning_mail_if_necessary: Mock,
@@ -103,7 +112,7 @@ class TestBuyCooperativeShares(TapirUnitTest):
         shares_valid_at = datetime.date(year=2024, month=2, day=13)
         cache = {}
         mandate_ref = Mock()
-        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
         payment = Mock()
         mock_create_or_update_payment.return_value = payment
         transaction = Mock()
@@ -119,7 +128,7 @@ class TestBuyCooperativeShares(TapirUnitTest):
             actor=actor,
         )
 
-        mock_get_or_create_mandate_ref.assert_called_once_with(
+        mock_get_or_create_mandate_reference.assert_called_once_with(
             member=member, cache=cache
         )
         mock_create_or_update_payment.assert_called_once_with(

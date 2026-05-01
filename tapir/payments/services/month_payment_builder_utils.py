@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -17,7 +18,6 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 
 class MonthPaymentBuilderUtils:
@@ -114,7 +114,9 @@ class MonthPaymentBuilderUtils:
         if first_day_of_rhythm_period > last_day_of_rhythm_period:
             return None
 
-        mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache=cache
+        )
 
         already_paid = MonthPaymentBuilderUtils.get_already_paid_amount(
             range_start=first_day_of_rhythm_period,

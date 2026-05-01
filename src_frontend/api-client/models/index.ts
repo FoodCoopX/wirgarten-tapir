@@ -73,6 +73,7 @@ export * from "./LegalStatusEnum";
 export * from "./LocaleEnum";
 export * from "./MailCategory";
 export * from "./MailCategoryRequest";
+export * from "./MandateReferencePreviewResponse";
 export * from "./Member";
 export * from "./MemberBankDataResponse";
 export * from "./MemberCountry";

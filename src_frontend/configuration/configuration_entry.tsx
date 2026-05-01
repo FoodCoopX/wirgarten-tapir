@@ -1,15 +1,20 @@
 import { createRoot } from "react-dom/client";
+import MandateReferencePreview from "./MandateReferencePreview.tsx";
 import IntendedUseEditorBase from "./payment_intended_use/IntendedUseEditorBase.tsx";
 
-const configElement = document.getElementById("payment-intended-use-config");
+const configElementIntendedUse = document.getElementById(
+  "payment-intended-use-config",
+);
 
-if (configElement) {
-  const contractKeys = configElement.dataset.contractKeys?.split(",") ?? [];
+if (configElementIntendedUse) {
+  const contractKeys =
+    configElementIntendedUse.dataset.contractKeys?.split(",") ?? [];
   for (const parameterKey of contractKeys) {
     createEditorRoot(parameterKey, true);
   }
 
-  const coopKeys = configElement.dataset.coopSharesKeys?.split(",") ?? [];
+  const coopKeys =
+    configElementIntendedUse.dataset.coopSharesKeys?.split(",") ?? [];
   for (const parameterKey of coopKeys) {
     createEditorRoot(parameterKey, false);
   }
@@ -40,4 +45,22 @@ function createEditorRoot(parameterKey: string, isContract: boolean) {
       title={inputElement.labels[0].innerText}
     />,
   );
+}
+
+const configElementMandateReference = document.getElementById(
+  "mandate-reference-preview-config",
+);
+if (configElementMandateReference) {
+  const parameterKey = configElementMandateReference.dataset.parameterKey;
+  const inputElement = document.getElementById(
+    "id_" + parameterKey,
+  ) as HTMLInputElement;
+
+  const previewDiv = document.createElement("div");
+  inputElement.insertAdjacentElement("afterend", previewDiv);
+
+  const root = createRoot(previewDiv);
+  root.render(<MandateReferencePreview inputField={inputElement} />);
+} else {
+  alert("Failed to render mandate reference preview");
 }

@@ -629,13 +629,17 @@ class MandateReference(models.Model):
     The mandate reference is generated for the SEPA payments.
     """
 
-    ref = models.CharField(primary_key=True, null=False, blank=False, max_length=35)
+    ref = models.CharField(primary_key=True, max_length=35)
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
-    start_ts = models.DateTimeField(null=False)
-    end_ts = models.DateTimeField(null=True)
+    start_ts = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         indexes = [Index(fields=["member"], name="idx_mandatereference_mamber")]
+
+    def __str__(self):
+        return f"{self.member}: {self.ref}, {format_date(self.start_ts)}"
 
 
 class Payable:

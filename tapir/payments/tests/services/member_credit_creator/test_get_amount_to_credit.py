@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -13,7 +14,6 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     GrowingPeriodFactory,
@@ -49,7 +49,9 @@ class TestGetAmountToCredit(TapirIntegrationTest):
 
         PaymentFactory.create(
             due_date=datetime.date(year=2027, month=2, day=15),
-            mandate_ref=get_or_create_mandate_ref(member=member, cache={}),
+            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                member=member, cache={}
+            ),
             amount=72.8,
             type="test_product_type",
             subscription_payment_range_start=datetime.date(year=2027, month=1, day=1),
@@ -61,7 +63,9 @@ class TestGetAmountToCredit(TapirIntegrationTest):
             period=growing_period,
             quantity=1,
             product__type__name="test_product_type",
-            mandate_ref=get_or_create_mandate_ref(member=member, cache={}),
+            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                member=member, cache={}
+            ),
         )
         ProductPriceFactory.create(
             product=subscription.product, price=10, valid_from=growing_period.start_date
@@ -95,7 +99,9 @@ class TestGetAmountToCredit(TapirIntegrationTest):
 
         PaymentFactory.create(
             due_date=datetime.date(year=2027, month=2, day=15),
-            mandate_ref=get_or_create_mandate_ref(member=member, cache={}),
+            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                member=member, cache={}
+            ),
             amount=72.8,
             type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
             subscription_payment_range_start=datetime.date(year=2027, month=1, day=1),

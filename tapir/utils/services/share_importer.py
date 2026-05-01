@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_SKIPPED,
     MEMBER_IMPORT_STATUS_CREATED,
@@ -14,7 +15,6 @@ from tapir.utils.exceptions import TapirDataImportException
 from tapir.utils.services.data_import_utils import DataImportUtils
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.utils import get_today
 
 
@@ -80,7 +80,9 @@ class ShareImporter:
                 key=ParameterKeys.COOP_SHARE_PRICE, cache={}
             ),
             transfer_member=transfer_member,
-            mandate_ref=get_or_create_mandate_ref(member),
+            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                member, cache={}
+            ),
         )
 
         cls.create_or_update_payment_if_necessary(transaction)
@@ -140,7 +142,9 @@ class ShareImporter:
             is_updated = True
         if DataImportUtils.update_if_diff(existing_transaction, "valid_at", valid_date):
             is_updated = True
-        mandate_ref = get_or_create_mandate_ref(existing_transaction.member)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            existing_transaction.member, cache={}
+        )
         if DataImportUtils.update_if_diff(
             existing_transaction, "mandate_ref", mandate_ref
         ):

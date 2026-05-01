@@ -65,6 +65,10 @@ export default defineConfig(() => {
             "/subscription_list/subscription_list_entry.tsx",
           ),
           credit_list: join(INPUT_DIR, "/credit_list/credit_list_entry.tsx"),
+          configuration: join(
+            INPUT_DIR,
+            "/configuration/configuration_entry.tsx",
+          ),
         },
       },
     },

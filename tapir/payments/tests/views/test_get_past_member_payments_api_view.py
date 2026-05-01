@@ -4,10 +4,10 @@ from django.urls import reverse
 from rest_framework import status
 
 from tapir.configuration.models import TapirParameter
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.wirgarten.models import Payment
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
 )
@@ -86,7 +86,9 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         member = MemberFactory.create()
         self.client.force_login(member)
 
-        mandate_ref = get_or_create_mandate_ref(member=member)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache={}
+        )
         past_payment_1 = Payment.objects.create(
             due_date=datetime.date(year=2020, month=1, day=1),
             amount=126,

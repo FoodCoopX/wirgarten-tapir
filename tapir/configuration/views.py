@@ -39,6 +39,9 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
         context["member_number_length_key"] = (
             ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH
         )
+        context["mandate_reference_pattern_key"] = (
+            ParameterKeys.PAYMENT_MANDATE_REFERENCE_PATTERN
+        )
         context["intended_use_contract_keys"] = ",".join(
             [
                 ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE,

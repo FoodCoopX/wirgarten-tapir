@@ -8,6 +8,7 @@ from tapir.payments.models import (
     MemberCredit,
     MemberCreditCreatedLogEntry,
 )
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -15,7 +16,6 @@ from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
     MemberFactory,
@@ -211,7 +211,9 @@ class TestPost(TapirIntegrationTest):
         )
         PaymentFactory.create(
             due_date=datetime.date(year=2025, month=1, day=1),
-            mandate_ref=get_or_create_mandate_ref(member=member, cache={}),
+            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                member=member, cache={}
+            ),
             amount=120,
             type=subscription.product.type.name,
             subscription_payment_range_start=datetime.date(year=2025, month=1, day=1),

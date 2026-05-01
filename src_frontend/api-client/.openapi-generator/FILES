@@ -86,6 +86,7 @@ models/LegalStatusEnum.ts
 models/LocaleEnum.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
+models/MandateReferencePreviewResponse.ts
 models/Member.ts
 models/MemberBankDataResponse.ts
 models/MemberCountry.ts
