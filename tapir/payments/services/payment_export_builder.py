@@ -9,6 +9,9 @@ from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.services.payment_export_intended_use_builder import (
+    PaymentExportIntendedUseBuilder,
+)
 from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.models import (
     Payment,
@@ -25,7 +28,7 @@ class PaymentExportBuilder:
     KEY_NAME = "Zahlungspflichtigen-Name"
     KEY_IBAN = "Zahlungspflichtigen-IBAN"
     KEY_AMOUNT = "Betrag"
-    KEY_VERWENDUNGSZWECK = "Verwendungszweck"
+    KEY_INTENDED_USE = "Verwendungszweck"
     KEY_MANDATE_REF = "Mandatsreferenz"
     KEY_MANDATE_DATE = "Mandatsdatum"
 
@@ -81,6 +84,7 @@ class PaymentExportBuilder:
             send_mail=send_mail,
             cache=cache,
         )
+
         cls.create_and_assign_transaction(
             file=exported_file,
             is_contract_payments=is_contract_payments,
@@ -92,10 +96,14 @@ class PaymentExportBuilder:
     def should_export_payments(
         cls, is_contract_payments: bool, reference_date: datetime.date
     ):
-        payment_type_display = cls.get_payment_type_display(is_contract_payments)
+        payment_type_display = (
+            PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(
+                is_contract_payments
+            )
+        )
         last_transaction = (
             PaymentTransaction.objects.filter(
-                type=payment_type_display, created_at__lte=reference_date
+                type=payment_type_display, month__lte=reference_date
             )
             .order_by("created_at")
             .last()
@@ -103,7 +111,7 @@ class PaymentExportBuilder:
         if last_transaction is None:
             return True
 
-        return reference_date.month != last_transaction.created_at.month
+        return reference_date.month != last_transaction.month.month
 
     @classmethod
     def create_and_assign_transaction(
@@ -115,7 +123,9 @@ class PaymentExportBuilder:
     ):
         payment_transaction = PaymentTransaction.objects.create(
             file=file,
-            type=cls.get_payment_type_display(is_contract_payments),
+            type=PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(
+                is_contract_payments
+            ),
             month=reference_date.replace(day=1),
         )
         for payment in payments:
@@ -128,12 +138,26 @@ class PaymentExportBuilder:
         combined_payments: dict[MandateReference, Payment] = {}
 
         for payment in payments:
-            if payment.mandate_ref not in combined_payments.keys():
+            if payment.mandate_ref not in combined_payments:
                 combined_payments[payment.mandate_ref] = Payment(
                     mandate_ref=payment.mandate_ref,
                     amount=Decimal(0),
+                    subscription_payment_range_start=payment.subscription_payment_range_start,
+                    subscription_payment_range_end=payment.subscription_payment_range_end,
                 )
             combined_payments[payment.mandate_ref].amount += payment.amount
+            combined_payments[payment.mandate_ref].subscription_payment_range_start = (
+                min(
+                    combined_payments[
+                        payment.mandate_ref
+                    ].subscription_payment_range_start,
+                    payment.subscription_payment_range_start,
+                )
+            )
+            combined_payments[payment.mandate_ref].subscription_payment_range_end = max(
+                combined_payments[payment.mandate_ref].subscription_payment_range_end,
+                payment.subscription_payment_range_end,
+            )
 
         return combined_payments.values()
 
@@ -159,24 +183,24 @@ class PaymentExportBuilder:
             [
                 cls.KEY_NAME,
                 cls.KEY_IBAN,
-                cls.KEY_VERWENDUNGSZWECK,
+                cls.KEY_INTENDED_USE,
                 cls.KEY_AMOUNT,
                 cls.KEY_MANDATE_REF,
                 cls.KEY_MANDATE_DATE,
             ]
         )
 
-        payment_type_display = cls.get_payment_type_display(contract_payments)
-
         for payment in payments:
-            verwendungszweck = f"{get_parameter_value(key=ParameterKeys.SITE_NAME)}, {payment.mandate_ref.member.last_name}, {payment_type_display}"
+            intended_use = PaymentExportIntendedUseBuilder.build_intended_use(
+                payment=payment, is_contracts=contract_payments, cache=cache
+            )
 
             writer.writerow(
                 {
                     cls.KEY_NAME: f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}",
                     cls.KEY_IBAN: payment.mandate_ref.member.iban,
                     cls.KEY_AMOUNT: format_currency(payment.amount).replace(".", ""),
-                    cls.KEY_VERWENDUNGSZWECK: verwendungszweck,
+                    cls.KEY_INTENDED_USE: intended_use,
                     cls.KEY_MANDATE_REF: payment.mandate_ref.ref,
                     cls.KEY_MANDATE_DATE: format_date(
                         payment.mandate_ref.member.sepa_consent.date()
@@ -190,7 +214,7 @@ class PaymentExportBuilder:
         file_content = cls.add_header(file_content, cache)
 
         return export_file(
-            filename=f"{payment_type_display}-Einzahlungen",
+            filename=f"{PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(contract_payments)}-Einzahlungen",
             filetype=ExportedFile.FileType.CSV,
             content=bytes(file_content, "utf-8"),
             send_email=send_mail,
@@ -215,10 +239,6 @@ class PaymentExportBuilder:
         writer.writerow([organisation_name, iban, credential_identifier])
 
         return "".join([header.getvalue(), file_content])
-
-    @classmethod
-    def get_payment_type_display(cls, contract_payments: bool):
-        return "Verträge" if contract_payments else PAYMENT_TYPE_COOP_SHARES
 
     @classmethod
     def split_payments_by_contract_or_coop_shares(cls, payments: Iterable[Payment]):

@@ -1,8 +1,12 @@
 {% extends "core/base.html" %}
+{% load django_vite %}
 {% load configuration %}
 {% load django_bootstrap5 %}
 {% load i18n %}
 {% load tapir_static %}
+{% block head %}
+    {% vite_asset 'configuration/configuration_entry.tsx' %}
+{% endblock head %}
 {% block content %}
     <div style="margin-top: 1em;">
         <form id="form" method="post">
@@ -100,4 +104,8 @@
          style="display:none"></div>
     <script src="{% static 'configuration/js/member_number_preview.js' %}"></script>
     <script src="{% static 'configuration/js/search.js' %}"></script>
+    <div id="payment-intended-use-config"
+         data-contract-keys="{{ intended_use_contract_keys }}"
+         data-coop-shares-keys="{{ intended_use_coop_shares_keys }}"
+         style="display:none"></div>
 {% endblock %}

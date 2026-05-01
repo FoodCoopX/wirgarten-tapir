@@ -45,4 +45,14 @@ urlpatterns = [
         views.CabLoggedInUserChangeTargetsPaymentRhythm.as_view(),
         name="can_logged_in_user_change_targets_payment_rhythm",
     ),
+    path(
+        "api/intended_use_preview_contracts",
+        views.PaymentIntendedUsePreviewContractsApiView.as_view(),
+        name="intended_use_preview_contracts",
+    ),
+    path(
+        "api/intended_use_preview_coop_shares",
+        views.PaymentIntendedUsePreviewCoopSharesApiView.as_view(),
+        name="intended_use_preview_coop_shares",
+    ),
 ]

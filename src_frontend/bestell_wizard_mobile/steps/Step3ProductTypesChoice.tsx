@@ -6,6 +6,7 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { selectAllRequiredProductTypes } from "../../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
@@ -145,6 +146,16 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                     />
                   )}
                   <span>{productType.name}</span>
+                  {productType.descriptionBestellwizardShort && (
+                    <TapirButton
+                      variant={"outline-secondary"}
+                      icon={"help"}
+                      size={"sm"}
+                      onClick={() => {
+                        setProductTypeForModal(productType);
+                      }}
+                    />
+                  )}
                 </div>
               </label>
             </div>

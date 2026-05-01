@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from tapir.wirgarten.tapirmail import configure_mail_module
+from tapir.wirgarten.tests.factories import MemberFactory
 
 
 class TapirFactoryMixin:
@@ -45,6 +46,11 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
             f"Order should be confirmed, error: {response_content["error"]}",
         )
         self.assertIsNone(response_content["error"])
+
+    def _login_as_admin(self):
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
+        return admin
 
 
 class TapirUnitTest(TapirFactoryMixin, SimpleTestCase):

@@ -21,14 +21,22 @@ class Command(BaseCommand):
         "Emails that would be sent when exporting payments are not sent when using this command"
     )
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--no-confirm",
+            help="Don't ask for confirmation",
+            action="store_true",
+        )
+
     @transaction.atomic
     def handle(self, *args, **kwargs):
-        answer = input(
-            "Are you sure? Maybe do a backup before just in case :) [y/N] "
-        ).lower()
-        if answer not in ["y", "yes"]:
-            print("Aborting")
-            return
+        if not kwargs["no_confirm"]:
+            answer = input(
+                "Are you sure? Maybe do a backup before just in case :) [y/N] "
+            ).lower()
+            if answer not in ["y", "yes"]:
+                print("Aborting")
+                return
 
         Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).delete()
         Payment.objects.update(transaction=None)
