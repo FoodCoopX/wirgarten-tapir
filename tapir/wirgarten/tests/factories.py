@@ -121,7 +121,7 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference
     ref = factory.LazyAttribute(
         lambda o: MandateReferenceProvider.build_mandate_ref(
             member=o.member,
-            pattern="{vorname}.{nachname}/MANDATE_REF_FOR_TEST/{zufall}",
+            pattern="{vorname}.{nachname}/TEST_MR/{zufall}",
             cache={},
         )
     )
