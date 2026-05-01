@@ -30,7 +30,7 @@ function createEditorRoot(parameterKey: string, isContract: boolean) {
   container.appendChild(inputElement);
   container.append(previewDiv);
 
-  inputElement.insertAdjacentElement("afterend", previewDiv);
+  inputElement.after(previewDiv);
 
   const root = createRoot(previewDiv);
   root.render(
