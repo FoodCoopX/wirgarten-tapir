@@ -29,6 +29,7 @@ class TestExpandPatternContracts(TapirIntegrationTest):
         cls._set_parameter(key=ParameterKeys.MEMBER_NUMBER_PREFIX, value="PF")
 
     def setUp(self):
+        super().setUp()
         self.member = MemberFactory.create(
             first_name="John", last_name="Doe", member_no=123
         )
