@@ -592,7 +592,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
                 cache=cache,
             )
         except Exception as error:
-            response_data["error"] = str(error)
+            response_data["error"] = getattr(error, "message", repr(error))
 
         return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
 
@@ -794,7 +794,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
                 cache=cache,
             )
         except Exception as error:
-            response_data["error"] = str(error)
+            response_data["error"] = getattr(error, "message", repr(error))
 
         return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
 
