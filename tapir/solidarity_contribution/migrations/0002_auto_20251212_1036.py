@@ -58,10 +58,7 @@ def migrate_solidarity_from_subscriptions_to_dedicated_model(apps, schema):
     contributions_by_member_id_and_growing_period = {}
 
     for subscription in subscriptions:
-        if (
-            subscription.member_id
-            not in contributions_by_member_id_and_growing_period.keys()
-        ):
+        if subscription.member_id not in contributions_by_member_id_and_growing_period:
             contributions_by_member_id_and_growing_period[subscription.member_id] = {}
 
         contributions_by_growing_period = contributions_by_member_id_and_growing_period[
@@ -72,7 +69,7 @@ def migrate_solidarity_from_subscriptions_to_dedicated_model(apps, schema):
             cache=cache,
             apps=apps,
         )
-        if growing_period not in contributions_by_growing_period.keys():
+        if growing_period not in contributions_by_growing_period:
             contributions_by_growing_period[growing_period] = SolidarityContribution(
                 member_id=subscription.member_id,
                 amount=Decimal(0),

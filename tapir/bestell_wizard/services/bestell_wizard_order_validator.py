@@ -141,7 +141,7 @@ class BestellWizardOrderValidator:
         order: TapirOrder,
         cache: dict,
     ):
-        if len(order.keys()) > 0 and get_parameter_value(
+        if len(order) > 0 and get_parameter_value(
             ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=cache
         ):
             raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")

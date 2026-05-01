@@ -151,7 +151,7 @@ class ApplyTapirOrderManager:
         for product, quantity in order.items():
             if quantity == 0:
                 continue
-            if product.type not in orders_by_product_type.keys():
+            if product.type not in orders_by_product_type:
                 orders_by_product_type[product.type] = {}
             orders_by_product_type[product.type][product] = quantity
 

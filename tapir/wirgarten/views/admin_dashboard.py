@@ -252,7 +252,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         for cancelled_membership in Subscription.objects.filter(
             product__type__is_association_membership=True, end_date__isnull=False
         ).order_by("end_date"):
-            if cancelled_membership.end_date.year not in cancellations_per_year.keys():
+            if cancelled_membership.end_date.year not in cancellations_per_year:
                 cancellations_per_year[cancelled_membership.end_date.year] = 0
             cancellations_per_year[cancelled_membership.end_date.year] += 1
 

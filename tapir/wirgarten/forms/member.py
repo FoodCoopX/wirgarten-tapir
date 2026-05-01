@@ -101,7 +101,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
     def clean_email(self):
-        if "email" not in self.cleaned_data.keys():
+        if "email" not in self.cleaned_data:
             return None
         return self.cleaned_data["email"].strip().lower()
 

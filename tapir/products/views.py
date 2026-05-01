@@ -189,10 +189,7 @@ class ExtendedProductTypeApiView(APIView):
         for scheduled_week in CustomCycleScheduledDeliveryWeek.objects.filter(
             product_type=product_type
         ).order_by("calendar_week"):
-            if (
-                scheduled_week.growing_period_id
-                not in custom_cycle_delivery_weeks.keys()
-            ):
+            if scheduled_week.growing_period_id not in custom_cycle_delivery_weeks:
                 custom_cycle_delivery_weeks[scheduled_week.growing_period_id] = []
             custom_cycle_delivery_weeks[scheduled_week.growing_period_id].append(
                 scheduled_week.calendar_week

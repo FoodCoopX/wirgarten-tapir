@@ -179,7 +179,7 @@ class MonthPaymentBuilderSolidarityContributions:
         contributions_by_member: dict[Member, set[SolidarityContribution]] = {}
 
         for contribution in contributions:
-            if contribution.member not in contributions_by_member.keys():
+            if contribution.member not in contributions_by_member:
                 contributions_by_member[contribution.member] = set()
             contributions_by_member[contribution.member].add(contribution)
 

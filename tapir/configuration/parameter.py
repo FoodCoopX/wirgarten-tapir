@@ -93,7 +93,7 @@ def get_parameter_value(key: str, cache: dict | None = None):
     )
 
     def compute_parameter_value():
-        if key not in parameters_by_key.keys():
+        if key not in parameters_by_key:
             raise KeyError(f"Parameter with key '{key}' does not exist.")
         return parameters_by_key[key].get_value()
 

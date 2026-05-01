@@ -99,14 +99,14 @@ class MemberDataToConfirmApiView(APIView):
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
         ).select_related("actor"):
             member = change.user.member
-            if member not in changes_by_member.keys():
+            if member not in changes_by_member:
                 changes_by_member[member] = {}
-            if "deleted" not in changes_by_member[member].keys():
+            if "deleted" not in changes_by_member[member]:
                 changes_by_member[member]["deleted"] = []
             changes_by_member[member]["deleted"].append(change)
 
         for member in Member.objects.all():
-            if member in changes_by_member.keys():
+            if member in changes_by_member:
                 continue
             unconfirmed_share_purchases = (
                 TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
@@ -128,13 +128,10 @@ class MemberDataToConfirmApiView(APIView):
         cls, subscriptions, key: str, changes_by_member: dict
     ):
         for subscription in subscriptions:
-            if subscription.member not in changes_by_member.keys():
+            if subscription.member not in changes_by_member:
                 changes_by_member[subscription.member] = {}
 
-            if (
-                subscription.product.type
-                not in changes_by_member[subscription.member].keys()
-            ):
+            if subscription.product.type not in changes_by_member[subscription.member]:
                 changes_by_member[subscription.member][subscription.product.type] = {
                     "cancellations": [],
                     "creations": [],
@@ -419,7 +416,7 @@ class RevokeChangesApiView(APIView):
     ):
         subscriptions_by_member = {}
         for subscription in subscriptions:
-            if subscription.member not in subscriptions_by_member.keys():
+            if subscription.member not in subscriptions_by_member:
                 subscriptions_by_member[subscription.member] = []
             subscriptions_by_member[subscription.member].append(subscription)
 
@@ -430,7 +427,7 @@ class RevokeChangesApiView(APIView):
 
         share_transactions_by_member: dict[Member, list[CoopShareTransaction]] = {}
         for share_transaction in share_transactions:
-            if share_transaction.member not in share_transactions_by_member.keys():
+            if share_transaction.member not in share_transactions_by_member:
                 share_transactions_by_member[share_transaction.member] = []
             share_transactions_by_member[share_transaction.member].append(
                 share_transaction

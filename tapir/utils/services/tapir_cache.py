@@ -118,7 +118,7 @@ class TapirCache:
             for subscription in get_active_and_future_subscriptions(
                 reference_date=reference_date, cache=cache
             ):
-                if subscription.member_id not in subscriptions_by_member_id.keys():
+                if subscription.member_id not in subscriptions_by_member_id:
                     subscriptions_by_member_id[subscription.member_id] = []
                 subscriptions_by_member_id[subscription.member_id].append(subscription)
             return subscriptions_by_member_id
@@ -337,7 +337,7 @@ class TapirCache:
             transactions = cls.get_unconfirmed_coop_share_purchases(cache=cache)
             transactions_by_member_id = {}
             for transaction in transactions:
-                if transaction.member_id not in transactions_by_member_id.keys():
+                if transaction.member_id not in transactions_by_member_id:
                     transactions_by_member_id[transaction.member_id] = []
                 transactions_by_member_id[transaction.member_id].append(transaction)
             return transactions_by_member_id
@@ -427,7 +427,7 @@ class TapirCache:
                 "valid_from"
             )
             for rhythm in all_rhythms:
-                if rhythm.member not in result.keys():
+                if rhythm.member not in result:
                     result[rhythm.member] = []
                 result[rhythm.member].append(rhythm)
             return result
@@ -459,9 +459,9 @@ class TapirCache:
             payments = Payment.objects.select_related("mandate_ref")
             result = {}
             for payment in payments:
-                if payment.mandate_ref not in result.keys():
+                if payment.mandate_ref not in result:
                     result[payment.mandate_ref] = {}
-                if payment.type not in result[payment.mandate_ref].keys():
+                if payment.type not in result[payment.mandate_ref]:
                     result[payment.mandate_ref][payment.type] = set()
                 result[payment.mandate_ref][payment.type].add(payment)
             return result

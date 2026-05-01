@@ -35,7 +35,7 @@ class BasketSizeCapacitiesService:
     def get_basket_size_equivalences_for_product(cls, product: Product, cache: dict):
         equivalences = dict.fromkeys(cls.get_basket_sizes(cache=cache), 0)
         for equivalence in ProductBasketSizeEquivalence.objects.filter(product=product):
-            if equivalence.basket_size_name not in equivalences.keys():
+            if equivalence.basket_size_name not in equivalences:
                 continue
 
             equivalences[equivalence.basket_size_name] = equivalence.quantity
@@ -50,7 +50,7 @@ class BasketSizeCapacitiesService:
             for equivalence in PickupLocationBasketCapacity.objects.filter(
                 pickup_location=pickup_location
             ):
-                if equivalence.basket_size_name not in capacities.keys():
+                if equivalence.basket_size_name not in capacities:
                     continue
 
                 capacities[equivalence.basket_size_name] = equivalence.capacity

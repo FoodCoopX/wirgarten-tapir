@@ -4,10 +4,10 @@ class TapirCacheManager:
         if cache is None:
             return
 
-        if "categories" not in cache.keys():
+        if "categories" not in cache:
             cache["categories"] = {}
 
-        if category not in cache["categories"].keys():
+        if category not in cache["categories"]:
             cache["categories"][category] = set()
 
         cache["categories"][category].add(key)
@@ -16,10 +16,10 @@ class TapirCacheManager:
     def clear_category(cls, cache: dict, category: str):
         if cache is None:
             return
-        if "categories" not in cache.keys():
+        if "categories" not in cache:
             return
-        if category not in cache["categories"].keys():
+        if category not in cache["categories"]:
             return
         for key in cache["categories"][category]:
-            if key in cache.keys():
+            if key in cache:
                 del cache[key]

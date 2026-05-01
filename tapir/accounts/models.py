@@ -149,7 +149,7 @@ class KeycloakUser(AbstractUser):
         else:
             if self.id is None or not type(self).objects.filter(id=self.id).exists():
                 super().save(*args, **kwargs)
-                if "force_insert" in kwargs.keys():
+                if "force_insert" in kwargs:
                     kwargs["force_insert"] = False
 
             _partial = partial(

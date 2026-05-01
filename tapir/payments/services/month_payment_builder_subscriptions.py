@@ -319,16 +319,13 @@ class MonthPaymentBuilderSubscriptions:
             Member, dict[ProductType, set[Subscription]]
         ] = {}
         for subscription in subscriptions:
-            if (
-                subscription.member
-                not in subscriptions_by_member_and_product_type.keys()
-            ):
+            if subscription.member not in subscriptions_by_member_and_product_type:
                 subscriptions_by_member_and_product_type[subscription.member] = {}
 
             subscriptions_by_product_type = subscriptions_by_member_and_product_type[
                 subscription.member
             ]
-            if subscription.product.type not in subscriptions_by_product_type.keys():
+            if subscription.product.type not in subscriptions_by_product_type:
                 subscriptions_by_product_type[subscription.product.type] = set()
 
             subscriptions_by_product_type[subscription.product.type].add(subscription)

@@ -116,7 +116,7 @@ class PickListBuilder:
         quantities_by_product_name = {}
 
         for subscription in subscriptions:
-            if subscription.product.name not in quantities_by_product_name.keys():
+            if subscription.product.name not in quantities_by_product_name:
                 quantities_by_product_name[subscription.product.name] = 0
             quantities_by_product_name[
                 subscription.product.name
@@ -181,7 +181,7 @@ class PickListBuilder:
             if pickup_location is None:
                 continue
 
-            if pickup_location.name not in subscriptions_by_pickup_location_name.keys():
+            if pickup_location.name not in subscriptions_by_pickup_location_name:
                 subscriptions_by_pickup_location_name[pickup_location.name] = []
 
             subscriptions_by_pickup_location_name[pickup_location.name].append(

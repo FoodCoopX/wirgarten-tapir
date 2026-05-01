@@ -108,7 +108,7 @@ def mock_keycloak(test: TapirIntegrationTest):
 
 
 def mock_set_and_return_new_keycloak_id(email: str, keycloak_ids: dict) -> str:
-    if email in keycloak_ids.keys():
+    if email in keycloak_ids:
         raise TapirMockKeycloakException(
             f"This email address is already in use: {email}"
         )

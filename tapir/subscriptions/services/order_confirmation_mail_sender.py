@@ -50,7 +50,7 @@ class OrderConfirmationMailSender:
         ).select_related("member", "product__type"):
             if skip_auto_confirmed and subscription.auto_confirmed is not None:
                 continue
-            if subscription.member not in data_by_member.keys():
+            if subscription.member not in data_by_member:
                 data_by_member[subscription.member] = {
                     "subscriptions": [],
                     "number_of_coop_shares": 0,
@@ -62,7 +62,7 @@ class OrderConfirmationMailSender:
         ).select_related("member"):
             if skip_auto_confirmed and share_transaction.auto_confirmed is not None:
                 continue
-            if share_transaction.member not in data_by_member.keys():
+            if share_transaction.member not in data_by_member:
                 data_by_member[share_transaction.member] = {
                     "subscriptions": [],
                     "number_of_coop_shares": 0,

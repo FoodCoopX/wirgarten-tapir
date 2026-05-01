@@ -84,15 +84,15 @@ class MonthPaymentBuilder:
     def group_payments_by_member_and_type_and_due_date(cls, payments: list[Payment]):
         payments_by_member = {}
         for payment in payments:
-            if payment.mandate_ref.member not in payments_by_member.keys():
+            if payment.mandate_ref.member not in payments_by_member:
                 payments_by_member[payment.mandate_ref.member] = {}
             payments_by_type = payments_by_member[payment.mandate_ref.member]
 
-            if payment.type not in payments_by_type.keys():
+            if payment.type not in payments_by_type:
                 payments_by_type[payment.type] = {}
             payments_by_due_date = payments_by_type[payment.type]
 
-            if payment.due_date not in payments_by_due_date.keys():
+            if payment.due_date not in payments_by_due_date:
                 payments_by_due_date[payment.due_date] = []
             payments_by_due_date[payment.due_date].append(payment)
 
