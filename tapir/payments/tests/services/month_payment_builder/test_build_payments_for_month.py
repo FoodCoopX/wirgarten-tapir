@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
@@ -12,7 +12,7 @@ from tapir.payments.services.month_payment_builder_subscriptions import (
 )
 
 
-class TestBuildPaymentForMonth(SimpleTestCase):
+class TestBuildPaymentForMonth(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderSolidarityContributions,
         "build_payments_for_solidarity_contributions",

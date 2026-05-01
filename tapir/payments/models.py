@@ -1,7 +1,6 @@
 import datetime
 
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
@@ -12,10 +11,10 @@ from tapir.wirgarten.utils import format_date
 
 class MemberPaymentRhythm(TapirModel):
     class Rhythm(models.TextChoices):
-        MONTHLY = "monthly", _("Monatlich")
-        QUARTERLY = "quarterly", _("Vierteljährlich")
-        SEMIANNUALLY = "semiannually", _("Halbjährlich")
-        YEARLY = "yearly", _("Jährlich")
+        MONTHLY = "monthly", "Monatlich"
+        QUARTERLY = "quarterly", "Vierteljährlich"
+        SEMIANNUALLY = "semiannually", "Halbjährlich"
+        YEARLY = "yearly", "Jährlich"
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     rhythm = models.CharField(choices=Rhythm, max_length=20)

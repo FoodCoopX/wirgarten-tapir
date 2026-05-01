@@ -1,7 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
@@ -11,7 +11,7 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 )
 
 
-class TestGetAmountToPayForSubscriptionWithinRange(SimpleTestCase):
+class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
     @patch.object(
         DeliveryPriceCalculator, "get_price_of_single_delivery_for_subscription"
     )

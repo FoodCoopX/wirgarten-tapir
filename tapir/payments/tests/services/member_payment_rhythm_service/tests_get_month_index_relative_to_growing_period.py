@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -10,7 +10,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
-class TestGetMonthIndexRelativeToGrowingPeriod(SimpleTestCase):
+class TestGetMonthIndexRelativeToGrowingPeriod(TapirUnitTest):
     @patch.object(TapirCache, "get_all_growing_periods_ascending")
     def test_getMonthIndexRelativeToGrowingPeriod_givenDateIsOnFirstMonth_returnsOne(
         self, mock_get_all_growing_periods_ascending: Mock

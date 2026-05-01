@@ -1,12 +1,12 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 
 
-class TestIsMemberInSubscriptionTrial(SimpleTestCase):
+class TestIsMemberInSubscriptionTrial(TapirUnitTest):
     @patch.object(
         TrialPeriodManager,
         "get_subscriptions_in_trial_period",

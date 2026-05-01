@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -9,7 +9,7 @@ from tapir.subscriptions.views.cancellations import CancelSubscriptionsView
 from tapir.wirgarten.tests.factories import ProductTypeFactory, ProductFactory
 
 
-class TestAreAllBaseProductsSelected(SimpleTestCase):
+class TestAreAllBaseProductsSelected(TapirUnitTest):
     @patch.object(BaseProductTypeService, "get_base_product_type")
     def test_areAllBaseProductsSelected_allBaseProductsSelected_returnsTrue(
         self, mock_get_base_product_type: Mock

@@ -1,9 +1,9 @@
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.waiting_list.views import SendWaitingListLinkApiView
 
 
-class TestSendWaitingListLinkApiView(SimpleTestCase):
+class TestSendWaitingListLinkApiView(TapirUnitTest):
     def test_buildWaitingListLink_default_returnsFullLink(self):
         result = SendWaitingListLinkApiView.build_waiting_list_link(
             entry_id="test_id", link_key="test_key"

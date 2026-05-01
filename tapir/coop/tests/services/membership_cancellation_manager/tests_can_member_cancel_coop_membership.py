@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
@@ -9,7 +9,7 @@ from tapir.coop.services.membership_cancellation_manager import (
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestCanMemberCancelCoopMembership(SimpleTestCase):
+class TestCanMemberCancelCoopMembership(TapirUnitTest):
     def setUp(self):
         mock_timezone(self, datetime.datetime(year=2024, month=1, day=15))
 

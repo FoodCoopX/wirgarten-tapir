@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ImproperlyConfigured
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports.models import AutomatedExportCycle
 from tapir.generic_exports.services.automated_exports_manager import (
@@ -9,7 +9,7 @@ from tapir.generic_exports.services.automated_exports_manager import (
 )
 
 
-class TestGetDatetimeOfLatestExport(SimpleTestCase):
+class TestGetDatetimeOfLatestExport(TapirUnitTest):
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_daily_export")
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_weekly_export")
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_monthly_export")

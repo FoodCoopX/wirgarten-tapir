@@ -2,15 +2,15 @@ import datetime
 from unittest.mock import Mock, patch
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
 
 from tapir.subscriptions.views.other import SubscriptionDateChangeApiView
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import SubscriptionFactory, GrowingPeriodFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-class TestValidateDates(SimpleTestCase):
+class TestValidateDates(TapirUnitTest):
     def test_validateDates_givenDatesAreTheSameAsSubscription_raisesError(self):
         subscription = SubscriptionFactory.build(
             start_date=datetime.date(year=2022, month=5, day=17),
@@ -33,31 +33,6 @@ class TestValidateDates(SimpleTestCase):
                 end_date=datetime.date(year=2022, month=7, day=28),
                 cache=Mock(),
             )
-
-    @patch("tapir.subscriptions.views.other.get_parameter_value")
-    def test_validateDates_givenEndDateIsNotOnCorrectDay_raisesError(
-        self, mock_get_parameter_value: Mock
-    ):
-        subscription = SubscriptionFactory.build()
-        parameter_values = {
-            ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL: 6,
-        }
-        mock_get_parameter_value.side_effect = lambda key, cache: parameter_values[key]
-        cache = Mock()
-
-        with self.assertRaises(ValidationError):
-            SubscriptionDateChangeApiView.validate_dates(
-                subscription=subscription,
-                start_date=datetime.date(year=2022, month=5, day=17),
-                end_date=datetime.date(
-                    year=2025, month=10, day=9
-                ),  # this is a wednesday
-                cache=cache,
-            )
-
-        mock_get_parameter_value.assert_called_once_with(
-            key=ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
-        )
 
     @patch.object(TapirCache, "get_growing_period_at_date")
     def test_validateDates_givenStartDateIsNotOnSameGrowingPeriod_raisesError(

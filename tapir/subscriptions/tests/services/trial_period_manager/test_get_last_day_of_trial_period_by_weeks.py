@@ -1,13 +1,13 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestGetLastDayOfTrialPeriodByWeeks(SimpleTestCase):
+class TestGetLastDayOfTrialPeriodByWeeks(TapirUnitTest):
     @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
     @patch(
         "tapir.subscriptions.services.trial_period_manager.get_parameter_value",

@@ -1,11 +1,11 @@
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestFormatMemberNumber(SimpleTestCase):
+class TestFormatMemberNumber(TapirUnitTest):
     def test_formatMemberNumber_withPrefixAndPadding_returnsFormattedString(self):
         cache = {}
         mock_parameter_value(

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
@@ -12,7 +12,7 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
-class TestProductCancellationDataBuilderBuildDataForASingleProduct(SimpleTestCase):
+class TestProductCancellationDataBuilderBuildDataForASingleProduct(TapirUnitTest):
     @patch.object(
         ProductCancellationDataBuilder,
         "get_last_day_of_notice_period_for_product",

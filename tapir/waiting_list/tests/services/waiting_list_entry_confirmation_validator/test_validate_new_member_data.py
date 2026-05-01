@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
@@ -13,7 +13,7 @@ from tapir.waiting_list.services.waiting_list_entry_confirmation_validator impor
 )
 
 
-class TestValidateNewMemberData(SimpleTestCase):
+class TestValidateNewMemberData(TapirUnitTest):
     @patch.object(
         MinimumNumberOfSharesValidator,
         "get_minimum_number_of_shares_for_tapir_order",

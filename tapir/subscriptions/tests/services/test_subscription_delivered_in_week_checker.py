@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.config import (
     DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE,
@@ -16,7 +16,7 @@ from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestSubscriptionDeliveredInWeekChecker(SimpleTestCase):
+class TestSubscriptionDeliveredInWeekChecker(TapirUnitTest):
     @patch.object(DeliveryDateCalculator, "is_week_delivered", autospec=True)
     def test_isSubscriptionDeliveredInWeek_weekIsNotCoveredByCycle_returnsFalse(
         self, mock_is_week_delivered: Mock

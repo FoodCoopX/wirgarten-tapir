@@ -2,7 +2,7 @@ import uuid
 from unittest.mock import patch, Mock
 
 from django.http import Http404
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.waiting_list.services.waiting_list_entry_confirmation_validator import (
     WaitingListEntryConfirmationValidator,
@@ -10,7 +10,7 @@ from tapir.waiting_list.services.waiting_list_entry_confirmation_validator impor
 from tapir.wirgarten.models import WaitingListEntry
 
 
-class TestGetEntryByIdAndValidateLinkKey(SimpleTestCase):
+class TestGetEntryByIdAndValidateLinkKey(TapirUnitTest):
     @patch(
         "tapir.waiting_list.services.waiting_list_entry_confirmation_validator.get_object_or_404",
         autospec=True,

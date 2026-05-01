@@ -2,7 +2,7 @@ import datetime
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
@@ -25,7 +25,7 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
 @patch.object(
     MemberNeedsBankingDataChecker, "does_member_need_banking_data", autospec=True
 )
-class TestSubscriptionUpdateViewValidatorValidateBankingData(SimpleTestCase):
+class TestSubscriptionUpdateViewValidatorValidateBankingData(TapirUnitTest):
     def setUp(self):
         self.now = mock_timezone(
             test=self, now=datetime.datetime(year=2024, month=5, day=1)

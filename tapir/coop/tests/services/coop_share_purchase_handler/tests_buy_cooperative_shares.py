@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.models import CoopSharesPurchasedLogEntry
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
@@ -11,7 +11,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestBuyCooperativeShares(SimpleTestCase):
+class TestBuyCooperativeShares(TapirUnitTest):
     @patch.object(CoopSharesPurchasedLogEntry, "populate_transaction")
     @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
     @patch.object(CoopSharePurchaseHandler, "send_warning_mail_if_necessary")

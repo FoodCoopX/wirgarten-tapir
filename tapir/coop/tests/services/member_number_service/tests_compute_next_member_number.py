@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.utils.tests_utils import mock_parameter_value
@@ -8,7 +8,7 @@ from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestComputeNextMemberNumber(SimpleTestCase):
+class TestComputeNextMemberNumber(TapirUnitTest):
     @patch.object(Member.objects, "aggregate", autospec=True)
     def test_computeNextMemberNumber_noExistingMembers_returnsStartValue(
         self, mock_aggregate

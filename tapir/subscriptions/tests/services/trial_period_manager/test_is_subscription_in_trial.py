@@ -1,14 +1,14 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestIsSubscriptionInTrial(SimpleTestCase):
+class TestIsSubscriptionInTrial(TapirUnitTest):
     def setUp(self):
         mock_timezone(self, datetime.datetime(year=2026, month=3, day=15))
 

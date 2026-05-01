@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -11,7 +11,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
-class TestsGetFirstDayOfRhythmPeriod(SimpleTestCase):
+class TestsGetFirstDayOfRhythmPeriod(TapirUnitTest):
     @patch.object(TapirCache, "get_all_growing_periods_ascending")
     def test_getFirstDayOfRhythmPeriod_givenDayIsFirstDayOfRhythmPeriod_returnsSameDate(
         self, mock_get_all_growing_periods_ascending: Mock

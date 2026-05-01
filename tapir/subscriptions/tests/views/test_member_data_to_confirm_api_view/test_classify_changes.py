@@ -1,10 +1,10 @@
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.views.confirmations import MemberDataToConfirmApiView
 from tapir.wirgarten.tests.factories import ProductTypeFactory, SubscriptionFactory
 
 
-class TestClassifyChanges(SimpleTestCase):
+class TestClassifyChanges(TapirUnitTest):
     def test_classifyChanges_productTypeHasOnlyCreations_allChangesAddedToCreations(
         self,
     ):

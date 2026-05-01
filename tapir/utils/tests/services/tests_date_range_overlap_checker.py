@@ -1,11 +1,11 @@
 import datetime
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 
 
-class TestsDateRangeOverlapChecker(SimpleTestCase):
+class TestsDateRangeOverlapChecker(TapirUnitTest):
     def test_doRangesOverlap_range1IsCompletelyBeforeRange2_returnsFalse(self):
         self.assertFalse(
             DateRangeOverlapChecker.do_ranges_overlap(

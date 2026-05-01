@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
@@ -9,7 +9,7 @@ from tapir.payments.services.month_payment_builder_subscriptions import (
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
-class TestGetTotalToPay(SimpleTestCase):
+class TestGetTotalToPay(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderSubscriptions,
         "get_amount_to_pay_for_subscription_within_range",

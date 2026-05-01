@@ -42,6 +42,17 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
         context["mandate_reference_pattern_key"] = (
             ParameterKeys.PAYMENT_MANDATE_REFERENCE_PATTERN
         )
+        context["intended_use_contract_keys"] = ",".join(
+            [
+                ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE,
+                ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE_SOLIDARITY_SUPPORTED,
+                ParameterKeys.PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE,
+                ParameterKeys.PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY,
+            ]
+        )
+        context["intended_use_coop_shares_keys"] = (
+            ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES
+        )
         return context
 
     def get_success_url(self, **kwargs):

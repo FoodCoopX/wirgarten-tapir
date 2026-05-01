@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports import tasks
 from tapir.generic_exports.services.automated_exports_manager import (
@@ -8,7 +8,7 @@ from tapir.generic_exports.services.automated_exports_manager import (
 )
 
 
-class TestTasks(SimpleTestCase):
+class TestTasks(TapirUnitTest):
     @patch.object(AutomatedExportsManager, "do_automated_pdf_exports")
     @patch.object(AutomatedExportsManager, "do_automated_csv_exports")
     def test_doAutomatedExports_default_callsService(

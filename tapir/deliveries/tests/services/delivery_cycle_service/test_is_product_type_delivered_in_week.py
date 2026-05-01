@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.wirgarten.constants import (
@@ -13,7 +13,7 @@ from tapir.wirgarten.constants import (
 )
 
 
-class TestIsProductTypeDeliveredInWeek(SimpleTestCase):
+class TestIsProductTypeDeliveredInWeek(TapirUnitTest):
     def test_isProductTypeDeliveredInWeek_cycleNoDelivery_returnsFalse(self):
         product_type = Mock()
         product_type.delivery_cycle = NO_DELIVERY[0]

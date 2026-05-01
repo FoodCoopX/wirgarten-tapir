@@ -1,11 +1,11 @@
 import datetime
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.utils.shortcuts import get_next_sunday
 
 
-class TestGetNextSunday(SimpleTestCase):
+class TestGetNextSunday(TapirUnitTest):
     def test_getNextSunday_givenDayIsNotSunday_returnsFollowingSunday(self):
         self.assertEqual(
             datetime.date(year=2026, month=4, day=5),

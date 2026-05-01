@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -19,7 +19,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 )
 @patch.object(BaseProductTypeService, "get_base_product_type", autospec=True)
 class TestSubscriptionUpdateViewValidatorValidateAdditionalProductCanBeOrderedWithoutBaseProductSubscription(
-    SimpleTestCase,
+    TapirUnitTest,
 ):
     def build_default_params(self):
         self.product_type = Mock()

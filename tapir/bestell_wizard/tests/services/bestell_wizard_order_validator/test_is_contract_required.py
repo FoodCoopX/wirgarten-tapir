@@ -1,4 +1,4 @@
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
@@ -8,7 +8,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import ProductFactory
 
 
-class TestIsContractRequired(SimpleTestCase):
+class TestIsContractRequired(TapirUnitTest):
     def test_isContractRequired_orderIsEmpty_returnsFalse(self):
         result = BestellWizardOrderValidator.is_contract_required(order={}, cache={})
 

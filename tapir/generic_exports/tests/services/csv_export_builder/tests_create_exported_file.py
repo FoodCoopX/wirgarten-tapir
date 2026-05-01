@@ -1,12 +1,12 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.wirgarten.models import ExportedFile
 
 
-class TestCreateExportedFile(SimpleTestCase):
+class TestCreateExportedFile(TapirUnitTest):
     @patch.object(CsvExportBuilder, "build_csv_export_string")
     @patch.object(CsvExportBuilder, "build_file_name")
     @patch.object(ExportedFile, "objects")

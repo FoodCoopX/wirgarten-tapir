@@ -1,12 +1,12 @@
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 
 
-class TestValidateRhythms(SimpleTestCase):
+class TestValidateRhythms(TapirUnitTest):
     def test_validateRhythms_inputContainsInvalidValue_raisesException(self):
         input = "Monatlich,Wöchentlich"
 

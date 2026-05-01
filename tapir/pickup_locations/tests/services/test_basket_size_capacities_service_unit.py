@@ -1,11 +1,11 @@
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
 
 
-class TestBasketSizeCapacitiesServiceUnit(SimpleTestCase):
+class TestBasketSizeCapacitiesServiceUnit(TapirUnitTest):
     def test_validateBasketSizes_emptyString_noException(self):
         BasketSizeCapacitiesService.validate_basket_sizes("")
 

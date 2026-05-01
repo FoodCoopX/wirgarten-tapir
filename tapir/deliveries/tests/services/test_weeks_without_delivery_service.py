@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
@@ -10,7 +10,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import GrowingPeriod
 
 
-class TestWeeksWithoutDeliveryService(SimpleTestCase):
+class TestWeeksWithoutDeliveryService(TapirUnitTest):
     @patch.object(TapirCache, "get_growing_period_at_date")
     def test_isDeliveryCancelledThisWeek_noGrowingPeriod_returnsFalse(
         self, mock_get_growing_period_at_date: Mock

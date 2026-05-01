@@ -1,11 +1,11 @@
 import datetime
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 
 
-class TestBuildFileName(SimpleTestCase):
+class TestBuildFileName(TapirUnitTest):
     def test_buildFileName_extensionAlreadyInFileName_extensionNotDoubled(self):
         self.assertEqual(
             "test_name.2024.03.25 06.45.csv",

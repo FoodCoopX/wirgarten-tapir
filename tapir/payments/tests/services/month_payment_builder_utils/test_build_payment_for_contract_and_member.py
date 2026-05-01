@@ -2,7 +2,7 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -24,7 +24,7 @@ from tapir.wirgarten.tests.factories import (
 )
 
 
-class TestBuildPaymentForContractAndMember(SimpleTestCase):
+class TestBuildPaymentForContractAndMember(TapirUnitTest):
     @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True

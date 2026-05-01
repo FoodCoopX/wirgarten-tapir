@@ -50,4 +50,14 @@ urlpatterns = [
         views.MandateReferencePreviewApiView.as_view(),
         name="mandate_reference_preview",
     ),
+    path(
+        "api/intended_use_preview_contracts",
+        views.PaymentIntendedUsePreviewContractsApiView.as_view(),
+        name="intended_use_preview_contracts",
+    ),
+    path(
+        "api/intended_use_preview_coop_shares",
+        views.PaymentIntendedUsePreviewCoopSharesApiView.as_view(),
+        name="intended_use_preview_coop_shares",
+    ),
 ]

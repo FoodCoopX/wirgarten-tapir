@@ -1,13 +1,13 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestGetPaymentDueDate(SimpleTestCase):
+class TestGetPaymentDueDate(TapirUnitTest):
     @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
     def test_getPaymentDueDate_sharesValidBeforePaymentDueDayOfMonth_returnsDateInSameMonth(
         self, mock_get_parameter_value: Mock

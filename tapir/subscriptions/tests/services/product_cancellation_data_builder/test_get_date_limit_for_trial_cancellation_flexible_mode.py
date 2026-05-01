@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
@@ -13,7 +13,7 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
 class TestProductCancellationDataBuilderGetDataLimitForTrialCancellationFlexibleMode(
-    SimpleTestCase,
+    TapirUnitTest,
 ):
     @patch.object(
         DateLimitForDeliveryChangeCalculator,

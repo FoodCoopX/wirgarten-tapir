@@ -127,6 +127,7 @@ export * from "./PatchedTemporaryUploadRequest";
 export * from "./PatchedUpdateMemberBankDataRequestRequest";
 export * from "./PatchedWaitingListEntryRequest";
 export * from "./Payment";
+export * from "./PaymentIntendedUsePreviewResponse";
 export * from "./PaymentRhythmSerializerRequest";
 export * from "./PaymentStatusEnum";
 export * from "./PdfExportModel";

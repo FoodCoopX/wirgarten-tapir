@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.subscriptions.services.subscription_delivered_in_week_checked import (
@@ -10,7 +10,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
-class TestDoesMemberHaveAtLeastOneSubscriptionDeliveredAtDate(SimpleTestCase):
+class TestDoesMemberHaveAtLeastOneSubscriptionDeliveredAtDate(TapirUnitTest):
     def test_doesMemberHaveAtLeastOneSubscriptionDeliveredAtDate_noSubscription_returnsFalse(
         self,
     ):

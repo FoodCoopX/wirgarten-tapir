@@ -55,4 +55,3 @@ class MemberCreditGenerator:
                     )
 
         MemberCredit.objects.bulk_create(credits_to_create)
-        print(f"Created {len(credits_to_create)} member credits")

@@ -1,14 +1,14 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import PaymentFactory, MandateReferenceFactory
 
 
-class TestGetAlreadyPaidAmount(SimpleTestCase):
+class TestGetAlreadyPaidAmount(TapirUnitTest):
     @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
     def test_getAlreadyPaidAmount_default_considersOnlyPaymentsThatOverlapWithTheGivenRange(
         self, mock_get_payments_by_mandate_ref_and_type: Mock

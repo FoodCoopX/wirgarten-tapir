@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.pickup_locations.services.member_pickup_location_getter import (
@@ -12,7 +12,7 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.tests.factories import SubscriptionFactory, ProductTypeFactory
 
 
-class TestGetTrialPeriodStartDate(SimpleTestCase):
+class TestGetTrialPeriodStartDate(TapirUnitTest):
     @patch.object(
         MemberPickupLocationGetter,
         "get_member_pickup_location_id_from_cache",

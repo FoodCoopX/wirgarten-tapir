@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
@@ -14,7 +14,7 @@ from tapir.waiting_list.services.waiting_list_reserved_capacity_calculator impor
 )
 
 
-class TestIsThereEnoughFreeGlobalCapacityForSingleProductType(SimpleTestCase):
+class TestIsThereEnoughFreeGlobalCapacityForSingleProductType(TapirUnitTest):
     @patch.object(
         WaitingListReservedCapacityCalculator,
         "calculate_capacity_reserved_by_the_waiting_list_entries",

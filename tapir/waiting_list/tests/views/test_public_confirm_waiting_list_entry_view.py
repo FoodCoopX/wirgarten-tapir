@@ -6,15 +6,18 @@ from unittest.mock import patch, Mock
 from django.urls import reverse
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
+    CoopShareTransaction,
     Member,
     OrderFeedback,
     WaitingListEntry,
     WaitingListProductWish,
     Subscription,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
@@ -138,3 +141,41 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             0
         ].kwargs["trigger_data"]
         self.assertEqual(Events.WAITING_LIST_ORDER_CONFIRMATION, trigger_data.key)
+
+    def test_post_legalStatusIsNotCooperative_noCoopSharesArePurchased(self):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+            first_name="John",
+            last_name="Doe",
+            email="john@example.com",
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+
+        confirm_data = {
+            "entry_id": str(entry.id),
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "John Doe",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 2,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+        }
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(confirm_data),
+            content_type="application/json",
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assert_order_confirmed(response.json())
+        self.assertEqual(1, Member.objects.count())
+        self.assertFalse(CoopShareTransaction.objects.exists())

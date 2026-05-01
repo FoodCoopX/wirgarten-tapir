@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestGetNextContractStartDateInGrowingPeriod(SimpleTestCase):
+class TestGetNextContractStartDateInGrowingPeriod(TapirUnitTest):
     @patch.object(ContractStartDateCalculator, "get_next_contract_start_date")
     def test_getNextContractStartDateInGrowingPeriod_growingPeriodIsAlreadyStarted_useTodayAsReferenceDate(
         self, mock_get_next_contract_start_date: Mock

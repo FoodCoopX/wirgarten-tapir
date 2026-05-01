@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
@@ -9,7 +9,7 @@ from tapir.solidarity_contribution.services.solidarity_validator import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestGetSolidarityDropdownValues(SimpleTestCase):
+class TestGetSolidarityDropdownValues(TapirUnitTest):
 
     @patch(
         "tapir.solidarity_contribution.services.solidarity_validator.get_parameter_value"

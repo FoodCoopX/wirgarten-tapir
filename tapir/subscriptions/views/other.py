@@ -35,7 +35,7 @@ from tapir.subscriptions.services.subscription_change_week_to_date_converter imp
     SubscriptionChangeWeekToDateConverter,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.constants import Permission, OPTIONS_WEEKDAYS
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Product,
     ProductType,
@@ -250,16 +250,6 @@ class SubscriptionDateChangeApiView(APIView):
 
         if subscription.start_date == start_date and subscription.end_date == end_date:
             raise ValidationError("Keine Änderungen")
-
-        if end_date != subscription.end_date:
-            end_date_must_be_on_weekday = get_parameter_value(
-                key=ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
-            )
-            if end_date.weekday() != end_date_must_be_on_weekday:
-                raise ValidationError(
-                    f"Das End-Datum muss am gleichem Wochentag sein wie die Kommissioniervariable ({OPTIONS_WEEKDAYS[end_date_must_be_on_weekday][1]}), "
-                    f"du hast {OPTIONS_WEEKDAYS[end_date.weekday()][1]} angegeben"
-                )
 
         if TapirCache.get_growing_period_at_date(
             subscription.start_date, cache=cache

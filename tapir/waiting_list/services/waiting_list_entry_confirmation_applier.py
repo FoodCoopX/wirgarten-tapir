@@ -32,7 +32,7 @@ from tapir.wirgarten.models import (
     OrderFeedback,
 )
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.utils import get_now, get_today
+from tapir.wirgarten.utils import get_now, get_today, legal_status_is_cooperative
 
 
 class WaitingListEntryConfirmationApplier:
@@ -121,7 +121,7 @@ class WaitingListEntryConfirmationApplier:
                 solidarity_contribution=solidarity_contribution,
             )
 
-        if is_new_member:
+        if is_new_member and legal_status_is_cooperative(cache=cache):
             BestellWizardOrderFulfiller.create_coop_shares(
                 member=member,
                 number_of_shares=validated_data["number_of_coop_shares"],

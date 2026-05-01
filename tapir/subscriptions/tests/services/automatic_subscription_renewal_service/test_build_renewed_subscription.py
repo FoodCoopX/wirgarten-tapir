@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_WEEKS
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
@@ -16,7 +16,7 @@ from tapir.wirgarten.tests.factories import (
 )
 
 
-class TestBuildRenewedSubscription(SimpleTestCase):
+class TestBuildRenewedSubscription(TapirUnitTest):
     @patch.object(AutomaticSubscriptionRenewalService, "get_renewed_trial_data")
     @patch.object(NoticePeriodManager, "get_notice_period_unit")
     @patch.object(NoticePeriodManager, "get_notice_period_duration")

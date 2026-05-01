@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.exceptions import TapirCustomCycleException
 from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
@@ -9,7 +9,7 @@ from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
-class TestGetDateFromWeekObject(SimpleTestCase):
+class TestGetDateFromWeekObject(TapirUnitTest):
     def test_getDateFromCalendarWeek_givenWeekIsAfterGrowingPeriodStartDateAndInSameYear_returnsCorrectDateOnSameYear(
         self,
     ):

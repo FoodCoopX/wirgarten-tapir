@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from "./BestellWizardApi";
+export * from "./ConfigApi";
 export * from "./CoopApi";
 export * from "./CoreApi";
 export * from "./DeliveriesApi";

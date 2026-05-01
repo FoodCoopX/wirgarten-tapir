@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -20,7 +20,7 @@ from tapir.wirgarten.models import PickupLocation
     MemberPickupLocationGetter, "get_member_pickup_location_id", autospec=True
 )
 @patch.object(OrderValidator, "does_order_need_a_pickup_location", autospec=True)
-class TestSubscriptionUpdateViewValidatorValidatePickupLocation(SimpleTestCase):
+class TestSubscriptionUpdateViewValidatorValidatePickupLocation(TapirUnitTest):
     def build_default_params(self):
         self.order = Mock()
         self.member = Mock()

@@ -1,12 +1,12 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestGetLastDayOfTrialPeriod(SimpleTestCase):
+class TestGetLastDayOfTrialPeriod(TapirUnitTest):
     def test_getLastDayOfTrialPeriod_trialDisabled_returnsNone(self):
         subscription = Mock()
         subscription.trial_disabled = True

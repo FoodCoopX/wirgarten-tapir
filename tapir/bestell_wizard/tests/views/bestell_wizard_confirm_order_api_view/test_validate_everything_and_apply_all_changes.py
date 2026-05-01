@@ -2,7 +2,7 @@ import datetime
 from unittest.mock import patch, Mock, call
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
+class TestValidateEverythingAndApplyAllChanges(TapirUnitTest):
     def setUp(self):
         self.now = mock_timezone(self, datetime.datetime(year=2021, month=9, day=12))
 

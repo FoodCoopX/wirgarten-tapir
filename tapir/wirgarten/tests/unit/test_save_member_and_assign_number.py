@@ -1,12 +1,12 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.views.member.list.modals import save_member_and_assign_number
 
 
-class TestSaveMemberAndAssignNumber(SimpleTestCase):
+class TestSaveMemberAndAssignNumber(TapirUnitTest):
     @patch.object(
         MemberNumberService,
         "assign_member_number_if_eligible",

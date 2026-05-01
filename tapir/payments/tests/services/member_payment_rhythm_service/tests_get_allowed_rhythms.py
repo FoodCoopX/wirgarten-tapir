@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -9,7 +9,7 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestGetAllowedRhythms(SimpleTestCase):
+class TestGetAllowedRhythms(TapirUnitTest):
     @patch(
         "tapir.payments.services.member_payment_rhythm_service.get_parameter_value",
         autospec=True,

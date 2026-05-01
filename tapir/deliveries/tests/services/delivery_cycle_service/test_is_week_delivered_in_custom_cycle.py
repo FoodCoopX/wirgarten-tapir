@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
     CustomCycleDeliveryDateCalculator,
@@ -9,7 +9,7 @@ from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 
 
-class TestIsWeekDeliveredInCustomCycle(SimpleTestCase):
+class TestIsWeekDeliveredInCustomCycle(TapirUnitTest):
     @staticmethod
     def _build_cache(date, product_type, growing_period, delivered_weeks):
         return {

@@ -1,4 +1,4 @@
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.factories import (
 )
 
 
-class TestGroupSubscriptionsByMemberAndProductType(SimpleTestCase):
+class TestGroupSubscriptionsByMemberAndProductType(TapirUnitTest):
     def test_groupSubscriptionsByMemberAndProductType_default_groupsCorrectly(self):
         product_type_1 = ProductTypeFactory.build(pk="pt1")
         product_type_2 = ProductTypeFactory.build(pk="pt2")

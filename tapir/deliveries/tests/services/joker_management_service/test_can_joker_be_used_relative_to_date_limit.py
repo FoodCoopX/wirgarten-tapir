@@ -1,14 +1,14 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestJokerManagementServiceCanJokerBeUsedRelativeToDateLimit(SimpleTestCase):
+class TestJokerManagementServiceCanJokerBeUsedRelativeToDateLimit(TapirUnitTest):
     def setUp(self):
         mock_timezone(self, factories.NOW)
 

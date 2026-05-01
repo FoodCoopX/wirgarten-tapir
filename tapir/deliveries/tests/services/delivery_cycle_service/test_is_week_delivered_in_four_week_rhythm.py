@@ -1,13 +1,13 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestIsWeekDeliveredInFourWeekRhythm(SimpleTestCase):
+class TestIsWeekDeliveredInFourWeekRhythm(TapirUnitTest):
     @patch("tapir.deliveries.services.delivery_cycle_service.get_parameter_value")
     def test_isWeekDeliveredInFourWeekRhythm_dateInThePastAndFourWeeksAgo_returnsTrue(
         self, mock_get_parameter_value: Mock

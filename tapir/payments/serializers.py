@@ -85,3 +85,12 @@ class CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(
 class MandateReferencePreviewResponseSerializer(serializers.Serializer):
     previews = serializers.DictField(child=serializers.CharField())
     error = serializers.CharField()
+
+
+class PaymentIntendedUsePreviewResponseSerializer(serializers.Serializer):
+    previews_new = serializers.ListField(child=serializers.CharField())
+    previews_old = serializers.ListField(child=serializers.CharField())
+    error = serializers.CharField()
+    tokens = serializers.ListField(child=serializers.CharField())
+    payments = PaymentSerializer(many=True)
+    members = MemberSerializer(many=True)

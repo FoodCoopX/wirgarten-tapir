@@ -1,7 +1,7 @@
 import datetime
 from decimal import Decimal
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports.services.payment_column_provider import PaymentColumnProvider
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
@@ -10,7 +10,7 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 from tapir.wirgarten.tests.factories import MemberFactory, PaymentFactory
 
 
-class TestPaymentColumnProvider(SimpleTestCase):
+class TestPaymentColumnProvider(TapirUnitTest):
     def test_getValueMemberFullName_default_returnsCorrectName(self):
         member = MemberFactory.build(first_name="John", last_name="Doe")
         payment = PaymentFactory.build(mandate_ref__member=member)
