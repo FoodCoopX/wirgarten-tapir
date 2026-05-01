@@ -633,12 +633,12 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
     ):
         fake_members = [
-            Member(first_name="John", last_name="Doe", member_no=14, id=14),
+            Member(first_name="John", last_name="Doe", member_no=14, id="14"),
             Member(
                 first_name="Maximilian",
                 last_name="Mustermann",
                 member_no=123456,
-                id=123456,
+                id="123456",
             ),
         ]
 
@@ -823,8 +823,8 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
     ):
         fake_members = [
-            Member(first_name="John", last_name="Doe", member_no="14"),
-            Member(first_name="Maximilian", last_name="Mustermann", member_no="123456"),
+            Member(first_name="John", last_name="Doe", member_no=14),
+            Member(first_name="Maximilian", last_name="Mustermann", member_no=123456),
         ]
 
         token_value_overrides = {
