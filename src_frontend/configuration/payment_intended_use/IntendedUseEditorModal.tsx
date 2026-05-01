@@ -142,7 +142,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
         </thead>
         <tbody>
           {members.map((member, index) => (
-            <>
+            <React.Fragment key={member.id!}>
               {index === 2 && (
                 <tr>
                   <th colSpan={4} className={"text-center"}>
@@ -150,7 +150,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
                   </th>
                 </tr>
               )}
-              <tr key={member.id!}>
+              <tr>
                 <td>
                   {formatCurrency(payments[index].amount)}
                   {isContract && (
@@ -168,7 +168,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
                 <td>{buildPreview(outerPreviews[index])}</td>
                 <td>{buildPreview(innerPreviews[index])}</td>
               </tr>
-            </>
+            </React.Fragment>
           ))}
         </tbody>
         <tfoot>
