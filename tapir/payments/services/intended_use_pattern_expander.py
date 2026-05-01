@@ -15,6 +15,9 @@ from tapir.payments.types import TokenReplacers
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
 )
+from tapir.utils.services.model_date_range_overlap_checker import (
+    ModelDateRangeOverlapChecker,
+)
 from tapir.wirgarten.models import Payment, Member, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_date, format_currency
@@ -100,10 +103,10 @@ class IntendedUsePatternExpander:
 
     @classmethod
     def get_relevant_subscriptions(cls, member: Member, payment: Payment):
-        return Subscription.objects.filter(
-            member_id=member.id,
-            start_date__lte=payment.subscription_payment_range_end,
-            end_date__gte=payment.subscription_payment_range_start,
+        return ModelDateRangeOverlapChecker.filter_objects_that_overlap_with_range(
+            queryset=Subscription.objects.filter(member_id=member.id),
+            range_start=payment.subscription_payment_range_start,
+            range_end=payment.subscription_payment_range_end,
         )
 
     @classmethod
