@@ -30,6 +30,8 @@ class MandateReferenceProvider:
 
         mandate_ref = cls.create_mandate_ref(member=member, cache=cache)
         mandate_ref_cache = cache.get(cls.CACHE_KEY)
+        if member.id not in mandate_ref_cache:
+            mandate_ref_cache[member.id] = []
         mandate_ref_cache[member.id].insert(0, mandate_ref)
 
         return mandate_ref
@@ -55,7 +57,7 @@ class MandateReferenceProvider:
         mandate_ref_cache = get_from_cache_or_compute(
             cache, "mandate_ref_cache", compute
         )
-        mandate_refs = mandate_ref_cache.get(member.id)
+        mandate_refs = mandate_ref_cache.get(member.id, [])
         for mandate_ref in mandate_refs:
             if mandate_ref.start_ts <= reference_datetime:
                 return mandate_ref
