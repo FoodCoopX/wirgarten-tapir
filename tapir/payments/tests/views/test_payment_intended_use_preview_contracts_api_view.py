@@ -16,10 +16,10 @@ from tapir.wirgarten.tests.factories import (
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
-URL_NAME = "payments:intended_use_preview_contracts"
-
 
 class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
+    URL_NAME = "payments:intended_use_preview_contracts"
+
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -27,23 +27,18 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
         ProductFactory.create(name="ProductA", type=product_type)
         ProductFactory.create(name="ProductB", type=product_type)
 
-    def _login_as_admin(self):
-        admin = MemberFactory.create(is_superuser=True)
-        self.client.force_login(admin)
-        return admin
-
     def test_get_loggedInAsNormalMember_returns403(self):
         member = MemberFactory.create(is_superuser=False)
         self.client.force_login(member)
 
-        response = self.client.get(reverse(URL_NAME))
+        response = self.client.get(reverse(self.URL_NAME))
 
         self.assertStatusCode(response, 403)
 
     def test_get_loggedInAsAdmin_returns200(self):
         self._login_as_admin()
 
-        response = self.client.get(reverse(URL_NAME))
+        response = self.client.get(reverse(self.URL_NAME))
 
         self.assertStatusCode(response, 200)
 
@@ -51,7 +46,7 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
         self._login_as_admin()
 
         response = self.client.get(
-            reverse(URL_NAME) + "?pattern_old={vorname}&pattern_new={vorname}"
+            reverse(self.URL_NAME) + "?pattern_old={vorname}&pattern_new={vorname}"
         )
 
         self.assertStatusCode(response, 200)
@@ -66,7 +61,7 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
         too_long = "X" * 50
 
         response = self.client.get(
-            reverse(URL_NAME) + f"?pattern_old={too_long}&pattern_new={too_long}"
+            reverse(self.URL_NAME) + f"?pattern_old={too_long}&pattern_new={too_long}"
         )
 
         self.assertStatusCode(response, 200)
@@ -80,7 +75,7 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
     def test_get_default_returnsTokenListWithCommonAndContractTokens(self):
         self._login_as_admin()
 
-        response = self.client.get(reverse(URL_NAME))
+        response = self.client.get(reverse(self.URL_NAME))
 
         self.assertStatusCode(response, 200)
         expected_tokens = sorted(IntendedUseTokens.COMMON_TOKENS) + sorted(
@@ -106,7 +101,7 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
             valid_from=datetime.date(2026, 1, 1),
             price=10,
         )
-        payment = PaymentFactory.create(
+        PaymentFactory.create(
             mandate_ref__member=member,
             due_date=datetime.date(2026, 6, 15),
             subscription_payment_range_start=datetime.date(2026, 6, 1),
@@ -114,7 +109,7 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
         )
 
         response = self.client.get(
-            reverse(URL_NAME) + "?pattern_old={vorname}&pattern_new={nachname}"
+            reverse(self.URL_NAME) + "?pattern_old={vorname}&pattern_new={nachname}"
         )
 
         self.assertStatusCode(response, 200)
