@@ -90,7 +90,9 @@ class Command(BaseCommand):
             QuestionaireTrafficSourceResponse.objects.all().delete()
             WaitingListEntry.objects.all().delete()
             EmailChangeRequest.objects.all().delete()
-            Member.objects.all().delete()
+            for member in Member.objects.all():
+                # members must be deleted one by one to trigger KeycloakUser.delete
+                member.delete()
             return
 
         # check if type and file params are present
@@ -150,7 +152,9 @@ class Command(BaseCommand):
                             QuestionaireTrafficSourceResponse.objects.all().delete()
                             WaitingListEntry.objects.all().delete()
                             EmailChangeRequest.objects.all().delete()
-                            Member.objects.all().delete()
+                            for member in Member.objects.all():
+                                # members must be deleted one by one to trigger KeycloakUser.delete
+                                member.delete()
 
                         if import_type == "shares":
                             TransferCoopSharesLogEntry.objects.all().delete()
