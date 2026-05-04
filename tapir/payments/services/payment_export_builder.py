@@ -21,7 +21,11 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.utils import format_date, format_currency
+from tapir.wirgarten.utils import (
+    format_date,
+    format_currency,
+    legal_status_is_cooperative,
+)
 
 
 class PaymentExportBuilder:
@@ -54,14 +58,15 @@ class PaymentExportBuilder:
             send_mail=send_mail,
             cache=cache,
         )
-        cls.export_payments_if_necessary(
-            combined_payments=coop_share_payments,
-            database_payments=coop_share_payments,
-            is_contract_payments=False,
-            reference_date=reference_date,
-            send_mail=send_mail,
-            cache=cache,
-        )
+        if legal_status_is_cooperative(cache=cache):
+            cls.export_payments_if_necessary(
+                combined_payments=coop_share_payments,
+                database_payments=coop_share_payments,
+                is_contract_payments=False,
+                reference_date=reference_date,
+                send_mail=send_mail,
+                cache=cache,
+            )
 
     @classmethod
     def export_payments_if_necessary(
