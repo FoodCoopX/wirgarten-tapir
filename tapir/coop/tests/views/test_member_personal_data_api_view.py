@@ -11,6 +11,7 @@ from tapir.accounts.models import UpdateTapirUserLogEntry, KeycloakUser
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import LEGAL_STATUS_ASSOCIATION, LEGAL_STATUS_COOPERATIVE
 from tapir.wirgarten.mail_events import Events
+from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -19,8 +20,6 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 class TestMemberBankDataApiView(TapirIntegrationTest):
     SIMPLE_FIELDS = [
-        "first_name",
-        "last_name",
         "email",
         "phone_number",
         "street",
@@ -28,6 +27,8 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         "postcode",
         "city",
     ]
+    SIMPLE_FIELDS_ADMIN_EDIT_ONLY = ["first_name", "last_name"]
+    ALL_SIMPLE_FIELDS = SIMPLE_FIELDS + SIMPLE_FIELDS_ADMIN_EDIT_ONLY
 
     @classmethod
     def setUpTestData(cls):
@@ -54,8 +55,10 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_200_OK)
         response_content = response.json()
-        for field in self.SIMPLE_FIELDS:
+        for field in self.ALL_SIMPLE_FIELDS:
             self.assertEqual(getattr(user, field), response_content[field])
+
+        self.assertFalse(response_content["can_edit_name"])
 
     def test_get_adminTriesToGetDataFromAnotherMember_returnsCorrectData(self):
         user = MemberFactory.create(is_superuser=True)
@@ -68,8 +71,9 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_200_OK)
         response_content = response.json()
-        for field in self.SIMPLE_FIELDS:
+        for field in self.ALL_SIMPLE_FIELDS:
             self.assertEqual(getattr(target, field), response_content[field])
+        self.assertTrue(response_content["can_edit_name"])
 
     def test_get_studentStatusEnabledButLegalStatusIsNotCooperative_returnsNoneAsStudentStatus(
         self,
@@ -148,17 +152,17 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
     def test_patch_memberTriesToUpdateOwnData_updatesDataAndCreateLogEntryAndSendMail(
         self, mock_fire_action: Mock
     ):
-        user = MemberFactory.create(is_superuser=False)
-        self.client.force_login(user)
+        user_before_changes = MemberFactory.create(is_superuser=False)
+        self.client.force_login(user_before_changes)
 
         url = reverse("coop:member_personal_data")
         data = {
-            "member_id": user.id,
+            "member_id": user_before_changes.id,
             "first_name": "test_fn",
             "last_name": "test_ln",
             "street": "test_street",
             "street_2": "test_street2",
-            "email": user.email,  # emails get tested separately since it triggers the mail change process
+            "email": user_before_changes.email,  # emails get tested separately since it triggers the mail change process
             "phone_number": "+4917744563327",
             "postcode": "12345",
             "city": "test_city",
@@ -175,23 +179,31 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertTrue(response_content["order_confirmed"])
         self.assertIsNone(response_content["error"])
 
-        user.refresh_from_db()
+        user_after_changes = Member.objects.get(id=user_before_changes.id)
         for field_name, value in data.items():
-            if field_name not in self.SIMPLE_FIELDS:
-                continue
-            self.assertEqual(data[field_name], getattr(user, field_name))
+            if field_name in self.SIMPLE_FIELDS:
+                self.assertEqual(
+                    data[field_name], getattr(user_after_changes, field_name)
+                )
+            if field_name in self.SIMPLE_FIELDS_ADMIN_EDIT_ONLY:
+                self.assertEqual(
+                    getattr(user_before_changes, field_name),
+                    getattr(user_after_changes, field_name),
+                )
 
         self.assertTrue(UpdateTapirUserLogEntry.objects.exists())
         log_entry = UpdateTapirUserLogEntry.objects.get()
-        self.assertEqual(user.email, log_entry.actor.email)
-        self.assertEqual(user.email, log_entry.user.email)
+        self.assertEqual(user_after_changes.email, log_entry.actor.email)
+        self.assertEqual(user_after_changes.email, log_entry.user.email)
 
         mock_fire_action.assert_called_once()
         trigger_data: TransactionalTriggerData = mock_fire_action.call_args_list[
             0
         ].args[0]
         self.assertEqual(Events.MEMBERAREA_CHANGE_DATA, trigger_data.key)
-        self.assertEqual(user.id, trigger_data.recipient_id_in_base_queryset)
+        self.assertEqual(
+            user_after_changes.id, trigger_data.recipient_id_in_base_queryset
+        )
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
         self.assertEqual({}, trigger_data.token_data)
 
@@ -229,7 +241,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
 
         target.refresh_from_db()
         for field_name, value in data.items():
-            if field_name not in self.SIMPLE_FIELDS:
+            if field_name not in self.ALL_SIMPLE_FIELDS:
                 continue
             self.assertEqual(data[field_name], getattr(target, field_name))
 
@@ -406,14 +418,14 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self, mock_email_verified: Mock, mock_fire_action: Mock
     ):
         mock_email_verified.return_value = True
-        user = MemberFactory.create(email="old_address@example.com")
-        self.client.force_login(user)
+        user_before_changes = MemberFactory.create(email="old_address@example.com")
+        self.client.force_login(user_before_changes)
 
         url = reverse("coop:member_personal_data")
         response = self.client.patch(
             url,
             data={
-                "member_id": user.id,
+                "member_id": user_before_changes.id,
                 "first_name": "test_fn",
                 "last_name": "test_ln",
                 "street": "test_street",
@@ -432,8 +444,8 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertTrue(response_content["order_confirmed"])
         self.assertIsNone(response_content["error"])
 
-        user.refresh_from_db()
-        self.assertEqual("old_address@example.com", user.email)
+        user_after_changes = Member.objects.get(id=user_before_changes.id)
+        self.assertEqual("old_address@example.com", user_after_changes.email)
 
         self.assertEqual(3, mock_fire_action.call_count)
 
@@ -446,7 +458,9 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
             1
         ].kwargs["trigger_data"]
         self.assertEqual(Events.MEMBERAREA_CHANGE_EMAIL_INITIATE, trigger_data.key)
-        self.assertEqual(user.id, trigger_data.recipient_id_in_base_queryset)
+        self.assertEqual(
+            user_after_changes.id, trigger_data.recipient_id_in_base_queryset
+        )
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
         self.assertEqual(["verify_link"], list(trigger_data.token_data.keys()))
 
@@ -457,8 +471,8 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertEqual(
             TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
                 email="new_address@example.com",
-                first_name="test_fn",
-                last_name="test_ln",
+                first_name=user_before_changes.first_name,  # We are logged in as not-admin, so the name should not change
+                last_name=user_before_changes.last_name,
             ),
             trigger_data.recipient_outside_of_base_queryset,
         )

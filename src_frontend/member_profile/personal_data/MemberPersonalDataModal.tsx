@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
+import { Form, Modal, Spinner } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import { CoopApi } from "../../api-client";
+import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
+import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
+import { isPersonalDataValidShort } from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { Form, Modal, Spinner } from "react-bootstrap";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import TapirButton from "../../components/TapirButton.tsx";
-import { isPersonalDataValidShort } from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
-import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
-import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { addToast } from "../../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberPersonalDataModalProps {
   memberId: string;
@@ -42,6 +42,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [isStudent, setIsStudent] = useState<boolean>();
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [canEditStudent, setCanEditStudent] = useState(false);
+  const [canEditName, setCanEditName] = useState(false);
 
   useEffect(() => {
     if (!show) return;
@@ -64,6 +65,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           setStudentStatusEnabled(true);
           setCanEditStudent(response.canEditStudent);
         }
+        setCanEditName(response.canEditName);
       })
       .catch((error) =>
         handleRequestError(
@@ -160,6 +162,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 onChange={(event) => setFirstName(event.target.value)}
                 isValid={showValidation && firstName.length > 0}
                 isInvalid={showValidation && firstName.length === 0}
+                disabled={!canEditName}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -170,6 +173,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 onChange={(event) => setLastName(event.target.value)}
                 isValid={showValidation && lastName.length > 0}
                 isInvalid={showValidation && lastName.length === 0}
+                disabled={!canEditName}
               />
             </Form.Group>
             <Form.Group className="mb-2">

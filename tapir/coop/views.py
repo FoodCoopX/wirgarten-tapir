@@ -473,9 +473,14 @@ class MemberPersonalDataApiView(APIView):
                     "city": member.city,
                     "is_student": is_student,
                     "can_edit_student": self.user_can_edit_student_status(request.user),
+                    "can_edit_name": self.user_can_edit_name(request.user),
                 }
             ).data
         )
+
+    @classmethod
+    def user_can_edit_name(cls, user):
+        return user.has_perm(Permission.Coop.MANAGE)
 
     @classmethod
     def user_can_edit_student_status(cls, user):
@@ -527,8 +532,6 @@ class MemberPersonalDataApiView(APIView):
             )
 
         simple_fields = [
-            "first_name",
-            "last_name",
             "email",
             "phone_number",
             "street",
@@ -536,6 +539,8 @@ class MemberPersonalDataApiView(APIView):
             "postcode",
             "city",
         ]
+        if self.user_can_edit_name(request.user):
+            simple_fields += ["first_name", "last_name"]
         for field in simple_fields:
             setattr(member, field, serializer.validated_data.get(field))
 

@@ -8312,7 +8312,10 @@ components:
           type: boolean
         can_edit_student:
           type: boolean
+        can_edit_name:
+          type: boolean
       required:
+      - can_edit_name
       - can_edit_student
       - city
       - email

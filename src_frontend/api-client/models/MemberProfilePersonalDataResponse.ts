@@ -78,6 +78,12 @@ export interface MemberProfilePersonalDataResponse {
    * @memberof MemberProfilePersonalDataResponse
    */
   canEditStudent: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MemberProfilePersonalDataResponse
+   */
+  canEditName: boolean;
 }
 
 /**
@@ -96,6 +102,8 @@ export function instanceOfMemberProfilePersonalDataResponse(
   if (!("postcode" in value) || value["postcode"] === undefined) return false;
   if (!("city" in value) || value["city"] === undefined) return false;
   if (!("canEditStudent" in value) || value["canEditStudent"] === undefined)
+    return false;
+  if (!("canEditName" in value) || value["canEditName"] === undefined)
     return false;
   return true;
 }
@@ -124,6 +132,7 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     city: json["city"],
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
     canEditStudent: json["can_edit_student"],
+    canEditName: json["can_edit_name"],
   };
 }
 
@@ -152,5 +161,6 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     city: value["city"],
     is_student: value["isStudent"],
     can_edit_student: value["canEditStudent"],
+    can_edit_name: value["canEditName"],
   };
 }

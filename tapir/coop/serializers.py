@@ -45,6 +45,7 @@ class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     city = serializers.CharField()
     is_student = serializers.BooleanField(required=False)
     can_edit_student = serializers.BooleanField()
+    can_edit_name = serializers.BooleanField()
 
 
 class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
