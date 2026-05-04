@@ -31,6 +31,11 @@ def export_payments_for_this_month(
     if reference_date is None:
         reference_date = get_today(cache=cache)
 
+    # export_payments_for_this_month will usually export on the first day of the month
+    # depending on when create_payments_for_this_month is run, for example if the server was down from the 31st at 23:00 to 1st at 08:00,
+    # the payments may not be created yet. So we make sure that they are created before exporting.
+    create_payments_for_this_month(reference_date)
+
     PaymentExportBuilder.export_all_unexported_payments(
         reference_date=reference_date,
         send_mail=send_mail,
