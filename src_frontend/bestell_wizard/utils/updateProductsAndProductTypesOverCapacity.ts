@@ -1,12 +1,11 @@
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { useApi } from "../../hooks/useApi.ts";
-import { BestellWizardApi, PublicGrowingPeriod } from "../../api-client";
-import { ShoppingCart } from "../types/ShoppingCart.ts";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import React from "react";
+import { BestellWizardApi, PublicGrowingPeriod } from "../../api-client";
 import { ToastData } from "../../types/ToastData.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 
 export function updateProductsAndProductTypesOverCapacity(
+  bestellWizardApi: BestellWizardApi,
   shoppingCart: ShoppingCart,
   setProductIdsOverCapacity: (ids: string[]) => void,
   setProductTypeIdsOverCapacity: (ids: string[]) => void,
@@ -21,8 +20,6 @@ export function updateProductsAndProductTypesOverCapacity(
   if (!growingPeriod) {
     return;
   }
-
-  const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
 
   if (checkingCapacitiesController) {
     checkingCapacitiesController.abort();

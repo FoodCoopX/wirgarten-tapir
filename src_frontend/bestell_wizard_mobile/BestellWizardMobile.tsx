@@ -7,6 +7,7 @@ import {
   BestellWizardApi,
   CoopApi,
   OrderConfirmationResponse,
+  PickupLocationsApi,
   PublicGrowingPeriod,
   PublicPickupLocation,
   type PublicProductType,
@@ -78,6 +79,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
   const coopApi = useApi(CoopApi, csrfToken);
   const waitingListApi = useApi(WaitingListApi, csrfToken);
+  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
 
   const [settings, setSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
@@ -225,6 +227,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     updateProductPrices(
+      bestellWizardApi,
       selectedGrowingPeriod,
       productPricesController,
       setProductPricesController,
@@ -321,6 +324,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     checkPickupLocationCapacities(
+      pickupLocationsApi,
       settings.pickupLocations,
       shoppingCart,
       setPickupLocationsWithCapacityCheckLoading,
@@ -333,6 +337,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   useEffect(() => {
     if (waitingListEntryDetails === undefined) {
       updateProductsAndProductTypesOverCapacity(
+        bestellWizardApi,
         shoppingCart,
         setProductIdsOverCapacity,
         setProductTypeIdsOverCapacity,
@@ -345,6 +350,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     updateMinimumNumberOfShares(
+      coopApi,
       shoppingCart,
       productTypesInWaitingList,
       setMinimumNumberOfShares,
@@ -358,6 +364,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     fetchFirstDeliveryDates(
+      bestellWizardApi,
       shoppingCart,
       selectedGrowingPeriod,
       setFirstDeliveryDatesByPickupLocationAndProductType,

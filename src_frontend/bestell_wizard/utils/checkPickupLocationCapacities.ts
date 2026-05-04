@@ -1,16 +1,15 @@
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { useApi } from "../../hooks/useApi.ts";
+import React from "react";
 import {
   PickupLocationsApi,
   PublicGrowingPeriod,
   PublicPickupLocation,
 } from "../../api-client";
-import { ShoppingCart } from "../types/ShoppingCart.ts";
-import React from "react";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 
 export function checkPickupLocationCapacities(
+  pickupLocationApi: PickupLocationsApi,
   pickupLocations: PublicPickupLocation[],
   shoppingCart: ShoppingCart,
   setPickupLocationsWithCapacityCheckLoading: React.Dispatch<
@@ -22,8 +21,6 @@ export function checkPickupLocationCapacities(
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
   growingPeriod: PublicGrowingPeriod | undefined,
 ) {
-  const pickupLocationApi = useApi(PickupLocationsApi, getCsrfToken());
-
   setPickupLocationsWithCapacityCheckLoading(new Set(pickupLocations));
 
   for (const pickupLocation of pickupLocations) {

@@ -1,11 +1,11 @@
-import { BestellWizardApi, PublicGrowingPeriod } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
-import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
-import { handleRequestError } from "./handleRequestError.ts";
-import { ToastData } from "../types/ToastData.ts";
 import React from "react";
+import { BestellWizardApi, PublicGrowingPeriod } from "../api-client";
+import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "./handleRequestError.ts";
 
 export function updateProductPrices(
+  bestellWizardApi: BestellWizardApi,
   selectedGrowingPeriod: PublicGrowingPeriod,
   productPricesController: AbortController | undefined,
   setProductPricesController: (controller: AbortController) => void,
@@ -19,8 +19,6 @@ export function updateProductPrices(
 
   const localController = new AbortController();
   setProductPricesController(localController);
-
-  const bestellWizardApi = useApi(BestellWizardApi, "unused");
 
   bestellWizardApi
     .bestellWizardApiProductPricesRetrieve(

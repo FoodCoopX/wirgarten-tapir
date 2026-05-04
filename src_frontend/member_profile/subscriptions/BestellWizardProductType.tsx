@@ -251,6 +251,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
 
   useEffect(() => {
     updateProductsAndProductTypesOverCapacity(
+      bestellWizardApi,
       shoppingCart,
       setProductIdsOverCapacity,
       setProductTypeIdsOverCapacity,
@@ -289,6 +290,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     }
 
     checkPickupLocationCapacities(
+      pickupLocationApi,
       settings.pickupLocations,
       shoppingCart,
       setPickupLocationsWithCapacityCheckLoading,
@@ -304,6 +306,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     }
 
     fetchFirstDeliveryDates(
+      bestellWizardApi,
       shoppingCart,
       selectedGrowingPeriod,
       setFirstDeliveryDatesByPickupLocationAndProductType,

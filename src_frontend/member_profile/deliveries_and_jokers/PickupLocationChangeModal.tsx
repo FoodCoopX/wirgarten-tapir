@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Spinner } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import {
   PickupLocationsApi,
   PublicPickupLocation,
@@ -7,17 +8,16 @@ import {
   SubscriptionsApi,
   WaitingListApi,
 } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import PickupLocationWaitingListSelector from "../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
 import PickupLocationSelector from "../../bestell_wizard/components/PickupLocationSelector.tsx";
-import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
+import PickupLocationWaitingListSelector from "../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import TapirButton from "../../components/TapirButton.tsx";
+import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
+import TapirButton from "../../components/TapirButton.tsx";
+import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface PickupLocationChangeModalProps {
   show: boolean;
@@ -133,6 +133,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     );
 
     checkPickupLocationCapacities(
+      pickupLocationsApi,
       pickupLocations,
       shoppingCart,
       setPickupLocationsWithCapacityCheckLoading,
