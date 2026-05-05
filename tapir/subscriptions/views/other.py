@@ -29,6 +29,7 @@ from tapir.subscriptions.serializers import (
     OrderConfirmationResponseSerializer,
     SubscriptionDateChangeRequestSerializer,
     ConvertWeekToDateForSubscriptionChangesResponseSerializer,
+    SubscriptionPriceOverrideChangeRequestSerializer,
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
@@ -264,6 +265,42 @@ class SubscriptionDateChangeApiView(APIView):
             raise ValidationError(
                 "Das neue End-Datum muss im gleiche Vertragsperiode liegen wie das alte"
             )
+
+
+class SubscriptionPriceOverrideApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        request=SubscriptionPriceOverrideChangeRequestSerializer,
+    )
+    def post(self, request):
+        serializer = SubscriptionPriceOverrideChangeRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        subscription = get_object_or_404(
+            Subscription, id=serializer.validated_data["subscription_id"]
+        )
+
+        price_override = serializer.validated_data["price_override"]
+        if price_override is not None and price_override < 0:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {
+                        "order_confirmed": False,
+                        "error": "Der Preis darf nicht negativ sein",
+                    }
+                ).data
+            )
+
+        subscription.price_override = price_override
+        subscription.save()
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
 
 
 class ConvertWeeksToDateForSubscriptionChangesApiView(APIView):

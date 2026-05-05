@@ -306,3 +306,8 @@ class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
     confirm_creation_ids = serializers.ListField(child=serializers.CharField())
     confirm_purchase_ids = serializers.ListField(child=serializers.CharField())
     confirm_deletion_ids = serializers.ListField(child=serializers.IntegerField())
+
+
+class SubscriptionPriceOverrideChangeRequestSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    price_override = serializers.FloatField(allow_null=True)

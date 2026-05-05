@@ -1994,35 +1994,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpdateMemberSolidarityContributionResponse'
           description: ''
-  /subscriptions/api(/convert_weeks_to_date_for_subscription_change:
-    get:
-      operationId: subscriptions_api(_convert_weeks_to_date_for_subscription_change_retrieve
-      parameters:
-      - in: query
-        name: end_week
-        schema:
-          type: integer
-      - in: query
-        name: start_week
-        schema:
-          type: integer
-      - in: query
-        name: subscription_id
-        schema:
-          type: string
-      tags:
-      - subscriptions
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConvertWeekToDateForSubscriptionChangesResponse'
-          description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
@@ -2050,6 +2021,35 @@ paths:
             application/json:
               schema:
                 type: string
+          description: ''
+  /subscriptions/api/convert_weeks_to_date_for_subscription_change:
+    get:
+      operationId: subscriptions_api_convert_weeks_to_date_for_subscription_change_retrieve
+      parameters:
+      - in: query
+        name: end_week
+        schema:
+          type: integer
+      - in: query
+        name: start_week
+        schema:
+          type: integer
+      - in: query
+        name: subscription_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertWeekToDateForSubscriptionChangesResponse'
           description: ''
   /subscriptions/api/dates_change:
     post:
@@ -2228,6 +2228,34 @@ paths:
             application/json:
               schema:
                 type: string
+          description: ''
+  /subscriptions/api/subscription_price_override:
+    post:
+      operationId: subscriptions_api_subscription_price_override_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPriceOverrideChangeRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPriceOverrideChangeRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionPriceOverrideChangeRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /subscriptions/api/update_subscription:
     post:
@@ -10639,6 +10667,19 @@ components:
       - end_week
       - start_date_is_on_period_start
       - start_week
+      - subscription_id
+    SubscriptionPriceOverrideChangeRequestRequest:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+          minLength: 1
+        price_override:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - price_override
       - subscription_id
     TemporaryUpload:
       type: object

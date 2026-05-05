@@ -28,9 +28,6 @@ from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_g
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
-from tapir.subscriptions.services.subscription_price_calculator import (
-    SubscriptionPriceCalculator,
-)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
@@ -1009,35 +1006,3 @@ def cancel_or_delete_subscriptions(
         subscription.save()
 
     return existing_trial_end_date
-
-
-class EditSubscriptionPriceForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        self.subscription_id = kwargs.pop("pk", None)
-        self.subscription = Subscription.objects.get(id=self.subscription_id)
-        super().__init__(*args, **kwargs)
-        cache = {}
-
-        initial = SubscriptionPriceCalculator.get_monthly_price(
-            subscription=self.subscription,
-            reference_date=get_today(cache=cache),
-            cache=cache,
-        )
-        self.fields["new_price"] = forms.DecimalField(
-            required=False,
-            label=_("Neuer Preis"),
-            localize=True,
-            max_digits=6,
-            decimal_places=2,
-            min_value=0.0,
-            initial=initial,
-            help_text="Leer lassen um den Preis zurückzusetzen (automatisch berechnen)",
-        )
-
-    def save(self):
-        if self.cleaned_data["new_price"]:
-            self.subscription.price_override = self.cleaned_data["new_price"]
-        else:
-            self.subscription.price_override = None
-        self.subscription.save()
-        return self.subscription
