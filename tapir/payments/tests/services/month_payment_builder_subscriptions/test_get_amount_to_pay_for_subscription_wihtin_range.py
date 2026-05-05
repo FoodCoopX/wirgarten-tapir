@@ -1,27 +1,35 @@
 from decimal import Decimal
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
+    @patch.object(SubscriptionPriceCalculator, "get_monthly_price", autospec=True)
     @patch.object(
-        DeliveryPriceCalculator, "get_price_of_single_delivery_for_subscription"
+        DeliveryPriceCalculator,
+        "get_price_of_single_delivery_for_subscription",
+        autospec=True,
     )
     @patch.object(
-        MonthPaymentBuilderSubscriptions, "get_number_of_months_and_deliveries_to_pay"
+        MonthPaymentBuilderSubscriptions,
+        "get_number_of_months_and_deliveries_to_pay",
+        autospec=True,
     )
     def test_getAmountToPayForSubscriptionWithinRange_default_returnsCorrectPrice(
         self,
         mock_get_number_of_months_and_deliveries_to_pay: Mock,
         mock_get_price_of_single_delivery_for_subscription: Mock,
+        mock_get_monthly_price: Mock,
     ):
         mock_get_number_of_months_and_deliveries_to_pay.return_value = 3, 4
         mock_get_price_of_single_delivery_for_subscription.return_value = Decimal(
@@ -29,8 +37,7 @@ class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
         )
 
         subscription = Mock()
-        subscription.total_price = Mock()
-        subscription.total_price.return_value = Decimal("14.5")
+        mock_get_monthly_price.return_value = Decimal("14.5")
 
         range_start = Mock()
         range_end = Mock()
@@ -45,7 +52,7 @@ class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
 
         self.assertEqual(
             Decimal("52.10"), result
-        )  # 3 full months * 14.5 total price + 4 deliveries + 2.15 delivery price
+        )  # 3 full months * 14.5 total price + 4 deliveries * 2.15 delivery price
 
         mock_get_number_of_months_and_deliveries_to_pay.assert_called_once_with(
             range_start=range_start,
@@ -53,9 +60,9 @@ class TestGetAmountToPayForSubscriptionWithinRange(TapirUnitTest):
             subscription=subscription,
             cache=cache,
         )
-        subscription.total_price.assert_called_once_with(
-            reference_date=range_start, cache=cache
-        )
         mock_get_price_of_single_delivery_for_subscription.assert_called_once_with(
             subscription=subscription, at_date=range_start, cache=cache
+        )
+        mock_get_monthly_price.assert_called_once_with(
+            subscription=subscription, reference_date=range_start, cache=cache
         )

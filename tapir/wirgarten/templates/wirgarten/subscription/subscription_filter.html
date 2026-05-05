@@ -80,7 +80,7 @@
                         <span style="font-size:1.25em; color: var(--bs-warning)" class="material-icons">warning</span>
                     </span>&nbsp;
                 {% endif %}
-                {{ entry.total_price | format_currency }} €
+                {{ entry.monthly_price | format_currency }} €
             </td>
             <td style="text-align:center">{{ entry.member.pickup_location.name }}</td>
         </tr>

@@ -1,6 +1,5 @@
 import datetime
 from decimal import Decimal
-from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ObjectDoesNotExist
@@ -13,7 +12,6 @@ from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     GrowingPeriod,
-    Payable,
     Product,
     ProductCapacity,
     ProductPrice,
@@ -27,16 +25,6 @@ from tapir.wirgarten.validators import (
     validate_date_range,
     validate_growing_period_overlap,
 )
-
-
-def get_total_price_for_subs(subs: List[Payable], cache: dict) -> float:
-    """
-    Returns the total amount of one payment for the given list of subs.
-    """
-    if not subs:
-        return 0
-
-    return round(sum([x.total_price(cache=cache) for x in subs]), 2)
 
 
 def get_active_product_types(reference_date: datetime.date = None, cache: dict = None):

@@ -28,6 +28,9 @@ from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_g
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
@@ -58,7 +61,6 @@ from tapir.wirgarten.service.payment import (
 )
 from tapir.wirgarten.service.products import (
     get_product_price,
-    get_total_price_for_subs,
     get_next_growing_period,
     get_active_and_future_subscriptions,
 )
@@ -247,9 +249,6 @@ class BaseProductForm(forms.Form):
                         "quantity": sub.quantity,
                     }
 
-                self.current_used_capacity = get_total_price_for_subs(
-                    subs[self.product_type.name], cache=self.cache
-                )
                 if len(sub_variants) > 0:
                     for key, field in self.fields.items():
                         if (
@@ -1017,7 +1016,13 @@ class EditSubscriptionPriceForm(forms.Form):
         self.subscription_id = kwargs.pop("pk", None)
         self.subscription = Subscription.objects.get(id=self.subscription_id)
         super().__init__(*args, **kwargs)
+        cache = {}
 
+        initial = SubscriptionPriceCalculator.get_monthly_price(
+            subscription=self.subscription,
+            reference_date=get_today(cache=cache),
+            cache=cache,
+        )
         self.fields["new_price"] = forms.DecimalField(
             required=False,
             label=_("Neuer Preis"),
@@ -1025,7 +1030,7 @@ class EditSubscriptionPriceForm(forms.Form):
             max_digits=6,
             decimal_places=2,
             min_value=0.0,
-            initial=self.subscription.total_price,
+            initial=initial,
             help_text="Leer lassen um den Preis zurückzusetzen (automatisch berechnen)",
         )
 

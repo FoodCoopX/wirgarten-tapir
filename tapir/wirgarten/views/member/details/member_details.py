@@ -18,8 +18,10 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
-from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -67,19 +69,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             for subscription in subscriptions:
                 price_at_renewal_date = 0
                 if next_growing_period:
-                    price_at_renewal_date = subscription.total_price(
-                        next_growing_period.start_date
+                    price_at_renewal_date = (
+                        SubscriptionPriceCalculator.get_monthly_price(
+                            subscription=subscription,
+                            reference_date=next_growing_period.start_date,
+                            cache=cache,
+                        )
                     )
                 subscription.price_at_renewal_date = price_at_renewal_date
-
-        context["sub_quantities"] = {
-            key: sum([subscription.quantity for subscription in subscriptions])
-            for key, subscriptions in context["subscriptions"].items()
-        }
-        context["sub_totals"] = {
-            key: sum([subscription.total_price() for subscription in subscriptions])
-            for key, subscriptions in context["subscriptions"].items()
-        }
 
         product_types = get_active_product_types(reference_date=next_month, cache=cache)
         types_to_remove = []
@@ -95,22 +92,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 "timestamp"
             )
         )
-        context["coop_shares"] = share_ownerships
-        context["coop_shares_total"] = self.object.coop_shares_quantity
-
-        context["available_product_types"] = {
-            product_type.name: True
-            for product_type in get_available_product_types(
-                reference_date=next_month, cache=cache
-            )
-        }
-
-        context["product_types_by_name"] = {
-            product_type.name: product_type
-            for product_type in TapirCache.get_product_types_in_standard_order(
-                cache=cache
-            )
-        }
 
         subscription_automatic_renewal = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache

@@ -14,6 +14,9 @@ from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -187,6 +190,10 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
     paginate_by = 20
     model = Subscription
 
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filter_query = self.request.GET.urlencode()
@@ -200,23 +207,27 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
             quantity_sum=Sum("quantity")
         )["quantity_sum"]
 
-        cache = {}
         subscriptions_trial_end_dates = {}
-        if get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+        if get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache):
             for subscription in self.object_list:
-                if TrialPeriodManager.is_contract_in_trial(subscription, cache=cache):
+                if TrialPeriodManager.is_contract_in_trial(
+                    subscription, cache=self.cache
+                ):
                     subscriptions_trial_end_dates[subscription.id] = (
                         TrialPeriodManager.get_last_day_of_trial_period(
-                            subscription, cache=cache
+                            subscription, cache=self.cache
                         )
                     )
         context["subscriptions_trial_end_dates"] = subscriptions_trial_end_dates
-        context["cache"] = cache
+        context["cache"] = self.cache
 
         return context
 
     def get_queryset(self):
-        return Subscription.objects.all().order_by("-created_at")
+        return SubscriptionPriceCalculator.annotate_subscriptions_queryset_with_monthly_price(
+            queryset=Subscription.objects.order_by("-created_at"),
+            reference_date=get_today(cache=self.cache),
+        )
 
 
 class ExportSubscriptionList(View):

@@ -1,6 +1,5 @@
 import datetime
 import uuid
-from decimal import Decimal
 from functools import partial
 
 from django.contrib.postgres.fields import ArrayField
@@ -665,7 +664,7 @@ class AdminConfirmableMixin(models.Model):
         abstract = True
 
 
-class Subscription(TapirModel, Payable, AdminConfirmableMixin):
+class Subscription(TapirModel, AdminConfirmableMixin):
     """
     A subscription for a member.
     """
@@ -701,18 +700,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["end_date"]),
             models.Index(fields=["member"]),
         ]
-
-    def total_price(self, reference_date=None, cache: dict = None) -> Decimal:
-        if self.price_override is not None:
-            return self.price_override
-
-        if reference_date is None:
-            reference_date = max(self.start_date, get_today(cache=cache))
-
-        from tapir.wirgarten.service.products import get_product_price
-
-        price = get_product_price(self.product, reference_date, cache=cache).price
-        return self.quantity * price
 
     def get_used_capacity(self, cache: dict):
         today = get_today(cache=cache)
