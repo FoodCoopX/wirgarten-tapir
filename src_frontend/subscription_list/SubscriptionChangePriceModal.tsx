@@ -71,7 +71,7 @@ const SubscriptionChangePriceModal: React.FC<
       return;
     }
 
-    if (Number.isNaN(Number.parseFloat(currentPrice))) {
+    if (currentPrice !== "" && Number.isNaN(Number.parseFloat(currentPrice))) {
       setError("Ungültiger Zahl");
       return;
     }
