@@ -54,6 +54,10 @@ class DeliveryDateCalculator:
         if product_type.delivery_cycle == NO_DELIVERY[0]:
             return delivery_date
 
+        growing_periods = TapirCache.get_all_growing_periods_ascending(cache=cache)
+        if len(growing_periods) == 0:
+            return None
+
         while not cls.is_week_delivered(
             product_type=product_type,
             delivery_date=delivery_date,
@@ -65,6 +69,8 @@ class DeliveryDateCalculator:
                 pickup_location_id=pickup_location_id,
                 cache=cache,
             )
+            if delivery_date > growing_periods[-1].end_date:
+                return None
 
         return delivery_date
 

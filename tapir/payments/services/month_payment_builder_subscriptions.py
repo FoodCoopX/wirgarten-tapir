@@ -307,6 +307,8 @@ class MonthPaymentBuilderSubscriptions:
                 check_for_weeks_without_delivery=False,
                 cache=cache,
             )
+            if current_date is None:
+                break
             if (
                 current_date <= last_of_month
                 and subscription.start_date <= current_date <= subscription.end_date

@@ -365,7 +365,8 @@ def send_product_order_confirmation(
             check_for_weeks_without_delivery=True,
             cache=cache,
         )
-        first_pickup_date = min(first_pickup_date, next_delivery_date)
+        if next_delivery_date is not None:
+            first_pickup_date = min(first_pickup_date, next_delivery_date)
 
     TransactionalTrigger.fire_action(
         trigger_data=TransactionalTriggerData(

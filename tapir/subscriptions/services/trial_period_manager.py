@@ -78,6 +78,8 @@ class TrialPeriodManager:
                 cache=cache,
             )
         )
+        if date_of_first_delivery is None:
+            date_of_first_delivery = contract.start_date
         return get_monday(date_of_first_delivery)
 
     @classmethod

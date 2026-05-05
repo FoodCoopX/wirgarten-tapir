@@ -2,31 +2,12 @@ import datetime
 
 from tapir.deliveries.exceptions import TapirCustomCycleException
 from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
-from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_next_sunday
-from tapir.wirgarten.models import GrowingPeriod, ProductType
+from tapir.wirgarten.models import GrowingPeriod
 from tapir.wirgarten.utils import format_date
 
 
 class CustomCycleDeliveryDateCalculator:
-    @classmethod
-    def does_product_type_have_at_least_one_delivery_in_the_future(
-        cls, product_type: ProductType, reference_date: datetime.date, cache: dict
-    ):
-        scheduled_weeks = TapirCache.get_all_scheduled_weeks_for_custom_cycle(
-            product_type=product_type, cache=cache
-        )
-        for scheduled_week in scheduled_weeks:
-            if (
-                CustomCycleDeliveryDateCalculator.get_date_from_scheduled_week(
-                    scheduled_week=scheduled_week
-                )
-                >= reference_date
-            ):
-                return True
-
-        return False
-
     @classmethod
     def get_date_from_scheduled_week(
         cls, scheduled_week: CustomCycleScheduledDeliveryWeek

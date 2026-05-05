@@ -3,9 +3,6 @@ import datetime
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
-    CustomCycleDeliveryDateCalculator,
-)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import (
@@ -61,17 +58,7 @@ class DeliveryCycleService:
             product_type=product_type, growing_period=growing_period, cache=cache
         )
 
-        if week_of_potential_delivery in delivered_weeks:
-            return True
-
-        # It is possible that a custom cycle product has no future deliveries.
-        # Our strategy when searching for the next delivery is to go week by week and return the first delivered one
-        # This would go in an infinite loop, see
-        # tapir.deliveries.services.delivery_date_calculator.DeliveryDateCalculator.get_next_delivery_date_for_product_type
-        # Therefore, if there are no future deliveries, we arbitrarily say that all weeks are delivered.
-        return not CustomCycleDeliveryDateCalculator.does_product_type_have_at_least_one_delivery_in_the_future(
-            product_type=product_type, reference_date=date, cache=cache
-        )
+        return week_of_potential_delivery in delivered_weeks
 
     @classmethod
     def is_week_delivered_in_four_week_rhythm(
