@@ -369,7 +369,11 @@ def resend_verify_email(request, **kwargs):
     member_id = kwargs["pk"]
     member = Member.objects.get(id=member_id)
     try:
-        member.send_verify_email(cache={})
+        if member.keycloak_id is None:
+            member.save(bypass_keycloak=False)
+            member.save(bypass_keycloak=False)
+        else:
+            member.send_verify_email(cache={})
         result = "success"
     except Exception as e:
         result = str(e)
