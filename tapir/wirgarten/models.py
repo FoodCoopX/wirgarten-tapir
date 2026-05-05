@@ -714,27 +714,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         price = get_product_price(self.product, reference_date, cache=cache).price
         return self.quantity * price
 
-    @property
-    def total_price_without_soli(self):
-        today = get_today()
-        if not hasattr(self, "_total_price_without_soli"):
-            product_prices = ProductPrice.objects.filter(
-                product_id=self.product_id, valid_from__lte=today
-            ).order_by("product_id", "-valid_from")
-            self._total_price_without_soli = (
-                next(
-                    (
-                        product_price.price
-                        for product_price in product_prices
-                        if product_price.product_id == self.product_id
-                    ),
-                    0.0,
-                )
-                * self.quantity
-            )
-
-        return self._total_price_without_soli
-
     def get_used_capacity(self, cache: dict):
         today = get_today(cache=cache)
         if not hasattr(self, "_used_capacity"):
