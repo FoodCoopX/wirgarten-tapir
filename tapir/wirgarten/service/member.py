@@ -30,6 +30,9 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -47,9 +50,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
-)
-from tapir.wirgarten.service.subscriptions import (
-    annotate_subscriptions_queryset_with_monthly_payment_without_solidarity,
 )
 from tapir.wirgarten.service.tasks import schedule_task_unique
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
@@ -428,8 +428,8 @@ def annotate_member_queryset_with_monthly_payment(
     )
 
     active_subscriptions_per_member = (
-        annotate_subscriptions_queryset_with_monthly_payment_without_solidarity(
-            active_subscriptions_per_member, reference_date
+        SubscriptionPriceCalculator.annotate_subscriptions_queryset_with_monthly_price(
+            queryset=active_subscriptions_per_member, reference_date=reference_date
         ).distinct()
     )
 
@@ -437,7 +437,7 @@ def annotate_member_queryset_with_monthly_payment(
         subscriptions_payment=Coalesce(
             Subquery(
                 active_subscriptions_per_member.values("member_id")
-                .annotate(total=Sum("monthly_price_without_solidarity"))
+                .annotate(total=Sum("monthly_price"))
                 .values("total"),
                 output_field=FloatField(),
             ),

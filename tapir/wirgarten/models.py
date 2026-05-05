@@ -1,6 +1,5 @@
 import datetime
 import uuid
-from decimal import Decimal
 from functools import partial
 
 from django.contrib.postgres.fields import ArrayField
@@ -665,7 +664,7 @@ class AdminConfirmableMixin(models.Model):
         abstract = True
 
 
-class Subscription(TapirModel, Payable, AdminConfirmableMixin):
+class Subscription(TapirModel, AdminConfirmableMixin):
     """
     A subscription for a member.
     """
@@ -701,39 +700,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["end_date"]),
             models.Index(fields=["member"]),
         ]
-
-    def total_price(self, reference_date=None, cache: dict = None) -> Decimal:
-        if self.price_override is not None:
-            return self.price_override
-
-        if reference_date is None:
-            reference_date = max(self.start_date, get_today(cache=cache))
-
-        from tapir.wirgarten.service.products import get_product_price
-
-        price = get_product_price(self.product, reference_date, cache=cache).price
-        return self.quantity * price
-
-    @property
-    def total_price_without_soli(self):
-        today = get_today()
-        if not hasattr(self, "_total_price_without_soli"):
-            product_prices = ProductPrice.objects.filter(
-                product_id=self.product_id, valid_from__lte=today
-            ).order_by("product_id", "-valid_from")
-            self._total_price_without_soli = (
-                next(
-                    (
-                        product_price.price
-                        for product_price in product_prices
-                        if product_price.product_id == self.product_id
-                    ),
-                    0.0,
-                )
-                * self.quantity
-            )
-
-        return self._total_price_without_soli
 
     def get_used_capacity(self, cache: dict):
         today = get_today(cache=cache)

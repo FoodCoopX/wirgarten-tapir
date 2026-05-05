@@ -4,14 +4,14 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { ToastData } from "../types/ToastData.ts";
-import SubscriptionChangeDatesModal from "./SubscriptionChangeDatesModal.tsx";
+import SubscriptionChangePriceModal from "./SubscriptionChangePriceModal.tsx";
 
-interface SubscriptionChangeDatesButtonProps {
+interface SubscriptionChangePriceButtonProps {
   csrfToken: string;
 }
 
-const SubscriptionChangeDatesButton: React.FC<
-  SubscriptionChangeDatesButtonProps
+const SubscriptionChangePriceButton: React.FC<
+  SubscriptionChangePriceButtonProps
 > = ({ csrfToken }) => {
   const [showModal, setShowModal] = useState(false);
   const [subscriptionId, setSubscriptionId] = useState();
@@ -20,7 +20,7 @@ const SubscriptionChangeDatesButton: React.FC<
   return (
     <>
       <TapirButton
-        icon={"edit_calendar"}
+        icon={"euro"}
         variant={"outline-primary"}
         onClick={() => {
           const subscriptionId = getParameterFromUrl("contract");
@@ -31,10 +31,10 @@ const SubscriptionChangeDatesButton: React.FC<
           setSubscriptionId(subscriptionId);
           setShowModal(true);
         }}
-        tooltip={"Vertragsstart-anpassen/Sonderkündigung"}
+        tooltip={"Betrag ändern"}
       />
       {subscriptionId && (
-        <SubscriptionChangeDatesModal
+        <SubscriptionChangePriceModal
           csrfToken={csrfToken}
           show={showModal}
           subscriptionId={subscriptionId}
@@ -50,4 +50,4 @@ const SubscriptionChangeDatesButton: React.FC<
   );
 };
 
-export default SubscriptionChangeDatesButton;
+export default SubscriptionChangePriceButton;

@@ -18,6 +18,9 @@ from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     Member,
@@ -227,7 +230,14 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_monthly_price(subscription: Subscription) -> float:
-        return float(subscription.total_price(reference_date=None, cache={}))
+        cache = {}
+        return float(
+            SubscriptionPriceCalculator.get_monthly_price(
+                subscription=subscription,
+                reference_date=get_today(cache=cache),
+                cache=cache,
+            )
+        )
 
     @staticmethod
     def get_product_name(subscription: Subscription) -> str:
@@ -296,3 +306,8 @@ class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
     confirm_creation_ids = serializers.ListField(child=serializers.CharField())
     confirm_purchase_ids = serializers.ListField(child=serializers.CharField())
     confirm_deletion_ids = serializers.ListField(child=serializers.IntegerField())
+
+
+class SubscriptionPriceOverrideChangeRequestSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    price_override = serializers.FloatField(allow_null=True)

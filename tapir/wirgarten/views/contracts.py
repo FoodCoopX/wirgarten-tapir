@@ -1,7 +1,6 @@
 import csv
 from urllib.parse import parse_qs, urlencode
 
-from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import OuterRef, Subquery, Sum
 from django.forms import CheckboxInput
@@ -14,6 +13,9 @@ from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -44,12 +46,6 @@ class SubscriptionListFilter(FilterSet):
     Filter set for the subscription list view
     """
 
-    show_only_trial_period = BooleanFilter(
-        label=_("Nur Verträge in der Probezeit anzeigen"),
-        field_name="show_only_trial_period",
-        method="filter_show_only_trial_period",
-        widget=CheckboxInput,
-    )
     period = ModelChoiceFilter(
         label=_("Vertragsperiode"),
         queryset=GrowingPeriod.objects.all().order_by("-start_date"),
@@ -87,12 +83,6 @@ class SubscriptionListFilter(FilterSet):
         empty_label="",
         secondary_ordering="member_id",
     )
-    show_only_ended_contracts = BooleanFilter(
-        label=_("Nur ausgelaufene Verträge anzeigen"),
-        field_name="show_only_ended_contracts",
-        method="filter_show_only_ended_contracts",
-        widget=CheckboxInput,
-    )
     membership_type = ChoiceFilter(
         label="Mitgliedschafts-Typ",
         method="filter_membership_type",
@@ -102,6 +92,51 @@ class SubscriptionListFilter(FilterSet):
             ("nicht-mitglied", "Weder Mitglied noch befreit"),
         ],
     )
+    show_only_trial_period = BooleanFilter(
+        label=_("Nur Verträge in der Probezeit anzeigen"),
+        field_name="show_only_trial_period",
+        method="filter_show_only_trial_period",
+        widget=CheckboxInput,
+    )
+    show_only_price_override_zero = BooleanFilter(
+        label=_("Nur Beitragsbefreite Verträge anzeigen"),
+        field_name="show_only_price_override_zero",
+        method="filter_show_only_price_override_zero",
+        widget=CheckboxInput,
+    )
+    show_only_ended_contracts = BooleanFilter(
+        label=_("Nur ausgelaufene Verträge anzeigen"),
+        field_name="show_only_ended_contracts",
+        method="filter_show_only_ended_contracts",
+        widget=CheckboxInput,
+    )
+
+    class Meta:
+        model = Subscription
+        fields = []
+
+    def __init__(self, data=None, *args, **kwargs):
+        self.cache = {}
+
+        if data is None:
+            data = {"period": self.get_default_period_filter_value()}
+        else:
+            data = data.copy()
+            if "period" not in data:
+                data["period"] = self.get_default_period_filter_value()
+
+        super(SubscriptionListFilter, self).__init__(data, *args, **kwargs)
+
+    @staticmethod
+    def get_default_period_filter_value():
+        today = get_today()
+        growing_periods = GrowingPeriod.objects.filter(
+            start_date__lte=today, end_date__gte=today
+        )
+        if not growing_periods.exists():
+            return GrowingPeriod.objects.order_by("start_date").first()
+
+        return growing_periods.first().id
 
     def filter_pickup_location(self, queryset, name, value):
         if value:
@@ -121,37 +156,21 @@ class SubscriptionListFilter(FilterSet):
                 member__memberpickuplocation__pickup_location_id=value,
             )
         else:
-            return queryset.all()
-
-    class Meta:
-        model = Subscription
-        fields = []
-
-    def __init__(self, data=None, *args, **kwargs):
-        def get_default_period_filter_value():
-            today = get_today()
-            growing_periods = GrowingPeriod.objects.filter(
-                start_date__lte=today, end_date__gte=today
-            )
-            if not growing_periods.exists():
-                return GrowingPeriod.objects.order_by("start_date").first()
-
-            return growing_periods.first().id
-
-        if data is None:
-            data = {"period": get_default_period_filter_value()}
-        else:
-            data = data.copy()
-            if "period" not in data:
-                data["period"] = get_default_period_filter_value()
-
-        super(SubscriptionListFilter, self).__init__(data, *args, **kwargs)
+            return queryset
 
     def filter_show_only_trial_period(self, queryset, name, value):
-        if value:
-            min_start_date = get_today() + relativedelta(day=1, months=-1)
-            return queryset.filter(start_date__gt=min_start_date, cancellation_ts=None)
-        return queryset
+        if not value:
+            return queryset
+
+        today = get_today(cache=self.cache)
+        included_ids = [
+            subscription.id
+            for subscription in queryset
+            if TrialPeriodManager.is_contract_in_trial(
+                contract=subscription, cache=self.cache, reference_date=today
+            )
+        ]
+        return queryset.filter(id__in=included_ids)
 
     def filter_show_only_ended_contracts(self, queryset, name, value):
         today = get_today()
@@ -175,6 +194,11 @@ class SubscriptionListFilter(FilterSet):
         if value == "nicht-mitglied":
             return queryset.filter(member__is_student=False)
 
+    def filter_show_only_price_override_zero(self, queryset, name, value):
+        if value:
+            return queryset.filter(price_override=0)
+        return queryset
+
 
 class SubscriptionListView(PermissionRequiredMixin, FilterView):
     """
@@ -186,6 +210,10 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
     template_name = "wirgarten/subscription/subscription_filter.html"
     paginate_by = 20
     model = Subscription
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -200,23 +228,27 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
             quantity_sum=Sum("quantity")
         )["quantity_sum"]
 
-        cache = {}
         subscriptions_trial_end_dates = {}
-        if get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+        if get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache):
             for subscription in self.object_list:
-                if TrialPeriodManager.is_contract_in_trial(subscription, cache=cache):
+                if TrialPeriodManager.is_contract_in_trial(
+                    subscription, cache=self.cache
+                ):
                     subscriptions_trial_end_dates[subscription.id] = (
                         TrialPeriodManager.get_last_day_of_trial_period(
-                            subscription, cache=cache
+                            subscription, cache=self.cache
                         )
                     )
         context["subscriptions_trial_end_dates"] = subscriptions_trial_end_dates
-        context["cache"] = cache
+        context["cache"] = self.cache
 
         return context
 
     def get_queryset(self):
-        return Subscription.objects.all().order_by("-created_at")
+        return SubscriptionPriceCalculator.annotate_subscriptions_queryset_with_monthly_price(
+            queryset=Subscription.objects.order_by("-created_at"),
+            reference_date=get_today(cache=self.cache),
+        )
 
 
 class ExportSubscriptionList(View):

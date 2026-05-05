@@ -195,6 +195,7 @@ models/Subscription.ts
 models/SubscriptionChange.ts
 models/SubscriptionChangeLogEntry.ts
 models/SubscriptionDateChangeRequestRequest.ts
+models/SubscriptionPriceOverrideChangeRequestRequest.ts
 models/TapirmailApiSegmentCombineCreate200Response.ts
 models/TapirmailApiSegmentCombineCreate200ResponseRecipientsInner.ts
 models/TemporaryUpload.ts

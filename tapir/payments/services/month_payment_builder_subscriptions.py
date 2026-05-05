@@ -23,6 +23,9 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
@@ -178,10 +181,11 @@ class MonthPaymentBuilderSubscriptions:
             )
         )
 
-        full_months_price = (
-            subscription.total_price(reference_date=range_start, cache=cache)
-            * number_of_full_month_to_pay
+        monthly_price = SubscriptionPriceCalculator.get_monthly_price(
+            subscription=subscription, reference_date=range_start, cache=cache
         )
+        full_months_price = monthly_price * number_of_full_month_to_pay
+
         single_deliveries_price = (
             number_of_single_deliveries_to_pay
             * DeliveryPriceCalculator.get_price_of_single_delivery_for_subscription(

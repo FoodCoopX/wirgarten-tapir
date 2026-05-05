@@ -15,6 +15,9 @@ from tapir.payments.types import TokenReplacers
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
 )
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.utils.services.model_date_range_overlap_checker import (
     ModelDateRangeOverlapChecker,
 )
@@ -46,7 +49,9 @@ class IntendedUsePatternExpander:
         )
 
         monthly_price_without_solidarity = sum(
-            subscription.total_price(reference_date=reference_date, cache=cache)
+            SubscriptionPriceCalculator.get_monthly_price(
+                subscription=subscription, reference_date=reference_date, cache=cache
+            )
             for subscription in subscriptions
         )
         monthly_price_just_solidarity = (

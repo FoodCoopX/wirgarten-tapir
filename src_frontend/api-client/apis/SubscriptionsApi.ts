@@ -29,6 +29,7 @@ import type {
   PublicProductType,
   Subscription,
   SubscriptionDateChangeRequestRequest,
+  SubscriptionPriceOverrideChangeRequestRequest,
   UpdateSubscriptionsRequestRequest,
 } from "../models/index";
 import {
@@ -48,6 +49,7 @@ import {
   PublicProductTypeFromJSON,
   SubscriptionDateChangeRequestRequestToJSON,
   SubscriptionFromJSON,
+  SubscriptionPriceOverrideChangeRequestRequestToJSON,
   UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -86,6 +88,10 @@ export interface SubscriptionsApiRevokeChangesCreateRequest {
   coopSharePurchaseIds: Array<string>;
   putOnWaitingList: boolean;
   subscriptionCreationIds: Array<string>;
+}
+
+export interface SubscriptionsApiSubscriptionPriceOverrideCreateRequest {
+  subscriptionPriceOverrideChangeRequestRequest: SubscriptionPriceOverrideChangeRequestRequest;
 }
 
 export interface SubscriptionsApiUpdateSubscriptionCreateRequest {
@@ -223,7 +229,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/subscriptions/api(/convert_weeks_to_date_for_subscription_change`,
+        path: `/subscriptions/api/convert_weeks_to_date_for_subscription_change`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -686,6 +692,73 @@ export class SubscriptionsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiSubscriptionPriceOverrideCreateRaw(
+    requestParameters: SubscriptionsApiSubscriptionPriceOverrideCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters["subscriptionPriceOverrideChangeRequestRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "subscriptionPriceOverrideChangeRequestRequest",
+        'Required parameter "subscriptionPriceOverrideChangeRequestRequest" was null or undefined when calling subscriptionsApiSubscriptionPriceOverrideCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/subscription_price_override`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: SubscriptionPriceOverrideChangeRequestRequestToJSON(
+          requestParameters["subscriptionPriceOverrideChangeRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiSubscriptionPriceOverrideCreate(
+    requestParameters: SubscriptionsApiSubscriptionPriceOverrideCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.subscriptionsApiSubscriptionPriceOverrideCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 
