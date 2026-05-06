@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, Col, Form, Modal, Row, Spinner } from "react-bootstrap";
 import { CoopApi, Member, Subscription, SubscriptionsApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
@@ -17,6 +18,20 @@ interface SubscriptionChangePriceModalProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
+type PriceMode = "standard" | "custom" | "free";
+const ALL_MODES: PriceMode[] = ["standard", "custom", "free"];
+
+function getPriceModeDisplay(mode: PriceMode) {
+  switch (mode) {
+    case "standard":
+      return "Standardbetrag";
+    case "custom":
+      return "Personalisierter Betrag";
+    case "free":
+      return "Beitragsbefreit";
+  }
+}
+
 const SubscriptionChangePriceModal: React.FC<
   SubscriptionChangePriceModalProps
 > = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
@@ -27,7 +42,8 @@ const SubscriptionChangePriceModal: React.FC<
   const [memberId, setMemberId] = useState<string>();
   const [memberData, setMemberData] = useState<Member>();
   const [error, setError] = useState<string>();
-  const [currentPrice, setCurrentPrice] = useState("");
+  const [customPrice, setCustomPrice] = useState("");
+  const [priceMode, setPriceMode] = useState<PriceMode>("standard");
 
   useEffect(() => {
     if (!show) {
@@ -39,11 +55,21 @@ const SubscriptionChangePriceModal: React.FC<
       .then((subscription) => {
         setSubscription(subscription);
         setMemberId(subscription.member);
-        setCurrentPrice(
+        setCustomPrice(
           subscription.priceOverride
             ? subscription.priceOverride.toString()
             : "",
         );
+        if (
+          subscription.priceOverride === null ||
+          subscription.priceOverride === undefined
+        ) {
+          setPriceMode("standard");
+        } else if (Number.parseFloat(subscription.priceOverride) === 0) {
+          setPriceMode("free");
+        } else {
+          setPriceMode("custom");
+        }
       })
       .catch(
         async (error) =>
@@ -71,9 +97,23 @@ const SubscriptionChangePriceModal: React.FC<
       return;
     }
 
-    if (currentPrice !== "" && Number.isNaN(Number.parseFloat(currentPrice))) {
-      setError("Ungültiger Zahl");
-      return;
+    let newPrice: number | null;
+    switch (priceMode) {
+      case "standard":
+        newPrice = null;
+        break;
+      case "custom": {
+        const parsedPrice = Number.parseFloat(customPrice);
+        if (Number.isNaN(parsedPrice)) {
+          setError("Ungültiger Zahl");
+          return;
+        }
+        newPrice = parsedPrice;
+        break;
+      }
+      case "free":
+        newPrice = 0;
+        break;
     }
 
     setLoading(true);
@@ -82,7 +122,7 @@ const SubscriptionChangePriceModal: React.FC<
       .subscriptionsApiSubscriptionPriceOverrideCreate({
         subscriptionPriceOverrideChangeRequestRequest: {
           subscriptionId: subscriptionId,
-          priceOverride: Number.parseFloat(currentPrice),
+          priceOverride: newPrice,
         },
       })
       .then((response) => {
@@ -140,34 +180,60 @@ const SubscriptionChangePriceModal: React.FC<
             </div>
           </Col>
         </Row>
-        {error && (
-          <Row className={"mt-4"}>
-            <Col>
-              <Alert variant={"danger"}>{error}</Alert>
-            </Col>
-          </Row>
-        )}
-        {subscription && (
-          <Row>
-            <Col>
-              <Form.Group>
-                <Form.Control
-                  value={currentPrice}
-                  onChange={(event) => {
-                    setCurrentPrice(event.target.value);
-                    setError(undefined);
-                  }}
-                  placeholder={"Kein personalisierter Preis"}
-                  type={"number"}
-                  min={0}
-                  step={0.01}
-                />
-                <Form.Text>
-                  Leer lassen um den Standardpreis zu verwenden.
-                </Form.Text>
-              </Form.Group>
-            </Col>
-          </Row>
+        <Row>
+          <Col>
+            <Form.Group className={"mb-2"}>
+              {ALL_MODES.map((mode) => (
+                <div
+                  key={mode}
+                  className={"d-flex flex-row gap-2 align-items-center"}
+                >
+                  <Form.Check
+                    id={"mode_" + mode}
+                    name={mode}
+                    label={getPriceModeDisplay(mode)}
+                    onChange={() => setPriceMode(mode)}
+                    type={"radio"}
+                    checked={priceMode === mode}
+                  />
+                  <TapirHelpButton
+                    buttonSize={"sm"}
+                    text={"WIP Hilfstext für " + getPriceModeDisplay(mode)}
+                  />
+                </div>
+              ))}
+            </Form.Group>
+          </Col>
+        </Row>
+        {priceMode === "custom" && (
+          <>
+            {error && (
+              <Row className={"mt-4"}>
+                <Col>
+                  <Alert variant={"danger"}>{error}</Alert>
+                </Col>
+              </Row>
+            )}
+            {subscription && (
+              <Row>
+                <Col>
+                  <Form.Group>
+                    <Form.Control
+                      value={customPrice}
+                      onChange={(event) => {
+                        setCustomPrice(event.target.value);
+                        setError(undefined);
+                      }}
+                      placeholder={"Kein personalisierter Preis"}
+                      type={"number"}
+                      min={0}
+                      step={0.01}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            )}
+          </>
         )}
       </>
     );
