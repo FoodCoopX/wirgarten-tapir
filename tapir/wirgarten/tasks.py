@@ -93,18 +93,26 @@ def should_export_list_today(cache: dict):
 
 
 @shared_task
-def export_pick_list_csv():
+def export_pick_list_csv(cache: dict = None):
     """
     Exports a CSV file containing the pick list for the next delivery.
     """
-    cache = {}
+    if cache is None:
+        cache = {}
+
     if not should_export_list_today(cache=cache):
         return
 
     all_product_types = {pt.name: pt for pt in get_active_product_types(cache=cache)}
-    include_product_types = get_parameter_value(
+    product_type_names_to_include = get_parameter_value(
         ParameterKeys.PICKING_PRODUCT_TYPES, cache=cache
-    ).split(",")
+    )
+    if product_type_names_to_include == "alle":
+        include_product_types = all_product_types.keys()
+    else:
+        include_product_types = get_parameter_value(
+            ParameterKeys.PICKING_PRODUCT_TYPES, cache=cache
+        ).split(",")
 
     for type_name in include_product_types:
         type_name = type_name.strip()

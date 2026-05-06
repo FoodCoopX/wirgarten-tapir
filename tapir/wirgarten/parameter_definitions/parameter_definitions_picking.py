@@ -21,10 +21,10 @@ class ParameterDefinitionsPicking:
     def define_all_parameters_picking(cls, importer: ParameterDefinitions):
         importer.parameter_definition(
             key=ParameterKeys.PICKING_PRODUCT_TYPES,
-            label="Produkte für Kommisionierliste",
+            label="Produkttypen für Kommisionierliste",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Ernteanteile",
-            description="Komma-separierte Liste der Zusatzabos für die eine Kommissionierliste erzeugt werden soll.",
+            initial_value="alle",
+            description="Komma-separierte Liste der Produkttypen für die eine Kommissionierliste erzeugt werden soll. Oder 'alle' um für alle Produkttypen eine Kommissionierliste zu erzeugen.",
             category=ParameterCategory.PICKING,
             order_priority=4,
         )
