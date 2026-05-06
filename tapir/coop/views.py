@@ -380,8 +380,8 @@ class MemberBankDataApiView(APIView):
         return Response(
             MemberBankDataResponseSerializer(
                 {
-                    "iban": member.iban,
-                    "account_owner": member.account_owner,
+                    "iban": member.iban or "",
+                    "account_owner": member.account_owner or "",
                     "organisation_name": get_parameter_value(
                         ParameterKeys.SITE_NAME, cache={}
                     ),

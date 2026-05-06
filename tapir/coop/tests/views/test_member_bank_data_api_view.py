@@ -72,6 +72,24 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertEqual("Test Account Owner", response_content["account_owner"])
         self.assertEqual("NL41ABNA3195199319", response_content["iban"])
 
+    def test_get_accountOwnerAndIbanAreNone_returnsEmptyStrings(self):
+        # Regression test for https://github.com/FoodCoopX/wirgarten-tapir/issues/1112#issuecomment-4386285817
+        user = MemberFactory.create(is_superuser=True)
+        target = MemberFactory.create(
+            account_owner=None,
+            iban=None,
+        )
+        self.client.force_login(user)
+
+        url = reverse("coop:member_banking_data")
+        url = f"{url}?member_id={target.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertEqual("", response_content["account_owner"])
+        self.assertEqual("", response_content["iban"])
+
     @patch.object(TransactionalTrigger, "fire_action")
     def test_patch_memberTriesToUpdateDataOfAnotherMember_returns403(
         self, mock_fire_action: Mock
