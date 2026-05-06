@@ -238,7 +238,7 @@ class ParameterDefinitionsMemberDashboard:
             key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL,
             label="Mitgliedsnummer erst nach Ablauf der Probezeit vergeben",
             datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=False,
+            initial_value=True,
             description=(
                 "Wenn aktiv, bekommen Mitglieder erst nach Ablauf der Probezeit "
                 "eine Mitgliedsnummer. Ansonsten wird die Nummer sofort vergeben."
