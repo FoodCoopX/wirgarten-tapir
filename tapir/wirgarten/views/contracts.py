@@ -222,7 +222,7 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
         query_dict.pop("page", None)
         new_query_string = urlencode(query_dict, doseq=True)
         context["filter_query"] = new_query_string
-        context["today"] = get_today()
+        context["today"] = get_today(cache=self.cache)
         context["number_of_contracts"] = self.filterset.qs.count()
         context["quantity_sum"] = self.filterset.qs.aggregate(
             quantity_sum=Sum("quantity")
@@ -245,9 +245,13 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
         return context
 
     def get_queryset(self):
+        return self.get_queryset_external(cache=self.cache)
+
+    @classmethod
+    def get_queryset_external(cls, cache: dict):
         return SubscriptionPriceCalculator.annotate_subscriptions_queryset_with_monthly_price(
             queryset=Subscription.objects.order_by("-created_at"),
-            reference_date=get_today(cache=self.cache),
+            reference_date=get_today(cache=cache),
         )
 
 
@@ -256,11 +260,14 @@ class ExportSubscriptionList(View):
     Exports the filtered subscriptions to csv
     """
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get(self, request, *args, **kwargs):
         # Get queryset based on filters and ordering
         filter_class = SubscriptionListFilter
         queryset = filter_class(request.GET, queryset=self.get_queryset()).qs
-        cache = {}
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")
@@ -292,7 +299,7 @@ class ExportSubscriptionList(View):
                 writer.writerow(
                     [
                         MemberNumberService.format_member_number(
-                            sub.member.member_no, cache=cache
+                            sub.member.member_no, cache=self.cache
                         ),
                         sub.member.first_name,
                         sub.member.last_name,
@@ -314,7 +321,7 @@ class ExportSubscriptionList(View):
         return response
 
     def get_queryset(self):
-        return SubscriptionListView.get_queryset(self)
+        return SubscriptionListView.get_queryset_external(cache=self.cache)
 
     def get_filterset_class(self):
         return SubscriptionListFilter
