@@ -46,7 +46,6 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
             dynamic_segment_names_subtractive=email_configuration_version.dynamic_segments_subtractive,
             static_segment_ids_additive=email_configuration_version.static_segments_additive.all(),
             static_segment_ids_subtractive=email_configuration_version.static_segments_subtractive.all(),
-            filter_list=email_configuration_version.filter_list,
             mail_category_ids_additive=email_configuration_version.mail_categories_additive.all(),
         ):
             cls._delete_unsent_config_dispatch(
