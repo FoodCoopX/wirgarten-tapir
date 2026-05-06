@@ -1,5 +1,7 @@
 import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
+from django.core import mail
 
 from tapir.configuration.models import TapirParameter
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
@@ -20,56 +22,71 @@ class TestSendWarningMailIfNecessary(TapirIntegrationTest):
             value="admin@example.com"
         )
 
-    @patch("tapir.coop.services.coop_share_purchase_handler.send_email")
-    def test_sendWarningMailIfNecessary_quantityIsBelowThreshold_noMailSent(
-        self, mock_send_email: Mock
-    ):
-        CoopSharePurchaseHandler.send_warning_mail_if_necessary(
-            quantity=7, member=Mock(), shares_valid_at=Mock(), cache={}
-        )
+    def test_sendWarningMailIfNecessary_quantityIsBelowThreshold_noMailSent(self):
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            CoopSharePurchaseHandler.send_warning_mail_if_necessary(
+                quantity=7, member=Mock(), shares_valid_at=Mock(), cache={}
+            )
 
-        mock_send_email.assert_not_called()
+        self.assertEqual(len(callbacks), 0)
+        self.assertEqual(len(mail.outbox), 0)
 
-    @patch("tapir.coop.services.coop_share_purchase_handler.send_email")
-    def test_sendWarningMailIfNecessary_quantityIsAboveThreshold_mailSent(
-        self, mock_send_email: Mock
-    ):
+    def test_sendWarningMailIfNecessary_quantityIsAboveThreshold_mailSent(self):
         member = MemberFactory.create(
             first_name="John", last_name="Smith", email="john@example.com"
         )
+        cache = {}
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
             CoopSharePurchaseHandler.send_warning_mail_if_necessary(
                 quantity=9,
                 member=member,
                 shares_valid_at=datetime.date(year=2022, month=2, day=27),
-                cache={},
+                cache=cache,
             )
 
-        mock_send_email.assert_called_once_with(
-            to_email=["admin@example.com"],
-            subject="Warnung: es wurden mehr als 8 Genossenschaftsanteile gezeichnet- bitte prüfen",
-            content="Bestehendes Mitglied oder Neuanmeldung: John Smith mit Mail-Adresse john@example.com hat gerade 9 Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem 27.02.2022 gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
+        self.assertEqual(len(callbacks), 1)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            ["admin@example.com"],
+            mail.outbox[0].to,
+        )
+        self.assertEqual(
+            "Warnung: es wurden mehr als 8 Genossenschaftsanteile gezeichnet- bitte prüfen",
+            mail.outbox[0].subject,
+        )
+        self.assertEqual(
+            "Bestehendes Mitglied oder Neuanmeldung: John Smith mit Mail-Adresse john@example.com hat gerade 9 Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem 27.02.2022 gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
+            mail.outbox[0].body,
         )
 
-    @patch("tapir.coop.services.coop_share_purchase_handler.send_email")
-    def test_sendWarningMailIfNecessary_quantityIsExactlyThreshold_mailSent(
-        self, mock_send_email: Mock
-    ):
+    def test_sendWarningMailIfNecessary_quantityIsExactlyThreshold_mailSent(self):
         member = MemberFactory.create(
             first_name="John", last_name="Smith", email="john@example.com"
         )
+        cache = {}
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
             CoopSharePurchaseHandler.send_warning_mail_if_necessary(
                 quantity=8,
                 member=member,
                 shares_valid_at=datetime.date(year=2022, month=2, day=27),
-                cache={},
+                cache=cache,
             )
 
-        mock_send_email.assert_called_once_with(
-            to_email=["admin@example.com"],
-            subject="Warnung: es wurden mehr als 8 Genossenschaftsanteile gezeichnet- bitte prüfen",
-            content="Bestehendes Mitglied oder Neuanmeldung: John Smith mit Mail-Adresse john@example.com hat gerade 8 Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem 27.02.2022 gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
+        self.assertEqual(len(callbacks), 1)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            ["admin@example.com"],
+            mail.outbox[0].to,
+        )
+        self.assertEqual(
+            "Warnung: es wurden mehr als 8 Genossenschaftsanteile gezeichnet- bitte prüfen",
+            mail.outbox[0].subject,
+        )
+        self.assertEqual(
+            "Bestehendes Mitglied oder Neuanmeldung: John Smith mit Mail-Adresse john@example.com hat gerade 8 Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem 27.02.2022 gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
+            mail.outbox[0].body,
         )

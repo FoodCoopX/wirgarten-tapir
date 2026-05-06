@@ -9,7 +9,6 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.models import CoopSharesPurchasedLogEntry
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
-from tapir.utils.shortcuts import is_running_tests
 from tapir.wirgarten.models import (
     Member,
     MandateReference,
@@ -133,8 +132,7 @@ class CoopSharePurchaseHandler:
             ],
             subject=f"Warnung: es wurden mehr als {threshold} Genossenschaftsanteile gezeichnet- bitte prüfen",
             content=f"Bestehendes Mitglied oder Neuanmeldung: {member.get_display_name()} mit Mail-Adresse {member.email} hat gerade {quantity} Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem {format_date(shares_valid_at)} gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
+            attachments=[],
+            cache=cache,
         )
-        if is_running_tests():
-            _partial()
-        else:
-            transaction.on_commit(_partial)
+        transaction.on_commit(_partial)
