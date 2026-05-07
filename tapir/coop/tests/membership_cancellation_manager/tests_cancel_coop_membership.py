@@ -3,9 +3,13 @@ import datetime
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
-from tapir.wirgarten.models import CoopShareTransaction
+from tapir.wirgarten.models import CoopShareTransaction, Payment
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory, CoopShareTransactionFactory
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    CoopShareTransactionFactory,
+    PaymentFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -35,6 +39,9 @@ class TestCancelCoopMembership(TapirIntegrationTest):
             member=member,
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
             valid_at=datetime.datetime(year=2024, month=9, day=28),
+            quantity=3,
+            share_price=50,
+            payment=PaymentFactory.create(amount=150),
         )
 
         MembershipCancellationManager.cancel_coop_membership(member)
@@ -42,3 +49,4 @@ class TestCancelCoopMembership(TapirIntegrationTest):
         self.assertEqual(2, CoopShareTransaction.objects.count())
         self.assertIn(transaction_1, CoopShareTransaction.objects.all())
         self.assertIn(transaction_2, CoopShareTransaction.objects.all())
+        self.assertEqual(0, Payment.objects.count())

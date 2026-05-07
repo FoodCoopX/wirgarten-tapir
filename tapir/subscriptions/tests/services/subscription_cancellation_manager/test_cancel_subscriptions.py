@@ -54,7 +54,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         ]
         mock_is_subscription_in_trial.return_value = False
 
-        cancellation_date = datetime.date(year=2024, month=11, day=17)
+        cancellation_date = datetime.date(year=2022, month=11, day=17)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
@@ -145,7 +145,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         )
         mock_is_subscription_in_trial.return_value = True
 
-        cancellation_date = datetime.date(year=2024, month=11, day=17)
+        cancellation_date = datetime.date(year=2022, month=11, day=17)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
         SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
