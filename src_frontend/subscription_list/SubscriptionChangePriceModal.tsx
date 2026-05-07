@@ -5,7 +5,6 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import formatSubscription from "../utils/formatSubscription.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -30,6 +29,27 @@ function getPriceModeDisplay(mode: PriceMode) {
     case "free":
       return "Beitragsbefreit";
   }
+}
+
+function getHelpText(mode: PriceMode) {
+  switch (mode) {
+    case "standard":
+      return "Der Vertrag läuft zu dem Preis, welcher in der Konfiguration hinterlegt ist.";
+    case "custom":
+      return "Bitte wähle die Höhe des Beitrages für den Vertrag im Textfeld aus.";
+    case "free":
+      return "Der Vertrag läuft ohne Beitrag. Dies verringert aber nicht den Solidar-Topf.";
+  }
+}
+
+function getMode(override: string | null | undefined): PriceMode {
+  if (override === null || override === undefined) {
+    return "standard";
+  }
+  if (Number.parseFloat(override) === 0) {
+    return "free";
+  }
+  return "custom";
 }
 
 const SubscriptionChangePriceModal: React.FC<
@@ -169,12 +189,7 @@ const SubscriptionChangePriceModal: React.FC<
                   </li>
                 )}
                 <li>
-                  {subscription.priceOverride
-                    ? "Preis personalisiert: " +
-                      formatCurrency(
-                        Number.parseFloat(subscription.priceOverride),
-                      )
-                    : "Preis standard"}
+                  {getPriceModeDisplay(getMode(subscription.priceOverride))}
                 </li>
               </ul>
             </div>
@@ -196,10 +211,7 @@ const SubscriptionChangePriceModal: React.FC<
                     type={"radio"}
                     checked={priceMode === mode}
                   />
-                  <TapirHelpButton
-                    buttonSize={"sm"}
-                    text={"WIP Hilfstext für " + getPriceModeDisplay(mode)}
-                  />
+                  <TapirHelpButton buttonSize={"sm"} text={getHelpText(mode)} />
                 </div>
               ))}
             </Form.Group>
@@ -224,7 +236,7 @@ const SubscriptionChangePriceModal: React.FC<
                         setCustomPrice(event.target.value);
                         setError(undefined);
                       }}
-                      placeholder={"Kein personalisierter Preis"}
+                      placeholder={getPriceModeDisplay("custom")}
                       type={"number"}
                       min={0}
                       step={0.01}
