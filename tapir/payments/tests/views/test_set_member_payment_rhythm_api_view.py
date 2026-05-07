@@ -9,8 +9,13 @@ from tapir.payments.models import MemberPaymentRhythm, MemberPaymentRhythmChange
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    GrowingPeriodFactory,
+    SubscriptionFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -44,10 +49,22 @@ class TestSetPaymentRhythmApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
         self.assertEqual(0, MemberPaymentRhythm.objects.count())
 
-    def test_post_adminSetsPaymentRhythmOfOtherMember_setsPaymentRhythm(self):
+    def test_post_adminSetsPaymentRhythmOfOtherMemberWithASubscription_setsPaymentRhythmAtEndOfOldRhythm(
+        self,
+    ):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
         other_member = MemberFactory.create()
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=1, day=1)
+        )
+        SubscriptionFactory.create(period=growing_period, member=other_member)
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
+            value=MemberPaymentRhythm.Rhythm.QUARTERLY,
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=2021, month=2, day=10))
 
         data = {"member_id": other_member.id, "rhythm": "yearly"}
         response = self.client.post(
@@ -55,15 +72,67 @@ class TestSetPaymentRhythmApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
+
         self.assertEqual(1, MemberPaymentRhythm.objects.count())
+        rhythm_object = MemberPaymentRhythm.objects.get()
         self.assertEqual(
             MemberPaymentRhythm.Rhythm.YEARLY,
-            MemberPaymentRhythm.objects.first().rhythm,
+            rhythm_object.rhythm,
+        )
+        self.assertEqual(other_member.id, rhythm_object.member_id)
+        self.assertEqual(
+            datetime.date(year=2021, month=4, day=1),
+            rhythm_object.valid_from,
+            "Previously the member was using the default rhythm (quarterly), whose interval ends on 31.03.2021. The new interval should start one day after",
         )
 
         self.assertEqual(1, MemberPaymentRhythmChangeLogEntry.objects.count())
         log_entry = MemberPaymentRhythmChangeLogEntry.objects.get()
         self.assertEqual("yearly", log_entry.new_rhythm)
+        self.assertEqual("quarterly", log_entry.old_rhythm)
+        self.assertEqual(other_member.email, log_entry.user.email)
+        self.assertEqual(member.email, log_entry.actor.email)
+
+    def test_post_adminSetsPaymentRhythmOfOtherMemberWithoutSubscription_setsPaymentRhythmToday(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+        other_member = MemberFactory.create()
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=1, day=1)
+        )
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
+            value=MemberPaymentRhythm.Rhythm.QUARTERLY,
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=2021, month=2, day=10))
+
+        data = {"member_id": other_member.id, "rhythm": "yearly"}
+        response = self.client.post(
+            reverse("payments:set_member_payment_rhythm"), data=data
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        self.assertEqual(1, MemberPaymentRhythm.objects.count())
+        rhythm_object = MemberPaymentRhythm.objects.get()
+        self.assertEqual(
+            MemberPaymentRhythm.Rhythm.YEARLY,
+            rhythm_object.rhythm,
+        )
+        self.assertEqual(other_member.id, rhythm_object.member_id)
+        self.assertEqual(
+            datetime.date(year=2021, month=2, day=10),
+            rhythm_object.valid_from,
+            "Since this member doesn't have any monthly payment yet, the rhythm should be set right away.",
+        )
+
+        self.assertEqual(1, MemberPaymentRhythmChangeLogEntry.objects.count())
+        log_entry = MemberPaymentRhythmChangeLogEntry.objects.get()
+        self.assertEqual("yearly", log_entry.new_rhythm)
+        self.assertEqual("quarterly", log_entry.old_rhythm)
         self.assertEqual(other_member.email, log_entry.user.email)
         self.assertEqual(member.email, log_entry.actor.email)
 

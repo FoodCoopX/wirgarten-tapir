@@ -117,10 +117,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         response_content = response.json()
-        self.assertTrue(
-            response_content["order_confirmed"],
-            "Order not confirmed because: " + (response_content["error"] or "no error"),
-        )
+        self.assert_order_confirmed(response_content)
 
         self.assert_order_applied_correctly(
             mock_fire_action, is_student=False, growing_period=self.growing_period

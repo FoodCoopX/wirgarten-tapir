@@ -6,6 +6,9 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.models import MemberPaymentRhythm, MemberPaymentRhythmChangeLogEntry
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -90,7 +93,7 @@ class MemberPaymentRhythmService:
     @classmethod
     def get_first_day_of_rhythm_period(
         cls, rhythm, reference_date: datetime.date, cache: dict
-    ):
+    ) -> datetime.date:
         reference_date = reference_date.replace(day=1)
         while not cls.is_start_of_rhythm_period(
             rhythm=rhythm, reference_date=reference_date, cache=cache
@@ -101,11 +104,11 @@ class MemberPaymentRhythmService:
     @classmethod
     def get_last_day_of_rhythm_period(
         cls, rhythm, reference_date: datetime.date, cache: dict
-    ):
+    ) -> datetime.date:
         start = cls.get_first_day_of_rhythm_period(
             rhythm=rhythm, reference_date=reference_date, cache=cache
         )
-        end = (
+        end: datetime.date = (
             start
             + relativedelta(
                 months=cls.get_number_of_months_paid_in_advance(rhythm=rhythm)
@@ -174,14 +177,24 @@ class MemberPaymentRhythmService:
     def get_date_of_next_payment_rhythm_change(
         cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> datetime.date:
-        rhythm_object = TapirCache.get_member_payment_rhythm_object(
-            member=member, reference_date=reference_date, cache=cache
+        members_subscriptions = (
+            TapirCache.get_active_and_future_subscriptions_by_member_id(
+                cache=cache, reference_date=reference_date
+            ).get(member.id, [])
         )
-        if rhythm_object is None:
+        solidarity_contribution = (
+            MemberSolidarityContributionService.get_member_contribution(
+                member_id=member.id, reference_date=reference_date, cache=cache
+            )
+        )
+        if len(members_subscriptions) == 0 and solidarity_contribution == 0:
             return reference_date
 
-        last_day = MemberPaymentRhythmService.get_last_day_of_rhythm_period(
-            rhythm=rhythm_object.rhythm, reference_date=reference_date, cache=cache
+        rhythm = cls.get_member_payment_rhythm(
+            member=member, reference_date=reference_date, cache=cache
+        )
+        last_day = cls.get_last_day_of_rhythm_period(
+            rhythm=rhythm, reference_date=reference_date, cache=cache
         )
         return last_day + datetime.timedelta(days=1)
 

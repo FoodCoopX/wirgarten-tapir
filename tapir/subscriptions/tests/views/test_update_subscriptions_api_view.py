@@ -4,7 +4,6 @@ from unittest.mock import patch, Mock
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -53,8 +52,12 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
         ProductCapacityFactory.create(
             period=cls.growing_period, product_type=cls.product_1.type, capacity=1000
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=cls.product_1.type_id
+        cls._set_parameter(
+            key=ParameterKeys.COOP_BASE_PRODUCT_TYPE, value=cls.product_1.type_id
+        )
+        cls._set_parameter(
+            key=ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
+            value=MemberPaymentRhythm.Rhythm.QUARTERLY,
         )
 
     def setUp(self) -> None:
@@ -139,9 +142,19 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
         self.assertEqual(member.email, log_entry_cancelled.user.email)
 
         self.assertEqual(
+            MemberPaymentRhythm.Rhythm.QUARTERLY,
+            MemberPaymentRhythmService.get_member_payment_rhythm(
+                reference_date=datetime.date(year=2030, month=6, day=30),
+                member=member,
+                cache={},
+            ),
+        )
+        self.assertEqual(
             MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
             MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=member, reference_date=subscription_new_1.start_date, cache={}
+                reference_date=datetime.date(year=2030, month=7, day=1),
+                member=member,
+                cache={},
             ),
         )
 

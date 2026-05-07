@@ -49,6 +49,10 @@ class SubscriptionUpdateViewChangeApplier:
                 cache=cache,
             )
 
+        cls.change_payment_rhythm_if_necessary(
+            payment_rhythm=payment_rhythm, member=member, actor=actor, cache=cache
+        )
+
         subscriptions_existed_before_changes, new_subscriptions = (
             ApplyTapirOrderManager.apply_order_single_product_type(
                 member=member,
@@ -68,10 +72,6 @@ class SubscriptionUpdateViewChangeApplier:
             cache=cache,
             from_waiting_list=False,
             solidarity_contribution=None,
-        )
-
-        cls.change_payment_rhythm_if_necessary(
-            payment_rhythm=payment_rhythm, member=member, actor=actor, cache=cache
         )
 
         MemberCreditCreator.create_member_credit_if_necessary(

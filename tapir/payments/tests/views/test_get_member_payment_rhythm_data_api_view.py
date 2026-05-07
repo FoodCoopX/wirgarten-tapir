@@ -7,7 +7,11 @@ from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory, GrowingPeriodFactory
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    GrowingPeriodFactory,
+    SubscriptionFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -41,6 +45,10 @@ class TestGetMemberPaymentRhythmDataApiView(TapirIntegrationTest):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
         other_member = MemberFactory.create()
+        GrowingPeriodFactory.create(
+            start_date=datetime.datetime(year=2028, month=1, day=1),
+            end_date=datetime.datetime(year=2029, month=12, day=31),
+        )
 
         url = reverse("payments:member_payment_rhythm_data")
         url = f"{url}?member_id={other_member.id}"
@@ -50,7 +58,7 @@ class TestGetMemberPaymentRhythmDataApiView(TapirIntegrationTest):
 
     def test_get_default_returnsCorrectData(self):
         mock_timezone(self, now=datetime.datetime(year=2028, month=4, day=15))
-        GrowingPeriodFactory.create(
+        growing_period = GrowingPeriodFactory.create(
             start_date=datetime.datetime(year=2028, month=1, day=1),
             end_date=datetime.datetime(year=2029, month=12, day=31),
         )
@@ -64,6 +72,7 @@ class TestGetMemberPaymentRhythmDataApiView(TapirIntegrationTest):
             ),
         )
         member = MemberFactory.create(is_superuser=True)
+        SubscriptionFactory.create(period=growing_period, member=member)
         rhythms = MemberPaymentRhythm.objects.bulk_create(
             [
                 MemberPaymentRhythm(
