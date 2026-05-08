@@ -64,7 +64,7 @@ const SubscriptionAddButtonModal: React.FC<
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [pickupLocation, setPickupLocation] = useState<PickupLocation>();
   const [paymentRhythm, setPaymentRhythm] = useState<string>();
-  const [error, setError] = useState<string>();
+  const [error] = useState<string>();
 
   // TODO add Create Contract API Call
 
