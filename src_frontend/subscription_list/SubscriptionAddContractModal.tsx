@@ -5,18 +5,18 @@ import {
   CoopApi,
   DeliveriesApi,
   GrowingPeriod,
-  Member,
-  MemberPaymentRhythmData,
   PaymentsApi,
   PickupLocation,
   PickupLocationsApi,
   Product,
+  PublicProductType,
   Subscription,
   SubscriptionsApi
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface SubscriptionAddContractModalProps {
@@ -38,16 +38,27 @@ const SubscriptionAddButtonModal: React.FC<
   const paymentsApi = useApi(PaymentsApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription>();
-  const [memberData, setMemberData] = useState<Member>();
-  const [paymentsData, setPaymentsData] = useState<MemberPaymentRhythmData>();
-  const [productList, setProductList] = useState<Product[]>();
-  const [periodList, setPeriodList] = useState<GrowingPeriod[]>();
-  const [pickupLocationsList, setPickupLocationsList] =
-    useState<PickupLocation[]>();
+  const [memberName, setMemberName] = useState<string>();
+  const [currentPaymentRhythm, setCurrentPaymentRhythm] = useState<string>("");
+  const [allowedPaymentRhythms, setAllowedPaymentRhythms] = useState<{
+    [key: string]: string;
+  }>({ "": "" });
+  const [productTypesList, setProductTypesList] = useState<PublicProductType[]>(
+    [],
+  );
+  const [productList, setProductList] = useState<Product[]>([]);
+  const [growingPeriodList, setGrowingPeriodList] = useState<GrowingPeriod[]>(
+    [],
+  );
+  const [pickupLocationsList, setPickupLocationsList] = useState<
+    PickupLocation[]
+  >([]);
   const [period, setPeriod] = useState<GrowingPeriod>();
+  const [productType, setProductType] = useState<PublicProductType>();
   const [product, setProduct] = useState<Product>();
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date | null | undefined>();
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [pickupLocation, setPickupLocation] = useState<PickupLocation>();
   const [paymentRhythm, setPaymentRhythm] = useState<string>();
   const [error, setError] = useState<string>();
 
@@ -56,117 +67,36 @@ const SubscriptionAddButtonModal: React.FC<
 
     setLoading(true);
 
-    coopApi
-      .coopMembersRetrieve({ id: memberId })
-      .then((response) => {
-        setMemberData(response);
-      })
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der persönliche Daten",
-          setToastDatas,
-        ),
+    Promise.all([
+      coopApi.coopMembersRetrieve({ id: memberId }),
+      subscriptionsApi.subscriptionsProductsList(),
+      subscriptionsApi.subscriptionsPublicProductTypesList(),
+      deliveriesApi.deliveriesGrowingPeriodsList(),
+      pickupApi.pickupLocationsPickupLocationsList(),
+      paymentsApi.paymentsApiMemberPaymentRhythmDataRetrieve({
+        memberId: memberId,
+      }),
+    ])
+      .then(
+        ([
+          Member,
+          ProductsList,
+          ProductTypesList,
+          GrowingPeriodList,
+          PickupLocationsList,
+          PaymentRhythmData,
+        ]) => {
+          setMemberName(`${Member.firstName} ${Member.lastName}`);
+          setProductList(ProductsList);
+          setProductTypesList(ProductTypesList);
+          setGrowingPeriodList(GrowingPeriodList);
+          setPickupLocationsList(PickupLocationsList);
+          setCurrentPaymentRhythm(PaymentRhythmData.currentRhythm);
+          setAllowedPaymentRhythms(PaymentRhythmData.allowedRhythms);
+        },
       )
-      .finally(() => setLoading(false));
-  }, [show]);
-
-  useEffect(() => {
-    if (!show) return;
-
-    setLoading(true);
-
-    subscriptionsApi
-      .subscriptionsProductsList()
-      .then((response) => {
-        setProductList(response);
-      })
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der Produktliste",
-          setToastDatas,
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, [show]);
-
-  useEffect(() => {
-    if (!show) return;
-
-    setLoading(true);
-
-    deliveriesApi
-      .deliveriesGrowingPeriodsList()
-      .then((response) => {
-        setPeriodList(response);
-      })
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der Produktliste",
-          setToastDatas,
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, [show]);
-
-  useEffect(() => {
-    if (!show) return;
-
-    setLoading(true);
-
-    pickupApi
-      .pickupLocationsPickupLocationsList()
-      .then((response) => {
-        setPickupLocationsList(response);
-      })
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der Produktliste",
-          setToastDatas,
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, [show]);
-
-  useEffect(() => {
-    if (!show) return;
-
-    setLoading(true);
-
-    pickupApi
-      .pickupLocationsPickupLocationsList()
-      .then((response) => {
-        setPickupLocationsList(response);
-      })
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der Produktliste",
-          setToastDatas,
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, [show]);
-
-  useEffect(() => {
-    if (!show) return;
-
-    setLoading(true);
-
-    paymentsApi
-      .paymentsApiMemberPaymentRhythmDataRetrieve({ memberId: memberId })
-      .then((response) => {
-        setPaymentsData(response);
-      })
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Laden der persönliche Daten",
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Laden der Daten", setToastDatas),
       )
       .finally(() => setLoading(false));
   }, [show]);
@@ -175,30 +105,27 @@ const SubscriptionAddButtonModal: React.FC<
     if (loading) {
       return <Spinner />;
     }
-    if (memberData === undefined) {
+    if (memberName === undefined) {
       return <p>Fehler beim Laden der Mitgliedsdaten</p>;
     }
     return (
       <>
         <Row>
-          {periodList && (
-            <Form.Group>
-              <Form.Label>Vertragsperiode</Form.Label>
-              <Form.Select
-                onChange={(event) => {
-                  // @ts-ignore
-                  setPeriod(periodList[event.target.value]);
-                }}
-              >
-                // TODO: When selecting for the first time opt.id is undefined
-                {periodList.map((opt, index) => (
-                  <option key={opt.id} value={index}>
-                    {dayjs(opt.startDate).format("YYYY")}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          )}
+          <Form.Group>
+            <Form.Label>Vertragsperiode</Form.Label>
+            <Form.Select
+              onChange={(event) => {
+                setPeriod(growingPeriodList[parseInt(event.target.value)]);
+              }}
+            >
+              {growingPeriodList.map((growingPeriod, index) => (
+                <option key={growingPeriod.id} value={index}>
+                  {`${formatDateNumeric(growingPeriod.startDate)} -
+                    ${formatDateNumeric(growingPeriod.endDate)}`}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
         </Row>
         <Row>
           <Col>
@@ -206,7 +133,6 @@ const SubscriptionAddButtonModal: React.FC<
               <Form.Label>Start-Datum</Form.Label>
               <Form.Control
                 type={"date"}
-                value={dayjs(period?.startDate).format("YYYY-MM-DD")}
                 onChange={(event) => {
                   setStartDate(new Date(event.target.value));
                 }}
@@ -218,9 +144,17 @@ const SubscriptionAddButtonModal: React.FC<
               <Form.Label>End-Datum</Form.Label>
               <Form.Control
                 type={"date"}
-                value={dayjs(period?.endDate).format("YYYY-MM-DD")}
                 onChange={(event) => {
-                  setEndDate(new Date(event.target.value));
+                  const selectedDate = new Date(event.target.value);
+                  if (dayjs(selectedDate).format("d") == "0") {
+                    setEndDate(selectedDate);
+                  } else if (new Date(selectedDate) === period?.endDate) {
+                    setEndDate(new Date(selectedDate));
+                  } else {
+                    alert(
+                      "Das End-Datum darf nur an einem Sonntag oder am letzten Tag der Periode sein.",
+                    );
+                  }
                 }}
               />
             </Form.Group>
@@ -236,84 +170,90 @@ const SubscriptionAddButtonModal: React.FC<
         <Row className={"mt-2"}>
           <Col>
             <p>
-              Das End-Datum darf nur am Tag der Kommissioniervariable gesetzt
-              werden (sehe Konfig-Seite).
+              Das End-Datum darf nur an einem Sonntag oder am letzten Tag der
+              Periode sein.
             </p>
           </Col>
         </Row>
         <Row>
-          {periodList && (
+          <Col>
             <Form.Group>
               <Form.Label>Produkttyp</Form.Label>
               <Form.Select
-                onChange={(event) => {
-                  // @ts-ignore
-                  setProduct(productList[event.target.value]);
-                }}
+                onChange={(event) =>
+                  setProductType(productTypesList[parseInt(event.target.value)])
+                }
               >
-                // TODO: When selecting for the first time opt.id is undefined
-                {productList?.map((opt, index) => (
-                  <option key={opt.id} value={index}>
-                    {opt.name}
+                {productTypesList.map((Product, index) => (
+                  <option key={Product.id} value={index}>
+                    {Product.name}
                   </option>
                 ))}
               </Form.Select>
             </Form.Group>
-          )}
-        </Row>
-        <Row>
-          {pickupLocationsList && (
+          </Col>
+          <Col>
             <Form.Group>
-              <Form.Label>Abholort</Form.Label>
+              <Form.Label>Produkt</Form.Label>
               <Form.Select
                 onChange={(event) => {
-                  // @ts-ignore
-                  setProduct(pickupLocationsList[event.target.value]);
+                  setProduct(
+                    productList.find((product) => {
+                      return product.id === event.target.value;
+                    }),
+                  );
                 }}
               >
-                // TODO: When selecting for the first time opt.id is undefined
-                {pickupLocationsList?.map((opt, index) => (
-                  <option key={opt.id} value={index}>
-                    {opt.name}
-                  </option>
-                ))}
+                {productList
+                  .filter((Product) => {
+                    if (productType) {
+                      return Product.type.id === productType.id;
+                    } else {
+                      return Product.type.id === productTypesList[0].id;
+                    }
+                  })
+                  .map((Product) => (
+                    <option key={Product.name} value={Product.id}>
+                      {Product.name}
+                    </option>
+                  ))}
               </Form.Select>
             </Form.Group>
-          )}
+          </Col>
         </Row>
         <Row>
-          {paymentsData && (
-            <Form.Group>
-              <Form.Label>Zahlungsintervall </Form.Label>
-              {paymentsData.currentRhythm && (
-                // TODO: get German name from paymentsData.allowedRythms
-                <Form.Label>: {paymentsData.currentRhythm}</Form.Label>
-              )}
-              {!paymentsData.currentRhythm && (
-                <Form.Select
-                  onChange={(event) => {
-                    setPaymentRhythm(
-                      Object.keys(paymentsData.allowedRhythms)[
-                        // @ts-ignore
-                        event.target.value
-                      ],
-                    );
-                    console.log(paymentsData.currentRhythm);
-                  }}
-                >
-                  // TODO: When selecting for the first time opt.id is undefined
-                  and the indexes dont seem to match
-                  {Object.values(paymentsData?.allowedRhythms).map(
-                    (opt, index) => (
-                      <option key={opt} value={index}>
-                        {opt}
-                      </option>
-                    ),
-                  )}
-                </Form.Select>
-              )}
-            </Form.Group>
-          )}
+          <Form.Group>
+            <Form.Label>Abholort</Form.Label>
+            <Form.Select
+              onChange={(event) => {
+                setPickupLocation(
+                  pickupLocationsList[parseInt(event.target.value)],
+                );
+              }}
+            >
+              {pickupLocationsList?.map((pickupLocation, index) => (
+                <option key={pickupLocation.id} value={index}>
+                  {pickupLocation.name}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        </Row>
+        <Row>
+          <Form.Group>
+            <Form.Label>Zahlungsintervall </Form.Label>
+            <Form.Select
+              onChange={(event) => {
+                setPaymentRhythm(event.target.value);
+              }}
+            >
+              {Object.entries(allowedPaymentRhythms).map(([rhythm, name]) => (
+                <option key={rhythm} value={rhythm}>
+                  {name}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
         </Row>
       </>
     );
@@ -324,12 +264,7 @@ const SubscriptionAddButtonModal: React.FC<
       <Modal onHide={onHide} show={show} centered={true} size={"lg"}>
         <Modal.Header closeButton>
           <Modal.Title>
-            {memberData && (
-              <h4>
-                Neuer Vertrag für {memberData.firstName} {memberData.lastName}
-                {", "} {memberData.city}
-              </h4>
-            )}
+            {memberName && <h4>Neuer Vertrag für {memberName}</h4>}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>{getBodyContent()}</Modal.Body>
