@@ -5,6 +5,7 @@ import {
   CoopApi,
   DeliveriesApi,
   GrowingPeriod,
+  Mpl,
   PaymentsApi,
   PickupLocation,
   PickupLocationsApi,
@@ -39,7 +40,9 @@ const SubscriptionAddButtonModal: React.FC<
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription>();
   const [memberName, setMemberName] = useState<string>();
-  const [currentPaymentRhythm, setCurrentPaymentRhythm] = useState<string>("");
+  const [currentPaymentRhythm, setCurrentPaymentRhythm] = useState<
+    string | undefined
+  >();
   const [allowedPaymentRhythms, setAllowedPaymentRhythms] = useState<{
     [key: string]: string;
   }>({ "": "" });
@@ -53,6 +56,7 @@ const SubscriptionAddButtonModal: React.FC<
   const [pickupLocationsList, setPickupLocationsList] = useState<
     PickupLocation[]
   >([]);
+  const [memberPickupLocation, setMemberPickupLocation] = useState<Mpl>();
   const [period, setPeriod] = useState<GrowingPeriod>();
   const [productType, setProductType] = useState<PublicProductType>();
   const [product, setProduct] = useState<Product>();
@@ -61,6 +65,8 @@ const SubscriptionAddButtonModal: React.FC<
   const [pickupLocation, setPickupLocation] = useState<PickupLocation>();
   const [paymentRhythm, setPaymentRhythm] = useState<string>();
   const [error, setError] = useState<string>();
+
+  // TODO add Create Contract API Call
 
   useEffect(() => {
     if (!show) return;
@@ -73,9 +79,8 @@ const SubscriptionAddButtonModal: React.FC<
       subscriptionsApi.subscriptionsPublicProductTypesList(),
       deliveriesApi.deliveriesGrowingPeriodsList(),
       pickupApi.pickupLocationsPickupLocationsList(),
-      paymentsApi.paymentsApiMemberPaymentRhythmDataRetrieve({
-        memberId: memberId,
-      }),
+      pickupApi.pickupLocationsApiGetMemberPickupLocationRetrieve({ memberId }),
+      paymentsApi.paymentsApiMemberPaymentRhythmDataRetrieve({ memberId }),
     ])
       .then(
         ([
@@ -84,6 +89,7 @@ const SubscriptionAddButtonModal: React.FC<
           ProductTypesList,
           GrowingPeriodList,
           PickupLocationsList,
+          MemberPickupLocation,
           PaymentRhythmData,
         ]) => {
           setMemberName(`${Member.firstName} ${Member.lastName}`);
@@ -91,6 +97,7 @@ const SubscriptionAddButtonModal: React.FC<
           setProductTypesList(ProductTypesList);
           setGrowingPeriodList(GrowingPeriodList);
           setPickupLocationsList(PickupLocationsList);
+          setMemberPickupLocation(MemberPickupLocation);
           setCurrentPaymentRhythm(PaymentRhythmData.currentRhythm);
           setAllowedPaymentRhythms(PaymentRhythmData.allowedRhythms);
         },
@@ -149,7 +156,7 @@ const SubscriptionAddButtonModal: React.FC<
                   if (dayjs(selectedDate).format("d") == "0") {
                     setEndDate(selectedDate);
                   } else if (new Date(selectedDate) === period?.endDate) {
-                    setEndDate(new Date(selectedDate));
+                    setEndDate(selectedDate);
                   } else {
                     alert(
                       "Das End-Datum darf nur an einem Sonntag oder am letzten Tag der Periode sein.",
@@ -206,11 +213,9 @@ const SubscriptionAddButtonModal: React.FC<
               >
                 {productList
                   .filter((Product) => {
-                    if (productType) {
-                      return Product.type.id === productType.id;
-                    } else {
-                      return Product.type.id === productTypesList[0].id;
-                    }
+                    return productType
+                      ? Product.type.id === productType.id
+                      : Product.type.id === productTypesList[0].id;
                   })
                   .map((Product) => (
                     <option key={Product.name} value={Product.id}>
@@ -231,29 +236,43 @@ const SubscriptionAddButtonModal: React.FC<
                 );
               }}
             >
-              {pickupLocationsList?.map((pickupLocation, index) => (
-                <option key={pickupLocation.id} value={index}>
-                  {pickupLocation.name}
-                </option>
-              ))}
+              {pickupLocationsList
+                .filter((pickupLocation) => {
+                  return memberPickupLocation?.hasLocation
+                    ? pickupLocation.id === memberPickupLocation.location?.id
+                    : [];
+                })
+                .map((pickupLocation, index) => (
+                  <option key={pickupLocation.id} value={index}>
+                    {pickupLocation.name}
+                  </option>
+                ))}
             </Form.Select>
           </Form.Group>
         </Row>
         <Row>
-          <Form.Group>
-            <Form.Label>Zahlungsintervall </Form.Label>
-            <Form.Select
-              onChange={(event) => {
-                setPaymentRhythm(event.target.value);
-              }}
-            >
-              {Object.entries(allowedPaymentRhythms).map(([rhythm, name]) => (
-                <option key={rhythm} value={rhythm}>
-                  {name}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+          {Object.entries(allowedPaymentRhythms).length > 1 && (
+            <Form.Group>
+              <Form.Label>Zahlungsintervall </Form.Label>
+              <Form.Select
+                onChange={(event) => {
+                  setPaymentRhythm(event.target.value);
+                }}
+              >
+                {Object.entries(allowedPaymentRhythms)
+                  .filter(([rhythm, name]) => {
+                    return currentPaymentRhythm
+                      ? currentPaymentRhythm === rhythm
+                      : [];
+                  })
+                  .map(([rhythm, name]) => (
+                    <option key={rhythm} value={rhythm}>
+                      {name}
+                    </option>
+                  ))}
+              </Form.Select>
+            </Form.Group>
+          )}
         </Row>
       </>
     );
