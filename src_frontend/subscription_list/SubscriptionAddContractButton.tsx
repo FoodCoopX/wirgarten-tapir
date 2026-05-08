@@ -1,8 +1,8 @@
-import React, { useState } from "react";
 import "dayjs/locale/de";
+import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
-import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { ToastData } from "../types/ToastData.ts";
 import SubscriptionAddContractModal from "./SubscriptionAddContractModal.tsx";
 
@@ -25,7 +25,9 @@ const SubscriptionAddContractButton: React.FC<
         onClick={() => {
           const memberId = getParameterFromUrl("member");
           if (!memberId) {
-            alert("Du musst erst ein Mitglied auswählen. Du kannst rechts unter 'Mitglied' suchen, oder über die Mitgliederliste eines auswählen und auf 'Verträge anzeigen'.");
+            alert(
+              "Du musst erst ein Mitglied auswählen. Du kannst rechts unter 'Mitglied' suchen, oder über die Mitgliederliste eines auswählen und auf 'Verträge anzeigen'.",
+            );
             return;
           }
           setMemberId(memberId);
