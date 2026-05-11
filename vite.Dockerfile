@@ -7,6 +7,7 @@ WORKDIR /app
 COPY \
     "./package.json" \
     "./pnpm-lock.yaml" \
+    "./pnpm-workspace.yaml" \
     ./
 RUN pnpm install
 
