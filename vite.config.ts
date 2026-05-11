@@ -1,4 +1,4 @@
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import { join, resolve } from "node:path";
 import { defineConfig } from "vite";
 
