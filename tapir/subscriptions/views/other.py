@@ -22,7 +22,10 @@ from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
-from tapir.subscriptions.models import SubscriptionChangedLogEntry
+from tapir.subscriptions.models import (
+    SubscriptionChangedLogEntry,
+    SubscriptionPriceChangedLogEntry,
+)
 from tapir.subscriptions.serializers import (
     ExtendedProductSerializer,
     PublicProductTypeSerializer,
@@ -293,8 +296,20 @@ class SubscriptionPriceOverrideApiView(APIView):
                 ).data
             )
 
+        subscription_before = freeze_for_log(subscription)
+        price_before = subscription.price_override
         subscription.price_override = price_override
-        subscription.save()
+
+        with transaction.atomic():
+            subscription.save()
+
+            SubscriptionPriceChangedLogEntry().populate_price_change(
+                subscription_frozen_before_changes=subscription_before,
+                subscription=subscription,
+                user=subscription.member,
+                actor=request.user,
+                price_before=price_before,
+            ).save()
 
         return Response(
             OrderConfirmationResponseSerializer(

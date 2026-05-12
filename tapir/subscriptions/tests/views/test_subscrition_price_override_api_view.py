@@ -1,6 +1,9 @@
+from decimal import Decimal
+
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.subscriptions.models import SubscriptionPriceChangedLogEntry
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -26,9 +29,10 @@ class TestSubscriptionPriceOverrideApiView(TapirIntegrationTest):
         self.assertEqual(5, subscription.price_override)
 
     def test_post_sendingNoOverride_priceOverrideSetToNone(self):
-        member = MemberFactory.create(is_superuser=True)
-        subscription = SubscriptionFactory.create(member=member, price_override=5)
-        self.client.force_login(member)
+        admin = MemberFactory.create(is_superuser=True)
+        other_member = MemberFactory.create()
+        subscription = SubscriptionFactory.create(member=other_member, price_override=5)
+        self.client.force_login(admin)
 
         post_data = {"subscription_id": subscription.id, "price_override": ""}
         response = self.client.post(
@@ -42,6 +46,13 @@ class TestSubscriptionPriceOverrideApiView(TapirIntegrationTest):
         self.assertIsNone(response_content["error"])
         subscription.refresh_from_db()
         self.assertIsNone(subscription.price_override)
+
+        self.assertEqual(1, SubscriptionPriceChangedLogEntry.objects.count())
+        log_entry = SubscriptionPriceChangedLogEntry.objects.get()
+        self.assertEqual(other_member.email, log_entry.user.email)
+        self.assertEqual(admin.email, log_entry.actor.email)
+        self.assertEqual(Decimal(5), log_entry.price_before)
+        self.assertIsNone(log_entry.price_after)
 
     def test_post_sendingOverrideNegative_returnsError(self):
         member = MemberFactory.create(is_superuser=True)
@@ -78,3 +89,10 @@ class TestSubscriptionPriceOverrideApiView(TapirIntegrationTest):
         self.assertIsNone(response_content["error"])
         subscription.refresh_from_db()
         self.assertEqual(123, subscription.price_override)
+
+        self.assertEqual(1, SubscriptionPriceChangedLogEntry.objects.count())
+        log_entry = SubscriptionPriceChangedLogEntry.objects.get()
+        self.assertEqual(member.email, log_entry.user.email)
+        self.assertEqual(member.email, log_entry.actor.email)
+        self.assertEqual(Decimal(5), log_entry.price_before)
+        self.assertEqual(Decimal(123), log_entry.price_after)
