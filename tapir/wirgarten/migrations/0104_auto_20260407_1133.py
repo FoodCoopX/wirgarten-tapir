@@ -25,6 +25,7 @@ def update_token_name_messenger_group(apps, schema):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ("tapir_mail", "0047_auto_20260410_1331"),
         ("wirgarten", "0103_alter_producttype_delivery_cycle"),
     ]
 
