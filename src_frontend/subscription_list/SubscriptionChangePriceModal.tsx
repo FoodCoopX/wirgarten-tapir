@@ -36,9 +36,9 @@ function getHelpText(mode: PriceMode) {
     case "standard":
       return "Der Vertrag läuft zu dem Preis, welcher in der Konfiguration hinterlegt ist.";
     case "custom":
-      return "Bitte wähle die Höhe des Beitrages für den Vertrag im Textfeld aus.";
+      return 'Bitte wähle die Höhe des Beitrages für den Vertrag im Textfeld aus. Die Abweichung vom eigentlichen Richtpreis verändert die Berechnung des Solidartopfes nicht. Du kannst unter "Mitglieder" gezielt nach Mitgliedern mit Verträgen mit personalisierten Beträgen suchen.';
     case "free":
-      return "Der Vertrag läuft ohne Beitrag. Dies verringert aber nicht den Solidar-Topf.";
+      return 'Der Vertrag läuft ohne Beitrag. Dies verringert aber nicht den Solidar-Topf. Du kannst unter "Mitglieder" gezielt nach Mitgliedern mit beitragsbefreiten Verträgensuchen.';
   }
 }
 
