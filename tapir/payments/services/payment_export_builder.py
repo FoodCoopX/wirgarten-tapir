@@ -21,6 +21,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
+from tapir.wirgarten.templatetags.wirgarten import format_month_and_year
 from tapir.wirgarten.utils import (
     format_date,
     format_currency,
@@ -84,10 +85,11 @@ class PaymentExportBuilder:
             return
 
         exported_file = cls.export_payments(
-            combined_payments,
-            contract_payments=is_contract_payments,
+            payments=combined_payments,
+            is_contract_payments=is_contract_payments,
             send_mail=send_mail,
             cache=cache,
+            reference_date=reference_date,
         )
 
         cls.create_and_assign_transaction(
@@ -177,8 +179,9 @@ class PaymentExportBuilder:
     def export_payments(
         cls,
         payments: Iterable[Payment],
-        contract_payments: bool,
+        is_contract_payments: bool,
         send_mail: bool,
+        reference_date: datetime.date,
         cache: dict,
     ):
         previous_locale = locale.getlocale()
@@ -197,7 +200,7 @@ class PaymentExportBuilder:
 
         for payment in payments:
             intended_use = PaymentExportIntendedUseBuilder.build_intended_use(
-                payment=payment, is_contracts=contract_payments, cache=cache
+                payment=payment, is_contracts=is_contract_payments, cache=cache
             )
 
             writer.writerow(
@@ -219,7 +222,7 @@ class PaymentExportBuilder:
         file_content = cls.add_header(file_content, cache)
 
         return export_file(
-            filename=f"{PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(contract_payments)}-Einzahlungen",
+            filename=f"{PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(is_contract_payments)}-Einzahlungen {format_month_and_year(reference_date)}",
             filetype=ExportedFile.FileType.CSV,
             content=bytes(file_content, "utf-8"),
             send_email=send_mail,
