@@ -1,8 +1,7 @@
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
-from django.core.exceptions import ImproperlyConfigured
-
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
@@ -58,7 +57,7 @@ class TestGetMonthlyPrice(TapirUnitTest):
         subscription = SubscriptionFactory.build()
         mock_get_product_price.return_value = None
 
-        with self.assertRaises(ImproperlyConfigured):
+        with self.assertRaises(TapirImproperlyConfigured):
             SubscriptionPriceCalculator.get_monthly_price(
                 subscription=subscription, reference_date=reference_date, cache=cache
             )

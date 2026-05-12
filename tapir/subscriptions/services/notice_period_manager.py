@@ -2,9 +2,9 @@ import calendar
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions import config as subscription_config
 from tapir.subscriptions.models import NoticePeriod
@@ -131,7 +131,7 @@ class NoticePeriodManager:
                     cache=cache,
                 )
             case _:
-                raise ImproperlyConfigured(
+                raise TapirImproperlyConfigured(
                     f"Unknown notice period unit: {notice_period_unit}"
                 )
 

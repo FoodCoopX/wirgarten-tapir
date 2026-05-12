@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
     ProductTypeLowestFreeCapacityAfterDateCalculator,
 )
@@ -11,6 +12,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.services.waiting_list_reserved_capacity_calculator import (
     WaitingListReservedCapacityCalculator,
 )
+from tapir.wirgarten.models import ProductType, Product
 from tapir.wirgarten.service.products import (
     get_product_price,
 )
@@ -110,3 +112,26 @@ class GlobalCapacityChecker:
             - float(capacity_used_by_the_current_subscriptions)
             + float(capacity_reserved_by_the_waiting_list_entries)
         )
+
+    @classmethod
+    def get_smallest_product(
+        cls, product_type: ProductType, reference_date: datetime.date, cache: dict
+    ) -> Product:
+        smallest_product = None
+        smallest_size = float("inf")
+        for product in TapirCache.get_products_with_product_type(
+            cache=cache, product_type_id=product_type.id
+        ):
+            price_object = get_product_price(
+                product=product, reference_date=reference_date, cache=cache
+            )
+            if price_object.size < smallest_size:
+                smallest_size = price_object.size
+                smallest_product = product
+
+        if smallest_product is None:
+            raise TapirImproperlyConfigured(
+                f"No product found for product type {product_type}"
+            )
+
+        return smallest_product

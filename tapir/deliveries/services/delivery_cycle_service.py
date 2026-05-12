@@ -1,8 +1,7 @@
 import datetime
 
-from django.core.exceptions import ImproperlyConfigured
-
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import (
@@ -43,7 +42,7 @@ class DeliveryCycleService:
         if cycle == ODD_WEEKS[0]:
             return not even_week
 
-        raise ImproperlyConfigured(f"Unknown delivery cycle: {cycle}")
+        raise TapirImproperlyConfigured(f"Unknown delivery cycle: {cycle}")
 
     @classmethod
     def is_week_delivered_in_custom_cycle(

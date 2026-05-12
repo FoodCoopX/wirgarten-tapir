@@ -1,9 +1,10 @@
 import datetime
 from decimal import Decimal
 
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.subscriptions import config
 from tapir.subscriptions.config import (
     SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED,
@@ -41,7 +42,7 @@ class SolidarityValidator:
                 amount_of_used_solidarity_in_euros = -amount
                 return amount_of_used_solidarity_in_euros < excess_solidarity
             case _:
-                raise ImproperlyConfigured(
+                raise TapirImproperlyConfigured(
                     f"Unknown solidarity mode: '{solidarity_mode}'"
                 )
 

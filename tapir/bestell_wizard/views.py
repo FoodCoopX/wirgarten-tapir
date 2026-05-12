@@ -58,9 +58,6 @@ from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
-from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
-    ProductTypeLowestFreeCapacityAfterDateCalculator,
-)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
@@ -638,23 +635,20 @@ class BestellWizardBaseDataApiView(APIView):
             if len(products) == 0:
                 continue
 
-            lowest_free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+            smallest_product = GlobalCapacityChecker.get_smallest_product(
                 product_type=product_type,
-                reference_date=contract_start_date,
                 cache=cache,
+                reference_date=contract_start_date,
             )
 
-            smallest_size = min(
-                [
-                    get_product_price(
-                        product=product,
-                        reference_date=contract_start_date,
-                        cache=cache,
-                    ).size
-                    for product in products
-                ],
-            )
-            if lowest_free_capacity < smallest_size:
+            if not GlobalCapacityChecker.is_there_enough_free_global_capacity_for_single_product_type(
+                order_for_a_single_product_type={smallest_product: 1},
+                product_type_id=product_type.id,
+                cache=cache,
+                member_id=None,
+                check_waiting_list_entries=True,
+                subscription_start_date=contract_start_date,
+            ):
                 ids.append(product_type.id)
                 continue
 

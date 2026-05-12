@@ -1,9 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.urls import reverse
 from django.views.generic import FormView
 
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.utils.config import Organization
 from tapir.utils.forms import ResetTestDataForm
 from tapir.utils.services.test_data_generation.data_generator import DataGenerator
@@ -21,7 +21,7 @@ class ResetTestData(LoginRequiredMixin, PermissionRequiredMixin, FormView):
 
     def form_valid(self, form):
         if not is_debug_instance():
-            raise ImproperlyConfigured("Don't reset data on non-debug instances.")
+            raise TapirImproperlyConfigured("Don't reset data on non-debug instances.")
 
         with transaction.atomic():
             DataGenerator.clear()

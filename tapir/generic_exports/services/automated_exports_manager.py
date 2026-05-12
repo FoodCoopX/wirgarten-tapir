@@ -1,9 +1,9 @@
 import datetime
 from zoneinfo import ZoneInfo
 
-from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.generic_exports.models import (
     CsvExport,
     AutomatedCsvExportResult,
@@ -75,7 +75,7 @@ class AutomatedExportsManager:
             return cls.get_datetime_of_latest_weekly_export(export)
         if export.automated_export_cycle == AutomatedExportCycle.DAILY:
             return cls.get_datetime_of_latest_daily_export(export)
-        raise ImproperlyConfigured(f"Unknown export cycle: {export}")
+        raise TapirImproperlyConfigured(f"Unknown export cycle: {export}")
 
     @classmethod
     def get_datetime_of_latest_yearly_export(cls, export: CsvExport | PdfExport):

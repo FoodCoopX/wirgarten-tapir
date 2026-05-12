@@ -1,0 +1,2 @@
+class TapirImproperlyConfigured(Exception):
+    pass

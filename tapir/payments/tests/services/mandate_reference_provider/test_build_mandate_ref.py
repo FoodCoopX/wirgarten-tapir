@@ -1,7 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.core.exceptions import ImproperlyConfigured
-
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -75,7 +74,7 @@ class TestBuildMandateRef(TapirUnitTest):
     ):
         member = MemberFactory.build(first_name="John", last_name="Doe", member_no=None)
 
-        with self.assertRaises(ImproperlyConfigured):
+        with self.assertRaises(TapirImproperlyConfigured):
             MandateReferenceProvider.build_mandate_ref(
                 member=member, pattern="{mitgliedsnummer_kurz}-{zufall}", cache={}
             )

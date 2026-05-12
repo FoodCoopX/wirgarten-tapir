@@ -1,10 +1,11 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ValidationError
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.payments.models import MemberPaymentRhythm, MemberPaymentRhythmChangeLogEntry
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -55,7 +56,7 @@ class MemberPaymentRhythmService:
             case MemberPaymentRhythm.Rhythm.YEARLY:
                 return [1]
             case _:
-                raise ImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
+                raise TapirImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
 
     @classmethod
     def get_month_index_relative_to_growing_period(
@@ -88,7 +89,7 @@ class MemberPaymentRhythmService:
             case MemberPaymentRhythm.Rhythm.YEARLY:
                 return 12
             case _:
-                raise ImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
+                raise TapirImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
 
     @classmethod
     def get_first_day_of_rhythm_period(
@@ -169,7 +170,7 @@ class MemberPaymentRhythmService:
         for choice in MemberPaymentRhythm.Rhythm.choices:
             if choice[1] == display_name:
                 return choice[0]
-        raise ImproperlyConfigured(
+        raise TapirImproperlyConfigured(
             f"Unknown display name for payment rhythm: {display_name}"
         )
 

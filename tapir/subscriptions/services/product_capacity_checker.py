@@ -50,7 +50,7 @@ class ProductCapacityChecker:
             - used_capacity
             - capacity_used_by_the_ordered_products
             + capacity_used_by_the_current_subscriptions
-            > 0
+            >= 0
         )
 
     @classmethod

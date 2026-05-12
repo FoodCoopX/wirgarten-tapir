@@ -1,8 +1,7 @@
 import datetime
 from typing import Literal
 
-from django.core.exceptions import ImproperlyConfigured
-
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.utils.shortcuts import get_next_sunday
 from tapir.wirgarten.models import GrowingPeriod
 
@@ -26,4 +25,4 @@ class SubscriptionChangeWeekToDateConverter:
         if boundary == "end":
             return min(sunday, growing_period.end_date)
 
-        raise ImproperlyConfigured(f"Unknown boundary: {boundary}")
+        raise TapirImproperlyConfigured(f"Unknown boundary: {boundary}")

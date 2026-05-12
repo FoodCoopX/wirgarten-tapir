@@ -1,11 +1,11 @@
 import datetime
 
 import nanoid
-from django.core.exceptions import ImproperlyConfigured
 from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.payments.services.mandate_reference_pattern_validator import (
     MandateReferencePatternValidator,
 )
@@ -145,6 +145,6 @@ class MandateReferenceProvider:
             token
         ) in MandateReferencePatternValidator.TOKENS_THAT_REQUIRE_A_MEMBER_NUMBER:
             if MandateReferencePatternValidator.get_token_with_braces(token) in pattern:
-                raise ImproperlyConfigured(
+                raise TapirImproperlyConfigured(
                     f"The pattern for mandate references is {pattern}, which uses a member number, but the given member does not have a member number: {member}"
                 )

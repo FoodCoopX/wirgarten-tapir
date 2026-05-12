@@ -1,9 +1,9 @@
 import datetime
 from decimal import Decimal
 
-from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Subquery, OuterRef, F, QuerySet, Case, When, DecimalField
 
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.wirgarten.models import Subscription, ProductPrice
 from tapir.wirgarten.service.products import get_product_price
 
@@ -23,7 +23,7 @@ class SubscriptionPriceCalculator:
             product=subscription.product, reference_date=reference_date, cache=cache
         )
         if price_object is None:
-            raise ImproperlyConfigured(
+            raise TapirImproperlyConfigured(
                 f"Can't find price for product {subscription.product} at {reference_date}"
             )
         return subscription.quantity * price_object.price

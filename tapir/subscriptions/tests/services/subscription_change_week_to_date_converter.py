@@ -1,12 +1,11 @@
 import datetime
 from unittest.mock import Mock
 
-from django.core.exceptions import ImproperlyConfigured
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
     SubscriptionChangeWeekToDateConverter,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetDateFromCalendarWeek(TapirUnitTest):
@@ -84,7 +83,7 @@ class TestGetDateFromCalendarWeek(TapirUnitTest):
             datetime.date(year=2026, month=1, day=1),
             datetime.date(year=2026, month=12, day=31),
         )
-        with self.assertRaises(ImproperlyConfigured):
+        with self.assertRaises(TapirImproperlyConfigured):
             SubscriptionChangeWeekToDateConverter.get_date_from_calendar_week(
                 week=10, growing_period=growing_period, boundary="invalid"
             )

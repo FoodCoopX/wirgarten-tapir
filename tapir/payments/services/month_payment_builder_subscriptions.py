@@ -3,8 +3,8 @@ from datetime import date
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
-from django.core.exceptions import ImproperlyConfigured
 
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.subscription_price_type_decider import (
     SubscriptionPricingStrategyDecider,
@@ -374,4 +374,4 @@ class MonthPaymentBuilderSubscriptions:
             return 2
         if delivery_cycle in {EVERY_FOUR_WEEKS[0], CUSTOM_CYCLE[0]}:
             return 1
-        raise ImproperlyConfigured("Unknown delivery cycle: " + delivery_cycle)
+        raise TapirImproperlyConfigured("Unknown delivery cycle: " + delivery_cycle)

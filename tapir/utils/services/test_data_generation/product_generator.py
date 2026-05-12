@@ -1,9 +1,8 @@
 import datetime
 
-from django.core.exceptions import ImproperlyConfigured
-
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.configuration.models import TapirParameter
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.utils.config import Organization
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, NO_DELIVERY, EVERY_FOUR_WEEKS
@@ -131,7 +130,9 @@ class ProductGenerator:
             case Organization.MM:
                 cls.generate_products_mm(product_type_ernteanteile=ernteanteile)
             case _:
-                raise ImproperlyConfigured(f"Unknown organization type: {organization}")
+                raise TapirImproperlyConfigured(
+                    f"Unknown organization type: {organization}"
+                )
 
     @classmethod
     def generate_products_verein(cls, product_type_ernteanteile: ProductType):

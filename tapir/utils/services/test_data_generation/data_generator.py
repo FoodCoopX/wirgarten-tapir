@@ -1,10 +1,10 @@
 import datetime
 
 import factory.random
-from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.log.models import LogEntry
 from tapir.payments.models import MemberCredit
 from tapir.utils.config import Organization
@@ -163,6 +163,6 @@ class DataGenerator:
             return 5
         if generate_test_data_for == Organization.MM:
             return 5
-        raise ImproperlyConfigured(
+        raise TapirImproperlyConfigured(
             f"Unknown organization for test data generation: {generate_test_data_for}"
         )

@@ -1,9 +1,8 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.core.exceptions import ImproperlyConfigured
-
 from tapir.configuration.models import TapirParameter
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
@@ -121,7 +120,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         ).update(value=False)
         mock_is_contract_in_trial.return_value = False
 
-        with self.assertRaises(ImproperlyConfigured):
+        with self.assertRaises(TapirImproperlyConfigured):
             SubscriptionCancellationManager.cancel_subscriptions(
                 product, member, cache={}
             )

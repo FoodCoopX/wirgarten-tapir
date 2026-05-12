@@ -1,12 +1,11 @@
 from unittest.mock import patch, Mock
 
-from django.core.exceptions import ImproperlyConfigured
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.generic_exports.models import AutomatedExportCycle
 from tapir.generic_exports.services.automated_exports_manager import (
     AutomatedExportsManager,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetDatetimeOfLatestExport(TapirUnitTest):
@@ -96,7 +95,7 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
         export = Mock()
         export.automated_export_cycle = AutomatedExportCycle.NEVER
 
-        with self.assertRaises(ImproperlyConfigured):
+        with self.assertRaises(TapirImproperlyConfigured):
             AutomatedExportsManager.get_datetime_of_latest_export(export)
 
         for mock in [mock_yearly, mock_monthly, mock_weekly, mock_daily]:

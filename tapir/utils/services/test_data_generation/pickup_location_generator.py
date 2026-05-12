@@ -1,7 +1,6 @@
 import datetime
 
-from environ import ImproperlyConfigured
-
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.utils.config import Organization
 from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
@@ -26,7 +25,7 @@ class PickupLocationGenerator:
             case Organization.MM:
                 cls.generate_pickup_locations_for_mm()
             case _:
-                raise ImproperlyConfigured(f"Unknown organization: {organization}")
+                raise TapirImproperlyConfigured(f"Unknown organization: {organization}")
 
     @classmethod
     def generate_pickup_locations_for_wirgarten(cls):

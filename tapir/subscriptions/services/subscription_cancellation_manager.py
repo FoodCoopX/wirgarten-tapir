@@ -1,6 +1,5 @@
-from django.core.exceptions import ImproperlyConfigured
-
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Product, Member
@@ -85,7 +84,7 @@ class SubscriptionCancellationManager:
                 not TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
                 and not auto_renew_enabled
             ):
-                raise ImproperlyConfigured(
+                raise TapirImproperlyConfigured(
                     "Subscriptions outside of trial period can only be cancelled if auto renew is enabled"
                 )
 
