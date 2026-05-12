@@ -4,6 +4,7 @@ from unittest.mock import patch, Mock
 from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.models import TapirParameter
+from tapir.deliveries.models import DeliveryDayAdjustment
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
@@ -39,6 +40,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        cls._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=4)
 
     def test_buildDeliveryObject_noSubscriptionWithDeliveryOnGivenWeek_returnsNone(
         self,
@@ -83,6 +85,27 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self.assertIsNotNone(delivery_object)
         self.assertEqual(updated_delivery_date, delivery_object["delivery_date"])
         mock_update_delivery_date_to_opening_times.assert_called_once()
+
+    def test_buildDeliveryObject_deliveryDateAdjusted_returnsAdjustedDeliveryDate(self):
+        member = MemberFactory.create()
+        subscription = SubscriptionFactory.create(member=member)
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+
+        DeliveryDayAdjustment.objects.create(
+            adjusted_weekday=2, growing_period=subscription.period, calendar_week=23
+        )
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNotNone(delivery_object)
+        self.assertEqual(
+            datetime.date(year=2023, month=6, day=7), delivery_object["delivery_date"]
+        )
 
     @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")

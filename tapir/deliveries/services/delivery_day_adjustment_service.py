@@ -9,7 +9,7 @@ class DeliveryDayAdjustmentService:
     @classmethod
     def get_adjusted_delivery_weekday(
         cls, delivery_date: datetime.date, cache: dict
-    ) -> int | None:
+    ) -> int:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=delivery_date, cache=cache
         )

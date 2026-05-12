@@ -1,7 +1,11 @@
 import datetime
 from typing import Set
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
+from tapir.deliveries.services.delivery_day_adjustment_service import (
+    DeliveryDayAdjustmentService,
+)
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.deliveries.services.weeks_without_delivery_service import (
@@ -22,6 +26,7 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 
 
@@ -79,6 +84,15 @@ class GetDeliveriesService:
                 opening_times, delivery_date
             )
         )
+        adjusted_weekday = DeliveryDayAdjustmentService.get_adjusted_delivery_weekday(
+            delivery_date=delivery_date, cache=cache
+        )
+        if adjusted_weekday != get_parameter_value(
+            key=ParameterKeys.DELIVERY_DAY, cache=cache
+        ):
+            delivery_date = get_monday(delivery_date) + datetime.timedelta(
+                days=adjusted_weekday
+            )
 
         joker_used = JokerManagementService.does_member_have_a_joker_in_week(
             member=member, reference_date=delivery_date, cache=cache
