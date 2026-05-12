@@ -112,7 +112,26 @@ const MemberProfilePaymentRhythmModal: React.FC<
           <h5 className={"mb-0"}>Zahlungsintervall bearbeiten</h5>
           <TapirHelpButton
             text={
-              'Nur du als Admin kannst das Zahlungsintervall ändern. Die Änderung gilt immer erst ab Ende des aktuellen Zahlungsintervalls. Das heißt, wenn vorher "halbjährlich" vorlag, wird erst zum Ende des bereits bezahlten Intervalls auf das neue Intervall umgestellt.'
+              <>
+                <p>
+                  Nur du als Admin kannst das Zahlungsintervall ändern. Das
+                  Datum, zu dem die Änderung gilt, wird dir angezeigt.
+                </p>
+                <ul>
+                  <li>
+                    Wenn das Mitglied noch keine regelmäßige Zahlung hat (kein
+                    Vertrag, kein Solibeitrag), dann wird das Intervall ab
+                    sofort gesetzt. Neue Mitglieder oder Fördermitglieder, die
+                    ein Vertrag abschließen, nutzen dann sofort das neue
+                    Intervall.
+                  </li>
+                  <li>
+                    Wenn das Mitglied schon regelmäßige Zahlungen hat, dann
+                    passiert der Wechsel am Ende des aktuellem Intervall (z.B.
+                    nach Ablauf des Halbjahres, welches schon bezahlt wurde).
+                  </li>
+                </ul>
+              </>
             }
           />
         </div>
