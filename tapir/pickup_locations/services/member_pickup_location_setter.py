@@ -22,10 +22,10 @@ class MemberPickupLocationSetter:
     @classmethod
     def link_member_to_pickup_location(
         cls,
-        pickup_location_id,
+        pickup_location_id: str | None,
         member: Member,
         valid_from: datetime.date,
-        actor: TapirUser,
+        actor: TapirUser | None,
         cache: dict,
     ):
         old_pickup_location = MemberPickupLocationGetter.get_member_pickup_location(
@@ -49,7 +49,7 @@ class MemberPickupLocationSetter:
             user=member,
         ).save()
 
-        if old_pickup_location is not None:
+        if old_pickup_location is not None and pickup_location_id is not None:
             TransactionalTrigger.fire_action(
                 TransactionalTriggerData(
                     key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,

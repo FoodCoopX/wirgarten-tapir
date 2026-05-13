@@ -1,7 +1,6 @@
 import datetime
 
 from django.urls import reverse
-from icecream import ic
 
 from tapir.payments.config import IntendedUseTokens
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -66,7 +65,6 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         data = response.json()
-        ic(data)
         self.assertEqual(
             "Diese Zeile: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' ist zu lang wenn die Tokens expandiert sind.",
             data["error"],

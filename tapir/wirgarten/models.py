@@ -540,7 +540,9 @@ class MemberPickupLocation(TapirModel):
         )
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
+    pickup_location = models.ForeignKey(
+        PickupLocation, on_delete=models.PROTECT, null=True
+    )
     valid_from = models.DateField()
 
     def __str__(self):

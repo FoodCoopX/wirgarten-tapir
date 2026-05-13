@@ -39,7 +39,11 @@ class PickupLocationChangedLogEntry(LogEntry):
         old_pickup_location: PickupLocation | None,
     ):
         super().populate(actor, user)
-        self.new_pickup_location_name = member_pickup_location.pickup_location.name
+        self.new_pickup_location_name = (
+            member_pickup_location.pickup_location.name
+            if member_pickup_location.pickup_location is not None
+            else "Keine"
+        )
         self.old_pickup_location_name = (
             old_pickup_location.name if old_pickup_location is not None else "Keine"
         )
