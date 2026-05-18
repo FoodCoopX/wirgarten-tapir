@@ -161,6 +161,11 @@ const EXPLANATION_TEXT = (
       hochgerechnet.
     </p>
     <p>
+      Wenn deine Verteilstation einen Lieferzuschlag erhebt, wird dieser pro
+      Lieferung berechnet (z.B. 2,00 € pro Lieferung, bei 4 Lieferungen im
+      Monat 8,00 €). Lieferzuschläge entfallen bei Jokern und Spenden.
+    </p>
+    <p>
       In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die
       nächsten 12 Monate angezeigt. Sie passen sich automatisch je nach deinen
       Aktionen (z.B. Zeichnung weiterer Anteile) an.
@@ -226,8 +231,19 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
               {trialPeriodText(extendedPayment, trialPeriodEnabled)}
             </span>
           )}
+          {extendedPayment.payment.type === "payment_type_delivery_charge" && (
+            <span>
+              {extendedPayment.deliveryChargePickupLocation
+                ? `Lieferzuschlag Verteilstation ${extendedPayment.deliveryChargePickupLocation.name}`
+                : "Lieferzuschlag"}
+              {partialMonthText(extendedPayment)}
+              {trialPeriodText(extendedPayment, trialPeriodEnabled)}
+            </span>
+          )}
           {(extendedPayment.subscriptions.length > 0 ||
-            extendedPayment.solidarityContributions.length > 0) && (
+            extendedPayment.solidarityContributions.length > 0 ||
+            extendedPayment.payment.type ===
+              "payment_type_delivery_charge") && (
             <span>
               {formatDateNumeric(getStartDate(extendedPayment))}
               {" -> "}

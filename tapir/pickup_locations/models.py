@@ -1,9 +1,46 @@
 from django.db import models
+from django.db.models import Index, UniqueConstraint
 
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry
 from tapir.wirgarten.models import Product, PickupLocation, MemberPickupLocation
+
+
+class PickupLocationDeliveryCharge(TapirModel):
+    """
+    Time-dependent extra charge that applies once per delivery day for members
+    assigned to this pickup location. Mirrors the ProductPrice validity-row pattern.
+    """
+
+    pickup_location = models.ForeignKey(
+        PickupLocation, on_delete=models.CASCADE, editable=False, null=False
+    )
+    amount = models.DecimalField(
+        decimal_places=2, max_digits=8, editable=False, null=False
+    )
+    valid_from = models.DateField(null=False, editable=False)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["pickup_location", "valid_from"],
+                name="unique_pickup_location_delivery_charge_date",
+            )
+        ]
+        indexes = [
+            Index(
+                fields=["pickup_location"],
+                name="idx_pl_charge_location",
+            ),
+            Index(
+                fields=["-valid_from"],
+                name="idx_pl_charge_valid_from",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.pickup_location} - {self.amount} - {self.valid_from} - {self.id}"
 
 
 class ProductBasketSizeEquivalence(TapirModel):

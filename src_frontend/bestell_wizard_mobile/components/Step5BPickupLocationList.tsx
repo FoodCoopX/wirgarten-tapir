@@ -7,6 +7,7 @@ import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
 
 interface Step5BPickupLocationListProps {
   pickupLocations: PublicPickupLocation[];
@@ -102,6 +103,21 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
     }
   }, [tabIsActive]);
 
+  function buildDeliveryChargeBadge(pickupLocation: PublicPickupLocation) {
+    const amount = Number.parseFloat(pickupLocation.currentDeliveryCharge);
+    if (!amount) {
+      return null;
+    }
+    return (
+      <>
+        <br />
+        <span className={"text-warning"}>
+          + {formatCurrency(amount)} pro Lieferung
+        </span>
+      </>
+    );
+  }
+
   function sortPickupLocations(
     a: PublicPickupLocation,
     b: PublicPickupLocation,
@@ -142,6 +158,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
         >
           <small style={{ lineHeight: "0" }}>
             <strong>{pickupLocation.name}</strong>
+            {buildDeliveryChargeBadge(pickupLocation)}
             <br />
             {buildCapacityIndicator(pickupLocation)}
             <br />

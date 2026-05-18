@@ -15,6 +15,7 @@ import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilte
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -130,6 +131,18 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
     return "marker-icon.png";
   }
 
+  function buildDeliveryChargeBadge(pickupLocation: PublicPickupLocation) {
+    const amount = Number.parseFloat(pickupLocation.currentDeliveryCharge);
+    if (!amount) {
+      return null;
+    }
+    return (
+      <span className={"text-warning"}>
+        + {formatCurrency(amount)} pro Lieferung
+      </span>
+    );
+  }
+
   function getPopupButtonText(pickupLocation: PublicPickupLocation) {
     if (
       !wouldTheOrderFitTheProductCapacities(
@@ -202,6 +215,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
               }
             >
               <strong>{pickupLocation.name}</strong>
+              {buildDeliveryChargeBadge(pickupLocation)}
               {pickupLocationsWithCapacityFull.has(pickupLocation) ? (
                 <span className={"text-danger"}>Ausgelastet</span>
               ) : (

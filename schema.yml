@@ -1758,6 +1758,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/PickupLocationCapacityEvolution'
           description: ''
+  /pickup_locations/api/pickup_location_delivery_charges:
+    get:
+      operationId: pickup_locations_api_pickup_location_delivery_charges_retrieve
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationDeliveryChargesResponse'
+          description: ''
+    post:
+      operationId: pickup_locations_api_pickup_location_delivery_charges_create
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationDeliveryChargeCreateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationDeliveryChargeCreateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationDeliveryChargeCreateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /pickup_locations/pickup_locations/:
     get:
       operationId: pickup_locations_pickup_locations_list
@@ -7403,8 +7457,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SolidarityContribution'
+        delivery_charge_pickup_location:
+          allOf:
+          - $ref: '#/components/schemas/PublicPickupLocation'
+          nullable: true
       required:
       - coop_share_transactions
+      - delivery_charge_pickup_location
       - payment
       - solidarity_contributions
       - subscriptions
@@ -9546,6 +9605,54 @@ components:
       required:
       - data_points
       - table_headers
+    PickupLocationDeliveryChargeCreateRequestRequest:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+          minLength: 1
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        valid_from:
+          type: string
+          format: date
+      required:
+      - amount
+      - pickup_location_id
+      - valid_from
+    PickupLocationDeliveryChargeEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        valid_from:
+          type: string
+          format: date
+      required:
+      - amount
+      - id
+      - valid_from
+    PickupLocationDeliveryChargesResponse:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+        pickup_location_name:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationDeliveryChargeEntry'
+      required:
+      - entries
+      - pickup_location_id
+      - pickup_location_name
     PickupLocationOpeningTime:
       type: object
       properties:
@@ -9912,10 +10019,16 @@ components:
           items:
             $ref: '#/components/schemas/PickupLocationOpeningTime'
           readOnly: true
+        current_delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          readOnly: true
       required:
       - city
       - coords_lat
       - coords_lon
+      - current_delivery_charge
       - name
       - opening_times
       - postcode

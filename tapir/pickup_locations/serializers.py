@@ -2,7 +2,11 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import PickupLocationOpeningTimeSerializer
+from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
+    PickupLocationDeliveryChargeService,
+)
 from tapir.wirgarten.models import PickupLocation, PickupLocationOpeningTime
+from tapir.wirgarten.utils import get_today
 
 
 class ProductBasketSizeEquivalenceSerializer(serializers.Serializer):
@@ -52,9 +56,11 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             "postcode",
             "city",
             "opening_times",
+            "current_delivery_charge",
         ]
 
     opening_times = serializers.SerializerMethodField()
+    current_delivery_charge = serializers.SerializerMethodField()
 
     @extend_schema_field(PickupLocationOpeningTimeSerializer(many=True))
     def get_opening_times(self, pickup_location: PickupLocation):
@@ -62,6 +68,16 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             PickupLocationOpeningTime.objects.filter(pickup_location=pickup_location),
             many=True,
         ).data
+
+    @extend_schema_field(serializers.DecimalField(max_digits=8, decimal_places=2))
+    def get_current_delivery_charge(self, pickup_location: PickupLocation):
+        cache = self.context.get("cache", {})
+        amount = PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
+            pickup_location_id=pickup_location.id,
+            reference_date=get_today(cache=cache),
+            cache=cache,
+        )
+        return str(amount)
 
 
 class PickupLocationCapacityCheckResponseSerializer(serializers.Serializer):
@@ -72,3 +88,21 @@ class PickupLocationCapacityCheckRequestSerializer(serializers.Serializer):
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
     pickup_location_id = serializers.CharField()
     growing_period_id = serializers.CharField(allow_null=True)
+
+
+class PickupLocationDeliveryChargeEntrySerializer(serializers.Serializer):
+    id = serializers.CharField()
+    amount = serializers.DecimalField(max_digits=8, decimal_places=2)
+    valid_from = serializers.DateField()
+
+
+class PickupLocationDeliveryChargesResponseSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField()
+    pickup_location_name = serializers.CharField()
+    entries = PickupLocationDeliveryChargeEntrySerializer(many=True)
+
+
+class PickupLocationDeliveryChargeCreateRequestSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField()
+    amount = serializers.DecimalField(max_digits=8, decimal_places=2, min_value=0)
+    valid_from = serializers.DateField()
