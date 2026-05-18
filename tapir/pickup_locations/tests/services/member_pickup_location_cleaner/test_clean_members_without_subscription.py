@@ -23,10 +23,11 @@ class TestCleanMembersWithoutSubscription(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
-        cls.member = MemberFactory.create()
         cls.pickup_location = PickupLocationFactory.create()
 
-    def setUp(self) -> None:
+    def setUp(self):
+        super().setUp()
+        self.member = MemberFactory.create()
         self.now = mock_timezone(
             test=self, now=datetime.datetime(year=2029, month=6, day=29)
         )
