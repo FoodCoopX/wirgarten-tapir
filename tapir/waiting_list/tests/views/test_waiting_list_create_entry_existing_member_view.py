@@ -110,6 +110,10 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         self.assertEqual(200, response.status_code)
         response_content = response.json()
         self.assert_order_confirmed(response_content)
+        member_profile_url = reverse(
+            "wirgarten:member_detail", kwargs={"pk": member.id}
+        )
+        self.assertEqual(member_profile_url, response_content["redirect_url"])
 
         self.assertEqual(1, WaitingListEntry.objects.count())
         entry = WaitingListEntry.objects.get()

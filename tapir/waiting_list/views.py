@@ -701,7 +701,11 @@ class WaitingListCreateEntryExistingMemberView(APIView):
         except ValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
-                    {"order_confirmed": False, "error": error.message}
+                    {
+                        "order_confirmed": False,
+                        "error": error.message,
+                        "redirect_url": None,
+                    }
                 ).data
             )
 
@@ -722,10 +726,16 @@ class WaitingListCreateEntryExistingMemberView(APIView):
                 existing_member_id=member_id,
                 entry=entry,
             )
-
+        member_profile_url = reverse(
+            "wirgarten:member_detail", kwargs={"pk": member.id}
+        )
         return Response(
             OrderConfirmationResponseSerializer(
-                {"order_confirmed": True, "error": None}
+                {
+                    "order_confirmed": True,
+                    "error": None,
+                    "redirect_url": member_profile_url,
+                }
             ).data
         )
 
