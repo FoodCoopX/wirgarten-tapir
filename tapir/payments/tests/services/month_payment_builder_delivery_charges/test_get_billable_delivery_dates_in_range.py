@@ -1,11 +1,13 @@
 import datetime
-from decimal import Decimal
+from unittest.mock import Mock, patch
 
+from tapir.configuration.models import TapirParameter
 from tapir.deliveries.tests.factories import DeliveryDonationFactory, JokerFactory
 from tapir.payments.services.month_payment_builder_delivery_charges import (
     MonthPaymentBuilderDeliveryCharges,
 )
 from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.models import PickupLocationOpeningTime
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -23,9 +25,29 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
     @classmethod
+    def setUpClass(cls):
+        # setUpTestData creates a Member, which triggers KeycloakUserManager. The
+        # CI environment doesn't have keycloak reachable and TapirIntegrationTest.setUp
+        # mocks it only per-instance; install the same mock at class scope so that
+        # setUpTestData (which runs inside setUpClass before setUp) is also covered.
+        keycloak_patcher = patch(
+            "tapir.accounts.services.keycloak_user_manager.KeycloakUserManager.get_keycloak_client"
+        )
+        mock_get_client = keycloak_patcher.start()
+        cls.addClassCleanup(keycloak_patcher.stop)
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
+        keycloak_ids: dict[str, str] = {}
+        mock_client.get_user_id.side_effect = lambda email: keycloak_ids.get(email)
+        mock_client.create_user.side_effect = lambda data: keycloak_ids.setdefault(
+            data["email"], f"Mock Keycloak ID for {data['email']}"
+        )
+        mock_client.delete_user.side_effect = lambda keycloak_id: None
+        super().setUpClass()
+
+    @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
-        from tapir.configuration.models import TapirParameter
 
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DAY).update(value="2")
         TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
@@ -44,7 +66,6 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
         )
 
         cls.pickup_location = PickupLocationFactory.create()
-        from tapir.wirgarten.models import PickupLocationOpeningTime
 
         PickupLocationOpeningTime.objects.create(
             pickup_location=cls.pickup_location,
