@@ -239,7 +239,7 @@ class TestUpdateMemberSolidarityContributionApiView(TapirIntegrationTest):
             member_id=target.id,
             amount=Decimal("-5"),
             start_date=self.growing_period.start_date,
-            end_date=self.CONTRACT_START_DATE - datetime.timedelta(days=1),
+            end_date=self.CONTRACT_START_DATE,
             trial_disabled=False,
             trial_end_date_override=None,
         )

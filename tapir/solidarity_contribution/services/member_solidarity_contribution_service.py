@@ -50,8 +50,13 @@ class MemberSolidarityContributionService:
             .order_by("start_date")
             .last()
         )
+
+        if amount == 0:
+            end_date = change_date
+        else:
+            end_date = change_date - datetime.timedelta(days=1)
         member_contributions.filter(end_date__gte=change_date).update(
-            end_date=change_date - datetime.timedelta(days=1),
+            end_date=end_date,
             cancellation_ts=get_now(cache=cache),
         )
         if last_contribution:

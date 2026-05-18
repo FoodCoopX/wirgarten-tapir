@@ -718,8 +718,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         contribution = SolidarityContribution.objects.get()
         self.assertEqual(Decimal(12), contribution.amount)
 
-        # since we are still in trial the mocked today is before the weekday change limit, the change happens today.
-        # With the changes happening today, the new contribution value (0) is valid from today. So the previous contribution must end yesterday
         self.assertEqual(
-            datetime.date(year=2013, month=1, day=19), contribution.end_date
+            datetime.date(year=2013, month=1, day=20), contribution.end_date
         )
