@@ -92,6 +92,12 @@ class MonthPaymentBuilderDeliveryCharges:
         cache: dict,
     ) -> Decimal:
         if not contracts:
+            # The production caller (build_payment_for_contract_and_member) always
+            # passes a non-empty set, but get_total_to_pay is also part of the public
+            # total_to_pay_function contract and may be invoked directly with no
+            # contracts (e.g. when a future builder iterates a member who has none
+            # in the current rhythm window). Returning 0 keeps that contract total,
+            # rather than crashing on the next(iter(contracts)) below.
             return Decimal(0)
 
         member_id = next(iter(contracts)).member_id

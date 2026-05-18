@@ -19,12 +19,18 @@ class TestBuildPaymentForMonth(TapirUnitTest):
     @patch.object(
         MonthPaymentBuilderDeliveryCharges,
         "build_payments_for_delivery_charges",
+        autospec=True,
     )
     @patch.object(
         MonthPaymentBuilderSolidarityContributions,
         "build_payments_for_solidarity_contributions",
+        autospec=True,
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "build_payments_for_subscriptions")
+    @patch.object(
+        MonthPaymentBuilderSubscriptions,
+        "build_payments_for_subscriptions",
+        autospec=True,
+    )
     def test_buildPaymentsForMonth_default_returnsPaymentsFromAllBuilders(
         self,
         mock_build_payments_for_subscriptions: Mock,

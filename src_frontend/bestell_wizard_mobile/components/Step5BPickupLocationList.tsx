@@ -7,7 +7,7 @@ import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 
 interface Step5BPickupLocationListProps {
   pickupLocations: PublicPickupLocation[];
@@ -103,21 +103,6 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
     }
   }, [tabIsActive]);
 
-  function buildDeliveryChargeBadge(pickupLocation: PublicPickupLocation) {
-    const amount = Number.parseFloat(pickupLocation.currentDeliveryCharge);
-    if (!amount) {
-      return null;
-    }
-    return (
-      <>
-        <br />
-        <span className={"text-warning"}>
-          + {formatCurrency(amount)} pro Lieferung
-        </span>
-      </>
-    );
-  }
-
   function sortPickupLocations(
     a: PublicPickupLocation,
     b: PublicPickupLocation,
@@ -141,7 +126,9 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
 
   return (
     <ListGroup style={{ maxHeight: "50dvh", overflow: "scroll" }}>
-      {pickupLocations.toSorted(sortPickupLocations).map((pickupLocation) => (
+      {pickupLocations.toSorted(sortPickupLocations).map((pickupLocation) => {
+        const deliveryChargeBadge = buildDeliveryChargeBadge(pickupLocation);
+        return (
         <ListGroupItem
           key={pickupLocation.id}
           style={{
@@ -158,7 +145,12 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
         >
           <small style={{ lineHeight: "0" }}>
             <strong>{pickupLocation.name}</strong>
-            {buildDeliveryChargeBadge(pickupLocation)}
+            {deliveryChargeBadge && (
+              <>
+                <br />
+                {deliveryChargeBadge}
+              </>
+            )}
             <br />
             {buildCapacityIndicator(pickupLocation)}
             <br />
@@ -174,7 +166,8 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
             <small>{formatOpeningTimes(pickupLocation)}</small>
           </small>
         </ListGroupItem>
-      ))}
+        );
+      })}
     </ListGroup>
   );
 };

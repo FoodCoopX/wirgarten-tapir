@@ -4,9 +4,11 @@ from decimal import Decimal
 from django.urls import reverse
 
 from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.pickup_locations.tests.factories import (
+    PickupLocationDeliveryChargeFactory,
+)
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
-    PickupLocationDeliveryChargeFactory,
     PickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest

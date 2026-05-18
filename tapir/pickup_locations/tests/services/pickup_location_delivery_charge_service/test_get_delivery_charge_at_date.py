@@ -4,9 +4,11 @@ from decimal import Decimal
 from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
     PickupLocationDeliveryChargeService,
 )
+from tapir.pickup_locations.tests.factories import (
+    PickupLocationDeliveryChargeFactory,
+)
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
-    PickupLocationDeliveryChargeFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 

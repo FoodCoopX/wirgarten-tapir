@@ -94,11 +94,15 @@ const PickupLocationDeliveryChargeModal: React.FC<
     ) as HTMLFormElement;
     if (!form.reportValidity()) return;
 
-    setSaving(true);
-
     const pickupLocationId = getParameterFromUrl(
       URL_PARAMETER_PICKUP_LOCATION_ID,
     );
+    if (!pickupLocationId) {
+      alert("Kein Abholort ausgewählt.");
+      return;
+    }
+
+    setSaving(true);
 
     api
       .pickupLocationsApiPickupLocationDeliveryChargesCreate({
@@ -126,7 +130,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
     }
     return (
       <span>
-        {formatAmount(currentEntry.amount)} — gültig seit{" "}
+        {formatAmount(currentEntry.amount)} - gültig seit{" "}
         {formatDateNumeric(new Date(currentEntry.validFrom))}
       </span>
     );

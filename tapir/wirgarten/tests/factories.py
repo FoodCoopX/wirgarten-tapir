@@ -8,7 +8,6 @@ from dateutil.relativedelta import relativedelta
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
 from tapir.wirgarten.constants import NO_DELIVERY
-from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     ExportedFile,
@@ -205,17 +204,6 @@ class MemberPickupLocationFactory(
 
     member = factory.SubFactory(MemberFactory)
     pickup_location = factory.SubFactory(PickupLocationFactory)
-    valid_from = TODAY - relativedelta(months=1)
-
-
-class PickupLocationDeliveryChargeFactory(
-    factory.django.DjangoModelFactory[PickupLocationDeliveryCharge]
-):
-    class Meta:
-        model = PickupLocationDeliveryCharge
-
-    pickup_location = factory.SubFactory(PickupLocationFactory)
-    amount = factory.Faker("pydecimal", left_digits=2, right_digits=2, positive=True)
     valid_from = TODAY - relativedelta(months=1)
 
 

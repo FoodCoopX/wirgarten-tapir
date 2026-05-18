@@ -35,6 +35,9 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
+from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
+    PickupLocationDeliveryChargeService,
+)
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
 )
@@ -500,20 +503,12 @@ class PickupLocationDeliveryChargesView(APIView):
             PickupLocation,
             id=request_serializer.validated_data["pickup_location_id"],
         )
-        amount = request_serializer.validated_data["amount"]
-        valid_from = request_serializer.validated_data["valid_from"]
 
-        existing = PickupLocationDeliveryCharge.objects.filter(
-            pickup_location=pickup_location, valid_from=valid_from
-        ).first()
-        if existing is not None:
-            existing.amount = amount
-            existing.save()
-        else:
-            PickupLocationDeliveryCharge.objects.create(
-                pickup_location=pickup_location,
-                amount=amount,
-                valid_from=valid_from,
-            )
+        PickupLocationDeliveryChargeService.save_charge(
+            pickup_location=pickup_location,
+            amount=request_serializer.validated_data["amount"],
+            valid_from=request_serializer.validated_data["valid_from"],
+            cache={},
+        )
 
         return Response("OK", status=status.HTTP_200_OK)

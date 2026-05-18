@@ -1,8 +1,10 @@
 import datetime
 from decimal import Decimal
 
+from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import PickupLocation
 
 
 class PickupLocationDeliveryChargeService:
@@ -35,3 +37,24 @@ class PickupLocationDeliveryChargeService:
             return charges[0].amount
 
         return get_from_cache_or_compute(charge_by_date_cache, reference_date, compute)
+
+    @classmethod
+    def save_charge(
+        cls,
+        pickup_location: PickupLocation,
+        amount: Decimal,
+        valid_from: datetime.date,
+        cache: dict,
+    ) -> PickupLocationDeliveryCharge:
+        existing = PickupLocationDeliveryCharge.objects.filter(
+            pickup_location=pickup_location, valid_from=valid_from
+        ).first()
+        if existing is not None:
+            existing.amount = amount
+            existing.save()
+            return existing
+        return PickupLocationDeliveryCharge.objects.create(
+            pickup_location=pickup_location,
+            amount=amount,
+            valid_from=valid_from,
+        )

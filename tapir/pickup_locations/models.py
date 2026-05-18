@@ -40,7 +40,7 @@ class PickupLocationDeliveryCharge(TapirModel):
         ]
 
     def __str__(self):
-        return f"{self.pickup_location} - {self.amount} - {self.valid_from} - {self.id}"
+        return f"PickupLocationDeliveryCharge({self.pickup_location_id}, {self.amount}, {self.valid_from}, {self.id})"
 
 
 class ProductBasketSizeEquivalence(TapirModel):
