@@ -1,12 +1,28 @@
 import dayjs from "dayjs";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
 import React, { useEffect, useState } from "react";
-import { Alert, Col, Form, Modal, Row, Spinner } from "react-bootstrap";
-import { CoopApi, Member, Subscription, SubscriptionsApi } from "../api-client";
+import {
+  Alert,
+  Col,
+  Form,
+  ListGroup,
+  Modal,
+  Row,
+  Spinner,
+} from "react-bootstrap";
+import {
+  CoopApi,
+  Member,
+  SolidarityContribution,
+  SolidarityContributionApi,
+  Subscription,
+  SubscriptionsApi,
+} from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import formatSubscription from "../utils/formatSubscription.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -66,6 +82,10 @@ const SubscriptionChangeDatesModal: React.FC<
   SubscriptionChangeDatesModalProps
 > = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+  const solidarityContributionApi = useApi(
+    SolidarityContributionApi,
+    csrfToken,
+  );
   const coopApi = useApi(CoopApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription>();
@@ -79,6 +99,10 @@ const SubscriptionChangeDatesModal: React.FC<
   const [error, setError] = useState<string>();
   const [startDateIsPeriodStart, setStartDateIsPeriodStart] = useState(false);
   const [endDateIsPeriodEnd, setEndDateIsPeriodEnd] = useState(false);
+  const [solidarityContributions, setSolidarityContributions] = useState<
+    SolidarityContribution[]
+  >([]);
+  const [updateSoliEndDate, setUpdateSoliEndDate] = useState(false);
 
   dayjs.extend(WeekOfYear);
   dayjs.locale("de");
@@ -112,7 +136,33 @@ const SubscriptionChangeDatesModal: React.FC<
       return;
     }
 
-    coopApi.coopMembersRetrieve({ id: memberId }).then(setMemberData);
+    coopApi
+      .coopMembersRetrieve({ id: memberId })
+      .then(setMemberData)
+      .catch(
+        async (error) =>
+          await handleRequestError(
+            error,
+            "Fehler bei der Laden der Mitgliedsdaten",
+            setToastDatas,
+          ),
+      );
+
+    solidarityContributionApi
+      .solidarityContributionApiMemberSolidarityContributionsRetrieve({
+        memberId: memberId,
+      })
+      .then((soliData) => {
+        setSolidarityContributions(soliData.contributions);
+      })
+      .catch(
+        async (error) =>
+          await handleRequestError(
+            error,
+            "Fehler bei der Laden der Solidarbeitragsdaten",
+            setToastDatas,
+          ),
+      );
   }, [memberId, show]);
 
   useEffect(() => {
@@ -141,6 +191,7 @@ const SubscriptionChangeDatesModal: React.FC<
           startWeek: startWeek,
           endDateIsOnPeriodEnd: endDateIsPeriodEnd,
           endWeek: endWeek,
+          updateSoliEndDate: updateSoliEndDate,
         },
       })
       .then((response) => {
@@ -212,103 +263,152 @@ const SubscriptionChangeDatesModal: React.FC<
     }
 
     return (
-      <>
-        <Row>
+      <ListGroup variant="flush">
+        <ListGroup.Item>
+          <div>
+            Aktuelle Vertragsdaten:
+            <ul>
+              <li>Produkt: {formatSubscription(subscription)}</li>
+              <li>Start: {formatDateNumeric(subscription.startDate)}</li>
+              <li>End: {formatDateNumeric(subscription.endDate)}</li>
+              {memberData && (
+                <li>
+                  Mitglied: {memberData.firstName} {memberData.lastName}{" "}
+                  {memberData.memberNo && "#" + memberData.memberNo}
+                </li>
+              )}
+            </ul>
+          </div>
+        </ListGroup.Item>
+        <ListGroup.Item>
+          {error && (
+            <Row className={"mt-4"}>
+              <Col>
+                <Alert variant={"danger"}>{error}</Alert>
+              </Col>
+            </Row>
+          )}
+          {subscription && (
+            <Row>
+              <Col>
+                <Form.Group>
+                  <Form.Label>
+                    <span
+                      className={"d-flex flex-row gap-2 align-items-center"}
+                    >
+                      Start-Datum
+                      <TapirHelpButton
+                        text={
+                          'Das neue Vertragsstart-Datum muss immer ein Montag sein, wenn du die Option "In einer bestimmten KW" wählst. Alternativ kannst du das Vertragsperioden-Startdatum auswählen.'
+                        }
+                        buttonSize={"sm"}
+                      />
+                    </span>
+                  </Form.Label>
+                  <Form.Select
+                    onChange={(event) =>
+                      setStartDateIsPeriodStart(event.target.value === "true")
+                    }
+                    value={startDateIsPeriodStart ? "true" : "false"}
+                    className={"mb-2"}
+                  >
+                    <option value={"true"}>
+                      Am erstem Tag der Vertragsperiode
+                    </option>
+                    <option value={"false"}>In einer bestimmten KW</option>
+                  </Form.Select>
+                  {!startDateIsPeriodStart && (
+                    <SubscriptionChangeDatesWeekInput
+                      week={startWeek}
+                      setWeek={setStartWeek}
+                      date={startDate}
+                    />
+                  )}
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group>
+                  <Form.Label>
+                    <span
+                      className={"d-flex flex-row gap-2 align-items-center"}
+                    >
+                      End-Datum
+                      <TapirHelpButton
+                        text={END_DATE_HELP_TEXT}
+                        buttonSize={"sm"}
+                      />
+                    </span>
+                  </Form.Label>
+                  <Form.Select
+                    onChange={(event) =>
+                      setEndDateIsPeriodEnd(event.target.value === "true")
+                    }
+                    value={endDateIsPeriodEnd ? "true" : "false"}
+                    className={"mb-2"}
+                  >
+                    <option value={"true"}>
+                      Am letztem Tag der Vertragsperiode
+                    </option>
+                    <option value={"false"}>In einer bestimmten KW</option>
+                  </Form.Select>
+                  {!endDateIsPeriodEnd && (
+                    <SubscriptionChangeDatesWeekInput
+                      week={endWeek}
+                      setWeek={setEndWeek}
+                      date={endDate}
+                    />
+                  )}
+                </Form.Group>
+              </Col>
+            </Row>
+          )}
+        </ListGroup.Item>
+        <ListGroup.Item>
           <Col>
-            <div>
-              Aktuelle Vertragsdaten:
-              <ul>
-                <li>Produkt: {formatSubscription(subscription)}</li>
-                <li>Start: {formatDateNumeric(subscription.startDate)}</li>
-                <li>End: {formatDateNumeric(subscription.endDate)}</li>
-                {memberData && (
-                  <li>
-                    Mitglied: {memberData.firstName} {memberData.lastName}{" "}
-                    {memberData.memberNo && "#" + memberData.memberNo}
-                  </li>
-                )}
-              </ul>
-            </div>
+            {solidarityContributions.length === 0 ? (
+              <span>Dieses Mitglied hat kein Solidarbeitrag</span>
+            ) : (
+              <>
+                <Form.Group>
+                  <Form.Check
+                    id={"soli_end_date"}
+                    checked={updateSoliEndDate}
+                    onChange={(e) => setUpdateSoliEndDate(e.target.checked)}
+                    label={
+                      <span className={"d-flex gap-2"}>
+                        <span>
+                          Soll das End-Datum des Solidarbeitrags zum ausgewählte
+                          Vertrag-End-Datum gesetzt werden?
+                        </span>
+                        <TapirHelpButton
+                          buttonSize={"sm"}
+                          text={
+                            "Solidarbeiträge die gültig sind am altem oder neuem End-Datum bekommen das gleiche End-Datum wie der Vertrag. " +
+                            "Ausgelaufene Solidarbeiträge werden nicht geändert. " +
+                            "Solidarbeiträge die nach dem neuem End-Datum starten werden gelöscht."
+                          }
+                        />
+                      </span>
+                    }
+                  />
+                </Form.Group>
+                <div>
+                  Solidarbeitrag für dieses Mitglied:
+                  <ul>
+                    {solidarityContributions.map((contribution) => (
+                      <li key={contribution.id}>
+                        {formatCurrency(Number.parseFloat(contribution.amount))}{" "}
+                        von {formatDateNumeric(contribution.startDate)} bis{" "}
+                        {formatDateNumeric(contribution.endDate)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            )}
           </Col>
-        </Row>
-        {error && (
-          <Row className={"mt-4"}>
-            <Col>
-              <Alert variant={"danger"}>{error}</Alert>
-            </Col>
-          </Row>
-        )}
-        {subscription && (
-          <Row>
-            <Col>
-              <Form.Group>
-                <Form.Label>
-                  <span className={"d-flex flex-row gap-2 align-items-center"}>
-                    Start-Datum
-                    <TapirHelpButton
-                      text={
-                        'Das neue Vertragsstart-Datum muss immer ein Montag sein, wenn du die Option "In einer bestimmten KW" wählst. Alternativ kannst du das Vertragsperioden-Startdatum auswählen.'
-                      }
-                      buttonSize={"sm"}
-                    />
-                  </span>
-                </Form.Label>
-                <Form.Select
-                  onChange={(event) =>
-                    setStartDateIsPeriodStart(event.target.value === "true")
-                  }
-                  value={startDateIsPeriodStart ? "true" : "false"}
-                  className={"mb-2"}
-                >
-                  <option value={"true"}>
-                    Am erstem Tag der Vertragsperiode
-                  </option>
-                  <option value={"false"}>In einer bestimmten KW</option>
-                </Form.Select>
-                {!startDateIsPeriodStart && (
-                  <SubscriptionChangeDatesWeekInput
-                    week={startWeek}
-                    setWeek={setStartWeek}
-                    date={startDate}
-                  />
-                )}
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group>
-                <Form.Label>
-                  <span className={"d-flex flex-row gap-2 align-items-center"}>
-                    End-Datum
-                    <TapirHelpButton
-                      text={END_DATE_HELP_TEXT}
-                      buttonSize={"sm"}
-                    />
-                  </span>
-                </Form.Label>
-                <Form.Select
-                  onChange={(event) =>
-                    setEndDateIsPeriodEnd(event.target.value === "true")
-                  }
-                  value={endDateIsPeriodEnd ? "true" : "false"}
-                  className={"mb-2"}
-                >
-                  <option value={"true"}>
-                    Am letztem Tag der Vertragsperiode
-                  </option>
-                  <option value={"false"}>In einer bestimmten KW</option>
-                </Form.Select>
-                {!endDateIsPeriodEnd && (
-                  <SubscriptionChangeDatesWeekInput
-                    week={endWeek}
-                    setWeek={setEndWeek}
-                    date={endDate}
-                  />
-                )}
-              </Form.Group>
-            </Col>
-          </Row>
-        )}
-      </>
+        </ListGroup.Item>
+      </ListGroup>
     );
   }
 

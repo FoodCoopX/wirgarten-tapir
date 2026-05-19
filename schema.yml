@@ -5849,13 +5849,12 @@ components:
           format: date-time
           nullable: true
         segment_data:
-          allOf:
-          - $ref: '#/components/schemas/SegmentData'
-          nullable: true
+          $ref: '#/components/schemas/SegmentData'
       required:
       - content
       - name
       - release_status
+      - segment_data
     BundledEmailConfigurationRequest:
       type: object
       properties:
@@ -5883,13 +5882,12 @@ components:
           format: date-time
           nullable: true
         segment_data:
-          allOf:
-          - $ref: '#/components/schemas/SegmentDataRequest'
-          nullable: true
+          $ref: '#/components/schemas/SegmentDataRequest'
       required:
       - content
       - name
       - release_status
+      - segment_data
     CabLoggedInUserChangeTargetsPaymentRhythmResponse:
       type: object
       properties:
@@ -8662,9 +8660,7 @@ components:
           format: date-time
           nullable: true
         segment_data:
-          allOf:
-          - $ref: '#/components/schemas/SegmentDataRequest'
-          nullable: true
+          $ref: '#/components/schemas/SegmentDataRequest'
     PatchedCsvExportModelRequest:
       type: object
       properties:
@@ -10662,12 +10658,15 @@ components:
         subscription_id:
           type: string
           minLength: 1
+        update_soli_end_date:
+          type: boolean
       required:
       - end_date_is_on_period_end
       - end_week
       - start_date_is_on_period_start
       - start_week
       - subscription_id
+      - update_soli_end_date
     SubscriptionPriceOverrideChangeRequestRequest:
       type: object
       properties:

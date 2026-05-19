@@ -12,6 +12,8 @@ from tapir.payments.services.mandate_reference_provider import MandateReferenceP
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -262,3 +264,95 @@ class TestPost(TapirIntegrationTest):
         self.assertEqual(member, member_credit.member)
 
         self.assertEqual(1, MemberCreditCreatedLogEntry.objects.count())
+
+    def test_post_solidarityContributionMustBeUpdatedButNoContributionExists_returnsError(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+
+        subscription = SubscriptionFactory.create(
+            period__start_date=datetime.date(year=2025, month=1, day=1),
+        )
+
+        response = self.client.post(
+            reverse("subscriptions:dates_change"),
+            data={
+                "subscription_id": subscription.id,
+                "start_date_is_on_period_start": False,
+                "end_date_is_on_period_end": False,
+                "start_week": 1,
+                "end_week": 20,
+                "update_soli_end_date": True,
+            },
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(
+            {
+                "error": "Keine Solidarbeitrag gefunden zwischen 01.01.2025 und 31.12.2025",
+                "order_confirmed": False,
+            },
+            response.json(),
+        )
+
+        subscription.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2025, month=12, day=31),
+            subscription.end_date,
+            "The end date should not have been changed",
+        )
+
+    def test_post_solidarityContributionMustBeUpdatedAndContributionExists_updatesCurrentContributionAndDeleteFutureContribution(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+
+        subscription = SubscriptionFactory.create(
+            period__start_date=datetime.date(year=2025, month=1, day=1),
+        )
+        current_contribution = SolidarityContributionFactory.create(
+            start_date=subscription.start_date, member=subscription.member
+        )
+        future_contribution = SolidarityContributionFactory.create(
+            start_date=subscription.end_date + datetime.timedelta(days=1),
+            member=subscription.member,
+        )
+        contribution_of_other_member = SolidarityContributionFactory.create(
+            start_date=subscription.end_date + datetime.timedelta(days=1),
+        )
+
+        response = self.client.post(
+            reverse("subscriptions:dates_change"),
+            data={
+                "subscription_id": subscription.id,
+                "start_date_is_on_period_start": False,
+                "end_date_is_on_period_end": False,
+                "start_week": 1,
+                "end_week": 20,
+                "update_soli_end_date": True,
+            },
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+
+        subscription.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2025, month=5, day=18), subscription.end_date
+        )
+
+        self.assertEqual(2, SolidarityContribution.objects.count())
+        current_contribution.refresh_from_db()
+        self.assertEqual(subscription.end_date, current_contribution.end_date)
+        self.assertEqual(
+            contribution_of_other_member.end_date,
+            SolidarityContribution.objects.get(
+                id=contribution_of_other_member.id
+            ).end_date,
+            "This one should not have been changed",
+        )
+        self.assertFalse(
+            SolidarityContribution.objects.filter(id=future_contribution.id).exists()
+        )
