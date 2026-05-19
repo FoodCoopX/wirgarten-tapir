@@ -28,6 +28,7 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     PaymentFactory,
     GrowingPeriodFactory,
+    MandateReferenceFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -364,24 +365,28 @@ class TestPost(TapirIntegrationTest):
     def test_post_solidarityContributionUpdatedAndContributionWasAlreadyPaid_createCredit(
         self,
     ):
-        member = MemberFactory.create(is_superuser=True)
-        self.client.force_login(member)
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
 
+        member = MemberFactory.create()
+        mandate_ref = MandateReferenceFactory.create(member=member)
         subscription = SubscriptionFactory.create(
             period__start_date=datetime.date(year=2025, month=1, day=1),
+            mandate_ref=mandate_ref,
+            member=member,
         )
         current_contribution = SolidarityContributionFactory.create(
             start_date=subscription.start_date, member=subscription.member, amount=10
         )
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
-            member=subscription.member,
-            actor=member,
+            member=member,
+            actor=admin,
             rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
             valid_from=subscription.start_date,
             cache={},
         )
         PaymentFactory.create(
-            mandate_ref__member=subscription.member,
+            mandate_ref=mandate_ref,
             due_date=subscription.start_date,
             amount=120,
             type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
