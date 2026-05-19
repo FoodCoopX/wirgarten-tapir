@@ -15,6 +15,7 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
     SubscriptionChangeLogEntry,
+    CoopShareTransaction,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -184,6 +185,7 @@ class ApplyTapirOrderManager:
         new_subscriptions: list[Subscription],
         cache: dict,
         from_waiting_list: bool,
+        coop_share_transaction: CoopShareTransaction | None,
         solidarity_contribution: SolidarityContribution | None,
     ):
         if subscriptions_existed_before_changes:
@@ -196,6 +198,6 @@ class ApplyTapirOrderManager:
                 subs=new_subscriptions,
                 cache=cache,
                 from_waiting_list=from_waiting_list,
-                coop_share_transaction=None,
+                coop_share_transaction=coop_share_transaction,
                 solidarity_contribution=solidarity_contribution,
             )

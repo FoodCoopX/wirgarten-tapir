@@ -71,6 +71,7 @@ class SubscriptionUpdateViewChangeApplier:
             new_subscriptions=new_subscriptions,
             cache=cache,
             from_waiting_list=False,
+            coop_share_transaction=None,
             solidarity_contribution=None,
         )
 

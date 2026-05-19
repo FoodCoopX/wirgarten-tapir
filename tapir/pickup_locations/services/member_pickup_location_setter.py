@@ -32,7 +32,7 @@ class MemberPickupLocationSetter:
             member=member, reference_date=valid_from, cache=cache
         )
         if old_pickup_location is None:
-            valid_from = get_today(cache=cache)
+            valid_from = min(valid_from, get_today(cache=cache))
 
         MemberPickupLocation.objects.filter(
             member=member, valid_from__gte=valid_from

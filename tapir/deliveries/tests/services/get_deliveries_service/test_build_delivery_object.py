@@ -131,7 +131,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         mock_get_member_pickup_location_id_from_cache.return_value = "test_pl_id"
         cache = {"pickup_location_by_id": {"test_pl_id": mock_pickup_location}}
         mock_opening_time = Mock()
-        mock_pickup_location_opening_times_objects.filter.return_value = [
+        mock_pickup_location_opening_times_objects.filter.return_value.order_by.return_value = [
             mock_opening_time
         ]
         mock_update_delivery_date_to_opening_times.return_value = datetime.date(

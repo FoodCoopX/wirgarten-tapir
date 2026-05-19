@@ -1,8 +1,6 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -16,6 +14,7 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.subscription_update_view_change_applier import (
     SubscriptionUpdateViewChangeApplier,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
@@ -186,6 +185,7 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
             cache=cache,
             from_waiting_list=False,
             solidarity_contribution=None,
+            coop_share_transaction=None,
         )
         mock_change_payment_rhythm_if_necessary.assert_called_once_with(
             payment_rhythm=payment_rhythm, member=member, actor=actor, cache=cache
