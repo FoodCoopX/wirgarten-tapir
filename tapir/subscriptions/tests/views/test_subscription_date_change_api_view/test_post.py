@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from django.urls import reverse
 
@@ -11,6 +12,9 @@ from tapir.payments.models import (
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
+)
+from tapir.payments.services.month_payment_builder_solidarity_contributions import (
+    MonthPaymentBuilderSolidarityContributions,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
@@ -356,3 +360,60 @@ class TestPost(TapirIntegrationTest):
         self.assertFalse(
             SolidarityContribution.objects.filter(id=future_contribution.id).exists()
         )
+
+    def test_post_solidarityContributionUpdatedAndContributionWasAlreadyPaid_createCredit(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+
+        subscription = SubscriptionFactory.create(
+            period__start_date=datetime.date(year=2025, month=1, day=1),
+        )
+        current_contribution = SolidarityContributionFactory.create(
+            start_date=subscription.start_date, member=subscription.member, amount=10
+        )
+        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
+            member=subscription.member,
+            actor=member,
+            rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
+            valid_from=subscription.start_date,
+            cache={},
+        )
+        PaymentFactory.create(
+            mandate_ref__member=subscription.member,
+            due_date=subscription.start_date,
+            amount=120,
+            type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
+            subscription_payment_range_start=subscription.start_date,
+            subscription_payment_range_end=subscription.end_date,
+        )
+
+        response = self.client.post(
+            reverse("subscriptions:dates_change"),
+            data={
+                "subscription_id": subscription.id,
+                "start_date_is_on_period_start": False,
+                "end_date_is_on_period_end": False,
+                "start_week": 1,
+                "end_week": 20,
+                "update_soli_end_date": True,
+            },
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+
+        subscription.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2025, month=5, day=18), subscription.end_date
+        )
+
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        current_contribution.refresh_from_db()
+        self.assertEqual(subscription.end_date, current_contribution.end_date)
+
+        self.assertEqual(1, MemberCredit.objects.count())
+        credit = MemberCredit.objects.get()
+        self.assertEqual(subscription.member, credit.member)
+        self.assertEqual(Decimal("74.19"), credit.amount)

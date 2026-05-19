@@ -98,7 +98,7 @@ class MemberCreditCreator:
         )
         first_day_of_rhythm_period = max(payment_start_date, first_day_of_rhythm_period)
         if first_day_of_rhythm_period > last_day_of_rhythm_period:
-            return 0
+            return Decimal("0.00")
 
         mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
             member=member, cache=cache
