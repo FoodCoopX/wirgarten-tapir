@@ -155,6 +155,7 @@ class TestPost(TapirIntegrationTest):
             product=subscription.product,
             valid_from=datetime.date(year=2025, month=1, day=1),
         )
+        created_at_before = subscription.created_at
 
         response = self.client.post(
             reverse("subscriptions:dates_change"),
@@ -181,6 +182,13 @@ class TestPost(TapirIntegrationTest):
             datetime.date(year=2025, month=5, day=18), subscription.end_date
         )
         self.assertEqual(1, Subscription.objects.count())
+        self.assertEqual(
+            created_at_before,
+            subscription.created_at,
+            "Regression test for infra#56, "
+            "we used to delete and re-create the subscription on date changes, "
+            "causing the creating date to be updated, leading to payment problems.",
+        )
 
     def test_post_newEndDateIsBeforeEndOfPaymentInterval_createsAMemberCredit(self):
         member = MemberFactory.create(is_superuser=True)

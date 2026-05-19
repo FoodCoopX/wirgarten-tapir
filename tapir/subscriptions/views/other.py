@@ -208,7 +208,7 @@ class SubscriptionDateChangeApiView(APIView):
             subscription.start_date = start_date
             if end_date != subscription.end_date:
                 subscription.cancellation_ts = get_now(cache=self.cache)
-                Subscription.objects.filter(
+                Subscription.objects.exclude(id=subscription.id).filter(
                     member_id=subscription.member_id,
                     product_id=subscription.product_id,
                     end_date__gt=end_date,
