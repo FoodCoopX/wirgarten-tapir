@@ -119,7 +119,8 @@ class GetFutureMemberPaymentsApiView(APIView):
                     "trial_period_enabled": get_parameter_value(
                         key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
                     ),
-                }
+                },
+                context={"cache": self.cache},
             ).data
         )
 
@@ -326,7 +327,8 @@ class GetPastMemberPaymentsApiView(APIView):
                     "trial_period_enabled": get_parameter_value(
                         key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
                     ),
-                }
+                },
+                context={"cache": self.cache},
             ).data
         )
 

@@ -227,10 +227,19 @@ class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = []
     serializer_class = PublicPickupLocationSerializer
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get_queryset(self):
         return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-            cache={}
+            cache=self.cache
         )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["cache"] = self.cache
+        return context
 
 
 class PickupLocationCapacityCheckApiView(APIView):
@@ -349,7 +358,9 @@ class GetMemberPickupLocationApiView(APIView):
         return Response(
             {
                 "has_location": True,
-                "location": PublicPickupLocationSerializer(pickup_location).data,
+                "location": PublicPickupLocationSerializer(
+                    pickup_location, context={"cache": self.cache}
+                ).data,
             }
         )
 
