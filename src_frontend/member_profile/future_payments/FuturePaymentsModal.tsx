@@ -70,12 +70,16 @@ function getStartDate(extendedPayment: ExtendedPayment) {
     (contribution) => contribution.startDate,
   );
 
-  const minDate = getMinimumDate([
+  const candidates = [
     ...subscriptionStartDates,
     ...contributionsStartDates,
-  ]);
+  ];
 
-  return getMaximumDate([minDate, paymentRangeStart!]);
+  if (candidates.length === 0) {
+    return paymentRangeStart!;
+  }
+
+  return getMaximumDate([getMinimumDate(candidates), paymentRangeStart!]);
 }
 
 function getEndDate(extendedPayment: ExtendedPayment) {
@@ -89,12 +93,13 @@ function getEndDate(extendedPayment: ExtendedPayment) {
     (contribution) => contribution.endDate,
   );
 
-  const maxDate = getMaximumDate([
-    ...subscriptionEndDates,
-    ...contributionEndDates,
-  ]);
+  const candidates = [...subscriptionEndDates, ...contributionEndDates];
 
-  return getMinimumDate([maxDate, paymentRangeEnd!]);
+  if (candidates.length === 0) {
+    return paymentRangeEnd!;
+  }
+
+  return getMinimumDate([getMaximumDate(candidates), paymentRangeEnd!]);
 }
 
 function partialMonthText(extendedPayment: ExtendedPayment) {
