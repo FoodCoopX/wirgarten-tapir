@@ -384,16 +384,16 @@ class Member(TapirUser):
         if all_locations.count() == 1:
             return all_locations.first().pickup_location
         else:
-            found = (
-                self.memberpickuplocation_set.filter(valid_from__lte=reference_date)
-                .order_by("-valid_from")
-                .values("pickup_location")
-            )
-            return (
-                PickupLocation.objects.get(id=found[0]["pickup_location"])
-                if found.exists()
-                else None
-            )
+            member_pickup_location_object = (
+                self.memberpickuplocation_set.filter(
+                    valid_from__lte=reference_date
+                ).order_by("-valid_from")
+            ).first()
+
+            if member_pickup_location_object is None:
+                return None
+
+            return member_pickup_location_object.pickup_location
 
     @transaction.atomic
     def save(self, *args, **kwargs):
