@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 
 from django.urls import reverse
+from icecream import ic
 
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import (
@@ -18,8 +19,9 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
+from tapir.subscriptions.models import SubscriptionChangedLogEntry
 from tapir.wirgarten.constants import WEEKLY
-from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.models import Subscription, GrowingPeriod, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -101,8 +103,8 @@ class TestPost(TapirIntegrationTest):
         )
 
     def test_post_endDateNotChanged_dontDeleteFutureSubscription(self):
-        member = MemberFactory.create(is_superuser=True)
-        self.client.force_login(member)
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
 
         subscription = SubscriptionFactory.create(
             period__start_date=datetime.date(year=2025, month=1, day=1),
@@ -146,9 +148,18 @@ class TestPost(TapirIntegrationTest):
         )
         self.assertEqual(2, Subscription.objects.count())
 
+        self.assertEqual(1, SubscriptionChangedLogEntry.objects.count())
+        log_entry = SubscriptionChangedLogEntry.objects.get()
+        self.assertEqual(admin.email, log_entry.actor.email)
+        self.assertEqual(subscription.member.email, log_entry.user.email)
+        self.assertEqual("2025-01-01", log_entry.old_values["start_date"])
+        self.assertEqual("2025-03-03", log_entry.new_values["start_date"])
+        self.assertNotIn("end_date", log_entry.old_values)
+        self.assertNotIn("end_date", log_entry.new_values)
+
     def test_post_endDateChanged_deleteFutureSubscription(self):
-        member = MemberFactory.create(is_superuser=True)
-        self.client.force_login(member)
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
 
         subscription = SubscriptionFactory.create(
             period__start_date=datetime.date(year=2025, month=1, day=1),
@@ -197,42 +208,27 @@ class TestPost(TapirIntegrationTest):
             "causing the creating date to be updated, leading to payment problems.",
         )
 
+        self.assertEqual(1, SubscriptionChangedLogEntry.objects.count())
+        log_entry = SubscriptionChangedLogEntry.objects.get()
+        self.assertEqual(admin.email, log_entry.actor.email)
+        self.assertEqual(subscription.member.email, log_entry.user.email)
+        self.assertEqual("2025-12-31", log_entry.old_values["end_date"])
+        self.assertEqual("2025-05-18", log_entry.new_values["end_date"])
+        self.assertNotIn("start_date", log_entry.old_values)
+        self.assertNotIn("start_date", log_entry.new_values)
+
     def test_post_newEndDateIsBeforeEndOfPaymentInterval_createsAMemberCredit(self):
-        member = MemberFactory.create(is_superuser=True)
-        self.client.force_login(member)
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
 
         mock_timezone(self, now=datetime.datetime(year=2025, month=7, day=12))
 
         growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2025, month=1, day=1),
         )
-        subscription = SubscriptionFactory.create(
-            member=member,
-            quantity=1,
-            period=growing_period,
-            product__type__delivery_cycle=WEEKLY[0],
-        )
-        ProductPriceFactory.create(
-            product=subscription.product,
-            valid_from=datetime.date(year=2025, month=1, day=1),
-            price=10,
-        )
-        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
-            member=member,
-            rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
-            valid_from=datetime.date(year=2025, month=1, day=1),
-            cache={},
-            actor=member,
-        )
-        PaymentFactory.create(
-            due_date=datetime.date(year=2025, month=1, day=1),
-            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
-                member=member, cache={}
-            ),
-            amount=120,
-            type=subscription.product.type.name,
-            subscription_payment_range_start=datetime.date(year=2025, month=1, day=1),
-            subscription_payment_range_end=datetime.date(year=2025, month=12, day=31),
+        member = MemberFactory.create()
+        subscription = self._create_subscription_and_payment(
+            member=member, growing_period=growing_period
         )
 
         response = self.client.post(
@@ -270,44 +266,6 @@ class TestPost(TapirIntegrationTest):
 
         self.assertEqual(1, MemberCreditCreatedLogEntry.objects.count())
 
-    def test_post_solidarityContributionMustBeUpdatedButNoContributionExists_returnsError(
-        self,
-    ):
-        member = MemberFactory.create(is_superuser=True)
-        self.client.force_login(member)
-
-        subscription = SubscriptionFactory.create(
-            period__start_date=datetime.date(year=2025, month=1, day=1),
-        )
-
-        response = self.client.post(
-            reverse("subscriptions:dates_change"),
-            data={
-                "subscription_id": subscription.id,
-                "start_date_is_on_period_start": False,
-                "end_date_is_on_period_end": False,
-                "start_week": 1,
-                "end_week": 20,
-                "update_soli_end_date": True,
-            },
-        )
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(
-            {
-                "error": "Keine Solidarbeitrag gefunden zwischen 01.01.2025 und 31.12.2025",
-                "order_confirmed": False,
-            },
-            response.json(),
-        )
-
-        subscription.refresh_from_db()
-        self.assertEqual(
-            datetime.date(year=2025, month=12, day=31),
-            subscription.end_date,
-            "The end date should not have been changed",
-        )
-
     def test_post_solidarityContributionMustBeUpdatedAndContributionExists_updatesCurrentContributionAndDeleteFutureContribution(
         self,
     ):
@@ -336,7 +294,7 @@ class TestPost(TapirIntegrationTest):
                 "end_date_is_on_period_end": False,
                 "start_week": 1,
                 "end_week": 20,
-                "update_soli_end_date": True,
+                "update_end_date_of_other_contracts": True,
             },
         )
 
@@ -361,6 +319,7 @@ class TestPost(TapirIntegrationTest):
         self.assertFalse(
             SolidarityContribution.objects.filter(id=future_contribution.id).exists()
         )
+        self.assertEqual(1, SubscriptionChangedLogEntry.objects.count())
 
     def test_post_solidarityContributionUpdatedAndContributionWasAlreadyPaid_createCredit(
         self,
@@ -402,7 +361,7 @@ class TestPost(TapirIntegrationTest):
                 "end_date_is_on_period_end": False,
                 "start_week": 1,
                 "end_week": 20,
-                "update_soli_end_date": True,
+                "update_end_date_of_other_contracts": True,
             },
         )
 
@@ -422,3 +381,102 @@ class TestPost(TapirIntegrationTest):
         credit = MemberCredit.objects.get()
         self.assertEqual(subscription.member, credit.member)
         self.assertEqual(Decimal("74.19"), credit.amount)
+
+    def test_post_endDateOfOtherSubscriptionMustAlsoBeSet_updateOtherSubscriptionAndCreateLogEntryAndCreateMemberCredit(
+        self,
+    ):
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
+
+        mock_timezone(self, now=datetime.datetime(year=2025, month=7, day=12))
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2025, month=1, day=1),
+        )
+        member = MemberFactory.create()
+        main_subscription = self._create_subscription_and_payment(
+            member=member, growing_period=growing_period
+        )
+        side_subscription = self._create_subscription_and_payment(
+            member=member, growing_period=growing_period
+        )
+
+        response = self.client.post(
+            reverse("subscriptions:dates_change"),
+            data={
+                "subscription_id": main_subscription.id,
+                "start_date_is_on_period_start": True,
+                "end_date_is_on_period_end": False,
+                "start_week": 1,
+                "end_week": 48,  # This ends the subscription on the last day of November
+                "update_end_date_of_other_contracts": True,
+            },
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(
+            {
+                "error": None,
+                "order_confirmed": True,
+            },
+            response.json(),
+        )
+
+        side_subscription.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2025, month=11, day=30), side_subscription.end_date
+        )
+
+        ic(MemberCredit.objects.all(), main_subscription, side_subscription)
+        self.assertEqual(2, MemberCredit.objects.count())
+        for member_credit in MemberCredit.objects.all():
+            self.assertEqual(10, member_credit.amount)
+            self.assertEqual(
+                datetime.date(year=2025, month=7, day=31), member_credit.due_date
+            )
+            self.assertEqual(member, member_credit.member)
+
+        self.assertEqual(2, MemberCreditCreatedLogEntry.objects.count())
+
+        self.assertEqual(2, SubscriptionChangedLogEntry.objects.count())
+        log_entry = SubscriptionChangedLogEntry.objects.order_by("created_date").last()
+        self.assertEqual(admin.email, log_entry.actor.email)
+        self.assertEqual(side_subscription.member.email, log_entry.user.email)
+        self.assertEqual("2025-12-31", log_entry.old_values["end_date"])
+        self.assertEqual("2025-11-30", log_entry.new_values["end_date"])
+        self.assertNotIn("start_date", log_entry.old_values)
+        self.assertNotIn("start_date", log_entry.new_values)
+
+    @classmethod
+    def _create_subscription_and_payment(
+        cls, member: Member, growing_period: GrowingPeriod
+    ) -> Subscription:
+        subscription = SubscriptionFactory.create(
+            member=member,
+            quantity=1,
+            period=growing_period,
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+        ProductPriceFactory.create(
+            product=subscription.product,
+            valid_from=datetime.date(year=2025, month=1, day=1),
+            price=10,
+        )
+        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
+            valid_from=datetime.date(year=2025, month=1, day=1),
+            cache={},
+            actor=member,
+        )
+        PaymentFactory.create(
+            due_date=datetime.date(year=2025, month=1, day=1),
+            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                member=member, cache={}
+            ),
+            amount=120,
+            type=subscription.product.type.name,
+            subscription_payment_range_start=datetime.date(year=2025, month=1, day=1),
+            subscription_payment_range_end=datetime.date(year=2025, month=12, day=31),
+        )
+        return subscription

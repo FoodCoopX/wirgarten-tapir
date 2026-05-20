@@ -39,9 +39,9 @@ class MemberCreditCreator:
             cache=cache,
         )
         if amount_to_credit == 0:
-            return
+            return None
 
-        cls.create_credit_and_log_entry(
+        return cls.create_credit_and_log_entry(
             member=member,
             actor=actor,
             amount_to_credit=amount_to_credit,
@@ -69,6 +69,8 @@ class MemberCreditCreator:
         MemberCreditCreatedLogEntry().populate(
             user=member, actor=actor, model=member_credit
         ).save()
+
+        return member_credit
 
     @classmethod
     def get_amount_to_credit(

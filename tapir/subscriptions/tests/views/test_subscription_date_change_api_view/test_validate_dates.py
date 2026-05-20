@@ -3,7 +3,9 @@ from unittest.mock import Mock, patch
 
 from django.core.exceptions import ValidationError
 
-from tapir.subscriptions.views.other import SubscriptionDateChangeApiView
+from tapir.subscriptions.services.subscription_date_change_applier import (
+    SubscriptionDateChangeApplier,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import SubscriptionFactory, GrowingPeriodFactory
@@ -18,7 +20,7 @@ class TestValidateDates(TapirUnitTest):
         )
 
         with self.assertRaises(ValidationError):
-            SubscriptionDateChangeApiView.validate_dates(
+            SubscriptionDateChangeApplier.validate_dates(
                 subscription=subscription,
                 start_date=datetime.date(year=2022, month=5, day=17),
                 end_date=datetime.date(year=2022, month=7, day=28),
@@ -27,7 +29,7 @@ class TestValidateDates(TapirUnitTest):
 
     def test_validateDates_startDateIsAfterEndDate_raisesError(self):
         with self.assertRaises(ValidationError):
-            SubscriptionDateChangeApiView.validate_dates(
+            SubscriptionDateChangeApplier.validate_dates(
                 subscription=Mock(),
                 start_date=datetime.date(year=2022, month=9, day=17),
                 end_date=datetime.date(year=2022, month=7, day=28),
@@ -54,7 +56,7 @@ class TestValidateDates(TapirUnitTest):
         )
 
         with self.assertRaises(ValidationError) as error:
-            SubscriptionDateChangeApiView.validate_dates(
+            SubscriptionDateChangeApplier.validate_dates(
                 subscription=subscription,
                 start_date=datetime.date(year=2022, month=5, day=17),
                 end_date=subscription.end_date,
@@ -92,7 +94,7 @@ class TestValidateDates(TapirUnitTest):
         )
 
         with self.assertRaises(ValidationError) as error:
-            SubscriptionDateChangeApiView.validate_dates(
+            SubscriptionDateChangeApplier.validate_dates(
                 subscription=subscription,
                 start_date=subscription.start_date,
                 end_date=datetime.date(year=2024, month=1, day=1),

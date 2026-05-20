@@ -10658,7 +10658,7 @@ components:
         subscription_id:
           type: string
           minLength: 1
-        update_soli_end_date:
+        update_end_date_of_other_contracts:
           type: boolean
       required:
       - end_date_is_on_period_end
@@ -10666,7 +10666,7 @@ components:
       - start_date_is_on_period_start
       - start_week
       - subscription_id
-      - update_soli_end_date
+      - update_end_date_of_other_contracts
     SubscriptionPriceOverrideChangeRequestRequest:
       type: object
       properties:

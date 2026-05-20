@@ -70,6 +70,9 @@ class MemberCredit(TapirModel):
     comment = models.TextField()
     settled_on = models.DateTimeField(null=True, blank=True, default=None)
 
+    def __str__(self):
+        return f"{self.member} Due:{self.due_date} Amount:{self.amount} Comment:{self.comment} Settled:{format_date(self.settled_on)}"
+
 
 class MemberCreditCreatedLogEntry(ModelLogEntry):
     template_name = "payments/log/member_credit_created_log_entry.html"

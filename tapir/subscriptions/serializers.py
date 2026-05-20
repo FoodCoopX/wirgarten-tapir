@@ -294,7 +294,7 @@ class SubscriptionDateChangeRequestSerializer(serializers.Serializer):
     start_week = serializers.IntegerField()
     end_week = serializers.IntegerField()
     subscription_id = serializers.CharField()
-    update_soli_end_date = serializers.BooleanField()
+    update_end_date_of_other_contracts = serializers.BooleanField()
 
 
 class ConvertWeekToDateForSubscriptionChangesResponseSerializer(serializers.Serializer):

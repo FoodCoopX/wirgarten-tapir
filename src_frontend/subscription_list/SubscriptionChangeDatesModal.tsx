@@ -13,6 +13,7 @@ import {
 import {
   CoopApi,
   Member,
+  PublicSubscription,
   SolidarityContribution,
   SolidarityContributionApi,
   Subscription,
@@ -24,7 +25,9 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import formatSubscription from "../utils/formatSubscription.ts";
+import formatSubscription, {
+  formatPublicSubscription,
+} from "../utils/formatSubscription.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import SubscriptionChangeDatesWeekInput from "./SubscriptionChangeDatesWeekInput.tsx";
 
@@ -70,6 +73,24 @@ const END_DATE_HELP_TEXT = (
   </>
 );
 
+const OTHER_CONTRACTS_HELP_TEXT = (
+  <>
+    <p>
+      Solidarbeiträge und Verträge die gültig sind am altem oder neuem End-Datum
+      bekommen das gleiche End-Datum wie der Vertrag.
+    </p>
+    <p>Ausgelaufene Solidarbeiträge und Verträge werden nicht geändert.</p>
+    <p>
+      Solidarbeiträge und Verträge die nach dem neuem End-Datum starten werden
+      gelöscht.
+    </p>
+    <p>
+      Je nachdem ob das Mitglied schon vorbezahlt hat können Gutschriften
+      entstehen.
+    </p>
+  </>
+);
+
 function isWeekValid(week: number | undefined) {
   if (!week) {
     return false;
@@ -87,7 +108,8 @@ const SubscriptionChangeDatesModal: React.FC<
     csrfToken,
   );
   const coopApi = useApi(CoopApi, csrfToken);
-  const [loading, setLoading] = useState(true);
+  const [mainDataLoading, setMainDataLoading] = useState(true);
+  const [extraDataLoading, setExtraDataLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription>();
   const [memberId, setMemberId] = useState<string>();
   const [memberData, setMemberData] = useState<Member>();
@@ -102,7 +124,11 @@ const SubscriptionChangeDatesModal: React.FC<
   const [solidarityContributions, setSolidarityContributions] = useState<
     SolidarityContribution[]
   >([]);
-  const [updateSoliEndDate, setUpdateSoliEndDate] = useState(false);
+  const [updateEndDateOtherContracts, setUpdateEndDateOtherContracts] =
+    useState(false);
+  const [otherSubscriptions, setOtherSubscriptions] = useState<
+    PublicSubscription[]
+  >([]);
 
   dayjs.extend(WeekOfYear);
   dayjs.locale("de");
@@ -126,9 +152,9 @@ const SubscriptionChangeDatesModal: React.FC<
             setToastDatas,
           ),
       )
-      .finally(() => setLoading(false));
+      .finally(() => setMainDataLoading(false));
 
-    setLoading(true);
+    setMainDataLoading(true);
   }, [show]);
 
   useEffect(() => {
@@ -136,33 +162,38 @@ const SubscriptionChangeDatesModal: React.FC<
       return;
     }
 
-    coopApi
-      .coopMembersRetrieve({ id: memberId })
-      .then(setMemberData)
-      .catch(
-        async (error) =>
-          await handleRequestError(
-            error,
-            "Fehler bei der Laden der Mitgliedsdaten",
-            setToastDatas,
-          ),
-      );
+    setExtraDataLoading(true);
 
-    solidarityContributionApi
-      .solidarityContributionApiMemberSolidarityContributionsRetrieve({
+    Promise.all([
+      coopApi.coopMembersRetrieve({ id: memberId }),
+      subscriptionsApi.subscriptionsApiMemberSubscriptionDataRetrieve({
         memberId: memberId,
-      })
-      .then((soliData) => {
-        setSolidarityContributions(soliData.contributions);
+      }),
+      solidarityContributionApi.solidarityContributionApiMemberSolidarityContributionsRetrieve(
+        {
+          memberId: memberId,
+        },
+      ),
+    ])
+      .then(([memberData, subscriptionData, solidarityData]) => {
+        setMemberData(memberData);
+        setOtherSubscriptions(
+          subscriptionData.subscriptions.filter(
+            (otherSubscription) =>
+              otherSubscription.productId !== subscription?.product.id,
+          ),
+        );
+        setSolidarityContributions(solidarityData.contributions);
       })
       .catch(
         async (error) =>
           await handleRequestError(
             error,
-            "Fehler bei der Laden der Solidarbeitragsdaten",
+            "Fehler bei der Laden der zusätzliche DAten",
             setToastDatas,
           ),
-      );
+      )
+      .finally(() => setExtraDataLoading(false));
   }, [memberId, show]);
 
   useEffect(() => {
@@ -181,7 +212,7 @@ const SubscriptionChangeDatesModal: React.FC<
       return;
     }
 
-    setLoading(true);
+    setMainDataLoading(true);
 
     subscriptionsApi
       .subscriptionsApiDatesChangeCreate({
@@ -191,7 +222,7 @@ const SubscriptionChangeDatesModal: React.FC<
           startWeek: startWeek,
           endDateIsOnPeriodEnd: endDateIsPeriodEnd,
           endWeek: endWeek,
-          updateSoliEndDate: updateSoliEndDate,
+          updateEndDateOfOtherContracts: updateEndDateOtherContracts,
         },
       })
       .then((response) => {
@@ -209,7 +240,7 @@ const SubscriptionChangeDatesModal: React.FC<
           setToastDatas,
         ),
       )
-      .finally(() => setLoading(false));
+      .finally(() => setMainDataLoading(false));
   }
 
   useEffect(() => {
@@ -254,7 +285,7 @@ const SubscriptionChangeDatesModal: React.FC<
   }
 
   function getBodyContent() {
-    if (loading) {
+    if (mainDataLoading) {
       return <Spinner />;
     }
 
@@ -364,49 +395,86 @@ const SubscriptionChangeDatesModal: React.FC<
           )}
         </ListGroup.Item>
         <ListGroup.Item>
-          <Col>
-            {solidarityContributions.length === 0 ? (
-              <span>Dieses Mitglied hat kein Solidarbeitrag</span>
-            ) : (
-              <>
-                <Form.Group>
-                  <Form.Check
-                    id={"soli_end_date"}
-                    checked={updateSoliEndDate}
-                    onChange={(e) => setUpdateSoliEndDate(e.target.checked)}
-                    label={
-                      <span className={"d-flex gap-2"}>
-                        <span>
-                          Soll das End-Datum des Solidarbeitrags zum ausgewählte
-                          Vertrag-End-Datum gesetzt werden?
-                        </span>
-                        <TapirHelpButton
-                          buttonSize={"sm"}
-                          text={
-                            "Solidarbeiträge die gültig sind am altem oder neuem End-Datum bekommen das gleiche End-Datum wie der Vertrag. " +
-                            "Ausgelaufene Solidarbeiträge werden nicht geändert. " +
-                            "Solidarbeiträge die nach dem neuem End-Datum starten werden gelöscht."
-                          }
-                        />
-                      </span>
-                    }
-                  />
-                </Form.Group>
-                <div>
-                  Solidarbeitrag für dieses Mitglied:
-                  <ul>
-                    {solidarityContributions.map((contribution) => (
-                      <li key={contribution.id}>
-                        {formatCurrency(Number.parseFloat(contribution.amount))}{" "}
-                        von {formatDateNumeric(contribution.startDate)} bis{" "}
-                        {formatDateNumeric(contribution.endDate)}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </>
-            )}
-          </Col>
+          {extraDataLoading ? (
+            <Spinner />
+          ) : (
+            <>
+              <Row>
+                <Col>
+                  <h6>Weitere Beiträge:</h6>
+                </Col>
+              </Row>
+              {otherSubscriptions.length + solidarityContributions.length >
+                0 && (
+                <Row>
+                  <Col>
+                    <Form.Group>
+                      <Form.Check
+                        id={"soli_end_date"}
+                        checked={updateEndDateOtherContracts}
+                        onChange={(e) =>
+                          setUpdateEndDateOtherContracts(e.target.checked)
+                        }
+                        label={
+                          <span className={"d-flex gap-2"}>
+                            <span>
+                              Soll das End-Datum für alle weitere Verträge und
+                              Solidarbeitrag ebenfalls gesetzt werden?
+                            </span>
+                            <TapirHelpButton
+                              buttonSize={"sm"}
+                              text={OTHER_CONTRACTS_HELP_TEXT}
+                            />
+                          </span>
+                        }
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+              )}
+              <Row>
+                <Col>
+                  <h6>Solidarbeitrag</h6>
+                  {solidarityContributions.length === 0 ? (
+                    <span>Dieses Mitglied hat kein Solidarbeitrag.</span>
+                  ) : (
+                    <div>
+                      <ul>
+                        {solidarityContributions.map((contribution) => (
+                          <li key={contribution.id}>
+                            {formatCurrency(
+                              Number.parseFloat(contribution.amount),
+                            )}{" "}
+                            von {formatDateNumeric(contribution.startDate)} bis{" "}
+                            {formatDateNumeric(contribution.endDate)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </Col>
+                <Col>
+                  <h6>Verträge</h6>
+                  {otherSubscriptions.length === 0 ? (
+                    "Dieses Mitglied hat kein andere Verträge."
+                  ) : (
+                    <div>
+                      Weitere Verträge dieses Mitglieds:
+                      <ul>
+                        {otherSubscriptions.map((otherSubscription) => (
+                          <li key={otherSubscription.productId}>
+                            {formatPublicSubscription(otherSubscription)} vom{" "}
+                            {formatDateNumeric(otherSubscription.startDate)} zum{" "}
+                            {formatDateNumeric(otherSubscription.endDate)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </Col>
+              </Row>
+            </>
+          )}
         </ListGroup.Item>
       </ListGroup>
     );
@@ -432,7 +500,7 @@ const SubscriptionChangeDatesModal: React.FC<
           variant={"primary"}
           icon={"save"}
           text={"Daten ändern"}
-          loading={loading}
+          loading={mainDataLoading}
           onClick={onConfirmChange}
         />
       </Modal.Footer>
