@@ -527,7 +527,7 @@ class Member(TapirUser):
 
         return list(
             self.memberextraemail_set.filter(confirmed_on__isnull=False).values_list(
-                "email"
+                "email", flat=True
             )
         )
 
