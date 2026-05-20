@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Form, Modal, Spinner, Table } from "react-bootstrap";
 import {
   PickupLocationDeliveryChargeEntry,
@@ -6,7 +6,6 @@ import {
 } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
@@ -17,9 +16,8 @@ interface PickupLocationDeliveryChargeModalProps {
   onHide: () => void;
   csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  pickupLocationId: string;
 }
-
-const URL_PARAMETER_PICKUP_LOCATION_ID = "selected";
 
 function parseAmountInput(input: string): string {
   return input.replace(",", ".").trim();
@@ -31,7 +29,7 @@ function formatAmount(amountAsString: string): string {
 
 const PickupLocationDeliveryChargeModal: React.FC<
   PickupLocationDeliveryChargeModalProps
-> = ({ show, onHide, csrfToken, setToastDatas }) => {
+> = ({ show, onHide, csrfToken, setToastDatas, pickupLocationId }) => {
   const api = useApi(PickupLocationsApi, csrfToken);
 
   const [dataLoading, setDataLoading] = useState(true);
@@ -42,6 +40,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
   );
   const [amountInput, setAmountInput] = useState("");
   const [validFromInput, setValidFromInput] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (!show) return;
@@ -50,18 +49,19 @@ const PickupLocationDeliveryChargeModal: React.FC<
     setAmountInput("");
     setValidFromInput("");
 
-    const pickupLocationId = getParameterFromUrl(
-      URL_PARAMETER_PICKUP_LOCATION_ID,
-    );
-    if (!pickupLocationId) return;
-
     api
       .pickupLocationsApiPickupLocationDeliveryChargesRetrieve({
         pickupLocationId: pickupLocationId,
       })
       .then((response) => {
         setLocationName(response.pickupLocationName);
-        setEntries(response.entries);
+        setEntries(
+          response.entries.toSorted(
+            (a, b) =>
+              new Date(b.validFrom).getTime() -
+              new Date(a.validFrom).getTime(),
+          ),
+        );
       })
       .catch((error) =>
         handleRequestError(
@@ -73,34 +73,13 @@ const PickupLocationDeliveryChargeModal: React.FC<
       .finally(() => setDataLoading(false));
   }, [show]);
 
-  function sortEntriesByValidFromDesc(
-    entries: PickupLocationDeliveryChargeEntry[],
-  ): PickupLocationDeliveryChargeEntry[] {
-    return [...entries].sort(
-      (a, b) =>
-        new Date(b.validFrom).getTime() - new Date(a.validFrom).getTime(),
-    );
-  }
-
   function getCurrentEntry(): PickupLocationDeliveryChargeEntry | undefined {
     const today = new Date();
-    const sorted = sortEntriesByValidFromDesc(entries);
-    return sorted.find((entry) => new Date(entry.validFrom) <= today);
+    return entries.find((entry) => new Date(entry.validFrom) <= today);
   }
 
   function onSave() {
-    const form = document.getElementById(
-      "pickupLocationDeliveryChargeForm",
-    ) as HTMLFormElement;
-    if (!form.reportValidity()) return;
-
-    const pickupLocationId = getParameterFromUrl(
-      URL_PARAMETER_PICKUP_LOCATION_ID,
-    );
-    if (!pickupLocationId) {
-      alert("Kein Abholort ausgewählt.");
-      return;
-    }
+    if (!formRef.current?.reportValidity()) return;
 
     setSaving(true);
 
@@ -149,7 +128,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
           </tr>
         </thead>
         <tbody>
-          {sortEntriesByValidFromDesc(entries).map((entry) => (
+          {entries.map((entry) => (
             <tr key={entry.id}>
               <td>{formatAmount(entry.amount)}</td>
               <td>{formatDateNumeric(new Date(entry.validFrom))}</td>
@@ -178,7 +157,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
           </div>
           <div>
             <h6>Neuen Zuschlag planen</h6>
-            <Form id={"pickupLocationDeliveryChargeForm"}>
+            <Form ref={formRef}>
               <Form.Group>
                 <Form.Label>Betrag (€)</Form.Label>
                 <Form.Control
@@ -202,10 +181,10 @@ const PickupLocationDeliveryChargeModal: React.FC<
               </Form.Group>
             </Form>
           </div>
-          <details>
-            <summary>Verlauf</summary>
-            <div className={"mt-2"}>{buildHistoryTable()}</div>
-          </details>
+          <div>
+            <h6>Verlauf</h6>
+            {buildHistoryTable()}
+          </div>
         </div>
       </Modal.Body>
     );
@@ -214,7 +193,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
   return (
     <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Lieferzuschlag: {locationName}</h5>
+        <Modal.Title>Lieferzuschlag: {locationName}</Modal.Title>
       </Modal.Header>
       {getModalBody()}
       <Modal.Footer>

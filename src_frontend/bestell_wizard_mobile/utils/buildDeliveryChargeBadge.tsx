@@ -7,9 +7,5 @@ export function buildDeliveryChargeBadge(pickupLocation: PublicPickupLocation) {
   if (!amount) {
     return null;
   }
-  return (
-    <span className={"text-warning"}>
-      + {formatCurrency(amount)} pro Lieferung
-    </span>
-  );
+  return <span>+ {formatCurrency(amount)} pro Lieferung</span>;
 }
