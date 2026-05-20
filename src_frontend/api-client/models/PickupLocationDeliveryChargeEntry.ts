@@ -23,7 +23,7 @@ export interface PickupLocationDeliveryChargeEntry {
    * @type {string}
    * @memberof PickupLocationDeliveryChargeEntry
    */
-  id: string;
+  id?: string;
   /**
    *
    * @type {string}
@@ -44,7 +44,6 @@ export interface PickupLocationDeliveryChargeEntry {
 export function instanceOfPickupLocationDeliveryChargeEntry(
   value: object,
 ): value is PickupLocationDeliveryChargeEntry {
-  if (!("id" in value) || value["id"] === undefined) return false;
   if (!("amount" in value) || value["amount"] === undefined) return false;
   if (!("validFrom" in value) || value["validFrom"] === undefined) return false;
   return true;
@@ -64,7 +63,7 @@ export function PickupLocationDeliveryChargeEntryFromJSONTyped(
     return json;
   }
   return {
-    id: json["id"],
+    id: json["id"] == null ? undefined : json["id"],
     amount: json["amount"],
     validFrom: new Date(json["valid_from"]),
   };

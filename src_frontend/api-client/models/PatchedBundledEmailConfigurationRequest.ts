@@ -76,7 +76,7 @@ export interface PatchedBundledEmailConfigurationRequest {
    * @type {SegmentDataRequest}
    * @memberof PatchedBundledEmailConfigurationRequest
    */
-  segmentData?: SegmentDataRequest | null;
+  segmentData?: SegmentDataRequest;
 }
 
 /**

@@ -349,7 +349,7 @@ class TapirCache:
             lambda: list(
                 PickupLocationOpeningTime.objects.filter(
                     pickup_location_id=pickup_location_id
-                )
+                ).order_by("day_of_week")
             ),
         )
 

@@ -8,6 +8,7 @@ from rest_framework import status, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import (
     ProductSerializer,
@@ -19,9 +20,13 @@ from tapir.deliveries.services.subscription_price_type_decider import (
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
+from tapir.payments.services.month_payment_builder_solidarity_contributions import (
+    MonthPaymentBuilderSolidarityContributions,
+)
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import (
     SubscriptionChangedLogEntry,
     SubscriptionPriceChangedLogEntry,
@@ -38,12 +43,16 @@ from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
     SubscriptionChangeWeekToDateConverter,
 )
+from tapir.utils.services.model_date_range_overlap_checker import (
+    ModelDateRangeOverlapChecker,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
+    Member,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -196,6 +205,17 @@ class SubscriptionDateChangeApiView(APIView):
                 end_date=end_date,
                 cache=self.cache,
             )
+
+            with transaction.atomic():
+                self.apply_changes(
+                    actor=request.user,
+                    start_date=start_date,
+                    end_date=end_date,
+                    subscription=subscription,
+                    update_soli_end_date=serializer.validated_data[
+                        "update_soli_end_date"
+                    ],
+                )
         except ValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
@@ -203,41 +223,61 @@ class SubscriptionDateChangeApiView(APIView):
                 ).data
             )
 
-        with transaction.atomic():
-            subscription_before = freeze_for_log(subscription)
-            subscription.start_date = start_date
-            if end_date != subscription.end_date:
-                subscription.cancellation_ts = get_now(cache=self.cache)
-                Subscription.objects.filter(
-                    member_id=subscription.member_id,
-                    product_id=subscription.product_id,
-                    end_date__gt=end_date,
-                ).delete()
-
-            subscription.end_date = end_date
-            subscription.save()
-
-            MemberCreditCreator.create_member_credit_if_necessary(
-                member=subscription.member,
-                product_type_id_or_soli=subscription.product.type.id,
-                reference_date=get_today(cache=self.cache),
-                comment="Vertragsdaten vom Admin durch der Vertragsliste angepasst.",
-                cache=self.cache,
-                actor=request.user,
-            )
-
-            SubscriptionChangedLogEntry().populate(
-                old_frozen=subscription_before,
-                new_model=subscription,
-                user=subscription.member,
-                actor=request.user,
-            ).save()
-
         return Response(
             OrderConfirmationResponseSerializer(
                 {"order_confirmed": True, "error": None}
             ).data
         )
+
+    def apply_changes(
+        self,
+        actor: TapirUser,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        update_soli_end_date: bool,
+        subscription: Subscription,
+    ):
+        subscription_before = freeze_for_log(subscription)
+        start_date_before_changes = subscription.start_date
+        end_date_before_changes = subscription.end_date
+        subscription.start_date = start_date
+        if end_date != subscription.end_date:
+            subscription.cancellation_ts = get_now(cache=self.cache)
+            Subscription.objects.exclude(id=subscription.id).filter(
+                member_id=subscription.member_id,
+                product_id=subscription.product_id,
+                end_date__gt=end_date,
+            ).delete()
+
+        subscription.end_date = end_date
+        subscription.save()
+
+        MemberCreditCreator.create_member_credit_if_necessary(
+            member=subscription.member,
+            product_type_id_or_soli=subscription.product.type.id,
+            reference_date=get_today(cache=self.cache),
+            comment="Vertragsdaten vom Admin durch der Vertragsliste angepasst.",
+            cache=self.cache,
+            actor=actor,
+        )
+
+        SubscriptionChangedLogEntry().populate(
+            old_frozen=subscription_before,
+            new_model=subscription,
+            user=subscription.member,
+            actor=actor,
+        ).save()
+
+        if update_soli_end_date:
+            self.update_solidarity_contributions(
+                member=subscription.member,
+                start_date_before_changes=start_date_before_changes,
+                end_date_before_changes=end_date_before_changes,
+                start_date_after_changes=subscription.start_date,
+                end_date_after_changes=subscription.end_date,
+                actor=actor,
+                cache=self.cache,
+            )
 
     @classmethod
     def validate_dates(
@@ -268,6 +308,61 @@ class SubscriptionDateChangeApiView(APIView):
             raise ValidationError(
                 "Das neue End-Datum muss im gleiche Vertragsperiode liegen wie das alte"
             )
+
+    @classmethod
+    def update_solidarity_contributions(
+        cls,
+        member: Member,
+        start_date_before_changes: datetime.date,
+        start_date_after_changes: datetime.date,
+        end_date_before_changes: datetime.date,
+        end_date_after_changes: datetime.date,
+        actor: TapirUser,
+        cache: dict,
+    ):
+        range_start = min(
+            start_date_before_changes,
+            start_date_after_changes,
+            end_date_before_changes,
+            end_date_after_changes,
+        )
+        range_end = max(
+            start_date_before_changes,
+            start_date_after_changes,
+            end_date_before_changes,
+            end_date_after_changes,
+        )
+        member_contributions = SolidarityContribution.objects.filter(
+            member_id=member.id
+        )
+        relevant_contribution = (
+            ModelDateRangeOverlapChecker.filter_objects_that_overlap_with_range(
+                queryset=member_contributions,
+                range_start=range_start,
+                range_end=range_end,
+            )
+            .order_by("start_date")
+            .first()
+        )
+        if relevant_contribution is None:
+            raise ValidationError(
+                f"Keine Solidarbeitrag gefunden zwischen {format_date(range_start)} und {format_date(range_end)}"
+            )
+
+        relevant_contribution.end_date = end_date_after_changes
+        relevant_contribution.save()
+        member_contributions.filter(
+            start_date__gt=relevant_contribution.start_date
+        ).delete()
+
+        MemberCreditCreator.create_member_credit_if_necessary(
+            member=member,
+            reference_date=relevant_contribution.end_date,
+            actor=actor,
+            cache=cache,
+            product_type_id_or_soli=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
+            comment="Solidarbeitrag End-Datum angepasst zusammen mit Vertrags-End-Datum",
+        )
 
 
 class SubscriptionPriceOverrideApiView(APIView):

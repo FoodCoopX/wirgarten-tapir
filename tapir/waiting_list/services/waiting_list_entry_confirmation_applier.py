@@ -111,6 +111,16 @@ class WaitingListEntryConfirmationApplier:
 
         waiting_list_entry.delete()
 
+        coop_share_transaction = None
+        if is_new_member and legal_status_is_cooperative(cache=cache):
+            coop_share_transaction = BestellWizardOrderFulfiller.create_coop_shares(
+                member=member,
+                number_of_shares=validated_data["number_of_coop_shares"],
+                subscriptions=new_subscriptions,
+                cache=cache,
+                actor=actor,
+            )
+
         if len(new_subscriptions) > 0:
             ApplyTapirOrderManager.send_order_confirmation_mail(
                 member=member,
@@ -118,16 +128,8 @@ class WaitingListEntryConfirmationApplier:
                 new_subscriptions=new_subscriptions,
                 cache=cache,
                 from_waiting_list=True,
+                coop_share_transaction=coop_share_transaction,
                 solidarity_contribution=solidarity_contribution,
-            )
-
-        if is_new_member and legal_status_is_cooperative(cache=cache):
-            BestellWizardOrderFulfiller.create_coop_shares(
-                member=member,
-                number_of_shares=validated_data["number_of_coop_shares"],
-                subscriptions=new_subscriptions,
-                cache=cache,
-                actor=actor,
             )
 
     @classmethod

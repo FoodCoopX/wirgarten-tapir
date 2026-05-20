@@ -48,6 +48,12 @@ export interface SubscriptionDateChangeRequestRequest {
    * @memberof SubscriptionDateChangeRequestRequest
    */
   subscriptionId: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof SubscriptionDateChangeRequestRequest
+   */
+  updateSoliEndDate: boolean;
 }
 
 /**
@@ -69,6 +75,11 @@ export function instanceOfSubscriptionDateChangeRequestRequest(
   if (!("startWeek" in value) || value["startWeek"] === undefined) return false;
   if (!("endWeek" in value) || value["endWeek"] === undefined) return false;
   if (!("subscriptionId" in value) || value["subscriptionId"] === undefined)
+    return false;
+  if (
+    !("updateSoliEndDate" in value) ||
+    value["updateSoliEndDate"] === undefined
+  )
     return false;
   return true;
 }
@@ -92,6 +103,7 @@ export function SubscriptionDateChangeRequestRequestFromJSONTyped(
     startWeek: json["start_week"],
     endWeek: json["end_week"],
     subscriptionId: json["subscription_id"],
+    updateSoliEndDate: json["update_soli_end_date"],
   };
 }
 
@@ -115,5 +127,6 @@ export function SubscriptionDateChangeRequestRequestToJSONTyped(
     start_week: value["startWeek"],
     end_week: value["endWeek"],
     subscription_id: value["subscriptionId"],
+    update_soli_end_date: value["updateSoliEndDate"],
   };
 }

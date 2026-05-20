@@ -76,7 +76,7 @@ export interface BundledEmailConfigurationRequest {
    * @type {SegmentDataRequest}
    * @memberof BundledEmailConfigurationRequest
    */
-  segmentData?: SegmentDataRequest | null;
+  segmentData: SegmentDataRequest;
 }
 
 /**
@@ -88,6 +88,8 @@ export function instanceOfBundledEmailConfigurationRequest(
   if (!("name" in value) || value["name"] === undefined) return false;
   if (!("content" in value) || value["content"] === undefined) return false;
   if (!("releaseStatus" in value) || value["releaseStatus"] === undefined)
+    return false;
+  if (!("segmentData" in value) || value["segmentData"] === undefined)
     return false;
   return true;
 }
@@ -117,10 +119,7 @@ export function BundledEmailConfigurationRequestFromJSONTyped(
     releaseStatus: json["release_status"],
     updatedAt:
       json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
-    segmentData:
-      json["segment_data"] == null
-        ? undefined
-        : SegmentDataRequestFromJSON(json["segment_data"]),
+    segmentData: SegmentDataRequestFromJSON(json["segment_data"]),
   };
 }
 
