@@ -15,16 +15,6 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetTotalToPay(TapirUnitTest):
-    def test_getTotalToPay_noSubscriptions_returnsZero(self):
-        result = MonthPaymentBuilderDeliveryCharges.get_total_to_pay(
-            range_start=datetime.date(year=2026, month=1, day=1),
-            range_end=datetime.date(year=2026, month=2, day=1),
-            contracts=[],
-            cache={},
-        )
-
-        self.assertEqual(Decimal(0), result)
-
     @patch.object(
         PickupLocationDeliveryChargeService,
         "get_delivery_charge_at_date",

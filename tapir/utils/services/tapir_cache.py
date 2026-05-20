@@ -194,13 +194,13 @@ class TapirCache:
     @classmethod
     def get_delivery_charges_by_pickup_location_id(
         cls, cache: dict, pickup_location_id: str
-    ):
+    ) -> list[PickupLocationDeliveryCharge]:
         delivery_charges_by_pickup_location_id = get_from_cache_or_compute(
             cache, "delivery_charges_by_pickup_location_id", lambda: {}
         )
 
         def compute():
-            return set(
+            return list(
                 PickupLocationDeliveryCharge.objects.filter(
                     pickup_location_id=pickup_location_id
                 ).order_by("valid_from")

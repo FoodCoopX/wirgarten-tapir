@@ -20,6 +20,7 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
     PickupLocationDeliveryChargeService,
 )
+from tapir.utils.shortcuts import get_any_element_from_set
 from tapir.wirgarten.models import Member, Payment, Subscription
 
 
@@ -44,7 +45,7 @@ class MonthPaymentBuilderDeliveryCharges:
             )
         )
 
-        subscriptions_by_member = cls.group_subscriptions_by_member(subscriptions)
+        subscriptions_by_member = cls._group_subscriptions_by_member(subscriptions)
 
         payments_to_create = []
         for member, member_subscriptions in subscriptions_by_member.items():
@@ -73,7 +74,7 @@ class MonthPaymentBuilderDeliveryCharges:
         return payments_to_create
 
     @classmethod
-    def group_subscriptions_by_member(
+    def _group_subscriptions_by_member(
         cls, subscriptions
     ) -> dict[Member, set[Subscription]]:
         subscriptions_by_member: dict[Member, set[Subscription]] = {}
@@ -91,16 +92,7 @@ class MonthPaymentBuilderDeliveryCharges:
         contracts,
         cache: dict,
     ) -> Decimal:
-        if not contracts:
-            # The production caller (build_payment_for_contract_and_member) always
-            # passes a non-empty set, but get_total_to_pay is also part of the public
-            # total_to_pay_function contract and may be invoked directly with no
-            # contracts (e.g. when a future builder iterates a member who has none
-            # in the current rhythm window). Returning 0 keeps that contract total,
-            # rather than crashing on the next(iter(contracts)) below.
-            return Decimal(0)
-
-        member_id = next(iter(contracts)).member_id
+        member_id = get_any_element_from_set(contracts).member_id
         delivery_dates = cls.get_billable_delivery_dates_in_range(
             subscriptions=contracts,
             range_start=range_start,
@@ -132,46 +124,45 @@ class MonthPaymentBuilderDeliveryCharges:
         range_end: datetime.date,
         cache: dict,
     ) -> set[datetime.date]:
-        candidates_by_member: dict[str, tuple] = {}
+        member = get_any_element_from_set(subscriptions).member
+
+        candidate_dates: set[datetime.date] = set()
         for subscription in subscriptions:
             window_start = max(range_start, subscription.start_date)
             window_end = min(range_end, subscription.end_date)
             if window_start > window_end:
                 continue
-            for delivery_date in cls._iter_delivery_dates_for_subscription(
-                subscription=subscription,
-                window_start=window_start,
-                window_end=window_end,
-                cache=cache,
-            ):
-                member_id = subscription.member_id
-                existing = candidates_by_member.get(member_id)
-                if existing is None:
-                    candidates_by_member[member_id] = (subscription.member, set())
-                candidates_by_member[member_id][1].add(delivery_date)
+            candidate_dates.update(
+                cls._get_delivery_dates_within_range(
+                    subscription=subscription,
+                    window_start=window_start,
+                    window_end=window_end,
+                    cache=cache,
+                )
+            )
 
         result: set[datetime.date] = set()
-        for member, delivery_dates in candidates_by_member.values():
-            for delivery_date in delivery_dates:
-                if JokerManagementService.does_member_have_a_joker_in_week(
-                    member=member, reference_date=delivery_date, cache=cache
-                ):
-                    continue
-                if DeliveryDonationManager.does_member_have_a_donation_in_week(
-                    member=member, reference_date=delivery_date, cache=cache
-                ):
-                    continue
-                result.add(delivery_date)
+        for delivery_date in candidate_dates:
+            if JokerManagementService.does_member_have_a_joker_in_week(
+                member=member, reference_date=delivery_date, cache=cache
+            ):
+                continue
+            if DeliveryDonationManager.does_member_have_a_donation_in_week(
+                member=member, reference_date=delivery_date, cache=cache
+            ):
+                continue
+            result.add(delivery_date)
         return result
 
     @classmethod
-    def _iter_delivery_dates_for_subscription(
+    def _get_delivery_dates_within_range(
         cls,
         subscription: Subscription,
         window_start: datetime.date,
         window_end: datetime.date,
         cache: dict,
-    ):
+    ) -> list[datetime.date]:
+        result: list[datetime.date] = []
         current_date = window_start - datetime.timedelta(days=1)
         while current_date <= window_end:
             pickup_location_id = (
@@ -182,7 +173,11 @@ class MonthPaymentBuilderDeliveryCharges:
                 )
             )
             if pickup_location_id is None:
-                return
+                raise ValueError(
+                    f"Member {subscription.member_id} has subscription {subscription.id} "
+                    f"with a delivery scheduled around {current_date} but no pickup "
+                    f"location assigned on that date."
+                )
             next_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
                 reference_date=current_date,
                 pickup_location_id=pickup_location_id,
@@ -191,7 +186,8 @@ class MonthPaymentBuilderDeliveryCharges:
                 cache=cache,
             )
             if next_date is None or next_date > window_end:
-                return
+                return result
             if next_date >= window_start:
-                yield next_date
+                result.append(next_date)
             current_date = next_date
+        return result

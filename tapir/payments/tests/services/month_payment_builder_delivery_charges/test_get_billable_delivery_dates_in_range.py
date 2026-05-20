@@ -207,26 +207,3 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
             },
             result,
         )
-
-    def test_getBillableDeliveryDatesInRange_subscriptionForOtherMember_notIncluded(
-        self,
-    ):
-        subscription = self._make_subscription()
-        other_member = MemberFactory.create()
-        other_subscription = SubscriptionFactory.create(
-            member=other_member,
-            product=self.product,
-            start_date=datetime.date(year=2026, month=1, day=1),
-            end_date=datetime.date(year=2026, month=12, day=31),
-        )
-
-        result = (
-            MonthPaymentBuilderDeliveryCharges.get_billable_delivery_dates_in_range(
-                subscriptions=[subscription, other_subscription],
-                range_start=self.range_start,
-                range_end=self.range_end,
-                cache={},
-            )
-        )
-
-        self.assertEqual(4, len(result))

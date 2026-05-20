@@ -217,7 +217,7 @@ class GetFutureMemberPaymentsApiView(APIView):
     @classmethod
     def get_delivery_charge_pickup_location(
         cls, member_id: str, payment: Payment, cache: dict
-    ) -> PickupLocation | None:
+    ) -> PickupLocation:
         reference_date = payment.subscription_payment_range_start or payment.due_date
         pickup_location_id = (
             MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
@@ -225,7 +225,10 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
         )
         if pickup_location_id is None:
-            return None
+            raise ValueError(
+                f"Member {member_id} has a delivery charge payment {payment.id} "
+                f"around {reference_date} but no pickup location assigned on that date."
+            )
         return PickupLocation.objects.filter(id=pickup_location_id).first()
 
     @classmethod
