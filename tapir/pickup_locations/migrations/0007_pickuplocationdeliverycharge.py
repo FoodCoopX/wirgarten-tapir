@@ -30,29 +30,17 @@ class Migration(migrations.Migration):
                 ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
-                (
-                    "amount",
-                    models.DecimalField(decimal_places=2, editable=False, max_digits=8),
-                ),
-                ("valid_from", models.DateField(editable=False)),
+                ("amount", models.DecimalField(decimal_places=2, max_digits=8)),
+                ("valid_from", models.DateField()),
                 (
                     "pickup_location",
                     models.ForeignKey(
-                        editable=False,
                         on_delete=django.db.models.deletion.CASCADE,
                         to="wirgarten.pickuplocation",
                     ),
                 ),
             ],
             options={
-                "indexes": [
-                    models.Index(
-                        fields=["pickup_location"], name="idx_pl_charge_location"
-                    ),
-                    models.Index(
-                        fields=["-valid_from"], name="idx_pl_charge_valid_from"
-                    ),
-                ],
                 "constraints": [
                     models.UniqueConstraint(
                         fields=("pickup_location", "valid_from"),
