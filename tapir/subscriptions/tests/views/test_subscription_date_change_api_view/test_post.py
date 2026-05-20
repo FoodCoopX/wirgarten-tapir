@@ -2,7 +2,6 @@ import datetime
 from decimal import Decimal
 
 from django.urls import reverse
-from icecream import ic
 
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import (
@@ -10,7 +9,6 @@ from tapir.payments.models import (
     MemberCredit,
     MemberCreditCreatedLogEntry,
 )
-from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -21,7 +19,7 @@ from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.subscriptions.models import SubscriptionChangedLogEntry
 from tapir.wirgarten.constants import WEEKLY
-from tapir.wirgarten.models import Subscription, GrowingPeriod, Member
+from tapir.wirgarten.models import Subscription, GrowingPeriod, Member, MandateReference
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -228,7 +226,9 @@ class TestPost(TapirIntegrationTest):
         )
         member = MemberFactory.create()
         subscription = self._create_subscription_and_payment(
-            member=member, growing_period=growing_period
+            member=member,
+            growing_period=growing_period,
+            mandate_ref=MandateReferenceFactory.create(member=member),
         )
 
         response = self.client.post(
@@ -394,11 +394,12 @@ class TestPost(TapirIntegrationTest):
             start_date=datetime.date(year=2025, month=1, day=1),
         )
         member = MemberFactory.create()
+        mandate_ref = MandateReferenceFactory.create(member=member)
         main_subscription = self._create_subscription_and_payment(
-            member=member, growing_period=growing_period
+            member=member, growing_period=growing_period, mandate_ref=mandate_ref
         )
         side_subscription = self._create_subscription_and_payment(
-            member=member, growing_period=growing_period
+            member=member, growing_period=growing_period, mandate_ref=mandate_ref
         )
 
         response = self.client.post(
@@ -427,7 +428,6 @@ class TestPost(TapirIntegrationTest):
             datetime.date(year=2025, month=11, day=30), side_subscription.end_date
         )
 
-        ic(MemberCredit.objects.all(), main_subscription, side_subscription)
         self.assertEqual(2, MemberCredit.objects.count())
         for member_credit in MemberCredit.objects.all():
             self.assertEqual(10, member_credit.amount)
@@ -449,13 +449,17 @@ class TestPost(TapirIntegrationTest):
 
     @classmethod
     def _create_subscription_and_payment(
-        cls, member: Member, growing_period: GrowingPeriod
+        cls,
+        member: Member,
+        growing_period: GrowingPeriod,
+        mandate_ref: MandateReference,
     ) -> Subscription:
         subscription = SubscriptionFactory.create(
             member=member,
             quantity=1,
             period=growing_period,
             product__type__delivery_cycle=WEEKLY[0],
+            mandate_ref=mandate_ref,
         )
         ProductPriceFactory.create(
             product=subscription.product,
@@ -471,9 +475,7 @@ class TestPost(TapirIntegrationTest):
         )
         PaymentFactory.create(
             due_date=datetime.date(year=2025, month=1, day=1),
-            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
-                member=member, cache={}
-            ),
+            mandate_ref=mandate_ref,
             amount=120,
             type=subscription.product.type.name,
             subscription_payment_range_start=datetime.date(year=2025, month=1, day=1),
