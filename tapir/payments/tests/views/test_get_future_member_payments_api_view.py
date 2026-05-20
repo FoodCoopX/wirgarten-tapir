@@ -12,6 +12,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
+    MemberPickupLocationFactory,
     SubscriptionFactory,
     GrowingPeriodFactory,
     ProductPriceFactory,
@@ -95,6 +96,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=1, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -171,6 +176,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(value=6)
         TapirParameter.objects.filter(
@@ -250,6 +259,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(value=6)
         TapirParameter.objects.filter(
@@ -361,6 +374,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(value=6)
         TapirParameter.objects.filter(
@@ -449,6 +466,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -511,6 +532,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -587,6 +612,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -662,6 +691,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=1, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15

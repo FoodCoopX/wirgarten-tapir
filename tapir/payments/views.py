@@ -40,10 +40,16 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MonthPaymentBuilderDeliveryCharges,
+)
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
     AutomaticSolidarityContributionRenewalService,
 )
@@ -59,6 +65,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     MandateReference,
     Member,
+    PickupLocation,
     Subscription,
     ProductType,
 )
@@ -112,7 +119,8 @@ class GetFutureMemberPaymentsApiView(APIView):
                     "trial_period_enabled": get_parameter_value(
                         key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
                     ),
-                }
+                },
+                context={"cache": self.cache},
             ).data
         )
 
@@ -165,6 +173,7 @@ class GetFutureMemberPaymentsApiView(APIView):
             subscriptions = []
             coop_share_transactions = []
             solidarity_contributions = []
+            delivery_charge_pickup_location = None
             match payment.type:
                 case "Genossenschaftsanteile":
                     coop_share_transactions = CoopShareTransaction.objects.filter(
@@ -181,6 +190,12 @@ class GetFutureMemberPaymentsApiView(APIView):
                             cache=cache,
                         )
                     )
+                case MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE:
+                    delivery_charge_pickup_location = (
+                        cls.get_delivery_charge_pickup_location(
+                            member_id=member_id, payment=payment, cache=cache
+                        )
+                    )
                 case _:
                     subscriptions = cls.get_relevant_subscriptions(
                         existing_subscriptions=existing_subscriptions,
@@ -195,9 +210,27 @@ class GetFutureMemberPaymentsApiView(APIView):
                     "subscriptions": subscriptions,
                     "coop_share_transactions": coop_share_transactions,
                     "solidarity_contributions": solidarity_contributions,
+                    "delivery_charge_pickup_location": delivery_charge_pickup_location,
                 }
             )
         return extended_payments
+
+    @classmethod
+    def get_delivery_charge_pickup_location(
+        cls, member_id: str, payment: Payment, cache: dict
+    ) -> PickupLocation:
+        reference_date = payment.subscription_payment_range_start or payment.due_date
+        pickup_location_id = (
+            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                member_id=member_id, reference_date=reference_date, cache=cache
+            )
+        )
+        if pickup_location_id is None:
+            raise ValueError(
+                f"Member {member_id} has a delivery charge payment {payment.id} "
+                f"around {reference_date} but no pickup location assigned on that date."
+            )
+        return PickupLocation.objects.filter(id=pickup_location_id).first()
 
     @classmethod
     def get_relevant_subscriptions(
@@ -294,7 +327,8 @@ class GetPastMemberPaymentsApiView(APIView):
                     "trial_period_enabled": get_parameter_value(
                         key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
                     ),
-                }
+                },
+                context={"cache": self.cache},
             ).data
         )
 

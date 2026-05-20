@@ -70,12 +70,16 @@ function getStartDate(extendedPayment: ExtendedPayment) {
     (contribution) => contribution.startDate,
   );
 
-  const minDate = getMinimumDate([
+  const candidates = [
     ...subscriptionStartDates,
     ...contributionsStartDates,
-  ]);
+  ];
 
-  return getMaximumDate([minDate, paymentRangeStart!]);
+  if (candidates.length === 0) {
+    return paymentRangeStart!;
+  }
+
+  return getMaximumDate([getMinimumDate(candidates), paymentRangeStart!]);
 }
 
 function getEndDate(extendedPayment: ExtendedPayment) {
@@ -89,12 +93,13 @@ function getEndDate(extendedPayment: ExtendedPayment) {
     (contribution) => contribution.endDate,
   );
 
-  const maxDate = getMaximumDate([
-    ...subscriptionEndDates,
-    ...contributionEndDates,
-  ]);
+  const candidates = [...subscriptionEndDates, ...contributionEndDates];
 
-  return getMinimumDate([maxDate, paymentRangeEnd!]);
+  if (candidates.length === 0) {
+    return paymentRangeEnd!;
+  }
+
+  return getMinimumDate([getMaximumDate(candidates), paymentRangeEnd!]);
 }
 
 function partialMonthText(extendedPayment: ExtendedPayment) {
@@ -159,6 +164,11 @@ const EXPLANATION_TEXT = (
     <p>
       Ein ggf. ausgewählter Solidarpreis wird taggenau auf den Monat
       hochgerechnet.
+    </p>
+    <p>
+      Wenn deine Verteilstation einen Lieferzuschlag erhebt, wird dieser pro
+      Lieferung berechnet (z.B. 2,00 € pro Lieferung, bei 4 Lieferungen im
+      Monat 8,00 €). Lieferzuschläge entfallen bei Jokern und Spenden.
     </p>
     <p>
       In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die
@@ -226,8 +236,19 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
               {trialPeriodText(extendedPayment, trialPeriodEnabled)}
             </span>
           )}
+          {extendedPayment.payment.type === "payment_type_delivery_charge" && (
+            <span>
+              {extendedPayment.deliveryChargePickupLocation
+                ? `Lieferzuschlag Verteilstation ${extendedPayment.deliveryChargePickupLocation.name}`
+                : "Lieferzuschlag"}
+              {partialMonthText(extendedPayment)}
+              {trialPeriodText(extendedPayment, trialPeriodEnabled)}
+            </span>
+          )}
           {(extendedPayment.subscriptions.length > 0 ||
-            extendedPayment.solidarityContributions.length > 0) && (
+            extendedPayment.solidarityContributions.length > 0 ||
+            extendedPayment.payment.type ===
+              "payment_type_delivery_charge") && (
             <span>
               {formatDateNumeric(getStartDate(extendedPayment))}
               {" -> "}

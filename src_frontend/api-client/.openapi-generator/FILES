@@ -155,6 +155,9 @@ models/PickupLocationCapacityChangePoint.ts
 models/PickupLocationCapacityCheckRequestRequest.ts
 models/PickupLocationCapacityCheckResponse.ts
 models/PickupLocationCapacityEvolution.ts
+models/PickupLocationDeliveryChargeCreateRequestRequest.ts
+models/PickupLocationDeliveryChargeEntry.ts
+models/PickupLocationDeliveryChargesResponse.ts
 models/PickupLocationOpeningTime.ts
 models/PreferredLanguageEnum.ts
 models/Product.ts

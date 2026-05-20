@@ -9,6 +9,7 @@ from tapir.deliveries.models import (
     CustomCycleScheduledDeliveryWeek,
 )
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import NoticePeriod
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
@@ -188,6 +189,27 @@ class TapirCache:
             product_by_product_type_id,
             product_type_id,
             lambda: set(Product.objects.filter(type_id=product_type_id)),
+        )
+
+    @classmethod
+    def get_delivery_charges_by_pickup_location_id(
+        cls, cache: dict, pickup_location_id: str
+    ) -> list[PickupLocationDeliveryCharge]:
+        delivery_charges_by_pickup_location_id = get_from_cache_or_compute(
+            cache, "delivery_charges_by_pickup_location_id", lambda: {}
+        )
+
+        def compute():
+            return list(
+                PickupLocationDeliveryCharge.objects.filter(
+                    pickup_location_id=pickup_location_id
+                ).order_by("valid_from")
+            )
+
+        return get_from_cache_or_compute(
+            delivery_charges_by_pickup_location_id,
+            pickup_location_id,
+            compute,
         )
 
     @classmethod
