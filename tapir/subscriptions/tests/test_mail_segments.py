@@ -19,6 +19,7 @@ class TestMailSegments(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         now = mock_timezone(
             test=self, now=datetime.datetime(year=2031, month=4, day=17)
         )
