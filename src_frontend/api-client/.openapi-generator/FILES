@@ -145,6 +145,7 @@ models/PaymentRhythmSerializerRequest.ts
 models/PaymentStatusEnum.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
+models/PdfExportTemplate.ts
 models/PersonalDataRequest.ts
 models/PickingModeEnum.ts
 models/PickupLocation.ts

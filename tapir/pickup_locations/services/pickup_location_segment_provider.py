@@ -8,11 +8,13 @@ from tapir.wirgarten.models import PickupLocation
 
 
 class PickupLocationSegmentProvider:
+    SEGMENT_ID_ALL_PICKUP_LOCATIONS = "pickup_locations.all"
+
     @classmethod
     def get_pickup_location_segments(cls):
         return [
             ExportSegment(
-                id="pickup_locations.all",
+                id=cls.SEGMENT_ID_ALL_PICKUP_LOCATIONS,
                 display_name="Alle Abholorte",
                 description="",
                 get_queryset=cls.get_queryset_all_pickup_stations,

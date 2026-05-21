@@ -132,6 +132,7 @@ export * from "./PaymentRhythmSerializerRequest";
 export * from "./PaymentStatusEnum";
 export * from "./PdfExportModel";
 export * from "./PdfExportModelRequest";
+export * from "./PdfExportTemplate";
 export * from "./PersonalDataRequest";
 export * from "./PickingModeEnum";
 export * from "./PickupLocation";

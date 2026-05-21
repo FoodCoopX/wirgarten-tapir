@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
+import { Card, Col, Dropdown, Row } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import {
   ExportSegment,
   GenericExportsApi,
   PdfExportModel,
+  PdfExportTemplate,
 } from "../api-client";
-import TapirButton from "../components/TapirButton.tsx";
-import PdfExportTable from "./PdfExportTable.tsx";
-import PdfExportModal from "./PdfExportModal.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
-import PdfExportBuildModal from "./PdfExportBuildModal.tsx";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import { ToastData } from "../types/ToastData.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { addToast } from "../utils/addToast.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import PdfExportBuildModal from "./PdfExportBuildModal.tsx";
+import PdfExportModal from "./PdfExportModal.tsx";
+import PdfExportTable from "./PdfExportTable.tsx";
 
 interface PdfExportEditorProps {
   csrfToken: string;
@@ -33,16 +35,23 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
   const [exportSelectedForBuild, setExportSelectedForBuild] =
     useState<PdfExportModel>();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
+  const [templates, setTemplates] = useState<PdfExportTemplate[]>([]);
+  const [creatingFromTemplate, setCreatingFromTemplate] = useState(false);
 
   useEffect(() => {
     setSegmentsLoading(true);
-    api
-      .genericExportsExportSegmentsList()
-      .then(setSegments)
+    Promise.all([
+      api.genericExportsExportSegmentsList(),
+      api.genericExportsPdfExportTemplatesList(),
+    ])
+      .then(([segments, templates]) => {
+        setSegments(segments);
+        setTemplates(templates);
+      })
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Segmente",
+          "Fehler beim Laden der Segmente und Templates",
           setToastDatas,
         ),
       )
@@ -80,6 +89,38 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
       .finally(() => setExportSelectedForDeletion(undefined));
   }
 
+  function createExportFromTemplate(templateId: string) {
+    setCreatingFromTemplate(true);
+
+    api
+      .genericExportsCreatePdfExportFromTemplatesCreate({
+        templateId: templateId,
+      })
+      .then((result) => {
+        if (result.orderConfirmed) {
+          loadExports();
+          return;
+        }
+        addToast(
+          {
+            id: uuidv4(),
+            variant: "danger",
+            message: result.error!,
+            title: "Fehler",
+          },
+          setToastDatas,
+        );
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Erzeugen des Exports aus einem Template",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setCreatingFromTemplate(false));
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -92,13 +133,37 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
                 }
               >
                 <h5 className={"mb-0"}>PDF-Export Editor</h5>
-                <TapirButton
-                  variant={"outline-primary"}
-                  text={"Neuen Export erzeugen"}
-                  icon={"add_circle"}
-                  onClick={() => setShowPdfExportModal(true)}
-                  disabled={segmentsLoading}
-                />
+                <Dropdown>
+                  <Dropdown.Toggle
+                    variant="outline-primary"
+                    id="dropdown-create"
+                    disabled={creatingFromTemplate}
+                  >
+                    {creatingFromTemplate
+                      ? "Wird erzeugt..."
+                      : "Neuen Export erzeugen"}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item
+                      onClick={() => setShowPdfExportModal(true)}
+                      disabled={segmentsLoading}
+                    >
+                      Leer
+                    </Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Header>Templates</Dropdown.Header>
+                    {templates.map((template) => (
+                      <Dropdown.Item
+                        key={template.id}
+                        onClick={() => createExportFromTemplate(template.id)}
+                      >
+                        {template.name}
+                        <br />
+                        <small>{template.description}</small>
+                      </Dropdown.Item>
+                    ))}
+                  </Dropdown.Menu>
+                </Dropdown>
               </div>
             </Card.Header>
             <Card.Body>

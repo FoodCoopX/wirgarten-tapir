@@ -1,0 +1,48 @@
+{% load wirgarten %}
+<style>
+    @page {
+        size: A4 landscape;
+        margin: 1cm;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #000;
+        padding: 3px 5px;
+        text-align: left;
+        vertical-align: top;
+    }
+</style>
+<h1>PICKUP_LOCATION_NAME {{ today|format_date }}</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Nachname</th>
+            <th>Vorname</th>
+            <th>Telefonnummer</th>
+            <th>E-Mail</th>
+            <th>Produktanteil</th>
+            <th>Produktanteilsgröße</th>
+            <th>Menge</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in entries %}
+            {% if entry.pickup_location_name == "PICKUP_LOCATION_NAME" %}
+                {% for delivery in entry.pickup_location_deliveries_current_week %}
+                    <tr>
+                        <td>{{delivery.last_name}}</td>
+                        <td>{{delivery.first_name}}</td>
+                        <td>{{delivery.phone_number}}</td>
+                        <td>{{delivery.email}}</td>
+                        <td>{{delivery.product_type_name}}</td>
+                        <td>{{delivery.product_name}}</td>
+                        <td>{{delivery.quantity}}</td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>

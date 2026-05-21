@@ -1007,6 +1007,27 @@ paths:
               schema:
                 type: string
           description: ''
+  /generic_exports/create_pdf_export_from_templates:
+    post:
+      operationId: generic_exports_create_pdf_export_from_templates_create
+      parameters:
+      - in: query
+        name: template_id
+        schema:
+          type: string
+      tags:
+      - generic_exports
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /generic_exports/csv_exports/:
     get:
       operationId: generic_exports_csv_exports_list
@@ -1177,6 +1198,24 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ExportSegment'
+          description: ''
+  /generic_exports/pdf_export_templates:
+    get:
+      operationId: generic_exports_pdf_export_templates_list
+      tags:
+      - generic_exports
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PdfExportTemplate'
           description: ''
   /generic_exports/pdf_exports/:
     get:
@@ -9328,6 +9367,19 @@ components:
       - generate_one_file_for_every_segment_entry
       - name
       - template
+    PdfExportTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - id
+      - name
     PersonalDataRequest:
       type: object
       properties:
