@@ -78,7 +78,7 @@ class TestGetTrialPeriodStartDate(TapirUnitTest):
             member_id="test_member_id", reference_date=contract_start_date, cache=cache
         )
         mock_get_next_delivery_date_for_product_type.assert_called_once_with(
-            reference_date=contract_start_date,
+            reference_date=contract_start_date - datetime.timedelta(days=1),
             product_type=product_type,
             check_for_weeks_without_delivery=False,
             pickup_location_id="test_pickup_location_id",
