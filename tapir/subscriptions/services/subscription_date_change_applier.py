@@ -170,7 +170,9 @@ class SubscriptionDateChangeApplier:
 
         subscription.end_date = end_date_after_changes
         subscription.save()
-        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
 
         SubscriptionChangedLogEntry().populate(
             old_frozen=subscription_before,

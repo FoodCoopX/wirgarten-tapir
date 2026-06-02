@@ -1,8 +1,6 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -10,6 +8,7 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.tests.factories import SubscriptionFactory, ProductTypeFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetTrialPeriodStartDate(TapirUnitTest):

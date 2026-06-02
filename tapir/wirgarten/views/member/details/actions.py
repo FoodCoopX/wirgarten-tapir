@@ -80,7 +80,9 @@ def renew_contract_same_conditions(request, **kwargs):
 
     Subscription.objects.bulk_create(new_subs)
 
-    TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+    TapirCacheManager.clear_category(
+        cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+    )
 
     member = Member.objects.get(id=member_id)
     member.sepa_consent = get_now(cache=cache)

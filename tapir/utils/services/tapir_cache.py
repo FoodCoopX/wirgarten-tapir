@@ -37,7 +37,7 @@ class TapirCache:
     def get_all_subscriptions(cls, cache: dict) -> Set[Subscription]:
         key = "all_subscriptions"
         TapirCacheManager.register_key_in_category(
-            cache=cache, key=key, category="subscriptions"
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
         return get_from_cache_or_compute(
             cache,
@@ -65,7 +65,7 @@ class TapirCache:
     ):
         key = "subscriptions_by_date"
         TapirCacheManager.register_key_in_category(
-            cache=cache, key=key, category="subscriptions"
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
 
         def compute():
@@ -106,7 +106,7 @@ class TapirCache:
     ):
         key = "subscriptions_by_date_and_member_id"
         TapirCacheManager.register_key_in_category(
-            cache=cache, key=key, category="subscriptions"
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
 
         def compute():
@@ -136,7 +136,7 @@ class TapirCache:
     ) -> Set[Subscription]:
         key = "subscriptions_by_delivery_cycle"
         TapirCacheManager.register_key_in_category(
-            cache=cache, key=key, category="subscriptions"
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
 
         subscriptions_by_delivery_cycle = get_from_cache_or_compute(
@@ -156,7 +156,7 @@ class TapirCache:
     def get_subscriptions_affected_by_jokers(cls, cache: dict):
         key = "subscriptions_affected_by_jokers"
         TapirCacheManager.register_key_in_category(
-            cache=cache, key=key, category="subscriptions"
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
 
         return get_from_cache_or_compute(
@@ -225,7 +225,7 @@ class TapirCache:
     def get_subscriptions_by_product_type(cls, cache: dict):
         key = "subscriptions_by_product_type"
         TapirCacheManager.register_key_in_category(
-            cache=cache, key=key, category="subscriptions"
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
 
         def compute():
@@ -265,7 +265,7 @@ class TapirCache:
     def get_last_subscription(cls, cache: dict):
         key = "last_subscription"
         TapirCacheManager.register_key_in_category(
-            cache=cache, key=key, category="subscriptions"
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
 
         return get_from_cache_or_compute(

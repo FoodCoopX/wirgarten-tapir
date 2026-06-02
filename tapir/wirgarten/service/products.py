@@ -218,7 +218,7 @@ def get_active_and_future_subscriptions(
 
     key = "active_and_future_subscriptions_by_date"
     TapirCacheManager.register_key_in_category(
-        cache=cache, key=key, category="subscriptions"
+        cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
     )
     active_and_future_subscriptions_by_date_cache = get_from_cache_or_compute(
         cache, key, lambda: {}
@@ -244,7 +244,7 @@ def get_active_subscriptions(
 
     key = "active_subscriptions_by_date"
     TapirCacheManager.register_key_in_category(
-        cache=cache, key=key, category="subscriptions"
+        cache=cache, key=key, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
     )
     active_subscriptions_by_date_cache = get_from_cache_or_compute(
         cache, "active_subscriptions_by_date", lambda: {}

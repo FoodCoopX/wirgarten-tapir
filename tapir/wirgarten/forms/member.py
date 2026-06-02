@@ -456,7 +456,9 @@ class SubscriptionRenewalForm(Form):
         for form in self.product_forms:
             form.save(*args, **kwargs)
 
-        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=self.cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
 
         member_id = kwargs["member_id"]
         self.subs = get_active_and_future_subscriptions(

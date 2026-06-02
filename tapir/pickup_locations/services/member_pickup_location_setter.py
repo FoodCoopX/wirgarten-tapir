@@ -13,6 +13,7 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, MemberPickupLocation
 from tapir.wirgarten.utils import get_today, format_date
@@ -42,6 +43,11 @@ class MemberPickupLocationSetter:
             pickup_location_id=pickup_location_id,
             valid_from=valid_from,
         )
+
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_MEMBER_PICKUP_LOCATIONS
+        )
+
         PickupLocationChangedLogEntry().populate_pickup_location(
             actor=actor,
             member_pickup_location=member_pickup_location,

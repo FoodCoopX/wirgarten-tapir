@@ -67,7 +67,9 @@ class ApplyTapirOrderManager:
             actor=actor,
             cache=cache,
         )
-        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
 
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=contract_start_date, cache=cache
@@ -121,7 +123,9 @@ class ApplyTapirOrderManager:
             )
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
-        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
         if len(new_subscriptions) > 0:
             OnboardingTrigger.on_subscription_updated(new_subscriptions[0])
 
