@@ -42,6 +42,7 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
     OrderFeedback,
+    PickupLocationOpeningTime,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -53,6 +54,7 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     ProductCapacityFactory,
     PickupLocationCapabilityFactory,
+    MemberPickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
@@ -64,7 +66,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         configure_mail_module()
 
         cls.product_1, cls.product_2, cls.product_3 = ProductFactory.create_batch(
@@ -1106,4 +1108,53 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             shopping_cart_waiting_list=data["shopping_cart_waiting_list"],
             pickup_location_wishes=data["pickup_location_ids"],
             mock_fire_action=mock_fire_action,
+        )
+
+    def test_post_selectedPickupLocationHasACapacityLimit_endOfTrialPeriodIsCorrect(
+        self,
+    ):
+        # This is a regression test for infra#92 https://github.com/FoodCoopX/infra/issues/92
+        # The fix is in 064b3783b41d0ada2e86e12549b9f8730b427ded and d85bd6666c20e7585f8138ee4d25dd91bb79fe60
+        # During capacity checks (before member creation), the member<->pickup_location links were cached
+        # so the new member was cached has having no pickup location, which meant the member was getting delivered on a monday
+        # pushing the first delivery by one week.
+
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_DURATION, value=4)
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=True)
+
+        # The selected location must have a capacity limit in order to trigger the calculations that cache MemberPickupLocation
+        PickupLocationCapabilityFactory.create(
+            product_type=self.product_1.type, pickup_location=self.pickup_location_1
+        )
+        # There must be a change in the future so that PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change gives a date in the future
+        MemberPickupLocationFactory.create(
+            pickup_location=self.pickup_location_1,
+            valid_from=self.growing_period_future.end_date,
+        )
+
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=self.pickup_location_1,
+            day_of_week=3,
+            open_time=datetime.time(hour=10),
+            close_time=datetime.time(hour=11),
+        )
+
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["shopping_cart_order"] = {self.product_1.id: 1}
+        post_data["pickup_location_ids"] = [self.pickup_location_1.id]
+        post_data["growing_period_id"] = self.growing_period.id
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, expected_status_code=200)
+        self.assert_order_confirmed(response.json())
+
+        transaction = CoopShareTransaction.objects.get()
+        self.assertEqual(datetime.date(2027, 7, 25), transaction.valid_at)
+        self.assertEqual(
+            self.CONTRACT_START_DATE, Subscription.objects.get().start_date
         )
