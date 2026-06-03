@@ -1100,7 +1100,7 @@ class QuestionaireTrafficSourceResponse(TapirModel):
 
 class QuestionaireCancellationReasonResponse(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
-    reason = models.CharField(max_length=150)
+    reason = models.CharField(max_length=1000)
     custom = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True, null=True)
 
