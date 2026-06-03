@@ -80,12 +80,14 @@ class Pain008XmlGenerator:
         )
 
         for payment in payments:
-            cls._add_payment(payments_container=payments_container, payment=payment)
+            cls._add_payment(
+                payments_container=payments_container, payment=payment, cache=cache
+            )
 
         return payments_container
 
     @classmethod
-    def _add_payment(cls, payments_container, payment: Payment):
+    def _add_payment(cls, payments_container, payment: Payment, cache: dict):
         direct_debit_transaction_info = cls._append_element(
             payments_container, "DrctDbtTxInf"
         )
@@ -134,9 +136,7 @@ class Pain008XmlGenerator:
             direct_debit_transaction_info, "RmtInf"
         )
         unstructured = cls._append_element(remittance_information, "Ustrd")
-        unstructured.text = (
-            f"{get_parameter_value(key=ParameterKeys.SITE_NAME)}, {payment.type}"
-        )
+        unstructured.text = f"{get_parameter_value(key=ParameterKeys.SITE_NAME, cache=cache)}, {payment.type}"
 
     @classmethod
     def _add_payments_header(
@@ -187,6 +187,10 @@ class Pain008XmlGenerator:
         creditor_iban.text = get_parameter_value(
             key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, cache=cache
         )
+        if len(creditor_iban.text.strip()) == 0:
+            raise ValidationError(
+                "Der Parameter 'IBAN der Organisation' muss in der Konfig gesetzt werden"
+            )
 
         creditor_agent = cls._append_element(payments_container, "CdtrAgt")
         financial_institution_id_container = cls._append_element(
@@ -213,6 +217,10 @@ class Pain008XmlGenerator:
         creditor_id.text = get_parameter_value(
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER, cache=cache
         )
+        if len(creditor_id.text.strip()) == 0:
+            raise ValidationError(
+                "Der Parameter 'Gläubiger-Identifikationsnummer' muss in der Konfig gesetzt werden"
+            )
         creditor_scheme_name = cls._append_element(creditor_other, "SchmeNm")
         creditor_scheme_proprietary = cls._append_element(creditor_scheme_name, "Prtry")
         creditor_scheme_proprietary.text = "SEPA"
