@@ -1,13 +1,13 @@
 import datetime
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.pick_list_builder import PickListBuilder
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.subscriptions.services.subscription_delivered_in_week_checked import (
     SubscriptionDeliveredInWeekChecker,
 )
@@ -115,6 +115,14 @@ class PickupLocationColumnProvider:
                 "product_type_name": subscription.product.type.name,
                 "product_name": subscription.product.name,
                 "quantity": subscription.quantity,
+                "usual_pickup_location": TapirCache.get_pickup_location_by_id(
+                    cache=cache,
+                    pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                        member_id=subscription.member_id,
+                        cache=cache,
+                        reference_date=reference_datetime.date(),
+                    ),
+                ),
             }
             for subscription in subscriptions
         ]

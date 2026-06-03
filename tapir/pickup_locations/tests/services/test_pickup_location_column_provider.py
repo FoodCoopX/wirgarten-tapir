@@ -107,6 +107,7 @@ class TestPickupLocationColumnProvider(TapirIntegrationTest):
                     "product_name": product.name,
                     "product_type_name": product_type_weekly.name,
                     "quantity": subscription_valid_2.quantity,
+                    "usual_pickup_location": target_pickup_location,
                 },
                 {
                     "member_no": 1027,
@@ -117,12 +118,13 @@ class TestPickupLocationColumnProvider(TapirIntegrationTest):
                     "product_name": product.name,
                     "product_type_name": product_type_weekly.name,
                     "quantity": subscription_valid_1.quantity,
+                    "usual_pickup_location": target_pickup_location,
                 },
             ],
             result,
         )
 
-    def test_getValuePickupLocationDeliveriesCurrentWeek_deliveryIsDonation_donationShowsOnCorrectLocaiton(
+    def test_getValuePickupLocationDeliveriesCurrentWeek_deliveryIsDonation_donationShowsOnCorrectLocation(
         self,
     ):
         member_pickup_location = PickupLocationFactory.create()
@@ -175,3 +177,4 @@ class TestPickupLocationColumnProvider(TapirIntegrationTest):
             1,
             len(result),
         )
+        self.assertEqual(member_pickup_location, result[0]["usual_pickup_location"])
