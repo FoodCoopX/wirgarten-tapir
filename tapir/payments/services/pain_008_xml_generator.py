@@ -13,12 +13,14 @@ from tapir.wirgarten.utils import get_now
 
 
 class Pain008XmlGenerator:
-    # Generates payment files according to ISO20022 pain.008.001.12
+    # Generates payment files according to ISO20022 pain.008.001.08
     # A description of the format can be found here: https://developer.huntington.com/enterprisepayments/docs/iso-pain008
     # This PDF can also be used as reference: https://www.nacha.org/system/files/2023-12/NACHA_ISO20022_Guide_pain.008_direct_debit%208-9-23.pdf
     # search for the element names to get a definition of the fields in section "ISO 20022 File Format Table"
+    # An updated version (pain.008.001.12) is available but this page https://www.gls.de/pain from the bank that most Tapir user use
+    # says they user the .08 version.
 
-    namespace = "urn:iso:std:iso:20022:tech:xsd:pain.008.001.12"
+    namespace = "urn:iso:std:iso:20022:tech:xsd:pain.008.001.08"
     NOT_PROVIDED = "NOTPROVIDED"
 
     @classmethod
@@ -33,7 +35,7 @@ class Pain008XmlGenerator:
 
         document.set(
             etree.QName("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation"),
-            f"{cls.namespace} pain.008.001.12.xsd",
+            f"{cls.namespace} pain.008.001.08.xsd",
         )
 
         container = cls._append_element(document, "CstmrDrctDbtInitn")
@@ -241,7 +243,7 @@ class Pain008XmlGenerator:
 
     @classmethod
     def _validate_document(cls, document: Element) -> list[str]:
-        path = Path(__file__).with_name("pain.008.001.12.xsd")
+        path = Path(__file__).with_name("pain.008.001.08.xsd")
         with path.open("rb") as file:
             schema_root = etree.XML(file.read())
 
