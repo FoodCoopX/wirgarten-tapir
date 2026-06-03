@@ -35,3 +35,19 @@ class TestGetSolidarityContributionsThatCouldBeCancelled(TapirIntegrationTest):
         )
 
         self.assertEqual([solidarity_3, solidarity_2], list(result))
+
+    def test_getSolidarityContributionsThatCouldBeCancelled_contributionHasAmountZero_dontReturnContribution(
+        self,
+    ):
+        mock_timezone(test=self, now=datetime.datetime(year=2035, month=7, day=22))
+        member = MemberFactory.create()
+
+        SolidarityContributionFactory.create(
+            member=member, end_date=datetime.date(year=2035, month=8, day=12), amount=0
+        )
+
+        result = SubscriptionCancellationManager.get_solidarity_contributions_that_could_be_cancelled(
+            member=member, cache={}
+        )
+
+        self.assertEqual(0, len(result))

@@ -61,9 +61,13 @@ class SubscriptionCancellationManager:
     def get_solidarity_contributions_that_could_be_cancelled(
         cls, member: Member, cache: dict
     ):
-        return SolidarityContribution.objects.filter(
-            member=member, end_date__gte=get_today(cache=cache)
-        ).order_by("end_date")
+        return (
+            SolidarityContribution.objects.filter(
+                member=member, end_date__gte=get_today(cache=cache)
+            )
+            .exclude(amount=0)
+            .order_by("end_date")
+        )
 
     @classmethod
     def cancel_subscriptions(cls, product: Product, member: Member, cache: dict):
