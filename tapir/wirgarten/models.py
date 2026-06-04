@@ -789,7 +789,7 @@ class Payment(TapirModel):
         ]
 
     def __str__(self):
-        return f"{self.id } {format_currency(self.amount)} €, due_date:{self.due_date}, type:{self.type}, range:{self.subscription_payment_range_start} to {self.subscription_payment_range_end}, member:{self.mandate_ref.member}"
+        return f"{format_currency(self.amount)} €, due_date:{self.due_date}, type:{self.type}, range:{self.subscription_payment_range_start} to {self.subscription_payment_range_end}, member:{self.mandate_ref.member}"
 
 
 class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
