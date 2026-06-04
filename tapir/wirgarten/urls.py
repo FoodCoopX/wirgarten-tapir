@@ -34,7 +34,6 @@ from tapir.wirgarten.views.member.list.modals import (
     get_coop_share_transfer_form,
     get_member_personal_data_create_form,
 )
-from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
     PickupLocationCfgView,
     delete_pickup_location,
@@ -178,7 +177,6 @@ urlpatterns = [
         ExportSubscriptionList.as_view(),
         name="subscription_overview_export",
     ),
-    path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
     path(
         "member/<str:pk>/cancellation_reason",
         get_cancellation_reason_form,
