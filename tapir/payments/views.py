@@ -926,6 +926,8 @@ class PaymentTransactionViewSet(ReadOnlyModelViewSet):
 
 
 class PaymentTransactionDetailsView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
     @extend_schema(
         responses={200: PaymentTransactionDetailsSerializer},
         parameters=[OpenApiParameter(name="transaction_id", type=str, required=True)],

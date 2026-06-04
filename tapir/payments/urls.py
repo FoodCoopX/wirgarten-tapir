@@ -67,7 +67,7 @@ urlpatterns = [
         name="payment_transaction_list",
     ),
     path(
-        "payment_transaction_details",
+        "api/payment_transaction_details",
         views.PaymentTransactionDetailsView.as_view(),
         name="payment_transaction_details",
     ),

@@ -38,6 +38,7 @@ class TestPaymentTransactionViewSet(TapirIntegrationTest):
         transaction = PaymentTransactionFactory.create()
         PaymentFactory.create(transaction=transaction, amount=12.7)
         PaymentFactory.create(transaction=transaction, amount=8.5)
+        PaymentFactory.create(transaction=PaymentTransactionFactory.create())
 
         response = self.client.get(
             reverse("payments:payment_transactions-detail", args=[transaction.id])
