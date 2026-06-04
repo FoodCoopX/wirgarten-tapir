@@ -9,7 +9,6 @@ import {
   Tab,
   Tabs,
 } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
 import {
   Counts,
   PickupLocation,
@@ -23,13 +22,14 @@ import {
   WaitingListApiListListOrderByEnum,
   WaitingListEntryDetails,
 } from "../api-client";
-import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 import "./waiting_list_card.css";
 import WaitingListEntryEditModal from "./WaitingListEntryEditModal.tsx";
-import { ToastData } from "../types/ToastData.ts";
-import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import WaitingListTable from "./WaitingListTable.tsx";
 
 interface WaitingListCardProps {

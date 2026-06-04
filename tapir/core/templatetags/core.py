@@ -103,6 +103,11 @@ def add_admin_links(groups, request, cache: dict):
             url=reverse_lazy("wirgarten:payment_transactions"),
         )
         admin_group.add_link(
+            display_name=_("Lastschrift 2"),
+            material_icon="construction",
+            url=reverse_lazy("payments:payment_transaction_list"),
+        )
+        admin_group.add_link(
             display_name=_("Gutschriften"),
             material_icon="euro",
             url=reverse_lazy("payments:credit_list"),

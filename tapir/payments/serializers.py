@@ -1,3 +1,5 @@
+from django.db.models import Sum, F
+from django.urls import reverse
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import SubscriptionSerializer
@@ -7,7 +9,7 @@ from tapir.subscriptions.serializers import (
     CoopShareTransactionSerializer,
     MemberSerializer,
 )
-from tapir.wirgarten.models import Payment
+from tapir.wirgarten.models import Payment, PaymentTransaction
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -94,3 +96,40 @@ class PaymentIntendedUsePreviewResponseSerializer(serializers.Serializer):
     tokens = serializers.ListField(child=serializers.CharField())
     payments = PaymentSerializer(many=True)
     members = MemberSerializer(many=True)
+
+
+class PaymentTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentTransaction
+        fields = "__all__"
+
+    payments_count = serializers.SerializerMethodField()
+    payments_sum = serializers.SerializerMethodField()
+    csv_download_url = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_payments_count(transaction: PaymentTransaction) -> int:
+        return transaction.payment_set.count()
+
+    @staticmethod
+    def get_payments_sum(transaction: PaymentTransaction) -> float:
+        return (
+            transaction.payment_set.aggregate(amount_sum=Sum(F("amount")))["amount_sum"]
+            or 0
+        )
+
+    @staticmethod
+    def get_csv_download_url(transaction: PaymentTransaction) -> str:
+        return reverse("wirgarten:exported_files_download", args=[transaction.file_id])
+
+
+class PaymentListSerializer(serializers.Serializer):
+    # In PaymentTransactionDetailsSerializer, if we set directly
+    # payments_by_mandate_ref = serializers.DictField(child=PaymentSerializer(many=True))
+    # then the deserialization on the frontend size doesn't work
+    payments = PaymentSerializer(many=True)
+
+
+class PaymentTransactionDetailsSerializer(serializers.Serializer):
+    payments_by_mandate_ref = serializers.DictField(child=PaymentListSerializer())
+    members_by_mandate_ref = serializers.DictField(child=MemberSerializer())

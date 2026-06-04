@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.payments import views
 
@@ -60,4 +61,22 @@ urlpatterns = [
         views.PaymentIntendedUsePreviewCoopSharesApiView.as_view(),
         name="intended_use_preview_coop_shares",
     ),
+    path(
+        "payment_transaction_list",
+        views.PaymentTransactionsListView.as_view(),
+        name="payment_transaction_list",
+    ),
+    path(
+        "payment_transaction_details",
+        views.PaymentTransactionDetailsView.as_view(),
+        name="payment_transaction_details",
+    ),
 ]
+
+router = DefaultRouter()
+router.register(
+    r"payment_transactions",
+    views.PaymentTransactionViewSet,
+    basename="payment_transactions",
+)
+urlpatterns += router.urls

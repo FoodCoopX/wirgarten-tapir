@@ -10,9 +10,11 @@ from django.views.generic import TemplateView
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, permissions
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.serializers import ListField
 from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -31,6 +33,8 @@ from tapir.payments.serializers import (
     CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer,
     MandateReferencePreviewResponseSerializer,
     PaymentIntendedUsePreviewResponseSerializer,
+    PaymentTransactionSerializer,
+    PaymentTransactionDetailsSerializer,
 )
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
@@ -61,6 +65,7 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
     ProductType,
+    PaymentTransaction,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import (
@@ -906,3 +911,50 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
                     token_value_overrides=token_value_overrides,
                 ),
             )
+
+
+class PaymentTransactionsListView(TemplateView):
+    permission_required = Permission.Coop.MANAGE
+    template_name = "payments/payment_transactions_list_view.html"
+
+
+class PaymentTransactionViewSet(ReadOnlyModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    queryset = PaymentTransaction.objects.order_by("-month", "type")
+    serializer_class = PaymentTransactionSerializer
+    pagination_class = LimitOffsetPagination
+
+
+class PaymentTransactionDetailsView(APIView):
+    @extend_schema(
+        responses={200: PaymentTransactionDetailsSerializer},
+        parameters=[OpenApiParameter(name="transaction_id", type=str, required=True)],
+    )
+    def get(self, request):
+        transaction = get_object_or_404(
+            PaymentTransaction, id=request.query_params["transaction_id"]
+        )
+
+        payments = transaction.payment_set.select_related("mandate_ref__member")
+
+        payments_by_mandate_ref = {}
+        members_by_mandate_ref = {}
+        for payment in payments:
+            payments_by_mandate_ref.setdefault(payment.mandate_ref.ref, []).append(
+                payment
+            )
+            members_by_mandate_ref.setdefault(
+                payment.mandate_ref.ref, payment.mandate_ref.member
+            )
+
+        return Response(
+            PaymentTransactionDetailsSerializer(
+                {
+                    "payments_by_mandate_ref": {
+                        mandate_ref: {"payments": payments}
+                        for mandate_ref, payments in payments_by_mandate_ref.items()
+                    },
+                    "members_by_mandate_ref": members_by_mandate_ref,
+                }
+            ).data
+        )
