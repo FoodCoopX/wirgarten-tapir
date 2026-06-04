@@ -913,7 +913,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
             )
 
 
-class PaymentTransactionsListView(TemplateView):
+class PaymentTransactionsListView(PermissionRequiredMixin, TemplateView):
     permission_required = Permission.Coop.MANAGE
     template_name = "payments/payment_transactions_list_view.html"
 
