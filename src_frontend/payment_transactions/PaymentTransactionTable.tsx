@@ -62,6 +62,8 @@ const PaymentTransactionsTable: React.FC<PaymentTransactionsTableProps> = ({
                   icon={"download"}
                   variant={"outline-secondary"}
                   size={"sm"}
+                  onClick={() => downloadFile(transaction.xmlDownloadUrl)}
+                  disabled={transaction.xmlDownloadUrl.length === 0}
                 />
               </div>
             </td>

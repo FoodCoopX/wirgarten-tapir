@@ -25,7 +25,7 @@ class PaymentTransactionListView(PermissionRequiredMixin, generic.list.ListView)
                 "created_at": t.created_at,
                 "number_of_payments": len(payments),
                 "total_amount": sum(map(lambda p: p.amount, payments)),
-                "file": t.file,
+                "file": t.csv_file,
                 "type": t.type,
                 "payments": payments,
                 "month": t.month,

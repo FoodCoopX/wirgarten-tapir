@@ -9384,6 +9384,9 @@ components:
         csv_download_url:
           type: string
           readOnly: true
+        xml_download_url:
+          type: string
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -9398,17 +9401,21 @@ components:
         month:
           type: string
           format: date
-        file:
+        csv_file:
           type: string
+        xml_file:
+          type: string
+          nullable: true
       required:
       - created_at
       - csv_download_url
-      - file
+      - csv_file
       - month
       - payments_count
       - payments_sum
       - type
       - updated_at
+      - xml_download_url
     PaymentTransactionDetails:
       type: object
       properties:

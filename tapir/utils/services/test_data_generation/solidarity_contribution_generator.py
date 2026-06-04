@@ -1,6 +1,8 @@
 import random
 from datetime import date
 
+from django.db.models import F
+
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
@@ -32,6 +34,7 @@ class SolidarityContributionGenerator:
             )
 
         SolidarityContribution.objects.bulk_create(contributions_to_create)
+        SolidarityContribution.objects.update(created_at=F("start_date"))
 
     @classmethod
     def _generate_solidarity_contribution_for_member(

@@ -106,6 +106,7 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
     payments_count = serializers.SerializerMethodField()
     payments_sum = serializers.SerializerMethodField()
     csv_download_url = serializers.SerializerMethodField()
+    xml_download_url = serializers.SerializerMethodField()
 
     @staticmethod
     def get_payments_count(transaction: PaymentTransaction) -> int:
@@ -120,7 +121,17 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_csv_download_url(transaction: PaymentTransaction) -> str:
-        return reverse("wirgarten:exported_files_download", args=[transaction.file_id])
+        return reverse(
+            "wirgarten:exported_files_download", args=[transaction.csv_file_id]
+        )
+
+    @staticmethod
+    def get_xml_download_url(transaction: PaymentTransaction) -> str:
+        if transaction.xml_file_id is None:
+            return ""
+        return reverse(
+            "wirgarten:exported_files_download", args=[transaction.xml_file_id]
+        )
 
 
 class PaymentListSerializer(serializers.Serializer):

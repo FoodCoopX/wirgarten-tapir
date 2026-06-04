@@ -44,6 +44,12 @@ export interface PaymentTransaction {
   readonly csvDownloadUrl: string;
   /**
    *
+   * @type {string}
+   * @memberof PaymentTransaction
+   */
+  readonly xmlDownloadUrl: string;
+  /**
+   *
    * @type {Date}
    * @memberof PaymentTransaction
    */
@@ -71,7 +77,13 @@ export interface PaymentTransaction {
    * @type {string}
    * @memberof PaymentTransaction
    */
-  file: string;
+  csvFile: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PaymentTransaction
+   */
+  xmlFile?: string | null;
 }
 
 /**
@@ -86,11 +98,13 @@ export function instanceOfPaymentTransaction(
     return false;
   if (!("csvDownloadUrl" in value) || value["csvDownloadUrl"] === undefined)
     return false;
+  if (!("xmlDownloadUrl" in value) || value["xmlDownloadUrl"] === undefined)
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("type" in value) || value["type"] === undefined) return false;
   if (!("month" in value) || value["month"] === undefined) return false;
-  if (!("file" in value) || value["file"] === undefined) return false;
+  if (!("csvFile" in value) || value["csvFile"] === undefined) return false;
   return true;
 }
 
@@ -110,11 +124,13 @@ export function PaymentTransactionFromJSONTyped(
     paymentsCount: json["payments_count"],
     paymentsSum: json["payments_sum"],
     csvDownloadUrl: json["csv_download_url"],
+    xmlDownloadUrl: json["xml_download_url"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     type: json["type"],
     month: new Date(json["month"]),
-    file: json["file"],
+    csvFile: json["csv_file"],
+    xmlFile: json["xml_file"] == null ? undefined : json["xml_file"],
   };
 }
 
@@ -128,6 +144,7 @@ export function PaymentTransactionToJSONTyped(
     | "payments_count"
     | "payments_sum"
     | "csv_download_url"
+    | "xml_download_url"
     | "created_at"
     | "updated_at"
   > | null,
@@ -141,6 +158,7 @@ export function PaymentTransactionToJSONTyped(
     id: value["id"],
     type: value["type"],
     month: value["month"].toISOString().substring(0, 10),
-    file: value["file"],
+    csv_file: value["csvFile"],
+    xml_file: value["xmlFile"],
   };
 }

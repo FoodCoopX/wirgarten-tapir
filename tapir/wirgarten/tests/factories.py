@@ -221,7 +221,8 @@ class PaymentTransactionFactory(factory.django.DjangoModelFactory[PaymentTransac
         model = PaymentTransaction
 
     created_at = NOW
-    file = factory.SubFactory(ExportedFileFactory)
+    csv_file = factory.SubFactory(ExportedFileFactory)
+    xml_file = factory.SubFactory(ExportedFileFactory)
     month = factory.LazyAttribute(
         lambda transaction: transaction.created_at.date().replace(day=1)
     )

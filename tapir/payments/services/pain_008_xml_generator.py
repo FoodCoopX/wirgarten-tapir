@@ -27,6 +27,12 @@ class Pain008XmlGenerator:
     def build_xml_string(
         cls, payments: list[Payment], cache: dict, collection_date: datetime.date
     ):
+        if len(payments) > 1:
+            for payment in payments:
+                cls.validate_single_payment(
+                    payment=payment, cache=cache, collection_date=collection_date
+                )
+
         namespace_map = {
             None: cls.namespace,
             "xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -60,6 +66,19 @@ class Pain008XmlGenerator:
             raise ValidationError(", ".join(errors))
 
         return etree.tostring(document, pretty_print=True, xml_declaration=True)
+
+    @classmethod
+    def validate_single_payment(
+        cls, payment: Payment, cache: dict, collection_date: datetime.date
+    ):
+        try:
+            cls.build_xml_string(
+                payments=[payment], cache=cache, collection_date=collection_date
+            )
+        except ValidationError as error:
+            raise ValidationError(
+                f"Error when building XML for payment: {payment}: {error}"
+            )
 
     @classmethod
     def _build_payments(
