@@ -962,7 +962,8 @@ class PaymentTransactionDetailsView(APIView):
                 payment.mandate_ref.ref, payment.mandate_ref.member
             )
 
-        for mandate_ref, payments in payments_by_mandate_ref.items():
+        for mandate_ref in list(payments_by_mandate_ref.keys()):
+            payments = payments_by_mandate_ref[mandate_ref]
             if transaction.type == PAYMENT_TYPE_COOP_SHARES:
                 intended_use_by_mandate_ref[mandate_ref] = (
                     PaymentExportIntendedUseBuilder.build_intended_use(
@@ -975,7 +976,11 @@ class PaymentTransactionDetailsView(APIView):
                         payments=payments
                     )
                 )
-
+                if mandate_ref not in combined:
+                    # this happens if the sum of payments is negative
+                    del payments_by_mandate_ref[mandate_ref]
+                    del members_by_mandate_ref[mandate_ref]
+                    continue
                 combined_payment = combined[mandate_ref]
                 intended_use_by_mandate_ref[mandate_ref] = (
                     PaymentExportIntendedUseBuilder.build_intended_use(

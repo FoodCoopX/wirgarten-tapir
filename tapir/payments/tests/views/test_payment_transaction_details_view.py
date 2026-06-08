@@ -74,6 +74,13 @@ class TestPaymentTransactionDetailsView(TapirIntegrationTest):
             subscription_payment_range_start=datetime.date.today(),
             subscription_payment_range_end=datetime.date.today(),
         )
+        PaymentFactory.create(
+            transaction=self.transaction,
+            amount=-5,
+            mandate_ref__ref="test_ref3",
+            subscription_payment_range_start=datetime.date.today(),
+            subscription_payment_range_end=datetime.date.today(),
+        )  # This payment should not be included because it the sum of payments for this mandate ref is negative
 
         url = reverse(
             "payments:payment_transaction_details",
