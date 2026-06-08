@@ -9450,7 +9450,12 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/Member'
+        intended_use_by_mandate_ref:
+          type: object
+          additionalProperties:
+            type: string
       required:
+      - intended_use_by_mandate_ref
       - members_by_mandate_ref
       - payments_by_mandate_ref
     PdfExportModel:

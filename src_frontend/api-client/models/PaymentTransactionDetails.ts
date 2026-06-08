@@ -36,6 +36,12 @@ export interface PaymentTransactionDetails {
    * @memberof PaymentTransactionDetails
    */
   membersByMandateRef: { [key: string]: Member };
+  /**
+   *
+   * @type {{ [key: string]: string; }}
+   * @memberof PaymentTransactionDetails
+   */
+  intendedUseByMandateRef: { [key: string]: string };
 }
 
 /**
@@ -52,6 +58,11 @@ export function instanceOfPaymentTransactionDetails(
   if (
     !("membersByMandateRef" in value) ||
     value["membersByMandateRef"] === undefined
+  )
+    return false;
+  if (
+    !("intendedUseByMandateRef" in value) ||
+    value["intendedUseByMandateRef"] === undefined
   )
     return false;
   return true;
@@ -79,6 +90,7 @@ export function PaymentTransactionDetailsFromJSONTyped(
       json["members_by_mandate_ref"],
       MemberFromJSON,
     ),
+    intendedUseByMandateRef: json["intended_use_by_mandate_ref"],
   };
 }
 
@@ -105,5 +117,6 @@ export function PaymentTransactionDetailsToJSONTyped(
       value["membersByMandateRef"],
       MemberToJSON,
     ),
+    intended_use_by_mandate_ref: value["intendedUseByMandateRef"],
   };
 }

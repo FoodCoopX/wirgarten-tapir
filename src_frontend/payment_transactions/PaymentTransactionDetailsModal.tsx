@@ -38,6 +38,9 @@ const PaymentTransactionsDetailsModal: React.FC<
   const [paymentsByMandateRef, setPaymentsByMandateRef] = useState<
     Record<string, Payment[]>
   >({});
+  const [intendedUseByMandateRef, setIntendedUseByMandateRef] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     api
@@ -46,6 +49,7 @@ const PaymentTransactionsDetailsModal: React.FC<
       })
       .then((response) => {
         setMembersByMandateRef(response.membersByMandateRef);
+        setIntendedUseByMandateRef(response.intendedUseByMandateRef);
         setPaymentsByMandateRef(
           Object.fromEntries(
             Object.entries(response.paymentsByMandateRef).map(
@@ -115,6 +119,7 @@ const PaymentTransactionsDetailsModal: React.FC<
           {member.firstName}
         </td>
         <td>{mandateRef}</td>
+        <td>{intendedUseByMandateRef[mandateRef]}</td>
         <td>{formatCurrency(sum)}</td>
         <td>
           <ul>
@@ -146,6 +151,7 @@ const PaymentTransactionsDetailsModal: React.FC<
             <tr>
               <th>Mitglied</th>
               <th>Mandatsreferenz</th>
+              <th>Verwendungszweck</th>
               <th>Summe</th>
               <th>Details</th>
             </tr>

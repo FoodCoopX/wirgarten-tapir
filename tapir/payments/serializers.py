@@ -144,3 +144,4 @@ class PaymentListSerializer(serializers.Serializer):
 class PaymentTransactionDetailsSerializer(serializers.Serializer):
     payments_by_mandate_ref = serializers.DictField(child=PaymentListSerializer())
     members_by_mandate_ref = serializers.DictField(child=MemberSerializer())
+    intended_use_by_mandate_ref = serializers.DictField(child=serializers.CharField())

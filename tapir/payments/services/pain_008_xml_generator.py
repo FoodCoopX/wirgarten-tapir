@@ -7,6 +7,10 @@ from lxml import etree
 from lxml.etree import Element
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.services.payment_export_intended_use_builder import (
+    PaymentExportIntendedUseBuilder,
+)
 from tapir.wirgarten.models import Payment
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
@@ -155,7 +159,11 @@ class Pain008XmlGenerator:
             direct_debit_transaction_info, "RmtInf"
         )
         unstructured = cls._append_element(remittance_information, "Ustrd")
-        unstructured.text = f"{get_parameter_value(key=ParameterKeys.SITE_NAME, cache=cache)}, {payment.type}"
+        unstructured.text = PaymentExportIntendedUseBuilder.build_intended_use(
+            payment=payment,
+            is_contracts=payment.type != PAYMENT_TYPE_COOP_SHARES,
+            cache=cache,
+        )
 
     @classmethod
     def _add_payments_header(

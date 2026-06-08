@@ -18,10 +18,9 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
-from tapir.utils.services.model_date_range_overlap_checker import (
-    ModelDateRangeOverlapChecker,
-)
-from tapir.wirgarten.models import Payment, Member, Subscription
+from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import Payment, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_date, format_currency
 
@@ -45,8 +44,10 @@ class IntendedUsePatternExpander:
         member = payment.mandate_ref.member
 
         subscriptions = IntendedUsePatternExpander.get_relevant_subscriptions(
-            member, payment
+            member=member, payment=payment, cache=cache
         )
+        # Sorting to ensure consistent order in the tests
+        subscriptions.sort(key=lambda subscription: subscription.product.name)
 
         monthly_price_without_solidarity = sum(
             SubscriptionPriceCalculator.get_monthly_price(
@@ -107,12 +108,18 @@ class IntendedUsePatternExpander:
         )
 
     @classmethod
-    def get_relevant_subscriptions(cls, member: Member, payment: Payment):
-        return ModelDateRangeOverlapChecker.filter_objects_that_overlap_with_range(
-            queryset=Subscription.objects.filter(member_id=member.id),
-            range_start=payment.subscription_payment_range_start,
-            range_end=payment.subscription_payment_range_end,
-        )
+    def get_relevant_subscriptions(cls, member: Member, payment: Payment, cache: dict):
+        return [
+            subscription
+            for subscription in TapirCache.get_all_subscriptions(cache=cache)
+            if subscription.member_id == member.id
+            and DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=payment.subscription_payment_range_start,
+                range_1_end=payment.subscription_payment_range_end,
+                range_2_start=subscription.start_date,
+                range_2_end=subscription.end_date,
+            )
+        ]
 
     @classmethod
     def _get_nb_months(cls, member: Member, reference_date: datetime.date, cache: dict):

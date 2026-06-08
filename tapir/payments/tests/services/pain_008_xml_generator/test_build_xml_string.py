@@ -27,6 +27,11 @@ class TestBuildXmlString(TapirUnitTest):
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER,
             value="Test-creditor-id",
         )
+        mock_parameter_value(
+            cache=self.cache,
+            key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM,
+            value=False,
+        )
 
     def test_buildXmlString_default_returnsCorrectString(self):
         mock_timezone(
@@ -130,7 +135,7 @@ class TestBuildXmlString(TapirUnitTest):
             self._get_child("DbtrAcct/Id/IBAN", first_payment).text,
         )
         self.assertEqual(
-            "Test-site-name, Test type",
+            f"Test-site-name, {payment_1.mandate_ref.member.last_name}, Verträge",
             self._get_child("RmtInf/Ustrd", first_payment).text,
         )
 

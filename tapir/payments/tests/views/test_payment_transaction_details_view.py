@@ -1,3 +1,5 @@
+import datetime
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -47,15 +49,31 @@ class TestPaymentTransactionDetailsView(TapirIntegrationTest):
 
         mandate_ref_1 = MandateReferenceFactory.create(ref="test_ref1")
         PaymentFactory.create(
-            transaction=self.transaction, amount=12.7, mandate_ref=mandate_ref_1
+            transaction=self.transaction,
+            amount=12.7,
+            mandate_ref=mandate_ref_1,
+            subscription_payment_range_start=datetime.date.today(),
+            subscription_payment_range_end=datetime.date.today(),
         )
         PaymentFactory.create(
-            transaction=self.transaction, amount=8.5, mandate_ref=mandate_ref_1
+            transaction=self.transaction,
+            amount=8.5,
+            mandate_ref=mandate_ref_1,
+            subscription_payment_range_start=datetime.date.today(),
+            subscription_payment_range_end=datetime.date.today(),
         )
         payment_ref_2 = PaymentFactory.create(
-            transaction=self.transaction, amount=9.2, mandate_ref__ref="test_ref2"
+            transaction=self.transaction,
+            amount=9.2,
+            mandate_ref__ref="test_ref2",
+            subscription_payment_range_start=datetime.date.today(),
+            subscription_payment_range_end=datetime.date.today(),
         )
-        PaymentFactory.create(transaction=PaymentTransactionFactory.create())
+        PaymentFactory.create(
+            transaction=PaymentTransactionFactory.create(),
+            subscription_payment_range_start=datetime.date.today(),
+            subscription_payment_range_end=datetime.date.today(),
+        )
 
         url = reverse(
             "payments:payment_transaction_details",
@@ -78,4 +96,13 @@ class TestPaymentTransactionDetailsView(TapirIntegrationTest):
         self.assertEqual(mandate_ref_1.member.id, members["test_ref1"]["id"])
         self.assertEqual(
             payment_ref_2.mandate_ref.member.id, members["test_ref2"]["id"]
+        )
+
+        intended_uses = response_content["intended_use_by_mandate_ref"]
+        self.assertEqual(
+            {
+                "test_ref1": f"Standort Name, {mandate_ref_1.member.last_name}, Verträge",
+                "test_ref2": f"Standort Name, {payment_ref_2.mandate_ref.member.last_name}, Verträge",
+            },
+            intended_uses,
         )

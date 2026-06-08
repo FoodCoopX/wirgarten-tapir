@@ -18,7 +18,6 @@ from tapir.wirgarten.models import (
     Payment,
     ExportedFile,
     PaymentTransaction,
-    MandateReference,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
@@ -50,7 +49,7 @@ class PaymentExportBuilder:
 
         combined_contract_payments = cls.combine_contract_payments_by_mandate_ref(
             contract_payments
-        )
+        ).values()
 
         cls.export_payments_if_necessary(
             combined_payments=combined_contract_payments,
@@ -146,30 +145,35 @@ class PaymentExportBuilder:
 
     @classmethod
     def combine_contract_payments_by_mandate_ref(cls, payments: list[Payment]):
-        combined_payments: dict[MandateReference, Payment] = {}
+        combined_payments: dict[str, Payment] = {}
 
         for payment in payments:
-            if payment.mandate_ref not in combined_payments:
-                combined_payments[payment.mandate_ref] = Payment(
+            if payment.mandate_ref.ref not in combined_payments:
+                combined_payments[payment.mandate_ref.ref] = Payment(
                     mandate_ref=payment.mandate_ref,
                     amount=Decimal(0),
                     subscription_payment_range_start=payment.subscription_payment_range_start,
                     subscription_payment_range_end=payment.subscription_payment_range_end,
                 )
-            combined_payments[payment.mandate_ref].amount += payment.amount
-            combined_payments[payment.mandate_ref].subscription_payment_range_start = (
-                min(
-                    combined_payments[
-                        payment.mandate_ref
-                    ].subscription_payment_range_start,
-                    payment.subscription_payment_range_start,
-                )
+
+            combined_payments[payment.mandate_ref.ref].amount += payment.amount
+            combined_payments[
+                payment.mandate_ref.ref
+            ].subscription_payment_range_start = min(
+                combined_payments[
+                    payment.mandate_ref.ref
+                ].subscription_payment_range_start,
+                payment.subscription_payment_range_start,
             )
-            combined_payments[payment.mandate_ref].subscription_payment_range_end = max(
-                combined_payments[payment.mandate_ref].subscription_payment_range_end,
+            combined_payments[
+                payment.mandate_ref.ref
+            ].subscription_payment_range_end = max(
+                combined_payments[
+                    payment.mandate_ref.ref
+                ].subscription_payment_range_end,
                 payment.subscription_payment_range_end,
             )
-            combined_payments[payment.mandate_ref].type += f", {payment.id}"
+            combined_payments[payment.mandate_ref.ref].type += f", {payment.type}"
 
         combined_payments = {
             mandate_ref: payment
@@ -177,7 +181,7 @@ class PaymentExportBuilder:
             if payment.amount > 0
         }
 
-        return combined_payments.values()
+        return combined_payments
 
     @classmethod
     def get_unexported_payments(cls, reference_date: datetime.date):

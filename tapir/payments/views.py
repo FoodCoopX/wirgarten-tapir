@@ -51,6 +51,9 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
     MonthPaymentBuilderSolidarityContributions,
 )
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
+from tapir.payments.services.payment_export_intended_use_builder import (
+    PaymentExportIntendedUseBuilder,
+)
 from tapir.payments.services.subscription_payments_rebuilder import (
     SubscriptionPaymentsRebuilder,
 )
@@ -676,7 +679,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         combined_payments = list(
             PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
                 payments=list(payments)
-            )
+            ).values()
         )
         payments = random.sample(combined_payments, k=min(len(combined_payments), 5))
         return sorted(
@@ -943,11 +946,14 @@ class PaymentTransactionDetailsView(APIView):
         transaction = get_object_or_404(
             PaymentTransaction, id=request.query_params["transaction_id"]
         )
+        cache = {}
 
         payments = transaction.payment_set.select_related("mandate_ref__member")
 
         payments_by_mandate_ref = {}
         members_by_mandate_ref = {}
+        intended_use_by_mandate_ref = {}
+
         for payment in payments:
             payments_by_mandate_ref.setdefault(payment.mandate_ref.ref, []).append(
                 payment
@@ -955,6 +961,27 @@ class PaymentTransactionDetailsView(APIView):
             members_by_mandate_ref.setdefault(
                 payment.mandate_ref.ref, payment.mandate_ref.member
             )
+
+        for mandate_ref, payments in payments_by_mandate_ref.items():
+            if transaction.type == PAYMENT_TYPE_COOP_SHARES:
+                intended_use_by_mandate_ref[mandate_ref] = (
+                    PaymentExportIntendedUseBuilder.build_intended_use(
+                        payment=payments[0], is_contracts=False, cache=cache
+                    )
+                )
+            else:
+                combined = (
+                    PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
+                        payments=payments
+                    )
+                )
+
+                combined_payment = combined[mandate_ref]
+                intended_use_by_mandate_ref[mandate_ref] = (
+                    PaymentExportIntendedUseBuilder.build_intended_use(
+                        payment=combined_payment, is_contracts=True, cache=cache
+                    )
+                )
 
         return Response(
             PaymentTransactionDetailsSerializer(
@@ -964,7 +991,9 @@ class PaymentTransactionDetailsView(APIView):
                         for mandate_ref, payments in payments_by_mandate_ref.items()
                     },
                     "members_by_mandate_ref": members_by_mandate_ref,
-                }
+                    "intended_use_by_mandate_ref": intended_use_by_mandate_ref,
+                },
+                context={"cache": cache},
             ).data
         )
 

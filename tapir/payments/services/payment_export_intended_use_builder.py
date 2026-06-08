@@ -6,7 +6,8 @@ from tapir.payments.services.intended_use_pattern_expander import (
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
     Payment,
 )
@@ -78,22 +79,29 @@ class PaymentExportIntendedUseBuilder:
         if range_start != start_if_normal or range_end != end_if_normal:
             return ParameterKeys.PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE
 
-        solidarity_contribution = SolidarityContribution.objects.filter(
-            member=payment.mandate_ref.member,
-            start_date__lte=payment.subscription_payment_range_end,
-            end_date__gte=payment.subscription_payment_range_start,
-        ).first()
-        if solidarity_contribution is None:
+        all_contributions = TapirCache.get_all_solidarity_contributions(cache=cache)
+        relevant_contributions = [
+            contribution
+            for contribution in all_contributions
+            if contribution.member_id == payment.mandate_ref.member_id
+            and DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=payment.subscription_payment_range_start,
+                range_1_end=payment.subscription_payment_range_end,
+                range_2_start=contribution.start_date,
+                range_2_end=contribution.end_date,
+            )
+        ]
+        if len(relevant_contributions) == 0:
             return ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE
 
         subscriptions = IntendedUsePatternExpander.get_relevant_subscriptions(
-            payment=payment, member=payment.mandate_ref.member
+            payment=payment, member=payment.mandate_ref.member, cache=cache
         )
 
-        if not subscriptions.exists():
+        if len(subscriptions) == 0:
             return ParameterKeys.PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY
 
-        if solidarity_contribution.amount < 0:
+        if relevant_contributions[0].amount < 0:
             return (
                 ParameterKeys.PAYMENT_INTENDED_USE_MONTHLY_INVOICE_SOLIDARITY_SUPPORTED
             )

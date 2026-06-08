@@ -533,12 +533,15 @@ class TapirCache:
         )
 
         def compute() -> Decimal:
+            contributions = cls.get_solidarity_contributions_active_at_date(
+                reference_date=reference_date, cache=cache
+            )
             return sum(
-                SolidarityContribution.objects.filter(
-                    member_id=member_id,
-                    start_date__lte=reference_date,
-                    end_date__gte=reference_date,
-                ).values_list("amount", flat=True),
+                (
+                    contribution.amount
+                    for contribution in contributions
+                    if contribution.member_id == member_id
+                ),
                 start=Decimal(0),
             )
 
