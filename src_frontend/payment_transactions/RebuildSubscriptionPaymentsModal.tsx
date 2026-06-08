@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Form, Modal } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Alert, Form, Modal } from "react-bootstrap";
 import { PaymentsApi } from "../api-client";
 import ConfirmModal from "../components/ConfirmModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
@@ -32,6 +32,7 @@ const RebuildSubscriptionPaymentsModal: React.FC<
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear());
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [error, setError] = useState("");
 
   function onConfirmRebuild() {
     setLoading(true);
@@ -42,15 +43,24 @@ const RebuildSubscriptionPaymentsModal: React.FC<
 
     api
       .paymentsApiRebuildSubscriptionPaymentsCreate({ from: from })
-      .then(() => {
+      .then((response) => {
+        if (response.orderConfirmed) {
+          setError("");
+          afterRebuild();
+        } else {
+          setError(response.error!);
+        }
         setShowConfirmationModal(false);
-        afterRebuild();
       })
       .catch((error) =>
         handleRequestError(error, "Fehler beim neu erzeugen", setToastDatas),
       )
       .finally(() => setLoading(false));
   }
+
+  useEffect(() => {
+    setError("");
+  }, [show]);
 
   return (
     <>
@@ -76,6 +86,7 @@ const RebuildSubscriptionPaymentsModal: React.FC<
             Dieses Aktion kann nicht rückgängig gemacht werden. Es ist empfohlen
             die alte Dateien zu sichern vor sie gelöscht werden.
           </p>
+          {error && <Alert variant={"danger"}>{error}</Alert>}
           <Form className={"d-flex flex-row gap-2"}>
             <Form.Group>
               <Form.Label>Monat</Form.Label>

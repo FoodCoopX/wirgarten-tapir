@@ -54,6 +54,7 @@ from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.payments.services.subscription_payments_rebuilder import (
     SubscriptionPaymentsRebuilder,
 )
+from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
     AutomaticSolidarityContributionRenewalService,
 )
@@ -972,7 +973,7 @@ class RebuildSubscriptionPaymentsApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
-        responses={200: str},
+        responses={200: OrderConfirmationResponseSerializer},
         parameters=[
             OpenApiParameter(name="from", type=OpenApiTypes.DATE, required=True)
         ],
@@ -982,9 +983,20 @@ class RebuildSubscriptionPaymentsApiView(APIView):
         from_date_string = request.query_params.get("from")
         from_date = datetime.datetime.strptime(from_date_string, "%Y-%m-%d").date()
 
-        with transaction.atomic():
-            SubscriptionPaymentsRebuilder.rebuild_subscription_payments(
-                from_date=from_date, cache=cache
+        try:
+            with transaction.atomic():
+                SubscriptionPaymentsRebuilder.rebuild_subscription_payments(
+                    from_date=from_date, cache=cache
+                )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
             )
 
-        return Response("OK")
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )

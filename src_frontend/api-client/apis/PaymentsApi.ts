@@ -20,6 +20,7 @@ import type {
   MemberCreditCreateRequest,
   MemberCreditSettleRequest,
   MemberPaymentRhythmData,
+  OrderConfirmationResponse,
   PaginatedPaymentTransactionList,
   PaymentIntendedUsePreviewResponse,
   PaymentRhythmSerializerRequest,
@@ -34,6 +35,7 @@ import {
   MemberCreditCreateRequestToJSON,
   MemberCreditSettleRequestToJSON,
   MemberPaymentRhythmDataFromJSON,
+  OrderConfirmationResponseFromJSON,
   PaginatedPaymentTransactionListFromJSON,
   PaymentIntendedUsePreviewResponseFromJSON,
   PaymentRhythmSerializerRequestToJSON,
@@ -808,7 +810,7 @@ export class PaymentsApi extends runtime.BaseAPI {
   async paymentsApiRebuildSubscriptionPaymentsCreateRaw(
     requestParameters: PaymentsApiRebuildSubscriptionPaymentsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<string>> {
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
     if (requestParameters["from"] == null) {
       throw new runtime.RequiredError(
         "from",
@@ -850,11 +852,9 @@ export class PaymentsApi extends runtime.BaseAPI {
       initOverrides,
     );
 
-    if (this.isJsonMime(response.headers.get("content-type"))) {
-      return new runtime.JSONApiResponse<string>(response);
-    } else {
-      return new runtime.TextApiResponse(response) as any;
-    }
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
   }
 
   /**
@@ -862,7 +862,7 @@ export class PaymentsApi extends runtime.BaseAPI {
   async paymentsApiRebuildSubscriptionPaymentsCreate(
     requestParameters: PaymentsApiRebuildSubscriptionPaymentsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<string> {
+  ): Promise<OrderConfirmationResponse> {
     const response = await this.paymentsApiRebuildSubscriptionPaymentsCreateRaw(
       requestParameters,
       initOverrides,

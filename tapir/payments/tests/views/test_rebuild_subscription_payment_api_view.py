@@ -1,8 +1,11 @@
 import datetime
+from unittest.mock import patch, Mock
 
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.payments.services.pain_008_xml_generator import Pain008XmlGenerator
 from tapir.wirgarten.models import PaymentTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -52,9 +55,27 @@ class TestRebuildSubscriptionPaymentsApiView(TapirIntegrationTest):
         self.client.force_login(member)
 
         response = self._setup_data_and_do_call()
+        self.assert_order_confirmed(response.json())
 
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assertEqual(2, PaymentTransaction.objects.count())
+
+    @patch.object(Pain008XmlGenerator, "build_xml_string", autospec=True)
+    def test_post_xmlExportThrowsError_returnsErrorProperly(
+        self, mock_build_xml_string: Mock
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+
+        mock_build_xml_string.side_effect = ValidationError("Test error")
+
+        response = self._setup_data_and_do_call()
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual("Test error", response_content["error"])
+        self.assertEqual(0, PaymentTransaction.objects.count())
 
     def _setup_data_and_do_call(self):
         subscription = SubscriptionFactory.create(

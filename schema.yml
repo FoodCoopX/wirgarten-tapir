@@ -1660,7 +1660,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /payments/api/set_member_payment_rhythm:
     post:
