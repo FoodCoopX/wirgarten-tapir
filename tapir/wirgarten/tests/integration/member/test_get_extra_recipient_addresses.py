@@ -1,5 +1,4 @@
 from django.utils import timezone
-from icecream import ic
 
 from tapir.wirgarten.models import MemberExtraEmail
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -52,5 +51,4 @@ class TestGetExtraRecipientAddresses(TapirIntegrationTest):
         )
 
         result = member.get_extra_recipient_addresses(cache={})
-        ic(result)
         self.assertEqual({"test1@example.com", "test3@example.com"}, set(result))

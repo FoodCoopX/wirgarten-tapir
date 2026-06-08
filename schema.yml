@@ -1617,6 +1617,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberPaymentRhythmData'
           description: ''
+  /payments/api/payment_transaction_details:
+    get:
+      operationId: payments_api_payment_transaction_details_retrieve
+      parameters:
+      - in: query
+        name: transaction_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentTransactionDetails'
+          description: ''
+  /payments/api/rebuild_subscription_payments:
+    post:
+      operationId: payments_api_rebuild_subscription_payments_create
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+          format: date
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /payments/api/set_member_payment_rhythm:
     post:
       operationId: payments_api_set_member_payment_rhythm_create
@@ -1644,6 +1689,59 @@ paths:
             application/json:
               schema:
                 type: string
+          description: ''
+  /payments/payment_transactions/:
+    get:
+      operationId: payments_payment_transactions_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Anzahl der pro Seite zurückzugebenden Ergebnisse.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: Der initiale Index, von dem die Ergebnisse zurückgegeben werden
+          sollen.
+        schema:
+          type: integer
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentTransactionList'
+          description: ''
+  /payments/payment_transactions/{id}/:
+    get:
+      operationId: payments_payment_transactions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der payment transaction identifiziert.
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentTransaction'
           description: ''
   /pickup_locations/api/change_member_pickup_location:
     post:
@@ -8649,6 +8747,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupedEmailDispatch'
+    PaginatedPaymentTransactionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentTransaction'
     PaginatedWaitingListEntryDetailsList:
       type: object
       required:
@@ -9253,6 +9374,15 @@ components:
       - previews_new
       - previews_old
       - tokens
+    PaymentList:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+      required:
+      - payments
     PaymentStatusEnum:
       enum:
       - PAID
@@ -9261,6 +9391,68 @@ components:
       description: |-
         * `PAID` - Bezahlt
         * `DUE` - Offen
+    PaymentTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        payments_count:
+          type: integer
+          readOnly: true
+        payments_sum:
+          type: number
+          format: double
+          readOnly: true
+        csv_download_url:
+          type: string
+          readOnly: true
+        xml_download_url:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        type:
+          type: string
+          maxLength: 100
+        month:
+          type: string
+          format: date
+        csv_file:
+          type: string
+        xml_file:
+          type: string
+          nullable: true
+      required:
+      - created_at
+      - csv_download_url
+      - csv_file
+      - month
+      - payments_count
+      - payments_sum
+      - type
+      - updated_at
+      - xml_download_url
+    PaymentTransactionDetails:
+      type: object
+      properties:
+        payments_by_mandate_ref:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/PaymentList'
+        members_by_mandate_ref:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Member'
+      required:
+      - members_by_mandate_ref
+      - payments_by_mandate_ref
     PdfExportModel:
       type: object
       properties:

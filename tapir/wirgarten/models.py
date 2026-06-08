@@ -727,6 +727,7 @@ class ExportedFile(TapirModel):
     class FileType(models.TextChoices):
         CSV = "csv", _("CSV")
         PDF = "pdf", _("PDF")
+        XML = "xml", _("XML")
 
     name = models.CharField(max_length=256, null=False)
     type = models.CharField(max_length=8, choices=FileType.choices, null=False)
@@ -742,7 +743,15 @@ class PaymentTransaction(TapirModel):
     The relevant payments must reference the transaction in the same step.
     """
 
-    file = models.ForeignKey(ExportedFile, on_delete=models.PROTECT)
+    csv_file = models.ForeignKey(
+        ExportedFile, on_delete=models.PROTECT, related_name="transaction_csv"
+    )
+    xml_file = models.ForeignKey(
+        ExportedFile,
+        on_delete=models.PROTECT,
+        related_name="transaction_xml",
+        null=True,
+    )
     type = models.CharField(max_length=100)
     month = models.DateField()
 

@@ -119,6 +119,7 @@ models/PaginatedEmailDispatchList.ts
 models/PaginatedEmailDispatchWithRetriesList.ts
 models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
+models/PaginatedPaymentTransactionList.ts
 models/PaginatedWaitingListEntryDetailsList.ts
 models/PatchedBundledEmailConfigurationRequest.ts
 models/PatchedCsvExportModelRequest.ts
@@ -141,8 +142,11 @@ models/PatchedUpdateMemberBankDataRequestRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/Payment.ts
 models/PaymentIntendedUsePreviewResponse.ts
+models/PaymentList.ts
 models/PaymentRhythmSerializerRequest.ts
 models/PaymentStatusEnum.ts
+models/PaymentTransaction.ts
+models/PaymentTransactionDetails.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
 models/PdfExportTemplate.ts
