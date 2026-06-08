@@ -3,14 +3,17 @@ import random
 
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.generic import TemplateView
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ListField
 from rest_framework.views import APIView
@@ -48,6 +51,7 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
     MonthPaymentBuilderSolidarityContributions,
 )
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
+from tapir.payments.services.payments_rebuilder import SubscriptionPaymentsRebuilder
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
     AutomaticSolidarityContributionRenewalService,
 )
@@ -960,3 +964,25 @@ class PaymentTransactionDetailsView(APIView):
                 }
             ).data
         )
+
+
+class RebuildSubscriptionPaymentsApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[
+            OpenApiParameter(name="from", type=OpenApiTypes.DATE, required=True)
+        ],
+    )
+    def post(self, request: Request):
+        cache = {}
+        from_date_string = request.query_params.get("from")
+        from_date = datetime.datetime.strptime(from_date_string, "%Y-%m-%d").date()
+
+        with transaction.atomic():
+            SubscriptionPaymentsRebuilder.rebuild_subscription_payments(
+                from_date=from_date, cache=cache
+            )
+
+        return Response("OK")

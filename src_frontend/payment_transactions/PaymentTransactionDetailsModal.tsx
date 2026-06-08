@@ -20,6 +20,13 @@ interface PaymentTransactionsDetailsModalProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
+function formatPaymentType(type: string) {
+  if (type === "payment_type_solidarity_contribution") {
+    return "Solidarbeitrag";
+  }
+  return type;
+}
+
 const PaymentTransactionsDetailsModal: React.FC<
   PaymentTransactionsDetailsModalProps
 > = ({ transaction, onHide, setToastDatas }) => {
@@ -34,7 +41,7 @@ const PaymentTransactionsDetailsModal: React.FC<
 
   useEffect(() => {
     api
-      .paymentsPaymentTransactionDetailsRetrieve({
+      .paymentsApiPaymentTransactionDetailsRetrieve({
         transactionId: transaction.id!,
       })
       .then((response) => {
@@ -122,13 +129,6 @@ const PaymentTransactionsDetailsModal: React.FC<
         </td>
       </tr>
     );
-  }
-
-  function formatPaymentType(type: string) {
-    if (type === "payment_type_solidarity_contribution") {
-      return "Solidarbeitrag";
-    }
-    return type;
   }
 
   return (

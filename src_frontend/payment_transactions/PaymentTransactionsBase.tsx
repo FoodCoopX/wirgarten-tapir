@@ -3,6 +3,7 @@ import { Card, Table } from "react-bootstrap";
 import { PaymentsApi, PaymentTransaction } from "../api-client";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
+import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
@@ -10,6 +11,7 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import PaymentTransactionDetailsModal from "./PaymentTransactionDetailsModal.tsx";
 import PaymentTransactionTable from "./PaymentTransactionTable.tsx";
+import RebuildSubscriptionPaymentsModal from "./RebuildSubscriptionPaymentsModal.tsx";
 
 interface PaymentTransactionsBaseProps {
   csrfToken: string;
@@ -27,8 +29,13 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
   const [selectedTransaction, setSelectedTransaction] = useState<
     PaymentTransaction | undefined
   >(undefined);
+  const [showRebuildModal, setShowRebuildModal] = useState(false);
 
   useEffect(() => {
+    loadData();
+  }, [currentPage]);
+
+  function loadData() {
     api
       .paymentsPaymentTransactionsList({
         limit: DEFAULT_PAGE_SIZE,
@@ -46,7 +53,7 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
         ),
       )
       .finally(() => setLoading(false));
-  }, [currentPage]);
+  }
 
   return (
     <>
@@ -56,6 +63,12 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
             className={"d-flex justify-content-between align-items-center mb-0"}
           >
             <h5 className={"mb-0"}>Zahlungseingang</h5>
+            <TapirButton
+              variant={"outline-primary"}
+              text={"Lastschriften neu erzeugen"}
+              icon={"redo"}
+              onClick={() => setShowRebuildModal(true)}
+            />
           </div>
         </Card.Header>
         <Card.Body>
@@ -93,6 +106,15 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
           setToastDatas={setToastDatas}
         />
       )}
+      <RebuildSubscriptionPaymentsModal
+        show={showRebuildModal}
+        onHide={() => setShowRebuildModal(false)}
+        setToastDatas={setToastDatas}
+        afterRebuild={() => {
+          setShowRebuildModal(false);
+          loadData();
+        }}
+      />
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}

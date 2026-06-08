@@ -86,12 +86,16 @@ export interface PaymentsApiMemberPaymentRhythmDataRetrieveRequest {
   memberId?: string;
 }
 
-export interface PaymentsApiSetMemberPaymentRhythmCreateRequest {
-  paymentRhythmSerializerRequest: PaymentRhythmSerializerRequest;
+export interface PaymentsApiPaymentTransactionDetailsRetrieveRequest {
+  transactionId: string;
 }
 
-export interface PaymentsPaymentTransactionDetailsRetrieveRequest {
-  transactionId: string;
+export interface PaymentsApiRebuildSubscriptionPaymentsCreateRequest {
+  from: Date;
+}
+
+export interface PaymentsApiSetMemberPaymentRhythmCreateRequest {
+  paymentRhythmSerializerRequest: PaymentRhythmSerializerRequest;
 }
 
 export interface PaymentsPaymentTransactionsListRequest {
@@ -738,6 +742,136 @@ export class PaymentsApi extends runtime.BaseAPI {
 
   /**
    */
+  async paymentsApiPaymentTransactionDetailsRetrieveRaw(
+    requestParameters: PaymentsApiPaymentTransactionDetailsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PaymentTransactionDetails>> {
+    if (requestParameters["transactionId"] == null) {
+      throw new runtime.RequiredError(
+        "transactionId",
+        'Required parameter "transactionId" was null or undefined when calling paymentsApiPaymentTransactionDetailsRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["transactionId"] != null) {
+      queryParameters["transaction_id"] = requestParameters["transactionId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/payment_transaction_details`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PaymentTransactionDetailsFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiPaymentTransactionDetailsRetrieve(
+    requestParameters: PaymentsApiPaymentTransactionDetailsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PaymentTransactionDetails> {
+    const response = await this.paymentsApiPaymentTransactionDetailsRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiRebuildSubscriptionPaymentsCreateRaw(
+    requestParameters: PaymentsApiRebuildSubscriptionPaymentsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (requestParameters["from"] == null) {
+      throw new runtime.RequiredError(
+        "from",
+        'Required parameter "from" was null or undefined when calling paymentsApiRebuildSubscriptionPaymentsCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["from"] != null) {
+      queryParameters["from"] = (requestParameters["from"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/rebuild_subscription_payments`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async paymentsApiRebuildSubscriptionPaymentsCreate(
+    requestParameters: PaymentsApiRebuildSubscriptionPaymentsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.paymentsApiRebuildSubscriptionPaymentsCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
   async paymentsApiSetMemberPaymentRhythmCreateRaw(
     requestParameters: PaymentsApiSetMemberPaymentRhythmCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -796,69 +930,6 @@ export class PaymentsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<string> {
     const response = await this.paymentsApiSetMemberPaymentRhythmCreateRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   */
-  async paymentsPaymentTransactionDetailsRetrieveRaw(
-    requestParameters: PaymentsPaymentTransactionDetailsRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<PaymentTransactionDetails>> {
-    if (requestParameters["transactionId"] == null) {
-      throw new runtime.RequiredError(
-        "transactionId",
-        'Required parameter "transactionId" was null or undefined when calling paymentsPaymentTransactionDetailsRetrieve().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    if (requestParameters["transactionId"] != null) {
-      queryParameters["transaction_id"] = requestParameters["transactionId"];
-    }
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/payments/payment_transaction_details`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      PaymentTransactionDetailsFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async paymentsPaymentTransactionDetailsRetrieve(
-    requestParameters: PaymentsPaymentTransactionDetailsRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<PaymentTransactionDetails> {
-    const response = await this.paymentsPaymentTransactionDetailsRetrieveRaw(
       requestParameters,
       initOverrides,
     );

@@ -71,6 +71,11 @@ urlpatterns = [
         views.PaymentTransactionDetailsView.as_view(),
         name="payment_transaction_details",
     ),
+    path(
+        "api/rebuild_subscription_payments",
+        views.RebuildSubscriptionPaymentsApiView.as_view(),
+        name="rebuild_subscription_payments",
+    ),
 ]
 
 router = DefaultRouter()

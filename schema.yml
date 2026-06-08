@@ -1617,6 +1617,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberPaymentRhythmData'
           description: ''
+  /payments/api/payment_transaction_details:
+    get:
+      operationId: payments_api_payment_transaction_details_retrieve
+      parameters:
+      - in: query
+        name: transaction_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentTransactionDetails'
+          description: ''
+  /payments/api/rebuild_subscription_payments:
+    post:
+      operationId: payments_api_rebuild_subscription_payments_create
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+          format: date
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /payments/api/set_member_payment_rhythm:
     post:
       operationId: payments_api_set_member_payment_rhythm_create
@@ -1644,28 +1689,6 @@ paths:
             application/json:
               schema:
                 type: string
-          description: ''
-  /payments/payment_transaction_details:
-    get:
-      operationId: payments_payment_transaction_details_retrieve
-      parameters:
-      - in: query
-        name: transaction_id
-        schema:
-          type: string
-        required: true
-      tags:
-      - payments
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaymentTransactionDetails'
           description: ''
   /payments/payment_transactions/:
     get:

@@ -203,7 +203,10 @@ class PaymentExportBuilder:
             filename=file_name,
             filetype=ExportedFile.FileType.CSV,
             content=bytes(csv_string, "utf-8"),
-            send_email=send_mail,
+            send_email=send_mail
+            and get_parameter_value(
+                key=ParameterKeys.PAYMENT_SEND_CSV_FILE_PER_MAIL, cache=cache
+            ),
             cache=cache,
         )
 
@@ -216,7 +219,10 @@ class PaymentExportBuilder:
                 filename=file_name,
                 filetype=ExportedFile.FileType.XML,
                 content=xml_bytes,
-                send_email=send_mail,
+                send_email=send_mail
+                and get_parameter_value(
+                    key=ParameterKeys.PAYMENT_SEND_XML_FILE_PER_MAIL, cache=cache
+                ),
                 cache=cache,
             )
 
