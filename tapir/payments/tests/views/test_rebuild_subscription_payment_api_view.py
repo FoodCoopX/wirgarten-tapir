@@ -33,6 +33,7 @@ class TestRebuildSubscriptionPaymentsApiView(TapirIntegrationTest):
         )
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(
             test=self, now=datetime.datetime(year=2023, month=4, day=15)
         )
