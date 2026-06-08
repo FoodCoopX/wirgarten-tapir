@@ -69,6 +69,10 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/configuration/configuration_entry.tsx",
           ),
+          payment_transactions: join(
+            INPUT_DIR,
+            "payment_transactions/payment_transactions_list_view_entry.tsx",
+          ),
         },
       },
     },
