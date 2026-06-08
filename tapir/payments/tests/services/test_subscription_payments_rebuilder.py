@@ -26,6 +26,7 @@ class TestSubscriptionPaymentsRebuilder(TapirIntegrationTest):
         )
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(test=self, now=datetime.datetime(year=2017, month=7, day=18))
 
     def test_rebuildSubscriptionPayments_transactionsAreBeforeGivenDate_transactionsNotAffected(

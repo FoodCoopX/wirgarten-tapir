@@ -51,7 +51,9 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
     MonthPaymentBuilderSolidarityContributions,
 )
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
-from tapir.payments.services.payments_rebuilder import SubscriptionPaymentsRebuilder
+from tapir.payments.services.subscription_payments_rebuilder import (
+    SubscriptionPaymentsRebuilder,
+)
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
     AutomaticSolidarityContributionRenewalService,
 )
