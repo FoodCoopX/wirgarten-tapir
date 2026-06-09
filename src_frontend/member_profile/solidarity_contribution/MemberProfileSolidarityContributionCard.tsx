@@ -1,16 +1,16 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Card, Form, Modal, Spinner } from "react-bootstrap";
-import "dayjs/locale/de";
 import {
   SolidarityContribution,
   SolidarityContributionApi,
 } from "../../api-client";
+import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import TapirButton from "../../components/TapirButton.tsx";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberProfileSolidarityContributionCardProps {
   memberId: string;
@@ -153,6 +153,18 @@ const MemberProfileSolidarityContributionCard: React.FC<
     );
 
     if (futureContributions.length === 0) {
+      const currentContribution = getCurrentContribution();
+      if (currentContribution?.cancellationTs) {
+        return (
+          <>
+            <br />
+            <span>
+              Ab dem {formatDateNumeric(currentContribution.endDate)}:{" "}
+              {formatCurrency(0)}
+            </span>
+          </>
+        );
+      }
       return;
     }
 
