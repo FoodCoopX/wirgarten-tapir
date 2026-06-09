@@ -11,7 +11,9 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
     MonthPaymentBuilderSolidarityContributions,
 )
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
+from tapir.payments.tasks import create_payments_for_this_month
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
+from tapir.wirgarten.models import Payment
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -23,6 +25,10 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
     @patch.object(
         MemberPaymentRhythmService, "get_member_payment_rhythm", autospec=True
     )
@@ -244,7 +250,6 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
     ):
         # Regression test for #863
 
-        ParameterDefinitions().import_definitions(bulk_create=True)
         TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
             value=True
         )
@@ -365,3 +370,54 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
             datetime.date(year=2020, month=12, day=31),
             payment_not_in_trial_march.subscription_payment_range_end,
         )
+
+    def test_buildPaymentsForSolidarityContribution_contributionReduceAfterPaymentWasPersisted_noNegativePaymentCreated(
+        self,
+    ):
+        # This is a regression test for infra#87, in particular this case:
+        # https://github.com/FoodCoopX/infra/issues/87#issuecomment-4612988509
+
+        member = MemberFactory.create()
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=False)
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            value=datetime.date(year=2020, month=1, day=1),
+        )
+
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2020, month=1, day=1))
+        old_contribution = SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2020, month=1, day=1),
+            amount=10,
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+        )
+
+        create_payments_for_this_month(
+            reference_date=datetime.date(year=2020, month=1, day=1)
+        )
+
+        payment = Payment.objects.get()
+        self.assertEqual(member, payment.mandate_ref.member)
+        self.assertEqual(Decimal("120.00"), payment.amount)
+
+        old_contribution.end_date = datetime.datetime(year=2020, month=6, day=30)
+        old_contribution.save()
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2020, month=7, day=1),
+            end_date=datetime.date(year=2020, month=12, day=31),
+            amount=5,
+        )
+
+        result = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
+            current_month=datetime.date(year=2020, month=7, day=1),
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+
+        self.assertEqual(0, len(result))
