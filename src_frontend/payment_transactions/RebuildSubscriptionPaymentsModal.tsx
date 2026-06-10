@@ -75,16 +75,17 @@ const RebuildSubscriptionPaymentsModal: React.FC<
         </Modal.Header>
         <Modal.Body>
           <p>
-            Vertragszahlungsdaten ab dem angegebenen Monat werden gelöscht und
-            neu erzeugt.
+            Vertragszahlungsdaten (CSV und XML) ab dem unten angegebenen Monat
+            werden gelöscht und neu erzeugt. Bitte wähle hier immer nur den
+            laufenden Monat aus. Die neu erzeugten Vertragszahlungsdaten
+            beziehen die aktuell gültigen Verträge ein, d.h. auch nachträgliche
+            Vertragsänderungen des laufenden Monats, die sich auf die
+            Zahlungsreihe im aktuellen Monat auswirken, sind berücksichtigt.
           </p>
           <p>
-            Zahlungsdaten relativ zu Genossenschaftsanteilen sind nicht
-            betroffen.
-          </p>
-          <p>
-            Dieses Aktion kann nicht rückgängig gemacht werden. Es ist empfohlen
-            die alte Dateien zu sichern vor sie gelöscht werden.
+            Dieses Aktion kann nicht rückgängig gemacht werden. Wenn die Dateien
+            einmal neu erzeugt wurden, sind die alten Dateien für die
+            entsprechenden Monate nicht mehr zugänglich.
           </p>
           {error && <Alert variant={"danger"}>{error}</Alert>}
           <Form className={"d-flex flex-row gap-2"}>
