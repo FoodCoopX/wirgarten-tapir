@@ -1,19 +1,35 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import patch, Mock, call
 
-from tapir.payments.models import MemberPaymentRhythm
+from django.urls import reverse
+from rest_framework import status
+
+from tapir.payments.models import MemberPaymentRhythm, MemberCredit
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
+from tapir.payments.tasks import create_payments_for_this_month
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
+from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.models import Payment, Subscription
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
     MemberFactory,
     ProductTypeFactory,
     PaymentFactory,
+    GrowingPeriodFactory,
+    ProductPriceFactory,
+    ProductFactory,
+    ProductCapacityFactory,
+    MemberPickupLocationFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
@@ -136,3 +152,249 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
             ],
             any_order=True,
         )
+
+    @patch.object(
+        ContractStartDateCalculator,
+        "get_next_contract_start_date_in_growing_period",
+        autospec=True,
+    )
+    def test_buildPaymentsForSubscriptionsInTrial_subscriptionReducedAfterPaymentWasPersisted_correctCreditCreatedAndNoNewPayment(
+        self, mock_get_next_contract_start_date_in_growing_period: Mock
+    ):
+        # This is a regression test for infra#87, in particular this case:
+        # https://github.com/FoodCoopX/infra/issues/87#issuecomment-4612988509
+        # It is the equivalent of test_buildPaymentsForSolidarityContribution_contributionReduceAfterPaymentWasPersisted_noNegativePaymentCreated
+
+        mock_timezone(test=self, now=datetime.datetime(year=2020, month=5, day=15))
+        member = MemberFactory.create()
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=False)
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            value=datetime.date(year=2020, month=1, day=1),
+        )
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=1, day=1)
+        )
+        old_subscription = SubscriptionFactory.create(
+            period=growing_period,
+            member=member,
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+        MemberPickupLocationFactory.create(
+            member=member, valid_from=growing_period.start_date
+        )
+        self._set_parameter(
+            key=ParameterKeys.COOP_BASE_PRODUCT_TYPE,
+            value=old_subscription.product.type_id,
+        )
+        ProductCapacityFactory.create(
+            period=growing_period,
+            product_type=old_subscription.product.type,
+            capacity=1000,
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
+            valid_from=growing_period.start_date,
+        )
+        ProductPriceFactory.create(
+            product=old_subscription.product,
+            price=10,
+            valid_from=growing_period.start_date,
+        )
+
+        create_payments_for_this_month(reference_date=growing_period.start_date)
+        payment = Payment.objects.get()
+        self.assertEqual(member, payment.mandate_ref.member)
+        self.assertEqual(Decimal("120.00"), payment.amount)
+
+        smaller_product = ProductFactory.create(type=old_subscription.product.type)
+        ProductPriceFactory.create(
+            product=smaller_product, price=5, valid_from=growing_period.start_date
+        )
+        mock_get_next_contract_start_date_in_growing_period.return_value = (
+            datetime.date(year=2020, month=7, day=1)
+        )
+
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        response = self.client.post(
+            reverse(
+                "subscriptions:update_subscription",
+            ),
+            data={
+                "member_id": member.id,
+                "product_type_id": old_subscription.product.type.id,
+                "shopping_cart": {smaller_product.id: 1},
+                "sepa_allowed": True,
+                "cancellation_policy_read": True,
+                "growing_period_id": growing_period.id,
+                "account_owner": "test account owner",
+                "iban": "NL21RABO7007935591",
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+
+        old_subscription.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2020, month=6, day=30), old_subscription.end_date
+        )
+        new_subscription = Subscription.objects.order_by("start_date").last()
+        self.assertEqual(
+            datetime.date(year=2020, month=7, day=1), new_subscription.start_date
+        )
+        credit = MemberCredit.objects.get()
+        self.assertEqual(Decimal("30.00"), credit.amount)
+
+        result = MonthPaymentBuilderSubscriptions.build_payments_for_subscriptions(
+            current_month=datetime.date(year=2020, month=7, day=1),
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+
+        self.assertEqual(0, len(result))
+
+    @patch.object(
+        ContractStartDateCalculator,
+        "get_next_contract_start_date_in_growing_period",
+        autospec=True,
+    )
+    def test_buildPaymentsForSubscriptionsInTrial_subscriptionAddedAfterAPause_correctFuturePaymentCreated(
+        self, mock_get_next_contract_start_date_in_growing_period: Mock
+    ):
+        # This is a regression test for infra#87, in particular this case:
+        # A member has a subscription and a yearly payment rhythm,
+        # but the subscription is "force canceled" to end in the middle of the year.
+        # Later in the same growing period, the member subscribes to another subscription
+        # Payments and credits must be correct at all steps
+
+        mock_timezone(test=self, now=datetime.datetime(year=2020, month=5, day=15))
+        member = MemberFactory.create()
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=False)
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            value=datetime.date(year=2020, month=1, day=1),
+        )
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=1, day=1)
+        )
+        old_subscription = SubscriptionFactory.create(
+            period=growing_period,
+            member=member,
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+        MemberPickupLocationFactory.create(
+            member=member, valid_from=growing_period.start_date
+        )
+        self._set_parameter(
+            key=ParameterKeys.COOP_BASE_PRODUCT_TYPE,
+            value=old_subscription.product.type_id,
+        )
+        ProductCapacityFactory.create(
+            period=growing_period,
+            product_type=old_subscription.product.type,
+            capacity=1000,
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
+            valid_from=growing_period.start_date,
+        )
+        ProductPriceFactory.create(
+            product=old_subscription.product,
+            price=10,
+            valid_from=growing_period.start_date,
+        )
+
+        create_payments_for_this_month(reference_date=growing_period.start_date)
+        payment = Payment.objects.get()
+        self.assertEqual(member, payment.mandate_ref.member)
+        self.assertEqual(Decimal("120.00"), payment.amount)
+
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        response = self.client.post(
+            reverse(
+                "subscriptions:dates_change",
+            ),
+            data={
+                "start_date_is_on_period_start": True,
+                "end_date_is_on_period_end": False,
+                "start_week": -1,
+                "end_week": 22,
+                "subscription_id": old_subscription.id,
+                "update_end_date_of_other_contracts": False,
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+
+        old_subscription.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2020, month=5, day=31), old_subscription.end_date
+        )
+        credit = MemberCredit.objects.get()
+        self.assertEqual(Decimal("70.00"), credit.amount)
+
+        result = MonthPaymentBuilderSubscriptions.build_payments_for_subscriptions(
+            current_month=datetime.date(year=2020, month=6, day=1),
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+
+        self.assertEqual(0, len(result))
+
+        other_product = ProductFactory.create(type=old_subscription.product.type)
+        ProductPriceFactory.create(
+            product=other_product, price=5, valid_from=growing_period.start_date
+        )
+        mock_get_next_contract_start_date_in_growing_period.return_value = (
+            datetime.date(year=2020, month=7, day=1)
+        )
+
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        response = self.client.post(
+            reverse(
+                "subscriptions:update_subscription",
+            ),
+            data={
+                "member_id": member.id,
+                "product_type_id": old_subscription.product.type.id,
+                "shopping_cart": {other_product.id: 1},
+                "sepa_allowed": True,
+                "cancellation_policy_read": True,
+                "growing_period_id": growing_period.id,
+                "account_owner": "test account owner",
+                "iban": "NL21RABO7007935591",
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        self.assertEqual(1, MemberCredit.objects.count())
+
+        new_subscription = Subscription.objects.order_by("start_date").last()
+        self.assertEqual(
+            datetime.date(year=2020, month=7, day=1), new_subscription.start_date
+        )
+
+        result = MonthPaymentBuilderSubscriptions.build_payments_for_subscriptions(
+            current_month=datetime.date(year=2020, month=7, day=1),
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+
+        self.assertEqual(1, len(result))
+        self.assertEqual(member, result[0].mandate_ref.member)
+        self.assertEqual(Decimal("30.00"), result[0].amount)

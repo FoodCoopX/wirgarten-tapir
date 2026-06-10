@@ -73,8 +73,24 @@ class MonthPaymentBuilderUtils:
             cache=cache,
             generated_payments=generated_payments,
         )
+        sum_paid = sum(
+            [payment.amount for payment in relevant_payments], start=Decimal(0)
+        )
 
-        return sum([payment.amount for payment in relevant_payments], start=Decimal(0))
+        member_credits = TapirCache.get_member_credits(
+            cache=cache, member_id=mandate_ref.member_id
+        )
+        sum_credits = sum(
+            [
+                credit.amount
+                for credit in member_credits
+                if credit.source == payment_type
+                and range_start <= credit.due_date <= range_end
+            ],
+            start=Decimal(0),
+        )
+
+        return sum_paid - sum_credits
 
     @classmethod
     def get_payment_due_date_on_month(cls, reference_date: datetime.date, cache: dict):

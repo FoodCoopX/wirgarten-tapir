@@ -2,8 +2,10 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, Mock, call
 
+from django.urls import reverse
+
 from tapir.configuration.models import TapirParameter
-from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.models import MemberPaymentRhythm, MemberCredit
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -12,7 +14,11 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 )
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.payments.tasks import create_payments_for_this_month
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
+from tapir.solidarity_contribution.views import (
+    UpdateMemberSolidarityContributionApiView,
+)
 from tapir.wirgarten.models import Payment
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -39,12 +45,12 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
     )
     @patch.object(
         MonthPaymentBuilderSolidarityContributions,
-        "get_current_and_renewed_solidarity_contributions",
+        "get_solidarity_contributions_for_this_and_the_next_growing_period",
         autospec=True,
     )
     def test_buildPaymentsForSolidarityContribution_notInTrial_buildsAPaymentForEachContribution(
         self,
-        mock_get_current_and_renewed_solidarity_contributions: Mock,
+        mock_get_solidarity_contributions_for_this_and_the_next_growing_period: Mock,
         mock_build_payment_for_contract_and_member: Mock,
         mock_get_member_payment_rhythm: Mock,
     ):
@@ -72,7 +78,7 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
             member_3: {contribution_m3},
         }
 
-        mock_get_current_and_renewed_solidarity_contributions.return_value = [
+        mock_get_solidarity_contributions_for_this_and_the_next_growing_period.return_value = [
             contribution_m1,
             contribution_m2_1,
             contribution_m2_2,
@@ -109,7 +115,7 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
 
         self.assertEqual({payment_m1, payment_m2}, set(result))
 
-        mock_get_current_and_renewed_solidarity_contributions.assert_called_once_with(
+        mock_get_solidarity_contributions_for_this_and_the_next_growing_period.assert_called_once_with(
             cache=cache, first_of_month=current_month, is_in_trial=False
         )
         self.assertEqual(3, mock_get_member_payment_rhythm.call_count)
@@ -150,12 +156,12 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
     )
     @patch.object(
         MonthPaymentBuilderSolidarityContributions,
-        "get_current_and_renewed_solidarity_contributions",
+        "get_solidarity_contributions_for_this_and_the_next_growing_period",
         autospec=True,
     )
     def test_buildPaymentsForSolidarityContribution_inTrial_buildsAPaymentForEachContribution(
         self,
-        mock_get_current_and_renewed_solidarity_contributions: Mock,
+        mock_get_solidarity_contributions_for_this_and_the_next_growing_period: Mock,
         mock_build_payment_for_contract_and_member: Mock,
         mock_get_member_payment_rhythm: Mock,
     ):
@@ -183,7 +189,7 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
             member_3: {contribution_m3},
         }
 
-        mock_get_current_and_renewed_solidarity_contributions.return_value = [
+        mock_get_solidarity_contributions_for_this_and_the_next_growing_period.return_value = [
             contribution_m1,
             contribution_m2_1,
             contribution_m2_2,
@@ -221,7 +227,7 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
 
         self.assertEqual({payment_m1, payment_m2}, set(result))
 
-        mock_get_current_and_renewed_solidarity_contributions.assert_called_once_with(
+        mock_get_solidarity_contributions_for_this_and_the_next_growing_period.assert_called_once_with(
             cache=cache, first_of_month=first_of_previous_month, is_in_trial=True
         )
         mock_get_member_payment_rhythm.assert_not_called()
@@ -265,7 +271,7 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
             start_date=datetime.date(year=2020, month=1, day=1),
             amount=Decimal("4.33"),
         )
-        # We define a past contribution so that get_current_and_renewed_solidarity_contributions returns a non-empty array.
+        # We define a past contribution so that get_solidarity_contributions_for_this_and_the_next_growing_period returns a non-empty array.
         # This makes sure that build_payment_for_contract_and_member gets called.
         SolidarityContributionFactory.create(
             member=member,
@@ -371,11 +377,18 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
             payment_not_in_trial_march.subscription_payment_range_end,
         )
 
+    @patch.object(
+        UpdateMemberSolidarityContributionApiView, "get_change_date", autospec=True
+    )
     def test_buildPaymentsForSolidarityContribution_contributionReduceAfterPaymentWasPersisted_noNegativePaymentCreated(
-        self,
+        self, mock_get_change_date: Mock
     ):
         # This is a regression test for infra#87, in particular this case:
         # https://github.com/FoodCoopX/infra/issues/87#issuecomment-4612988509
+        # where a member used to have a SolidarityContribution, the payment for it got persisted,
+        # then the admin reduced the amount of that contribution, resulting in a MemberCredit being created (was already correct)
+        # but the following calls to MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions
+        # would create negative payments
 
         member = MemberFactory.create()
         self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=False)
@@ -399,19 +412,34 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
         create_payments_for_this_month(
             reference_date=datetime.date(year=2020, month=1, day=1)
         )
-
         payment = Payment.objects.get()
         self.assertEqual(member, payment.mandate_ref.member)
         self.assertEqual(Decimal("120.00"), payment.amount)
 
-        old_contribution.end_date = datetime.datetime(year=2020, month=6, day=30)
-        old_contribution.save()
-        SolidarityContributionFactory.create(
-            member=member,
-            start_date=datetime.date(year=2020, month=7, day=1),
-            end_date=datetime.date(year=2020, month=12, day=31),
-            amount=5,
+        mock_get_change_date.return_value = datetime.date(year=2020, month=7, day=1)
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        self.client.post(
+            reverse(
+                "solidarity_contribution:update_member_contribution",
+            ),
+            data={
+                "amount": 5,
+                "member_id": member.id,
+                "start_contribution_now": False,
+            },
         )
+
+        old_contribution.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2020, month=6, day=30), old_contribution.end_date
+        )
+        new_contribution = SolidarityContribution.objects.order_by("start_date").last()
+        self.assertEqual(Decimal("5.00"), new_contribution.amount)
+        self.assertEqual(
+            datetime.date(year=2020, month=7, day=1), new_contribution.start_date
+        )
+        credit = MemberCredit.objects.get()
+        self.assertEqual(Decimal("30.00"), credit.amount)
 
         result = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
             current_month=datetime.date(year=2020, month=7, day=1),
@@ -421,3 +449,97 @@ class TestBuildPaymentsForSolidarityContributions(TapirIntegrationTest):
         )
 
         self.assertEqual(0, len(result))
+
+    @patch.object(
+        UpdateMemberSolidarityContributionApiView, "get_change_date", autospec=True
+    )
+    def test_buildPaymentsForSolidarityContribution_contributionCancelledThenNewContributionCreated_creditsAndPaymentsCreatedCorrectly(
+        self, mock_get_change_date: Mock
+    ):
+        # This is a regression test for infra#87, in particular this case:
+        # A member has a contribution, then cancels it, waits a month, then gets a contribution again
+
+        member = MemberFactory.create()
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=False)
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            value=datetime.date(year=2020, month=1, day=1),
+        )
+
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2020, month=1, day=1))
+        old_contribution = SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2020, month=1, day=1),
+            amount=10,
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.YEARLY,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+        )
+
+        create_payments_for_this_month(
+            reference_date=datetime.date(year=2020, month=1, day=1)
+        )
+        payment = Payment.objects.get()
+        self.assertEqual(member, payment.mandate_ref.member)
+        self.assertEqual(Decimal("120.00"), payment.amount)
+
+        mock_get_change_date.return_value = datetime.date(year=2020, month=6, day=30)
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        self.client.post(
+            reverse(
+                "solidarity_contribution:update_member_contribution",
+            ),
+            data={
+                "amount": 0,
+                "member_id": member.id,
+                "start_contribution_now": False,
+            },
+        )
+
+        old_contribution.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2020, month=6, day=30), old_contribution.end_date
+        )
+        credit = MemberCredit.objects.get()
+        self.assertEqual(Decimal("60.00"), credit.amount)
+
+        result = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
+            current_month=datetime.date(year=2020, month=7, day=1),
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+
+        self.assertEqual(0, len(result))
+
+        mock_get_change_date.return_value = datetime.date(year=2020, month=8, day=1)
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        self.client.post(
+            reverse(
+                "solidarity_contribution:update_member_contribution",
+            ),
+            data={
+                "amount": 5,
+                "member_id": member.id,
+                "start_contribution_now": False,
+            },
+        )
+
+        new_contribution = SolidarityContribution.objects.order_by("start_date").last()
+        self.assertEqual(
+            datetime.date(year=2020, month=8, day=1), new_contribution.start_date
+        )
+        self.assertEqual(Decimal("5.00"), new_contribution.amount)
+        self.assertEqual(1, MemberCredit.objects.count())
+
+        result = MonthPaymentBuilderSolidarityContributions.build_payments_for_solidarity_contributions(
+            current_month=datetime.date(year=2020, month=8, day=1),
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+
+        self.assertEqual(1, len(result))
+        self.assertEqual(Decimal("25.00"), result[0].amount)

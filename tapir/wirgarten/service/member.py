@@ -281,7 +281,7 @@ def send_cancellation_confirmation_email(
 def send_contract_change_confirmation(
     member: Member, subs: List[Subscription], cache: dict
 ):
-    if not len(subs):
+    if len(subs) == 0:
         raise Exception(
             "No subscriptions provided for sending contract change confirmation for member: ",
             member,
