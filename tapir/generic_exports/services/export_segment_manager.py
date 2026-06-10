@@ -18,6 +18,7 @@ class ExportSegment:
     description: str
     get_queryset: Callable[[datetime.datetime], Iterable]
     get_available_columns: Callable[[], List[ExportSegmentColumn]]
+    use_typst: bool = False
 
 
 class ExportSegmentManager:
