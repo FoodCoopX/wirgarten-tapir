@@ -3406,6 +3406,34 @@ files = [
 ]
 
 [[package]]
+name = "typst"
+version = "0.14.9"
+description = "Python binding to Typst, a new markup-based typesetting system that is powerful and easy to learn."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "typst-0.14.9-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:abc1348393390173ba7b993389b06b3df4b635cf69205aedaa05ce51de9be3b6"},
+    {file = "typst-0.14.9-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:e3d62e29ce38c45e94e81716383c153272438964b76c343b9a2183fe52a9ff02"},
+    {file = "typst-0.14.9-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3f054414502fd21b84474bdd1c92263be1910e010a5a6bdb0d546d7a00131f91"},
+    {file = "typst-0.14.9-cp314-cp314t-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:d2676e5b6548ae83b13ff3b769f5f30cf5d716b712502ea64a8e98fc3ae4577f"},
+    {file = "typst-0.14.9-cp314-cp314t-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:456ecf0e9bf02748fb3d7b6f0176aff36027ee8c2e81056eca20b3d4ba54e82b"},
+    {file = "typst-0.14.9-cp314-cp314t-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:a67963bd4e3b6969eee412a2bf49753276cd95be0acc86c07fd0c06f188a41bc"},
+    {file = "typst-0.14.9-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eabac1449c75381828996eaf352bfd795857668834a4c9cc6308d7687352ed49"},
+    {file = "typst-0.14.9-cp314-cp314t-win_amd64.whl", hash = "sha256:b5637861645b0abb2529e1006a8984a831ecd9d24610a60e99d3ae0af4e4691a"},
+    {file = "typst-0.14.9-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:4c4404891b3c8bfbb01d9e9308a24b9637088fb41aea0f24b58a9dffdd43b164"},
+    {file = "typst-0.14.9-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:9ade0c99e853bf02bcc28f1bad8be3714de5ee5323e1a0f649abdb4e634240e9"},
+    {file = "typst-0.14.9-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1339a1d8beb05f098090a8a6c627e1aa7d4c7792b333e59694d30072f6f0ccdb"},
+    {file = "typst-0.14.9-cp38-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:792818bb147ea4a88b0555fd2066e1bb0b65353aecd01270a8acd3be018f3e39"},
+    {file = "typst-0.14.9-cp38-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:c4ecc5102125880baebbe454946a8492f6377680bf3d74f60650fae093958e3b"},
+    {file = "typst-0.14.9-cp38-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:7be2e851ee3ff3561c79d244a2809089fb7cfc678912555ecabb031d5de74da9"},
+    {file = "typst-0.14.9-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:be26d1f195b75d4c57e7411646124f8257d136417cc5e9c393dcd8ea3c3a11e8"},
+    {file = "typst-0.14.9-cp38-abi3-pyemscripten_2026_0_wasm32.whl", hash = "sha256:2f7008b41217194a41b9eec611cef358cc7c8d90193817b182f9abed62526984"},
+    {file = "typst-0.14.9-cp38-abi3-win_amd64.whl", hash = "sha256:6ebe6b433f71e9ec03c444b26f123363ab63ebab9a289fc4f26d6962b18fad4e"},
+    {file = "typst-0.14.9.tar.gz", hash = "sha256:53a7ee0825c127c100023685eeb8fb911226d7ad9ae861a370c11bb0f5c160cc"},
+]
+
+[[package]]
 name = "tzdata"
 version = "2025.3"
 description = "Provider of IANA time zone data"
@@ -3671,4 +3699,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.14"
-content-hash = "ee4544d2dad8ff3197aa2186a0444b388fe169d34d721b08e9816bb6d5b8456b"
+content-hash = "cfafeee6e7ed180101326039d39f17759271175b52a4685ebbe1d08081f30de9"

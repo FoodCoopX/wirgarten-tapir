@@ -77,6 +77,9 @@ class PdfExport(TapirModel):
     template = models.TextField()
     generate_one_file_for_every_segment_entry = models.BooleanField()
 
+    Renderer = models.IntegerChoices("Renderer", "WEASYPRINT TYPST")
+    renderer = models.IntegerField(choices=Renderer, default=Renderer.WEASYPRINT.value)
+
     def __str__(self):
         return self.name
 
