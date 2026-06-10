@@ -8,7 +8,7 @@ from tapir.deliveries.models import (
     DeliveryDonation,
     CustomCycleScheduledDeliveryWeek,
 )
-from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.models import MemberPaymentRhythm, MemberCredit
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import NoticePeriod
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
@@ -688,3 +688,17 @@ class TapirCache:
                 product_type=product_type
             ),
         )
+
+    @classmethod
+    def get_member_credits(cls, cache: dict, member_id: str):
+        def compute():
+            credits_by_member: dict[str, list[MemberCredit]] = {}
+            for credit in MemberCredit.objects.order_by("due_date"):
+                credits_by_member.setdefault(credit.member_id, []).append(credit)
+            return credits_by_member
+
+        credits_by_member_cache = get_from_cache_or_compute(
+            cache=cache, key="credits_by_member", compute_function=compute
+        )
+
+        return credits_by_member_cache.get(member_id, [])
