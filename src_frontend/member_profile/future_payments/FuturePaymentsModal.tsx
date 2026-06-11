@@ -1,9 +1,7 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Badge, Form, Modal, Table } from "react-bootstrap";
-import "dayjs/locale/de";
 
-import "../../fixed_header.css";
-import { formatDateText } from "../../utils/formatDateText.ts";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import {
@@ -12,17 +10,19 @@ import {
   Payment,
   PaymentsApi,
 } from "../../api-client";
-import formatSubscription from "../../utils/formatSubscription.ts";
+import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import "../../fixed_header.css";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
-import { getMinimumDate } from "../../utils/getMinimumDate.ts";
+import { formatDateText } from "../../utils/formatDateText.ts";
+import formatSubscription from "../../utils/formatSubscription.ts";
 import { getMaximumDate } from "../../utils/getMaximumDate.ts";
-import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
-import { useApi } from "../../hooks/useApi.ts";
+import { getMinimumDate } from "../../utils/getMinimumDate.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { ToastData } from "../../types/ToastData.ts";
-import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 
 interface FuturePaymentsModalProps {
   transactionsByDueDate: TransactionsByDueDate;
@@ -153,8 +153,9 @@ const EXPLANATION_TEXT = (
     <p>
       In Monaten in denen du aufgrund deines Vertragsstartes nicht alle
       Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
-      auf Basis des Kistenpreises berechnet ((Monatspreis / 52 Wochen) und mit
-      der Anzahl der wahrgenommenen Lieferungen multipliziert.
+      auf Basis des Kistenpreises berechnet (((Monatspreis * 12 Monate) / 52
+      Wochen) * Anzahl wahrgenommener Lieferungen) und mit der Anzahl der
+      wahrgenommenen Lieferungen multipliziert.
     </p>
     <p>
       Ein ggf. ausgewählter Solidarpreis wird taggenau auf den Monat
