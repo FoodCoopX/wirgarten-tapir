@@ -96,7 +96,7 @@ class TestExtraRecipientTokens(TapirIntegrationTest):
                 "email": "original@example.com",
                 "iban": "IBANORIGINAL",
             },
-            email_dispatches["original"].recipient_tokens,
+            email_dispatches["extra"].recipient_tokens,
         )
 
     def _assert_recipient_tokens_are_correct(
