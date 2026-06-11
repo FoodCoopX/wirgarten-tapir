@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
+import { Form, ListGroup, Modal, Spinner, Table } from "react-bootstrap";
 import { CoreApi, MemberExtraEmail } from "../../api-client";
+import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { Form, ListGroup, Modal, Spinner, Table } from "react-bootstrap";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import TapirButton from "../../components/TapirButton.tsx";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberExtraEmailsModalProps {
   memberId: string;
@@ -27,9 +27,14 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
   const [extraEmails, setExtraEmails] = useState<MemberExtraEmail[]>([]);
   const [explanationText, setExplanationText] = useState("");
   const [newAddress, setNewAddress] = useState("");
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [selectedForEdit, setSelectedForEdit] = useState<MemberExtraEmail>();
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
 
   useEffect(() => {
     if (!show) return;
@@ -62,8 +67,12 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
 
     api
       .coreApiMemberExtraEmailsCreate({
-        memberId: memberId,
-        extraEmail: newAddress,
+        memberExtraEmailCreateRequestRequest: {
+          memberId: memberId,
+          extraEmail: newAddress,
+          firstName: newFirstName,
+          lastName: newLastName,
+        },
       })
       .then(() => setNewAddress(""))
       .catch((error) =>
@@ -95,6 +104,28 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       .finally(() => setDeleting(false));
   }
 
+  function onUpdate(extraEmail: MemberExtraEmail) {
+    setSaving(true);
+
+    api
+      .coreApiMemberExtraEmailsPartialUpdate({
+        patchedMemberExtraEmailUpdateRequestRequest: {
+          extraEmailId: extraEmail.id,
+          firstName: editFirstName,
+          lastName: editLastName,
+        },
+      })
+      .then(loadData)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Editieren eine zusätzliche Adresse",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setSaving(false));
+  }
+
   function getTable() {
     if (loading) {
       return <Spinner />;
@@ -109,6 +140,8 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
         <thead>
           <tr>
             <th>E-Mail</th>
+            <th>Vorname</th>
+            <th>Nachname</th>
             <th>Bestätigt am</th>
             <th></th>
           </tr>
@@ -117,19 +150,69 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
           {extraEmails.map((extraEmail) => (
             <tr key={extraEmail.id}>
               <td>{extraEmail.email}</td>
+              {selectedForEdit == extraEmail ? (
+                <>
+                  <td>
+                    <Form.Control
+                      placeholder={"Vorname"}
+                      value={editFirstName}
+                      onChange={(event) => {
+                        setEditFirstName(event.target.value);
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control
+                      placeholder={"Nachname"}
+                      value={editLastName}
+                      onChange={(event) => {
+                        setEditLastName(event.target.value);
+                      }}
+                    />
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td>{extraEmail.firstName}</td>
+                  <td>{extraEmail.lastName}</td>
+                </>
+              )}
               <td>
                 {extraEmail.confirmedOn
                   ? formatDateNumeric(extraEmail.confirmedOn)
                   : "Nicht bestätigt"}
               </td>
               <td>
-                <TapirButton
-                  variant={"outline-danger"}
-                  icon={"delete"}
-                  size={"sm"}
-                  onClick={() => onDelete(extraEmail.id!)}
-                  loading={deleting}
-                />
+                <div className={"d-flex flex-row gap-2"}>
+                  {selectedForEdit == extraEmail ? (
+                    <TapirButton
+                      variant={"primary"}
+                      icon={"save"}
+                      size={"sm"}
+                      loading={saving}
+                      onClick={() => onUpdate(extraEmail)}
+                    />
+                  ) : (
+                    <TapirButton
+                      variant={"outline-primary"}
+                      icon={"edit"}
+                      size={"sm"}
+                      onClick={() => {
+                        setEditFirstName(extraEmail.firstName);
+                        setEditLastName(extraEmail.lastName);
+                        setSelectedForEdit(extraEmail);
+                      }}
+                      loading={saving}
+                    />
+                  )}
+                  <TapirButton
+                    variant={"outline-danger"}
+                    icon={"delete"}
+                    size={"sm"}
+                    onClick={() => onDelete(extraEmail.id!)}
+                    loading={deleting}
+                  />
+                </div>
               </td>
             </tr>
           ))}
@@ -153,11 +236,29 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
             <Form>
               <h5>Zusätzliche Adresse hinzufügen</h5>
               <div className={"d-flex flex-row gap-2"}>
-                <Form.Group controlId={"new_extra"}>
+                <Form.Group controlId={"new_extra_email"}>
+                  <Form.Label>E-Mail</Form.Label>
                   <Form.Control
+                    placeholder={"E-Mail"}
                     type={"email"}
                     value={newAddress}
                     onChange={(event) => setNewAddress(event.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group controlId={"new_extra_first_name"}>
+                  <Form.Label>Vorname</Form.Label>
+                  <Form.Control
+                    placeholder={"Vorname"}
+                    value={newFirstName}
+                    onChange={(event) => setNewFirstName(event.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group controlId={"new_extra_last_name"}>
+                  <Form.Label>Nachname</Form.Label>
+                  <Form.Control
+                    placeholder={"Nachname"}
+                    value={newLastName}
+                    onChange={(event) => setNewLastName(event.target.value)}
                   />
                 </Form.Group>
                 <TapirButton

@@ -475,17 +475,46 @@ paths:
           description: ''
     post:
       operationId: core_api_member_extra_emails_create
-      parameters:
-      - in: query
-        name: extra_email
-        schema:
-          type: string
-      - in: query
-        name: member_id
-        schema:
-          type: string
       tags:
       - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberExtraEmailCreateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberExtraEmailCreateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberExtraEmailCreateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+    patch:
+      operationId: core_api_member_extra_emails_partial_update
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberExtraEmailUpdateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberExtraEmailUpdateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMemberExtraEmailUpdateRequestRequest'
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -8338,6 +8367,12 @@ components:
           type: string
           format: email
           maxLength: 254
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
         confirmed_on:
           type: string
           format: date-time
@@ -8349,7 +8384,30 @@ components:
           type: string
       required:
       - email
+      - first_name
+      - last_name
       - member
+    MemberExtraEmailCreateRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        extra_email:
+          type: string
+          format: email
+          minLength: 1
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+      required:
+      - extra_email
+      - first_name
+      - last_name
+      - member_id
     MemberExtraMailData:
       type: object
       properties:
@@ -9026,6 +9084,18 @@ components:
         dynamic_segment_name:
           type: string
           maxLength: 100
+    PatchedMemberExtraEmailUpdateRequestRequest:
+      type: object
+      properties:
+        extra_email_id:
+          type: string
+          minLength: 1
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
     PatchedMemberProfilePersonalDataRequestRequest:
       type: object
       properties:

@@ -502,17 +502,13 @@ class Member(TapirUser):
     def __str__(self):
         return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
 
-    def get_extra_recipient_addresses(self, cache: dict):
+    def get_extra_recipients(self, cache: dict):
         if not get_parameter_value(
             ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
         ):
             return []
 
-        return list(
-            self.memberextraemail_set.filter(confirmed_on__isnull=False).values_list(
-                "email", flat=True
-            )
-        )
+        return list(self.memberextraemail_set.filter(confirmed_on__isnull=False))
 
 
 class MemberPickupLocation(TapirModel):
@@ -1175,6 +1171,8 @@ class MemberExtraEmail(TapirModel):
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     email = models.EmailField()
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     confirmed_on = models.DateTimeField(null=True)
     secret = models.UUIDField(default=uuid.uuid4)
 
@@ -1186,12 +1184,23 @@ class MemberExtraEmailCreatedLogEntry(LogEntry):
     template_name = "wirgarten/log/member_extra_email_created_log_entry.html"
 
     email = models.EmailField(max_length=1024)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
 
-    def populate_email(self, email: str, actor: TapirUser, user: Member):
+    def populate_email(
+        self, extra_email_object: MemberExtraEmail, actor: TapirUser, user: Member
+    ):
         self.populate(actor=actor, user=user)
-        self.email = email
+        self.email = extra_email_object.email
+        self.first_name = extra_email_object.first_name
+        self.last_name = extra_email_object.last_name
 
         return self
+
+
+class MemberExtraEmailUpdatedLogEntry(UpdateModelLogEntry):
+    template_name = "wirgarten/log/member_extra_email_updated_log_entry.html"
+    excluded_fields = ["updated_at"]
 
 
 class MemberExtraEmailDeletedLogEntry(LogEntry):

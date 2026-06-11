@@ -105,3 +105,10 @@ class ConfigurationGenerator:
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_START_DATE).update(
             value=(today - datetime.timedelta(days=365)).replace(day=1)
         )
+
+        TapirParameter.objects.filter(
+            key=ParameterKeys.PAYMENT_ORGANISATION_IBAN
+        ).update(value="DE00TEST")
+        TapirParameter.objects.filter(
+            key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER
+        ).update(value="TEST-IDENTIFIER")

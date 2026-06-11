@@ -95,6 +95,7 @@ models/MemberCreditCreateRequest.ts
 models/MemberCreditSettleRequest.ts
 models/MemberDataToConfirm.ts
 models/MemberExtraEmail.ts
+models/MemberExtraEmailCreateRequestRequest.ts
 models/MemberExtraMailData.ts
 models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts
@@ -130,6 +131,7 @@ models/PatchedExtendedProductRequest.ts
 models/PatchedGrowingPeriodRequest.ts
 models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
 models/PatchedMailCategoryRequest.ts
+models/PatchedMemberExtraEmailUpdateRequestRequest.ts
 models/PatchedMemberProfilePersonalDataRequestRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedPickupLocationCapacitiesRequest.ts
