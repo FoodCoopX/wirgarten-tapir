@@ -9,6 +9,7 @@ from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.services.member_mail_token_service import MemberMailTokenService
 from tapir.core.services.newsletter_management_link_provider import (
     NewsletterManagementLinkProvider,
 )
@@ -106,6 +107,7 @@ def _register_tokens():
             "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
         },
         dynamic_tokens={
+            "Mitglied - Post-Adresse": MemberMailTokenService.get_post_address,
             "Verteilstation - Name": PickupLocationMailTokenService.pickup_location_name,
             "Verteilstation - Adresse": PickupLocationMailTokenService.pickup_location_address,
             "Verteilstation - Zugangscode": PickupLocationMailTokenService.pickup_location_access_code,
