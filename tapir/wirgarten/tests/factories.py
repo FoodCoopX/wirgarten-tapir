@@ -24,6 +24,7 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     ProductPrice,
     PickupLocationCapability,
+    MemberExtraEmail,
 )
 
 NOW = datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc)
@@ -261,3 +262,13 @@ class CoopShareTransactionFactory(
         ),
         mandate_ref__member=factory.SelfAttribute("...member"),
     )
+
+
+class MemberExtraEmailFactory(factory.django.DjangoModelFactory[MemberExtraEmail]):
+    class Meta:
+        model = MemberExtraEmail
+
+    member = factory.SubFactory(MemberFactory)
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    email = factory.Faker("email")

@@ -32,6 +32,18 @@ export interface MemberExtraEmail {
   email: string;
   /**
    *
+   * @type {string}
+   * @memberof MemberExtraEmail
+   */
+  firstName: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberExtraEmail
+   */
+  lastName: string;
+  /**
+   *
    * @type {Date}
    * @memberof MemberExtraEmail
    */
@@ -57,6 +69,8 @@ export function instanceOfMemberExtraEmail(
   value: object,
 ): value is MemberExtraEmail {
   if (!("email" in value) || value["email"] === undefined) return false;
+  if (!("firstName" in value) || value["firstName"] === undefined) return false;
+  if (!("lastName" in value) || value["lastName"] === undefined) return false;
   if (!("member" in value) || value["member"] === undefined) return false;
   return true;
 }
@@ -75,6 +89,8 @@ export function MemberExtraEmailFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     email: json["email"],
+    firstName: json["first_name"],
+    lastName: json["last_name"],
     confirmedOn:
       json["confirmed_on"] == null ? undefined : new Date(json["confirmed_on"]),
     secret: json["secret"] == null ? undefined : json["secret"],
@@ -97,6 +113,8 @@ export function MemberExtraEmailToJSONTyped(
   return {
     id: value["id"],
     email: value["email"],
+    first_name: value["firstName"],
+    last_name: value["lastName"],
     confirmed_on:
       value["confirmedOn"] == null
         ? undefined

@@ -29,7 +29,7 @@ nanoid = "^2.0.0"
 lxml= "^6.1.1"
 python-keycloak = "^7.1.1"
 unidecode = "^1.4.0"
-tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1780479919/tapir_mail-0.0.0.dev1780479919-py3-none-any.whl" }
+tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1781187292/tapir_mail-0.0.0.dev1781187292-py3-none-any.whl" }
 djangorestframework = "^3.17.1"
 drf-spectacular = "^0.29.0"
 django-vite = "^3.1.0"

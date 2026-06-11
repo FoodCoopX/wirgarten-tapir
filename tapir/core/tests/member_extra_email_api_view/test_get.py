@@ -41,9 +41,15 @@ class TestMemberExtraEmailApiViewGet(TapirIntegrationTest):
             email="confirmed@example.com",
             member=member,
             confirmed_on=now,
+            first_name="confirmed_first_name",
+            last_name="confirmed_last_name",
         )
         unconfirmed = MemberExtraEmail.objects.create(
-            email="unconfirmed@example.com", member=member, confirmed_on=None
+            email="unconfirmed@example.com",
+            member=member,
+            confirmed_on=None,
+            first_name="unconfirmed_first_name",
+            last_name="unconfirmed_last_name",
         )
         TapirParameter.objects.filter(
             key=ParameterKeys.EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES
@@ -74,6 +80,8 @@ class TestMemberExtraEmailApiViewGet(TapirIntegrationTest):
                             "confirmed_on"
                         ],
                         "secret": str(confirmed.secret),
+                        "first_name": "confirmed_first_name",
+                        "last_name": "confirmed_last_name",
                     },
                     {
                         "id": unconfirmed.id,
@@ -81,6 +89,8 @@ class TestMemberExtraEmailApiViewGet(TapirIntegrationTest):
                         "email": "unconfirmed@example.com",
                         "confirmed_on": None,
                         "secret": str(unconfirmed.secret),
+                        "first_name": "unconfirmed_first_name",
+                        "last_name": "unconfirmed_last_name",
                     },
                 ],
                 "explanation_text": "test text",

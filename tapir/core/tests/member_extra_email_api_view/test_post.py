@@ -45,8 +45,15 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.client.force_login(member)
 
         url = reverse("core:member_extra_emails")
-        url = f"{url}?extra_email=test@example.com&member_id={member.id}"
-        response = self.client.post(url)
+        response = self.client.post(
+            url,
+            data={
+                "extra_email": "test@example.com",
+                "member_id": member.id,
+                "first_name": "test_first",
+                "last_name": "test_last",
+            },
+        )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
@@ -87,8 +94,15 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.client.force_login(admin)
 
         url = reverse("core:member_extra_emails")
-        url = f"{url}?extra_email=test@example.com&member_id={other_member.id}"
-        response = self.client.post(url)
+        response = self.client.post(
+            url,
+            data={
+                "extra_email": "test@example.com",
+                "member_id": other_member.id,
+                "first_name": "test_first",
+                "last_name": "test_last",
+            },
+        )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
 
@@ -96,6 +110,8 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         extra_email = MemberExtraEmail.objects.get()
         self.assertEqual("test@example.com", extra_email.email)
         self.assertEqual(other_member, extra_email.member)
+        self.assertEqual("test_first", extra_email.first_name)
+        self.assertEqual("test_last", extra_email.last_name)
 
         self.assertEqual(1, MemberExtraEmailCreatedLogEntry.objects.count())
         log_entry = MemberExtraEmailCreatedLogEntry.objects.get()
@@ -128,8 +144,15 @@ class TestMemberExtraEmailApiViewPost(TapirIntegrationTest):
         self.client.force_login(admin)
 
         url = reverse("core:member_extra_emails")
-        url = f"{url}?extra_email=test@example.com&member_id={other_member.id}"
-        response = self.client.post(url)
+        response = self.client.post(
+            url,
+            data={
+                "extra_email": "test@example.com",
+                "member_id": other_member.id,
+                "first_name": "test_first",
+                "last_name": "test_last",
+            },
+        )
 
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
         self.assertFalse(MemberExtraEmail.objects.exists())
