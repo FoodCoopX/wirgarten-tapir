@@ -326,7 +326,7 @@ class ExportMembersView(View):
                     member.last_name,
                     member.email,
                     member.phone_number,
-                    member.street + (", " + member.street_2) if member.street_2 else "",
+                    member.street + (", " + member.street_2 if member.street_2 else ""),
                     member.postcode,
                     member.city,
                     member.country,
