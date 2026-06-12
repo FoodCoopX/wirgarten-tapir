@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import dayjs from "dayjs";
+import React, { useRef, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
 import { GenericExportsApi, PdfExportModel } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
-import dayjs from "dayjs";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PdfExportBuildModalProps {
   show: boolean;
@@ -13,6 +14,14 @@ interface PdfExportBuildModalProps {
   csrfToken: string;
   exportToBuild: PdfExportModel;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+}
+
+function downloadExportFile(url: string) {
+  const element = document.createElement("a");
+  element.setAttribute("href", url);
+
+  element.style.display = "none";
+  element.click();
 }
 
 const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
@@ -26,8 +35,17 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
 
   const [datetime, setDatetime] = useState(new Date());
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   function buildExport() {
+    if (!formRef.current) {
+      return;
+    }
+
+    if (!formRef.current.reportValidity()) {
+      return;
+    }
+
     setLoading(true);
     api
       .genericExportsBuildPdfExportRetrieve({
@@ -48,14 +66,6 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
       });
   }
 
-  function downloadExportFile(url: string) {
-    const element = document.createElement("a");
-    element.setAttribute("href", url);
-
-    element.style.display = "none";
-    element.click();
-  }
-
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
@@ -65,15 +75,19 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
         <Form
           className={"d-flex flex-column gap-2"}
           id={"createPdfExportBuildModalForm"}
+          ref={formRef}
         >
           <Form.Group controlId={"form.name"}>
             <Form.Label>Datum</Form.Label>
-            <Form.Control
-              type={"datetime-local"}
-              onChange={(event) => setDatetime(new Date(event.target.value))}
-              required={true}
-              value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
-            />
+            <div className={"d-flex flex-row gap-2"}>
+              <Form.Control
+                type={"datetime-local"}
+                onChange={(event) => setDatetime(new Date(event.target.value))}
+                required={true}
+                value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
+              />
+              <TapirHelpButton text={"WIP"} />
+            </div>
           </Form.Group>
         </Form>
       </Modal.Body>

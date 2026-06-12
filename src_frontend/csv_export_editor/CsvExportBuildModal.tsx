@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import dayjs from "dayjs";
+import React, { useRef, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
 import {
   BuildCsvExportResponse,
@@ -6,10 +7,10 @@ import {
   GenericExportsApi,
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
-import dayjs from "dayjs";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface CsvExportBuildModalProps {
   show: boolean;
@@ -17,6 +18,19 @@ interface CsvExportBuildModalProps {
   csrfToken: string;
   exportToBuild: CsvExportModel;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+}
+
+function downloadExportFile(response: BuildCsvExportResponse) {
+  const element = document.createElement("a");
+  element.setAttribute(
+    "href",
+    "data:text/plain;charset=utf-8," +
+      encodeURIComponent(response.fileAsString),
+  );
+  element.setAttribute("download", response.fileName);
+
+  element.style.display = "none";
+  element.click();
 }
 
 const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
@@ -30,8 +44,17 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
 
   const [datetime, setDatetime] = useState(new Date());
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   function buildExport() {
+    if (!formRef.current) {
+      return;
+    }
+
+    if (!formRef.current.reportValidity()) {
+      return;
+    }
+
     setLoading(true);
     api
       .genericExportsBuildCsvExportRetrieve({
@@ -52,19 +75,6 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
       });
   }
 
-  function downloadExportFile(response: BuildCsvExportResponse) {
-    const element = document.createElement("a");
-    element.setAttribute(
-      "href",
-      "data:text/plain;charset=utf-8," +
-        encodeURIComponent(response.fileAsString),
-    );
-    element.setAttribute("download", response.fileName);
-
-    element.style.display = "none";
-    element.click();
-  }
-
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
@@ -74,17 +84,21 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
         <Form
           className={"d-flex flex-column gap-2"}
           id={"createCsvExportBuildModalForm"}
+          ref={formRef}
         >
           <Form.Group controlId={"form.name"}>
             <Form.Label>Datum</Form.Label>
-            <Form.Control
-              type={"datetime-local"}
-              onChange={(event) => {
-                setDatetime(new Date(event.target.value));
-              }}
-              required={true}
-              value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
-            />
+            <div className={"d-flex flex-row gap-2"}>
+              <Form.Control
+                type={"datetime-local"}
+                onChange={(event) => {
+                  setDatetime(new Date(event.target.value));
+                }}
+                required={true}
+                value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
+              />
+              <TapirHelpButton text={"WIP"} />
+            </div>
           </Form.Group>
         </Form>
       </Modal.Body>
