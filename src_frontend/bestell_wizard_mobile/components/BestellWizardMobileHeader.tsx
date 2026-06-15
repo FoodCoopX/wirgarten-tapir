@@ -1,18 +1,18 @@
 import React, { useState } from "react";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import BestellWizardShoppingCartOverlay from "./BestellWizardShoppingCartOverlay.tsx";
-import { Phase } from "../types/Phase.ts";
 import { PublicPickupLocation, PublicProductType } from "../../api-client";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { Phase } from "../types/Phase.ts";
+import { Step } from "../types/Step.ts";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { HEADER_HEIGHT } from "../utils/DIMENSIONS.ts";
 import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
-import { formatCurrency } from "../../utils/formatCurrency.ts";
+import BestellWizardShoppingCartOverlay from "./BestellWizardShoppingCartOverlay.tsx";
 import "./header.css";
-import { Step } from "../types/Step.ts";
 
 interface BestellWizardMobileHeaderProps {
   settings: BestellWizardSettings;
@@ -27,6 +27,7 @@ interface BestellWizardMobileHeaderProps {
   currentStep: Step;
   setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
+  goToProductTypeStep: (productType: PublicProductType) => void;
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
@@ -42,6 +43,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   setCurrentStep,
   currentStep,
   selectedNumberOfCoopShares,
+  goToProductTypeStep,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -108,6 +110,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         setCurrentStep={setCurrentStep}
         selectedNumberOfCoopShares={selectedNumberOfCoopShares}
         solidarityContribution={solidarityContribution}
+        goToProductTypeStep={goToProductTypeStep}
       />
     </>
   );

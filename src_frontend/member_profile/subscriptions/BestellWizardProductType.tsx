@@ -501,8 +501,8 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             personalData={personalData}
             confirmOrder={onConfirm}
             goToNextStep={goToNextStep}
-            goToProductTypeStep={(productType) => {
-              setCurrentStep(productType.id + "_order");
+            goToProductTypeStep={() => {
+              setCurrentStep(productTypeId + "_order");
             }}
             selectedPickupLocations={selectedPickupLocations}
             becomeMemberNow={false}
@@ -587,6 +587,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       showProgress={steps.length > 2}
       hideFooterButtonsOnLastStep={false}
       selectedNumberOfCoopShares={0}
+      goToProductTypeStep={() => {
+        setCurrentStep(productTypeId + "_order");
+      }}
     />
   );
 };

@@ -560,6 +560,13 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
   }
 
+  function goToProductTypeStep(productType: PublicProductType) {
+    if (!selectedProductTypes.includes(productType)) {
+      setSelectedProductTypes([...selectedProductTypes, productType]);
+    }
+    setCurrentStep(productType.id! + "_order");
+  }
+
   function getStepComponent(step: Step) {
     switch (step) {
       case "1a_welcome":
@@ -750,12 +757,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             firstDeliveryDatesByPickupLocationAndProductType={
               firstDeliveryDatesByPickupLocationAndProductType
             }
-            goToProductTypeStep={(productType) => {
-              if (!selectedProductTypes.includes(productType)) {
-                setSelectedProductTypes([...selectedProductTypes, productType]);
-              }
-              setCurrentStep(productType.id + "_order");
-            }}
+            goToProductTypeStep={goToProductTypeStep}
             selectedPickupLocations={selectedPickupLocations}
             solidarityContribution={solidarityContribution}
             personalData={personalData}
@@ -893,6 +895,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       showProgress={true}
       hideFooterButtonsOnLastStep={true}
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+      goToProductTypeStep={goToProductTypeStep}
     />
   );
 };

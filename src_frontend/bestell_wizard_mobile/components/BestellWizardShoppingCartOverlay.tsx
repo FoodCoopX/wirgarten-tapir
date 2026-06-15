@@ -1,16 +1,16 @@
 import React from "react";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
-import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 import { PublicPickupLocation, type PublicProductType } from "../../api-client";
-import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
+import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Step } from "../types/Step.ts";
-import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 
 interface BestellWizardShoppingCartOverlayProps {
   settings: BestellWizardSettings;
@@ -25,6 +25,7 @@ interface BestellWizardShoppingCartOverlayProps {
   setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
   solidarityContribution: number;
+  goToProductTypeStep: (productType: PublicProductType) => void;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -39,9 +40,9 @@ const BestellWizardShoppingCartOverlay: React.FC<
   productTypesInWaitingList,
   steps,
   currentStep,
-  setCurrentStep,
   selectedNumberOfCoopShares,
   solidarityContribution,
+  goToProductTypeStep,
 }) => {
   function canEditProductTypeOrder(productType: PublicProductType) {
     return (
@@ -149,7 +150,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
                       text={"Bestellung anpassen"}
                       icon={"edit"}
                       onClick={() => {
-                        setCurrentStep(productType.id! + "_order");
+                        goToProductTypeStep(productType);
                         onHide();
                       }}
                     />

@@ -247,6 +247,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
       showProgress={false}
       hideFooterButtonsOnLastStep={false}
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+      goToProductTypeStep={() => {}}
     />
   );
 };
