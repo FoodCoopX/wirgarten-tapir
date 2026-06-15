@@ -41,6 +41,7 @@ THEME_ALFTER = "alfter"
 THEME_GKH = "gkh"
 THEME_TEST = "test"
 THEME_GEBAECK = "gbk"
+THEME_SOLAWI_ODERSCHWALBE = "sos"
 
 THEME_OPTIONS = [
     (THEME_ALFTER, "Alfter"),
@@ -55,6 +56,7 @@ THEME_OPTIONS = [
     (THEME_LEISTENMUEHLE, "Leistenmühle"),
     (THEME_MM, "Möllers Morgen"),
     (THEME_SACHERL_TANNBERG, "Sacherl Tannberg"),
+    (THEME_SOLAWI_ODERSCHWALBE, "Solawi Oderschwalbe"),
     (THEME_SOLAWI_HALL, "Solawi Hall"),
     (THEME_WIRGARTEN, "WirGarten Lüneburg"),
     (THEME_TEST, "Test"),
