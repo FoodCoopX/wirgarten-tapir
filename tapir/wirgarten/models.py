@@ -209,21 +209,6 @@ class ProductType(TapirModel):
     title_bestellwizard_product_choice = models.CharField(max_length=512, default="")
     background_image_in_bestellwizard = models.CharField(max_length=512, default="")
 
-    def base_price(self, reference_date=None):
-        if reference_date is None:
-            reference_date = get_today()
-
-        product = self.product_set.get(base=True)
-        price_queryset = product.productprice_set.filter(
-            valid_from__lte=reference_date
-        ).order_by("-valid_from")
-
-        price = price_queryset.first()
-        if price is None:
-            price = product.productprice_set.order_by("-valid_from").first()
-
-        return price.price if price else None
-
     class Meta:
         constraints = [
             UniqueConstraint(
