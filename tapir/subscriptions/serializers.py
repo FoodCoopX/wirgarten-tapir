@@ -172,6 +172,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "background_image_in_bestellwizard",
             "price_per_delivery",
             "tax_rate",
+            "is_association_membership",
         ]
 
     products = SerializerMethodField()

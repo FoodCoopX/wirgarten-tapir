@@ -22,6 +22,11 @@ import {
   BestellWizardStringsFromJSON,
   BestellWizardStringsToJSON,
 } from "./BestellWizardStrings";
+import type { LegalStatusEnum } from "./LegalStatusEnum";
+import {
+  LegalStatusEnumFromJSON,
+  LegalStatusEnumToJSON,
+} from "./LegalStatusEnum";
 import type { PublicGrowingPeriod } from "./PublicGrowingPeriod";
 import {
   PublicGrowingPeriodFromJSON,
@@ -219,6 +224,12 @@ export interface BestellWizardBaseDataResponse {
   solidarityStepPosition: SolidarityStepPositionEnum;
   /**
    *
+   * @type {LegalStatusEnum}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  legalStatus: LegalStatusEnum;
+  /**
+   *
    * @type {BestellWizardStrings}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -348,6 +359,8 @@ export function instanceOfBestellWizardBaseDataResponse(
     value["solidarityStepPosition"] === undefined
   )
     return false;
+  if (!("legalStatus" in value) || value["legalStatus"] === undefined)
+    return false;
   if (!("strings" in value) || value["strings"] === undefined) return false;
   if (!("images" in value) || value["images"] === undefined) return false;
   if (!("debug" in value) || value["debug"] === undefined) return false;
@@ -406,6 +419,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     solidarityStepPosition: SolidarityStepPositionEnumFromJSON(
       json["solidarity_step_position"],
     ),
+    legalStatus: LegalStatusEnumFromJSON(json["legal_status"]),
     strings: BestellWizardStringsFromJSON(json["strings"]),
     images: BestellWizardImagesFromJSON(json["images"]),
     debug: json["debug"],
@@ -465,6 +479,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     solidarity_step_position: SolidarityStepPositionEnumToJSON(
       value["solidarityStepPosition"],
     ),
+    legal_status: LegalStatusEnumToJSON(value["legalStatus"]),
     strings: BestellWizardStringsToJSON(value["strings"]),
     images: BestellWizardImagesToJSON(value["images"]),
     debug: value["debug"],

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
 )
@@ -167,6 +168,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     solidarity_step_position = serializers.ChoiceField(
         choices=OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION
     )
+    legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
     debug = serializers.BooleanField()

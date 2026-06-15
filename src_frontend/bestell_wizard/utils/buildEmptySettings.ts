@@ -29,6 +29,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     feedbackStepEnabled: false,
     growingPeriodChoices: [],
     solidarityStepPosition: "before_personal_data",
+    legalStatus: "coop",
     strings: {
       step1aTitle: "",
       step1aText: "",

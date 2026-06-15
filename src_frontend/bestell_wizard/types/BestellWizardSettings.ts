@@ -1,12 +1,13 @@
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import {
   BestellWizardImages,
   BestellWizardStrings,
+  LegalStatusEnum,
   PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
   type SolidarityStepPositionEnum,
 } from "../../api-client";
+import { TapirTheme } from "../../types/TapirTheme.ts";
 
 export type BestellWizardSettings = {
   theme: TapirTheme;
@@ -36,6 +37,7 @@ export type BestellWizardSettings = {
   feedbackStepEnabled: boolean;
   growingPeriodChoices: PublicGrowingPeriod[];
   solidarityStepPosition: SolidarityStepPositionEnum;
+  legalStatus: LegalStatusEnum;
   strings: BestellWizardStrings;
   images: BestellWizardImages;
   debug: boolean;

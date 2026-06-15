@@ -40,7 +40,16 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
 
   useEffect(() => {
     if (investingMembership) {
-      setSelectedProductTypes([]);
+      if (settings.legalStatus === "association") {
+        setSelectedProductTypes(
+          settings.productTypes.filter(
+            (productType) => productType.isAssociationMembership,
+          ),
+        );
+      } else {
+        setSelectedProductTypes([]);
+      }
+
       setShoppingCart(buildEmptyShoppingCart(settings.productTypes));
     } else {
       selectAllRequiredProductTypes(
@@ -52,7 +61,15 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   }, [investingMembership]);
 
   useEffect(() => {
-    if (selectedProductTypes.length > 0) {
+    if (settings.legalStatus === "association") {
+      if (
+        selectedProductTypes.some(
+          (productType) => !productType.isAssociationMembership,
+        )
+      ) {
+        setInvestingMembership(false);
+      }
+    } else if (selectedProductTypes.length > 0) {
       setInvestingMembership(false);
     }
   }, [selectedProductTypes]);
@@ -100,6 +117,19 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
     }
   }
 
+  function getRelevantProductTypes() {
+    if (settings.legalStatus !== "association") {
+      return settings.productTypes;
+    }
+
+    return settings.productTypes.filter(
+      (productType) =>
+        !(
+          productType.mustBeSubscribedTo && productType.isAssociationMembership
+        ),
+    );
+  }
+
   return (
     <>
       {settings.strings.step3Text && (
@@ -113,7 +143,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           id={"product_types_choice"}
           className={"d-flex gap-2 justify-content-center align-items-center"}
         >
-          {settings.productTypes.map((productType) => (
+          {getRelevantProductTypes().map((productType) => (
             <div key={productType.id}>
               <input
                 type="checkbox"

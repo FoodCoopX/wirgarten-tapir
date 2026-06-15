@@ -496,6 +496,9 @@ class BestellWizardBaseDataApiView(APIView):
                     cache=self.cache,
                 ),
                 "growing_period_choices": available_growing_periods,
+                "legal_status": get_parameter_value(
+                    key=ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
+                ),
                 "strings": self.build_strings_object(cache=self.cache),
                 "images": self.build_images_object(cache=self.cache),
                 "debug": settings.DEBUG,

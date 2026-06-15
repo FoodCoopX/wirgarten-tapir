@@ -5586,6 +5586,8 @@ components:
             $ref: '#/components/schemas/PublicGrowingPeriod'
         solidarity_step_position:
           $ref: '#/components/schemas/SolidarityStepPositionEnum'
+        legal_status:
+          $ref: '#/components/schemas/LegalStatusEnum'
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
         images:
@@ -5607,6 +5609,7 @@ components:
       - intro_step_text
       - label_checkbox_contract_policy
       - label_checkbox_sepa_mandat
+      - legal_status
       - logo_url
       - organization_name
       - payment_rhythm_choices
@@ -10331,6 +10334,9 @@ components:
           type: number
           format: double
           readOnly: true
+        is_association_membership:
+          type: boolean
+          title: Repräsentiert Vereinsmitgliedschaften
       required:
       - accordions
       - name
