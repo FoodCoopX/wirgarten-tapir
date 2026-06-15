@@ -25,6 +25,11 @@ class TapirModel(models.Model):
         abstract = True
 
 
+class DatabaseWriteTest(TapirModel):
+    # This class is only used by TapirHealthStatusProvider to check that the DB can be read and written to
+    pass
+
+
 class SidebarLinkGroup:
     name: str
 
