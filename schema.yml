@@ -10327,12 +10327,17 @@ components:
         price_per_delivery:
           type: boolean
           readOnly: true
+        tax_rate:
+          type: number
+          format: double
+          readOnly: true
       required:
       - accordions
       - name
       - no_delivery
       - price_per_delivery
       - products
+      - tax_rate
     PublicSubscription:
       type: object
       properties:

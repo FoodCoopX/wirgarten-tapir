@@ -17,6 +17,7 @@ from tapir.deliveries.services.subscription_price_type_decider import (
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
+from tapir.products.services.tax_rate_service import TaxRateService
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
@@ -144,7 +145,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.FLOAT)
     def get_price(self, product: Product):
-        cache = {}
+        cache = self.context["cache"]
         return get_product_price(
             product=product, reference_date=get_today(cache=cache), cache=cache
         ).price
@@ -170,12 +171,20 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "icon_link",
             "background_image_in_bestellwizard",
             "price_per_delivery",
+            "tax_rate",
         ]
 
     products = SerializerMethodField()
     no_delivery = SerializerMethodField()
     accordions = SerializerMethodField()
     price_per_delivery = SerializerMethodField()
+    tax_rate = SerializerMethodField()
+
+    def get_tax_rate(self, product_type: ProductType) -> float:
+        cache = self.context["cache"]
+        return TaxRateService.get_tax_rate(
+            product_type=product_type, at_date=get_today(cache=cache), cache=cache
+        )
 
     @staticmethod
     def get_price_per_delivery(product_type: ProductType) -> bool:
@@ -186,7 +195,9 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
     @extend_schema_field(PublicProductSerializer(many=True))
     def get_products(self, product_type: ProductType):
         serialized_products = PublicProductSerializer(
-            Product.objects.filter(type=product_type, deleted=False), many=True
+            Product.objects.filter(type=product_type, deleted=False),
+            many=True,
+            context=self.context,
         ).data
 
         return sorted(serialized_products, key=lambda product: product["price"])

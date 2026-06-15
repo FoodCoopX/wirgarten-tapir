@@ -502,7 +502,11 @@ class BestellWizardBaseDataApiView(APIView):
             }
         )
 
-        return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
+        return Response(
+            BestellWizardBaseDataResponseSerializer(
+                response_data, context={"cache": self.cache}
+            ).data
+        )
 
     @classmethod
     def build_simple_response_fields(cls, cache: dict):
