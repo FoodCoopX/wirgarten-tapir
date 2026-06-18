@@ -25,6 +25,7 @@ class TestGetMemberSubscriptionDataApiView(TapirIntegrationTest):
         )
 
     def setUp(self):
+        super().setUp()
         self.target_member = MemberFactory.create(is_superuser=False)
 
         mock_timezone(test=self, now=datetime.datetime(year=2023, month=11, day=15))
