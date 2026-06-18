@@ -12,7 +12,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
     AutomaticSubscriptionRenewalService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_monday
+from tapir.utils.shortcuts import get_monday, get_next_sunday
 from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     Member,
@@ -106,6 +106,7 @@ class GetDeliveriesService:
     def get_relevant_subscriptions(
         cls, member: Member, reference_date: datetime.date, cache: Dict
     ) -> Set[Subscription]:
+        reference_date = get_next_sunday(reference_date)
         accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
             date=reference_date, cache=cache
         )
