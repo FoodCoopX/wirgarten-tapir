@@ -21,7 +21,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
     AutomaticSubscriptionRenewalService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_monday
+from tapir.utils.shortcuts import get_monday, get_next_sunday
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -140,6 +140,10 @@ class GetDeliveriesService:
     def get_relevant_subscriptions(
         cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> Set[Subscription]:
+        # Only weeks fully covered by the subscription get delivered.
+        # That means that a (non-renewed) subscription that ends on a Wednesday won't get a delivery on the previous Tuesday.
+        reference_date = get_next_sunday(reference_date)
+
         delivered_subscriptions = {
             subscription
             for subscription in TapirCache.get_all_subscriptions(cache=cache)

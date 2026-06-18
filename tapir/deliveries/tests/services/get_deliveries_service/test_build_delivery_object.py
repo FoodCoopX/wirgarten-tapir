@@ -385,3 +385,91 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         )
 
         self.assertIsNone(delivery_object)
+
+    def test_buildDeliveryObject_givenDateIsWithinSubscriptionRangeButWeekOfDeliveryIsNotFullyCoveredBySubscription_returnsNone(
+        self,
+    ):
+        # For subscriptions that end in the middle of a week,
+        # the last subscription is the on in the last week fully covered by the subscription.
+        # For example, a subscription that ends on a Friday with delivery day on Thursday will not get delivered on the
+        # last week.
+
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
+
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            period__start_date=datetime.date(year=2026, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+            end_date=datetime.date(
+                year=2026, month=9, day=30
+            ),  # Subscription ends on a Wednesday: Tuesday 29.09. should not get delivered
+        )
+
+        given_delivery_date = datetime.date(year=2026, month=9, day=29)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNone(delivery_object)
+
+    def test_buildDeliveryObject_givenDateIsInWeekPartiallyCoveredBySubscription_returnsNone(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=False
+        )
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2027, month=1, day=1))
+
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            period__start_date=datetime.date(year=2026, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+            end_date=datetime.date(
+                year=2026, month=12, day=31
+            ),  # Subscription ends on a Wednesday: Tuesday 29.09. should not get delivered
+        )
+
+        given_delivery_date = datetime.date(year=2026, month=12, day=29)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNone(delivery_object)
+
+    def test_buildDeliveryObject_givenDateIsInWeekPartiallyCoveredBySubscriptionButSubscriptionWillBeRenewed_returnsObject(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
+        GrowingPeriodFactory.create(start_date=datetime.date(year=2027, month=1, day=1))
+
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            period__start_date=datetime.date(year=2026, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+            end_date=datetime.date(
+                year=2026, month=12, day=31
+            ),  # Subscription ends on a Wednesday: Tuesday 29.09. should not get delivered
+        )
+
+        given_delivery_date = datetime.date(year=2026, month=12, day=29)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNotNone(delivery_object)
