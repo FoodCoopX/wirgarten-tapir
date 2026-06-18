@@ -63,6 +63,12 @@ export interface PublicSubscription {
    * @memberof PublicSubscription
    */
   readonly monthlyPrice: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicSubscription
+   */
+  id?: string;
 }
 
 /**
@@ -102,6 +108,7 @@ export function PublicSubscriptionFromJSONTyped(
     startDate: new Date(json["start_date"]),
     endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
     monthlyPrice: json["monthly_price"],
+    id: json["id"] == null ? undefined : json["id"],
   };
 }
 
@@ -127,5 +134,6 @@ export function PublicSubscriptionToJSONTyped(
       value["endDate"] == null
         ? undefined
         : (value["endDate"] as any).toISOString().substring(0, 10),
+    id: value["id"],
   };
 }

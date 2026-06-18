@@ -234,6 +234,7 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
             "start_date",
             "end_date",
             "monthly_price",
+            "id",
         ]
 
     monthly_price = serializers.SerializerMethodField()
@@ -259,10 +260,11 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
     def get_product_type_name(subscription: Subscription) -> str:
         return subscription.product.type.name
 
-    @staticmethod
     @extend_schema_field(PublicProductTypeSerializer)
-    def get_product_type(subscription: Subscription):
-        return PublicProductTypeSerializer(subscription.product.type).data
+    def get_product_type(self, subscription: Subscription):
+        return PublicProductTypeSerializer(
+            subscription.product.type, context=self.context
+        ).data
 
 
 class UpdateSubscriptionsRequestSerializer(serializers.Serializer):

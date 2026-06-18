@@ -10372,6 +10372,9 @@ components:
           type: number
           format: double
           readOnly: true
+        id:
+          type: string
+          maxLength: 10
       required:
       - monthly_price
       - product_id
