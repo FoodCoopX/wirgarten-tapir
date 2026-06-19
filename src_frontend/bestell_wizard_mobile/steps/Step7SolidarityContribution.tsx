@@ -7,6 +7,7 @@ import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeast
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
+import { getShoppingCartWithoutAssociationMembership } from "../utils/getShoppingCartWithoutAssociationMembership.ts";
 
 interface Step7SolidarityContributionProps {
   goToNextStep: () => void;
@@ -151,7 +152,12 @@ const Step7SolidarityContribution: React.FC<
         <p
           className={"text-center"}
           dangerouslySetInnerHTML={{
-            __html: isAtLeastOneProductOrdered(shoppingCart)
+            __html: isAtLeastOneProductOrdered(
+              getShoppingCartWithoutAssociationMembership(
+                shoppingCart,
+                settings,
+              ),
+            )
               ? settings.strings.step4dText
               : settings.strings.step4dTextSupportingMember,
           }}
