@@ -136,6 +136,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         current_growing_period = TapirCache.get_growing_period_at_date(
             reference_date=get_today(cache=self.cache), cache=self.cache
         )
+        context["recent_feedbacks"] = get_recent_feedbacks()
         if not current_growing_period:
             context["no_growing_period"] = True
             return context
@@ -196,7 +197,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancellations_during_trial"] = len(
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
-        context["recent_feedbacks"] = get_recent_feedbacks()
 
         context["solidarity_overplus"] = SolidarityValidator.get_solidarity_excess(
             reference_date=get_today(cache=self.cache), cache=self.cache
