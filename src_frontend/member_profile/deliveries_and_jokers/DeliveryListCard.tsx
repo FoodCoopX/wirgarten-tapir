@@ -1,47 +1,30 @@
+import dayjs from "dayjs";
+import "dayjs/locale/de";
+import RelativeTime from "dayjs/plugin/relativeTime";
+import WeekOfYear from "dayjs/plugin/weekOfYear";
 import React, { useEffect, useState } from "react";
+import { Card, Spinner } from "react-bootstrap";
 import {
   DeliveriesApi,
   Delivery,
   PickupLocation,
   PickupLocationOpeningTime,
 } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import { Card, Placeholder, Spinner, Table } from "react-bootstrap";
 import TapirButton from "../../components/TapirButton.tsx";
-import { formatDateText } from "../../utils/formatDateText.ts";
-import RelativeTime from "dayjs/plugin/relativeTime";
-import dayjs from "dayjs";
-import "dayjs/locale/de";
-import PickupLocationDeliveryDetailsModal from "./PickupLocationDeliveryDetailsModal.tsx";
-import ManageJokersAndDonationsModal from "./ManageJokersAndDonationsModal.tsx";
-import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import WeekOfYear from "dayjs/plugin/weekOfYear";
-import PickupLocationChangeModal from "./PickupLocationChangeModal.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import DeliveriesTable from "./DeliveriesTable.tsx";
+import ManageJokersAndDonationsModal from "./ManageJokersAndDonationsModal.tsx";
+import PickupLocationChangeModal from "./PickupLocationChangeModal.tsx";
+import PickupLocationDeliveryDetailsModal from "./PickupLocationDeliveryDetailsModal.tsx";
 
 interface DeliveryListCardProps {
   memberId: string;
   areJokersEnabled: boolean;
   areDonationsEnabled: boolean;
   csrfToken: string;
-}
-
-function loadingPlaceholder() {
-  return Array.from(new Array(7).keys()).map((index) => {
-    return (
-      <tr key={index}>
-        {Array.from(new Array(3).keys()).map((index) => {
-          return (
-            <td key={index}>
-              <Placeholder lg={10} />
-            </td>
-          );
-        })}
-      </tr>
-    );
-  });
 }
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
@@ -85,66 +68,6 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         ),
       )
       .finally(() => setDeliveriesLoading(false));
-  }
-
-  function dateCell(delivery: Delivery) {
-    return (
-      <div className={"d-flex flex-column"}>
-        <strong>{formatDateText(delivery.deliveryDate)}</strong>
-        <small>
-          KW{dayjs(delivery.deliveryDate).week()},{" "}
-          {dayjs().to(dayjs(delivery.deliveryDate))}
-        </small>
-      </div>
-    );
-  }
-
-  function productCell(delivery: Delivery) {
-    let content;
-    if (delivery.isDeliveryCancelledThisWeek) {
-      content = <>Keine Lieferung</>;
-    } else if (delivery.jokerUsed) {
-      content = <>Joker eingesetzt</>;
-    } else if (delivery.donationUsed) {
-      content = <>Lieferung gespendet</>;
-    } else {
-      content = (
-        <>
-          {delivery.subscriptions.map((subscription) => {
-            return (
-              <div key={subscription.id}>
-                {subscription.quantity}
-                {" × "}
-                {subscription.product.name}
-              </div>
-            );
-          })}
-        </>
-      );
-    }
-
-    return <div className={"d-flex flex-column"}>{content}</div>;
-  }
-
-  function pickupLocationCell(delivery: Delivery) {
-    return (
-      <div className={"d-flex flex-column align-items-center"}>
-        <strong>{delivery.pickupLocation.name}</strong>
-        <div style={{ width: "32px" }}>
-          <TapirButton
-            variant={"outline-secondary"}
-            icon={"info"}
-            size={"sm"}
-            onClick={() => {
-              setSelectedPickupLocation(delivery.pickupLocation);
-              setSelectedPickupLocationOpeningTimes(
-                delivery.pickupLocationOpeningTimes,
-              );
-            }}
-          />
-        </div>
-      </div>
-    );
   }
 
   function getJokerButtonText() {
@@ -206,34 +129,14 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           </div>
         </Card.Header>
         <Card.Body className={deliveries.length > 0 ? "p-0" : ""}>
-          <div style={{ overflowY: "scroll", maxHeight: "30em" }}>
-            {!deliveriesLoading && deliveries.length === 0 ? (
-              <p className={"text-center mb-0"}>Keine Abholungen</p>
-            ) : (
-              <Table striped hover responsive className={"text-center"}>
-                <thead>
-                  <tr>
-                    <th>Datum</th>
-                    <th>Produkte</th>
-                    <th>Abholort</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deliveriesLoading
-                    ? loadingPlaceholder()
-                    : deliveries.map((delivery) => {
-                        return (
-                          <tr key={formatDateNumeric(delivery.deliveryDate)}>
-                            <td>{dateCell(delivery)}</td>
-                            <td>{productCell(delivery)}</td>
-                            <td>{pickupLocationCell(delivery)}</td>
-                          </tr>
-                        );
-                      })}
-                </tbody>
-              </Table>
-            )}
-          </div>
+          <DeliveriesTable
+            deliveries={deliveries}
+            deliveriesLoading={deliveriesLoading}
+            setSelectedPickupLocation={setSelectedPickupLocation}
+            setSelectedPickupLocationOpeningTimes={
+              setSelectedPickupLocationOpeningTimes
+            }
+          />
         </Card.Body>
       </Card>
       {selectedPickupLocation && (

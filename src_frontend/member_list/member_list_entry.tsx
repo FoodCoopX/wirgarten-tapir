@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
+import DeliveriesButton from "./DeliveriesButton.tsx";
 import MemberDeleteButton from "./MemberDeleteButton.tsx";
 import PaymentsButton from "./PaymentsButton.tsx";
 import SubscriptionCancellationButton from "./SubscriptionCancellationButton.tsx";
@@ -33,4 +34,13 @@ if (domNodePaymentButton) {
   root.render(<PaymentsButton csrfToken={getCsrfToken()} />);
 } else {
   console.error("Member payments button not found");
+}
+
+const domNodeDeliveriesButton = document.getElementById("deliveries_button");
+
+if (domNodeDeliveriesButton) {
+  const root = createRoot(domNodeDeliveriesButton);
+  root.render(<DeliveriesButton csrfToken={getCsrfToken()} />);
+} else {
+  console.error("Member deliveries button not found");
 }
