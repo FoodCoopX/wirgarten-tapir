@@ -76,6 +76,12 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="settings",
             url=reverse_lazy("configuration:parameters"),
         )
+    if request.user.has_perm(Permission.Coop.MANAGE):
+        admin_group.add_link(
+            display_name=_("Vereinsmitgliedschaften"),
+            material_icon="id_card",
+            url=reverse_lazy("associations:association_memberships_config"),
+        )
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
             display_name=_("Vertragsperiode & Produkte"),

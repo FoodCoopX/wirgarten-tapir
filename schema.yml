@@ -3,6 +3,159 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /associations/association_membership_types/:
+    get:
+      operationId: associations_association_membership_types_list
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+    post:
+      operationId: associations_association_membership_types_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+  /associations/association_membership_types/{id}/:
+    get:
+      operationId: associations_association_membership_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type identifiziert.
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+    put:
+      operationId: associations_association_membership_types_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type identifiziert.
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+    patch:
+      operationId: associations_association_membership_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type identifiziert.
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypeRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+    delete:
+      operationId: associations_association_membership_types_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type identifiziert.
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
   /bestell_wizard/api/bestell_wizard_base_data:
     get:
       operationId: bestell_wizard_api_bestell_wizard_base_data_retrieve
@@ -5472,6 +5625,44 @@ paths:
           description: No response body
 components:
   schemas:
+    AssociationMembershipType:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        deleted:
+          type: boolean
+      required:
+      - created_at
+      - name
+      - updated_at
+    AssociationMembershipTypeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        deleted:
+          type: boolean
+      required:
+      - name
     AutomatedExportCycleEnum:
       enum:
       - yearly
@@ -8854,6 +9045,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WaitingListEntryDetails'
+    PatchedAssociationMembershipTypeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        deleted:
+          type: boolean
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:

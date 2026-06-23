@@ -4,6 +4,7 @@ from tapir_mail.models import MailCategory, MailCategoryMode
 from tapir_mail.service.external_recipient_manager import ExternalRecipientManager
 
 from tapir.accounts.models import TapirUser
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
@@ -174,6 +175,9 @@ class BestellWizardOrderFulfiller:
             **personal_data, **contracts_signed, is_student=is_student
         )
         MemberNumberService.assign_member_number_if_eligible(member, cache=cache)
+
+        client = KeycloakUserManager.get_keycloak_client(cache=cache)
+
         return member
 
     @classmethod

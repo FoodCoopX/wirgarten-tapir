@@ -1,5 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from "./AssociationMembershipType";
+export * from "./AssociationMembershipTypeRequest";
 export * from "./AutomatedExportCycleEnum";
 export * from "./AvailableSegmentsResponse";
 export * from "./BestellWizardBaseDataResponse";
@@ -109,6 +111,7 @@ export * from "./PaginatedEmailTemplateList";
 export * from "./PaginatedGroupedEmailDispatchList";
 export * from "./PaginatedPaymentTransactionList";
 export * from "./PaginatedWaitingListEntryDetailsList";
+export * from "./PatchedAssociationMembershipTypeRequest";
 export * from "./PatchedBundledEmailConfigurationRequest";
 export * from "./PatchedCsvExportModelRequest";
 export * from "./PatchedEmailConfigurationDispatchRequest";
