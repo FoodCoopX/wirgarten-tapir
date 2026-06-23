@@ -860,8 +860,11 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             )
         )
 
-        data = self.build_public_entry_data(waiting_list_entry, cache={})
-        serializer = PublicWaitingListEntryDetailsSerializer(data)
+        cache = {}
+        data = self.build_public_entry_data(waiting_list_entry, cache=cache)
+        serializer = PublicWaitingListEntryDetailsSerializer(
+            data, context={"cache": cache}
+        )
 
         return Response(serializer.data)
 
