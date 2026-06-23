@@ -78,11 +78,13 @@ const PickupLocationDeliveryDetailsModal: React.FC<
             })}
           </ul>
         </p>
-        <img
-          src={pickupLocation.photoLink}
-          style={{ maxWidth: 764 }}
-          alt={pickupLocation.name}
-        />
+        {pickupLocation.photoLink && (
+          <img
+            src={pickupLocation.photoLink}
+            style={{ maxWidth: 764 }}
+            alt={pickupLocation.name}
+          />
+        )}
       </Modal.Body>
     </Modal>
   );
