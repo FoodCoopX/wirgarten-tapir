@@ -18,4 +18,9 @@ router.register(
     views.AssociationMembershipTypeViewSet,
     basename="association_membership_types",
 )
+router.register(
+    r"association_membership_types_price",
+    views.AssociationMembershipTypePriceViewSet,
+    basename="association_membership_types_price",
+)
 urlpatterns += router.urls

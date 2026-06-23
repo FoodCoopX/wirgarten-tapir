@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Card, Col, Row, Spinner, Table } from "react-bootstrap";
+import { Alert, Card, Col, Row, Spinner } from "react-bootstrap";
 import { AssociationMembershipType, AssociationsApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
@@ -7,7 +7,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import AssociationMembershipTypeCreateModal from "./AssociationMembershipTypeCreateModal.tsx";
-import AssociationMembershipTypeEditModal from "./AssociationMembershipTypeEditModal.tsx";
+import AssociationMembershipTypeTable from "./AssociationMembershipTypeTable.tsx";
 
 interface AssociationMembershipsConfigProps {
   csrfToken: string;
@@ -23,8 +23,6 @@ const AssociationMembershipsConfigBase: React.FC<
   >([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [typeSelectedForEdit, setTypeSelectedForEdit] =
-    useState<AssociationMembershipType>();
 
   useEffect(() => {
     loadMembershipTypes();
@@ -60,37 +58,12 @@ const AssociationMembershipsConfigBase: React.FC<
     }
 
     return (
-      <Table hover responsive bordered>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {membershipTypes.map((type) => (
-            <tr key={type.id}>
-              <td>{type.name}</td>
-              <td>
-                <div className={"d-flex gap-2"}>
-                  <TapirButton
-                    variant={"outline-primary"}
-                    icon={"edit"}
-                    size={"sm"}
-                    onClick={() => setTypeSelectedForEdit(type)}
-                  />
-                  <TapirButton
-                    variant={"outline-danger"}
-                    icon={"delete"}
-                    size={"sm"}
-                    onClick={() => alert("WIP")}
-                  />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <AssociationMembershipTypeTable
+        membershipTypes={membershipTypes}
+        setToastDatas={setToastDatas}
+        csrfToken={csrfToken}
+        loadData={loadMembershipTypes}
+      />
     );
   }
 
@@ -126,19 +99,6 @@ const AssociationMembershipsConfigBase: React.FC<
         }}
         setToastDatas={setToastDatas}
       />
-      {typeSelectedForEdit && (
-        <AssociationMembershipTypeEditModal
-          csrfToken={csrfToken}
-          show={true}
-          onHide={() => setTypeSelectedForEdit(undefined)}
-          onEdited={() => {
-            loadMembershipTypes();
-            setTypeSelectedForEdit(undefined);
-          }}
-          setToastDatas={setToastDatas}
-          membershipType={typeSelectedForEdit}
-        />
-      )}
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}

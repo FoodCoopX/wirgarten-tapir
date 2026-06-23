@@ -156,6 +156,159 @@ paths:
       responses:
         '204':
           description: No response body
+  /associations/association_membership_types_price/:
+    get:
+      operationId: associations_association_membership_types_price_list
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+    post:
+      operationId: associations_association_membership_types_price_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+  /associations/association_membership_types_price/{id}/:
+    get:
+      operationId: associations_association_membership_types_price_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type price identifiziert.
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+    put:
+      operationId: associations_association_membership_types_price_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type price identifiziert.
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+    patch:
+      operationId: associations_association_membership_types_price_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type price identifiziert.
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypePriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypePriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypePriceRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+    delete:
+      operationId: associations_association_membership_types_price_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type price identifiziert.
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
   /bestell_wizard/api/bestell_wizard_base_data:
     get:
       operationId: bestell_wizard_api_bestell_wizard_base_data_retrieve
@@ -5631,6 +5784,11 @@ components:
         id:
           type: string
           maxLength: 10
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -5647,7 +5805,58 @@ components:
       required:
       - created_at
       - name
+      - prices
       - updated_at
+    AssociationMembershipTypePrice:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        valid_from:
+          type: string
+          format: date
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        type:
+          type: string
+      required:
+      - created_at
+      - price
+      - type
+      - updated_at
+      - valid_from
+    AssociationMembershipTypePriceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        valid_from:
+          type: string
+          format: date
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        type:
+          type: string
+          minLength: 1
+      required:
+      - price
+      - type
+      - valid_from
     AssociationMembershipTypeRequest:
       type: object
       properties:
@@ -9045,6 +9254,23 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WaitingListEntryDetails'
+    PatchedAssociationMembershipTypePriceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        valid_from:
+          type: string
+          format: date
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        type:
+          type: string
+          minLength: 1
     PatchedAssociationMembershipTypeRequest:
       type: object
       properties:

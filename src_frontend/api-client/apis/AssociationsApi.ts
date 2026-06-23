@@ -14,12 +14,18 @@
 
 import type {
   AssociationMembershipType,
+  AssociationMembershipTypePrice,
+  AssociationMembershipTypePriceRequest,
   AssociationMembershipTypeRequest,
+  PatchedAssociationMembershipTypePriceRequest,
   PatchedAssociationMembershipTypeRequest,
 } from "../models/index";
 import {
   AssociationMembershipTypeFromJSON,
+  AssociationMembershipTypePriceFromJSON,
+  AssociationMembershipTypePriceRequestToJSON,
   AssociationMembershipTypeRequestToJSON,
+  PatchedAssociationMembershipTypePriceRequestToJSON,
   PatchedAssociationMembershipTypeRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -35,6 +41,28 @@ export interface AssociationsAssociationMembershipTypesDestroyRequest {
 export interface AssociationsAssociationMembershipTypesPartialUpdateRequest {
   id: string;
   patchedAssociationMembershipTypeRequest?: PatchedAssociationMembershipTypeRequest;
+}
+
+export interface AssociationsAssociationMembershipTypesPriceCreateRequest {
+  associationMembershipTypePriceRequest: AssociationMembershipTypePriceRequest;
+}
+
+export interface AssociationsAssociationMembershipTypesPriceDestroyRequest {
+  id: string;
+}
+
+export interface AssociationsAssociationMembershipTypesPricePartialUpdateRequest {
+  id: string;
+  patchedAssociationMembershipTypePriceRequest?: PatchedAssociationMembershipTypePriceRequest;
+}
+
+export interface AssociationsAssociationMembershipTypesPriceRetrieveRequest {
+  id: string;
+}
+
+export interface AssociationsAssociationMembershipTypesPriceUpdateRequest {
+  id: string;
+  associationMembershipTypePriceRequest: AssociationMembershipTypePriceRequest;
 }
 
 export interface AssociationsAssociationMembershipTypesRetrieveRequest {
@@ -283,6 +311,386 @@ export class AssociationsApi extends runtime.BaseAPI {
   ): Promise<AssociationMembershipType> {
     const response =
       await this.associationsAssociationMembershipTypesPartialUpdateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceCreateRaw(
+    requestParameters: AssociationsAssociationMembershipTypesPriceCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AssociationMembershipTypePrice>> {
+    if (requestParameters["associationMembershipTypePriceRequest"] == null) {
+      throw new runtime.RequiredError(
+        "associationMembershipTypePriceRequest",
+        'Required parameter "associationMembershipTypePriceRequest" was null or undefined when calling associationsAssociationMembershipTypesPriceCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/association_membership_types_price/`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: AssociationMembershipTypePriceRequestToJSON(
+          requestParameters["associationMembershipTypePriceRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AssociationMembershipTypePriceFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceCreate(
+    requestParameters: AssociationsAssociationMembershipTypesPriceCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AssociationMembershipTypePrice> {
+    const response =
+      await this.associationsAssociationMembershipTypesPriceCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceDestroyRaw(
+    requestParameters: AssociationsAssociationMembershipTypesPriceDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling associationsAssociationMembershipTypesPriceDestroy().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/association_membership_types_price/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceDestroy(
+    requestParameters: AssociationsAssociationMembershipTypesPriceDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.associationsAssociationMembershipTypesPriceDestroyRaw(
+      requestParameters,
+      initOverrides,
+    );
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<AssociationMembershipTypePrice>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/association_membership_types_price/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(AssociationMembershipTypePriceFromJSON),
+    );
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<AssociationMembershipTypePrice>> {
+    const response =
+      await this.associationsAssociationMembershipTypesPriceListRaw(
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPricePartialUpdateRaw(
+    requestParameters: AssociationsAssociationMembershipTypesPricePartialUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AssociationMembershipTypePrice>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling associationsAssociationMembershipTypesPricePartialUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/association_membership_types_price/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "PATCH",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PatchedAssociationMembershipTypePriceRequestToJSON(
+          requestParameters["patchedAssociationMembershipTypePriceRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AssociationMembershipTypePriceFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPricePartialUpdate(
+    requestParameters: AssociationsAssociationMembershipTypesPricePartialUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AssociationMembershipTypePrice> {
+    const response =
+      await this.associationsAssociationMembershipTypesPricePartialUpdateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceRetrieveRaw(
+    requestParameters: AssociationsAssociationMembershipTypesPriceRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AssociationMembershipTypePrice>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling associationsAssociationMembershipTypesPriceRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/association_membership_types_price/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AssociationMembershipTypePriceFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceRetrieve(
+    requestParameters: AssociationsAssociationMembershipTypesPriceRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AssociationMembershipTypePrice> {
+    const response =
+      await this.associationsAssociationMembershipTypesPriceRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceUpdateRaw(
+    requestParameters: AssociationsAssociationMembershipTypesPriceUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<AssociationMembershipTypePrice>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling associationsAssociationMembershipTypesPriceUpdate().',
+      );
+    }
+
+    if (requestParameters["associationMembershipTypePriceRequest"] == null) {
+      throw new runtime.RequiredError(
+        "associationMembershipTypePriceRequest",
+        'Required parameter "associationMembershipTypePriceRequest" was null or undefined when calling associationsAssociationMembershipTypesPriceUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/association_membership_types_price/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "PUT",
+        headers: headerParameters,
+        query: queryParameters,
+        body: AssociationMembershipTypePriceRequestToJSON(
+          requestParameters["associationMembershipTypePriceRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      AssociationMembershipTypePriceFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsAssociationMembershipTypesPriceUpdate(
+    requestParameters: AssociationsAssociationMembershipTypesPriceUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<AssociationMembershipTypePrice> {
+    const response =
+      await this.associationsAssociationMembershipTypesPriceUpdateRaw(
         requestParameters,
         initOverrides,
       );

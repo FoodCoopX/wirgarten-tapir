@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationMembershipTypePrice } from "./AssociationMembershipTypePrice";
+import { AssociationMembershipTypePriceFromJSON } from "./AssociationMembershipTypePrice";
+
 /**
  *
  * @export
@@ -24,6 +27,12 @@ export interface AssociationMembershipType {
    * @memberof AssociationMembershipType
    */
   id?: string;
+  /**
+   *
+   * @type {Array<AssociationMembershipTypePrice>}
+   * @memberof AssociationMembershipType
+   */
+  readonly prices: Array<AssociationMembershipTypePrice>;
   /**
    *
    * @type {Date}
@@ -56,6 +65,7 @@ export interface AssociationMembershipType {
 export function instanceOfAssociationMembershipType(
   value: object,
 ): value is AssociationMembershipType {
+  if (!("prices" in value) || value["prices"] === undefined) return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
@@ -77,6 +87,9 @@ export function AssociationMembershipTypeFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
+    prices: (json["prices"] as Array<any>).map(
+      AssociationMembershipTypePriceFromJSON,
+    ),
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
@@ -91,7 +104,10 @@ export function AssociationMembershipTypeToJSON(
 }
 
 export function AssociationMembershipTypeToJSONTyped(
-  value?: Omit<AssociationMembershipType, "created_at" | "updated_at"> | null,
+  value?: Omit<
+    AssociationMembershipType,
+    "prices" | "created_at" | "updated_at"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
