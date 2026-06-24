@@ -17,7 +17,7 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, TemplateView
 
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
@@ -52,6 +52,12 @@ urlpatterns = [
     path("utils/", include("tapir.utils.urls")),
     path("waiting_list/", include("tapir.waiting_list.urls")),
     path("tapir/", include("tapir.wirgarten.urls")),
+    path("api/commissioning/", include("apps.commissioning.urls")),
+    path(
+        "picking",
+        TemplateView.as_view(template_name="picking-dist/dist/index.html"),
+        name="picking",
+    ),
     path(
         "mailing/",
         TapirMailView.as_view(),
