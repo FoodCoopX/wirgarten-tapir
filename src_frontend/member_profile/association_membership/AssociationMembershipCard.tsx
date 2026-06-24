@@ -38,35 +38,6 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
       .finally(() => setLoading(false));
   }, [memberId]);
 
-  function getMembershipList() {
-    const currentAndFutureMemberships = memberships.filter(
-      (membership) => !membership.endDate || membership.endDate > new Date(),
-    );
-
-    if (currentAndFutureMemberships.length > 0) {
-      return (
-        <ul>
-          {currentAndFutureMemberships.map((membership) => (
-            <li key={membership.id}>
-              Ab dem {formatDateNumeric(membership.startDate)}
-            </li>
-          ))}
-        </ul>
-      );
-    }
-
-    if (memberships.length > 0) {
-      return (
-        "Mitgliedschaft beendet: " +
-        formatDateNumeric(memberships[0].startDate) +
-        " -> " +
-        formatDateNumeric(memberships.at(-1)?.endDate)
-      );
-    }
-
-    return "Keine Mitgliedschaft";
-  }
-
   function getCurrentMembership() {
     const today = new Date();
     const membership = memberships.find(
