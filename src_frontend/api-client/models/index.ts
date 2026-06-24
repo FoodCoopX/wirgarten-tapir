@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from "./AssociationMembership";
 export * from "./AssociationMembershipType";
 export * from "./AssociationMembershipTypePrice";
 export * from "./AssociationMembershipTypePriceRequest";

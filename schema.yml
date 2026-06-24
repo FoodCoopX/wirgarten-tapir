@@ -3,6 +3,29 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /associations/api/member_association_memberships:
+    get:
+      operationId: associations_api_member_association_memberships_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssociationMembership'
+          description: ''
   /associations/association_membership_types/:
     get:
       operationId: associations_association_membership_types_list
@@ -493,6 +516,15 @@ paths:
   /config/member-number-preview:
     get:
       operationId: config_member_number_preview_retrieve
+      parameters:
+      - in: query
+        name: length
+        schema:
+          type: integer
+      - in: query
+        name: prefix
+        schema:
+          type: string
       tags:
       - config
       security:
@@ -501,7 +533,15 @@ paths:
       - DrfForwardAuthentication: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+          description: ''
   /coop/api/delete_member:
     delete:
       operationId: coop_api_delete_member_destroy
@@ -2699,7 +2739,9 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
           description: ''
   /subscriptions/api/subscription_price_override:
     post:
@@ -5778,6 +5820,37 @@ paths:
           description: No response body
 components:
   schemas:
+    AssociationMembership:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        type:
+          $ref: '#/components/schemas/AssociationMembershipType'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        member:
+          type: string
+      required:
+      - created_at
+      - member
+      - start_date
+      - type
+      - updated_at
     AssociationMembershipType:
       type: object
       properties:

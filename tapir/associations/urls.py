@@ -10,6 +10,11 @@ urlpatterns = [
         views.AssociationMembershipConfigView.as_view(),
         name="association_memberships_config",
     ),
+    path(
+        "api/member_association_memberships",
+        views.MemberAssociationMembershipDetails.as_view(),
+        name="member_association_memberships",
+    ),
 ]
 
 router = DefaultRouter()

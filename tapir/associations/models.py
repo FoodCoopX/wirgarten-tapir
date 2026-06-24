@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import UniqueConstraint
 
 from tapir.core.models import TapirModel
+from tapir.wirgarten.models import Member
 
 
 class AssociationMembershipType(TapirModel):
@@ -27,3 +28,13 @@ class AssociationMembershipTypePrice(TapirModel):
 
     def __str__(self):
         return f"{self.type.name} {self.price} from:{self.valid_from}"
+
+
+class AssociationMembership(TapirModel):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    type = models.ForeignKey(AssociationMembershipType, on_delete=models.PROTECT)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True)
+
+    def __str__(self):
+        return f"{self.member.get_display_name()} {self.type.name} {self.start_date} -> {self.end_date}"

@@ -14,6 +14,11 @@
 
 import * as runtime from "../runtime";
 
+export interface ConfigMemberNumberPreviewRetrieveRequest {
+  length?: number;
+  prefix?: string;
+}
+
 /**
  *
  */
@@ -21,9 +26,18 @@ export class ConfigApi extends runtime.BaseAPI {
   /**
    */
   async configMemberNumberPreviewRetrieveRaw(
+    requestParameters: ConfigMemberNumberPreviewRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<void>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: Array<string> }>> {
     const queryParameters: any = {};
+
+    if (requestParameters["length"] != null) {
+      queryParameters["length"] = requestParameters["length"];
+    }
+
+    if (requestParameters["prefix"] != null) {
+      queryParameters["prefix"] = requestParameters["prefix"];
+    }
 
     const headerParameters: runtime.HTTPHeaders = {};
 
@@ -51,14 +65,19 @@ export class ConfigApi extends runtime.BaseAPI {
       initOverrides,
     );
 
-    return new runtime.VoidApiResponse(response);
+    return new runtime.JSONApiResponse<any>(response);
   }
 
   /**
    */
   async configMemberNumberPreviewRetrieve(
+    requestParameters: ConfigMemberNumberPreviewRetrieveRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<void> {
-    await this.configMemberNumberPreviewRetrieveRaw(initOverrides);
+  ): Promise<{ [key: string]: Array<string> }> {
+    const response = await this.configMemberNumberPreviewRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
   }
 }
