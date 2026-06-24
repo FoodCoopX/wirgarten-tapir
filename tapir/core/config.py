@@ -42,9 +42,12 @@ THEME_GKH = "gkh"
 THEME_TEST = "test"
 THEME_GEBAECK = "gbk"
 THEME_SOLAWI_ODERSCHWALBE = "sos"
+THEME_AUERGARDEN = "aug"
+
 
 THEME_OPTIONS = [
     (THEME_ALFTER, "Alfter"),
+    (THEME_AUERGARDEN, "Auergarden"),
     (THEME_BIOTOP, "Biotop Oberland"),
     (THEME_ERNTEUNIONOST, "Ernte Union Ost"),
     (THEME_GEBAECK, "Ge:Bäck"),
