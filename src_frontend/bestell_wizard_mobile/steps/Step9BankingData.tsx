@@ -7,7 +7,6 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
 import TapirButton from "../../components/TapirButton.tsx";
-import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import NextStepButton from "../components/NextStepButton.tsx";
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
@@ -31,8 +30,6 @@ interface Step9BankingDataProps {
   orderLoading: boolean;
   nextButtonText?: string;
   canChangePaymentRhythm: boolean;
-  cancellationPolicyRead?: boolean;
-  setCancellationPolicyRead?: (read: boolean) => void;
   autoFillAccountOwnerFromName: boolean;
 }
 
@@ -64,8 +61,6 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   orderLoading,
   nextButtonText,
   canChangePaymentRhythm,
-  cancellationPolicyRead,
-  setCancellationPolicyRead,
   autoFillAccountOwnerFromName,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
@@ -111,15 +106,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
       return;
     }
 
-    if (mustShowCheckboxCancellationPolicy() && !cancellationPolicyRead) {
-      return;
-    }
-
     goToNextStep();
-  }
-
-  function mustShowCheckboxCancellationPolicy() {
-    return setCancellationPolicyRead !== undefined;
   }
 
   function mustShowCheckboxContractAccepted() {
@@ -209,21 +196,6 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
               controlId={"contract"}
               showError={showValidation && !contractAccepted}
             />
-          )}
-          {mustShowCheckboxCancellationPolicy() && (
-            <div className={"d-flex flex-row gap-2 align-items-center"}>
-              <TapirCheckbox
-                onChange={setCancellationPolicyRead!}
-                checked={!!cancellationPolicyRead}
-                label={settings.strings.step11RevocationLabel}
-                controlId={"cancellation_policy"}
-                showError={showValidation && !cancellationPolicyRead}
-              />
-              <TapirHelpButton
-                buttonSize={"sm"}
-                text={settings.strings.step11RevocationText}
-              />
-            </div>
           )}
         </div>
       </div>
