@@ -64,6 +64,7 @@ const AssociationMembershipTypeTable: React.FC<
           <tr>
             <th>Name</th>
             <th>Preis</th>
+            <th>Reihenfolge</th>
             <th></th>
           </tr>
         </thead>
@@ -72,6 +73,7 @@ const AssociationMembershipTypeTable: React.FC<
             <tr key={type.id}>
               <td>{type.name}</td>
               <td>{buildPrice(type)}</td>
+              <td>{type.orderInBestellWizard}</td>
               <td>
                 <div className={"d-flex gap-2"}>
                   <TapirButton

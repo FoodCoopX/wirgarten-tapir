@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from tapir.associations.serializers import AssociationMembershipTypeSerializer
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
@@ -136,6 +137,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     theme = serializers.CharField()
     allow_investing_membership = serializers.BooleanField()
     product_types = PublicProductTypeSerializer(many=True)
+    association_membership_types = AssociationMembershipTypeSerializer(many=True)
     pickup_locations = PublicPickupLocationSerializer(many=True)
     force_waiting_list = serializers.BooleanField()
     intro_enabled = serializers.BooleanField()

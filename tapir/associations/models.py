@@ -8,6 +8,8 @@ from tapir.wirgarten.models import Member
 class AssociationMembershipType(TapirModel):
     name = models.CharField(max_length=100, unique=True)
     deleted = models.BooleanField(default=False)
+    description_in_bestell_wizard = models.TextField()
+    order_in_bestell_wizard = models.IntegerField()
 
     def __str__(self):
         result = f"{self.name}"

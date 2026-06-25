@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
 import { AssociationMembershipType, AssociationsApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
@@ -21,12 +21,25 @@ const AssociationMembershipTypeEditModal: React.FC<
   const api = useApi(AssociationsApi, csrfToken);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [order, setOrder] = useState(1);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     setName(membershipType.name);
+    setOrder(membershipType.orderInBestellWizard);
+    setDescription(membershipType.descriptionInBestellWizard);
   }, [membershipType]);
 
   function onSave() {
+    if (!formRef.current) {
+      return;
+    }
+
+    if (!formRef.current.reportValidity()) {
+      return;
+    }
+
     setSaving(true);
 
     api
@@ -34,6 +47,8 @@ const AssociationMembershipTypeEditModal: React.FC<
         id: membershipType.id!,
         associationMembershipTypeRequest: {
           name: name,
+          descriptionInBestellWizard: description,
+          orderInBestellWizard: order,
         },
       })
       .then(onEdited)
@@ -53,17 +68,40 @@ const AssociationMembershipTypeEditModal: React.FC<
         <Modal.Title>Mitgliedschafttyp anpassen</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form>
+        <Form ref={formRef}>
           <Form.Group>
             <Form.Label>Name</Form.Label>
             <Form.Control
               placeholder={"Name"}
               value={name}
               onChange={(event) => setName(event.target.value)}
-              onKeyUp={(event) => {
-                event.preventDefault();
-                if (event.key === "Enter") onSave();
-              }}
+              required={true}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>
+              Reihenfolge im BestellWizard (kleiner ist früher)
+            </Form.Label>
+            <Form.Control
+              placeholder={"Reihenfolge"}
+              value={order}
+              onChange={(event) =>
+                setOrder(Number.parseInt(event.target.value))
+              }
+              type={"number"}
+              step={1}
+              min={1}
+              required={true}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Beschreibung im BestellWizard</Form.Label>
+            <Form.Control
+              placeholder={"Beschreibung"}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              as={"textarea"}
+              required={true}
             />
           </Form.Group>
         </Form>

@@ -5873,9 +5873,17 @@ components:
           maxLength: 100
         deleted:
           type: boolean
+        description_in_bestell_wizard:
+          type: string
+        order_in_bestell_wizard:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
       required:
       - created_at
+      - description_in_bestell_wizard
       - name
+      - order_in_bestell_wizard
       - prices
       - updated_at
     AssociationMembershipTypePrice:
@@ -5941,8 +5949,17 @@ components:
           maxLength: 100
         deleted:
           type: boolean
+        description_in_bestell_wizard:
+          type: string
+          minLength: 1
+        order_in_bestell_wizard:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
       required:
+      - description_in_bestell_wizard
       - name
+      - order_in_bestell_wizard
     AutomatedExportCycleEnum:
       enum:
       - yearly
@@ -5990,6 +6007,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublicProductType'
+        association_membership_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationMembershipType'
         pickup_locations:
           type: array
           items:
@@ -6069,6 +6090,7 @@ components:
           type: boolean
       required:
       - allow_investing_membership
+      - association_membership_types
       - associations_allow_investing_membership
       - contact_mail_address
       - coop_statute_link
@@ -9358,6 +9380,13 @@ components:
           maxLength: 100
         deleted:
           type: boolean
+        description_in_bestell_wizard:
+          type: string
+          minLength: 1
+        order_in_bestell_wizard:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:

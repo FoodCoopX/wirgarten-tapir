@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationMembershipType } from "./AssociationMembershipType";
+import {
+  AssociationMembershipTypeFromJSON,
+  AssociationMembershipTypeToJSON,
+} from "./AssociationMembershipType";
 import type { BestellWizardImages } from "./BestellWizardImages";
 import {
   BestellWizardImagesFromJSON,
@@ -78,6 +83,12 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   productTypes: Array<PublicProductType>;
+  /**
+   *
+   * @type {Array<AssociationMembershipType>}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  associationMembershipTypes: Array<AssociationMembershipType>;
   /**
    *
    * @type {Array<PublicPickupLocation>}
@@ -270,6 +281,11 @@ export function instanceOfBestellWizardBaseDataResponse(
     return false;
   if (!("productTypes" in value) || value["productTypes"] === undefined)
     return false;
+  if (
+    !("associationMembershipTypes" in value) ||
+    value["associationMembershipTypes"] === undefined
+  )
+    return false;
   if (!("pickupLocations" in value) || value["pickupLocations"] === undefined)
     return false;
   if (!("forceWaitingList" in value) || value["forceWaitingList"] === undefined)
@@ -398,6 +414,9 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     productTypes: (json["product_types"] as Array<any>).map(
       PublicProductTypeFromJSON,
     ),
+    associationMembershipTypes: (
+      json["association_membership_types"] as Array<any>
+    ).map(AssociationMembershipTypeFromJSON),
     pickupLocations: (json["pickup_locations"] as Array<any>).map(
       PublicPickupLocationFromJSON,
     ),
@@ -460,6 +479,9 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     product_types: (value["productTypes"] as Array<any>).map(
       PublicProductTypeToJSON,
     ),
+    association_membership_types: (
+      value["associationMembershipTypes"] as Array<any>
+    ).map(AssociationMembershipTypeToJSON),
     pickup_locations: (value["pickupLocations"] as Array<any>).map(
       PublicPickupLocationToJSON,
     ),

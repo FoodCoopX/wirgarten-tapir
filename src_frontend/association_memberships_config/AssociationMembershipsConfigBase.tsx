@@ -33,7 +33,13 @@ const AssociationMembershipsConfigBase: React.FC<
 
     api
       .associationsAssociationMembershipTypesList()
-      .then(setMembershipTypes)
+      .then((types) => {
+        setMembershipTypes(
+          types.toSorted(
+            (a, b) => a.orderInBestellWizard - b.orderInBestellWizard,
+          ),
+        );
+      })
       .catch((error) =>
         handleRequestError(
           error,

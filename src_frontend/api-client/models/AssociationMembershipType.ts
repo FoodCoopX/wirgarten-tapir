@@ -57,6 +57,18 @@ export interface AssociationMembershipType {
    * @memberof AssociationMembershipType
    */
   deleted?: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof AssociationMembershipType
+   */
+  descriptionInBestellWizard: string;
+  /**
+   *
+   * @type {number}
+   * @memberof AssociationMembershipType
+   */
+  orderInBestellWizard: number;
 }
 
 /**
@@ -69,6 +81,16 @@ export function instanceOfAssociationMembershipType(
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (
+    !("descriptionInBestellWizard" in value) ||
+    value["descriptionInBestellWizard"] === undefined
+  )
+    return false;
+  if (
+    !("orderInBestellWizard" in value) ||
+    value["orderInBestellWizard"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -94,6 +116,8 @@ export function AssociationMembershipTypeFromJSONTyped(
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
     deleted: json["deleted"] == null ? undefined : json["deleted"],
+    descriptionInBestellWizard: json["description_in_bestell_wizard"],
+    orderInBestellWizard: json["order_in_bestell_wizard"],
   };
 }
 
@@ -118,5 +142,7 @@ export function AssociationMembershipTypeToJSONTyped(
     id: value["id"],
     name: value["name"],
     deleted: value["deleted"],
+    description_in_bestell_wizard: value["descriptionInBestellWizard"],
+    order_in_bestell_wizard: value["orderInBestellWizard"],
   };
 }
