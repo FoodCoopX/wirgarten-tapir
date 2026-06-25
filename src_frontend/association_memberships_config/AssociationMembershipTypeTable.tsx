@@ -7,6 +7,7 @@ import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import AssociationMembershipTypeEditModal from "./AssociationMembershipTypeEditModal.tsx";
 import AssociationMembershipTypePriceModal from "./AssociationMembershipTypePriceModal.tsx";
+import { getAssociationMembershipTypeCurrentPrice } from "./getAssociationMembershipTypeCurrentPrice.ts";
 
 interface AssociationMembershipTypeTableProps {
   csrfToken: string;
@@ -23,11 +24,6 @@ const AssociationMembershipTypeTable: React.FC<
   const [typeSelectedForPrice, setTypeSelectedForPrice] =
     useState<AssociationMembershipType>();
 
-  function getCurrentPrice(type: AssociationMembershipType) {
-    const now = new Date();
-    return type.prices.findLast((price) => price.validFrom < now);
-  }
-
   function getNextPrice(type: AssociationMembershipType) {
     const now = new Date();
     return type.prices.find((price) => price.validFrom > now);
@@ -39,7 +35,7 @@ const AssociationMembershipTypeTable: React.FC<
     }
 
     const result = [];
-    const currentPrice = getCurrentPrice(type);
+    const currentPrice = getAssociationMembershipTypeCurrentPrice(type);
     if (currentPrice) {
       result.push(formatCurrency(Number.parseFloat(currentPrice.price)));
     }

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import {
+  AssociationMembershipType,
   BestellWizardApi,
   CoopApi,
   OrderConfirmationResponse,
@@ -149,6 +150,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     useState<AbortController>();
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [
+    selectedAssociationMembershipType,
+    setSelectedAssociationMembershipType,
+  ] = useState<AssociationMembershipType>();
 
   useEffect(() => {
     Promise.all([
@@ -688,7 +693,18 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           />
         );
       case "6b_association_membership":
-        return <Step6BAssociationMembership goToNextStep={goToNextStep} />;
+        return (
+          <Step6BAssociationMembership
+            goToNextStep={goToNextStep}
+            settings={settings}
+            selectedAssociationMembershipType={
+              selectedAssociationMembershipType
+            }
+            setSelectedAssociationMembershipType={
+              setSelectedAssociationMembershipType
+            }
+          />
+        );
       case "6c_coop_member_now":
         return (
           <Step6CCoopMemberNow

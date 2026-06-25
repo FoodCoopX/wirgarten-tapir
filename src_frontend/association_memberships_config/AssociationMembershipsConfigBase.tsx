@@ -43,7 +43,7 @@ const AssociationMembershipsConfigBase: React.FC<
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Vereinsmitgliedschafsttypen",
+          "Fehler beim Laden der Vereinsmitgliedschafttypen",
           setToastDatas,
         ),
       )

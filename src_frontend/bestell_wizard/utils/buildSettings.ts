@@ -10,6 +10,7 @@ export function buildSettings(
     theme: baseData.theme as TapirTheme,
     pickupLocations: baseData.pickupLocations,
     productTypes: sortProductTypes(baseData.productTypes),
+    associationMembershipTypes: baseData.associationMembershipTypes,
     priceOfAShare: baseData.priceOfAShare,
     allowInvestingMembership: baseData.allowInvestingMembership,
     associationsAllowInvestingMembership:

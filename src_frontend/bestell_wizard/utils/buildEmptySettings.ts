@@ -5,6 +5,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     theme: "biotop",
     pickupLocations: [],
     productTypes: [],
+    associationMembershipTypes: [],
     priceOfAShare: 0,
     allowInvestingMembership: false,
     associationsAllowInvestingMembership: false,
