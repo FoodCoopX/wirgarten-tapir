@@ -51,6 +51,7 @@ import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
 import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
+import Step6BAssociationMembership from "./steps/Step6BAssociationMembership.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
 import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
@@ -686,6 +687,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             forceHideStudentCheckbox={!isAtLeastOneProductOrdered(shoppingCart)}
           />
         );
+      case "6b_association_membership":
+        return <Step6BAssociationMembership goToNextStep={goToNextStep} />;
       case "6c_coop_member_now":
         return (
           <Step6CCoopMemberNow

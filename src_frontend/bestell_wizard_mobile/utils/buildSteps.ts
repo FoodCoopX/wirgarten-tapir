@@ -82,24 +82,21 @@ export function buildSteps(
     }
   }
 
-  if (
-    shouldIncludeStepsCoopShares(
+  newSteps.push(
+    ...buildCoopSteps(
       waitingListEntryDetails,
-      settings.showCoopContent,
-    )
-  ) {
-    newSteps.push("6a_coop_intro");
-
-    if (
-      shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
-    ) {
-      newSteps.push("6c_coop_member_now");
-    }
-
-    if (becomeMemberNow !== false) {
-      newSteps.push("6b_coop_shares");
-    }
-  }
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
+    ),
+    ...buildAssociationSteps(
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
+    ),
+  );
 
   if (
     shouldShowStepSolidarityContributionBeforeStepPersonalData(
@@ -221,4 +218,64 @@ function shouldShowStepSolidarityContributionBeforeStepPersonalData(
       shoppingCart,
     )
   );
+}
+
+function buildCoopSteps(
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  settings: BestellWizardSettings,
+  shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
+) {
+  if (
+    !shouldIncludeStepsCoopShares(
+      waitingListEntryDetails,
+      settings.showCoopContent,
+    )
+  ) {
+    return [];
+  }
+
+  const coopSteps: Step[] = [];
+
+  coopSteps.push("6a_coop_intro");
+
+  if (
+    shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
+  ) {
+    coopSteps.push("6c_coop_member_now");
+  }
+
+  if (becomeMemberNow !== false) {
+    coopSteps.push("6b_coop_shares");
+  }
+
+  return coopSteps;
+}
+
+function buildAssociationSteps(
+  settings: BestellWizardSettings,
+  shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
+) {
+  if (settings.legalStatus !== "association") {
+    return [];
+  }
+
+  const associationSteps: Step[] = [];
+
+  associationSteps.push("6a_coop_intro");
+
+  if (
+    shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
+  ) {
+    associationSteps.push("6c_coop_member_now");
+  }
+
+  if (becomeMemberNow !== false) {
+    associationSteps.push("6b_association_membership");
+  }
+
+  return associationSteps;
 }

@@ -8,6 +8,10 @@ from tapir.solidarity_contribution.config import (
 )
 from tapir.wirgarten.constants import ParameterCategory, HTML_ALLOWED_TEXT
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import (
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.parameters import (
@@ -429,36 +433,48 @@ class ParameterDefinitionsBestellwizard:
 
         importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
-            label="Seite 6A: Genossenschaft Einführung - Titel",
+            label="Seite 6A: Genossenschaft/Verein Einführung - Titel",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Unsere Genossenschaft",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(vars_hint=["vorname"]),
+            meta=ParameterMeta(
+                vars_hint=["vorname"],
+                show_only_when=lambda cache: legal_status_is_cooperative(cache)
+                or legal_status_is_association(cache),
+            ),
         )
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6A_TEXT,
-            label="Seite 6A: Genossenschaft Einführung - Text",
+            label="Seite 6A: Genossenschaft/Verein Einführung - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="<p>Als Mitglied unserer Genossenschaft bist du gleichzeitig Miteigentümer*In deiner eigenen Gemüsegärtnerei! Du kannst somit bei allen Grundsatzentscheidungen mitbestimmen und hast ein Stimmrecht bei der Generalversammlung. </p><p>"
             "Mit deinen Genossenschaftsanteilen ermöglichst du die gemeinsame Finanzierung wichtiger Investitionen für die Genossenschaft.</p>",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(textarea=True),
+            meta=ParameterMeta(
+                textarea=True,
+                show_only_when=lambda cache: legal_status_is_cooperative(cache)
+                or legal_status_is_association(cache),
+            ),
         )
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6_BACKGROUND_IMAGE,
-            label="Seite 6 A&B: Genossenschaftsanteile - Hintergrundbild",
+            label="Seite 6 A&B: Genossenschaft/Verein - Hintergrundbild",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: legal_status_is_cooperative(cache)
+                or legal_status_is_association(cache),
+            ),
             order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
@@ -471,7 +487,9 @@ class ParameterDefinitionsBestellwizard:
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(vars_hint=["vorname"]),
+            meta=ParameterMeta(
+                vars_hint=["vorname"], show_only_when=legal_status_is_cooperative
+            ),
         )
         bestellwizard_parameter_order -= 1
 
@@ -483,7 +501,9 @@ class ParameterDefinitionsBestellwizard:
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(textarea=True),
+            meta=ParameterMeta(
+                textarea=True, show_only_when=legal_status_is_cooperative
+            ),
         )
         bestellwizard_parameter_order -= 1
 
@@ -495,7 +515,10 @@ class ParameterDefinitionsBestellwizard:
             description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(vars_hint=["betriebsname", "link_zu_satzung"]),
+            meta=ParameterMeta(
+                vars_hint=["betriebsname", "link_zu_satzung"],
+                show_only_when=legal_status_is_cooperative,
+            ),
         )
         bestellwizard_parameter_order -= 1
 
@@ -506,6 +529,7 @@ class ParameterDefinitionsBestellwizard:
             initial_value="Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10 und § 37.",
             description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
+            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
             order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
@@ -517,6 +541,7 @@ class ParameterDefinitionsBestellwizard:
             initial_value="Ich verpflichte mich hiermit, die nach Gesetz und Satzung geschuldeten Einzahlungen auf die gezeichneten Geschäftsanteile zu leisten.",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
+            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
             order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
@@ -529,7 +554,11 @@ class ParameterDefinitionsBestellwizard:
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(vars_hint=["vorname"]),
+            meta=ParameterMeta(
+                vars_hint=["vorname"],
+                show_only_when=lambda cache: legal_status_is_cooperative(cache)
+                or legal_status_is_association(cache),
+            ),
         )
         bestellwizard_parameter_order -= 1
 
@@ -540,6 +569,10 @@ class ParameterDefinitionsBestellwizard:
             initial_value="Die wirst auf die Warteliste für deine Bestellung eingetragen. Du kannst dich aber entscheiden sofort Mitglied der Genossenschaft zu werden.",
             description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: legal_status_is_cooperative(cache)
+                or legal_status_is_association(cache),
+            ),
             order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
