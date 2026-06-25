@@ -125,9 +125,15 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
             <Spinner />
           ) : (
             <>
-              {getCurrentMembership()}
-              {getFutureMemberships()}
-              {getPastMemberships()}
+              {memberships.length === 0 ? (
+                "Keine Mitgliedschaft"
+              ) : (
+                <>
+                  {getCurrentMembership()}
+                  {getFutureMemberships()}
+                  {getPastMemberships()}
+                </>
+              )}
             </>
           )}
         </Card.Body>

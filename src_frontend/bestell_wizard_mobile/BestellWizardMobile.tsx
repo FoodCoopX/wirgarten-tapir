@@ -526,6 +526,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           solidarityContribution: solidarityContribution,
           distributionChannels: [...selectedDistributionChannels],
           feedback: feedback,
+          associationMembershipTypeId: selectedAssociationMembershipType?.id,
         },
       })
       .then(handleOrderResponse)

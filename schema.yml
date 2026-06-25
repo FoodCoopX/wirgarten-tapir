@@ -6201,6 +6201,8 @@ components:
             minLength: 1
         feedback:
           type: string
+        association_membership_type_id:
+          type: string
       required:
       - become_member_now
       - cancellation_policy_read

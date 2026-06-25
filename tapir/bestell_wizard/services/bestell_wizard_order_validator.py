@@ -3,6 +3,7 @@ import datetime
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
+from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
@@ -35,7 +36,11 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import legal_status_is_cooperative, get_today
+from tapir.wirgarten.utils import (
+    legal_status_is_cooperative,
+    get_today,
+    legal_status_is_association,
+)
 
 
 class BestellWizardOrderValidator:
@@ -96,6 +101,10 @@ class BestellWizardOrderValidator:
 
         if legal_status_is_cooperative(cache=cache):
             cls.validate_coop_content(
+                validated_data=validated_serializer_data, order=order, cache=cache
+            )
+        elif legal_status_is_association(cache=cache):
+            cls.validate_association_content(
                 validated_data=validated_serializer_data, order=order, cache=cache
             )
 
@@ -205,6 +214,29 @@ class BestellWizardOrderValidator:
                 raise ValidationError(
                     f"Genossenschaftsanteile bestellt: {nb_ordered_coop_shares}, minimum: {minimum_number_of_shares}."
                 )
+
+    @classmethod
+    def validate_association_content(
+        cls, validated_data: dict, order: TapirOrder, cache: dict
+    ):
+        membership_type_id = validated_data.get("association_membership_type_id", None)
+        if membership_type_id is None:
+            raise ValidationError("Keine Vereinsmitgliedschaft ausgewählt")
+
+        membership_type = AssociationMembershipType.objects.filter(
+            id=membership_type_id
+        ).first()
+        if not membership_type:
+            raise ValidationError(
+                f"Unbekannte Vereinsmitgliedschaft-ID: {membership_type_id}"
+            )
+
+        if len(order) == 0 and not get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP, cache=cache
+        ):
+            raise ValidationError(
+                "Fördermitgliedschaften sind nicht erlaubt, es muss mindestens 1 Product ausgewählt werden"
+            )
 
     @classmethod
     def get_first_pickup_location_with_enough_capacity(

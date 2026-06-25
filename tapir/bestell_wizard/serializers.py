@@ -45,6 +45,9 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     solidarity_contribution = serializers.FloatField()
     distribution_channels = serializers.ListField(child=serializers.CharField())
     feedback = serializers.CharField(allow_blank=True, required=False)
+    association_membership_type_id = serializers.CharField(
+        required=False, allow_blank=True
+    )
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):

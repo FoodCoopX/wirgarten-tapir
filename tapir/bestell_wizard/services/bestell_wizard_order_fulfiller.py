@@ -4,7 +4,10 @@ from tapir_mail.models import MailCategory, MailCategoryMode
 from tapir_mail.service.external_recipient_manager import ExternalRecipientManager
 
 from tapir.accounts.models import TapirUser
-from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.association_membership_change_handler import (
+    AssociationMembershipChangeHandler,
+)
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
@@ -43,6 +46,7 @@ from tapir.wirgarten.utils import (
     get_today,
     get_now,
     legal_status_is_cooperative,
+    legal_status_is_association,
 )
 
 
@@ -104,6 +108,16 @@ class BestellWizardOrderFulfiller:
         if legal_status_is_cooperative(cache=cache) and not is_student:
             coop_share_transaction = cls.create_coop_shares(
                 number_of_shares=validated_serializer_data["number_of_coop_shares"],
+                member=member,
+                subscriptions=subscriptions,
+                cache=cache,
+                actor=actor,
+            )
+        if legal_status_is_association(cache=cache):
+            cls.create_association_membership(
+                association_membership_type=AssociationMembershipType.objects.get(
+                    id=validated_serializer_data["association_membership_type_id"]
+                ),
                 member=member,
                 subscriptions=subscriptions,
                 cache=cache,
@@ -176,8 +190,6 @@ class BestellWizardOrderFulfiller:
         )
         MemberNumberService.assign_member_number_if_eligible(member, cache=cache)
 
-        client = KeycloakUserManager.get_keycloak_client(cache=cache)
-
         return member
 
     @classmethod
@@ -189,24 +201,16 @@ class BestellWizardOrderFulfiller:
         cache: dict,
         actor: TapirUser,
     ):
-        shares_valid_at = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
-        at_least_one_trial_period_found = False
-        if len(subscriptions) > 0:
-            for subscription in subscriptions:
-                end_of_trial_period = TrialPeriodManager.get_last_day_of_trial_period(
-                    contract=subscription, cache=cache
-                )
-                if end_of_trial_period is not None:
-                    shares_valid_at = min(
-                        shares_valid_at,
-                        end_of_trial_period,
-                    )
-                    at_least_one_trial_period_found = True
+        earliest_trial_period_end = cls.get_earliest_trial_period_end(
+            subscriptions=subscriptions, cache=cache
+        )
 
-        if not at_least_one_trial_period_found:
+        if earliest_trial_period_end is None:
             shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
                 reference_date=get_today(cache), apply_buffer_time=True, cache=cache
             )
+        else:
+            shares_valid_at = earliest_trial_period_end
 
         return CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=number_of_shares,
@@ -257,3 +261,56 @@ class BestellWizardOrderFulfiller:
             amount=contribution,
             actor=actor,
         )
+
+    @classmethod
+    def create_association_membership(
+        cls,
+        association_membership_type: AssociationMembershipType,
+        member: Member,
+        subscriptions: list[Subscription],
+        cache: dict,
+        actor: TapirUser,
+    ):
+        earliest_trial_period_end = cls.get_earliest_trial_period_end(
+            subscriptions=subscriptions, cache=cache
+        )
+
+        if earliest_trial_period_end is None:
+            shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache), apply_buffer_time=True, cache=cache
+            )
+        else:
+            shares_valid_at = earliest_trial_period_end
+
+        return AssociationMembershipChangeHandler.start_membership(
+            member=member,
+            start_date=shares_valid_at,
+            association_membership_type=association_membership_type,
+            actor=actor,
+        )
+
+    @classmethod
+    def get_earliest_trial_period_end(
+        cls,
+        subscriptions: list[Subscription],
+        cache: dict,
+    ):
+        earliest_trial_period_end = datetime.date(
+            year=datetime.MAXYEAR, month=12, day=31
+        )
+        at_least_one_trial_period_found = False
+        for subscription in subscriptions:
+            end_of_trial_period = TrialPeriodManager.get_last_day_of_trial_period(
+                contract=subscription, cache=cache
+            )
+            if end_of_trial_period is not None:
+                earliest_trial_period_end = min(
+                    earliest_trial_period_end,
+                    end_of_trial_period,
+                )
+                at_least_one_trial_period_found = True
+
+        if at_least_one_trial_period_found:
+            return earliest_trial_period_end
+
+        return None
