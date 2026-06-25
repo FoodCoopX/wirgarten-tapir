@@ -230,6 +230,12 @@ export interface BestellWizardBaseDataResponse {
   legalStatus: LegalStatusEnum;
   /**
    *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  associationsAllowInvestingMembership: boolean;
+  /**
+   *
    * @type {BestellWizardStrings}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -361,6 +367,11 @@ export function instanceOfBestellWizardBaseDataResponse(
     return false;
   if (!("legalStatus" in value) || value["legalStatus"] === undefined)
     return false;
+  if (
+    !("associationsAllowInvestingMembership" in value) ||
+    value["associationsAllowInvestingMembership"] === undefined
+  )
+    return false;
   if (!("strings" in value) || value["strings"] === undefined) return false;
   if (!("images" in value) || value["images"] === undefined) return false;
   if (!("debug" in value) || value["debug"] === undefined) return false;
@@ -420,6 +431,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
       json["solidarity_step_position"],
     ),
     legalStatus: LegalStatusEnumFromJSON(json["legal_status"]),
+    associationsAllowInvestingMembership:
+      json["associations_allow_investing_membership"],
     strings: BestellWizardStringsFromJSON(json["strings"]),
     images: BestellWizardImagesFromJSON(json["images"]),
     debug: json["debug"],
@@ -480,6 +493,8 @@ export function BestellWizardBaseDataResponseToJSONTyped(
       value["solidarityStepPosition"],
     ),
     legal_status: LegalStatusEnumToJSON(value["legalStatus"]),
+    associations_allow_investing_membership:
+      value["associationsAllowInvestingMembership"],
     strings: BestellWizardStringsToJSON(value["strings"]),
     images: BestellWizardImagesToJSON(value["images"]),
     debug: value["debug"],

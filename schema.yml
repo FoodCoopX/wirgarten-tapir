@@ -2739,9 +2739,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: {}
-                description: Unspecified response body
+                type: string
           description: ''
   /subscriptions/api/subscription_price_override:
     post:
@@ -6061,6 +6059,8 @@ components:
           $ref: '#/components/schemas/SolidarityStepPositionEnum'
         legal_status:
           $ref: '#/components/schemas/LegalStatusEnum'
+        associations_allow_investing_membership:
+          type: boolean
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
         images:
@@ -6069,6 +6069,7 @@ components:
           type: boolean
       required:
       - allow_investing_membership
+      - associations_allow_investing_membership
       - contact_mail_address
       - coop_statute_link
       - debug

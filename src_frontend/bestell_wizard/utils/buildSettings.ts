@@ -12,6 +12,8 @@ export function buildSettings(
     productTypes: sortProductTypes(baseData.productTypes),
     priceOfAShare: baseData.priceOfAShare,
     allowInvestingMembership: baseData.allowInvestingMembership,
+    associationsAllowInvestingMembership:
+      baseData.associationsAllowInvestingMembership,
     forceWaitingList: baseData.forceWaitingList,
     showCoopContent: baseData.showCoopContent,
     introStepText: baseData.introStepText,

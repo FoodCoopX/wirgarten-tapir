@@ -169,6 +169,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
         choices=OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION
     )
     legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
+    associations_allow_investing_membership = serializers.BooleanField()
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
     debug = serializers.BooleanField()

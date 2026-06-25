@@ -610,7 +610,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsApiRevokeChangesCreateRaw(
     requestParameters: SubscriptionsApiRevokeChangesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<string>> {
     if (requestParameters["coopSharePurchaseIds"] == null) {
       throw new runtime.RequiredError(
         "coopSharePurchaseIds",
@@ -675,7 +675,11 @@ export class SubscriptionsApi extends runtime.BaseAPI {
       initOverrides,
     );
 
-    return new runtime.JSONApiResponse<any>(response);
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
   }
 
   /**
@@ -683,7 +687,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsApiRevokeChangesCreate(
     requestParameters: SubscriptionsApiRevokeChangesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<string> {
     const response = await this.subscriptionsApiRevokeChangesCreateRaw(
       requestParameters,
       initOverrides,
