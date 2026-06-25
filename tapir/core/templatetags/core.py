@@ -13,7 +13,7 @@ from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :
 from tapir.wirgarten.models import (
     WaitingListEntry,
 )
-from tapir.wirgarten.utils import is_debug_instance
+from tapir.wirgarten.utils import is_debug_instance, legal_status_is_association
 
 register = template.Library()
 
@@ -75,6 +75,14 @@ def add_admin_links(groups, request, cache: dict):
             display_name=_("Konfiguration"),
             material_icon="settings",
             url=reverse_lazy("configuration:parameters"),
+        )
+    if request.user.has_perm(Permission.Coop.MANAGE) and legal_status_is_association(
+        cache=cache
+    ):
+        admin_group.add_link(
+            display_name=_("Vereinsmitgliedschaften"),
+            material_icon="id_card",
+            url=reverse_lazy("associations:association_memberships_config"),
         )
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(

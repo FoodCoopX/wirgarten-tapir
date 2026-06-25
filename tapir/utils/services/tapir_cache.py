@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 from typing import Set
 
+from tapir.associations.models import AssociationMembershipTypePrice
 from tapir.deliveries.models import (
     Joker,
     DeliveryDayAdjustment,
@@ -702,3 +703,21 @@ class TapirCache:
         )
 
         return credits_by_member_cache.get(member_id, [])
+
+    @classmethod
+    def get_association_membership_type_prices(
+        cls, type_id: str, cache: dict
+    ) -> list[AssociationMembershipTypePrice]:
+        def compute():
+            prices_by_type: dict[str, list[AssociationMembershipTypePrice]] = {}
+            for price in AssociationMembershipTypePrice.objects.order_by("valid_from"):
+                prices_by_type.setdefault(price.type_id, []).append(price)
+            return prices_by_type
+
+        prices_by_type_cache = get_from_cache_or_compute(
+            cache=cache,
+            key="association_membership_type_prices_by_type",
+            compute_function=compute,
+        )
+
+        return prices_by_type_cache.get(type_id, [])

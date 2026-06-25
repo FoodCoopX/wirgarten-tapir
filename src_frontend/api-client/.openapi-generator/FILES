@@ -1,3 +1,4 @@
+apis/AssociationsApi.ts
 apis/BestellWizardApi.ts
 apis/ConfigApi.ts
 apis/CoopApi.ts
@@ -13,6 +14,11 @@ apis/TapirmailApi.ts
 apis/WaitingListApi.ts
 apis/index.ts
 index.ts
+models/AssociationMembership.ts
+models/AssociationMembershipType.ts
+models/AssociationMembershipTypePrice.ts
+models/AssociationMembershipTypePriceRequest.ts
+models/AssociationMembershipTypeRequest.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableSegmentsResponse.ts
 models/BestellWizardBaseDataResponse.ts
@@ -122,6 +128,8 @@ models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
 models/PaginatedPaymentTransactionList.ts
 models/PaginatedWaitingListEntryDetailsList.ts
+models/PatchedAssociationMembershipTypePriceRequest.ts
+models/PatchedAssociationMembershipTypeRequest.ts
 models/PatchedBundledEmailConfigurationRequest.ts
 models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts

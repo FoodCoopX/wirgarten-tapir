@@ -3,6 +3,335 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /associations/api/member_association_memberships:
+    get:
+      operationId: associations_api_member_association_memberships_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssociationMembership'
+          description: ''
+  /associations/association_membership_types/:
+    get:
+      operationId: associations_association_membership_types_list
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+    post:
+      operationId: associations_association_membership_types_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+  /associations/association_membership_types/{id}/:
+    get:
+      operationId: associations_association_membership_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type identifiziert.
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+    put:
+      operationId: associations_association_membership_types_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type identifiziert.
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypeRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+    patch:
+      operationId: associations_association_membership_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type identifiziert.
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypeRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipType'
+          description: ''
+    delete:
+      operationId: associations_association_membership_types_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type identifiziert.
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
+  /associations/association_membership_types_price/:
+    get:
+      operationId: associations_association_membership_types_price_list
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+    post:
+      operationId: associations_association_membership_types_price_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+  /associations/association_membership_types_price/{id}/:
+    get:
+      operationId: associations_association_membership_types_price_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type price identifiziert.
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+    put:
+      operationId: associations_association_membership_types_price_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type price identifiziert.
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssociationMembershipTypePriceRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+    patch:
+      operationId: associations_association_membership_types_price_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type price identifiziert.
+        required: true
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypePriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypePriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssociationMembershipTypePriceRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          description: ''
+    delete:
+      operationId: associations_association_membership_types_price_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der association membership type price identifiziert.
+        required: true
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
   /bestell_wizard/api/bestell_wizard_base_data:
     get:
       operationId: bestell_wizard_api_bestell_wizard_base_data_retrieve
@@ -187,6 +516,15 @@ paths:
   /config/member-number-preview:
     get:
       operationId: config_member_number_preview_retrieve
+      parameters:
+      - in: query
+        name: length
+        schema:
+          type: integer
+      - in: query
+        name: prefix
+        schema:
+          type: string
       tags:
       - config
       security:
@@ -195,7 +533,15 @@ paths:
       - DrfForwardAuthentication: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+          description: ''
   /coop/api/delete_member:
     delete:
       operationId: coop_api_delete_member_destroy
@@ -2393,7 +2739,9 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
           description: ''
   /subscriptions/api/subscription_price_override:
     post:
@@ -5472,6 +5820,131 @@ paths:
           description: No response body
 components:
   schemas:
+    AssociationMembership:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        type:
+          $ref: '#/components/schemas/AssociationMembershipType'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        member:
+          type: string
+      required:
+      - created_at
+      - member
+      - start_date
+      - type
+      - updated_at
+    AssociationMembershipType:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationMembershipTypePrice'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        deleted:
+          type: boolean
+      required:
+      - created_at
+      - name
+      - prices
+      - updated_at
+    AssociationMembershipTypePrice:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        valid_from:
+          type: string
+          format: date
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        type:
+          type: string
+      required:
+      - created_at
+      - price
+      - type
+      - updated_at
+      - valid_from
+    AssociationMembershipTypePriceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        valid_from:
+          type: string
+          format: date
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        type:
+          type: string
+          minLength: 1
+      required:
+      - price
+      - type
+      - valid_from
+    AssociationMembershipTypeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        deleted:
+          type: boolean
+      required:
+      - name
     AutomatedExportCycleEnum:
       enum:
       - yearly
@@ -8854,6 +9327,36 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WaitingListEntryDetails'
+    PatchedAssociationMembershipTypePriceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        valid_from:
+          type: string
+          format: date
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        type:
+          type: string
+          minLength: 1
+    PatchedAssociationMembershipTypeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        deleted:
+          type: boolean
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:
