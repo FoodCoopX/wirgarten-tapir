@@ -18,7 +18,6 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.wirgarten.utils import check_permission_or_self
 
 
-# Create your views here.
 class AssociationMembershipConfigView(TemplateView):
     template_name = "associations/association_membership_config_view.html"
 
