@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, permissions
@@ -15,10 +16,12 @@ from tapir.associations.serializers import (
     AssociationMembershipSerializer,
 )
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.utils import check_permission_or_self
 
 
-class AssociationMembershipConfigView(TemplateView):
+class AssociationMembershipConfigView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Coop.MANAGE
     template_name = "associations/association_membership_config_view.html"
 
 
