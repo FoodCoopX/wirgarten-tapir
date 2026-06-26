@@ -38,10 +38,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
     }
 
     return (
-      type.name +
-      " " +
-      formatCurrency(Number.parseFloat(currentPrice.price)) +
-      "/Monat"
+      type.name + " " + formatCurrency(currentPrice.priceAsFloat) + "/Monat"
     );
   }
 

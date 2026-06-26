@@ -2,10 +2,12 @@ import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
+  AssociationMembershipType,
   PublicPickupLocation,
   PublicProductType,
   PublicWaitingListEntryDetails,
 } from "../../api-client";
+import { getAssociationMembershipTypeCurrentPrice } from "../../association_memberships_config/getAssociationMembershipTypeCurrentPrice.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
@@ -19,6 +21,7 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
 import {
   getProductById,
@@ -50,6 +53,7 @@ interface Step10OrderSummaryProps {
   isOrderStep: boolean;
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
   singleProductType?: PublicProductType;
+  associationMembershipType?: AssociationMembershipType;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -72,6 +76,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   isOrderStep,
   waitingListEntryDetails,
   singleProductType,
+  associationMembershipType,
 }) => {
   const [activePickupLocation, setActivePickupLocation] =
     useState<PublicPickupLocation>();
@@ -107,6 +112,20 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       "Mitgliedschaft in der Genossenschaft (" +
       formatCurrency(numberOfCoopShares * settings.priceOfAShare) +
       ")"
+    );
+  }
+
+  function getAssociationMembershipTitle() {
+    if (!associationMembershipType) {
+      return "Keine Vereinsmitgliedschaft";
+    }
+
+    return (
+      "Vereinsmitgliedschaft: " +
+      associationMembershipType.name +
+      getAssociationMembershipTypeMonthlyPriceFormatted(
+        associationMembershipType,
+      )
     );
   }
 
@@ -320,6 +339,30 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 </Accordion.Item>
               </Accordion>
             )}
+          {associationMembershipType && (
+            <Accordion>
+              <Accordion.Item
+                eventKey={"association_membership"}
+                onClick={scrollIntoView}
+              >
+                <Accordion.Header>
+                  {getAssociationMembershipTitle()}
+                </Accordion.Header>
+                <AccordionBody>
+                  <li>{associationMembershipType.name}</li>
+                  {getAssociationMembershipTypeCurrentPrice(
+                    associationMembershipType,
+                  ) && (
+                    <li>
+                      {getAssociationMembershipTypeMonthlyPriceFormatted(
+                        associationMembershipType,
+                      )}
+                    </li>
+                  )}
+                </AccordionBody>
+              </Accordion.Item>
+            </Accordion>
+          )}
           <hr />
           {(solidarityContribution > 0 ||
             isAtLeastOneProductOrdered(shoppingCart)) && (
@@ -359,6 +402,10 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         / Monat
                       </li>
                     )}
+                    {associationMembershipType &&
+                      getAssociationMembershipTypeCurrentPrice(
+                        associationMembershipType,
+                      ) && <li>{getAssociationMembershipTitle()}</li>}
                   </ul>
                   {atLeastOneMonthlyPayment(
                     shoppingCart,

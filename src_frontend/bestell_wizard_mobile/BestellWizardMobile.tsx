@@ -443,7 +443,17 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
     setShoppingCart(newShoppingCart);
     setSelectedPickupLocations([settings.pickupLocations[0]]);
-    setSelectedNumberOfCoopShares(7);
+    switch (settings.legalStatus) {
+      case "coop":
+        setSelectedNumberOfCoopShares(7);
+        break;
+      case "association":
+        if (settings.associationMembershipTypes.length > 0) {
+          setSelectedAssociationMembershipType(
+            settings.associationMembershipTypes[0],
+          );
+        }
+    }
     setSepaAllowed(true);
     setContractAccepted(true);
     setStatuteAccepted(true);
@@ -724,6 +734,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             active={currentStep === step}
             shoppingCart={shoppingCart}
             productTypesInWaitingList={productTypesInWaitingList}
+            associationMembershipType={selectedAssociationMembershipType}
           />
         );
       case "8_personal_data":
@@ -788,6 +799,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             isOrderStep={waitingListEntryDetails !== undefined}
             confirmOrder={onConfirmOrder}
             waitingListEntryDetails={waitingListEntryDetails}
+            associationMembershipType={selectedAssociationMembershipType}
           />
         );
       case "11_legal":
@@ -916,6 +928,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       hideFooterButtonsOnLastStep={true}
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
       goToProductTypeStep={goToProductTypeStep}
+      associationMembershipType={selectedAssociationMembershipType}
     />
   );
 };

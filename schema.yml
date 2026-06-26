@@ -5892,6 +5892,10 @@ components:
         id:
           type: string
           maxLength: 10
+        price_as_float:
+          type: number
+          format: double
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -5912,6 +5916,7 @@ components:
       required:
       - created_at
       - price
+      - price_as_float
       - type
       - updated_at
       - valid_from

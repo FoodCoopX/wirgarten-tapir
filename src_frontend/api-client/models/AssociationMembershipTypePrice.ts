@@ -26,6 +26,12 @@ export interface AssociationMembershipTypePrice {
   id?: string;
   /**
    *
+   * @type {number}
+   * @memberof AssociationMembershipTypePrice
+   */
+  readonly priceAsFloat: number;
+  /**
+   *
    * @type {Date}
    * @memberof AssociationMembershipTypePrice
    */
@@ -62,6 +68,8 @@ export interface AssociationMembershipTypePrice {
 export function instanceOfAssociationMembershipTypePrice(
   value: object,
 ): value is AssociationMembershipTypePrice {
+  if (!("priceAsFloat" in value) || value["priceAsFloat"] === undefined)
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("validFrom" in value) || value["validFrom"] === undefined) return false;
@@ -85,6 +93,7 @@ export function AssociationMembershipTypePriceFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
+    priceAsFloat: json["price_as_float"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     validFrom: new Date(json["valid_from"]),
@@ -102,7 +111,7 @@ export function AssociationMembershipTypePriceToJSON(
 export function AssociationMembershipTypePriceToJSONTyped(
   value?: Omit<
     AssociationMembershipTypePrice,
-    "created_at" | "updated_at"
+    "price_as_float" | "created_at" | "updated_at"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {

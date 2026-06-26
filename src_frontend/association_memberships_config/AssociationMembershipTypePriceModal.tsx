@@ -131,7 +131,7 @@ const AssociationMembershipTypePriceModal: React.FC<
                 membershipType.prices.map((price) => (
                   <tr key={price.id}>
                     <td>{formatDateNumeric(price.validFrom)}</td>
-                    <td>{formatCurrency(Number.parseFloat(price.price))}</td>
+                    <td>{formatCurrency(price.priceAsFloat)}</td>
                     <td>
                       <TapirButton
                         variant={"outline-danger"}
@@ -189,7 +189,7 @@ const AssociationMembershipTypePriceModal: React.FC<
           onCancel={() => setPriceSelectedForDeletion(undefined)}
           message={
             'Bist du sicher das du den Preis "' +
-            formatCurrency(Number.parseFloat(priceSelectedForDeletion.price)) +
+            formatCurrency(priceSelectedForDeletion.priceAsFloat) +
             " ab dem " +
             formatDateNumeric(priceSelectedForDeletion.validFrom) +
             '" löschen willst?'

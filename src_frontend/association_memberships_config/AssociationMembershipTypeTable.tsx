@@ -37,7 +37,7 @@ const AssociationMembershipTypeTable: React.FC<
     const result = [];
     const currentPrice = getAssociationMembershipTypeCurrentPrice(type);
     if (currentPrice) {
-      result.push(formatCurrency(Number.parseFloat(currentPrice.price)));
+      result.push(formatCurrency(currentPrice.priceAsFloat));
     }
 
     const nextPrice = getNextPrice(type);
@@ -46,7 +46,7 @@ const AssociationMembershipTypeTable: React.FC<
         "Ab dem " +
           formatDateNumeric(nextPrice.validFrom) +
           ": " +
-          formatCurrency(Number.parseFloat(nextPrice.price)),
+          formatCurrency(nextPrice.priceAsFloat),
       );
     }
 

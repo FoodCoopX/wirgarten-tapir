@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
@@ -14,6 +17,12 @@ class AssociationMembershipTypePriceSerializer(ModelSerializer):
     class Meta:
         model = AssociationMembershipTypePrice
         fields = "__all__"
+
+    price_as_float = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_price_as_float(price: AssociationMembershipTypePrice) -> float:
+        return float(price.price.quantize(Decimal("0.01")))
 
 
 class AssociationMembershipTypeSerializer(ModelSerializer):
