@@ -31,9 +31,6 @@ class TestMemberAssociationMembershipDetails(TapirIntegrationTest):
         logged_in_member = MemberFactory.create(is_superuser=False)
         other_member = MemberFactory.create(is_superuser=False)
         self.client.force_login(logged_in_member)
-        memberships = AssociationMembershipFactory.create_batch(
-            size=3, member=other_member
-        )
 
         url = reverse("associations:member_association_memberships")
         url = f"{url}?member_id={other_member.id}"
