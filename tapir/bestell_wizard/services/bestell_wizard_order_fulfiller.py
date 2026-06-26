@@ -280,7 +280,7 @@ class BestellWizardOrderFulfiller:
                 reference_date=get_today(cache), apply_buffer_time=True, cache=cache
             )
         else:
-            shares_valid_at = earliest_trial_period_end
+            shares_valid_at = earliest_trial_period_end + datetime.timedelta(days=1)
 
         return AssociationMembershipChangeHandler.start_membership(
             member=member,

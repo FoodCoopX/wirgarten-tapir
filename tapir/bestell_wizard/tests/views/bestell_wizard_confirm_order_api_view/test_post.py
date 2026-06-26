@@ -10,11 +10,13 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.associations.models import AssociationMembership
+from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
 from tapir.configuration.models import TapirParameter
-from tapir.core.config import LEGAL_STATUS_COMPANY
+from tapir.core.config import LEGAL_STATUS_COMPANY, LEGAL_STATUS_ASSOCIATION
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -26,6 +28,7 @@ from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.config import (
     SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -1158,3 +1161,107 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertEqual(
             self.CONTRACT_START_DATE, Subscription.objects.get().start_date
         )
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_legalStatusIsAssociation_membershipCreatedAndNotCoopSharesCreated(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        membership_types = AssociationMembershipTypeFactory.create_batch(size=3)
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["association_membership_type_id"] = membership_types[1].id
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assert_order_confirmed(response_content)
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+        self.assertFalse(CoopShareTransaction.objects.exists())
+        self.assertEqual(1, AssociationMembership.objects.count())
+        membership = AssociationMembership.objects.get()
+        self.assertEqual(membership_types[1].id, membership.type_id)
+
+        subscription = Subscription.objects.first()
+        end_of_trial_period = TrialPeriodManager.get_last_day_of_trial_period(
+            contract=subscription, cache={}
+        )
+        self.assertEqual(
+            end_of_trial_period + datetime.timedelta(days=1), membership.start_date
+        )
+
+        mock_fire_action.assert_called_once()
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action=mock_fire_action,
+            key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        )
+        self.assertEqual(2, mock_on_subscription_updated.call_count)
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_legalStatusIsAssociationButNoMembershipTypeSelected_orderNotConfirmed(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        AssociationMembershipTypeFactory.create_batch(size=3)
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Keine Vereinsmitgliedschaft ausgewählt", response_content["error"]
+        )
+        self.assertFalse(Member.objects.exists())
+        mock_fire_action.assert_not_called()
+        mock_on_subscription_updated.assert_not_called()
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_associationSupportingMembershipNotAllowedAndOrderIsEmpty_orderNotConfirmed(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(
+            key=ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP, value=False
+        )
+        membership_types = AssociationMembershipTypeFactory.create_batch(size=3)
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["association_membership_type_id"] = membership_types[1].id
+        post_data["shopping_cart_order"] = {}
+        post_data["become_member_now"] = True
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Fördermitgliedschaften sind nicht erlaubt, es muss mindestens 1 Product ausgewählt werden",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        mock_fire_action.assert_not_called()
+        mock_on_subscription_updated.assert_not_called()
