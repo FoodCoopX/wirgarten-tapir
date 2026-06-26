@@ -1,5 +1,8 @@
 import datetime
 
+from tapir.payments.services.month_payment_builder_association_membership import (
+    MonthPaymentBuilderAssociationMembership,
+)
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
@@ -57,11 +60,18 @@ class MonthPaymentBuilder:
             in_trial=False,
         )
 
+        payments_to_create_association_membership = MonthPaymentBuilderAssociationMembership.build_payments_for_association_memberships(
+            current_month=first_of_month,
+            cache=cache,
+            generated_payments=generated_payments,
+        )
+
         return (
             payments_to_create_subscriptions_not_in_trial
             + payments_to_create_subscriptions_in_trial
             + payments_to_create_solidarity_contributions_in_trial
             + payments_to_create_solidarity_contributions_not_in_trial
+            + payments_to_create_association_membership
         )
 
     @classmethod
