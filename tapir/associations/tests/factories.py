@@ -1,6 +1,10 @@
 import factory
 
-from tapir.associations.models import AssociationMembershipType, AssociationMembership
+from tapir.associations.models import (
+    AssociationMembershipType,
+    AssociationMembership,
+    AssociationMembershipTypePrice,
+)
 from tapir.wirgarten.tests.factories import MemberFactory
 
 
@@ -14,6 +18,17 @@ class AssociationMembershipTypeFactory(
     deleted = False
     description_in_bestell_wizard = factory.Faker("paragraph")
     order_in_bestell_wizard = 1
+
+
+class AssociationMembershipTypePriceFactory(
+    factory.django.DjangoModelFactory[AssociationMembershipTypePrice]
+):
+    class Meta:
+        model = AssociationMembershipTypePrice
+
+    type = factory.SubFactory(AssociationMembershipTypeFactory)
+    valid_from = factory.Faker("date")
+    price = factory.Faker("pydecimal", min_value=3, max_value=30)
 
 
 class AssociationMembershipFactory(
