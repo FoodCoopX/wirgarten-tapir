@@ -745,7 +745,7 @@ class TapirCache:
                 type_id=type_id, cache=cache
             )
             for price in reversed(prices_for_this_type):
-                if price.valid_from < reference_date:
+                if price.valid_from <= reference_date:
                     return price
             return None
 
