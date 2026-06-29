@@ -1,18 +1,24 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_association_membership import (
+    MonthPaymentBuilderAssociationMembership,
+)
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestBuildPaymentForMonth(TapirUnitTest):
+    @patch.object(
+        MonthPaymentBuilderAssociationMembership,
+        "build_payments_for_association_memberships",
+    )
     @patch.object(
         MonthPaymentBuilderSolidarityContributions,
         "build_payments_for_solidarity_contributions",
@@ -22,6 +28,7 @@ class TestBuildPaymentForMonth(TapirUnitTest):
         self,
         mock_build_payments_for_subscriptions: Mock,
         mock_build_payments_for_solidarity_contributions: Mock,
+        mock_build_payments_for_association_memberships: Mock,
     ):
         payment_1 = Mock()
         payment_2 = Mock()
@@ -32,6 +39,8 @@ class TestBuildPaymentForMonth(TapirUnitTest):
         payment_7 = Mock()
         payment_8 = Mock()
         payment_9 = Mock()
+        payment_10 = Mock()
+        payment_11 = Mock()
         cache = Mock()
         generated_payments = {payment_6}
 
@@ -55,6 +64,11 @@ class TestBuildPaymentForMonth(TapirUnitTest):
             )
         )
 
+        membership_payments = [payment_10, payment_11]
+        mock_build_payments_for_association_memberships.return_value = (
+            membership_payments
+        )
+
         result = MonthPaymentBuilder.build_payments_for_month(
             reference_date=datetime.date(year=2022, month=5, day=12),
             cache=cache,
@@ -71,6 +85,8 @@ class TestBuildPaymentForMonth(TapirUnitTest):
                 payment_7,
                 payment_8,
                 payment_9,
+                payment_10,
+                payment_11,
             },
             set(result),
         )
@@ -108,4 +124,10 @@ class TestBuildPaymentForMonth(TapirUnitTest):
                     in_trial=False,
                 ),
             ]
+        )
+
+        mock_build_payments_for_association_memberships.assert_called_once_with(
+            current_month=datetime.date(year=2022, month=5, day=1),
+            cache=cache,
+            generated_payments=generated_payments,
         )
