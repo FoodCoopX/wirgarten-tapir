@@ -18,6 +18,16 @@ interface Step6BCoopSharesProps {
   >;
 }
 
+function buildLabel(type: AssociationMembershipType) {
+  const currentPrice = getAssociationMembershipTypeCurrentPrice(type);
+
+  if (!currentPrice) {
+    return type.name;
+  }
+
+  return type.name + " " + formatCurrency(currentPrice.priceAsFloat) + "/Monat";
+}
+
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   goToNextStep,
   settings,
@@ -29,18 +39,6 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   useEffect(() => {
     setShowError(false);
   }, [selectedAssociationMembershipType]);
-
-  function buildLabel(type: AssociationMembershipType) {
-    const currentPrice = getAssociationMembershipTypeCurrentPrice(type);
-
-    if (!currentPrice) {
-      return type.name;
-    }
-
-    return (
-      type.name + " " + formatCurrency(currentPrice.priceAsFloat) + "/Monat"
-    );
-  }
 
   function onNextClicked() {
     if (selectedAssociationMembershipType === undefined) {
