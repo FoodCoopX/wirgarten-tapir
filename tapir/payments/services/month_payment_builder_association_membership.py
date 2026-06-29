@@ -2,7 +2,6 @@ import datetime
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
-from icecream import ic
 
 from tapir.associations.models import AssociationMembership
 from tapir.associations.services.association_membership_price_type_getter import (
@@ -31,7 +30,6 @@ class MonthPaymentBuilderAssociationMembership:
         cache: dict,
         generated_payments: set[Payment],
     ) -> list[Payment]:
-        ic(current_month)
         active_memberships = cls.get_active_memberships(
             cache=cache, first_of_month=current_month
         )
@@ -58,7 +56,7 @@ class MonthPaymentBuilderAssociationMembership:
                 in_trial=False,
                 payment_type=cls.PAYMENT_TYPE_ASSOCIATION_MEMBERSHIP,
                 total_to_pay_function=cls.get_total_to_pay,
-                allow_negative_amounts=True,
+                allow_negative_amounts=False,
             )
             if payment is not None:
                 payments_to_create.append(payment)
