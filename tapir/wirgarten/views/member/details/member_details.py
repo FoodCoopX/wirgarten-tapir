@@ -164,6 +164,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["show_coop_shares"] = legal_status_is_cooperative(cache=cache)
         context["show_association_membership"] = legal_status_is_association(
             cache=cache
+        ) and get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS, cache=cache
         )
 
         context["payment_rhythm"] = MemberPaymentRhythmService.get_rhythm_display_name(

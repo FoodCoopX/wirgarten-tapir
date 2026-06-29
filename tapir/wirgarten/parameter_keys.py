@@ -278,3 +278,6 @@ class ParameterKeys:
     ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP = (
         f"{PREFIX}.associations.allow_supporting_membership"
     )
+    ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS = (
+        f"{PREFIX}.associations.enable_supporting_membership"
+    )
