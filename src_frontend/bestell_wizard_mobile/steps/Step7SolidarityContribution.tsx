@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Form } from "react-bootstrap";
-import { PublicProductType } from "../../api-client";
+import { AssociationMembershipType, PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
@@ -17,6 +17,7 @@ interface Step7SolidarityContributionProps {
   active: boolean;
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;
+  associationMembershipType?: AssociationMembershipType;
 }
 
 const SUFFIX = "\u00A0€";
@@ -31,6 +32,7 @@ const Step7SolidarityContribution: React.FC<
   solidarityContribution,
   shoppingCart,
   productTypesInWaitingList,
+  associationMembershipType,
 }) => {
   const [selectedValue, setSelectedValue] = useState<number | "custom">(0);
   const [customValue, setCustomValue] = useState("");
@@ -111,6 +113,7 @@ const Step7SolidarityContribution: React.FC<
         shoppingCart,
         settings,
         productTypesInWaitingList,
+        associationMembershipType,
       ) < 0
     ) {
       return false;

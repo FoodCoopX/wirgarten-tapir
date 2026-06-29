@@ -54,7 +54,7 @@ class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
     day_of_week_string = serializers.SerializerMethodField()
 
     @staticmethod
-    def get_day_of_week_string(opening_time: PickupLocationOpeningTime):
+    def get_day_of_week_string(opening_time: PickupLocationOpeningTime) -> str:
         return OPTIONS_WEEKDAYS[opening_time.day_of_week][1]
 
 

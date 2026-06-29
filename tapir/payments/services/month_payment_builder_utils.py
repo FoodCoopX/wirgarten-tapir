@@ -1,12 +1,13 @@
 import datetime
 from decimal import Decimal
 
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.payments.types import TapirContract
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
@@ -15,7 +16,6 @@ from tapir.wirgarten.models import (
     Payment,
     MandateReference,
     Member,
-    Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -102,7 +102,7 @@ class MonthPaymentBuilderUtils:
     def build_payment_for_contract_and_member(
         cls,
         member: Member,
-        contracts: set[Subscription | SolidarityContribution],
+        contracts: set[TapirContract],
         first_of_month: datetime.date,
         rhythm,
         cache: dict,
@@ -187,7 +187,7 @@ class MonthPaymentBuilderUtils:
         cls,
         first_of_month: datetime.date,
         in_trial: bool,
-        contracts: set[Subscription | SolidarityContribution],
+        contracts: set[TapirContract],
         cache: dict,
     ) -> datetime.date:
         payments_due_date = cls.get_payment_due_date_on_month(
@@ -215,7 +215,7 @@ class MonthPaymentBuilderUtils:
     @classmethod
     def get_payment_range(
         cls,
-        contracts: set[Subscription | SolidarityContribution],
+        contracts: set[TapirContract],
         first_day_of_rhythm_period: datetime.date,
         last_day_of_rhythm_period: datetime.date,
         in_trial: bool,
@@ -240,13 +240,14 @@ class MonthPaymentBuilderUtils:
     def get_payment_range_for_contracts_not_in_trial(
         cls,
         last_day_of_rhythm_period: datetime.date,
-        contracts: set[Subscription | SolidarityContribution],
+        contracts: set[TapirContract],
         first_day_of_rhythm_period: datetime.date,
         cache: dict,
     ) -> tuple[datetime.date, datetime.date]:
         trial_period_ends = [
             TrialPeriodManager.get_last_day_of_trial_period(contract, cache=cache)
             for contract in contracts
+            if not isinstance(contract, AssociationMembership)
         ]
         trial_period_ends = [date for date in trial_period_ends if date is not None]
         if len(trial_period_ends) == 0:
@@ -263,17 +264,20 @@ class MonthPaymentBuilderUtils:
                 min(contract.start_date for contract in contracts),
             )
 
-        subscription_payment_range_end = min(
-            last_day_of_rhythm_period,
-            max(contract.end_date for contract in contracts),
-        )
+        if any(contract.end_date is None for contract in contracts):
+            subscription_payment_range_end = last_day_of_rhythm_period
+        else:
+            subscription_payment_range_end = min(
+                last_day_of_rhythm_period,
+                max(contract.end_date for contract in contracts),
+            )
         return subscription_payment_range_start, subscription_payment_range_end
 
     @classmethod
     def get_payment_range_for_contracts_in_trial(
         cls,
         last_day_of_rhythm_period: datetime.date,
-        contracts: set[Subscription | SolidarityContribution],
+        contracts: set[TapirContract],
         first_day_of_rhythm_period: datetime.date,
         cache: dict,
     ) -> tuple[datetime.date, datetime.date]:

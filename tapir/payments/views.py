@@ -19,9 +19,10 @@ from rest_framework.serializers import ListField
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES, IntendedUseTokens
+from tapir.payments import config as payments_config
 from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
@@ -47,6 +48,9 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_association_membership import (
+    MonthPaymentBuilderAssociationMembership,
+)
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
@@ -57,6 +61,7 @@ from tapir.payments.services.payment_export_intended_use_builder import (
 from tapir.payments.services.subscription_payments_rebuilder import (
     SubscriptionPaymentsRebuilder,
 )
+from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
     AutomaticSolidarityContributionRenewalService,
@@ -127,7 +132,8 @@ class GetFutureMemberPaymentsApiView(APIView):
                     "trial_period_enabled": get_parameter_value(
                         key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
                     ),
-                }
+                },
+                context={"cache": self.cache},
             ).data
         )
 
@@ -164,7 +170,9 @@ class GetFutureMemberPaymentsApiView(APIView):
         return member_payments
 
     @classmethod
-    def build_extended_payments(cls, member_id, member_payments, cache: dict):
+    def build_extended_payments(
+        cls, member_id: str, member_payments: set[Payment], cache: dict
+    ):
         extended_payments = []
         existing_subscriptions = [
             subscription
@@ -176,12 +184,19 @@ class GetFutureMemberPaymentsApiView(APIView):
             for contribution in TapirCache.get_all_solidarity_contributions(cache=cache)
             if contribution.member_id == member_id
         ]
+        existing_memberships = [
+            membership
+            for membership in TapirCache.get_all_association_memberships(cache=cache)
+            if membership.member_id == member_id
+        ]
         for payment in member_payments:
             subscriptions = []
             coop_share_transactions = []
             solidarity_contributions = []
+            association_memberships = []
+
             match payment.type:
-                case "Genossenschaftsanteile":
+                case payments_config.PAYMENT_TYPE_COOP_SHARES:
                     coop_share_transactions = CoopShareTransaction.objects.filter(
                         payment=payment
                     )
@@ -195,6 +210,13 @@ class GetFutureMemberPaymentsApiView(APIView):
                             payment=payment,
                             cache=cache,
                         )
+                    )
+                case (
+                    MonthPaymentBuilderAssociationMembership.PAYMENT_TYPE_ASSOCIATION_MEMBERSHIP
+                ):
+                    association_memberships = cls.get_relevant_association_memberships(
+                        existing_memberships=existing_memberships,
+                        payment=payment,
                     )
                 case _:
                     subscriptions = cls.get_relevant_subscriptions(
@@ -210,13 +232,21 @@ class GetFutureMemberPaymentsApiView(APIView):
                     "subscriptions": subscriptions,
                     "coop_share_transactions": coop_share_transactions,
                     "solidarity_contributions": solidarity_contributions,
+                    "association_memberships": sorted(
+                        association_memberships,
+                        key=lambda membership: membership.start_date,
+                    ),
                 }
             )
         return extended_payments
 
     @classmethod
     def get_relevant_subscriptions(
-        cls, existing_subscriptions, member_id, payment, cache: dict
+        cls,
+        existing_subscriptions: list[Subscription],
+        member_id: str,
+        payment: Payment,
+        cache: dict,
     ):
         planned_renewed_subscriptions = [
             AutomaticSubscriptionRenewalService.build_renewed_subscription(
@@ -243,7 +273,11 @@ class GetFutureMemberPaymentsApiView(APIView):
 
     @classmethod
     def get_relevant_solidarity_contributions(
-        cls, existing_contributions, member_id, payment, cache: dict
+        cls,
+        existing_contributions: list[SolidarityContribution],
+        member_id: str,
+        payment: Payment,
+        cache: dict,
     ):
         planned_renewed_contributions = [
             AutomaticSolidarityContributionRenewalService.build_renewed_contribution(
@@ -265,6 +299,23 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
         ]
         return contributions
+
+    @classmethod
+    def get_relevant_association_memberships(
+        cls,
+        existing_memberships: list[AssociationMembership],
+        payment: Payment,
+    ):
+        return [
+            membership
+            for membership in existing_memberships
+            if DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=membership.start_date,
+                range_1_end=membership.end_date,
+                range_2_start=payment.subscription_payment_range_start,
+                range_2_end=payment.subscription_payment_range_end,
+            )
+        ]
 
 
 class GetPastMemberPaymentsApiView(APIView):
@@ -309,7 +360,8 @@ class GetPastMemberPaymentsApiView(APIView):
                     "trial_period_enabled": get_parameter_value(
                         key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
                     ),
-                }
+                },
+                context={"cache": self.cache},
             ).data
         )
 
@@ -629,8 +681,8 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             "previews_old": ["" for _ in payments],
             "previews_new": ["" for _ in payments],
             "error": "",
-            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
-            + sorted(IntendedUseTokens.CONTRACT_TOKENS),
+            "tokens": sorted(payments_config.IntendedUseTokens.COMMON_TOKENS)
+            + sorted(payments_config.IntendedUseTokens.CONTRACT_TOKENS),
             "payments": payments,
             "members": [payment.mandate_ref.member for payment in payments],
         }
@@ -672,9 +724,9 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         random_date = min_date + datetime.timedelta(
             days=random.randint(0, (max_date - min_date).days)
         )
-        payments = Payment.objects.exclude(type=PAYMENT_TYPE_COOP_SHARES).filter(
-            due_date__year=random_date.year, due_date__month=random_date.month
-        )
+        payments = Payment.objects.exclude(
+            type=payments_config.PAYMENT_TYPE_COOP_SHARES
+        ).filter(due_date__year=random_date.year, due_date__month=random_date.month)
 
         combined_payments = list(
             PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
@@ -710,28 +762,28 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             is_short_member = fake_member.first_name == "John"
 
             token_value_overrides = {
-                IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
+                payments_config.IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
                     10 if is_short_member else 100
                 ),
-                IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITH_SOLI: format_currency(
+                payments_config.IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITH_SOLI: format_currency(
                     5 if is_short_member else 150
                 ),
-                IntendedUseTokens.MONTHLY_PRICE_JUST_SOLI: format_currency(
+                payments_config.IntendedUseTokens.MONTHLY_PRICE_JUST_SOLI: format_currency(
                     -5 if is_short_member else 50
                 ),
-                IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
+                payments_config.IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
                     10 if is_short_member else 1200
                 ),
-                IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: format_currency(
+                payments_config.IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: format_currency(
                     5 if is_short_member else 900
                 ),
-                IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: format_currency(
+                payments_config.IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: format_currency(
                     -5 if is_short_member else 300
                 ),
-                IntendedUseTokens.CONTRACT_LIST: cls._build_fake_contract_list(
+                payments_config.IntendedUseTokens.CONTRACT_LIST: cls._build_fake_contract_list(
                     short_version=is_short_member, cache=cache
                 ),
-                IntendedUseTokens.PAYMENT_RHYTHM: (
+                payments_config.IntendedUseTokens.PAYMENT_RHYTHM: (
                     MemberPaymentRhythm.Rhythm.MONTHLY.label
                     if is_short_member
                     else MemberPaymentRhythm.Rhythm.QUARTERLY.label
@@ -835,8 +887,8 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
             "previews_old": ["" for _ in payments],
             "previews_new": ["" for _ in payments],
             "error": "",
-            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
-            + sorted(IntendedUseTokens.COOP_SHARE_TOKENS),
+            "tokens": sorted(payments_config.IntendedUseTokens.COMMON_TOKENS)
+            + sorted(payments_config.IntendedUseTokens.COOP_SHARE_TOKENS),
             "payments": payments,
             "members": [payment.mandate_ref.member for payment in payments],
         }
@@ -875,7 +927,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
     @classmethod
     def _get_random_payments(cls, cache: dict):
         return list(
-            Payment.objects.filter(type=PAYMENT_TYPE_COOP_SHARES)
+            Payment.objects.filter(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
             .select_related("mandate_ref__member")
             .order_by("?")[:5]
         )
@@ -890,7 +942,9 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         ]
 
         token_value_overrides = {
-            IntendedUseTokens.COOP_ENTRY_DATE: format_date(get_today(cache=cache)),
+            payments_config.IntendedUseTokens.COOP_ENTRY_DATE: format_date(
+                get_today(cache=cache)
+            ),
         }
 
         for fake_member in fake_members:
@@ -964,7 +1018,7 @@ class PaymentTransactionDetailsView(APIView):
 
         for mandate_ref in list(payments_by_mandate_ref.keys()):
             payments = payments_by_mandate_ref[mandate_ref]
-            if transaction.type == PAYMENT_TYPE_COOP_SHARES:
+            if transaction.type == payments_config.PAYMENT_TYPE_COOP_SHARES:
                 intended_use_by_mandate_ref[mandate_ref] = (
                     PaymentExportIntendedUseBuilder.build_intended_use(
                         payment=payments[0], is_contracts=False, cache=cache

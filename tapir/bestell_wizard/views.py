@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
+from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
@@ -463,6 +464,9 @@ class BestellWizardBaseDataApiView(APIView):
         response_data.update(
             {
                 "product_types": ProductType.objects.all(),
+                "association_membership_types": AssociationMembershipType.objects.order_by(
+                    "order_in_bestell_wizard"
+                ),
                 "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
                     cache=self.cache
                 ),
@@ -530,6 +534,8 @@ class BestellWizardBaseDataApiView(APIView):
             "solidarity_contribution_default": ParameterKeys.SOLIDARITY_DEFAULT,
             "feedback_step_enabled": ParameterKeys.BESTELLWIZARD_STEP13_ENABLED,
             "solidarity_step_position": ParameterKeys.BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
+            "legal_status": ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            "associations_allow_investing_membership": ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP,
         }
         return cls.build_dictionary_from_config_parameters(
             serializer_key_to_parameter_key_map, cache

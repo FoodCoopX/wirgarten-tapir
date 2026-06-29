@@ -1,8 +1,7 @@
 import datetime
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestsDateRangeOverlapChecker(TapirUnitTest):
@@ -128,6 +127,32 @@ class TestsDateRangeOverlapChecker(TapirUnitTest):
                 range_1_start=datetime.date(year=2025, month=3, day=1),
                 range_1_end=datetime.date(year=2025, month=4, day=20),
                 range_2_start=datetime.date(year=2025, month=3, day=4),
+                range_2_end=datetime.date(year=2025, month=3, day=10),
+            ),
+        )
+
+    def test_getNumberOfDaysOfOverlap_range1HasNoEndAndRange2IsFullyInside_returnsCorrectValue(
+        self,
+    ):
+        self.assertEqual(
+            7,
+            DateRangeOverlapChecker.get_number_of_days_of_overlap(
+                range_1_start=datetime.date(year=2025, month=3, day=1),
+                range_1_end=None,
+                range_2_start=datetime.date(year=2025, month=3, day=4),
+                range_2_end=datetime.date(year=2025, month=3, day=10),
+            ),
+        )
+
+    def test_getNumberOfDaysOfOverlap_range1HasNoEndAndRange2IsPartiallyInside_returnsCorrectValue(
+        self,
+    ):
+        self.assertEqual(
+            10,
+            DateRangeOverlapChecker.get_number_of_days_of_overlap(
+                range_1_start=datetime.date(year=2025, month=3, day=1),
+                range_1_end=None,
+                range_2_start=datetime.date(year=2025, month=2, day=10),
                 range_2_end=datetime.date(year=2025, month=3, day=10),
             ),
         )

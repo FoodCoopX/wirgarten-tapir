@@ -1,7 +1,11 @@
 import React, { ReactNode } from "react";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import {
+  AssociationMembershipType,
+  PublicPickupLocation,
+  PublicProductType,
+} from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
@@ -37,6 +41,7 @@ interface BestellWizardMobileBaseProps {
   hideFooterButtonsOnLastStep: boolean;
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
+  associationMembershipType?: AssociationMembershipType;
 }
 
 const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
@@ -58,6 +63,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
   hideFooterButtonsOnLastStep,
   selectedNumberOfCoopShares,
   goToProductTypeStep,
+  associationMembershipType,
 }) => {
   return (
     <div
@@ -95,6 +101,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
           setCurrentStep={setCurrentStep}
           selectedNumberOfCoopShares={selectedNumberOfCoopShares}
           goToProductTypeStep={goToProductTypeStep}
+          associationMembershipType={associationMembershipType}
         />
       </div>
       <div

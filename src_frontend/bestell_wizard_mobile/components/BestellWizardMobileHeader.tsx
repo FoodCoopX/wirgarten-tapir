@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import {
+  AssociationMembershipType,
+  PublicPickupLocation,
+  PublicProductType,
+} from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../components/TapirButton.tsx";
@@ -28,6 +32,7 @@ interface BestellWizardMobileHeaderProps {
   setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
+  associationMembershipType?: AssociationMembershipType;
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
@@ -44,6 +49,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   currentStep,
   selectedNumberOfCoopShares,
   goToProductTypeStep,
+  associationMembershipType,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -82,6 +88,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
                     shoppingCart,
                     settings,
                     productTypesInWaitingList,
+                    associationMembershipType,
                   ),
                 ) + " / Monat"}
                 {atLeastOneProductTypeInWaitingList && (
@@ -111,6 +118,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         selectedNumberOfCoopShares={selectedNumberOfCoopShares}
         solidarityContribution={solidarityContribution}
         goToProductTypeStep={goToProductTypeStep}
+        associationMembershipType={associationMembershipType}
       />
     </>
   );

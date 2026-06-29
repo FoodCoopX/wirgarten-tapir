@@ -126,6 +126,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
   feedback?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  associationMembershipTypeId?: string;
 }
 
 /**
@@ -227,6 +233,10 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(
     solidarityContribution: json["solidarity_contribution"],
     distributionChannels: json["distribution_channels"],
     feedback: json["feedback"] == null ? undefined : json["feedback"],
+    associationMembershipTypeId:
+      json["association_membership_type_id"] == null
+        ? undefined
+        : json["association_membership_type_id"],
   };
 }
 
@@ -262,5 +272,6 @@ export function BestellWizardConfirmOrderRequestRequestToJSONTyped(
     solidarity_contribution: value["solidarityContribution"],
     distribution_channels: value["distributionChannels"],
     feedback: value["feedback"],
+    association_membership_type_id: value["associationMembershipTypeId"],
   };
 }
