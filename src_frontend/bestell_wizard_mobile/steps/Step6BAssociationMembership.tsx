@@ -24,7 +24,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   selectedAssociationMembershipType,
   setSelectedAssociationMembershipType,
 }) => {
-  const [showValidation, setShowError] = useState(false);
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     setShowError(false);
@@ -69,7 +69,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                     }
                   }}
                   label={buildLabel(type)}
-                  showError={showValidation}
+                  showError={showError}
                 />
               </Accordion.Header>
               <Accordion.Body>
