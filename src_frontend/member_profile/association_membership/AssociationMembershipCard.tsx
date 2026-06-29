@@ -2,27 +2,36 @@ import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Card, Spinner } from "react-bootstrap";
 import { type AssociationMembership, AssociationsApi } from "../../api-client";
+import TapirButton from "../../components/TapirButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import AssociationMembershipAdminModal from "./AssociationMembershipAdminModal.tsx";
 
 interface AssociationMembershipCardProps {
   memberId: string;
   csrfToken: string;
+  admin: boolean;
 }
 
 const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
   memberId,
   csrfToken,
+  admin,
 }) => {
   const api = useApi(AssociationsApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [memberships, setMemberships] = useState<AssociationMembership[]>([]);
+  const [showAdminModal, setShowAdminModal] = useState(false);
 
   useEffect(() => {
+    loadData();
+  }, [memberId]);
+
+  function loadData() {
     setLoading(true);
 
     api
@@ -36,7 +45,7 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
         ),
       )
       .finally(() => setLoading(false));
-  }, [memberId]);
+  }
 
   function getCurrentMembership() {
     const today = new Date();
@@ -118,7 +127,17 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
     <>
       <Card className={"mb-2"}>
         <Card.Header>
-          <Card.Title>Vereinsmitgliedschaft</Card.Title>
+          <div className={"d-flex justify-content-between align-items-center"}>
+            <Card.Title className={"mb-0"}>Vereinsmitgliedschaft</Card.Title>
+            {admin && (
+              <TapirButton
+                variant={"outline-primary"}
+                icon={"edit"}
+                text={"Admin"}
+                onClick={() => setShowAdminModal(true)}
+              />
+            )}
+          </div>
         </Card.Header>
         <Card.Body>
           {loading ? (
@@ -138,6 +157,16 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
           )}
         </Card.Body>
       </Card>
+      {admin && (
+        <AssociationMembershipAdminModal
+          onHide={() => setShowAdminModal(false)}
+          show={showAdminModal}
+          setToastDatas={setToastDatas}
+          reloadData={loadData}
+          csrfToken={csrfToken}
+          memberId={memberId}
+        />
+      )}
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}

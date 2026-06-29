@@ -13,24 +13,32 @@
  */
 
 import type {
+  AdminSetAssociationMembershipRequestRequest,
   AssociationMembership,
   AssociationMembershipType,
   AssociationMembershipTypePrice,
   AssociationMembershipTypePriceRequest,
   AssociationMembershipTypeRequest,
+  OrderConfirmationResponse,
   PatchedAssociationMembershipTypePriceRequest,
   PatchedAssociationMembershipTypeRequest,
 } from "../models/index";
 import {
+  AdminSetAssociationMembershipRequestRequestToJSON,
   AssociationMembershipFromJSON,
   AssociationMembershipTypeFromJSON,
   AssociationMembershipTypePriceFromJSON,
   AssociationMembershipTypePriceRequestToJSON,
   AssociationMembershipTypeRequestToJSON,
+  OrderConfirmationResponseFromJSON,
   PatchedAssociationMembershipTypePriceRequestToJSON,
   PatchedAssociationMembershipTypeRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
+
+export interface AssociationsApiAdminCreateMembershipCreateRequest {
+  adminSetAssociationMembershipRequestRequest: AdminSetAssociationMembershipRequestRequest;
+}
 
 export interface AssociationsApiMemberAssociationMembershipsListRequest {
   memberId?: string;
@@ -84,6 +92,72 @@ export interface AssociationsAssociationMembershipTypesUpdateRequest {
  *
  */
 export class AssociationsApi extends runtime.BaseAPI {
+  /**
+   */
+  async associationsApiAdminCreateMembershipCreateRaw(
+    requestParameters: AssociationsApiAdminCreateMembershipCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters["adminSetAssociationMembershipRequestRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "adminSetAssociationMembershipRequestRequest",
+        'Required parameter "adminSetAssociationMembershipRequestRequest" was null or undefined when calling associationsApiAdminCreateMembershipCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/admin_create_membership`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: AdminSetAssociationMembershipRequestRequestToJSON(
+          requestParameters["adminSetAssociationMembershipRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiAdminCreateMembershipCreate(
+    requestParameters: AssociationsApiAdminCreateMembershipCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response = await this.associationsApiAdminCreateMembershipCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
   /**
    */
   async associationsApiMemberAssociationMembershipsListRaw(

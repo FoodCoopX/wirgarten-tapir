@@ -3,6 +3,34 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /associations/api/admin_create_membership:
+    post:
+      operationId: associations_api_admin_create_membership_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSetAssociationMembershipRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminSetAssociationMembershipRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminSetAssociationMembershipRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /associations/api/member_association_memberships:
     get:
       operationId: associations_api_member_association_memberships_list
@@ -5818,6 +5846,22 @@ paths:
           description: No response body
 components:
   schemas:
+    AdminSetAssociationMembershipRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        membership_type_id:
+          type: string
+          minLength: 1
+        start_date:
+          type: string
+          format: date
+      required:
+      - member_id
+      - membership_type_id
+      - start_date
     AssociationMembership:
       type: object
       properties:

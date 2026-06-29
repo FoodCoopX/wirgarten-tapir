@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField
-from rest_framework.serializers import ModelSerializer
+from rest_framework.fields import SerializerMethodField, CharField, DateField
+from rest_framework.serializers import ModelSerializer, Serializer
 
 from tapir.associations.models import (
     AssociationMembershipType,
@@ -51,3 +51,9 @@ class AssociationMembershipSerializer(ModelSerializer):
         fields = "__all__"
 
     type = AssociationMembershipTypeSerializer()
+
+
+class AdminSetAssociationMembershipRequestSerializer(Serializer):
+    member_id = CharField()
+    membership_type_id = CharField()
+    start_date = DateField()
