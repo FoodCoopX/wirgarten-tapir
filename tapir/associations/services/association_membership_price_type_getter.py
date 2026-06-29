@@ -1,4 +1,5 @@
-from datetime import datetime
+import datetime
+from decimal import Decimal
 
 from tapir.associations.models import AssociationMembershipType
 from tapir.utils.services.tapir_cache import TapirCache
@@ -17,4 +18,4 @@ class AssociationMembershipTypePriceGetter:
         )
         if price_object:
             return price_object.price
-        return 0
+        return Decimal(0)

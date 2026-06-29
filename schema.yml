@@ -8073,7 +8073,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SolidarityContribution'
+        association_memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationMembership'
       required:
+      - association_memberships
       - coop_share_transactions
       - payment
       - solidarity_contributions

@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationMembership } from "./AssociationMembership";
+import {
+  AssociationMembershipFromJSON,
+  AssociationMembershipToJSON,
+} from "./AssociationMembership";
 import type { CoopShareTransaction } from "./CoopShareTransaction";
 import {
   CoopShareTransactionFromJSON,
@@ -57,6 +62,12 @@ export interface ExtendedPayment {
    * @memberof ExtendedPayment
    */
   solidarityContributions: Array<SolidarityContribution>;
+  /**
+   *
+   * @type {Array<AssociationMembership>}
+   * @memberof ExtendedPayment
+   */
+  associationMemberships: Array<AssociationMembership>;
 }
 
 /**
@@ -76,6 +87,11 @@ export function instanceOfExtendedPayment(
   if (
     !("solidarityContributions" in value) ||
     value["solidarityContributions"] === undefined
+  )
+    return false;
+  if (
+    !("associationMemberships" in value) ||
+    value["associationMemberships"] === undefined
   )
     return false;
   return true;
@@ -103,6 +119,9 @@ export function ExtendedPaymentFromJSONTyped(
     solidarityContributions: (
       json["solidarity_contributions"] as Array<any>
     ).map(SolidarityContributionFromJSON),
+    associationMemberships: (json["association_memberships"] as Array<any>).map(
+      AssociationMembershipFromJSON,
+    ),
   };
 }
 
@@ -129,5 +148,8 @@ export function ExtendedPaymentToJSONTyped(
     solidarity_contributions: (
       value["solidarityContributions"] as Array<any>
     ).map(SolidarityContributionToJSON),
+    association_memberships: (
+      value["associationMemberships"] as Array<any>
+    ).map(AssociationMembershipToJSON),
   };
 }

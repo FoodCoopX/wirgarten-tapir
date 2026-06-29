@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
+from icecream import ic
 
 from tapir.associations.models import AssociationMembership
 from tapir.associations.services.association_membership_price_type_getter import (
@@ -30,7 +31,7 @@ class MonthPaymentBuilderAssociationMembership:
         cache: dict,
         generated_payments: set[Payment],
     ) -> list[Payment]:
-
+        ic(current_month)
         active_memberships = cls.get_active_memberships(
             cache=cache, first_of_month=current_month
         )
@@ -43,9 +44,6 @@ class MonthPaymentBuilderAssociationMembership:
             member,
             memberships,
         ) in memberships_by_member.items():
-            if member.id == "sBRMVn4T82":
-                print("prout")
-
             rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
                 member=member, reference_date=current_month, cache=cache
             )

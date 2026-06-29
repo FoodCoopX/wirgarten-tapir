@@ -744,7 +744,7 @@ class TapirCache:
             prices_for_this_type = cls.get_association_membership_type_prices(
                 type_id=type_id, cache=cache
             )
-            for price in prices_for_this_type:
+            for price in reversed(prices_for_this_type):
                 if price.valid_from < reference_date:
                     return price
             return None
