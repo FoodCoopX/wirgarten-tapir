@@ -815,6 +815,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
             solidarityContribution={solidarityContribution}
+            isOrderStep={false}
           />
         );
       case "12_channel":

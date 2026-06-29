@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import TapirButton from "../../components/TapirButton.tsx";
-import { PublicProduct, PublicProductType } from "../../api-client";
 import { Carousel, Form, Modal } from "react-bootstrap";
+import { CarouselRef } from "react-bootstrap/Carousel";
+import { PublicProduct, PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
-import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
+import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
+import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import NextStepButton from "../components/NextStepButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import { CarouselRef } from "react-bootstrap/Carousel";
 import Step4BProductOrder from "../components/Step4BProductOrder.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
@@ -122,7 +122,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   return (
     <>
       {productType.products.length <= 2 ? (
-        <div className={"d-flex flex-row"}>
+        <div className={"d-flex flex-row gap-2"}>
           {productType.products
             .toSorted((a, b) => a.price - b.price)
             .map((product, index) => (

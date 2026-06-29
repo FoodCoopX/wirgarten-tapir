@@ -25,7 +25,7 @@ const NextStepButton: React.FC<NextButtonProps> = ({
       return text;
     }
     if (isOrderStep) {
-      return "Bestellung bestätigen";
+      return "Bestellung kostenpflichtig abschließen";
     }
     return "Weiter";
   }

@@ -92,6 +92,17 @@ class TestExpandPatternContracts(TapirIntegrationTest):
 
         self.assertEqual("TestSiteName\nJohn Doe\n123 PF00123 00123", result)
 
+    def test_expandPatternContracts_memberHasNoNumber_useZeroAsDefault(self):
+        self.member.member_no = None
+        self.member.save()
+        result = IntendedUsePatternExpander.expand_pattern_contracts(
+            pattern=f"{{{IntendedUseTokens.SITE_NAME}}}\n{{{IntendedUseTokens.FIRST_NAME}}} {{{IntendedUseTokens.LAST_NAME}}}\n{{{IntendedUseTokens.MEMBER_NUMBER_SHORT}}} {{{IntendedUseTokens.MEMBER_NUMBER_LONG}}} {{{IntendedUseTokens.MEMBER_NUMBER_WITHOUT_PREFIX}}}",
+            payment=self.payment,
+            cache={},
+        )
+
+        self.assertEqual("TestSiteName\nJohn Doe\n0 PF00000 00000", result)
+
     def test_expandPatternContracts_monthlyPriceContractsWithoutSoli_tokenCorrectlyReplaced(
         self,
     ):
