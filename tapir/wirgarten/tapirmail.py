@@ -29,6 +29,7 @@ TOKENS_COOP_ENTRY = {
     "Beitrittsdatum in der Genossenschaft": "membership_start_date",
     "Solidarbeitrag - Betrag": "solidarity_contribution_amount",
     "Solidarbeitrag - Startdatum": "solidarity_contribution_start_date",
+    "Vereinsmitgliedschaft - Monatspreis": "membership_monthly_price",
 }
 
 

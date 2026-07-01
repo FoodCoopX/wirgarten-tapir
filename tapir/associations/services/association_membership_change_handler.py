@@ -53,3 +53,4 @@ class AssociationMembershipChangeHandler:
             membership=membership,
             actor=actor,
         ).save()
+        return membership

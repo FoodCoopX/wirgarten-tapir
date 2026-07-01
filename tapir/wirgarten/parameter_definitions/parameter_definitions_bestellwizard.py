@@ -1,8 +1,12 @@
 import typing
 
-from tapir.configuration.models import TapirParameterDatatype
+from tapir.configuration.models import TapirParameterDatatype, TapirParameter
 from tapir.configuration.parameter import ParameterMeta, get_parameter_value
-from tapir.core.config import LEGAL_STATUS_OPTIONS
+from tapir.core.config import (
+    LEGAL_STATUS_OPTIONS,
+    LEGAL_STATUS_COOPERATIVE,
+    LEGAL_STATUS_ASSOCIATION,
+)
 from tapir.solidarity_contribution.config import (
     OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
     BESTELL_WIZARD_SOLIDARITY_STEP_POSITION_BEFORE_PERSONAL_DATA,
@@ -909,9 +913,12 @@ class ParameterDefinitionsBestellwizard:
 
     @classmethod
     def get_legal_status_name(cls):
-        legal_status = get_parameter_value(
-            ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=None
-        )
+        parameter = TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).first()
+        if parameter is None:
+            return "Rechtsform noch nicht definiert"
+        legal_status = parameter.get_value()
         for status in LEGAL_STATUS_OPTIONS:
             if status[0] == legal_status:
                 return status[1]
@@ -919,9 +926,14 @@ class ParameterDefinitionsBestellwizard:
 
     @classmethod
     def get_membership_name(cls):
-        cache = {}
-        if legal_status_is_cooperative(cache=cache):
+        parameter = TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).first()
+        if parameter is None:
+            return "Rechtsform noch nicht definiert"
+        legal_status = parameter.get_value()
+        if legal_status == LEGAL_STATUS_COOPERATIVE:
             return "Genossenschaftsanteile"
-        if legal_status_is_association(cache=cache):
+        if legal_status == LEGAL_STATUS_ASSOCIATION:
             return "Vereinsmitgliedschaft"
         return "invalid"
