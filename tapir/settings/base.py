@@ -73,6 +73,10 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.openid_connect",
+    "apps.commissioning",
+    "apps.shared.tenants",
+    "auditlog",
+    "axes",
 ]
 
 if ENABLE_SILK_PROFILING:
@@ -91,6 +95,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
     "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"
@@ -109,12 +114,18 @@ def get_tapir_mail_template_dir():
         return str(path)
 
 
+def get_picking_module_template_dir():
+    with resources.path("apps", "static") as path:
+        return str(path)
+
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             os.path.join(BASE_DIR, "tapir/templates"),
             get_tapir_mail_template_dir(),
+            get_picking_module_template_dir(),
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -149,11 +160,17 @@ def get_tapir_mail_static_dir():
         return str(path)
 
 
+def get_picking_module_static_dir():
+    with resources.path("apps", "static/picking-dist/dist") as path:
+        return str(path)
+
+
 STATIC_URL = "/static/"
 STATIC_ROOT = "static"
 STATICFILES_DIRS = [
     get_tapir_mail_static_dir(),
     "dist",
+    get_picking_module_static_dir(),
 ]
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
@@ -217,6 +234,7 @@ STORAGES = {
 }
 
 AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
@@ -224,3 +242,6 @@ SOCIALACCOUNT_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
 SOCIALACCOUNT_ADAPTER = "tapir.accounts.adapter.MySocialAccountAdapter"
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+TENANT_MODEL = "tenants.Tenant"
+TENANT_DOMAIN_MODEL = "tenants.Domain"

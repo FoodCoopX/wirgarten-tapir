@@ -23,13 +23,13 @@ django-environ = "^0.12.0"
 django-bootstrap5 = "^26.2"
 django-formtools = "^2.5.1"
 celery = "^5.6.3"
-redis = "5.3"
+redis = "^8.0.1"
 django-localflavor = "^5.0"
 nanoid = "^2.0.0"
 lxml= "^6.1.1"
 python-keycloak = "^7.1.1"
 unidecode = "^1.4.0"
-tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1781187292/tapir_mail-0.0.0.dev1781187292-py3-none-any.whl" }
+tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1782292382/tapir_mail-0.0.0.dev1782292382-py3-none-any.whl" }
 djangorestframework = "^3.17.1"
 drf-spectacular = "^0.29.0"
 django-vite = "^3.1.0"
@@ -38,6 +38,7 @@ whitenoise = {extras = ["brotli"], version = "^6.12.0"}
 legacy-cgi = "^2.6.3"
 django-allauth = {extras = ["socialaccount"], version = "^65.10.0"}
 djhtml = "^3.0.11"
+picking-module = { file = "/home/theo/PycharmProjects/tapir-platform/tapir-core/django-core/dist/picking_module-0.1.10-py3-none-any.whl" }
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.6.0"
