@@ -217,6 +217,15 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         }
 
         setSolidarityContribution(settings.solidarityContributionDefault);
+
+        if (
+          newSettings.legalStatus === "association" &&
+          newSettings.associationMembershipTypes.length > 0
+        ) {
+          setSelectedAssociationMembershipType(
+            newSettings.associationMembershipTypes[0],
+          );
+        }
       })
       .catch((error) =>
         handleRequestError(

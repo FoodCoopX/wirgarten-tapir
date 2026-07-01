@@ -69,8 +69,6 @@ const Step6BAssociationMemberships: React.FC<
                   onChange={(checked) => {
                     if (checked) {
                       setSelectedAssociationMembershipType(type);
-                    } else {
-                      setSelectedAssociationMembershipType(undefined);
                     }
                   }}
                   label={buildLabel(type, contractStartDate)}
