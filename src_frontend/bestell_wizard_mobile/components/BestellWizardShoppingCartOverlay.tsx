@@ -28,7 +28,6 @@ interface BestellWizardShoppingCartOverlayProps {
   productTypesInWaitingList: Set<PublicProductType>;
   steps: Step[];
   currentStep: Step;
-  setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
   solidarityContribution: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
