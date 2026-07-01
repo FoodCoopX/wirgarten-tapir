@@ -33,6 +33,7 @@ interface BestellWizardMobileHeaderProps {
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
+  contractStartDate: Date;
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
@@ -50,6 +51,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   selectedNumberOfCoopShares,
   goToProductTypeStep,
   associationMembershipType,
+  contractStartDate,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -89,6 +91,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
                     settings,
                     productTypesInWaitingList,
                     associationMembershipType,
+                    contractStartDate,
                   ),
                 ) + " / Monat"}
                 {atLeastOneProductTypeInWaitingList && (
@@ -119,6 +122,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         solidarityContribution={solidarityContribution}
         goToProductTypeStep={goToProductTypeStep}
         associationMembershipType={associationMembershipType}
+        contractStartDate={contractStartDate}
       />
     </>
   );

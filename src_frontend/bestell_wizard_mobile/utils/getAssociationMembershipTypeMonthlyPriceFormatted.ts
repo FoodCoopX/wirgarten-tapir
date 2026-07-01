@@ -4,13 +4,15 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 
 export function getAssociationMembershipTypeMonthlyPriceFormatted(
   associationMembershipType?: AssociationMembershipType,
+  contractStartDate?: Date,
 ) {
-  if (!associationMembershipType) {
+  if (!associationMembershipType || !contractStartDate) {
     return "";
   }
 
   const currentPrice = getAssociationMembershipTypeCurrentPrice(
     associationMembershipType,
+    contractStartDate,
   );
 
   if (!currentPrice) {

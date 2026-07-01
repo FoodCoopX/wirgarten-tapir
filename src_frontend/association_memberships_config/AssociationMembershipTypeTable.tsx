@@ -35,7 +35,10 @@ const AssociationMembershipTypeTable: React.FC<
     }
 
     const result = [];
-    const currentPrice = getAssociationMembershipTypeCurrentPrice(type);
+    const currentPrice = getAssociationMembershipTypeCurrentPrice(
+      type,
+      new Date(),
+    );
     if (currentPrice) {
       result.push(formatCurrency(currentPrice.priceAsFloat));
     }

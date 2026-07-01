@@ -9,17 +9,21 @@ import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import "../utils/flexColOnSmallScreen.css";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
-interface Step6BCoopSharesProps {
+interface Step6BAssociationMembershipsProps {
   goToNextStep: () => void;
   settings: BestellWizardSettings;
   selectedAssociationMembershipType: AssociationMembershipType | undefined;
   setSelectedAssociationMembershipType: React.Dispatch<
     React.SetStateAction<AssociationMembershipType | undefined>
   >;
+  contractStartDate: Date;
 }
 
-function buildLabel(type: AssociationMembershipType) {
-  const currentPrice = getAssociationMembershipTypeCurrentPrice(type);
+function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
+  const currentPrice = getAssociationMembershipTypeCurrentPrice(
+    type,
+    contractStartDate,
+  );
 
   if (!currentPrice) {
     return type.name;
@@ -28,11 +32,14 @@ function buildLabel(type: AssociationMembershipType) {
   return type.name + " " + formatCurrency(currentPrice.priceAsFloat) + "/Monat";
 }
 
-const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
+const Step6BAssociationMemberships: React.FC<
+  Step6BAssociationMembershipsProps
+> = ({
   goToNextStep,
   settings,
   selectedAssociationMembershipType,
   setSelectedAssociationMembershipType,
+  contractStartDate,
 }) => {
   const [showError, setShowError] = useState(false);
 
@@ -66,7 +73,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                       setSelectedAssociationMembershipType(undefined);
                     }
                   }}
-                  label={buildLabel(type)}
+                  label={buildLabel(type, contractStartDate)}
                   showError={showError}
                 />
               </Accordion.Header>
@@ -87,4 +94,4 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   );
 };
 
-export default Step6BCoopShares;
+export default Step6BAssociationMemberships;

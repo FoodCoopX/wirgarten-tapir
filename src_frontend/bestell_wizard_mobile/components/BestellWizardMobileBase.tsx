@@ -42,6 +42,7 @@ interface BestellWizardMobileBaseProps {
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
+  contractStartDate: Date;
 }
 
 const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
@@ -64,6 +65,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
   selectedNumberOfCoopShares,
   goToProductTypeStep,
   associationMembershipType,
+  contractStartDate,
 }) => {
   return (
     <div
@@ -102,6 +104,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
           selectedNumberOfCoopShares={selectedNumberOfCoopShares}
           goToProductTypeStep={goToProductTypeStep}
           associationMembershipType={associationMembershipType}
+          contractStartDate={contractStartDate}
         />
       </div>
       <div

@@ -18,6 +18,7 @@ interface Step7SolidarityContributionProps {
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;
   associationMembershipType?: AssociationMembershipType;
+  contractStartDate: Date;
 }
 
 const SUFFIX = "\u00A0€";
@@ -33,6 +34,7 @@ const Step7SolidarityContribution: React.FC<
   shoppingCart,
   productTypesInWaitingList,
   associationMembershipType,
+  contractStartDate,
 }) => {
   const [selectedValue, setSelectedValue] = useState<number | "custom">(0);
   const [customValue, setCustomValue] = useState("");
@@ -114,6 +116,7 @@ const Step7SolidarityContribution: React.FC<
         settings,
         productTypesInWaitingList,
         associationMembershipType,
+        contractStartDate,
       ) < 0
     ) {
       return false;

@@ -125,6 +125,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       associationMembershipType.name +
       getAssociationMembershipTypeMonthlyPriceFormatted(
         associationMembershipType,
+        contractStartDate,
       )
     );
   }
@@ -352,10 +353,12 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                   <li>{associationMembershipType.name}</li>
                   {getAssociationMembershipTypeCurrentPrice(
                     associationMembershipType,
+                    contractStartDate,
                   ) && (
                     <li>
                       {getAssociationMembershipTypeMonthlyPriceFormatted(
                         associationMembershipType,
+                        contractStartDate,
                       )}
                     </li>
                   )}
@@ -405,6 +408,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                     {associationMembershipType &&
                       getAssociationMembershipTypeCurrentPrice(
                         associationMembershipType,
+                        contractStartDate,
                       ) && <li>{getAssociationMembershipTitle()}</li>}
                   </ul>
                   {atLeastOneMonthlyPayment(

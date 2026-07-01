@@ -2,7 +2,7 @@ import { AssociationMembershipType } from "../api-client";
 
 export function getAssociationMembershipTypeCurrentPrice(
   type: AssociationMembershipType,
+  date: Date,
 ) {
-  const now = new Date();
-  return type.prices.findLast((price) => price.validFrom < now);
+  return type.prices.findLast((price) => price.validFrom <= date);
 }
