@@ -1,11 +1,10 @@
 import datetime
 from unittest.mock import Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestMonthPaymentBuilderUtilsGetPaymentDueDate(TapirUnitTest):
