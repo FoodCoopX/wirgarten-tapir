@@ -109,6 +109,10 @@ const Step7SolidarityContribution: React.FC<
   }
 
   function isValueValid(value: number) {
+    if (value < 0 && !isAtLeastOneProductOrdered(shoppingCart)) {
+      return false;
+    }
+
     if (
       getMonthlyPayment(
         value,
