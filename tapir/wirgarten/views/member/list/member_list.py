@@ -10,6 +10,7 @@ from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
     BooleanFilter,
+    CharFilter,
     ChoiceFilter,
     FilterSet,
     ModelChoiceFilter,
@@ -38,7 +39,7 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_today
-from tapir.wirgarten.views.filters import MultiFieldFilter
+from tapir.coop.services.member_search_service import MemberSearchService
 
 
 class ContractStatusFilter(ChoiceFilter):
@@ -114,9 +115,7 @@ class ContractStatusFilter(ChoiceFilter):
 
 
 class MemberFilter(FilterSet):
-    search = MultiFieldFilter(
-        fields=["first_name", "last_name", "email"], label="Suche"
-    )
+    search = CharFilter(method="filter_search", label="Suche")
     pickup_location = ModelChoiceFilter(
         label="Abholort",
         queryset=PickupLocation.objects.all().order_by("name"),
@@ -185,6 +184,11 @@ class MemberFilter(FilterSet):
             w = self.form.fields["contract_status"].widget
             w.attrs["disabled"] = True
             w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
+
+    def filter_search(self, queryset, name, value):
+        return MemberSearchService.filter_queryset(
+            queryset, search_value=value, cache=self.cache
+        )
 
     def filter_pickup_location(self, queryset, name, value):
         if value:
