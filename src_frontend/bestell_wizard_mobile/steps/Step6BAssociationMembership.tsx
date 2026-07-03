@@ -44,6 +44,7 @@ const Step6BAssociationMemberships: React.FC<
   active,
 }) => {
   const [showError, setShowError] = useState(false);
+  const [statuteAccepted, setStatuteAccepted] = useState(false);
 
   useEffect(() => {
     setShowError(false);
@@ -63,7 +64,7 @@ const Step6BAssociationMemberships: React.FC<
   }, [active]);
 
   function onNextClicked() {
-    if (selectedAssociationMembershipType === undefined) {
+    if (selectedAssociationMembershipType === undefined || !statuteAccepted) {
       setShowError(true);
       return;
     }
@@ -87,7 +88,9 @@ const Step6BAssociationMemberships: React.FC<
                     }
                   }}
                   label={buildLabel(type, contractStartDate)}
-                  showError={showError}
+                  showError={
+                    showError && selectedAssociationMembershipType === undefined
+                  }
                 />
               </Accordion.Header>
               <Accordion.Body>
@@ -100,6 +103,18 @@ const Step6BAssociationMemberships: React.FC<
             </Accordion.Item>
           </Accordion>
         ))}
+        <div
+          className={"d-flex justify-content-center"}
+          style={{ width: "100%" }}
+        >
+          <TapirCheckbox
+            onChange={setStatuteAccepted}
+            checked={statuteAccepted}
+            label={settings.strings.step6bCheckboxStatuteAssociations}
+            controlId={"statuteAssociations"}
+            showError={showError && !statuteAccepted}
+          />
+        </div>
       </div>
 
       <NextStepButton onClick={onNextClicked} />

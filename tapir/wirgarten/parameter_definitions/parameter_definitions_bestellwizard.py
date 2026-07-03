@@ -517,6 +517,20 @@ class ParameterDefinitionsBestellwizard:
         bestellwizard_parameter_order -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6B_CHECKBOX_STATUTE_ASSOCIATIONS,
+            label="Seite 6B: Verein - Checkbox zu Satzung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ich habe die <a href='HIER_LINK_HINFÜGEN' target='_blank'>Satzung</a> zur Kenntnis genommen.",
+            description=HTML_ALLOWED_TEXT,
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(
+                textarea=True, show_only_when=legal_status_is_association
+            ),
+        )
+        bestellwizard_parameter_order -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,
             label="Seite 6B: Genossenschaft - Rechtliches - Checkbox-Label Satzung gelesen",
             datatype=TapirParameterDatatype.STRING,
