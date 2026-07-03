@@ -119,7 +119,9 @@ class TestFilterQueryset(TapirIntegrationTest):
             list(result.values_list("id", flat=True)),
         )
 
-    def test_filterQueryset_memberNumberLongerThanPadLength_returnsMatchingMember(self):
+    def test_filterQueryset_memberNumberLongerThanPadLength_returnsMatchingMember(
+        self,
+    ):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
         member = MemberFactory.create(
@@ -136,7 +138,9 @@ class TestFilterQueryset(TapirIntegrationTest):
             list(result.values_list("id", flat=True)),
         )
 
-    def test_filterQueryset_formattedLongMemberNumberWithPrefix_returnsMatchingMember(self):
+    def test_filterQueryset_formattedLongMemberNumberWithPrefix_returnsMatchingMember(
+        self,
+    ):
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
         self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 3)
         member = MemberFactory.create(
