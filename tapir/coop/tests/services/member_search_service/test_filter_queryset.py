@@ -1,5 +1,4 @@
 from tapir.coop.services.member_search_service import MemberSearchService
-from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -15,16 +14,8 @@ class TestFilterQueryset(TapirIntegrationTest):
     def setUp(self):
         super().setUp()
         self.cache = {}
-        mock_parameter_value(
-            cache=self.cache,
-            key=ParameterKeys.MEMBER_NUMBER_PREFIX,
-            value="",
-        )
-        mock_parameter_value(
-            cache=self.cache,
-            key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH,
-            value=0,
-        )
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "")
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 0)
         self.target_member = MemberFactory.create(
             first_name="Max",
             last_name="Mustermann",
@@ -84,16 +75,8 @@ class TestFilterQueryset(TapirIntegrationTest):
         )
 
     def test_filterQueryset_memberNumberWithPrefix_returnsMatchingMember(self):
-        mock_parameter_value(
-            cache=self.cache,
-            key=ParameterKeys.MEMBER_NUMBER_PREFIX,
-            value="BT",
-        )
-        mock_parameter_value(
-            cache=self.cache,
-            key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH,
-            value=4,
-        )
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
 
         result = self.filter_members("BT0017")
 
@@ -103,16 +86,8 @@ class TestFilterQueryset(TapirIntegrationTest):
         )
 
     def test_filterQueryset_paddedMemberNumberSubstring_returnsMatchingMember(self):
-        mock_parameter_value(
-            cache=self.cache,
-            key=ParameterKeys.MEMBER_NUMBER_PREFIX,
-            value="BT",
-        )
-        mock_parameter_value(
-            cache=self.cache,
-            key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH,
-            value=4,
-        )
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
         member = MemberFactory.create(
             first_name="Padded",
             last_name="Number",
@@ -121,6 +96,57 @@ class TestFilterQueryset(TapirIntegrationTest):
         )
 
         result = self.filter_members("011")
+
+        self.assertEqual(
+            [member.id],
+            list(result.values_list("id", flat=True)),
+        )
+
+    def test_filterQueryset_prefixWithoutPadding_returnsMatchingMember(self):
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 0)
+        member = MemberFactory.create(
+            first_name="Prefix",
+            last_name="NoPad",
+            email="prefix.nopad@example.com",
+            member_no=118,
+        )
+
+        result = self.filter_members("BT118")
+
+        self.assertEqual(
+            [member.id],
+            list(result.values_list("id", flat=True)),
+        )
+
+    def test_filterQueryset_memberNumberLongerThanPadLength_returnsMatchingMember(self):
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "")
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 4)
+        member = MemberFactory.create(
+            first_name="Long",
+            last_name="Number",
+            email="long.number@example.com",
+            member_no=12345,
+        )
+
+        result = self.filter_members("12345")
+
+        self.assertEqual(
+            [member.id],
+            list(result.values_list("id", flat=True)),
+        )
+
+    def test_filterQueryset_formattedLongMemberNumberWithPrefix_returnsMatchingMember(self):
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_PREFIX, "BT")
+        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, 3)
+        member = MemberFactory.create(
+            first_name="Théo",
+            last_name="Test",
+            email="theo.test@example.com",
+            member_no=123456,
+        )
+
+        result = self.filter_members("BT123456")
 
         self.assertEqual(
             [member.id],
