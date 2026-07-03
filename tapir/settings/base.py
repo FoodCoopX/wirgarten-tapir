@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 ERROR_LOG_DIR = env.str("ERROR_LOG_DIR", default="error_logs")
 
-ENABLE_SILK_PROFILING = True
+ENABLE_SILK_PROFILING = False
 
 # Application definition
 INSTALLED_APPS = [
@@ -214,7 +214,7 @@ SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
 
 DJANGO_VITE = {
     "default": {
-        "dev_mode": True,
+        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
         "manifest_path": "./dist/manifest.json",
     }
 }
