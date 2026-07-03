@@ -17,6 +17,7 @@ interface Step6BAssociationMembershipsProps {
     React.SetStateAction<AssociationMembershipType | undefined>
   >;
   contractStartDate: Date;
+  active: boolean;
 }
 
 function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
@@ -40,12 +41,26 @@ const Step6BAssociationMemberships: React.FC<
   selectedAssociationMembershipType,
   setSelectedAssociationMembershipType,
   contractStartDate,
+  active,
 }) => {
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     setShowError(false);
   }, [selectedAssociationMembershipType]);
+
+  useEffect(() => {
+    if (!active) return;
+
+    if (
+      selectedAssociationMembershipType === undefined &&
+      settings.associationMembershipTypes.length > 0
+    ) {
+      setSelectedAssociationMembershipType(
+        settings.associationMembershipTypes[0],
+      );
+    }
+  }, [active]);
 
   function onNextClicked() {
     if (selectedAssociationMembershipType === undefined) {
