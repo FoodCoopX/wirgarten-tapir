@@ -16,7 +16,7 @@ SECRET_KEY = env.str(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=False)
 if not DEBUG:
     print(
         f"Tapir Version: {TAPIR_VERSION}"
