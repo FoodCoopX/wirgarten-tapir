@@ -158,19 +158,20 @@ class IntendedUsePatternExpander:
 
     @classmethod
     def _get_common_token_replacers(cls, member: Member, cache: dict):
+        member_number = member.member_no or 0
         return {
             IntendedUseTokens.SITE_NAME: lambda: get_parameter_value(
                 key=ParameterKeys.SITE_NAME, cache=cache
             ),
             IntendedUseTokens.FIRST_NAME: lambda: member.first_name,
             IntendedUseTokens.LAST_NAME: lambda: member.last_name,
-            IntendedUseTokens.MEMBER_NUMBER_SHORT: lambda: str(member.member_no),
+            IntendedUseTokens.MEMBER_NUMBER_SHORT: lambda: str(member_number),
             IntendedUseTokens.MEMBER_NUMBER_LONG: lambda: MemberNumberService.format_member_number(
-                member_number=member.member_no, cache=cache
+                member_number=member_number, cache=cache
             )
             or "",
             IntendedUseTokens.MEMBER_NUMBER_WITHOUT_PREFIX: lambda: MemberNumberService.build_formatted_number(
-                member_number=member.member_no,
+                member_number=member_number,
                 prefix="",
                 length=get_parameter_value(
                     key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, cache=cache

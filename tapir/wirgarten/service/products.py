@@ -212,8 +212,12 @@ def get_active_and_future_subscriptions(
 
     def compute():
         filters = Q(end_date__gte=reference_date) | Q(end_date__isnull=True)
-        return Subscription.objects.filter(filters).order_by(
-            *product_type_order_by("product__type_id", "product__type__name", cache)
+        return (
+            Subscription.objects.filter(filters)
+            .order_by(
+                *product_type_order_by("product__type_id", "product__type__name", cache)
+            )
+            .select_related("product__type")
         )
 
     key = "active_and_future_subscriptions_by_date"

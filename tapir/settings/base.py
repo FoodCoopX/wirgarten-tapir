@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "tapir.products",
     "tapir.bestell_wizard",
     "tapir.solidarity_contribution",
+    "tapir.associations",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields

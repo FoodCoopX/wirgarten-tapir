@@ -2,6 +2,10 @@ import datetime
 from decimal import Decimal
 from typing import Set
 
+from tapir.associations.models import (
+    AssociationMembershipTypePrice,
+    AssociationMembership,
+)
 from tapir.deliveries.models import (
     Joker,
     DeliveryDayAdjustment,
@@ -114,7 +118,7 @@ class TapirCache:
                 get_active_and_future_subscriptions,
             )
 
-            subscriptions_by_member_id = {}
+            subscriptions_by_member_id: dict[str, list[Subscription]] = {}
             for subscription in get_active_and_future_subscriptions(
                 reference_date=reference_date, cache=cache
             ):
@@ -702,3 +706,59 @@ class TapirCache:
         )
 
         return credits_by_member_cache.get(member_id, [])
+
+    @classmethod
+    def get_association_membership_type_prices(
+        cls, type_id: str, cache: dict
+    ) -> list[AssociationMembershipTypePrice]:
+        def compute():
+            prices_by_type: dict[str, list[AssociationMembershipTypePrice]] = {}
+            for price in AssociationMembershipTypePrice.objects.order_by("valid_from"):
+                prices_by_type.setdefault(price.type_id, []).append(price)
+            return prices_by_type
+
+        prices_by_type_cache = get_from_cache_or_compute(
+            cache=cache,
+            key="association_membership_type_prices_by_type",
+            compute_function=compute,
+        )
+
+        return prices_by_type_cache.get(type_id, [])
+
+    @classmethod
+    def get_association_membership_price_object_at_date(
+        cls, type_id: str, reference_date: datetime.date, cache: dict
+    ):
+        membership_type_prices_by_type_and_date_cache = get_from_cache_or_compute(
+            cache=cache,
+            key="membership_type_prices_by_type_and_date",
+            compute_function=lambda: {},
+        )
+        membership_type_prices_by_date_cache = get_from_cache_or_compute(
+            cache=membership_type_prices_by_type_and_date_cache,
+            key=type_id,
+            compute_function=lambda: {},
+        )
+
+        def compute():
+            prices_for_this_type = cls.get_association_membership_type_prices(
+                type_id=type_id, cache=cache
+            )
+            for price in reversed(prices_for_this_type):
+                if price.valid_from <= reference_date:
+                    return price
+            return None
+
+        return get_from_cache_or_compute(
+            cache=membership_type_prices_by_date_cache,
+            key=reference_date,
+            compute_function=compute,
+        )
+
+    @classmethod
+    def get_all_association_memberships(cls, cache: dict) -> Set[AssociationMembership]:
+        return get_from_cache_or_compute(
+            cache,
+            "all_association_memberships",
+            lambda: set(AssociationMembership.objects.select_related("member", "type")),
+        )

@@ -1,0 +1,76 @@
+.custom-sidebar {
+  width: 4em;
+  transition: width 0.3s ease;
+  position: absolute;
+  padding-top: 4.5em;
+  white-space: nowrap;
+  z-index: 990;
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-item-details {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-group {
+  margin-top: 1em;
+}
+
+.custom-sidebar:hover {
+  width: 16em;
+}
+
+.custom-sidebar:hover > div > .sidebar-item-details,
+.custom-sidebar:hover > div > ul > li > a > span.sidebar-item-details {
+  opacity: 1;
+}
+
+h1 {
+  line-height: 1.4 !important;
+  font-size: 39px !important;
+  font-family: "Avenir", sans-serif !important;
+}
+
+h2 {
+  line-height: 1.4 !important;
+  font-size: 33px !important;
+  font-family: "Avenir", sans-serif !important;
+}
+
+h3 {
+  line-height: 1.4 !important;
+  font-size: 23px !important;
+  font-family: "Avenir", sans-serif !important;
+}
+
+h4 {
+  line-height: 1.4 !important;
+  font-size: 20px !important;
+  font-family: "Avenir", sans-serif !important;
+}
+
+h5 {
+  line-height: 1.4 !important;
+  font-size: 17px !important;
+  font-family: "Avenir", sans-serif !important;
+}
+
+h6 {
+  line-height: 1.4 !important;
+  font-size: 16px !important;
+  font-family: "Avenir", sans-serif !important;
+}
+
+body {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  font-family: "Avenir", sans-serif !important;
+  color: var(--black);
+}
+
+@font-face {
+  font-family: "Avenir";
+  font-style: normal;
+  src: url("/static/core/themes/aug/fonts/Avenir.woff2") format("woff2");
+}

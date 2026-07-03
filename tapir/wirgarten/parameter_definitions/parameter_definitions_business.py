@@ -9,7 +9,10 @@ from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import legal_status_is_cooperative
+from tapir.wirgarten.utils import (
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 from tapir.wirgarten.validators import validate_base_product_type_exists
 
 if typing.TYPE_CHECKING:
@@ -21,6 +24,7 @@ if typing.TYPE_CHECKING:
 class ParameterDefinitionsBusiness:
     @classmethod
     def define_all_member_business(cls, importer: ParameterDefinitions):
+        order_priority = 1000
         importer.parameter_definition(
             key=ParameterKeys.COOP_MIN_SHARES,
             label="Mindestanzahl Genossenschaftsanteile",
@@ -28,12 +32,13 @@ class ParameterDefinitionsBusiness:
             initial_value=2,
             description="Die Mindestanzahl der Genossenschaftsanteile die ein neues Mitglied zeichnen muss.",
             category=ParameterCategory.BUSINESS,
-            order_priority=1000,
+            order_priority=order_priority,
             meta=ParameterMeta(
                 validators=[MinValueValidator(limit_value=0)],
                 show_only_when=legal_status_is_cooperative,
             ),
         )
+        order_priority -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.COOP_SHARE_PRICE,
@@ -42,13 +47,14 @@ class ParameterDefinitionsBusiness:
             initial_value=50,
             description="",
             category=ParameterCategory.BUSINESS,
-            order_priority=999,
+            order_priority=order_priority,
             meta=ParameterMeta(
                 validators=[MinValueValidator(limit_value=0)],
                 show_only_when=legal_status_is_cooperative,
             ),
             enabled=is_debug_instance(),
         )
+        order_priority -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.COOP_STATUTE_LINK,
@@ -61,7 +67,9 @@ class ParameterDefinitionsBusiness:
                 validators=[URLValidator()],
                 show_only_when=legal_status_is_cooperative,
             ),
+            order_priority=order_priority,
         )
+        order_priority -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.COOP_INFO_LINK,
@@ -71,7 +79,9 @@ class ParameterDefinitionsBusiness:
             description="Der Link zu weiteren Infos über der Betrieb.",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(validators=[URLValidator()]),
+            order_priority=order_priority,
         )
+        order_priority -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT,
@@ -81,7 +91,9 @@ class ParameterDefinitionsBusiness:
             description="Wenn mehr als der angegebene Anzahl an Geno-Anteile gezeichnet werden, wird ein Mail an der Admin versendet.",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
+            order_priority=order_priority,
         )
+        order_priority -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
@@ -97,8 +109,9 @@ class ParameterDefinitionsBusiness:
                 ],
                 show_only_when=legal_status_is_cooperative,
             ),
-            order_priority=800,
+            order_priority=order_priority,
         )
+        order_priority -= 1
 
         def get_default_product_type():
             if not hasattr(settings, "BASE_PRODUCT_NAME"):
@@ -130,4 +143,30 @@ class ParameterDefinitionsBusiness:
                 validators=[validate_base_product_type_exists],
             ),
             enabled=True,
+            order_priority=order_priority,
         )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP,
+            label="Fördermitgliedschaften erlauben",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn ausgeschaltet, ist es nicht möglich eine Vereinsmitgliedschaft abzuschließen ohne dabei ein Produktvertrag abzuschließen. Das wirkt nur in der Intro-Seite des BestellWizards.",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS,
+            label="Neue Vereinsmitgliedschaften aktivieren",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+            order_priority=order_priority,
+        )
+        order_priority -= 1

@@ -5,6 +5,8 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestBuildSimpleResponseFields(TapirUnitTest):
+    maxDiff = 2000
+
     def test_buildSimpleResponseFields_default_returnsCorrectDictionary(self):
         cache = {}
 
@@ -82,6 +84,16 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
             value="test_step_position",
             cache=cache,
         )
+        mock_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP,
+            value="test_associations_allow_supporting_membership",
+            cache=cache,
+        )
+        mock_parameter_value(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value="test_legal_status",
+            cache=cache,
+        )
 
         result = BestellWizardBaseDataApiView.build_simple_response_fields(cache=cache)
 
@@ -103,6 +115,8 @@ class TestBuildSimpleResponseFields(TapirUnitTest):
                 "solidarity_contribution_default": "test_solidarity_default",
                 "feedback_step_enabled": "test_step13",
                 "solidarity_step_position": "test_step_position",
+                "associations_allow_investing_membership": "test_associations_allow_supporting_membership",
+                "legal_status": "test_legal_status",
             },
             result,
         )

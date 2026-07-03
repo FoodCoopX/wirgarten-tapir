@@ -2,6 +2,7 @@ from django.db.models import Sum, F
 from django.urls import reverse
 from rest_framework import serializers
 
+from tapir.associations.serializers import AssociationMembershipSerializer
 from tapir.deliveries.serializers import SubscriptionSerializer
 from tapir.payments.models import MemberPaymentRhythm, MemberCredit
 from tapir.solidarity_contribution.serializers import SolidarityContributionSerializer
@@ -25,6 +26,7 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     subscriptions = SubscriptionSerializer(many=True)
     coop_share_transactions = CoopShareTransactionSerializer(many=True)
     solidarity_contributions = SolidarityContributionSerializer(many=True)
+    association_memberships = AssociationMembershipSerializer(many=True)
 
 
 class MemberCreditSerializer(serializers.ModelSerializer):

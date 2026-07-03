@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import {
+  AssociationMembershipType,
   BestellWizardApi,
   CoopApi,
   OrderConfirmationResponse,
@@ -51,6 +52,7 @@ import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
 import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
+import Step6BAssociationMembership from "./steps/Step6BAssociationMembership.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
 import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
@@ -148,6 +150,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     useState<AbortController>();
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [
+    selectedAssociationMembershipType,
+    setSelectedAssociationMembershipType,
+  ] = useState<AssociationMembershipType>();
 
   useEffect(() => {
     Promise.all([
@@ -437,7 +443,17 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
     setShoppingCart(newShoppingCart);
     setSelectedPickupLocations([settings.pickupLocations[0]]);
-    setSelectedNumberOfCoopShares(7);
+    switch (settings.legalStatus) {
+      case "coop":
+        setSelectedNumberOfCoopShares(7);
+        break;
+      case "association":
+        if (settings.associationMembershipTypes.length > 0) {
+          setSelectedAssociationMembershipType(
+            settings.associationMembershipTypes[0],
+          );
+        }
+    }
     setSepaAllowed(true);
     setContractAccepted(true);
     setStatuteAccepted(true);
@@ -520,6 +536,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           solidarityContribution: solidarityContribution,
           distributionChannels: [...selectedDistributionChannels],
           feedback: feedback,
+          associationMembershipTypeId: selectedAssociationMembershipType?.id,
         },
       })
       .then(handleOrderResponse)
@@ -686,6 +703,21 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             forceHideStudentCheckbox={!isAtLeastOneProductOrdered(shoppingCart)}
           />
         );
+      case "6b_association_membership":
+        return (
+          <Step6BAssociationMembership
+            goToNextStep={goToNextStep}
+            settings={settings}
+            selectedAssociationMembershipType={
+              selectedAssociationMembershipType
+            }
+            setSelectedAssociationMembershipType={
+              setSelectedAssociationMembershipType
+            }
+            contractStartDate={contractStartDate}
+            active={currentStep === step}
+          />
+        );
       case "6c_coop_member_now":
         return (
           <Step6CCoopMemberNow
@@ -704,6 +736,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             active={currentStep === step}
             shoppingCart={shoppingCart}
             productTypesInWaitingList={productTypesInWaitingList}
+            associationMembershipType={selectedAssociationMembershipType}
+            contractStartDate={contractStartDate}
           />
         );
       case "8_personal_data":
@@ -768,6 +802,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             isOrderStep={waitingListEntryDetails !== undefined}
             confirmOrder={onConfirmOrder}
             waitingListEntryDetails={waitingListEntryDetails}
+            associationMembershipType={selectedAssociationMembershipType}
           />
         );
       case "11_legal":
@@ -783,6 +818,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
             solidarityContribution={solidarityContribution}
+            isOrderStep={false}
           />
         );
       case "12_channel":
@@ -896,6 +932,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       hideFooterButtonsOnLastStep={true}
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
       goToProductTypeStep={goToProductTypeStep}
+      associationMembershipType={selectedAssociationMembershipType}
+      contractStartDate={contractStartDate}
     />
   );
 };

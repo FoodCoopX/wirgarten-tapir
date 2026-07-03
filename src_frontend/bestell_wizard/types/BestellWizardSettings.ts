@@ -1,4 +1,5 @@
 import {
+  AssociationMembershipType,
   BestellWizardImages,
   BestellWizardStrings,
   LegalStatusEnum,
@@ -13,8 +14,10 @@ export type BestellWizardSettings = {
   theme: TapirTheme;
   pickupLocations: PublicPickupLocation[];
   productTypes: PublicProductType[];
+  associationMembershipTypes: AssociationMembershipType[];
   priceOfAShare: number;
   allowInvestingMembership: boolean;
+  associationsAllowInvestingMembership: boolean;
   forceWaitingList: boolean;
   showCoopContent: boolean;
   introStepText: string;

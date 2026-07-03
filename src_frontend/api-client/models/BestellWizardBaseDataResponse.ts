@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationMembershipType } from "./AssociationMembershipType";
+import {
+  AssociationMembershipTypeFromJSON,
+  AssociationMembershipTypeToJSON,
+} from "./AssociationMembershipType";
 import type { BestellWizardImages } from "./BestellWizardImages";
 import {
   BestellWizardImagesFromJSON,
@@ -78,6 +83,12 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   productTypes: Array<PublicProductType>;
+  /**
+   *
+   * @type {Array<AssociationMembershipType>}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  associationMembershipTypes: Array<AssociationMembershipType>;
   /**
    *
    * @type {Array<PublicPickupLocation>}
@@ -230,6 +241,12 @@ export interface BestellWizardBaseDataResponse {
   legalStatus: LegalStatusEnum;
   /**
    *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  associationsAllowInvestingMembership: boolean;
+  /**
+   *
    * @type {BestellWizardStrings}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -263,6 +280,11 @@ export function instanceOfBestellWizardBaseDataResponse(
   )
     return false;
   if (!("productTypes" in value) || value["productTypes"] === undefined)
+    return false;
+  if (
+    !("associationMembershipTypes" in value) ||
+    value["associationMembershipTypes"] === undefined
+  )
     return false;
   if (!("pickupLocations" in value) || value["pickupLocations"] === undefined)
     return false;
@@ -361,6 +383,11 @@ export function instanceOfBestellWizardBaseDataResponse(
     return false;
   if (!("legalStatus" in value) || value["legalStatus"] === undefined)
     return false;
+  if (
+    !("associationsAllowInvestingMembership" in value) ||
+    value["associationsAllowInvestingMembership"] === undefined
+  )
+    return false;
   if (!("strings" in value) || value["strings"] === undefined) return false;
   if (!("images" in value) || value["images"] === undefined) return false;
   if (!("debug" in value) || value["debug"] === undefined) return false;
@@ -387,6 +414,9 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     productTypes: (json["product_types"] as Array<any>).map(
       PublicProductTypeFromJSON,
     ),
+    associationMembershipTypes: (
+      json["association_membership_types"] as Array<any>
+    ).map(AssociationMembershipTypeFromJSON),
     pickupLocations: (json["pickup_locations"] as Array<any>).map(
       PublicPickupLocationFromJSON,
     ),
@@ -420,6 +450,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
       json["solidarity_step_position"],
     ),
     legalStatus: LegalStatusEnumFromJSON(json["legal_status"]),
+    associationsAllowInvestingMembership:
+      json["associations_allow_investing_membership"],
     strings: BestellWizardStringsFromJSON(json["strings"]),
     images: BestellWizardImagesFromJSON(json["images"]),
     debug: json["debug"],
@@ -447,6 +479,9 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     product_types: (value["productTypes"] as Array<any>).map(
       PublicProductTypeToJSON,
     ),
+    association_membership_types: (
+      value["associationMembershipTypes"] as Array<any>
+    ).map(AssociationMembershipTypeToJSON),
     pickup_locations: (value["pickupLocations"] as Array<any>).map(
       PublicPickupLocationToJSON,
     ),
@@ -480,6 +515,8 @@ export function BestellWizardBaseDataResponseToJSONTyped(
       value["solidarityStepPosition"],
     ),
     legal_status: LegalStatusEnumToJSON(value["legalStatus"]),
+    associations_allow_investing_membership:
+      value["associationsAllowInvestingMembership"],
     strings: BestellWizardStringsToJSON(value["strings"]),
     images: BestellWizardImagesToJSON(value["images"]),
     debug: value["debug"],

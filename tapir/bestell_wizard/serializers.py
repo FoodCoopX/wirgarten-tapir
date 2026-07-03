@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from tapir.associations.serializers import AssociationMembershipTypeSerializer
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
@@ -44,6 +45,9 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     solidarity_contribution = serializers.FloatField()
     distribution_channels = serializers.ListField(child=serializers.CharField())
     feedback = serializers.CharField(allow_blank=True, required=False)
+    association_membership_type_id = serializers.CharField(
+        required=False, allow_blank=True
+    )
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
@@ -85,6 +89,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step6a_text = serializers.CharField()
     step6b_title = serializers.CharField()
     step6b_text = serializers.CharField()
+    step6b_checkbox_statute_associations = serializers.CharField()
     step6c_checkbox_statute = serializers.CharField()
     step6c_text_statute = serializers.CharField()
     step6c_checkbox_commitment = serializers.CharField()
@@ -136,6 +141,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     theme = serializers.CharField()
     allow_investing_membership = serializers.BooleanField()
     product_types = PublicProductTypeSerializer(many=True)
+    association_membership_types = AssociationMembershipTypeSerializer(many=True)
     pickup_locations = PublicPickupLocationSerializer(many=True)
     force_waiting_list = serializers.BooleanField()
     intro_enabled = serializers.BooleanField()
@@ -169,6 +175,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
         choices=OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION
     )
     legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
+    associations_allow_investing_membership = serializers.BooleanField()
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
     debug = serializers.BooleanField()

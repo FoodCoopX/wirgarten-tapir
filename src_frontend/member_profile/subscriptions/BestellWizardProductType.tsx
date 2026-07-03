@@ -28,6 +28,7 @@ import { isShoppingCartEmpty } from "../../bestell_wizard/utils/isShoppingCartEm
 import { updateProductsAndProductTypesOverCapacity } from "../../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import BestellWizardMobileBase from "../../bestell_wizard_mobile/components/BestellWizardMobileBase.tsx";
 import Step10OrderSummary from "../../bestell_wizard_mobile/steps/Step10OrderSummary.tsx";
+import Step11Legal from "../../bestell_wizard_mobile/steps/Step11Legal.tsx";
 import Step3BGrowingPeriodChoice from "../../bestell_wizard_mobile/steps/Step3BGrowingPeriodChoice.tsx";
 import Step4BProductTypeOrder from "../../bestell_wizard_mobile/steps/Step4BProductTypeOrder.tsx";
 import Step5BPickupLocationChoice from "../../bestell_wizard_mobile/steps/Step5BPickupLocationChoice.tsx";
@@ -109,6 +110,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
 
   const [contractAccepted, setContractAccepted] = useState(false);
   const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
+  const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [sepaAllowed, setSepaAllowed] = useState(false);
   const [personalData, setPersonalData] = useState<PersonalData>(
     getEmptyPersonalData(),
@@ -243,7 +245,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       newSteps.push("5a_pickup_location_intro", "5b_pickup_location_choice");
     }
 
-    newSteps.push("9_banking_data", "10_summary");
+    newSteps.push("9_banking_data", "10_summary", "11_legal");
 
     setSteps(newSteps);
     setCurrentStep(newSteps[0]);
@@ -473,8 +475,6 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             setSepaAllowed={setSepaAllowed}
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
-            cancellationPolicyRead={cancellationPolicyRead}
-            setCancellationPolicyRead={setCancellationPolicyRead}
             autoFillAccountOwnerFromName={false}
             settings={settings}
             shoppingCart={shoppingCart}
@@ -492,7 +492,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       case "10_summary":
         return (
           <Step10OrderSummary
-            isOrderStep={step === steps.at(-1)}
+            isOrderStep={false}
             confirmOrderLoading={orderLoading}
             settings={settings}
             shoppingCart={shoppingCart}
@@ -517,6 +517,25 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             singleProductType={productType}
           />
         );
+      case "11_legal":
+        return (
+          <Step11Legal
+            goToNextStep={goToNextStep}
+            settings={settings}
+            shoppingCart={shoppingCart}
+            solidarityContribution={0}
+            productTypesInWaitingList={productTypesInWaitingList}
+            cancellationPolicyRead={cancellationPolicyRead}
+            setCancellationPolicyRead={setCancellationPolicyRead}
+            privacyPolicyRead={privacyPolicyRead}
+            setPrivacyPolicyRead={setPrivacyPolicyRead}
+            active={currentStep === step}
+            isOrderStep={step === steps.at(-1)}
+            confirmOrderLoading={orderLoading}
+            confirmOrder={onConfirm}
+          />
+        );
+
       case "loading":
         return (
           <div
@@ -590,6 +609,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       goToProductTypeStep={() => {
         setCurrentStep(productTypeId + "_order");
       }}
+      contractStartDate={selectedGrowingPeriod?.contractStartDate!}
     />
   );
 };

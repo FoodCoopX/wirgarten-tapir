@@ -1,17 +1,18 @@
 import { createRoot } from "react-dom/client";
-import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
+import AssociationMembershipCard from "./association_membership/AssociationMembershipCard.tsx";
+import MemberBankingDataBase from "./banking_data/MemberBankingDataBase.tsx";
+import CoopSharesCard from "./coop_shares/CoopSharesCard.tsx";
+import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
+import MemberExtraEmailsBase from "./extra_email_addresses/MemberExtraEmailsBase.tsx";
+import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
+import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
+import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
+import MemberPersonalDataBase from "./personal_data/MemberPersonalDataBase.tsx";
+import MemberProfileSolidarityContributionCard from "./solidarity_contribution/MemberProfileSolidarityContributionCard.tsx";
 import SubscriptionCancellationCard from "./subscription_cancellation/SubscriptionCancellationCard.tsx";
 import SubscriptionCards from "./subscriptions/SubscriptionCards.tsx";
 import MemberProfileWaitingListCard from "./waiting_list/MemberProfileWaitingListCard.tsx";
-import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
-import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
-import CoopSharesCard from "./coop_shares/CoopSharesCard.tsx";
-import MemberProfileSolidarityContributionCard from "./solidarity_contribution/MemberProfileSolidarityContributionCard.tsx";
-import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
-import MemberExtraEmailsBase from "./extra_email_addresses/MemberExtraEmailsBase.tsx";
-import MemberBankingDataBase from "./banking_data/MemberBankingDataBase.tsx";
-import MemberPersonalDataBase from "./personal_data/MemberPersonalDataBase.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -182,6 +183,21 @@ if (domNodeBankData) {
     <MemberBankingDataBase
       memberId={domNodeBankData.dataset.memberId!}
       csrfToken={getCsrfToken()}
+    />,
+  );
+}
+
+const domNodeAssociationMembershipCard = document.getElementById(
+  "association_membership_card",
+);
+if (domNodeAssociationMembershipCard) {
+  const root = createRoot(domNodeAssociationMembershipCard);
+
+  root.render(
+    <AssociationMembershipCard
+      memberId={domNodeAssociationMembershipCard.dataset.memberId!}
+      csrfToken={getCsrfToken()}
+      admin={domNodeAssociationMembershipCard.dataset.admin === "True"}
     />,
   );
 }

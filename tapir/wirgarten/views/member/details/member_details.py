@@ -9,7 +9,6 @@ from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
 from tapir.coop.services.membership_text_service import MembershipTextService
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
@@ -41,7 +40,12 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_next_growing_period,
 )
-from tapir.wirgarten.utils import format_date, get_today
+from tapir.wirgarten.utils import (
+    format_date,
+    get_today,
+    legal_status_is_association,
+    legal_status_is_cooperative,
+)
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 
 
@@ -157,9 +161,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
 
-        context["show_coop_shares"] = (
-            get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
-            == LEGAL_STATUS_COOPERATIVE
+        context["show_coop_shares"] = legal_status_is_cooperative(cache=cache)
+        context["show_association_membership"] = legal_status_is_association(
+            cache=cache
+        ) and get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS, cache=cache
+        )
+        context["show_association_admin_content"] = self.request.user.has_perm(
+            Permission.Coop.MANAGE
         )
 
         context["payment_rhythm"] = MemberPaymentRhythmService.get_rhythm_display_name(

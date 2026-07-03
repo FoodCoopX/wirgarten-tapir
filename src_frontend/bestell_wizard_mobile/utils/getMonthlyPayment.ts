@@ -1,13 +1,16 @@
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { AssociationMembershipType, PublicProductType } from "../../api-client";
+import { getAssociationMembershipTypeCurrentPrice } from "../../association_memberships_config/getAssociationMembershipTypeCurrentPrice.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { getProductById } from "./getProductByIdGlobal.ts";
-import { PublicProductType } from "../../api-client";
 
 export function getMonthlyPayment(
   solidarityContribution: number,
   shoppingCart: ShoppingCart,
   settings: BestellWizardSettings,
   productTypesInWaitingList: Set<PublicProductType>,
+  associationMembershipType: AssociationMembershipType | undefined,
+  contractStartDate: Date,
 ) {
   let monthlyPayment = solidarityContribution;
   for (const [productId, quantity] of Object.entries(shoppingCart)) {
@@ -20,6 +23,16 @@ export function getMonthlyPayment(
         continue;
       }
       monthlyPayment += product.price * quantity;
+    }
+  }
+
+  if (associationMembershipType) {
+    const currentPrice = getAssociationMembershipTypeCurrentPrice(
+      associationMembershipType,
+      contractStartDate,
+    );
+    if (currentPrice) {
+      monthlyPayment += currentPrice.priceAsFloat;
     }
   }
 

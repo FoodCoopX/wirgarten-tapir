@@ -209,6 +209,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP6B_TITLE = f"{PREFIX}.bestellwizard.step6b.title"
     BESTELLWIZARD_STEP6B_TEXT = f"{PREFIX}.bestellwizard.step6b.text"
+    BESTELLWIZARD_STEP6B_CHECKBOX_STATUTE_ASSOCIATIONS = (
+        f"{PREFIX}.bestellwizard.step6b.checkbox_statute_associations"
+    )
     BESTELLWIZARD_STEP6C_TITLE = f"{PREFIX}.bestellwizard.step6c.title"
     BESTELLWIZARD_STEP6C_TEXT = f"{PREFIX}.bestellwizard.step6c.text"
     BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE = (
@@ -271,8 +274,13 @@ class ParameterKeys:
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
     )
-
     MEMBER_NUMBER_PREFIX = f"{PREFIX}.member.number.prefix"
     MEMBER_NUMBER_ZERO_PAD_LENGTH = f"{PREFIX}.member.number.zero_pad_length"
     MEMBER_NUMBER_START_VALUE = f"{PREFIX}.member.number.start_value"
     MEMBER_NUMBER_ONLY_AFTER_TRIAL = f"{PREFIX}.member.number.only_after_trial"
+    ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP = (
+        f"{PREFIX}.associations.allow_supporting_membership"
+    )
+    ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS = (
+        f"{PREFIX}.associations.enable_supporting_membership"
+    )

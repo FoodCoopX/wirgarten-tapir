@@ -185,6 +185,7 @@ class TestSubscriptionUpdateViewChangeApplierApplyChanges(TapirUnitTest):
             cache=cache,
             from_waiting_list=False,
             solidarity_contribution=None,
+            association_membership=None,
             coop_share_transaction=None,
         )
         mock_change_payment_rhythm_if_necessary.assert_called_once_with(
