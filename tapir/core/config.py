@@ -43,7 +43,7 @@ THEME_TEST = "test"
 THEME_GEBAECK = "gbk"
 THEME_SOLAWI_ODERSCHWALBE = "sos"
 THEME_AUERGARDEN = "aug"
-THEME_LANDMUEHLE = "lnd"
+THEME_LANDLMUEHLE = "lnd"
 
 
 THEME_OPTIONS = [
@@ -57,7 +57,7 @@ THEME_OPTIONS = [
     (THEME_HUMUSWERKSTATT, "Humuswerkstatt"),
     (THEME_KATRINGER_GRUENZEUG, "Katringer Grünzeug"),
     (THEME_L2G, "L2G Dickendorf"),
-    (THEME_LANDMUEHLE, "Landmühle"),
+    (THEME_LANDLMUEHLE, "Landlmühle"),
     (THEME_LEISTENMUEHLE, "Leistenmühle"),
     (THEME_MM, "Möllers Morgen"),
     (THEME_SACHERL_TANNBERG, "Sacherl Tannberg"),
