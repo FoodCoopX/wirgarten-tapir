@@ -9,7 +9,8 @@ from rest_framework.views import APIView
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import (
     ProductSerializer,
-    SubscriptionSerializer,
+    PickupLocationSerializer,
+    ProductTypeSerializer,
 )
 from tapir.deliveries.services.subscription_price_type_decider import (
     SubscriptionPricingStrategyDecider,
@@ -29,7 +30,10 @@ from tapir.subscriptions.serializers import (
     SubscriptionDateChangeRequestSerializer,
     ConvertWeekToDateForSubscriptionChangesResponseSerializer,
     SubscriptionPriceOverrideChangeRequestSerializer,
+    AdminSubscriptionSerializer,
+    SubscriptionTrialChangeRequestSerializer,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
     SubscriptionChangeWeekToDateConverter,
@@ -141,8 +145,15 @@ class PublicProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
 
 class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-    queryset = Subscription.objects.all()
-    serializer_class = SubscriptionSerializer
+    queryset = Subscription.objects.select_related("product")
+    serializer_class = AdminSubscriptionSerializer
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    def get_serializer_context(self):
+        return {**super().get_serializer_context(), "cache": self.cache}
 
 
 class SubscriptionDateChangeApiView(APIView):
@@ -300,5 +311,80 @@ class ConvertWeeksToDateForSubscriptionChangesApiView(APIView):
         return Response(
             ConvertWeekToDateForSubscriptionChangesResponseSerializer(
                 {"start_date": start_date, "end_date": end_date}
+            ).data
+        )
+
+
+class SubscriptionTrialChangeApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        request=SubscriptionTrialChangeRequestSerializer,
+    )
+    def post(self, request):
+        serializer = SubscriptionTrialChangeRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        subscription = get_object_or_404(
+            Subscription, id=serializer.validated_data["subscription_id"]
+        )
+
+        trial_disabled = serializer.validated_data["trial_disabled"]
+        trial_end_date_override = serializer.validated_data.get(
+            "trial_end_date_override"
+        )
+        cache = {}
+
+        if not trial_disabled and not get_parameter_value(
+            ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+        ):
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {
+                        "order_confirmed": False,
+                        "error": "Probezeit ist global deaktiviert",
+                    }
+                ).data
+            )
+
+        if (
+            not trial_disabled
+            and trial_end_date_override is not None
+            and trial_end_date_override.weekday() != 6
+        ):
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {
+                        "order_confirmed": False,
+                        "error": "Das Probezeit-Enddatum muss ein Sonntag sein",
+                    }
+                ).data
+            )
+
+        if (
+            trial_disabled
+            and not subscription.trial_disabled
+            and not TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
+        ):
+            trial_disabled = False
+
+        trial_end_date_override = (
+            TrialPeriodManager.resolve_trial_end_date_override_for_admin_save(
+                subscription,
+                trial_disabled=trial_disabled,
+                trial_end_date_override=trial_end_date_override,
+                cache=cache,
+            )
+        )
+
+        with transaction.atomic():
+            subscription.trial_disabled = trial_disabled
+            subscription.trial_end_date_override = trial_end_date_override
+            subscription.save()
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
             ).data
         )

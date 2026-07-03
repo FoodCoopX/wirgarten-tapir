@@ -2797,6 +2797,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /subscriptions/api/subscription_trial_change:
+    post:
+      operationId: subscriptions_api_subscription_trial_change_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionTrialChangeRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionTrialChangeRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionTrialChangeRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /subscriptions/api/update_subscription:
     post:
       operationId: subscriptions_api_update_subscription_create
@@ -11505,6 +11533,19 @@ components:
           nullable: true
         mandate_ref:
           type: string
+        is_in_trial:
+          type: boolean
+          readOnly: true
+        default_trial_end_date:
+          type: string
+          format: date
+          nullable: true
+          readOnly: true
+        effective_trial_end_date:
+          type: string
+          format: date
+          nullable: true
+          readOnly: true
       required:
       - created_at
       - mandate_ref
@@ -11602,6 +11643,21 @@ components:
       required:
       - price_override
       - subscription_id
+    SubscriptionTrialChangeRequestRequest:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+          minLength: 1
+        trial_disabled:
+          type: boolean
+        trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - subscription_id
+      - trial_disabled
     TemporaryUpload:
       type: object
       properties:

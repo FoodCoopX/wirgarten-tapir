@@ -20,6 +20,11 @@ import {
 import type { Product } from "./Product";
 import { ProductFromJSON, ProductToJSON } from "./Product";
 
+function parseApiDate(isoDate: string): Date {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 /**
  *
  * @export
@@ -110,6 +115,24 @@ export interface Subscription {
    * @memberof Subscription
    */
   trialEndDateOverride?: Date | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof Subscription
+   */
+  isInTrial?: boolean;
+  /**
+   *
+   * @type {Date}
+   * @memberof Subscription
+   */
+  defaultTrialEndDate?: Date | null;
+  /**
+   *
+   * @type {Date}
+   * @memberof Subscription
+   */
+  effectiveTrialEndDate?: Date | null;
   /**
    *
    * @type {string}
@@ -218,7 +241,17 @@ export function SubscriptionFromJSONTyped(
     trialEndDateOverride:
       json["trial_end_date_override"] == null
         ? undefined
-        : new Date(json["trial_end_date_override"]),
+        : parseApiDate(json["trial_end_date_override"]),
+    isInTrial:
+      json["is_in_trial"] == null ? undefined : json["is_in_trial"],
+    defaultTrialEndDate:
+      json["default_trial_end_date"] == null
+        ? undefined
+        : parseApiDate(json["default_trial_end_date"]),
+    effectiveTrialEndDate:
+      json["effective_trial_end_date"] == null
+        ? undefined
+        : parseApiDate(json["effective_trial_end_date"]),
     priceOverride:
       json["price_override"] == null ? undefined : json["price_override"],
     noticePeriodDuration: json["notice_period_duration"],

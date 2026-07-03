@@ -2,7 +2,7 @@ import csv
 from urllib.parse import parse_qs, urlencode
 
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import OuterRef, Subquery, Sum
+from django.db.models import OuterRef, Q, Subquery, Sum
 from django.forms import CheckboxInput
 from django.http import HttpResponse
 from django.urls import reverse_lazy
@@ -110,6 +110,14 @@ class SubscriptionListFilter(FilterSet):
         method="filter_show_only_ended_contracts",
         widget=CheckboxInput,
     )
+    show_only_manual_trial_period = BooleanFilter(
+        label=_(
+            "Nur Verträge mit manuell deaktivierter/aktivierter Probezeit anzeigen"
+        ),
+        field_name="show_only_manual_trial_period",
+        method="filter_show_only_manual_trial_period",
+        widget=CheckboxInput,
+    )
 
     class Meta:
         model = Subscription
@@ -171,6 +179,14 @@ class SubscriptionListFilter(FilterSet):
             )
         ]
         return queryset.filter(id__in=included_ids)
+
+    def filter_show_only_manual_trial_period(self, queryset, name, value):
+        if not value:
+            return queryset
+
+        return queryset.filter(
+            Q(trial_disabled=True) | Q(trial_end_date_override__isnull=False)
+        )
 
     def filter_show_only_ended_contracts(self, queryset, name, value):
         today = get_today()
@@ -240,6 +256,9 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
                         )
                     )
         context["subscriptions_trial_end_dates"] = subscriptions_trial_end_dates
+        context["trial_period_enabled"] = get_parameter_value(
+            ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+        )
         context["cache"] = self.cache
 
         return context
