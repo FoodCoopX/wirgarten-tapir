@@ -20,7 +20,6 @@ class ProductTypeChangeApplier:
         "single_subscription_only",
         "is_affected_by_jokers",
         "must_be_subscribed_to",
-        "is_association_membership",
         "force_waiting_list",
         "title_bestellwizard_product_choice",
         "title_bestellwizard_intro",

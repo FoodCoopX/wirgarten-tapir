@@ -5885,6 +5885,10 @@ components:
           type: string
           format: date
           nullable: true
+        cancellation_ts:
+          type: string
+          format: date-time
+          nullable: true
         member:
           type: string
       required:
@@ -8218,8 +8222,6 @@ components:
           type: boolean
         must_be_subscribed_to:
           type: boolean
-        is_association_membership:
-          type: boolean
         force_waiting_list:
           type: boolean
         accordions_in_bestell_wizard:
@@ -8246,7 +8248,6 @@ components:
       - delivery_cycle
       - force_waiting_list
       - is_affected_by_jokers
-      - is_association_membership
       - must_be_subscribed_to
       - name
       - order_in_bestellwizard
@@ -8262,8 +8263,6 @@ components:
           type: boolean
         show_jokers:
           type: boolean
-        show_association_membership:
-          type: boolean
         delivery_cycle_options:
           type: object
           additionalProperties: {}
@@ -8275,7 +8274,6 @@ components:
       - can_update_notice_period
       - delivery_cycle_options
       - extended_product_type
-      - show_association_membership
       - show_jokers
       - show_notice_period
     ExtendedProductTypeRequest:
@@ -8316,8 +8314,6 @@ components:
           type: boolean
         must_be_subscribed_to:
           type: boolean
-        is_association_membership:
-          type: boolean
         force_waiting_list:
           type: boolean
         accordions_in_bestell_wizard:
@@ -8344,7 +8340,6 @@ components:
       - delivery_cycle
       - force_waiting_list
       - is_affected_by_jokers
-      - is_association_membership
       - must_be_subscribed_to
       - name
       - order_in_bestellwizard
@@ -10644,9 +10639,6 @@ components:
           type: boolean
           title: Muss gezeichnet werden
           description: Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
-        is_association_membership:
-          type: boolean
-          title: Repräsentiert Vereinsmitgliedschaften
         description_bestellwizard_short:
           type: string
           title: Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)
@@ -10712,8 +10704,6 @@ components:
           type: boolean
         show_jokers:
           type: boolean
-        show_association_membership:
-          type: boolean
         delivery_cycle_options:
           type: object
           additionalProperties: {}
@@ -10723,7 +10713,6 @@ components:
       - can_update_notice_period
       - delivery_cycle_options
       - product_types_without_capacity
-      - show_association_membership
       - show_jokers
       - show_notice_period
     PublicConfirmWaitingListEntryRequestRequest:
@@ -10923,9 +10912,6 @@ components:
           type: number
           format: double
           readOnly: true
-        is_association_membership:
-          type: boolean
-          title: Repräsentiert Vereinsmitgliedschaften
       required:
       - accordions
       - name
@@ -10956,7 +10942,6 @@ components:
         end_date:
           type: string
           format: date
-          nullable: true
         monthly_price:
           type: number
           format: double
@@ -10965,6 +10950,7 @@ components:
           type: string
           maxLength: 10
       required:
+      - end_date
       - monthly_price
       - product_id
       - product_name
@@ -11464,7 +11450,6 @@ components:
         end_date:
           type: string
           format: date
-          nullable: true
         cancellation_ts:
           type: string
           format: date-time
@@ -11507,6 +11492,7 @@ components:
           type: string
       required:
       - created_at
+      - end_date
       - mandate_ref
       - member
       - notice_period_duration

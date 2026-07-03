@@ -9,13 +9,14 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 from django.views.generic import View
 
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import CoopShareTransaction, Member, Subscription
+from tapir.wirgarten.models import CoopShareTransaction, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string
 from tapir.wirgarten.service.member import (
@@ -236,9 +237,7 @@ def export_coop_member_list(request, **kwargs):
 
         if legal_status_is_association(cache=cache):
             first_association_membership = (
-                Subscription.objects.filter(
-                    member_id=entry.id, product__type__is_association_membership=True
-                )
+                AssociationMembership.objects.filter(member_id=entry.id)
                 .order_by("start_date")
                 .first()
             )
@@ -248,8 +247,8 @@ def export_coop_member_list(request, **kwargs):
                 else ""
             )
             last_association_membership = (
-                Subscription.objects.filter(
-                    member_id=entry.id, product__type__is_association_membership=True
+                AssociationMembership.objects.filter(
+                    member_id=entry.id, end_date__isnull=False
                 )
                 .order_by("-end_date")
                 .first()

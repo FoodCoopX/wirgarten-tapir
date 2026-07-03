@@ -43,6 +43,7 @@ class AssociationMembership(TapirModel):
     type = models.ForeignKey(AssociationMembershipType, on_delete=models.PROTECT)
     start_date = models.DateField()
     end_date = models.DateField(null=True)
+    cancellation_ts = models.DateTimeField(null=True)
 
     def __str__(self):
         return f"{self.member.get_display_name()} {self.type.name} {self.start_date} -> {self.end_date}"

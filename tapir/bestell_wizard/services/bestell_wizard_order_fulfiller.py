@@ -287,6 +287,7 @@ class BestellWizardOrderFulfiller:
             start_date=shares_valid_at,
             association_membership_type=association_membership_type,
             actor=actor,
+            cache=cache,
         )
 
     @classmethod

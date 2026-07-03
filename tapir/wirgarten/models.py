@@ -185,9 +185,6 @@ class ProductType(TapirModel):
             "Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen."
         ),
     )
-    is_association_membership = models.BooleanField(
-        default=False, verbose_name=_("Repräsentiert Vereinsmitgliedschaften")
-    )
     description_bestellwizard_short = models.TextField(
         default="",
         verbose_name=_(
@@ -640,7 +637,7 @@ class Subscription(TapirModel, AdminConfirmableMixin):
     period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=True)
     quantity = models.PositiveSmallIntegerField(null=False)
     start_date = models.DateField(null=False)
-    end_date = models.DateField(null=True)
+    end_date = models.DateField(null=False)
     cancellation_ts = models.DateTimeField(null=True)
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False

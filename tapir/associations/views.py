@@ -85,6 +85,7 @@ class AdminSetAssociationMembership(APIView):
     def post(self, request):
         serializer = AdminSetAssociationMembershipRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        cache = {}
 
         member = get_object_or_404(Member, id=serializer.validated_data["member_id"])
         membership_type = get_object_or_404(
@@ -99,6 +100,7 @@ class AdminSetAssociationMembership(APIView):
                 association_membership_type=membership_type,
                 start_date=start_date,
                 actor=request.user,
+                cache=cache,
             )
 
         return Response(OrderConfirmationResponseSerializer({"order_confirmed": True}))

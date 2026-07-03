@@ -12,6 +12,7 @@ from tapir.associations.models import (
 )
 from tapir.log.util import freeze_for_log
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.utils import get_now
 
 
 class AssociationMembershipChangeHandler:
@@ -22,6 +23,7 @@ class AssociationMembershipChangeHandler:
         association_membership_type: AssociationMembershipType,
         start_date: datetime.date,
         actor: TapirUser,
+        cache: dict,
     ):
         member_memberships = AssociationMembership.objects.filter(member=member)
 
@@ -38,6 +40,7 @@ class AssociationMembershipChangeHandler:
         for membership in memberships_to_update:
             before_changes = freeze_for_log(membership)
             membership.end_date = start_date - datetime.timedelta(days=1)
+            membership.cancellation_ts = get_now(cache=cache)
             membership.save()
             AssociationMembershipUpdatedLogEntry().populate(
                 old_frozen=before_changes,
