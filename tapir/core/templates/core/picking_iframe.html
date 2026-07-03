@@ -15,25 +15,27 @@
               "
     >
         <iframe
-            id="tapirMailIframe"
+            id="pickingIframe"
             style="width: 100%; height: 100%; overflow: hidden"
         ></iframe>
     </div>
     <script>
         window.onload = () => {
-            const iframe = document.getElementById("tapirMailIframe");
+            const iframe = document.getElementById("pickingIframe");
+            console.log(window._env_)
             iframe.contentWindow._env_ = window._env_;
+            console.log(iframe.contentWindow._env_)
             let subpage = window.location.hash.substring(1);
             if (subpage.startsWith("state=")) {
                 subpage = "";
             }
 
-            iframe.src = "{{TAPIR_MAIL_PATH}}" + subpage;
+            iframe.src = "/commissioning/home" + subpage;
 
             const checkIframeUrl = () => {
                 try {
                     window.location.hash = iframe.contentWindow.location.pathname.replace(
-                        "/tapirmail",
+                        "/commissioning",
                         ""
                     );
                 } catch (e) {
@@ -43,18 +45,6 @@
 
             setInterval(checkIframeUrl, 500);
         };
-
-        // Prevent leaving the page when the user is editing an email
-        window.addEventListener("beforeunload", function (e) {
-            if (
-                window.location.hash.startsWith("#/editor") ||
-                window.location.hash.startsWith("#/emailconfiguration")
-            ) {
-                e.preventDefault();
-                // Chrome requires returnValue to be set.
-                e.returnValue = "";
-            }
-        });
     </script>
 
 {% endblock %}

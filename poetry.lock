@@ -905,6 +905,18 @@ files = [
 ]
 
 [[package]]
+name = "defusedxml"
+version = "0.7.1"
+description = "XML bomb protection for Python stdlib modules"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+groups = ["main"]
+files = [
+    {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
+    {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
+]
+
+[[package]]
 name = "deprecation"
 version = "2.1.0"
 description = "A library to handle automated deprecations"
@@ -2489,17 +2501,18 @@ files = [
 
 [[package]]
 name = "picking-module"
-version = "0.1.10"
+version = "0.1.23"
 description = "Tapir Django App"
 optional = false
 python-versions = ">=3.14"
 groups = ["main"]
 files = [
-    {file = "picking_module-0.1.10-py3-none-any.whl", hash = "sha256:e5c53b1b1fc7ca9739ab7f4e87a55db8701a336d91582869629f26d4bbe36308"},
+    {file = "picking_module-0.1.23-py3-none-any.whl", hash = "sha256:c8f52e439d42fa2ea747b8985e3d1133163d18c84a6968585ed3205e7a8d69af"},
 ]
 
 [package.dependencies]
 cryptography = ">=48.0.1,<49"
+defusedxml = ">=0.7.1,<0.8.0"
 django = ">=6.0.5,<7.0.0"
 django-admin-interface = ">=0.32.0,<0.33.0"
 django-auditlog = ">=3.4.1,<4.0.0"
@@ -2534,7 +2547,7 @@ weasyprint = ">=68.0,<69.0"
 
 [package.source]
 type = "file"
-url = "../tapir-platform/tapir-core/django-core/dist/picking_module-0.1.10-py3-none-any.whl"
+url = "../tapir-platform/tapir-core/django-core/dist/picking_module-0.1.23-py3-none-any.whl"
 
 [[package]]
 name = "pillow"
@@ -4197,4 +4210,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.14"
-content-hash = "f72ae1c2d878e13757f3597e2bba0b2f76f20aa23feff4210fc83bf4367bff58"
+content-hash = "5d298384ba450e4d5ab9c608a103f33be5c43e7e2c613c39e1edad6494c592d0"

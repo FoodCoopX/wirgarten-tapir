@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import datetime
 import os
 from importlib import resources
 from pathlib import Path
@@ -76,6 +77,9 @@ INSTALLED_APPS = [
     "apps.shared.tenants",
     "auditlog",
     "axes",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
 ]
 
 if ENABLE_SILK_PROFILING:
@@ -160,7 +164,7 @@ def get_tapir_mail_static_dir():
 
 
 def get_picking_module_static_dir():
-    with resources.path("apps", "static/picking-dist/dist") as path:
+    with resources.path("apps", "static/picking-dist/dist/static") as path:
         return str(path)
 
 
@@ -210,7 +214,7 @@ SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
 
 DJANGO_VITE = {
     "default": {
-        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
+        "dev_mode": True,
         "manifest_path": "./dist/manifest.json",
     }
 }
@@ -244,3 +248,6 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 
 TENANT_MODEL = "tenants.Tenant"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
+
+TWO_FACTOR_CHALLENGE_LIFETIME = datetime.timedelta(minutes=5)
+TWO_FACTOR_ENROLMENT_LIFETIME = datetime.timedelta(minutes=15)

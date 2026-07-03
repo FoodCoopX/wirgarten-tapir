@@ -16,7 +16,7 @@ SECRET_KEY = env.str(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = True
 if not DEBUG:
     print(
         f"Tapir Version: {TAPIR_VERSION}"
@@ -29,12 +29,14 @@ if not DEBUG:
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     "default": env.db(
-        "DATABASE_CONNECTION", default="postgresql://tapir:tapir@db:5432/tapir"
+        "DATABASE_CONNECTION", default="postgresql://tapir:tapir@localhost:5432/tapir"
     ),
 }
 
-CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://redis:6379")
-CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://redis:6379")
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://localhost:6379")
+CELERY_RESULT_BACKEND = env.str(
+    "CELERY_RESULT_BACKEND", default="redis://localhost:6379"
+)
 CELERY_BEAT_SCHEDULE = {
     "execute_scheduled_tasks": {
         "task": "tapir.wirgarten.tasks.execute_scheduled_tasks",
@@ -151,7 +153,7 @@ SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
 KEYCLOAK_ADMIN_CONFIG = {
-    "SERVER_URL": env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
+    "SERVER_URL": env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://localhost:8080"),
     "PUBLIC_URL": env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
     "CLIENT_ID": env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
     "FRONTEND_CLIENT_ID": env.str(
@@ -234,3 +236,32 @@ if not DEBUG and FIELD_ENCRYPTION_KEY == DEFAULT_FIELD_ENCRYPTION_KEY:
     raise ValueError(
         "FIELD_ENCRYPTION_KEY must be set in production (and must not be the dev default)."
     )
+
+SIMPLE_JWT = {
+    # Short access token = small blast radius if a token is leaked.
+    # Refresh token rotates on every refresh and old ones are blacklisted.
+    "ACCESS_TOKEN_LIFETIME": datetime.timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": str(SECRET_KEY),
+    "VERIFYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "JWK_URL": None,
+    "LEEWAY": 0,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+    "JTI_CLAIM": "jti",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": datetime.timedelta(minutes=15),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": datetime.timedelta(days=7),
+}

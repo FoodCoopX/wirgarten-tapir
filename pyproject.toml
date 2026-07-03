@@ -38,7 +38,7 @@ whitenoise = {extras = ["brotli"], version = "^6.12.0"}
 legacy-cgi = "^2.6.3"
 django-allauth = {extras = ["socialaccount"], version = "^65.10.0"}
 djhtml = "^3.0.11"
-picking-module = { file = "/home/theo/PycharmProjects/tapir-platform/tapir-core/django-core/dist/picking_module-0.1.10-py3-none-any.whl" }
+picking-module = { file = "/home/theo/PycharmProjects/tapir-platform/tapir-core/django-core/dist/picking_module-0.1.23-py3-none-any.whl" }
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.6.0"

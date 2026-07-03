@@ -58,7 +58,18 @@ class KeycloakUser(AbstractUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.roles = None
+        self._roles = None
+
+    @property
+    def roles(self):
+        roles = KeycloakUserManager.get_user_roles(self.keycloak_id)
+        if self.is_superuser:
+            roles.append("admin")
+        return roles
+
+    @roles.setter
+    def roles(self, value):
+        self._roles = value
 
     def email_verified(self, cache: dict = None) -> bool:
         if cache is None:
