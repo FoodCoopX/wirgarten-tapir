@@ -17,6 +17,7 @@ interface Step6BAssociationMembershipsProps {
     React.SetStateAction<AssociationMembershipType | undefined>
   >;
   contractStartDate: Date;
+  active: boolean;
 }
 
 function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
@@ -40,15 +41,30 @@ const Step6BAssociationMemberships: React.FC<
   selectedAssociationMembershipType,
   setSelectedAssociationMembershipType,
   contractStartDate,
+  active,
 }) => {
   const [showError, setShowError] = useState(false);
+  const [statuteAccepted, setStatuteAccepted] = useState(false);
 
   useEffect(() => {
     setShowError(false);
   }, [selectedAssociationMembershipType]);
 
+  useEffect(() => {
+    if (!active) return;
+
+    if (
+      selectedAssociationMembershipType === undefined &&
+      settings.associationMembershipTypes.length > 0
+    ) {
+      setSelectedAssociationMembershipType(
+        settings.associationMembershipTypes[0],
+      );
+    }
+  }, [active]);
+
   function onNextClicked() {
-    if (selectedAssociationMembershipType === undefined) {
+    if (selectedAssociationMembershipType === undefined || !statuteAccepted) {
       setShowError(true);
       return;
     }
@@ -72,7 +88,9 @@ const Step6BAssociationMemberships: React.FC<
                     }
                   }}
                   label={buildLabel(type, contractStartDate)}
-                  showError={showError}
+                  showError={
+                    showError && selectedAssociationMembershipType === undefined
+                  }
                 />
               </Accordion.Header>
               <Accordion.Body>
@@ -85,6 +103,18 @@ const Step6BAssociationMemberships: React.FC<
             </Accordion.Item>
           </Accordion>
         ))}
+        <div
+          className={"d-flex justify-content-center"}
+          style={{ width: "100%" }}
+        >
+          <TapirCheckbox
+            onChange={setStatuteAccepted}
+            checked={statuteAccepted}
+            label={settings.strings.step6bCheckboxStatuteAssociations}
+            controlId={"statuteAssociations"}
+            showError={showError && !statuteAccepted}
+          />
+        </div>
       </div>
 
       <NextStepButton onClick={onNextClicked} />

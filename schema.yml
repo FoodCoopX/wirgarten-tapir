@@ -6405,6 +6405,8 @@ components:
           type: string
         step6b_text:
           type: string
+        step6b_checkbox_statute_associations:
+          type: string
         step6c_checkbox_statute:
           type: string
         step6c_text_statute:
@@ -6503,6 +6505,7 @@ components:
       - step5c_title
       - step6a_text
       - step6a_title
+      - step6b_checkbox_statute_associations
       - step6b_text
       - step6b_title
       - step6c_checkbox_commitment

@@ -209,6 +209,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP6B_TITLE = f"{PREFIX}.bestellwizard.step6b.title"
     BESTELLWIZARD_STEP6B_TEXT = f"{PREFIX}.bestellwizard.step6b.text"
+    BESTELLWIZARD_STEP6B_CHECKBOX_STATUTE_ASSOCIATIONS = (
+        f"{PREFIX}.bestellwizard.step6b.checkbox_statute_associations"
+    )
     BESTELLWIZARD_STEP6C_TITLE = f"{PREFIX}.bestellwizard.step6c.title"
     BESTELLWIZARD_STEP6C_TEXT = f"{PREFIX}.bestellwizard.step6c.text"
     BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE = (
