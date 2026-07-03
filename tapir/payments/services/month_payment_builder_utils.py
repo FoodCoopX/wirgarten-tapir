@@ -197,20 +197,40 @@ class MonthPaymentBuilderUtils:
             cache=cache,
         )
 
-        min_creation_date = min(
-            (
-                contract.created_at.date()
-                if contract.created_at
-                else contract.start_date
-            )  # Renewed contracts that are planned but not saved yet don't have a created_at yet.
+        minimum_due_date = min(
+            cls.get_minimum_due_date(contract=contract, cache=cache)
             for contract in contracts
         )
-        if min_creation_date > payments_due_date:
+        if minimum_due_date > payments_due_date:
             payments_due_date = cls.get_payment_due_date_on_month(
                 reference_date=(get_first_of_next_month(payments_due_date)),
                 cache=cache,
             )
         return payments_due_date
+
+    @classmethod
+    def get_minimum_due_date(cls, contract: TapirContract, cache: dict):
+        if isinstance(contract, AssociationMembership) and get_parameter_value(
+            key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+        ):
+            first_of_this_month = contract.start_date.replace(day=1)
+            subscriptions = TapirCache.get_active_and_future_subscriptions_by_member_id(
+                reference_date=first_of_this_month, cache=cache
+            ).get(contract.member_id, [])
+            if all(
+                TrialPeriodManager.is_contract_in_trial(
+                    contract=subscription,
+                    reference_date=first_of_this_month,
+                    cache=cache,
+                )
+                for subscription in subscriptions
+            ):
+                return get_first_of_next_month(contract.start_date)
+
+        if contract.created_at:
+            # Renewed contracts that are planned but not saved yet don't have a created_at yet.
+            return contract.created_at.date()
+        return contract.start_date
 
     @classmethod
     def get_payment_range(

@@ -714,6 +714,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             setSelectedAssociationMembershipType={
               setSelectedAssociationMembershipType
             }
+            contractStartDate={contractStartDate}
+            active={currentStep === step}
           />
         );
       case "6c_coop_member_now":
@@ -735,6 +737,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             shoppingCart={shoppingCart}
             productTypesInWaitingList={productTypesInWaitingList}
             associationMembershipType={selectedAssociationMembershipType}
+            contractStartDate={contractStartDate}
           />
         );
       case "8_personal_data":
@@ -930,6 +933,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
       goToProductTypeStep={goToProductTypeStep}
       associationMembershipType={selectedAssociationMembershipType}
+      contractStartDate={contractStartDate}
     />
   );
 };

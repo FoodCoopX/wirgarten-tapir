@@ -118,7 +118,7 @@ class TapirCache:
                 get_active_and_future_subscriptions,
             )
 
-            subscriptions_by_member_id = {}
+            subscriptions_by_member_id: dict[str, list[Subscription]] = {}
             for subscription in get_active_and_future_subscriptions(
                 reference_date=reference_date, cache=cache
             ):
@@ -760,5 +760,5 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache,
             "all_association_memberships",
-            lambda: set(AssociationMembership.objects.select_related("member")),
+            lambda: set(AssociationMembership.objects.select_related("member", "type")),
         )

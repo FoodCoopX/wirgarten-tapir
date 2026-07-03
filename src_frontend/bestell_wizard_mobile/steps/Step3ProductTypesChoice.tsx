@@ -108,6 +108,14 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
     return settings.associationsAllowInvestingMembership;
   }
 
+  function showInvestingMembership() {
+    if (settings.legalStatus !== "association") {
+      return true;
+    }
+
+    return settings.associationsAllowInvestingMembership;
+  }
+
   return (
     <>
       {settings.strings.step3Text && (

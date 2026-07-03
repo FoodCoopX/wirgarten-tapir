@@ -276,6 +276,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
                 "contract_end_date": "31.12.2026",
                 "contract_list": "<ul><li>1 × M Basket  (11.05.2026 - 31.12.2026)</li></ul>",
                 "membership_start_date": "07.06.2026",
+                "membership_monthly_price": "0,00",
                 "first_pickup_date": "14.05.2026",
                 "number_of_coop_shares": 2,
                 "price_of_a_coop_share": "50,00",

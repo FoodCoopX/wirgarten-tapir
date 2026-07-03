@@ -243,7 +243,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               {
                 id: uuidv4(),
                 variant: "success",
-                title: "Verteilstation-Weschel bestätigt",
+                title: "Verteilstation-Wechsel bestätigt",
               },
               setToastDatas,
             );

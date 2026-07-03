@@ -129,6 +129,7 @@ class WaitingListEntryConfirmationApplier:
                 cache=cache,
                 from_waiting_list=True,
                 coop_share_transaction=coop_share_transaction,
+                association_membership=None,
                 solidarity_contribution=solidarity_contribution,
             )
 

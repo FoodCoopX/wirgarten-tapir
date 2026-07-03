@@ -28,11 +28,11 @@ interface BestellWizardShoppingCartOverlayProps {
   productTypesInWaitingList: Set<PublicProductType>;
   steps: Step[];
   currentStep: Step;
-  setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
   solidarityContribution: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
+  contractStartDate: Date;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -51,6 +51,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
   solidarityContribution,
   goToProductTypeStep,
   associationMembershipType,
+  contractStartDate,
 }) => {
   function canEditProductTypeOrder(productType: PublicProductType) {
     return (
@@ -174,10 +175,12 @@ const BestellWizardShoppingCartOverlay: React.FC<
                 <li>{associationMembershipType.name}</li>
                 {getAssociationMembershipTypeCurrentPrice(
                   associationMembershipType,
+                  contractStartDate,
                 ) && (
                   <li>
                     {getAssociationMembershipTypeMonthlyPriceFormatted(
                       associationMembershipType,
+                      contractStartDate,
                     )}
                   </li>
                 )}

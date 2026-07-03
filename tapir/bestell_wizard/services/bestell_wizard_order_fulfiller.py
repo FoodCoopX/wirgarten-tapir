@@ -105,6 +105,7 @@ class BestellWizardOrderFulfiller:
             )
 
         coop_share_transaction = None
+        association_membership = None
         if legal_status_is_cooperative(cache=cache) and not is_student:
             coop_share_transaction = cls.create_coop_shares(
                 number_of_shares=validated_serializer_data["number_of_coop_shares"],
@@ -114,7 +115,7 @@ class BestellWizardOrderFulfiller:
                 actor=actor,
             )
         if legal_status_is_association(cache=cache):
-            cls.create_association_membership(
+            association_membership = cls.create_association_membership(
                 association_membership_type=AssociationMembershipType.objects.get(
                     id=validated_serializer_data["association_membership_type_id"]
                 ),
@@ -145,7 +146,9 @@ class BestellWizardOrderFulfiller:
             send_investing_membership_confirmation(
                 member_id=member.id,
                 coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
                 solidarity_contribution=solidarity_contribution,
+                cache=cache,
             )
         else:
             send_product_order_confirmation(
@@ -154,6 +157,7 @@ class BestellWizardOrderFulfiller:
                 cache=cache,
                 from_waiting_list=False,
                 coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
                 solidarity_contribution=solidarity_contribution,
             )
 

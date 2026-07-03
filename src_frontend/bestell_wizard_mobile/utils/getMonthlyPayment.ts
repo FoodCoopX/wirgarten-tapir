@@ -10,6 +10,7 @@ export function getMonthlyPayment(
   settings: BestellWizardSettings,
   productTypesInWaitingList: Set<PublicProductType>,
   associationMembershipType: AssociationMembershipType | undefined,
+  contractStartDate: Date,
 ) {
   let monthlyPayment = solidarityContribution;
   for (const [productId, quantity] of Object.entries(shoppingCart)) {
@@ -28,6 +29,7 @@ export function getMonthlyPayment(
   if (associationMembershipType) {
     const currentPrice = getAssociationMembershipTypeCurrentPrice(
       associationMembershipType,
+      contractStartDate,
     );
     if (currentPrice) {
       monthlyPayment += currentPrice.priceAsFloat;

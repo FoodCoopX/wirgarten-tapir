@@ -9,17 +9,22 @@ import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import "../utils/flexColOnSmallScreen.css";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
-interface Step6BCoopSharesProps {
+interface Step6BAssociationMembershipsProps {
   goToNextStep: () => void;
   settings: BestellWizardSettings;
   selectedAssociationMembershipType: AssociationMembershipType | undefined;
   setSelectedAssociationMembershipType: React.Dispatch<
     React.SetStateAction<AssociationMembershipType | undefined>
   >;
+  contractStartDate: Date;
+  active: boolean;
 }
 
-function buildLabel(type: AssociationMembershipType) {
-  const currentPrice = getAssociationMembershipTypeCurrentPrice(type);
+function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
+  const currentPrice = getAssociationMembershipTypeCurrentPrice(
+    type,
+    contractStartDate,
+  );
 
   if (!currentPrice) {
     return type.name;
@@ -28,20 +33,38 @@ function buildLabel(type: AssociationMembershipType) {
   return type.name + " " + formatCurrency(currentPrice.priceAsFloat) + "/Monat";
 }
 
-const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
+const Step6BAssociationMemberships: React.FC<
+  Step6BAssociationMembershipsProps
+> = ({
   goToNextStep,
   settings,
   selectedAssociationMembershipType,
   setSelectedAssociationMembershipType,
+  contractStartDate,
+  active,
 }) => {
   const [showError, setShowError] = useState(false);
+  const [statuteAccepted, setStatuteAccepted] = useState(false);
 
   useEffect(() => {
     setShowError(false);
   }, [selectedAssociationMembershipType]);
 
+  useEffect(() => {
+    if (!active) return;
+
+    if (
+      selectedAssociationMembershipType === undefined &&
+      settings.associationMembershipTypes.length > 0
+    ) {
+      setSelectedAssociationMembershipType(
+        settings.associationMembershipTypes[0],
+      );
+    }
+  }, [active]);
+
   function onNextClicked() {
-    if (selectedAssociationMembershipType === undefined) {
+    if (selectedAssociationMembershipType === undefined || !statuteAccepted) {
       setShowError(true);
       return;
     }
@@ -66,8 +89,10 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                       setSelectedAssociationMembershipType(undefined);
                     }
                   }}
-                  label={buildLabel(type)}
-                  showError={showError}
+                  label={buildLabel(type, contractStartDate)}
+                  showError={
+                    showError && selectedAssociationMembershipType === undefined
+                  }
                 />
               </Accordion.Header>
               <Accordion.Body>
@@ -80,6 +105,18 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             </Accordion.Item>
           </Accordion>
         ))}
+        <div
+          className={"d-flex justify-content-center"}
+          style={{ width: "100%" }}
+        >
+          <TapirCheckbox
+            onChange={setStatuteAccepted}
+            checked={statuteAccepted}
+            label={settings.strings.step6bCheckboxStatuteAssociations}
+            controlId={"statuteAssociations"}
+            showError={showError && !statuteAccepted}
+          />
+        </div>
       </div>
 
       <NextStepButton onClick={onNextClicked} />
@@ -87,4 +124,4 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   );
 };
 
-export default Step6BCoopShares;
+export default Step6BAssociationMemberships;

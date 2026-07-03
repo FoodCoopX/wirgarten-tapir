@@ -609,6 +609,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       goToProductTypeStep={() => {
         setCurrentStep(productTypeId + "_order");
       }}
+      contractStartDate={selectedGrowingPeriod?.contractStartDate!}
     />
   );
 };

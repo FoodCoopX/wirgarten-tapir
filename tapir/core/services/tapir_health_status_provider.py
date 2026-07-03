@@ -68,16 +68,17 @@ class TapirHealthStatusProvider:
     @classmethod
     def _get_smtp_connection_status(cls):
         with mail.get_connection():
+            # If the connection doesn't succeed an exception will be thrown.
             pass
 
     @classmethod
     def _get_bounce_mailbox_status(cls):
         bounce_user = getattr(settings, "EMAIL_BOUNCE_USER", None)
         if not bounce_user:
-            return f"Missing setting EMAIL_BOUNCE_USER"
+            return "Missing setting EMAIL_BOUNCE_USER"
         bounce_password = getattr(settings, "EMAIL_BOUNCE_PASSWORD", None)
         if not bounce_password:
-            return f"Missing setting EMAIL_BOUNCE_PASSWORD"
+            return "Missing setting EMAIL_BOUNCE_PASSWORD"
 
         mail_client = IMAP4_SSL(settings.EMAIL_HOST, port=settings.EMAIL_PORT_IMAP)
         return_code, _ = mail_client.login(
@@ -88,7 +89,7 @@ class TapirHealthStatusProvider:
 
         try:
             mail_client.select(readonly=True)
-            return_code, messages_id_blocks = mail_client.search(None, "(UNSEEN)")
+            return_code, _ = mail_client.search(None, "(UNSEEN)")
             if return_code != "OK":
                 return f"Imap server search failed, return code : {return_code}"
         finally:
