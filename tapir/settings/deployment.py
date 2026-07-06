@@ -28,10 +28,16 @@ if not DEBUG:
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
-    "default": env.db(
-        "DATABASE_CONNECTION", default="postgresql://tapir:tapir@db:5432/tapir"
-    ),
+    "default": {
+        "ENGINE": "django_tenants.postgresql_backend",
+        "NAME": "tapir",
+        "USER": "tapir",
+        "PASSWORD": "tapir",
+        "HOST": "localhost",
+        "PORT": "5432",
+    },
 }
+DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://redis:6379")
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://redis:6379")
@@ -203,6 +209,11 @@ TAPIRMAIL_REACT_APP_BASENAME = TAPIR_MAIL_PATH
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]
+    CSRF_COOKIE_HTTPONLY = (
+        False  # JS needs to read the token; HttpOnly would break the SPA
+    )
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
 
 SOCIALACCOUNT_PROVIDERS = {
     "openid_connect": {

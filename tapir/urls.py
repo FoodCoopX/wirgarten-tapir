@@ -62,6 +62,7 @@ urlpatterns = [
     ),
     path("commissioning/api/", include("apps.commissioning.urls")),
     path("commissioning/api/commissioning/", include("apps.commissioning.urls")),
+    path("commissioning/api/tenants/", include("apps.shared.tenants.urls")),
     path(
         "picking/",
         TemplateView.as_view(template_name="core/picking_iframe.html"),

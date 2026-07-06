@@ -81,12 +81,17 @@ INSTALLED_APPS = [
     "django_otp",
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
+    "django_tenants",
 ]
+
+SHARED_APPS = INSTALLED_APPS
+TENANT_APPS = INSTALLED_APPS
 
 if ENABLE_SILK_PROFILING:
     INSTALLED_APPS.append("silk")
 
 MIDDLEWARE = [
+    "django_tenants.middleware.main.TenantMainMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
