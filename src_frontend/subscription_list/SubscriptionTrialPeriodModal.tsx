@@ -49,7 +49,7 @@ const SubscriptionTrialPeriodModal: React.FC<
       .subscriptionsSubscriptionsRetrieve({ id: subscriptionId })
       .then((subscriptionData) => {
         setSubscription(subscriptionData);
-        setTrialDisabled(subscriptionData.trialDisabled ?? false);
+        setTrialDisabled(!(subscriptionData.isInTrial ?? false));
         setUseCustomEndDate(subscriptionData.trialEndDateOverride != null);
         setCustomEndDate(
           formatDateForInput(subscriptionData.trialEndDateOverride),
