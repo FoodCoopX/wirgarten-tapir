@@ -20,6 +20,10 @@ export function SubscriptionTrialChangeRequestRequestToJSON(
     trial_end_date_override:
       value.trialEndDateOverride == null
         ? null
-        : value.trialEndDateOverride.toISOString().substring(0, 10),
+        : [
+            value.trialEndDateOverride.getFullYear(),
+            String(value.trialEndDateOverride.getMonth() + 1).padStart(2, "0"),
+            String(value.trialEndDateOverride.getDate()).padStart(2, "0"),
+          ].join("-"),
   };
 }
