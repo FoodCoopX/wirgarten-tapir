@@ -75,7 +75,9 @@ class AssociationMembershipCreatedLogEntry(ModelLogEntry):
 
     type_name = models.CharField(max_length=ASSOCIATION_MEMBERSHIP_TYPE_NAME_MAX_LENGTH)
 
-    def populate_membership(self, membership: AssociationMembership, actor: TapirUser):
+    def populate_membership(
+        self, membership: AssociationMembership, actor: TapirUser | None
+    ):
         self.populate(model=membership, user=membership.member, actor=actor)
         self.type_name = membership.type.name
 
