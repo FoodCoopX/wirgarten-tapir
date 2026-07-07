@@ -748,7 +748,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 11: Erklärungstext unter dem Checkbox zur Datenschutzerklärung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen der Mitgliederverwaltung und geben sie nicht an Dritte weiter. "
-            'Unsere Datenschutzerklärung kannst du hier einsehen: <a href="{{link_zu_datenschutzerklärung}}">Datenschutzerklärung</a>',
+            'Klicke auf unsere <a href="{link_zu_datenschutzerklärung}">Datenschutzerklärung</a>, um diese einzusehen.',
             description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
