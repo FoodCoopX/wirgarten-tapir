@@ -138,9 +138,9 @@ const SubscriptionTrialPeriodModal: React.FC<
           <Col>
             <ul>
               <li>Vertrag: {formatSubscription(subscription)}</li>
-              <li>Start: {formatDateNumeric(subscription.startDate)}</li>
+              <li>Vertrags-Start: {formatDateNumeric(subscription.startDate)}</li>
               <li>
-                Ende:{" "}
+                Vertrags-Ende:{" "}
                 {subscription.endDate
                   ? formatDateNumeric(subscription.endDate)
                   : "—"}
