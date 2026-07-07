@@ -569,6 +569,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step6a_text": ParameterKeys.BESTELLWIZARD_STEP6A_TEXT,
             "step6b_title": ParameterKeys.BESTELLWIZARD_STEP6B_TITLE,
             "step6b_text": ParameterKeys.BESTELLWIZARD_STEP6B_TEXT,
+            "step6b_checkbox_statute_associations": ParameterKeys.BESTELLWIZARD_STEP6B_CHECKBOX_STATUTE_ASSOCIATIONS,
             "step6c_title": ParameterKeys.BESTELLWIZARD_STEP6C_TITLE,
             "step6c_text": ParameterKeys.BESTELLWIZARD_STEP6C_TEXT,
             "step6c_checkbox_statute": ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,

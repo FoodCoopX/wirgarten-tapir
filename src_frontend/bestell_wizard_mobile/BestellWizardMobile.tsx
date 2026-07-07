@@ -217,15 +217,6 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         }
 
         setSolidarityContribution(settings.solidarityContributionDefault);
-
-        if (
-          newSettings.legalStatus === "association" &&
-          newSettings.associationMembershipTypes.length > 0
-        ) {
-          setSelectedAssociationMembershipType(
-            newSettings.associationMembershipTypes[0],
-          );
-        }
       })
       .catch((error) =>
         handleRequestError(
@@ -724,6 +715,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               setSelectedAssociationMembershipType
             }
             contractStartDate={contractStartDate}
+            active={currentStep === step}
           />
         );
       case "6c_coop_member_now":
