@@ -479,6 +479,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             numberOfCoopShares: selectedNumberOfCoopShares,
             paymentRhythm: personalData.paymentRhythm,
             solidarityContribution: solidarityContribution,
+            associationMembershipTypeId:
+              selectedAssociationMembershipType?.id ?? null,
           },
         })
         .then(handleOrderResponse)

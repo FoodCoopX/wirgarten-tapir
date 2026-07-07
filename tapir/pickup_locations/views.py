@@ -176,7 +176,7 @@ class PickupLocationCapacityEvolutionView(APIView):
         data_points = []
         product_types = ProductType.objects.order_by(*product_type_order_by())
         capacities_by_product_type = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-            pickup_location
+            pickup_location, cache=cache
         )
 
         max_date = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(

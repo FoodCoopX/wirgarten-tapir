@@ -146,7 +146,7 @@ class WaitingListApiView(APIView):
         pagination = self.pagination_class()
 
         entries = WaitingListEntry.objects.prefetch_related(
-            "product_wishes__product",
+            "product_wishes__product__type",
             "pickup_location_wishes__pickup_location",
         ).select_related(
             "member",
@@ -177,7 +177,9 @@ class WaitingListApiView(APIView):
         entries = pagination.paginate_queryset(entries, request)
 
         data = [self.build_entry_data(entry, cache=self.cache) for entry in entries]
-        serializer = WaitingListEntryDetailsSerializer(data, many=True)
+        serializer = WaitingListEntryDetailsSerializer(
+            data, many=True, context={"cache": self.cache}
+        )
 
         return pagination.get_paginated_response(serializer.data)
 
@@ -896,6 +898,7 @@ class GetMemberWaitingListEntryDetailsApiView(APIView):
     def get(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
+        cache = {}
 
         waiting_list_entry = WaitingListEntry.objects.filter(
             member_id=member_id
@@ -904,8 +907,10 @@ class GetMemberWaitingListEntryDetailsApiView(APIView):
         entry_data = None
         if waiting_list_entry is not None:
             entry_data = WaitingListApiView.build_entry_data(
-                waiting_list_entry, cache={}
+                waiting_list_entry, cache=cache
             )
-        serializer = OptionalWaitingListEntryDetailsSerializer({"entry": entry_data})
+        serializer = OptionalWaitingListEntryDetailsSerializer(
+            {"entry": entry_data}, context={"cache": cache}
+        )
 
         return Response(serializer.data)

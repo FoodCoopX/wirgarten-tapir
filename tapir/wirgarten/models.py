@@ -1022,7 +1022,7 @@ class SubscriptionChangeLogEntry(LogEntry):
 
 
 class WaitingListEntry(TapirModel):
-    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
+    member = models.ForeignKey(Member, on_delete=models.PROTECT, null=True)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     phone_number = PhoneNumberField(_("Phone number"))

@@ -71,6 +71,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             "number_of_coop_shares": 2,
             "payment_rhythm": "semiannually",
             "solidarity_contribution": 0,
+            "association_membership_type_id": None,
         }
 
         response = self.client.post(
@@ -124,6 +125,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             "number_of_coop_shares": 2,
             "payment_rhythm": "semiannually",
             "solidarity_contribution": 0,
+            "association_membership_type_id": None,
         }
 
         response = self.client.post(
@@ -175,6 +177,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             "number_of_coop_shares": 2,
             "payment_rhythm": "semiannually",
             "solidarity_contribution": 0,
+            "association_membership_type_id": None,
         }
 
         response = self.client.post(
@@ -183,7 +186,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             content_type="application/json",
         )
 
-        self.assertEqual(200, response.status_code)
+        self.assertStatusCode(response, 200)
         self.assert_order_confirmed(response.json())
         self.assertEqual(1, Member.objects.count())
         self.assertFalse(CoopShareTransaction.objects.exists())
@@ -254,6 +257,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             "number_of_coop_shares": 2,
             "payment_rhythm": "semiannually",
             "solidarity_contribution": 12,
+            "association_membership_type_id": None,
         }
 
         response = self.client.post(

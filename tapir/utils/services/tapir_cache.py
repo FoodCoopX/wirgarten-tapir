@@ -762,3 +762,53 @@ class TapirCache:
             "all_association_memberships",
             lambda: set(AssociationMembership.objects.select_related("member", "type")),
         )
+
+    @classmethod
+    def get_member_association_memberships(cls, cache: dict, member: Member):
+        cache_by_member_id: dict[str, list[AssociationMembership]] = (
+            get_from_cache_or_compute(
+                cache=cache,
+                key="association_memberships_by_member_id",
+                compute_function=lambda: {},
+            )
+        )
+
+        def compute():
+            for membership in cls.get_all_association_memberships(cache=cache):
+                cache_by_member_id.setdefault(membership.id, []).append(membership)
+            return cache_by_member_id.get(member.id, [])
+
+        return get_from_cache_or_compute(
+            cache=cache_by_member_id, key=member.id, compute_function=compute
+        )
+
+    @classmethod
+    def get_member_association_membership_at_date(
+        cls, cache: dict, member: Member, reference_date: datetime.date
+    ):
+        cache_by_member_id: dict[
+            str, dict[datetime.date, AssociationMembership | None]
+        ] = get_from_cache_or_compute(
+            cache=cache,
+            key="association_memberships_by_member_id_and_date",
+            compute_function=lambda: {},
+        )
+        cache_by_date: dict[datetime.date, AssociationMembership | None] = (
+            get_from_cache_or_compute(
+                cache=cache_by_member_id, key=member.id, compute_function=lambda: {}
+            )
+        )
+
+        def compute():
+            for membership in cls.get_member_association_memberships(
+                cache=cache, member=member
+            ):
+                if membership.start_date <= reference_date and (
+                    membership.end_date is None or membership.end_date >= reference_date
+                ):
+                    return membership
+            return None
+
+        return get_from_cache_or_compute(
+            cache=cache_by_date, key=reference_date, compute_function=compute
+        )

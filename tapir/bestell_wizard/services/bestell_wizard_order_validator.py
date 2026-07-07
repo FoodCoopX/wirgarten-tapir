@@ -228,7 +228,7 @@ class BestellWizardOrderValidator:
         ).first()
         if not membership_type:
             raise ValidationError(
-                f"Unbekannte Vereinsmitgliedschaft-ID: {membership_type_id}"
+                f"Unbekannte Vereinsmitgliedschafttyp-ID: {membership_type_id}"
             )
 
         if len(order) == 0 and not get_parameter_value(

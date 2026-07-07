@@ -37,7 +37,7 @@ class TestValidateAssociationContent(TapirUnitTest):
             )
 
         self.assertEqual(
-            "Unbekannte Vereinsmitgliedschaft-ID: test_membership_type_id",
+            "Unbekannte Vereinsmitgliedschafttyp-ID: test_membership_type_id",
             error.exception.message,
         )
         mock_type_objects.filter.assert_called_once_with(id="test_membership_type_id")

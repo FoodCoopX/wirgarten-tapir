@@ -72,6 +72,12 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
    * @memberof PublicConfirmWaitingListEntryRequestRequest
    */
   solidarityContribution: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  associationMembershipTypeId: string | null;
 }
 
 /**
@@ -101,6 +107,11 @@ export function instanceOfPublicConfirmWaitingListEntryRequestRequest(
     value["solidarityContribution"] === undefined
   )
     return false;
+  if (
+    !("associationMembershipTypeId" in value) ||
+    value["associationMembershipTypeId"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -127,6 +138,7 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(
     numberOfCoopShares: json["number_of_coop_shares"],
     paymentRhythm: json["payment_rhythm"],
     solidarityContribution: json["solidarity_contribution"],
+    associationMembershipTypeId: json["association_membership_type_id"],
   };
 }
 
@@ -154,5 +166,6 @@ export function PublicConfirmWaitingListEntryRequestRequestToJSONTyped(
     number_of_coop_shares: value["numberOfCoopShares"],
     payment_rhythm: value["paymentRhythm"],
     solidarity_contribution: value["solidarityContribution"],
+    association_membership_type_id: value["associationMembershipTypeId"],
   };
 }

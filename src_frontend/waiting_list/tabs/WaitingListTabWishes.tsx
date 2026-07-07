@@ -1,7 +1,6 @@
+import dayjs from "dayjs";
 import React from "react";
 import { Col, Form, Row } from "react-bootstrap";
-import PickupLocationWishesEditor from "../PickupLocationWishesEditor.tsx";
-import ProductWishesEditor from "../ProductWishesEditor.tsx";
 import {
   PickupLocation,
   Product,
@@ -9,9 +8,10 @@ import {
   WaitingListPickupLocationWish,
   WaitingListProductWish,
 } from "../../api-client";
-import formatSubscription from "../../utils/formatSubscription.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import dayjs from "dayjs";
+import formatSubscription from "../../utils/formatSubscription.ts";
+import PickupLocationWishesEditor from "../PickupLocationWishesEditor.tsx";
+import ProductWishesEditor from "../ProductWishesEditor.tsx";
 
 interface WaitingListTabWishesProps {
   entryDetails: WaitingListEntryDetails;

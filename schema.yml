@@ -10715,8 +10715,13 @@ components:
         solidarity_contribution:
           type: number
           format: double
+        association_membership_type_id:
+          type: string
+          nullable: true
+          minLength: 1
       required:
       - account_owner
+      - association_membership_type_id
       - contract_accepted
       - entry_id
       - iban
