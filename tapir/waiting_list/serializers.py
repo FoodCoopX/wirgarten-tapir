@@ -124,20 +124,6 @@ class WaitingListEntryUpdateSerializer(serializers.Serializer):
     category = serializers.CharField(required=False, allow_blank=True)
 
 
-class PublicWaitingListEntryNewMemberCreateSerializer(serializers.Serializer):
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    email = serializers.EmailField()
-    phone_number = serializers.CharField()
-    street = serializers.CharField()
-    street_2 = serializers.CharField(allow_blank=True)
-    postcode = serializers.CharField()
-    city = serializers.CharField()
-    pickup_location_ids = serializers.ListField(child=serializers.CharField())
-    shopping_cart = serializers.DictField(child=serializers.IntegerField())
-    number_of_coop_shares = serializers.IntegerField()
-
-
 class PublicWaitingListEntryExistingMemberCreateSerializer(serializers.Serializer):
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
     shopping_cart = serializers.DictField(child=serializers.IntegerField())

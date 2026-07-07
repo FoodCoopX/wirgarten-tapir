@@ -5563,34 +5563,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/PublicWaitingListEntryDetails'
           description: ''
-  /waiting_list/api/public_waiting_list_create_entry_potential_member:
-    post:
-      operationId: waiting_list_api_public_waiting_list_create_entry_potential_member_create
-      tags:
-      - waiting_list
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderConfirmationResponse'
-          description: ''
   /waiting_list/api/send_waiting_list_link:
     post:
       operationId: waiting_list_api_send_waiting_list_link_create
@@ -11040,56 +11012,6 @@ components:
       - member_id
       - pickup_location_ids
       - shopping_cart
-    PublicWaitingListEntryNewMemberCreateRequest:
-      type: object
-      properties:
-        first_name:
-          type: string
-          minLength: 1
-        last_name:
-          type: string
-          minLength: 1
-        email:
-          type: string
-          format: email
-          minLength: 1
-        phone_number:
-          type: string
-          minLength: 1
-        street:
-          type: string
-          minLength: 1
-        street_2:
-          type: string
-        postcode:
-          type: string
-          minLength: 1
-        city:
-          type: string
-          minLength: 1
-        pickup_location_ids:
-          type: array
-          items:
-            type: string
-            minLength: 1
-        shopping_cart:
-          type: object
-          additionalProperties:
-            type: integer
-        number_of_coop_shares:
-          type: integer
-      required:
-      - city
-      - email
-      - first_name
-      - last_name
-      - number_of_coop_shares
-      - phone_number
-      - pickup_location_ids
-      - postcode
-      - shopping_cart
-      - street
-      - street_2
     PublicWaitingListProductWish:
       type: object
       properties:

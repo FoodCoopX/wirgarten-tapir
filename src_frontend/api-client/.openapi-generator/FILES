@@ -190,7 +190,6 @@ models/PublicProductType.ts
 models/PublicSubscription.ts
 models/PublicWaitingListEntryDetails.ts
 models/PublicWaitingListEntryExistingMemberCreateRequest.ts
-models/PublicWaitingListEntryNewMemberCreateRequest.ts
 models/PublicWaitingListProductWish.ts
 models/RecipientRequest.ts
 models/RhythmEnum.ts

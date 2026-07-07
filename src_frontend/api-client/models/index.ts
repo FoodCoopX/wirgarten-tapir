@@ -176,7 +176,6 @@ export * from "./PublicProductType";
 export * from "./PublicSubscription";
 export * from "./PublicWaitingListEntryDetails";
 export * from "./PublicWaitingListEntryExistingMemberCreateRequest";
-export * from "./PublicWaitingListEntryNewMemberCreateRequest";
 export * from "./PublicWaitingListProductWish";
 export * from "./RecipientRequest";
 export * from "./RhythmEnum";
