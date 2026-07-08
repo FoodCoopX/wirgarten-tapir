@@ -1,0 +1,30 @@
+---
+description: Tapir-Konventionen aus Code-Review (FoodCoopX) — reduziert Review-Aufwand
+alwaysApply: true
+---
+
+# Tapir Review-Konventionen
+
+## Probezeit-Domäne
+
+- `trial_disabled` = Admin-/Zahlungs-Schalter (Probezeit-Behandlung an/aus), **unabhängig** vom Kalenderstatus
+- `is_in_trial` / `is_contract_in_trial()` = berechnetes Kalender-Ende liegt noch in der Zukunft
+- **Nicht verwechseln:** Modal-Default und POST-Logik nutzen `trial_disabled`, nicht `is_in_trial`
+- `trial_end_date_override` nur setzen, wenn der Admin **explizit** ein Datum angibt — nie automatisch beim Re-Aktivieren
+- Admin-POST respektiert `trial_disabled` vom Client; kein Überschreiben basierend auf `is_contract_in_trial`
+
+## Python / DRF
+
+- Serializer-Namen: kein `Admin`-Prefix; nur `Public…` für öffentliche APIs markieren
+- Pflicht-Context: `self.context["cache"]` wenn Cache erforderlich (nicht `.get("cache", {})`)
+- Tests: eine Datei pro View/Endpoint
+- Test-Shortcuts nutzen: `assert_order_confirmed()`, `self._set_parameter()`
+- Factory-Defaults nutzen (`period__start_date=…`), redundantes `member=MemberFactory.create()` vermeiden
+- `datetime.date(year=…, month=…, day=…)` in Tests (benannte Argumente)
+
+## Frontend (Admin-UI)
+
+- Neue Buttons/Modals an Geschwister-Komponenten orientieren (z. B. Price/Dates-Button)
+- Binäre Schalter: Checkbox statt zwei Radio-Buttons
+- Form-Hints in `<Form.Text>`, nicht im Label
+- Datums-only an API: lokale `getFullYear/getMonth/getDate` in generierten Client-Models, nicht `toISOString().substring(0, 10)`

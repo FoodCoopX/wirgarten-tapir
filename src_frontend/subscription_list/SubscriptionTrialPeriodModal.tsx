@@ -49,7 +49,7 @@ const SubscriptionTrialPeriodModal: React.FC<
       .subscriptionsSubscriptionsRetrieve({ id: subscriptionId })
       .then((subscriptionData) => {
         setSubscription(subscriptionData);
-        setTrialDisabled(!(subscriptionData.isInTrial ?? false));
+        setTrialDisabled(subscriptionData.trialDisabled ?? false);
         setUseCustomEndDate(subscriptionData.trialEndDateOverride != null);
         setCustomEndDate(
           formatDateForInput(subscriptionData.trialEndDateOverride),
@@ -71,10 +71,13 @@ const SubscriptionTrialPeriodModal: React.FC<
       return null;
     }
     if (useCustomEndDate && customEndDate) {
-      const [year, month, day] = customEndDate.split("-").map(Number);
-      return new Date(year, month - 1, day);
+      return new Date(customEndDate);
     }
-    return subscription.defaultTrialEndDate ?? null;
+    return (
+      subscription.effectiveTrialEndDate ??
+      subscription.defaultTrialEndDate ??
+      null
+    );
   }
 
   function onConfirmChange() {
@@ -88,8 +91,7 @@ const SubscriptionTrialPeriodModal: React.FC<
         setError("Bitte ein Probezeit-Enddatum angeben.");
         return;
       }
-      const [year, month, day] = customEndDate.split("-").map(Number);
-      trialEndDateOverride = new Date(year, month - 1, day);
+      trialEndDateOverride = new Date(customEndDate);
     }
 
     setLoading(true);
@@ -108,7 +110,7 @@ const SubscriptionTrialPeriodModal: React.FC<
           location.reload();
           onHide();
         } else {
-          setError(response.error ?? undefined);
+          setError(response.error!);
         }
       })
       .catch((requestError) =>
@@ -159,25 +161,14 @@ const SubscriptionTrialPeriodModal: React.FC<
           <Col>
             <Form.Group className={"mb-3"}>
               <Form.Check
-                id={"trial_enabled"}
-                type={"radio"}
-                name={"trial_status"}
-                label={"Probezeit aktiv"}
-                checked={!trialDisabled}
-                onChange={() => {
-                  setTrialDisabled(false);
-                  setError(undefined);
-                }}
-              />
-              <Form.Check
                 id={"trial_disabled"}
-                type={"radio"}
-                name={"trial_status"}
                 label={"Probezeit deaktiviert"}
                 checked={trialDisabled}
-                onChange={() => {
-                  setTrialDisabled(true);
-                  setUseCustomEndDate(false);
+                onChange={(event) => {
+                  setTrialDisabled(event.target.checked);
+                  if (event.target.checked) {
+                    setUseCustomEndDate(false);
+                  }
                   setError(undefined);
                 }}
               />
@@ -195,7 +186,7 @@ const SubscriptionTrialPeriodModal: React.FC<
               </p>
               <Form.Check
                 id={"use_custom_trial_end"}
-                label={"Individuelles Probezeit-Ende (muss ein Sonntag sein)"}
+                label={"Individuelles Probezeit-Ende"}
                 checked={useCustomEndDate}
                 onChange={(event) => {
                   setUseCustomEndDate(event.target.checked);
@@ -212,15 +203,20 @@ const SubscriptionTrialPeriodModal: React.FC<
                 }}
               />
               {useCustomEndDate && (
-                <Form.Control
-                  type={"date"}
-                  className={"mt-2"}
-                  value={customEndDate}
-                  onChange={(event) => {
-                    setCustomEndDate(event.target.value);
-                    setError(undefined);
-                  }}
-                />
+                <>
+                  <Form.Control
+                    type={"date"}
+                    className={"mt-2"}
+                    value={customEndDate}
+                    onChange={(event) => {
+                      setCustomEndDate(event.target.value);
+                      setError(undefined);
+                    }}
+                  />
+                  <Form.Text className={"text-muted"}>
+                    Muss ein Sonntag sein.
+                  </Form.Text>
+                </>
               )}
             </Col>
           </Row>

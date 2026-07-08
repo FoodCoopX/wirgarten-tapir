@@ -13,7 +13,7 @@ const SubscriptionTrialPeriodButton: React.FC<
   SubscriptionTrialPeriodButtonProps
 > = ({ csrfToken }) => {
   const [showModal, setShowModal] = useState(false);
-  const [subscriptionId, setSubscriptionId] = useState<string>();
+  const [subscriptionId, setSubscriptionId] = useState();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   return (
@@ -22,12 +22,12 @@ const SubscriptionTrialPeriodButton: React.FC<
         icon={"hourglass_empty"}
         variant={"outline-primary"}
         onClick={() => {
-          const selectedSubscriptionId = getParameterFromUrl("contract");
-          if (!selectedSubscriptionId) {
+          const subscriptionId = getParameterFromUrl("contract");
+          if (!subscriptionId) {
             alert("Du musst erst der Vertrag auswählen.");
             return;
           }
-          setSubscriptionId(selectedSubscriptionId);
+          setSubscriptionId(subscriptionId);
           setShowModal(true);
         }}
         tooltip={"Probezeit aktivieren/deaktivieren"}

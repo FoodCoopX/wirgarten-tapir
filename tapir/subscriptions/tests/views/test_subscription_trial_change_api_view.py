@@ -4,14 +4,9 @@ from django.urls import reverse
 from rest_framework import status
 
 from tapir.configuration.models import TapirParameter
-from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import (
-    GrowingPeriodFactory,
-    MemberFactory,
-    SubscriptionFactory,
-)
+from tapir.wirgarten.tests.factories import MemberFactory, SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
@@ -47,7 +42,6 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
     def test_post_disableTrial_setsTrialDisabledAndClearsOverride(self):
         admin = MemberFactory.create(is_superuser=True)
         subscription = SubscriptionFactory.create(
-            member=MemberFactory.create(),
             trial_disabled=False,
             trial_end_date_override=datetime.date(2026, 3, 22),
         )
@@ -59,29 +53,16 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        self.assertTrue(response.json()["order_confirmed"])
+        self.assert_order_confirmed(response.json())
         subscription.refresh_from_db()
         self.assertTrue(subscription.trial_disabled)
         self.assertIsNone(subscription.trial_end_date_override)
 
-    def test_post_enableExpiredTrial_setsTrialEndDateOverride(self):
+    def test_post_enableTrial_keepsOverrideEmpty(self):
         admin = MemberFactory.create(is_superuser=True)
-        period = GrowingPeriodFactory.create(
-            start_date=datetime.date(2026, 1, 1),
-            end_date=datetime.date(2026, 12, 31),
-        )
         subscription = SubscriptionFactory.create(
-            member=MemberFactory.create(),
             trial_disabled=True,
-            period=period,
-            start_date=period.start_date,
-            end_date=period.end_date,
-        )
-        cache = {}
-        expected_override = (
-            TrialPeriodManager.get_default_trial_end_date_for_admin_enable(
-                subscription, cache=cache
-            )
+            period__start_date=datetime.date(2026, 1, 1),
         )
         self.client.force_login(admin)
 
@@ -91,17 +72,33 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        self.assertTrue(response.json()["order_confirmed"])
+        self.assert_order_confirmed(response.json())
         subscription.refresh_from_db()
         self.assertFalse(subscription.trial_disabled)
-        self.assertEqual(expected_override, subscription.trial_end_date_override)
+        self.assertIsNone(subscription.trial_end_date_override)
+
+    def test_post_disableTrial_whenNotInTrial_stillDisables(self):
+        admin = MemberFactory.create(is_superuser=True)
+        mock_timezone(self, datetime.datetime(2026, 7, 3, 12, 0, 0))
+        subscription = SubscriptionFactory.create(
+            trial_disabled=False,
+            period__start_date=datetime.date(2026, 1, 1),
+        )
+        self.client.force_login(admin)
+
+        response = self.client.post(
+            reverse("subscriptions:subscription_trial_change"),
+            data={"subscription_id": subscription.id, "trial_disabled": True},
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_order_confirmed(response.json())
+        subscription.refresh_from_db()
+        self.assertTrue(subscription.trial_disabled)
 
     def test_post_invalidWeekdayOverride_returnsError(self):
         admin = MemberFactory.create(is_superuser=True)
-        subscription = SubscriptionFactory.create(
-            member=MemberFactory.create(),
-            trial_disabled=False,
-        )
+        subscription = SubscriptionFactory.create(trial_disabled=False)
         self.client.force_login(admin)
 
         response = self.client.post(
@@ -109,7 +106,9 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
             data={
                 "subscription_id": subscription.id,
                 "trial_disabled": False,
-                "trial_end_date_override": datetime.date(2026, 4, 6).isoformat(),
+                "trial_end_date_override": datetime.date(
+                    year=2026, month=4, day=6
+                ).isoformat(),
             },
         )
 
@@ -123,13 +122,8 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
 
     def test_post_enableTrialWhenGloballyDisabled_returnsError(self):
         admin = MemberFactory.create(is_superuser=True)
-        subscription = SubscriptionFactory.create(
-            member=MemberFactory.create(),
-            trial_disabled=True,
-        )
-        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
-            value=False
-        )
+        subscription = SubscriptionFactory.create(trial_disabled=True)
+        self._set_parameter(ParameterKeys.TRIAL_PERIOD_ENABLED, False)
         self.client.force_login(admin)
 
         response = self.client.post(
@@ -142,24 +136,4 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
         self.assertFalse(response_content["order_confirmed"])
         self.assertEqual("Probezeit ist global deaktiviert", response_content["error"])
 
-        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
-            value=True
-        )
-
-    def test_retrieve_includesTrialFields(self):
-        admin = MemberFactory.create(is_superuser=True)
-        subscription = SubscriptionFactory.create(
-            member=MemberFactory.create(),
-            trial_disabled=False,
-        )
-        self.client.force_login(admin)
-
-        response = self.client.get(
-            reverse("subscriptions:subscriptions-detail", args=[subscription.id]),
-        )
-
-        self.assertStatusCode(response, status.HTTP_200_OK)
-        response_content = response.json()
-        self.assertIn("is_in_trial", response_content)
-        self.assertIn("default_trial_end_date", response_content)
-        self.assertIn("effective_trial_end_date", response_content)
+        self._set_parameter(ParameterKeys.TRIAL_PERIOD_ENABLED, True)

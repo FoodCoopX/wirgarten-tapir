@@ -112,7 +112,7 @@ class SubscriptionListFilter(FilterSet):
     )
     show_only_manual_trial_period = BooleanFilter(
         label=_(
-            "Nur Verträge mit manuell deaktivierter/aktivierter Probezeit anzeigen"
+            "Nur Verträge mit manuell deaktivierter Probezeit oder manuell festgelegter Probezeit-Dauer anzeigen"
         ),
         field_name="show_only_manual_trial_period",
         method="filter_show_only_manual_trial_period",

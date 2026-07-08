@@ -30,10 +30,9 @@ from tapir.subscriptions.serializers import (
     SubscriptionDateChangeRequestSerializer,
     ConvertWeekToDateForSubscriptionChangesResponseSerializer,
     SubscriptionPriceOverrideChangeRequestSerializer,
-    AdminSubscriptionSerializer,
+    SubscriptionTrialFieldsSerializer,
     SubscriptionTrialChangeRequestSerializer,
 )
-from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.subscription_change_week_to_date_converter import (
     SubscriptionChangeWeekToDateConverter,
@@ -146,7 +145,7 @@ class PublicProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
 class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     queryset = Subscription.objects.select_related("product")
-    serializer_class = AdminSubscriptionSerializer
+    serializer_class = SubscriptionTrialFieldsSerializer
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -362,21 +361,8 @@ class SubscriptionTrialChangeApiView(APIView):
                 ).data
             )
 
-        if (
-            trial_disabled
-            and not subscription.trial_disabled
-            and not TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
-        ):
-            trial_disabled = False
-
-        trial_end_date_override = (
-            TrialPeriodManager.resolve_trial_end_date_override_for_admin_save(
-                subscription,
-                trial_disabled=trial_disabled,
-                trial_end_date_override=trial_end_date_override,
-                cache=cache,
-            )
-        )
+        if trial_disabled:
+            trial_end_date_override = None
 
         with transaction.atomic():
             subscription.trial_disabled = trial_disabled

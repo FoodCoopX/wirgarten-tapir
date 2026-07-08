@@ -36,53 +36,6 @@ class TrialPeriodManager:
         return cls.get_last_day_of_trial_period_by_weeks(contract, cache=cache)
 
     @classmethod
-    def get_default_trial_end_date_for_admin_enable(
-        cls, contract: Subscription | SolidarityContribution, cache: dict
-    ) -> datetime.date | None:
-        if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
-            return None
-
-        if cls.is_contract_in_trial(contract, cache=cache):
-            return cls.get_last_day_of_trial_period(contract, cache=cache)
-
-        contract_start_end = cls.get_last_day_of_trial_period_by_weeks(
-            contract, cache=cache
-        )
-        today = get_today(cache=cache)
-        if contract_start_end >= today:
-            return contract_start_end
-
-        return cls.get_last_day_of_trial_period_by_weeks_from_reference(
-            contract, today, cache=cache
-        )
-
-    @classmethod
-    def resolve_trial_end_date_override_for_admin_save(
-        cls,
-        contract: Subscription | SolidarityContribution,
-        trial_disabled: bool,
-        trial_end_date_override: datetime.date | None,
-        cache: dict,
-    ) -> datetime.date | None:
-        if trial_disabled:
-            return None
-        if trial_end_date_override is not None:
-            return trial_end_date_override
-        if cls.is_contract_in_trial(contract, cache=cache):
-            return None
-
-        # Re-activating expired trial: persist override so end date is from today, not contract start.
-        default_end = cls.get_default_trial_end_date_for_admin_enable(
-            contract, cache=cache
-        )
-        contract_start_end = cls.get_last_day_of_trial_period_by_weeks(
-            contract, cache=cache
-        )
-        if default_end != contract_start_end:
-            return default_end
-        return None
-
-    @classmethod
     def get_last_day_of_trial_period_by_weeks(
         cls, contract: Subscription | SolidarityContribution, cache: dict
     ) -> datetime.date:
