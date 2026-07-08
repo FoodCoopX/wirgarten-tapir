@@ -10,7 +10,13 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
 )
 
-from tapir.core.config import LEGAL_STATUS_ASSOCIATION, LEGAL_STATUS_COOPERATIVE
+from tapir.associations.models import AssociationMembership
+from tapir.associations.tests.factories import AssociationMembershipTypeFactory
+from tapir.core.config import (
+    LEGAL_STATUS_COOPERATIVE,
+    LEGAL_STATUS_COMPANY,
+    LEGAL_STATUS_ASSOCIATION,
+)
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
@@ -154,7 +160,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
 
     def test_post_legalStatusIsNotCooperative_noCoopSharesArePurchased(self):
         self._set_parameter(
-            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_COMPANY
         )
 
         entry = WaitingListEntryFactory.create(
@@ -290,3 +296,47 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             },
             trigger_data.token_data,
         )
+
+    def test_post_legalStatusIsAssociation_associationMembershipCreated(self):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+            first_name="John",
+            last_name="Doe",
+            email="john@example.com",
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+        membership_type = AssociationMembershipTypeFactory.create()
+
+        confirm_data = {
+            "entry_id": str(entry.id),
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "John Doe",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 2,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+            "association_membership_type_id": membership_type.id,
+        }
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(confirm_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+        self.assertEqual(1, Member.objects.count())
+        self.assertFalse(CoopShareTransaction.objects.exists())
+
+        self.assertEqual(1, AssociationMembership.objects.count())
+        membership = AssociationMembership.objects.get()
+        self.assertEqual(membership_type, membership.type)

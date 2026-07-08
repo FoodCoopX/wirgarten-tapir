@@ -3,6 +3,7 @@ import datetime
 from django.db import transaction
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
 )
@@ -32,7 +33,12 @@ from tapir.wirgarten.models import (
     OrderFeedback,
 )
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.utils import get_now, get_today, legal_status_is_cooperative
+from tapir.wirgarten.utils import (
+    get_now,
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 
 class WaitingListEntryConfirmationApplier:
@@ -108,6 +114,17 @@ class WaitingListEntryConfirmationApplier:
         OrderFeedback.objects.filter(waiting_list_entry=waiting_list_entry).update(
             waiting_list_entry=None, member=member
         )
+
+        if legal_status_is_association(cache=cache) and is_new_member:
+            BestellWizardOrderFulfiller.create_association_membership(
+                member=member,
+                association_membership_type=AssociationMembershipType.objects.get(
+                    id=validated_data["association_membership_type_id"]
+                ),
+                actor=actor,
+                cache=cache,
+                subscriptions=new_subscriptions,
+            )
 
         waiting_list_entry.delete()
 

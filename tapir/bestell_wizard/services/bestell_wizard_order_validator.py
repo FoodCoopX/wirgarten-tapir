@@ -105,7 +105,11 @@ class BestellWizardOrderValidator:
             )
         elif legal_status_is_association(cache=cache):
             cls.validate_association_content(
-                validated_data=validated_serializer_data, order=order, cache=cache
+                association_membership_type_id=validated_serializer_data.get(
+                    "association_membership_type_id", None
+                ),
+                order=order,
+                cache=cache,
             )
 
         cls.validate_distribution_channels(
@@ -217,18 +221,17 @@ class BestellWizardOrderValidator:
 
     @classmethod
     def validate_association_content(
-        cls, validated_data: dict, order: TapirOrder, cache: dict
+        cls, association_membership_type_id: str | None, order: TapirOrder, cache: dict
     ):
-        membership_type_id = validated_data.get("association_membership_type_id", None)
-        if membership_type_id is None:
+        if association_membership_type_id is None:
             raise ValidationError("Keine Vereinsmitgliedschaft ausgewählt")
 
         membership_type = AssociationMembershipType.objects.filter(
-            id=membership_type_id
+            id=association_membership_type_id
         ).first()
         if not membership_type:
             raise ValidationError(
-                f"Unbekannte Vereinsmitgliedschafttyp-ID: {membership_type_id}"
+                f"Unbekannte Vereinsmitgliedschafttyp-ID: {association_membership_type_id}"
             )
 
         if len(order) == 0 and not get_parameter_value(
