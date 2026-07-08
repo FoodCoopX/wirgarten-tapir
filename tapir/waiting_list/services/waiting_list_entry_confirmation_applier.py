@@ -6,6 +6,7 @@ from tapir.accounts.models import TapirUser
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -120,6 +121,11 @@ class WaitingListEntryConfirmationApplier:
                 cache=cache,
                 actor=actor,
             )
+
+        if MemberNumberService.assign_member_number_if_eligible(
+            member=member, cache=cache
+        ):
+            member.save()
 
         if len(new_subscriptions) > 0:
             ApplyTapirOrderManager.send_order_confirmation_mail(

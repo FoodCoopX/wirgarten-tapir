@@ -38,7 +38,7 @@ from tapir.wirgarten.models import (
     OrderFeedback,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.tasks import generate_member_numbers
+from tapir.wirgarten.tasks import assign_member_numbers
 from tapir.wirgarten.utils import get_today
 
 
@@ -130,7 +130,7 @@ class UserGenerator:
         cls.link_members_to_pickup_location(
             members_that_need_a_pickup_location, organization=organization
         )
-        generate_member_numbers()
+        assign_member_numbers()
 
         # The creation date of subscriptions is used when generating payments , so we have to set a realistic date.
         Subscription.objects.update(created_at=F("start_date"))
