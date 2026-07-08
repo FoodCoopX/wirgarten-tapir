@@ -364,6 +364,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             "number_of_coop_shares": 2,
             "payment_rhythm": "semiannually",
             "solidarity_contribution": 0,
+            "association_membership_type_id": None,
         }
 
         response = self.client.post(
@@ -401,6 +402,7 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             "number_of_coop_shares": 2,
             "payment_rhythm": "semiannually",
             "solidarity_contribution": 0,
+            "association_membership_type_id": None,
         }
 
         response = self.client.post(

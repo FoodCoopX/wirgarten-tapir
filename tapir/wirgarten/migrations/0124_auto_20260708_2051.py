@@ -27,7 +27,7 @@ def update_mail_token_coop_entry_date(apps, schema):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("wirgarten", "0121_remove_waitinglistentry_association_membership_type"),
+        ("wirgarten", "0123_remove_waitinglistentry_association_membership_type"),
     ]
 
     operations = [

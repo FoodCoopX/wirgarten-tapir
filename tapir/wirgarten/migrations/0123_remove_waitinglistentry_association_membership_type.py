@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("wirgarten", "0120_waitinglistentry_association_membership_type_and_more"),
+        ("wirgarten", "0122_waitinglistentry_association_membership_type_and_more"),
     ]
 
     operations = [

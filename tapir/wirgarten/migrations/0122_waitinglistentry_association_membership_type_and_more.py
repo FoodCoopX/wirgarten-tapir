@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("associations", "0007_associationmembership_cancellation_ts"),
-        ("wirgarten", "0119_remove_producttype_is_association_membership_and_more"),
+        ("wirgarten", "0121_remove_producttype_is_association_membership_and_more"),
     ]
 
     operations = [
