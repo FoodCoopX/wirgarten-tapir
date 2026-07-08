@@ -20,6 +20,7 @@ from tapir.associations.models import (
     AssociationMembershipType,
     AssociationMembershipTypePrice,
     AssociationMembership,
+    AssociationMembershipUpdatedLogEntry,
 )
 from tapir.associations.serializers import (
     AssociationMembershipTypeSerializer,
@@ -27,6 +28,7 @@ from tapir.associations.serializers import (
     AdminSetAssociationMembershipRequestSerializer,
     MemberAssociationMembershipDetailsSerializer,
     ExistingMemberUpdatesAssociationMembershipRequest,
+    SetAssociationMembershipEndDateRequestSerializer,
 )
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
@@ -107,6 +109,8 @@ class MemberAssociationMembershipDetails(APIView):
 
 
 class AdminSetAssociationMembership(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
     @extend_schema(
         responses={200: OrderConfirmationResponseSerializer},
         request=AdminSetAssociationMembershipRequestSerializer,
@@ -287,3 +291,45 @@ class ExistingMemberUpdatesAssociationMembershipApiView(APIView):
                         recipient_id_in_base_queryset=member.id,
                     ),
                 )
+
+
+class SetAssociationMembershipEndDateApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        request=SetAssociationMembershipEndDateRequestSerializer,
+    )
+    def post(self, request):
+        serializer = SetAssociationMembershipEndDateRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        membership = get_object_or_404(
+            AssociationMembership, id=serializer.validated_data["membership_id"]
+        )
+        end_date = serializer.validated_data["end_date"]
+
+        if end_date < membership.start_date:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {
+                        "order_confirmed": False,
+                        "error": "Das End-Datum muss nach dem Start-Datum sein",
+                    }
+                ).data
+            )
+
+        with transaction.atomic():
+            before_changes = freeze_for_log(membership)
+            membership.end_date = end_date
+            membership.save()
+            AssociationMembershipUpdatedLogEntry().populate(
+                old_frozen=before_changes,
+                new_model=membership,
+                actor=request.user,
+                user=membership.member,
+            ).save()
+
+        return Response(
+            OrderConfirmationResponseSerializer({"order_confirmed": True}).data
+        )

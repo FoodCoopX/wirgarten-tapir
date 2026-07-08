@@ -69,3 +69,8 @@ class ExistingMemberUpdatesAssociationMembershipRequest(Serializer):
     association_membership_type_id = CharField()
     iban = serializers.CharField(required=False, allow_blank=True)
     account_owner = serializers.CharField(required=False, allow_blank=True)
+
+
+class SetAssociationMembershipEndDateRequestSerializer(Serializer):
+    membership_id = CharField()
+    end_date = DateField()

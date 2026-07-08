@@ -23,6 +23,7 @@ import type {
   OrderConfirmationResponse,
   PatchedAssociationMembershipTypePriceRequest,
   PatchedAssociationMembershipTypeRequest,
+  SetAssociationMembershipEndDateRequestRequest,
 } from "../models/index";
 import {
   AdminSetAssociationMembershipRequestRequestToJSON,
@@ -35,6 +36,7 @@ import {
   OrderConfirmationResponseFromJSON,
   PatchedAssociationMembershipTypePriceRequestToJSON,
   PatchedAssociationMembershipTypeRequestToJSON,
+  SetAssociationMembershipEndDateRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
 
@@ -48,6 +50,10 @@ export interface AssociationsApiExistingMemberUpdatesMembershipCreateRequest {
 
 export interface AssociationsApiMemberAssociationMembershipsRetrieveRequest {
   memberId?: string;
+}
+
+export interface AssociationsApiSetMembershipEndDateCreateRequest {
+  setAssociationMembershipEndDateRequestRequest: SetAssociationMembershipEndDateRequestRequest;
 }
 
 export interface AssociationsAssociationMembershipTypesCreateRequest {
@@ -289,6 +295,72 @@ export class AssociationsApi extends runtime.BaseAPI {
         requestParameters,
         initOverrides,
       );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiSetMembershipEndDateCreateRaw(
+    requestParameters: AssociationsApiSetMembershipEndDateCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters["setAssociationMembershipEndDateRequestRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "setAssociationMembershipEndDateRequestRequest",
+        'Required parameter "setAssociationMembershipEndDateRequestRequest" was null or undefined when calling associationsApiSetMembershipEndDateCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/set_membership_end_date`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: SetAssociationMembershipEndDateRequestRequestToJSON(
+          requestParameters["setAssociationMembershipEndDateRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiSetMembershipEndDateCreate(
+    requestParameters: AssociationsApiSetMembershipEndDateCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response = await this.associationsApiSetMembershipEndDateCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

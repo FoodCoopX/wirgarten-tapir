@@ -25,6 +25,11 @@ urlpatterns = [
         views.ExistingMemberUpdatesAssociationMembershipApiView.as_view(),
         name="existing_member_updates_membership",
     ),
+    path(
+        "api/set_membership_end_date",
+        views.SetAssociationMembershipEndDateApiView.as_view(),
+        name="set_membership_end_date",
+    ),
 ]
 
 router = DefaultRouter()

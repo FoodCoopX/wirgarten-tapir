@@ -80,6 +80,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberAssociationMembershipDetails'
           description: ''
+  /associations/api/set_membership_end_date:
+    post:
+      operationId: associations_api_set_membership_end_date_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetAssociationMembershipEndDateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetAssociationMembershipEndDateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetAssociationMembershipEndDateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /associations/association_membership_types/:
     get:
       operationId: associations_association_membership_types_list
@@ -11184,6 +11212,18 @@ components:
       - mail_category_ids_additive
       - static_segment_ids_additive
       - static_segment_ids_subtractive
+    SetAssociationMembershipEndDateRequestRequest:
+      type: object
+      properties:
+        membership_id:
+          type: string
+          minLength: 1
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - membership_id
     SolidarityContribution:
       type: object
       properties:

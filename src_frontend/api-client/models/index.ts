@@ -185,6 +185,7 @@ export * from "./SaveExtendedProductTypeRequest";
 export * from "./SegmentData";
 export * from "./SegmentDataRequest";
 export * from "./SendLinkSerializerRequest";
+export * from "./SetAssociationMembershipEndDateRequestRequest";
 export * from "./SolidarityContribution";
 export * from "./SolidarityContributionCancellationData";
 export * from "./SolidarityStepPositionEnum";

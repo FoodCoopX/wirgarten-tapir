@@ -199,6 +199,7 @@ models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
+models/SetAssociationMembershipEndDateRequestRequest.ts
 models/SolidarityContribution.ts
 models/SolidarityContributionCancellationData.ts
 models/SolidarityStepPositionEnum.ts

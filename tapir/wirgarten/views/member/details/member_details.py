@@ -167,9 +167,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         ) and get_parameter_value(
             key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS, cache=cache
         )
-        context["show_association_admin_content"] = self.request.user.has_perm(
-            Permission.Coop.MANAGE
-        )
 
         context["payment_rhythm"] = MemberPaymentRhythmService.get_rhythm_display_name(
             MemberPaymentRhythmService.get_member_payment_rhythm(
