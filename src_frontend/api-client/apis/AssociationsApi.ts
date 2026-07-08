@@ -14,22 +14,24 @@
 
 import type {
   AdminSetAssociationMembershipRequestRequest,
-  AssociationMembership,
   AssociationMembershipType,
   AssociationMembershipTypePrice,
   AssociationMembershipTypePriceRequest,
   AssociationMembershipTypeRequest,
+  ExistingMemberUpdatesAssociationMembershipRequestRequest,
+  MemberAssociationMembershipDetails,
   OrderConfirmationResponse,
   PatchedAssociationMembershipTypePriceRequest,
   PatchedAssociationMembershipTypeRequest,
 } from "../models/index";
 import {
   AdminSetAssociationMembershipRequestRequestToJSON,
-  AssociationMembershipFromJSON,
   AssociationMembershipTypeFromJSON,
   AssociationMembershipTypePriceFromJSON,
   AssociationMembershipTypePriceRequestToJSON,
   AssociationMembershipTypeRequestToJSON,
+  ExistingMemberUpdatesAssociationMembershipRequestRequestToJSON,
+  MemberAssociationMembershipDetailsFromJSON,
   OrderConfirmationResponseFromJSON,
   PatchedAssociationMembershipTypePriceRequestToJSON,
   PatchedAssociationMembershipTypeRequestToJSON,
@@ -40,7 +42,11 @@ export interface AssociationsApiAdminCreateMembershipCreateRequest {
   adminSetAssociationMembershipRequestRequest: AdminSetAssociationMembershipRequestRequest;
 }
 
-export interface AssociationsApiMemberAssociationMembershipsListRequest {
+export interface AssociationsApiExistingMemberUpdatesMembershipCreateRequest {
+  existingMemberUpdatesAssociationMembershipRequestRequest: ExistingMemberUpdatesAssociationMembershipRequestRequest;
+}
+
+export interface AssociationsApiMemberAssociationMembershipsRetrieveRequest {
   memberId?: string;
 }
 
@@ -160,10 +166,81 @@ export class AssociationsApi extends runtime.BaseAPI {
 
   /**
    */
-  async associationsApiMemberAssociationMembershipsListRaw(
-    requestParameters: AssociationsApiMemberAssociationMembershipsListRequest,
+  async associationsApiExistingMemberUpdatesMembershipCreateRaw(
+    requestParameters: AssociationsApiExistingMemberUpdatesMembershipCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<AssociationMembership>>> {
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters[
+        "existingMemberUpdatesAssociationMembershipRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "existingMemberUpdatesAssociationMembershipRequestRequest",
+        'Required parameter "existingMemberUpdatesAssociationMembershipRequestRequest" was null or undefined when calling associationsApiExistingMemberUpdatesMembershipCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/existing_member_updates_membership`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: ExistingMemberUpdatesAssociationMembershipRequestRequestToJSON(
+          requestParameters[
+            "existingMemberUpdatesAssociationMembershipRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiExistingMemberUpdatesMembershipCreate(
+    requestParameters: AssociationsApiExistingMemberUpdatesMembershipCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.associationsApiExistingMemberUpdatesMembershipCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiMemberAssociationMembershipsRetrieveRaw(
+    requestParameters: AssociationsApiMemberAssociationMembershipsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberAssociationMembershipDetails>> {
     const queryParameters: any = {};
 
     if (requestParameters["memberId"] != null) {
@@ -197,18 +274,18 @@ export class AssociationsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(AssociationMembershipFromJSON),
+      MemberAssociationMembershipDetailsFromJSON(jsonValue),
     );
   }
 
   /**
    */
-  async associationsApiMemberAssociationMembershipsList(
-    requestParameters: AssociationsApiMemberAssociationMembershipsListRequest = {},
+  async associationsApiMemberAssociationMembershipsRetrieve(
+    requestParameters: AssociationsApiMemberAssociationMembershipsRetrieveRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<AssociationMembership>> {
+  ): Promise<MemberAssociationMembershipDetails> {
     const response =
-      await this.associationsApiMemberAssociationMembershipsListRaw(
+      await this.associationsApiMemberAssociationMembershipsRetrieveRaw(
         requestParameters,
         initOverrides,
       );

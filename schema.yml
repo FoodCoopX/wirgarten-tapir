@@ -31,9 +31,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /associations/api/existing_member_updates_membership:
+    post:
+      operationId: associations_api_existing_member_updates_membership_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExistingMemberUpdatesAssociationMembershipRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExistingMemberUpdatesAssociationMembershipRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExistingMemberUpdatesAssociationMembershipRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /associations/api/member_association_memberships:
     get:
-      operationId: associations_api_member_association_memberships_list
+      operationId: associations_api_member_association_memberships_retrieve
       parameters:
       - in: query
         name: member_id
@@ -50,9 +78,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AssociationMembership'
+                $ref: '#/components/schemas/MemberAssociationMembershipDetails'
           description: ''
   /associations/association_membership_types/:
     get:
@@ -8031,6 +8057,22 @@ components:
       - as_admin
       - member_id
       - number_of_shares_to_add
+    ExistingMemberUpdatesAssociationMembershipRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        association_membership_type_id:
+          type: string
+          minLength: 1
+        iban:
+          type: string
+        account_owner:
+          type: string
+      required:
+      - association_membership_type_id
+      - member_id
     ExportSegment:
       type: object
       properties:
@@ -8760,6 +8802,19 @@ components:
       - last_name
       - password
       - username
+    MemberAssociationMembershipDetails:
+      type: object
+      properties:
+        memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationMembership'
+        order_wizard_url:
+          type: string
+          nullable: true
+      required:
+      - memberships
+      - order_wizard_url
     MemberBankDataResponse:
       type: object
       properties:

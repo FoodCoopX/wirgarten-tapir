@@ -20,6 +20,11 @@ urlpatterns = [
         views.AdminSetAssociationMembership.as_view(),
         name="admin_create_membership",
     ),
+    path(
+        "api/existing_member_updates_membership",
+        views.ExistingMemberUpdatesAssociationMembershipApiView.as_view(),
+        name="existing_member_updates_membership",
+    ),
 ]
 
 router = DefaultRouter()

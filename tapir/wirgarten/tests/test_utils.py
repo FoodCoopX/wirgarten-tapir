@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.test import TestCase, Client, SimpleTestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
+from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -51,6 +52,17 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
         admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
         return admin
+
+    def assert_mail_event_has_been_triggered(self, mock_fire_action: Mock, key: str):
+        mock_fire_action.assert_called()
+        for call in mock_fire_action.mock_calls:
+            trigger_data: TransactionalTriggerData = call.kwargs["trigger_data"]
+            if trigger_data.key == key:
+                return
+
+        self.fail(
+            f"Expected trigger ({key}) not found in {mock_fire_action.mock_calls}"
+        )
 
 
 class TapirUnitTest(TapirFactoryMixin, SimpleTestCase):

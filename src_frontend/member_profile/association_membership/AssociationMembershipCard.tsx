@@ -26,6 +26,7 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [memberships, setMemberships] = useState<AssociationMembership[]>([]);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [orderWizardUrl, setOrderWizardUrl] = useState<string>();
 
   useEffect(() => {
     loadData();
@@ -35,8 +36,13 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
     setLoading(true);
 
     api
-      .associationsApiMemberAssociationMembershipsList({ memberId: memberId })
-      .then(setMemberships)
+      .associationsApiMemberAssociationMembershipsRetrieve({
+        memberId: memberId,
+      })
+      .then((response) => {
+        setMemberships(response.memberships);
+        setOrderWizardUrl(response.orderWizardUrl ?? undefined);
+      })
       .catch((error) =>
         handleRequestError(
           error,
@@ -156,6 +162,17 @@ const AssociationMembershipCard: React.FC<AssociationMembershipCardProps> = ({
             </>
           )}
         </Card.Body>
+        {orderWizardUrl && (
+          <Card.Footer>
+            <div className={"d-flex justify-content-end"}>
+              <TapirButton
+                variant={"outline-primary"}
+                icon={"add"}
+                onClick={() => location.assign(orderWizardUrl)}
+              />
+            </div>
+          </Card.Footer>
+        )}
       </Card>
       {admin && (
         <AssociationMembershipAdminModal

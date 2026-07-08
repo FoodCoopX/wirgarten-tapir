@@ -71,6 +71,7 @@ models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
 models/ExistingMemberPurchasesSharesRequestRequest.ts
+models/ExistingMemberUpdatesAssociationMembershipRequestRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
 models/ExtendedMemberCredit.ts
@@ -95,6 +96,7 @@ models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MandateReferencePreviewResponse.ts
 models/Member.ts
+models/MemberAssociationMembershipDetails.ts
 models/MemberBankDataResponse.ts
 models/MemberCountry.ts
 models/MemberCredit.ts

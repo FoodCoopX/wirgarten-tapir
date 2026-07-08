@@ -775,7 +775,9 @@ class TapirCache:
 
         def compute():
             for membership in cls.get_all_association_memberships(cache=cache):
-                cache_by_member_id.setdefault(membership.id, []).append(membership)
+                cache_by_member_id.setdefault(membership.member.id, []).append(
+                    membership
+                )
             return cache_by_member_id.get(member.id, [])
 
         return get_from_cache_or_compute(

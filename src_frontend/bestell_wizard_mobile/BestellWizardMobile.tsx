@@ -718,6 +718,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             }
             contractStartDate={contractStartDate}
             active={currentStep === step}
+            isOrderStep={false}
           />
         );
       case "6c_coop_member_now":

@@ -57,3 +57,15 @@ class AdminSetAssociationMembershipRequestSerializer(Serializer):
     member_id = CharField()
     membership_type_id = CharField()
     start_date = DateField()
+
+
+class MemberAssociationMembershipDetailsSerializer(Serializer):
+    memberships = AssociationMembershipSerializer(many=True)
+    order_wizard_url = CharField(allow_null=True)
+
+
+class ExistingMemberUpdatesAssociationMembershipRequest(Serializer):
+    member_id = CharField()
+    association_membership_type_id = CharField()
+    iban = serializers.CharField(required=False, allow_blank=True)
+    account_owner = serializers.CharField(required=False, allow_blank=True)
