@@ -3,7 +3,6 @@ import datetime
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, SubscriptionFactory
@@ -14,15 +13,11 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
-        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
-            value=True
-        )
-        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_DURATION).update(
-            value=4
-        )
 
     def setUp(self) -> None:
         super().setUp()
+        self._set_parameter(ParameterKeys.TRIAL_PERIOD_ENABLED, True)
+        self._set_parameter(ParameterKeys.TRIAL_PERIOD_DURATION, 4)
         mock_timezone(self, datetime.datetime(2026, 3, 15, 12, 0, 0))
 
     def test_post_normalMember_returns403(self):
@@ -135,5 +130,3 @@ class TestSubscriptionTrialChangeApiView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertEqual("Probezeit ist global deaktiviert", response_content["error"])
-
-        self._set_parameter(ParameterKeys.TRIAL_PERIOD_ENABLED, True)
