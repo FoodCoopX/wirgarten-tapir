@@ -10,7 +10,6 @@ import {
   Tabs,
 } from "react-bootstrap";
 import {
-  AssociationsApi,
   Counts,
   PickupLocation,
   PickupLocationsApi,
@@ -41,7 +40,6 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const waitingListApi = useApi(WaitingListApi, csrfToken);
   const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const associationsApi = useApi(AssociationsApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [waitingListEntries, setWaitingListEntries] = useState<
