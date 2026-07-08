@@ -340,3 +340,77 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         self.assertEqual(1, AssociationMembership.objects.count())
         membership = AssociationMembership.objects.get()
         self.assertEqual(membership_type, membership.type)
+
+    def test_post_memberNumbersAreAssignedAfterTrialPeriod_memberGetsCreatedWithoutNumber(
+        self,
+    ):
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+        self._set_parameter(
+            key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, value=True
+        )
+
+        confirm_data = {
+            "entry_id": str(entry.id),
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "John Doe",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 2,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+        }
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(confirm_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+
+        member = Member.objects.get()
+        self.assertIsNone(member.member_no)
+
+    def test_post_memberNumbersAreAssignedOnRegistration_memberGetsCreatedWithNumber(
+        self,
+    ):
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+        self._set_parameter(
+            key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, value=False
+        )
+
+        confirm_data = {
+            "entry_id": str(entry.id),
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "John Doe",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 2,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+        }
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(confirm_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
+
+        member = Member.objects.get()
+        self.assertIsNotNone(member.member_no)

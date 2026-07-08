@@ -3,13 +3,17 @@ import logging
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from django.db.models import Q
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
 
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.coop.services.membership_cancellation_manager import (
+    MembershipCancellationManager,
+)
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.pick_list_builder import PickListBuilder
 from tapir.wirgarten.mail_events import Events
@@ -30,6 +34,9 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
+    format_currency,
+    legal_status_is_cooperative,
+    legal_status_is_association,
 )
 
 logger = logging.getLogger(__name__)
@@ -174,17 +181,49 @@ def send_email_member_contract_end_reminder(member_id: str):
         )
 
 
+def _fire_membership_entry_trigger(member: Member, cache: dict):
+    number_of_coop_shares = member.coop_shares_quantity
+    price_of_a_share = get_parameter_value(
+        key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
+    )
+    TransactionalTrigger.fire_action(
+        trigger_data=TransactionalTriggerData(
+            key=Events.MEMBERSHIP_ENTRY,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "number_of_coop_shares": number_of_coop_shares,
+                "price_of_a_share": format_currency(price_of_a_share),
+                "price_of_all_shares": format_currency(
+                    number_of_coop_shares * price_of_a_share
+                ),
+            },
+        ),
+    )
+
+
 @shared_task
-def assign_member_numbers(cache: dict = None):
-    if cache is None:
-        cache = {}
-    members = Member.objects.filter(member_no__isnull=True)
+def send_membership_entry_mails():
+    cache = {}
+    members = Member.objects.filter(has_received_membership_started_mail=False)
+    today = get_today(cache=cache)
 
     with transaction.atomic():
         for member in members:
-            if not MemberNumberService.assign_member_number_if_eligible(
-                member, cache=cache
-            ):
-                continue
+            should_send_mail = False
+            if legal_status_is_cooperative(cache=cache):
+                entry_date = MembershipCancellationManager.get_coop_entry_date(member)
+                if entry_date is not None and entry_date <= today:
+                    should_send_mail = True
 
-            logger.info(f"assign_member_numbers: generated member_no for {member}")
+            if (
+                legal_status_is_association(cache=cache)
+                and AssociationMembership.objects.filter(start_date__lte=today)
+                .filter(Q(end_date__isnull=True) | Q(end_date__lte=today))
+                .exists()
+            ):
+                should_send_mail = True
+
+            if should_send_mail:
+                _fire_membership_entry_trigger(member=member, cache=cache)
+                member.has_received_membership_started_mail = True
+                member.save()
