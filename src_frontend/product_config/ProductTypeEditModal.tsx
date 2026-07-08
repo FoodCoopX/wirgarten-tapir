@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Spinner } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import {
   DeliveriesApi,
   DeliveryCycleEnum,
@@ -8,18 +9,17 @@ import {
   ProductsApi,
   type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { addToast } from "../utils/addToast.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 import {
   getPeriodIdFromUrl,
   getProductTypeIdFromUrl,
 } from "./get_parameter_from_url.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import { ToastData } from "../types/ToastData.ts";
 import ProductTypeForm from "./ProductTypeForm.tsx";
-import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
-import { addToast } from "../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
 
 interface ProductTypeEditModalProps {
   show: boolean;
@@ -39,8 +39,6 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showJokers, setShowJokers] = useState(false);
-  const [showAssociationMembership, setShowAssociationMembership] =
-    useState(false);
   const [showNoticePeriod, setShowNoticePeriod] = useState(false);
   const [canUpdateNoticePeriod, setCanUpdateNoticePeriod] = useState(false);
   const [name, setName] = useState("");
@@ -68,7 +66,6 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   const [singleSubscriptionOnly, setSingleSubscriptionOnly] = useState(false);
   const [isAffectedByJokers, setIsAffectedByJokers] = useState(false);
   const [mustBeSubscribedTo, setMustBeSubscribedTo] = useState(false);
-  const [isAssociationMembership, setIsAssociationMembership] = useState(false);
   const [forceWaitingList, setForceWaitingList] = useState(false);
   const [growingPeriod, setGrowingPeriod] = useState<GrowingPeriod>();
   const [accordions, setAccordions] = useState<
@@ -103,7 +100,6 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
       })
       .then((result) => {
         setShowJokers(result.showJokers);
-        setShowAssociationMembership(result.showAssociationMembership);
         setShowNoticePeriod(result.showNoticePeriod);
         setCanUpdateNoticePeriod(result.canUpdateNoticePeriod);
         setDeliveryCycleOptions(result.deliveryCycleOptions);
@@ -138,9 +134,6 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
         );
         setIsAffectedByJokers(result.extendedProductType.isAffectedByJokers);
         setMustBeSubscribedTo(result.extendedProductType.mustBeSubscribedTo);
-        setIsAssociationMembership(
-          result.extendedProductType.isAssociationMembership,
-        );
         setForceWaitingList(result.extendedProductType.forceWaitingList);
         setAccordions(result.extendedProductType.accordionsInBestellWizard);
         setTitleBestellWizardProductChoices(
@@ -210,7 +203,6 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
             taxRateChangeDate: taxRateChangeDate,
             singleSubscriptionOnly: singleSubscriptionOnly,
             mustBeSubscribedTo: mustBeSubscribedTo,
-            isAssociationMembership: isAssociationMembership,
             descriptionBestellwizardShort: descriptionBestellwizardShort,
             descriptionBestellwizardLong: descriptionBestellwizardLong,
             orderInBestellwizard: orderInBestellwizard,
@@ -291,9 +283,6 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
           setSingleSubscriptionOnly={setSingleSubscriptionOnly}
           mustBeSubscribedTo={mustBeSubscribedTo}
           setMustBeSubscribedTo={setMustBeSubscribedTo}
-          showAssociationMembership={showAssociationMembership}
-          isAssociationMembership={isAssociationMembership}
-          setIsAssociationMembership={setIsAssociationMembership}
           descriptionBestellwizardShort={descriptionBestellwizardShort}
           setDescriptionBestellwizardShort={setDescriptionBestellwizardShort}
           descriptionBestellwizardLong={descriptionBestellwizardLong}

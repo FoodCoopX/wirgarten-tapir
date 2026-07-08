@@ -698,6 +698,7 @@ class TestValidateOrderAndUserData(TapirUnitTest):
             "solidarity_contribution": 12,
             "pickup_location_ids": pickup_location_ids,
             "distribution_channels": distribution_channels,
+            "association_membership_type_id": "test_membership_type_id",
         }
         cache = Mock()
         mock_is_contract_required.return_value = False
@@ -741,7 +742,9 @@ class TestValidateOrderAndUserData(TapirUnitTest):
         mock_legal_status_is_cooperative.assert_called_once_with(cache=cache)
         mock_validate_coop_content.assert_not_called()
         mock_validate_association_content.assert_called_once_with(
-            validated_data=data, order=order, cache=cache
+            association_membership_type_id="test_membership_type_id",
+            order=order,
+            cache=cache,
         )
         mock_validate_distribution_channels.assert_called_once_with(
             distribution_channels, cache=cache

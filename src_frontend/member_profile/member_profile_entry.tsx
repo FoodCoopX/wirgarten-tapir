@@ -197,7 +197,6 @@ if (domNodeAssociationMembershipCard) {
     <AssociationMembershipCard
       memberId={domNodeAssociationMembershipCard.dataset.memberId!}
       csrfToken={getCsrfToken()}
-      admin={domNodeAssociationMembershipCard.dataset.admin === "True"}
     />,
   );
 }

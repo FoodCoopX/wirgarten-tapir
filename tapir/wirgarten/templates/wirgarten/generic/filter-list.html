@@ -135,13 +135,11 @@
                     sortField.value = `-${sort}`;
                 } else if (sortOrders[sort] === -1) {
                     sortOrders[sort] = 0;
-                    sortField.value = '';
+                    sortField.value = sort;
                 } else {
                     sortOrders[sort] = 1;
                     sortField.value = sort;
                 }
-
-                console.log(sortField.value)
 
                 sortForm.submit();
 

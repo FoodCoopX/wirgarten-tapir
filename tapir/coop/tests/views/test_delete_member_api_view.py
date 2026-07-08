@@ -11,7 +11,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestDeleteMemberApiView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_delete_normalMemberTriesToDelete_returns403(self):
         to_delete = MemberFactory.create()

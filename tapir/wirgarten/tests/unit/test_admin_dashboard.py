@@ -1,7 +1,7 @@
-from tapir.wirgarten.models import Member, OrderFeedback, WaitingListEntry
+from tapir.waiting_list.tests.factories import WaitingListEntryFactory
+from tapir.wirgarten.models import OrderFeedback
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
-from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 from tapir.wirgarten.views.admin_dashboard import get_recent_feedbacks
 
@@ -9,7 +9,7 @@ from tapir.wirgarten.views.admin_dashboard import get_recent_feedbacks
 class TestGetRecentFeedbacks(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_get_recent_feedbacks_includesMemberFeedback(self):
         member = MemberFactory.create()

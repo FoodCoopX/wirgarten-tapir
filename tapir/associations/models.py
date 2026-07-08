@@ -43,6 +43,7 @@ class AssociationMembership(TapirModel):
     type = models.ForeignKey(AssociationMembershipType, on_delete=models.PROTECT)
     start_date = models.DateField()
     end_date = models.DateField(null=True)
+    cancellation_ts = models.DateTimeField(null=True)
 
     def __str__(self):
         return f"{self.member.get_display_name()} {self.type.name} {self.start_date} -> {self.end_date}"
@@ -74,7 +75,9 @@ class AssociationMembershipCreatedLogEntry(ModelLogEntry):
 
     type_name = models.CharField(max_length=ASSOCIATION_MEMBERSHIP_TYPE_NAME_MAX_LENGTH)
 
-    def populate_membership(self, membership: AssociationMembership, actor: TapirUser):
+    def populate_membership(
+        self, membership: AssociationMembership, actor: TapirUser | None
+    ):
         self.populate(model=membership, user=membership.member, actor=actor)
         self.type_name = membership.type.name
 

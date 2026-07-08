@@ -16,7 +16,7 @@ class TestValidateAssociationContent(TapirUnitTest):
     def test_validateAssociationContent_noTypeSelected_raisesValidationError(self):
         with self.assertRaises(ValidationError) as error:
             BestellWizardOrderValidator.validate_association_content(
-                {}, order=Mock(), cache=Mock()
+                None, order=Mock(), cache=Mock()
             )
 
         self.assertEqual(
@@ -31,13 +31,13 @@ class TestValidateAssociationContent(TapirUnitTest):
 
         with self.assertRaises(ValidationError) as error:
             BestellWizardOrderValidator.validate_association_content(
-                {"association_membership_type_id": "test_membership_type_id"},
+                "test_membership_type_id",
                 order=Mock(),
                 cache=Mock(),
             )
 
         self.assertEqual(
-            "Unbekannte Vereinsmitgliedschaft-ID: test_membership_type_id",
+            "Unbekannte Vereinsmitgliedschafttyp-ID: test_membership_type_id",
             error.exception.message,
         )
         mock_type_objects.filter.assert_called_once_with(id="test_membership_type_id")
@@ -56,7 +56,7 @@ class TestValidateAssociationContent(TapirUnitTest):
 
         with self.assertRaises(ValidationError) as error:
             BestellWizardOrderValidator.validate_association_content(
-                {"association_membership_type_id": "test_membership_type_id"},
+                "test_membership_type_id",
                 order={},
                 cache=cache,
             )
@@ -80,7 +80,7 @@ class TestValidateAssociationContent(TapirUnitTest):
         )
 
         BestellWizardOrderValidator.validate_association_content(
-            {"association_membership_type_id": "test_membership_type_id"},
+            "test_membership_type_id",
             order={},
             cache=cache,
         )
@@ -100,7 +100,7 @@ class TestValidateAssociationContent(TapirUnitTest):
         )
 
         BestellWizardOrderValidator.validate_association_content(
-            {"association_membership_type_id": "test_membership_type_id"},
+            "test_membership_type_id",
             order={ProductFactory.build(): 2},
             cache=cache,
         )

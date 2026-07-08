@@ -189,46 +189,6 @@ class ProductGenerator:
             min_coop_shares=0,
         )
 
-        association_membership = ProductType.objects.create(
-            name="Vereinsmitgliedschaft",
-            delivery_cycle=NO_DELIVERY[0],
-            is_affected_by_jokers=False,
-            single_subscription_only=True,
-            subscriptions_have_end_dates=False,
-            must_be_subscribed_to=True,
-            is_association_membership=True,
-            order_in_bestellwizard=3,
-        )
-        TaxRate.objects.create(
-            product_type=association_membership,
-            tax_rate=0,
-            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
-        )
-        cls.generate_product(
-            product_type=association_membership,
-            name="Typ A",
-            base_price=10,
-            size=1,
-            base=True,
-            min_coop_shares=0,
-        )
-        cls.generate_product(
-            product_type=association_membership,
-            name="Typ B",
-            base_price=17.5,
-            size=1,
-            base=False,
-            min_coop_shares=0,
-        )
-        cls.generate_product(
-            product_type=association_membership,
-            name="Typ C",
-            base_price=22.5,
-            size=1,
-            base=False,
-            min_coop_shares=0,
-        )
-
     @classmethod
     def generate_products_wirgarten(cls, product_type_ernteanteile: ProductType):
         cls.generate_product(

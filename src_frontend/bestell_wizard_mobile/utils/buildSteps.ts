@@ -95,6 +95,7 @@ export function buildSteps(
       shoppingCart,
       productTypesInWaitingList,
       becomeMemberNow,
+      waitingListEntryDetails,
     ),
   );
 
@@ -258,8 +259,13 @@ function buildAssociationSteps(
   shoppingCart: ShoppingCart,
   productTypesInWaitingList: Set<PublicProductType>,
   becomeMemberNow: boolean | null,
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
 ) {
   if (settings.legalStatus !== "association") {
+    return [];
+  }
+
+  if (waitingListEntryDetails?.memberAlreadyExists) {
     return [];
   }
 

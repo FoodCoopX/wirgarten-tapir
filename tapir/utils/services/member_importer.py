@@ -1,7 +1,14 @@
 import datetime
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.associations.models import (
+    AssociationMembership,
+    AssociationMembershipType,
+    AssociationMembershipCreatedLogEntry,
+    AssociationMembershipUpdatedLogEntry,
+)
 from tapir.configuration.parameter import get_parameter_value
+from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -76,6 +83,8 @@ class MemberImporter:
             reference_date=DataImportUtils.to_date(row["consent_sepa"]),
             rhythm_from_import=row.get("Zahlungsintervall", None),
         )
+
+        cls.update_association_membership_if_necessary(member=member, row=row)
 
         if (
             member_attributes_updated
@@ -328,9 +337,106 @@ class MemberImporter:
             rhythm_from_import=row.get("Zahlungsintervall", None),
         )
 
+        cls.create_association_membership_if_necessary(member=member, row=row)
+
         MemberImportedLogEntry().populate(model=member, actor=None, user=member).save()
 
         return MEMBER_IMPORT_STATUS_CREATED
+
+    @classmethod
+    def create_association_membership_if_necessary(
+        cls, member: Member, row: dict[str, str]
+    ):
+        membership_type, start_date, end_date = cls.get_association_membership_data(row)
+        if membership_type is None:
+            return
+
+        membership = AssociationMembership.objects.create(
+            member=member,
+            type=membership_type,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        AssociationMembershipCreatedLogEntry().populate_membership(
+            membership=membership,
+            actor=None,
+        ).save()
+
+    @classmethod
+    def get_association_membership_data(cls, row: dict[str, str]):
+        membership_type_name = DataImportUtils.normalize_cell(
+            row.get("Vereinsmitgliedschafttyp", None)
+        )
+        if membership_type_name == "":
+            return None, None, None
+
+        membership_type = AssociationMembershipType.objects.filter(
+            name=membership_type_name
+        ).first()
+        if membership_type is None:
+            raise TapirDataImportException(
+                f"Keine Vereinsmitgliedsachttyp mit Name {membership_type_name} gefunden, gültige Namen sind: {", ". join(AssociationMembershipType.objects.values_list("name", flat=True))}"
+            )
+
+        start_date = DataImportUtils.to_date(
+            row.get("Vereinsmitgliedschaft Start_Date", None)
+        )
+        if start_date is None:
+            raise TapirDataImportException(
+                "Keine Start-Datum gefunden für die Vereinsmitgliedschaft"
+            )
+
+        end_date = DataImportUtils.to_date(
+            row.get("Vereinsmitgliedschaft End_Date", None)
+        )
+        return membership_type, start_date, end_date
+
+    @classmethod
+    def update_association_membership_if_necessary(
+        cls, member: Member, row: dict[str, str]
+    ):
+        membership_type, start_date, end_date = cls.get_association_membership_data(row)
+
+        existing_memberships = AssociationMembership.objects.filter(member=member)
+        nb_memberships = existing_memberships.count()
+        if membership_type is None:
+            if nb_memberships == 0:
+                return False
+
+            existing_memberships.delete()
+            return True
+
+        if nb_memberships != 1:
+            existing_memberships.delete()
+            membership = AssociationMembership.objects.create(
+                member=member,
+                type=membership_type,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            AssociationMembershipCreatedLogEntry().populate_membership(
+                membership=membership,
+                actor=None,
+            ).save()
+            return True
+
+        membership = existing_memberships.get()
+        if (
+            membership.type_id == membership_type.id
+            and membership.start_date == start_date
+            and membership.end_date == end_date
+        ):
+            return False
+
+        before_changes = freeze_for_log(membership)
+        membership.type = membership_type
+        membership.start_date = start_date
+        membership.end_date = end_date
+        membership.save()
+        AssociationMembershipUpdatedLogEntry().populate(
+            old_frozen=before_changes, new_model=membership, actor=None, user=member
+        )
+        return True
 
     @classmethod
     def create_solidarity_contribution(

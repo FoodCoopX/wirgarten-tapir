@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Col, Modal, Row, Spinner } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import {
   DeliveriesApi,
   DeliveryCycleEnum,
@@ -10,15 +11,14 @@ import {
   ProductType,
   type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
-import { ToastData } from "../types/ToastData.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import ProductTypeForm from "./ProductTypeForm.tsx";
+import { useApi } from "../hooks/useApi.ts";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { ToastData } from "../types/ToastData.ts";
 import { addToast } from "../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
+import ProductTypeForm from "./ProductTypeForm.tsx";
 
 interface ProductTypeCreateModalProps {
   show: boolean;
@@ -40,8 +40,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
     useState<ProductType[]>([]);
   const [mode, setMode] = useState<"select" | "create">("select");
   const [showJokers, setShowJokers] = useState(false);
-  const [showAssociationMembership, setShowAssociationMembership] =
-    useState(false);
   const [showNoticePeriod, setShowNoticePeriod] = useState(false);
   const [canUpdateNoticePeriod, setCanUpdateNoticePeriod] = useState(false);
   const [name, setName] = useState("");
@@ -69,7 +67,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [singleSubscriptionOnly, setSingleSubscriptionOnly] = useState(false);
   const [isAffectedByJokers, setIsAffectedByJokers] = useState(false);
   const [mustBeSubscribedTo, setMustBeSubscribedTo] = useState(false);
-  const [isAssociationMembership, setIsAssociationMembership] = useState(false);
   const [forceWaitingList, setForceWaitingList] = useState(false);
   const [growingPeriod, setGrowingPeriod] = useState<GrowingPeriod>();
   const [saving, setSaving] = useState(false);
@@ -103,7 +100,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
       })
       .then((result) => {
         setProductTypesWithoutCapacity(result.productTypesWithoutCapacity);
-        setShowAssociationMembership(result.showAssociationMembership);
         setShowJokers(result.showJokers);
         setShowNoticePeriod(result.showNoticePeriod);
         setCanUpdateNoticePeriod(result.canUpdateNoticePeriod);
@@ -174,7 +170,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
     setSaving(true);
 
     const extendedProductType: ExtendedProductTypeRequest = {
-      isAssociationMembership: isAssociationMembership,
       contractLink: contractLink,
       orderInBestellwizard: orderInBestellwizard,
       descriptionBestellwizardLong: descriptionBestellwizardLong,
@@ -329,9 +324,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setSingleSubscriptionOnly={setSingleSubscriptionOnly}
           mustBeSubscribedTo={mustBeSubscribedTo}
           setMustBeSubscribedTo={setMustBeSubscribedTo}
-          showAssociationMembership={showAssociationMembership}
-          isAssociationMembership={isAssociationMembership}
-          setIsAssociationMembership={setIsAssociationMembership}
           descriptionBestellwizardShort={descriptionBestellwizardShort}
           setDescriptionBestellwizardShort={setDescriptionBestellwizardShort}
           descriptionBestellwizardLong={descriptionBestellwizardLong}

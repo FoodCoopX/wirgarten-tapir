@@ -479,6 +479,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             numberOfCoopShares: selectedNumberOfCoopShares,
             paymentRhythm: personalData.paymentRhythm,
             solidarityContribution: solidarityContribution,
+            associationMembershipTypeId:
+              selectedAssociationMembershipType?.id ?? null,
           },
         })
         .then(handleOrderResponse)
@@ -716,6 +718,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             }
             contractStartDate={contractStartDate}
             active={currentStep === step}
+            isOrderStep={false}
           />
         );
       case "6c_coop_member_now":

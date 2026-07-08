@@ -26,8 +26,10 @@ class PickupLocationCapacityGeneralChecker:
     ) -> bool:
         if (
             already_registered_member
-            and MemberPickupLocationGetter.get_member_pickup_location_id(
-                already_registered_member, subscription_start
+            and MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                member_id=already_registered_member.id,
+                reference_date=subscription_start,
+                cache=cache,
             )
             != pickup_location.id
         ):

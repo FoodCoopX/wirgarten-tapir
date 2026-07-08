@@ -185,9 +185,6 @@ class ProductType(TapirModel):
             "Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen."
         ),
     )
-    is_association_membership = models.BooleanField(
-        default=False, verbose_name=_("Repräsentiert Vereinsmitgliedschaften")
-    )
     description_bestellwizard_short = models.TextField(
         default="",
         verbose_name=_(
@@ -418,17 +415,9 @@ class Member(TapirUser):
         )
 
     @property
-    def coop_entry_date(self):
-        from tapir.coop.services.membership_cancellation_manager import (
-            MembershipCancellationManager,
-        )
-
-        return MembershipCancellationManager.get_coop_entry_date(self)
-
-    @property
     def base_subscriptions_text(self):
         """
-        Returns a human readable string stating which base products the member has subscribed,
+        Returns a human-readable string stating which base products the member has subscribed,
         sorted by their price in ascending order.
 
         Examples:
@@ -641,7 +630,7 @@ class Subscription(TapirModel, AdminConfirmableMixin):
     period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=True)
     quantity = models.PositiveSmallIntegerField(null=False)
     start_date = models.DateField(null=False)
-    end_date = models.DateField(null=True)
+    end_date = models.DateField(null=False)
     cancellation_ts = models.DateTimeField(null=True)
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
@@ -1026,7 +1015,7 @@ class SubscriptionChangeLogEntry(LogEntry):
 
 
 class WaitingListEntry(TapirModel):
-    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
+    member = models.ForeignKey(Member, on_delete=models.PROTECT, null=True)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     phone_number = PhoneNumberField(_("Phone number"))

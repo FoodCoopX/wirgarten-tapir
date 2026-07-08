@@ -77,6 +77,10 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/association_memberships_config/association_memberships_config_entry.tsx",
           ),
+          bestell_wizard_association_membership: join(
+            INPUT_DIR,
+            "/member_profile/association_membership/bestell_wizard_association_membership.tsx",
+          ),
         },
       },
     },

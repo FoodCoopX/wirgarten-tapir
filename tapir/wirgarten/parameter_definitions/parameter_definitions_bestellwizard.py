@@ -442,7 +442,7 @@ class ParameterDefinitionsBestellwizard:
             key=ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
             label=f"Seite 6A: {legal_status_name} Einführung - Titel",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Unsere Genossenschaft",
+            initial_value="Unsere Genossenschaft / Unser Verein",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
@@ -454,12 +454,15 @@ class ParameterDefinitionsBestellwizard:
         )
         bestellwizard_parameter_order -= 1
 
+        label = f"Seite 6A: {legal_status_name} Einführung - Text"
         importer.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6A_TEXT,
-            label=f"Seite 6A: {legal_status_name} Einführung - Text",
+            label=label,
             datatype=TapirParameterDatatype.STRING,
-            initial_value="<p>Als Mitglied unserer Genossenschaft bist du gleichzeitig Miteigentümer*In deiner eigenen Gemüsegärtnerei! Du kannst somit bei allen Grundsatzentscheidungen mitbestimmen und hast ein Stimmrecht bei der Generalversammlung. </p><p>"
-            "Mit deinen Genossenschaftsanteilen ermöglichst du die gemeinsame Finanzierung wichtiger Investitionen für die Genossenschaft.</p>",
+            initial_value=f"""<p>Als Mitglied unserer Genossenschaft /Verein bist du gleichzeitig Miteigentümer*In deiner eigenen Gemüsegärtnerei!</p>
+                              <p>Du kannst somit bei allen Grundsatzentscheidungen mitbestimmen und hast ein Stimmrecht bei der Generalversammlung.</p>
+                              <p>Mit deinen Genossenschaftsanteilen /Vereinsmitgliedschaft ermöglichst du die gemeinsame Finanzierung wichtiger Investitionen für die Genossenschaft.</p>
+                              <p>Anzupassen in Konfig unter "{label}"</p>""",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
@@ -745,7 +748,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 11: Erklärungstext unter dem Checkbox zur Datenschutzerklärung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen der Mitgliederverwaltung und geben sie nicht an Dritte weiter. "
-            'Unsere Datenschutzerklärung kannst du hier einsehen: <a href="{{link_zu_datenschutzerklärung}}">Datenschutzerklärung</a>',
+            'Klicke auf unsere <a href="{link_zu_datenschutzerklärung}">Datenschutzerklärung</a>, um diese einzusehen.',
             description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,

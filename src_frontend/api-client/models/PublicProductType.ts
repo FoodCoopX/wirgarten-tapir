@@ -125,12 +125,6 @@ export interface PublicProductType {
    * @memberof PublicProductType
    */
   readonly taxRate: number;
-  /**
-   *
-   * @type {boolean}
-   * @memberof PublicProductType
-   */
-  isAssociationMembership?: boolean;
 }
 
 /**
@@ -209,10 +203,6 @@ export function PublicProductTypeFromJSONTyped(
         : json["background_image_in_bestellwizard"],
     pricePerDelivery: json["price_per_delivery"],
     taxRate: json["tax_rate"],
-    isAssociationMembership:
-      json["is_association_membership"] == null
-        ? undefined
-        : json["is_association_membership"],
   };
 }
 
@@ -249,6 +239,5 @@ export function PublicProductTypeToJSONTyped(
     title_bestellwizard_intro: value["titleBestellwizardIntro"],
     icon_link: value["iconLink"],
     background_image_in_bestellwizard: value["backgroundImageInBestellwizard"],
-    is_association_membership: value["isAssociationMembership"],
   };
 }

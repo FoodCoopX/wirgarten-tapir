@@ -33,7 +33,6 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
     single_subscription_only = serializers.BooleanField()
     is_affected_by_jokers = serializers.BooleanField()
     must_be_subscribed_to = serializers.BooleanField()
-    is_association_membership = serializers.BooleanField()
     force_waiting_list = serializers.BooleanField()
     accordions_in_bestell_wizard = ProductTypeAccordionInBestellWizardSerializer(
         many=True
@@ -49,7 +48,6 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
 class ExtendedProductTypeAndConfigSerializer(serializers.Serializer):
     show_notice_period = serializers.BooleanField()
     show_jokers = serializers.BooleanField()
-    show_association_membership = serializers.BooleanField()
     delivery_cycle_options = serializers.DictField()
     extended_product_type = ExtendedProductTypeSerializer()
     can_update_notice_period = serializers.BooleanField()
@@ -65,6 +63,5 @@ class ProductTypesAndConfigSerializer(serializers.Serializer):
     product_types_without_capacity = ProductTypeSerializer(many=True)
     show_notice_period = serializers.BooleanField()
     show_jokers = serializers.BooleanField()
-    show_association_membership = serializers.BooleanField()
     delivery_cycle_options = serializers.DictField()
     can_update_notice_period = serializers.BooleanField()

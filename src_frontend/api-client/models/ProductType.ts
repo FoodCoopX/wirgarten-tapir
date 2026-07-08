@@ -92,12 +92,6 @@ export interface ProductType {
   mustBeSubscribedTo?: boolean;
   /**
    *
-   * @type {boolean}
-   * @memberof ProductType
-   */
-  isAssociationMembership?: boolean;
-  /**
-   *
    * @type {string}
    * @memberof ProductType
    */
@@ -189,10 +183,6 @@ export function ProductTypeFromJSONTyped(
       json["must_be_subscribed_to"] == null
         ? undefined
         : json["must_be_subscribed_to"],
-    isAssociationMembership:
-      json["is_association_membership"] == null
-        ? undefined
-        : json["is_association_membership"],
     descriptionBestellwizardShort:
       json["description_bestellwizard_short"] == null
         ? undefined
@@ -246,7 +236,6 @@ export function ProductTypeToJSONTyped(
     is_affected_by_jokers: value["isAffectedByJokers"],
     subscriptions_have_end_dates: value["subscriptionsHaveEndDates"],
     must_be_subscribed_to: value["mustBeSubscribedTo"],
-    is_association_membership: value["isAssociationMembership"],
     description_bestellwizard_short: value["descriptionBestellwizardShort"],
     description_bestellwizard_long: value["descriptionBestellwizardLong"],
     order_in_bestellwizard: value["orderInBestellwizard"],

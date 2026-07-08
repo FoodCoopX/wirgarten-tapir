@@ -47,18 +47,22 @@
             <span id="deliveries_button"></span>
         </div>
         <div style="width: 1em"></div>
-        {% if perms.accounts.manage %}
-            {% if perms.coop.manage and show_cooperative_content %}
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleCancelCoopShares()' disabled=True title='Genossenschaftsanteile kündigen' type='primary' icon='free_cancellation' class='needs-member' %}
-            {% endif %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
-            <div style="width: 1em"></div>
+        {% if show_cooperative_content %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='handleCancelCoopShares()' disabled=True title='Genossenschaftsanteile kündigen' type='primary' icon='free_cancellation' class='needs-member' %}
+        {% endif %}
+        {% if show_association_content %}
             <div class="d-flex gap-2">
-                <span id="subscription_cancellation_button"></span>
-                <span id="member_delete_button"></span>
+                <span id="association_membership_cancel_button"></span>
+                <span id="association_membership_update_button"></span>
             </div>
         {% endif %}
+        {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
+        <div style="width: 1em"></div>
+        <div class="d-flex gap-2">
+            <span id="subscription_cancellation_button"></span>
+            <span id="member_delete_button"></span>
+        </div>
     </span>
 {% endblock %}
 {% block table_head %}
@@ -74,7 +78,7 @@
         <th class="sort-header" data-sort="monthly_payment">{% translate "Umsatz/Monat" %}</th>
         <th>{% translate "Solidarbeitrag" %}</th>
         <th>{% translate "Abholort" %}</th>
-        <th class="sort-header" data-sort="created_at">{% translate "Eintritt" %}</th>
+        <th class="sort-header" data-sort="organisation_entry_date">{% translate "Eintritt" %}</th>
     </tr>
 {% endblock %}
 {% block table_body %}
@@ -115,7 +119,7 @@
                 {% endif %}
             </td>
             <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
-            <td>{{ member.coop_entry_date|format_date }}</td>
+            <td>{{ member.organisation_entry_date|format_date }}</td>
         </tr>
     {% endfor %}
 {% endblock %}
