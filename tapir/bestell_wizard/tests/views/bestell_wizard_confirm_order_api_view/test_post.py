@@ -7,7 +7,6 @@ from unittest.mock import patch, Mock
 from django.urls import reverse
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
-    TransactionalTriggerData,
 )
 
 from tapir.associations.models import AssociationMembership
@@ -997,17 +996,6 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
 
         return waiting_list_entry
-
-    def assert_mail_event_has_been_triggered(self, mock_fire_action: Mock, key: str):
-        mock_fire_action.assert_called()
-        for call in mock_fire_action.mock_calls:
-            trigger_data: TransactionalTriggerData = call.kwargs["trigger_data"]
-            if trigger_data.key == key:
-                return
-
-        self.fail(
-            f"Expected trigger ({key}) not found in {mock_fire_action.mock_calls}"
-        )
 
     def assert_solidarity_contribution_created_correctly(
         self, member_id: str, amount_as_string: str, growing_period: GrowingPeriod
