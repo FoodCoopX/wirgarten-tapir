@@ -13,6 +13,9 @@ from tapir.core.services.member_mail_token_service import MemberMailTokenService
 from tapir.core.services.newsletter_management_link_provider import (
     NewsletterManagementLinkProvider,
 )
+from tapir.core.services.organisation_entry_date_annotator import (
+    OrganisationEntryDateAnnotator,
+)
 from tapir.pickup_locations.services.pickup_location_mail_token_service import (
     PickupLocationMailTokenService,
 )
@@ -69,7 +72,6 @@ def _register_tokens():
             "Mitglieds-Nr": "member_no",
             "Kontoempfänger": "account_owner",
             "IBAN": "iban",
-            "Beitrittsdatum": "coop_entry_date",
             "Ernteanteilsgrößen": "base_subscriptions_text",
         },
         general_tokens={
@@ -108,6 +110,7 @@ def _register_tokens():
             "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
         },
         dynamic_tokens={
+            "Mitglied - Beitrittsdatum": OrganisationEntryDateAnnotator.get_organisation_entry_date,
             "Mitglied - Post-Adresse": MemberMailTokenService.get_post_address,
             "Verteilstation - Name": PickupLocationMailTokenService.pickup_location_name,
             "Verteilstation - Adresse": PickupLocationMailTokenService.pickup_location_address,

@@ -74,7 +74,7 @@
         <th class="sort-header" data-sort="monthly_payment">{% translate "Umsatz/Monat" %}</th>
         <th>{% translate "Solidarbeitrag" %}</th>
         <th>{% translate "Abholort" %}</th>
-        <th class="sort-header" data-sort="created_at">{% translate "Eintritt" %}</th>
+        <th class="sort-header" data-sort="organisation_entry_date">{% translate "Eintritt" %}</th>
     </tr>
 {% endblock %}
 {% block table_body %}
@@ -115,7 +115,7 @@
                 {% endif %}
             </td>
             <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
-            <td>{{ member.coop_entry_date|format_date }}</td>
+            <td>{{ member.organisation_entry_date|format_date }}</td>
         </tr>
     {% endfor %}
 {% endblock %}

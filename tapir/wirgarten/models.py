@@ -414,17 +414,9 @@ class Member(TapirUser):
         )
 
     @property
-    def coop_entry_date(self):
-        from tapir.coop.services.membership_cancellation_manager import (
-            MembershipCancellationManager,
-        )
-
-        return MembershipCancellationManager.get_coop_entry_date(self)
-
-    @property
     def base_subscriptions_text(self):
         """
-        Returns a human readable string stating which base products the member has subscribed,
+        Returns a human-readable string stating which base products the member has subscribed,
         sorted by their price in ascending order.
 
         Examples:

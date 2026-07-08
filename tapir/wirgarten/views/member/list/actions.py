@@ -12,6 +12,9 @@ from django.views.generic import View
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.core.services.organisation_entry_date_annotator import (
+    OrganisationEntryDateAnnotator,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -29,7 +32,6 @@ from tapir.wirgarten.utils import (
     get_now,
     get_today,
     legal_status_is_association,
-    legal_status_is_cooperative,
 )
 from tapir.wirgarten.views.member.list.member_list import MemberFilter
 
@@ -138,7 +140,13 @@ def export_coop_member_list(request, **kwargs):
         columns.append(KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE)
 
     output, writer = begin_csv_string(columns)
-    for entry in Member.objects.order_by("member_no"):
+
+    members = Member.objects.order_by("member_no")
+    members = OrganisationEntryDateAnnotator.annotate_with_organisation_entry_date(
+        members, cache=cache
+    )
+
+    for entry in members:
         coop_shares = entry.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
         ).order_by("timestamp")
@@ -155,11 +163,12 @@ def export_coop_member_list(request, **kwargs):
             [format_date(t.valid_at) for t in cancelled_coop_shares]
         )
 
-        today = get_today()
-        # skip future members. TODO: check cancellation, when must old members be removed from the list?
-        if legal_status_is_cooperative(cache=cache) and (
-            entry.coop_entry_date is None or entry.coop_entry_date > today
-        ):
+        today = get_today(cache=cache)
+        # skip future members.
+        entry_date = getattr(
+            entry, OrganisationEntryDateAnnotator.ANNOTATION_ORGANISATION_ENTRY_DATE
+        )
+        if entry_date is None or entry_date > today:
             continue
 
         transfers = entry.coopsharetransaction_set.filter(
@@ -314,7 +323,6 @@ class ExportMembersView(View):
             ]
         )
 
-        # Write data rows
         for member in queryset:
             writer.writerow(
                 [
@@ -330,7 +338,12 @@ class ExportMembersView(View):
                     member.city,
                     member.country,
                     format_date(member.created_at.date()),
-                    format_date(member.coop_entry_date),
+                    format_date(
+                        getattr(
+                            member,
+                            OrganisationEntryDateAnnotator.ANNOTATION_ORGANISATION_ENTRY_DATE,
+                        )
+                    ),
                     format_currency(member.coop_shares_total_value),
                     format_currency(member.monthly_payment),
                     getattr(
@@ -351,6 +364,9 @@ class ExportMembersView(View):
         queryset = annotate_member_queryset_with_monthly_payment(queryset, today)
         queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_name_at_date(
             queryset=queryset, reference_date=today
+        )
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_entry_date(
+            queryset=queryset, cache=self.cache
         )
         return queryset
 
