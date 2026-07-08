@@ -30,6 +30,7 @@ class TestExistingMemberUpdatesAssociationMembershipApiView(TapirIntegrationTest
         )
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(
             test=self, now=datetime.datetime(year=2020, month=1, day=3)
         )
