@@ -153,13 +153,15 @@ const AssociationMembershipUpdateModal: React.FC<
             text={
               <>
                 <p>
-                  Bestehen Mitgliedschaften die nach dem ausgewähltem
-                  Start-Datum beginnen werden gelöscht.
+                  Bestehen bereits andere Mitgliedschaften, die nach dem
+                  ausgewähltem Start-Datum beginnen, werden diese anderen
+                  Mitgliedschaften gelöscht.
                 </p>
                 <p>
-                  Bestehen Mitgliedschaften die aktiv am ausgewähltem
-                  Start-Datum sind werden geendet mit End-Datum am Tag vor dem
-                  Start-Datum.s
+                  Bestehen bereits andere Mitgliedschaften, die am ausgewähltem
+                  Start-Datum bereits aktiv sind, wird für diese anderen
+                  Mitgliedschaften das End-Datum einen Tag vor dem Start-Datum
+                  der neu erzeugten Mitgliedschaft gesetzt.
                 </p>
               </>
             }

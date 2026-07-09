@@ -129,13 +129,24 @@ const AssociationMembershipCancelModal: React.FC<
           <Modal.Title>Vereinsmitgliedschaft-End-Datum setzen</Modal.Title>
           <TapirHelpButton
             text={
-              <p>
-                Es wird nur das End-Datum für die ausgewählte Mitgliedschaft
-                gesetzt. Es wird nicht geprüft, ob Überschneidungen mit ggf.
-                anderen existierenden Mitgliedschaften für dieses Mitglied
-                entstehen. Die Produktverträge des Mitgliedes werden nicht
-                geändert oder beendet.
-              </p>
+              <>
+                <p>
+                  Es wird nur das End-Datum für die ausgewählte Mitgliedschaft
+                  gesetzt. Es wird nicht geprüft, ob Überschneidungen mit ggf.
+                  anderen existierenden Mitgliedschaften für dieses Mitglied
+                  entstehen. Die Produktverträge des Mitgliedes werden nicht
+                  geändert oder beendet.
+                </p>
+                <p>
+                  Bsp.: Ein Mitglied hat zwei Mitgliedschaften hinterlegt, z.B.
+                  eine TypA vom 01.01.2025 bis 31.12.2025 (schon geendet) und
+                  eine TypB von 01.01.2026 ohne End-Datum. Wenn der Admin das
+                  End-Datum der Mitgliedschaft TypA zum 01.06.2026 setzt, gäbe
+                  es eine Überschneidung der Laufzeiten der beiden
+                  Mitgliedschaften. Dies muss durch den Admin ausgeschlossen
+                  werden.
+                </p>
+              </>
             }
           />
         </div>

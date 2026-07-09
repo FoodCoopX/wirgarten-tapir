@@ -576,7 +576,7 @@ class ParameterDefinitionsBestellwizard:
             key=ParameterKeys.BESTELLWIZARD_STEP6C_TITLE,
             label="Seite 6C: Sofort oder später Mitglied werden - Titel",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Möchtest du sofort Mitglied werden?",
+            initial_value="Möchtest du sofort Mitglied der Genossenschaft/Verein werden?",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
@@ -592,7 +592,7 @@ class ParameterDefinitionsBestellwizard:
             key=ParameterKeys.BESTELLWIZARD_STEP6C_TEXT,
             label="Seite 6C: Sofort oder später Mitglied werden - Text",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Die wirst auf die Warteliste für deine Bestellung eingetragen. Du kannst dich aber entscheiden sofort Mitglied der Genossenschaft zu werden.",
+            initial_value="Die wirst auf die Warteliste für deine Bestellung / deinen Ernteanteil eingetragen. Als Mitglied der Genossenschaft/Verein (Fördermitglied) hast du Vorrang bei freiwerdenden Kapazitäten und du erhältst schneller deinen Anteil.",
             description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             meta=ParameterMeta(
