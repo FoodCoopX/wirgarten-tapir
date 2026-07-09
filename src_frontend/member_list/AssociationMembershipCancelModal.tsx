@@ -129,17 +129,13 @@ const AssociationMembershipCancelModal: React.FC<
           <Modal.Title>Vereinsmitgliedschaft-End-Datum setzen</Modal.Title>
           <TapirHelpButton
             text={
-              <>
-                <p>
-                  Es wird nur das End-Datum für die ausgewählte Mitgliedschaft
-                  gespeichert.
-                </p>
-                <p>
-                  Es wird nicht geprüft ob dadurch Überlappungen mit andere
-                  Mitgliedschaften für dieses Mitglied entstehen.
-                </p>
-                <p>Verträge werden nicht geändert.</p>
-              </>
+              <p>
+                Es wird nur das End-Datum für die ausgewählte Mitgliedschaft
+                gesetzt. Es wird nicht geprüft, ob Überschneidungen mit ggf.
+                anderen existierenden Mitgliedschaften für dieses Mitglied
+                entstehen. Die Produktverträge des Mitgliedes werden nicht
+                geändert oder beendet.
+              </p>
             }
           />
         </div>
@@ -169,7 +165,7 @@ const AssociationMembershipCancelModal: React.FC<
               <Row className={"mt-2"}>
                 <Col>
                   <>
-                    <h6>Mitgliedschaft zu anpassen</h6>
+                    <h6>Neues End-Datum der Mitgliedschaft setzen</h6>
                     <div className={"d-flex flex-column gap-2"}>
                       <Form.Group>
                         <Form.Label>Mitgliedschaften</Form.Label>
