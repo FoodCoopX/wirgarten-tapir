@@ -20,145 +20,181 @@ import {
 import type { Product } from "./Product";
 import { ProductFromJSON, ProductToJSON } from "./Product";
 
+function parseApiDate(isoDate: string): Date {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 /**
  *
  * @export
- * @interface Subscription
+ * @interface SubscriptionTrialFields
  */
-export interface Subscription {
+export interface SubscriptionTrialFields {
   /**
    *
    * @type {string}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   id?: string;
   /**
    *
    * @type {Product}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   product: Product;
   /**
    *
+   * @type {boolean}
+   * @memberof SubscriptionTrialFields
+   */
+  readonly isInTrial: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof SubscriptionTrialFields
+   */
+  readonly defaultTrialEndDate: string;
+  /**
+   *
+   * @type {string}
+   * @memberof SubscriptionTrialFields
+   */
+  readonly effectiveTrialEndDate: string;
+  /**
+   *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   readonly createdAt: Date;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   readonly updatedAt: Date;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   adminConfirmed?: Date | null;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   autoConfirmed?: Date | null;
   /**
    *
    * @type {number}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   quantity: number;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   startDate: Date;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   endDate?: Date | null;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   cancellationTs?: Date | null;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   consentTs?: Date | null;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   withdrawalConsentTs?: Date | null;
   /**
    *
    * @type {boolean}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   trialDisabled?: boolean;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   trialEndDateOverride?: Date | null;
   /**
    *
    * @type {string}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   priceOverride?: string | null;
   /**
    *
    * @type {number}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   noticePeriodDuration: number;
   /**
    *
    * @type {NoticePeriodUnitEnum}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   noticePeriodUnit: NoticePeriodUnitEnum;
   /**
    *
    * @type {Date}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   cancellationAdminConfirmed?: Date | null;
   /**
    *
    * @type {string}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   member: string;
   /**
    *
    * @type {string}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   period?: string | null;
   /**
    *
    * @type {string}
-   * @memberof Subscription
+   * @memberof SubscriptionTrialFields
    */
   mandateRef: string;
 }
 
 /**
- * Check if a given object implements the Subscription interface.
+ * Check if a given object implements the SubscriptionTrialFields interface.
  */
-export function instanceOfSubscription(value: object): value is Subscription {
+export function instanceOfSubscriptionTrialFields(
+  value: object,
+): value is SubscriptionTrialFields {
   if (!("product" in value) || value["product"] === undefined) return false;
+  if (!("isInTrial" in value) || value["isInTrial"] === undefined) return false;
+  if (
+    !("defaultTrialEndDate" in value) ||
+    value["defaultTrialEndDate"] === undefined
+  )
+    return false;
+  if (
+    !("effectiveTrialEndDate" in value) ||
+    value["effectiveTrialEndDate"] === undefined
+  )
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("quantity" in value) || value["quantity"] === undefined) return false;
@@ -176,20 +212,25 @@ export function instanceOfSubscription(value: object): value is Subscription {
   return true;
 }
 
-export function SubscriptionFromJSON(json: any): Subscription {
-  return SubscriptionFromJSONTyped(json, false);
+export function SubscriptionTrialFieldsFromJSON(
+  json: any,
+): SubscriptionTrialFields {
+  return SubscriptionTrialFieldsFromJSONTyped(json, false);
 }
 
-export function SubscriptionFromJSONTyped(
+export function SubscriptionTrialFieldsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): Subscription {
+): SubscriptionTrialFields {
   if (json == null) {
     return json;
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
     product: ProductFromJSON(json["product"]),
+    isInTrial: json["is_in_trial"],
+    defaultTrialEndDate: json["default_trial_end_date"],
+    effectiveTrialEndDate: json["effective_trial_end_date"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     adminConfirmed:
@@ -218,7 +259,7 @@ export function SubscriptionFromJSONTyped(
     trialEndDateOverride:
       json["trial_end_date_override"] == null
         ? undefined
-        : new Date(json["trial_end_date_override"]),
+        : parseApiDate(json["trial_end_date_override"]),
     priceOverride:
       json["price_override"] == null ? undefined : json["price_override"],
     noticePeriodDuration: json["notice_period_duration"],
@@ -233,12 +274,21 @@ export function SubscriptionFromJSONTyped(
   };
 }
 
-export function SubscriptionToJSON(json: any): Subscription {
-  return SubscriptionToJSONTyped(json, false);
+export function SubscriptionTrialFieldsToJSON(
+  json: any,
+): SubscriptionTrialFields {
+  return SubscriptionTrialFieldsToJSONTyped(json, false);
 }
 
-export function SubscriptionToJSONTyped(
-  value?: Omit<Subscription, "created_at" | "updated_at"> | null,
+export function SubscriptionTrialFieldsToJSONTyped(
+  value?: Omit<
+    SubscriptionTrialFields,
+    | "is_in_trial"
+    | "default_trial_end_date"
+    | "effective_trial_end_date"
+    | "created_at"
+    | "updated_at"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

@@ -27,10 +27,10 @@ import type {
   PatchedExtendedProductRequest,
   Product,
   PublicProductType,
-  Subscription,
   SubscriptionDateChangeRequestRequest,
   SubscriptionPriceOverrideChangeRequestRequest,
   SubscriptionTrialChangeRequestRequest,
+  SubscriptionTrialFields,
   UpdateSubscriptionsRequestRequest,
 } from "../models/index";
 import {
@@ -49,9 +49,9 @@ import {
   ProductFromJSON,
   PublicProductTypeFromJSON,
   SubscriptionDateChangeRequestRequestToJSON,
-  SubscriptionFromJSON,
   SubscriptionPriceOverrideChangeRequestRequestToJSON,
   SubscriptionTrialChangeRequestRequestToJSON,
+  SubscriptionTrialFieldsFromJSON,
   UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -789,7 +789,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     if (this.configuration && this.configuration.apiKey) {
       headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization");
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
     }
 
     if (
@@ -825,10 +825,11 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     requestParameters: SubscriptionsApiSubscriptionTrialChangeCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<OrderConfirmationResponse> {
-    const response = await this.subscriptionsApiSubscriptionTrialChangeCreateRaw(
-      requestParameters,
-      initOverrides,
-    );
+    const response =
+      await this.subscriptionsApiSubscriptionTrialChangeCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 
@@ -1239,7 +1240,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
    */
   async subscriptionsSubscriptionsListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<Subscription>>> {
+  ): Promise<runtime.ApiResponse<Array<SubscriptionTrialFields>>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -1269,7 +1270,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(SubscriptionFromJSON),
+      jsonValue.map(SubscriptionTrialFieldsFromJSON),
     );
   }
 
@@ -1277,7 +1278,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
    */
   async subscriptionsSubscriptionsList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<Subscription>> {
+  ): Promise<Array<SubscriptionTrialFields>> {
     const response =
       await this.subscriptionsSubscriptionsListRaw(initOverrides);
     return await response.value();
@@ -1288,7 +1289,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsSubscriptionsRetrieveRaw(
     requestParameters: SubscriptionsSubscriptionsRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Subscription>> {
+  ): Promise<runtime.ApiResponse<SubscriptionTrialFields>> {
     if (requestParameters["id"] == null) {
       throw new runtime.RequiredError(
         "id",
@@ -1328,7 +1329,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      SubscriptionFromJSON(jsonValue),
+      SubscriptionTrialFieldsFromJSON(jsonValue),
     );
   }
 
@@ -1337,7 +1338,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsSubscriptionsRetrieve(
     requestParameters: SubscriptionsSubscriptionsRetrieveRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Subscription> {
+  ): Promise<SubscriptionTrialFields> {
     const response = await this.subscriptionsSubscriptionsRetrieveRaw(
       requestParameters,
       initOverrides,

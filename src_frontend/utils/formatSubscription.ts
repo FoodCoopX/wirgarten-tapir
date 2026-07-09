@@ -1,6 +1,9 @@
-import { PublicSubscription, Subscription } from "../api-client";
+import { PublicSubscription } from "../api-client";
 
-export default function formatSubscription(subscription: Subscription) {
+export default function formatSubscription(subscription: {
+  quantity: number;
+  product: { name: string };
+}) {
   return subscription.quantity + " × " + subscription.product.name;
 }
 

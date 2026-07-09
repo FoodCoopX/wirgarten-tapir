@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Col, Form, Modal, Row, Spinner } from "react-bootstrap";
-import { Subscription, SubscriptionsApi } from "../api-client";
+import { SubscriptionTrialFields, SubscriptionsApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
@@ -16,13 +16,19 @@ interface SubscriptionTrialPeriodModalProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
-function formatDateForInput(date: Date | null | undefined): string {
+function parseApiDate(isoDate: string): Date {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDateForInput(date: Date | string | null | undefined): string {
   if (!date) {
     return "";
   }
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const parsedDate = typeof date === "string" ? parseApiDate(date) : date;
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(parsedDate.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -31,7 +37,7 @@ const SubscriptionTrialPeriodModal: React.FC<
 > = ({ onHide, show, subscriptionId, csrfToken, setToastDatas }) => {
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const [loading, setLoading] = useState(true);
-  const [subscription, setSubscription] = useState<Subscription>();
+  const [subscription, setSubscription] = useState<SubscriptionTrialFields>();
   const [trialDisabled, setTrialDisabled] = useState(false);
   const [useCustomEndDate, setUseCustomEndDate] = useState(false);
   const [customEndDate, setCustomEndDate] = useState("");
@@ -73,11 +79,13 @@ const SubscriptionTrialPeriodModal: React.FC<
     if (useCustomEndDate && customEndDate) {
       return new Date(customEndDate);
     }
-    return (
-      subscription.effectiveTrialEndDate ??
-      subscription.defaultTrialEndDate ??
-      null
-    );
+    if (subscription.effectiveTrialEndDate) {
+      return parseApiDate(subscription.effectiveTrialEndDate);
+    }
+    if (subscription.defaultTrialEndDate) {
+      return parseApiDate(subscription.defaultTrialEndDate);
+    }
+    return null;
   }
 
   function onConfirmChange() {
