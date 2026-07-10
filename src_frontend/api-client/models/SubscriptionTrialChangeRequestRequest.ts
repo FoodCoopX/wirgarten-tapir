@@ -93,11 +93,7 @@ export function SubscriptionTrialChangeRequestRequestToJSONTyped(
     trial_disabled: value["trialDisabled"],
     trial_end_date_override:
       value["trialEndDateOverride"] == null
-        ? null
-        : [
-            value["trialEndDateOverride"].getFullYear(),
-            String(value["trialEndDateOverride"].getMonth() + 1).padStart(2, "0"),
-            String(value["trialEndDateOverride"].getDate()).padStart(2, "0"),
-          ].join("-"),
+        ? undefined
+        : (value["trialEndDateOverride"] as any).toISOString().substring(0, 10),
   };
 }

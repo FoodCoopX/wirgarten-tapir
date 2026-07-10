@@ -20,11 +20,6 @@ import {
 import type { Product } from "./Product";
 import { ProductFromJSON, ProductToJSON } from "./Product";
 
-function parseApiDate(isoDate: string): Date {
-  const [year, month, day] = isoDate.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
 /**
  *
  * @export
@@ -259,7 +254,7 @@ export function SubscriptionTrialFieldsFromJSONTyped(
     trialEndDateOverride:
       json["trial_end_date_override"] == null
         ? undefined
-        : parseApiDate(json["trial_end_date_override"]),
+        : new Date(json["trial_end_date_override"]),
     priceOverride:
       json["price_override"] == null ? undefined : json["price_override"],
     noticePeriodDuration: json["notice_period_duration"],

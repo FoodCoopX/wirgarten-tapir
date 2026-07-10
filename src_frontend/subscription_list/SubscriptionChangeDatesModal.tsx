@@ -16,6 +16,7 @@ import {
   PublicSubscription,
   SolidarityContribution,
   SolidarityContributionApi,
+  Subscription,
   SubscriptionTrialFields,
   SubscriptionsApi,
 } from "../api-client";
@@ -299,7 +300,7 @@ const SubscriptionChangeDatesModal: React.FC<
           <div>
             Aktuelle Vertragsdaten:
             <ul>
-              <li>Produkt: {formatSubscription(subscription)}</li>
+              <li>Produkt: {formatSubscription(subscription as Subscription)}</li>
               <li>Start: {formatDateNumeric(subscription.startDate)}</li>
               <li>End: {formatDateNumeric(subscription.endDate)}</li>
               {memberData && (

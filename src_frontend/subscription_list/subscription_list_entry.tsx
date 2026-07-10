@@ -30,9 +30,7 @@ const domNodeSubscriptionTrialPeriodButton = document.getElementById(
   "subscription_trial_period_button",
 );
 
-if (!domNodeSubscriptionTrialPeriodButton) {
-  console.error("Subscription trial period button not found");
-} else {
+if (domNodeSubscriptionTrialPeriodButton) {
   const root = createRoot(domNodeSubscriptionTrialPeriodButton);
   root.render(<SubscriptionTrialPeriodButton csrfToken={getCsrfToken()} />);
 }

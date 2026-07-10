@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Col, Form, Modal, Row, Spinner } from "react-bootstrap";
-import { CoopApi, Member, SubscriptionTrialFields, SubscriptionsApi } from "../api-client";
+import { CoopApi, Member, Subscription, SubscriptionTrialFields, SubscriptionsApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
@@ -179,7 +179,7 @@ const SubscriptionChangePriceModal: React.FC<
             <div>
               Aktuelle Vertragsdaten:
               <ul>
-                <li>Produkt: {formatSubscription(subscription)}</li>
+                <li>Produkt: {formatSubscription(subscription as Subscription)}</li>
                 <li>Start: {formatDateNumeric(subscription.startDate)}</li>
                 <li>End: {formatDateNumeric(subscription.endDate)}</li>
                 {memberData && (
