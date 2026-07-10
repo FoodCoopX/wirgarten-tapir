@@ -48,6 +48,9 @@
                                     class="tr-clickable location-row"
                                     onclick="handleRowClick('{{ pl.id }}')">
                                     <td style="text-align:left">
+                                        {% if pl.location_route %}
+	                                        {{ pl.location_route }}
+                                        {% endif %}
                                         <strong>{{ pl.name }}</strong>
                                     </td>
                                     <td>
