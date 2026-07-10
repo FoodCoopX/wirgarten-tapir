@@ -16,7 +16,7 @@ import {
   PublicSubscription,
   SolidarityContribution,
   SolidarityContributionApi,
-  Subscription,
+  SubscriptionTrialFields,
   SubscriptionsApi,
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
@@ -110,7 +110,7 @@ const SubscriptionChangeDatesModal: React.FC<
   const coopApi = useApi(CoopApi, csrfToken);
   const [mainDataLoading, setMainDataLoading] = useState(true);
   const [extraDataLoading, setExtraDataLoading] = useState(true);
-  const [subscription, setSubscription] = useState<Subscription>();
+  const [subscription, setSubscription] = useState<SubscriptionTrialFields>();
   const [memberId, setMemberId] = useState<string>();
   const [memberData, setMemberData] = useState<Member>();
   const [startWeek, setStartWeek] = useState<number>(1);
