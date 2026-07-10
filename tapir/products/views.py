@@ -29,7 +29,7 @@ from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.wirgarten.constants import DeliveryCycleDict
 from tapir.wirgarten.models import ProductType, GrowingPeriod, ProductCapacity
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import get_today, legal_status_is_association
+from tapir.wirgarten.utils import get_today
 
 
 class ExtendedProductTypeApiView(APIView):
@@ -63,9 +63,6 @@ class ExtendedProductTypeApiView(APIView):
             )
             or get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE)
             != DELIVERY_DONATION_MODE_DISABLED,
-            "show_association_membership": legal_status_is_association(
-                cache=self.cache
-            ),
             "delivery_cycle_options": DeliveryCycleDict,
             "extended_product_type": self.build_extended_product_type_data(
                 product_type=product_type, growing_period=growing_period
@@ -227,7 +224,6 @@ class ProductTypesWithoutCapacityAndConfigApiView(APIView):
                 ParameterKeys.JOKERS_ENABLED, cache=cache
             ),
             "can_update_notice_period": settings.DEBUG,
-            "show_association_membership": legal_status_is_association(cache=cache),
             "delivery_cycle_options": DeliveryCycleDict,
             "product_types_without_capacity": types_without_capacity,
         }

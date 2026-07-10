@@ -15,7 +15,7 @@ from tapir.associations.tests.factories import (
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestAssociationMembershipChangeHandler(TapirIntegrationTest):
@@ -34,6 +34,7 @@ class TestAssociationMembershipChangeHandler(TapirIntegrationTest):
             association_membership_type=self.association_membership_type,
             start_date=start_date,
             actor=actor,
+            cache={},
         )
 
         self.assertEqual(1, AssociationMembership.objects.count())
@@ -69,6 +70,7 @@ class TestAssociationMembershipChangeHandler(TapirIntegrationTest):
             association_membership_type=self.association_membership_type,
             start_date=start_date,
             actor=actor,
+            cache={},
         )
 
         self.assertEqual(2, AssociationMembership.objects.count())
@@ -118,6 +120,7 @@ class TestAssociationMembershipChangeHandler(TapirIntegrationTest):
             association_membership_type=self.association_membership_type,
             start_date=start_date,
             actor=actor,
+            cache={},
         )
 
         self.assertEqual(1, AssociationMembership.objects.count())
@@ -147,12 +150,16 @@ class TestAssociationMembershipChangeHandler(TapirIntegrationTest):
             member=member,
             start_date=datetime.date(year=2037, month=1, day=1),
         )
+        now = mock_timezone(
+            test=self, now=datetime.datetime(year=2036, month=12, day=18)
+        )
 
         AssociationMembershipChangeHandler.start_membership(
             member=member,
             association_membership_type=self.association_membership_type,
             start_date=start_date,
             actor=actor,
+            cache={},
         )
 
         self.assertEqual(2, AssociationMembership.objects.count())
@@ -160,12 +167,14 @@ class TestAssociationMembershipChangeHandler(TapirIntegrationTest):
         self.assertEqual(member.id, membership.member_id)
         self.assertEqual(self.association_membership_type.id, membership.type_id)
         self.assertEqual(start_date, membership.start_date)
+        self.assertIsNone(membership.cancellation_ts)
         self.assertIsNone(membership.end_date)
 
         ongoing_membership.refresh_from_db()
         self.assertEqual(
             datetime.date(year=2037, month=2, day=25), ongoing_membership.end_date
         )
+        self.assertEqual(now, ongoing_membership.cancellation_ts)
         self.assertEqual(1, AssociationMembershipUpdatedLogEntry.objects.count())
         log_entry = AssociationMembershipUpdatedLogEntry.objects.get()
         self.assertEqual(member.email, log_entry.user.email)

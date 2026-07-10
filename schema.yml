@@ -31,9 +31,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /associations/api/existing_member_updates_membership:
+    post:
+      operationId: associations_api_existing_member_updates_membership_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExistingMemberUpdatesAssociationMembershipRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExistingMemberUpdatesAssociationMembershipRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExistingMemberUpdatesAssociationMembershipRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /associations/api/member_association_memberships:
     get:
-      operationId: associations_api_member_association_memberships_list
+      operationId: associations_api_member_association_memberships_retrieve
       parameters:
       - in: query
         name: member_id
@@ -50,9 +78,35 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AssociationMembership'
+                $ref: '#/components/schemas/MemberAssociationMembershipDetails'
+          description: ''
+  /associations/api/set_membership_end_date:
+    post:
+      operationId: associations_api_set_membership_end_date_create
+      tags:
+      - associations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetAssociationMembershipEndDateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetAssociationMembershipEndDateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetAssociationMembershipEndDateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /associations/association_membership_types/:
     get:
@@ -5590,34 +5644,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/PublicWaitingListEntryDetails'
           description: ''
-  /waiting_list/api/public_waiting_list_create_entry_potential_member:
-    post:
-      operationId: waiting_list_api_public_waiting_list_create_entry_potential_member_create
-      tags:
-      - waiting_list
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderConfirmationResponse'
-          description: ''
   /waiting_list/api/send_waiting_list_link:
     post:
       operationId: waiting_list_api_send_waiting_list_link_create
@@ -5911,6 +5937,10 @@ components:
         end_date:
           type: string
           format: date
+          nullable: true
+        cancellation_ts:
+          type: string
+          format: date-time
           nullable: true
         member:
           type: string
@@ -8082,6 +8112,22 @@ components:
       - as_admin
       - member_id
       - number_of_shares_to_add
+    ExistingMemberUpdatesAssociationMembershipRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        association_membership_type_id:
+          type: string
+          minLength: 1
+        iban:
+          type: string
+        account_owner:
+          type: string
+      required:
+      - association_membership_type_id
+      - member_id
     ExportSegment:
       type: object
       properties:
@@ -8248,8 +8294,6 @@ components:
           type: boolean
         must_be_subscribed_to:
           type: boolean
-        is_association_membership:
-          type: boolean
         force_waiting_list:
           type: boolean
         accordions_in_bestell_wizard:
@@ -8276,7 +8320,6 @@ components:
       - delivery_cycle
       - force_waiting_list
       - is_affected_by_jokers
-      - is_association_membership
       - must_be_subscribed_to
       - name
       - order_in_bestellwizard
@@ -8292,8 +8335,6 @@ components:
           type: boolean
         show_jokers:
           type: boolean
-        show_association_membership:
-          type: boolean
         delivery_cycle_options:
           type: object
           additionalProperties: {}
@@ -8305,7 +8346,6 @@ components:
       - can_update_notice_period
       - delivery_cycle_options
       - extended_product_type
-      - show_association_membership
       - show_jokers
       - show_notice_period
     ExtendedProductTypeRequest:
@@ -8346,8 +8386,6 @@ components:
           type: boolean
         must_be_subscribed_to:
           type: boolean
-        is_association_membership:
-          type: boolean
         force_waiting_list:
           type: boolean
         accordions_in_bestell_wizard:
@@ -8374,7 +8412,6 @@ components:
       - delivery_cycle
       - force_waiting_list
       - is_affected_by_jokers
-      - is_association_membership
       - must_be_subscribed_to
       - name
       - order_in_bestellwizard
@@ -8822,6 +8859,19 @@ components:
       - last_name
       - password
       - username
+    MemberAssociationMembershipDetails:
+      type: object
+      properties:
+        memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationMembership'
+        order_wizard_url:
+          type: string
+          nullable: true
+      required:
+      - memberships
+      - order_wizard_url
     MemberBankDataResponse:
       type: object
       properties:
@@ -10676,9 +10726,6 @@ components:
           type: boolean
           title: Muss gezeichnet werden
           description: Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
-        is_association_membership:
-          type: boolean
-          title: Repräsentiert Vereinsmitgliedschaften
         description_bestellwizard_short:
           type: string
           title: Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)
@@ -10744,8 +10791,6 @@ components:
           type: boolean
         show_jokers:
           type: boolean
-        show_association_membership:
-          type: boolean
         delivery_cycle_options:
           type: object
           additionalProperties: {}
@@ -10755,7 +10800,6 @@ components:
       - can_update_notice_period
       - delivery_cycle_options
       - product_types_without_capacity
-      - show_association_membership
       - show_jokers
       - show_notice_period
     PublicConfirmWaitingListEntryRequestRequest:
@@ -10783,8 +10827,13 @@ components:
         solidarity_contribution:
           type: number
           format: double
+        association_membership_type_id:
+          type: string
+          nullable: true
+          minLength: 1
       required:
       - account_owner
+      - association_membership_type_id
       - contract_accepted
       - entry_id
       - iban
@@ -10955,9 +11004,6 @@ components:
           type: number
           format: double
           readOnly: true
-        is_association_membership:
-          type: boolean
-          title: Repräsentiert Vereinsmitgliedschaften
       required:
       - accordions
       - name
@@ -10988,7 +11034,6 @@ components:
         end_date:
           type: string
           format: date
-          nullable: true
         monthly_price:
           type: number
           format: double
@@ -10997,6 +11042,7 @@ components:
           type: string
           maxLength: 10
       required:
+      - end_date
       - monthly_price
       - product_id
       - product_name
@@ -11083,56 +11129,6 @@ components:
       - member_id
       - pickup_location_ids
       - shopping_cart
-    PublicWaitingListEntryNewMemberCreateRequest:
-      type: object
-      properties:
-        first_name:
-          type: string
-          minLength: 1
-        last_name:
-          type: string
-          minLength: 1
-        email:
-          type: string
-          format: email
-          minLength: 1
-        phone_number:
-          type: string
-          minLength: 1
-        street:
-          type: string
-          minLength: 1
-        street_2:
-          type: string
-        postcode:
-          type: string
-          minLength: 1
-        city:
-          type: string
-          minLength: 1
-        pickup_location_ids:
-          type: array
-          items:
-            type: string
-            minLength: 1
-        shopping_cart:
-          type: object
-          additionalProperties:
-            type: integer
-        number_of_coop_shares:
-          type: integer
-      required:
-      - city
-      - email
-      - first_name
-      - last_name
-      - number_of_coop_shares
-      - phone_number
-      - pickup_location_ids
-      - postcode
-      - shopping_cart
-      - street
-      - street_2
     PublicWaitingListProductWish:
       type: object
       properties:
@@ -11245,6 +11241,18 @@ components:
       - mail_category_ids_additive
       - static_segment_ids_additive
       - static_segment_ids_subtractive
+    SetAssociationMembershipEndDateRequestRequest:
+      type: object
+      properties:
+        membership_id:
+          type: string
+          minLength: 1
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - membership_id
     SolidarityContribution:
       type: object
       properties:
@@ -11496,7 +11504,6 @@ components:
         end_date:
           type: string
           format: date
-          nullable: true
         cancellation_ts:
           type: string
           format: date-time
@@ -11539,6 +11546,7 @@ components:
           type: string
       required:
       - created_at
+      - end_date
       - mandate_ref
       - member
       - notice_period_duration

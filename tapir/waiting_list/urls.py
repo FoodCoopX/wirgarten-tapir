@@ -31,11 +31,6 @@ urlpatterns = [
         name="show_coop_content",
     ),
     path(
-        "api/public_waiting_list_create_entry_potential_member",
-        views.PublicWaitingListCreateEntryPotentialMemberView.as_view(),
-        name="public_waiting_list_create_entry_potential_member",
-    ),
-    path(
         "api/waiting_list_create_entry_existing_member",
         views.WaitingListCreateEntryExistingMemberView.as_view(),
         name="waiting_list_create_entry_existing_member",

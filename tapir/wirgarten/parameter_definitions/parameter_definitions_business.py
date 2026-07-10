@@ -163,7 +163,7 @@ class ParameterDefinitionsBusiness:
             key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS,
             label="Neue Vereinsmitgliedschaften aktivieren",
             datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=False,
+            initial_value=True,
             description="",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(show_only_when=legal_status_is_association),

@@ -122,9 +122,16 @@ class SubscriptionChangeValidator:
         subscription_start_date: datetime.date,
         cache: dict,
     ):
-        current_subscriptions = get_active_subscriptions(
-            subscription_start_date, cache=cache
-        ).filter(member_id=member_id, product__type_id=product_type_id)
+        current_subscriptions = [
+            subscription
+            for subscription in TapirCache.get_active_and_future_subscriptions_by_member_id(
+                cache=cache, reference_date=subscription_start_date
+            ).get(
+                member_id, []
+            )
+            if subscription.product.type_id == product_type_id
+            and subscription.end_date >= subscription_start_date
+        ]
         return sum(
             [
                 subscription.get_used_capacity(cache=cache)

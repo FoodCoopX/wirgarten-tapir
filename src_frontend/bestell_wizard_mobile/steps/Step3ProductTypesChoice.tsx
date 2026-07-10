@@ -52,15 +52,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   }, [investingMembership]);
 
   useEffect(() => {
-    if (settings.legalStatus === "association") {
-      if (
-        selectedProductTypes.some(
-          (productType) => !productType.isAssociationMembership,
-        )
-      ) {
-        setInvestingMembership(false);
-      }
-    } else if (selectedProductTypes.length > 0) {
+    if (selectedProductTypes.length > 0) {
       setInvestingMembership(false);
     }
   }, [selectedProductTypes]);
@@ -108,19 +100,6 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
     }
   }
 
-  function getRelevantProductTypes() {
-    if (settings.legalStatus !== "association") {
-      return settings.productTypes;
-    }
-
-    return settings.productTypes.filter(
-      (productType) =>
-        !(
-          productType.mustBeSubscribedTo && productType.isAssociationMembership
-        ),
-    );
-  }
-
   function showInvestingMembership() {
     if (settings.legalStatus !== "association") {
       return true;
@@ -142,7 +121,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           id={"product_types_choice"}
           className={"d-flex gap-2 justify-content-center align-items-center"}
         >
-          {getRelevantProductTypes().map((productType) => (
+          {settings.productTypes.map((productType) => (
             <div key={productType.id}>
               <input
                 type="checkbox"

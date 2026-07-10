@@ -71,6 +71,7 @@ models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
 models/ExistingMemberPurchasesSharesRequestRequest.ts
+models/ExistingMemberUpdatesAssociationMembershipRequestRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
 models/ExtendedMemberCredit.ts
@@ -95,6 +96,7 @@ models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MandateReferencePreviewResponse.ts
 models/Member.ts
+models/MemberAssociationMembershipDetails.ts
 models/MemberBankDataResponse.ts
 models/MemberCountry.ts
 models/MemberCredit.ts
@@ -190,7 +192,6 @@ models/PublicProductType.ts
 models/PublicSubscription.ts
 models/PublicWaitingListEntryDetails.ts
 models/PublicWaitingListEntryExistingMemberCreateRequest.ts
-models/PublicWaitingListEntryNewMemberCreateRequest.ts
 models/PublicWaitingListProductWish.ts
 models/RecipientRequest.ts
 models/RhythmEnum.ts
@@ -198,6 +199,7 @@ models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
+models/SetAssociationMembershipEndDateRequestRequest.ts
 models/SolidarityContribution.ts
 models/SolidarityContributionCancellationData.ts
 models/SolidarityStepPositionEnum.ts

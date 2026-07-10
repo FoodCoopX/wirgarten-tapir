@@ -129,12 +129,6 @@ export interface ExtendedProductTypeRequest {
    * @type {boolean}
    * @memberof ExtendedProductTypeRequest
    */
-  isAssociationMembership: boolean;
-  /**
-   *
-   * @type {boolean}
-   * @memberof ExtendedProductTypeRequest
-   */
   forceWaitingList: boolean;
   /**
    *
@@ -202,11 +196,6 @@ export function instanceOfExtendedProductTypeRequest(
   if (
     !("mustBeSubscribedTo" in value) ||
     value["mustBeSubscribedTo"] === undefined
-  )
-    return false;
-  if (
-    !("isAssociationMembership" in value) ||
-    value["isAssociationMembership"] === undefined
   )
     return false;
   if (!("forceWaitingList" in value) || value["forceWaitingList"] === undefined)
@@ -281,7 +270,6 @@ export function ExtendedProductTypeRequestFromJSONTyped(
     singleSubscriptionOnly: json["single_subscription_only"],
     isAffectedByJokers: json["is_affected_by_jokers"],
     mustBeSubscribedTo: json["must_be_subscribed_to"],
-    isAssociationMembership: json["is_association_membership"],
     forceWaitingList: json["force_waiting_list"],
     accordionsInBestellWizard: (
       json["accordions_in_bestell_wizard"] as Array<any>
@@ -325,7 +313,6 @@ export function ExtendedProductTypeRequestToJSONTyped(
     single_subscription_only: value["singleSubscriptionOnly"],
     is_affected_by_jokers: value["isAffectedByJokers"],
     must_be_subscribed_to: value["mustBeSubscribedTo"],
-    is_association_membership: value["isAssociationMembership"],
     force_waiting_list: value["forceWaitingList"],
     accordions_in_bestell_wizard: (
       value["accordionsInBestellWizard"] as Array<any>

@@ -41,12 +41,6 @@ export interface ProductTypesAndConfig {
   showJokers: boolean;
   /**
    *
-   * @type {boolean}
-   * @memberof ProductTypesAndConfig
-   */
-  showAssociationMembership: boolean;
-  /**
-   *
    * @type {{ [key: string]: any; }}
    * @memberof ProductTypesAndConfig
    */
@@ -73,11 +67,6 @@ export function instanceOfProductTypesAndConfig(
   if (!("showNoticePeriod" in value) || value["showNoticePeriod"] === undefined)
     return false;
   if (!("showJokers" in value) || value["showJokers"] === undefined)
-    return false;
-  if (
-    !("showAssociationMembership" in value) ||
-    value["showAssociationMembership"] === undefined
-  )
     return false;
   if (
     !("deliveryCycleOptions" in value) ||
@@ -111,7 +100,6 @@ export function ProductTypesAndConfigFromJSONTyped(
     ).map(ProductTypeFromJSON),
     showNoticePeriod: json["show_notice_period"],
     showJokers: json["show_jokers"],
-    showAssociationMembership: json["show_association_membership"],
     deliveryCycleOptions: json["delivery_cycle_options"],
     canUpdateNoticePeriod: json["can_update_notice_period"],
   };
@@ -135,7 +123,6 @@ export function ProductTypesAndConfigToJSONTyped(
     ).map(ProductTypeToJSON),
     show_notice_period: value["showNoticePeriod"],
     show_jokers: value["showJokers"],
-    show_association_membership: value["showAssociationMembership"],
     delivery_cycle_options: value["deliveryCycleOptions"],
     can_update_notice_period: value["canUpdateNoticePeriod"],
   };

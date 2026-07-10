@@ -18,6 +18,7 @@ interface Step6BAssociationMembershipsProps {
   >;
   contractStartDate: Date;
   active: boolean;
+  isOrderStep: boolean;
 }
 
 function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
@@ -42,6 +43,7 @@ const Step6BAssociationMemberships: React.FC<
   setSelectedAssociationMembershipType,
   contractStartDate,
   active,
+  isOrderStep,
 }) => {
   const [showError, setShowError] = useState(false);
   const [statuteAccepted, setStatuteAccepted] = useState(false);
@@ -85,6 +87,8 @@ const Step6BAssociationMemberships: React.FC<
                   onChange={(checked) => {
                     if (checked) {
                       setSelectedAssociationMembershipType(type);
+                    } else {
+                      setSelectedAssociationMembershipType(undefined);
                     }
                   }}
                   label={buildLabel(type, contractStartDate)}
@@ -117,7 +121,11 @@ const Step6BAssociationMemberships: React.FC<
         </div>
       </div>
 
-      <NextStepButton onClick={onNextClicked} />
+      <NextStepButton
+        onClick={onNextClicked}
+        isOrderStep={isOrderStep}
+        text={isOrderStep ? "Vereinsmitgliedschaft bestätigen" : undefined}
+      />
     </>
   );
 };
