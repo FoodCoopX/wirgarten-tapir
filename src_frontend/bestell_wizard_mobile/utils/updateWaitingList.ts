@@ -1,8 +1,8 @@
 import type { PublicPickupLocation, PublicProductType } from "../../api-client";
-import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
-import { isProductOrdered } from "./isProductOrdered.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import { isProductOrdered } from "./isProductOrdered.ts";
 
 export function updateWaitingList(
   selectedPickupLocations: PublicPickupLocation[],
@@ -26,21 +26,16 @@ export function updateWaitingList(
       continue;
     }
 
-    if (productTypeIdsOverCapacity.includes(productType.id!)) {
+    if (
+      shouldProductTypeBeInWaitingList(
+        productType,
+        productTypeIdsOverCapacity,
+        pickupLocationForcesWaitingList,
+        shoppingCart,
+        productIdsOverCapacity,
+      )
+    ) {
       newProductsInWaitingList.add(productType);
-    }
-
-    if (pickupLocationForcesWaitingList && !productType.noDelivery) {
-      newProductsInWaitingList.add(productType);
-    }
-
-    for (const product of productType.products) {
-      if (
-        isProductOrdered(product, shoppingCart) &&
-        productIdsOverCapacity.includes(product.id!)
-      ) {
-        newProductsInWaitingList.add(productType);
-      }
     }
   }
 
@@ -60,4 +55,35 @@ function doesPickupLocationSelectionForceWaitingListForDeliveredProducts(
   );
 
   return pickupLocationsWithEnoughCapacity.length === 0;
+}
+
+function shouldProductTypeBeInWaitingList(
+  productType: PublicProductType,
+  productTypeIdsOverCapacity: string[],
+  pickupLocationForcesWaitingList: boolean,
+  shoppingCart: ShoppingCart,
+  productIdsOverCapacity: string[],
+) {
+  if (productType.forceWaitingList) {
+    return true;
+  }
+
+  if (productTypeIdsOverCapacity.includes(productType.id!)) {
+    return true;
+  }
+
+  if (pickupLocationForcesWaitingList && !productType.noDelivery) {
+    return true;
+  }
+
+  for (const product of productType.products) {
+    if (
+      isProductOrdered(product, shoppingCart) &&
+      productIdsOverCapacity.includes(product.id!)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
