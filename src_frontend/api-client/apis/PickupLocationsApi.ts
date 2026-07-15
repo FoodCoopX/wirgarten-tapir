@@ -70,6 +70,10 @@ export interface PickupLocationsApiPickupLocationDeliveryChargesCreateRequest {
   pickupLocationDeliveryChargeCreateRequestRequest: PickupLocationDeliveryChargeCreateRequestRequest;
 }
 
+export interface PickupLocationsApiPickupLocationDeliveryChargesDestroyRequest {
+  id?: string;
+}
+
 export interface PickupLocationsApiPickupLocationDeliveryChargesRetrieveRequest {
   pickupLocationId?: string;
 }
@@ -517,6 +521,65 @@ export class PickupLocationsApi extends runtime.BaseAPI {
   ): Promise<string> {
     const response =
       await this.pickupLocationsApiPickupLocationDeliveryChargesCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async pickupLocationsApiPickupLocationDeliveryChargesDestroyRaw(
+    requestParameters: PickupLocationsApiPickupLocationDeliveryChargesDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["id"] != null) {
+      queryParameters["id"] = requestParameters["id"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/api/pickup_location_delivery_charges`,
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async pickupLocationsApiPickupLocationDeliveryChargesDestroy(
+    requestParameters: PickupLocationsApiPickupLocationDeliveryChargesDestroyRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response =
+      await this.pickupLocationsApiPickupLocationDeliveryChargesDestroyRaw(
         requestParameters,
         initOverrides,
       );

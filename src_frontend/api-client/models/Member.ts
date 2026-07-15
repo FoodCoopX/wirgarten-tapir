@@ -206,6 +206,12 @@ export interface Member {
    * @memberof Member
    */
   isStudent?: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof Member
+   */
+  hasReceivedMembershipStartedMail?: boolean;
 }
 
 /**
@@ -285,6 +291,10 @@ export function MemberFromJSONTyped(
     createdAt: new Date(json["created_at"]),
     memberNo: json["member_no"] == null ? undefined : json["member_no"],
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
+    hasReceivedMembershipStartedMail:
+      json["has_received_membership_started_mail"] == null
+        ? undefined
+        : json["has_received_membership_started_mail"],
   };
 }
 
@@ -348,5 +358,7 @@ export function MemberToJSONTyped(
         : (value["privacyConsent"] as any).toISOString(),
     member_no: value["memberNo"],
     is_student: value["isStudent"],
+    has_received_membership_started_mail:
+      value["hasReceivedMembershipStartedMail"],
   };
 }
