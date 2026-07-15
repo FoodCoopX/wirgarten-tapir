@@ -1,104 +1,98 @@
 import datetime
 from decimal import Decimal
+from unittest.mock import Mock, patch
 
+from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
     PickupLocationDeliveryChargeService,
 )
-from tapir.pickup_locations.tests.factories import (
-    PickupLocationDeliveryChargeFactory,
-)
-from tapir.wirgarten.tests.factories import (
-    PickupLocationFactory,
-)
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
+
+REFERENCE_DATE = datetime.date(year=2026, month=5, day=15)
 
 
-class TestGetDeliveryChargeAtDate(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls):
-        cls.pickup_location = PickupLocationFactory.create()
-        cls.reference_date = datetime.date(year=2026, month=5, day=15)
+def _build_charge(
+    amount: str, valid_from: datetime.date
+) -> PickupLocationDeliveryCharge:
+    return PickupLocationDeliveryCharge(
+        pickup_location_id="test_location",
+        amount=Decimal(amount),
+        valid_from=valid_from,
+    )
 
-    def test_getDeliveryChargeAtDate_noChargeRowExists_returnsZero(self):
+
+class TestGetDeliveryChargeAtDate(TapirUnitTest):
+    @patch.object(
+        TapirCache, "get_delivery_charges_by_pickup_location_id", autospec=True
+    )
+    def test_getDeliveryChargeAtDate_noChargeRowExists_returnsZero(
+        self, mock_get_charges: Mock
+    ):
+        mock_get_charges.return_value = []
+        cache = Mock()
+
         result = PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
-            pickup_location_id=self.pickup_location.id,
-            reference_date=self.reference_date,
-            cache={},
+            pickup_location_id="test_location",
+            reference_date=REFERENCE_DATE,
+            cache=cache,
         )
 
         self.assertEqual(Decimal("0.00"), result)
+        mock_get_charges.assert_called_once_with(
+            cache=cache, pickup_location_id="test_location"
+        )
 
+    @patch.object(
+        TapirCache, "get_delivery_charges_by_pickup_location_id", autospec=True
+    )
     def test_getDeliveryChargeAtDate_multipleEntries_returnsMostRecentValidEntry(
-        self,
+        self, mock_get_charges: Mock
     ):
-        PickupLocationDeliveryChargeFactory.create(
-            pickup_location=self.pickup_location,
-            amount=Decimal("1.50"),
-            valid_from=self.reference_date - datetime.timedelta(days=60),
-        )
-        PickupLocationDeliveryChargeFactory.create(
-            pickup_location=self.pickup_location,
-            amount=Decimal("2.00"),
-            valid_from=self.reference_date - datetime.timedelta(days=10),
-        )
-        PickupLocationDeliveryChargeFactory.create(
-            pickup_location=self.pickup_location,
-            amount=Decimal("3.00"),
-            valid_from=self.reference_date + datetime.timedelta(days=10),
-        )
+        mock_get_charges.return_value = [
+            _build_charge("1.50", REFERENCE_DATE - datetime.timedelta(days=60)),
+            _build_charge("2.00", REFERENCE_DATE - datetime.timedelta(days=10)),
+            _build_charge("3.00", REFERENCE_DATE + datetime.timedelta(days=10)),
+        ]
 
         result = PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
-            pickup_location_id=self.pickup_location.id,
-            reference_date=self.reference_date,
-            cache={},
+            pickup_location_id="test_location",
+            reference_date=REFERENCE_DATE,
+            cache=Mock(),
         )
 
         self.assertEqual(Decimal("2.00"), result)
 
-    def test_getDeliveryChargeAtDate_referenceBeforeAllEntries_returnsZero(self):
-        PickupLocationDeliveryChargeFactory.create(
-            pickup_location=self.pickup_location,
-            amount=Decimal("2.00"),
-            valid_from=self.reference_date + datetime.timedelta(days=10),
-        )
+    @patch.object(
+        TapirCache, "get_delivery_charges_by_pickup_location_id", autospec=True
+    )
+    def test_getDeliveryChargeAtDate_referenceBeforeAllEntries_returnsZero(
+        self, mock_get_charges: Mock
+    ):
+        mock_get_charges.return_value = [
+            _build_charge("2.00", REFERENCE_DATE + datetime.timedelta(days=10)),
+        ]
 
         result = PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
-            pickup_location_id=self.pickup_location.id,
-            reference_date=self.reference_date,
-            cache={},
+            pickup_location_id="test_location",
+            reference_date=REFERENCE_DATE,
+            cache=Mock(),
         )
 
         self.assertEqual(Decimal("0.00"), result)
 
-    def test_getDeliveryChargeAtDate_validFromEqualsReference_returnsThatAmount(self):
-        PickupLocationDeliveryChargeFactory.create(
-            pickup_location=self.pickup_location,
-            amount=Decimal("4.50"),
-            valid_from=self.reference_date,
-        )
+    @patch.object(
+        TapirCache, "get_delivery_charges_by_pickup_location_id", autospec=True
+    )
+    def test_getDeliveryChargeAtDate_validFromEqualsReference_returnsThatAmount(
+        self, mock_get_charges: Mock
+    ):
+        mock_get_charges.return_value = [_build_charge("4.50", REFERENCE_DATE)]
 
         result = PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
-            pickup_location_id=self.pickup_location.id,
-            reference_date=self.reference_date,
-            cache={},
+            pickup_location_id="test_location",
+            reference_date=REFERENCE_DATE,
+            cache=Mock(),
         )
 
         self.assertEqual(Decimal("4.50"), result)
-
-    def test_getDeliveryChargeAtDate_otherLocationHasCharge_returnsZeroForRequestedLocation(
-        self,
-    ):
-        other_location = PickupLocationFactory.create()
-        PickupLocationDeliveryChargeFactory.create(
-            pickup_location=other_location,
-            amount=Decimal("5.00"),
-            valid_from=self.reference_date - datetime.timedelta(days=10),
-        )
-
-        result = PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
-            pickup_location_id=self.pickup_location.id,
-            reference_date=self.reference_date,
-            cache={},
-        )
-
-        self.assertEqual(Decimal("0.00"), result)
