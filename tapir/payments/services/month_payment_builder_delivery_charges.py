@@ -3,10 +3,11 @@ from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -22,6 +23,7 @@ from tapir.pickup_locations.services.pickup_location_delivery_charge_service imp
 )
 from tapir.utils.shortcuts import get_any_element_from_set
 from tapir.wirgarten.models import Member, Payment, Subscription
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class MonthPaymentBuilderDeliveryCharges:
@@ -56,22 +58,121 @@ class MonthPaymentBuilderDeliveryCharges:
                     member=member, reference_date=target_month, cache=cache
                 )
 
-            payment = MonthPaymentBuilderUtils.build_payment_for_contract_and_member(
-                member=member,
-                first_of_month=target_month,
-                contracts=member_subscriptions,
-                rhythm=rhythm,
-                cache=cache,
-                generated_payments=generated_payments,
-                in_trial=in_trial,
-                payment_type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
-                total_to_pay_function=cls.get_total_to_pay,
-                allow_negative_amounts=True,
+            payments_to_create.extend(
+                cls.build_payments_for_member(
+                    member=member,
+                    contracts=member_subscriptions,
+                    first_of_month=target_month,
+                    rhythm=rhythm,
+                    cache=cache,
+                    generated_payments=generated_payments,
+                    in_trial=in_trial,
+                )
             )
-            if payment is not None:
-                payments_to_create.append(payment)
 
         return payments_to_create
+
+    @classmethod
+    def build_payments_for_member(
+        cls,
+        member: Member,
+        contracts: set[Subscription],
+        first_of_month: datetime.date,
+        rhythm,
+        cache: dict,
+        generated_payments: set[Payment],
+        in_trial: bool,
+    ) -> list[Payment]:
+        first_day_of_rhythm_period = (
+            MemberPaymentRhythmService.get_first_day_of_rhythm_period(
+                rhythm=rhythm, reference_date=first_of_month, cache=cache
+            )
+        )
+        last_day_of_rhythm_period = (
+            MemberPaymentRhythmService.get_last_day_of_rhythm_period(
+                rhythm=rhythm, reference_date=first_of_month, cache=cache
+            )
+        )
+        payment_start_date = get_parameter_value(
+            key=ParameterKeys.PAYMENT_START_DATE, cache=cache
+        )
+        first_day_of_rhythm_period = max(payment_start_date, first_day_of_rhythm_period)
+        if first_day_of_rhythm_period > last_day_of_rhythm_period:
+            return []
+
+        delivery_dates = cls.get_billable_delivery_dates_in_range(
+            subscriptions=contracts,
+            range_start=first_day_of_rhythm_period,
+            range_end=last_day_of_rhythm_period,
+            cache=cache,
+        )
+        delivery_dates_by_pickup_location = (
+            cls._group_delivery_dates_by_pickup_location(
+                member_id=member.id, delivery_dates=delivery_dates, cache=cache
+            )
+        )
+
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache=cache
+        )
+        due_date = MonthPaymentBuilderUtils.get_payment_due_date(
+            first_of_month=first_of_month,
+            in_trial=in_trial,
+            contracts=contracts,
+            cache=cache,
+        )
+
+        # One payment per pickup location so that a member who moves mid-period can
+        # be billed - and shown - the charge for each location separately. The
+        # payment's range is the span of delivery dates at that location, which
+        # keeps the per-location ranges disjoint and lets the existing
+        # already_paid idempotency (keyed on overlapping ranges) treat them
+        # independently.
+        payments = []
+        for pickup_location_id in sorted(
+            delivery_dates_by_pickup_location,
+            key=lambda location_id: min(delivery_dates_by_pickup_location[location_id]),
+        ):
+            location_dates = delivery_dates_by_pickup_location[pickup_location_id]
+            range_start = min(location_dates)
+            range_end = max(location_dates)
+
+            total_to_pay = sum(
+                (
+                    PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
+                        pickup_location_id=pickup_location_id,
+                        reference_date=delivery_date,
+                        cache=cache,
+                    )
+                    for delivery_date in location_dates
+                ),
+                start=Decimal(0),
+            )
+            already_paid = MonthPaymentBuilderUtils.get_already_paid_amount(
+                range_start=range_start,
+                range_end=range_end,
+                mandate_ref=mandate_ref,
+                payment_type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
+                cache=cache,
+                generated_payments=generated_payments,
+            )
+            amount = (total_to_pay - already_paid).quantize(Decimal("0.01"))
+            if amount == 0:
+                continue
+
+            payments.append(
+                Payment(
+                    due_date=due_date,
+                    amount=amount,
+                    mandate_ref=mandate_ref,
+                    status=Payment.PaymentStatus.DUE,
+                    type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
+                    subscription_payment_range_start=range_start,
+                    subscription_payment_range_end=range_end,
+                )
+            )
+
+        return payments
 
     @classmethod
     def _group_subscriptions_by_member(
@@ -85,36 +186,28 @@ class MonthPaymentBuilderDeliveryCharges:
         return subscriptions_by_member
 
     @classmethod
-    def get_total_to_pay(
+    def _group_delivery_dates_by_pickup_location(
         cls,
-        range_start: datetime.date,
-        range_end: datetime.date,
-        contracts,
+        member_id: str,
+        delivery_dates: set[datetime.date],
         cache: dict,
-    ) -> Decimal:
-        member_id = get_any_element_from_set(contracts).member_id
-        delivery_dates = cls.get_billable_delivery_dates_in_range(
-            subscriptions=contracts,
-            range_start=range_start,
-            range_end=range_end,
-            cache=cache,
-        )
-
-        total = Decimal(0)
+    ) -> dict[str, set[datetime.date]]:
+        delivery_dates_by_pickup_location: dict[str, set[datetime.date]] = {}
         for delivery_date in delivery_dates:
             pickup_location_id = (
                 MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
-                    member_id=member_id,
-                    reference_date=delivery_date,
-                    cache=cache,
+                    member_id=member_id, reference_date=delivery_date, cache=cache
                 )
             )
-            total += PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
-                pickup_location_id=pickup_location_id,
-                reference_date=delivery_date,
-                cache=cache,
+            if pickup_location_id is None:
+                raise ValueError(
+                    f"Member {member_id} has a billable delivery on {delivery_date} "
+                    f"but no pickup location assigned on that date."
+                )
+            delivery_dates_by_pickup_location.setdefault(pickup_location_id, set()).add(
+                delivery_date
             )
-        return total
+        return delivery_dates_by_pickup_location
 
     @classmethod
     def get_billable_delivery_dates_in_range(
@@ -141,13 +234,13 @@ class MonthPaymentBuilderDeliveryCharges:
                 )
             )
 
+        # A joker replaces a delivery with a paid week off, so no delivery reaches
+        # the pickup location and no charge applies. A donation still produces a
+        # delivery (it is redistributed), so the charge does apply - donation weeks
+        # are intentionally not filtered out here.
         result: set[datetime.date] = set()
         for delivery_date in candidate_dates:
             if JokerManagementService.does_member_have_a_joker_in_week(
-                member=member, reference_date=delivery_date, cache=cache
-            ):
-                continue
-            if DeliveryDonationManager.does_member_have_a_donation_in_week(
                 member=member, reference_date=delivery_date, cache=cache
             ):
                 continue

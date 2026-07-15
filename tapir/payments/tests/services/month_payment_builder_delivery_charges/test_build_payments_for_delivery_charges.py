@@ -11,7 +11,6 @@ from tapir.payments.services.month_payment_builder_delivery_charges import (
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
-from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PaymentFactory,
@@ -25,8 +24,8 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
         MemberPaymentRhythmService, "get_member_payment_rhythm", autospec=True
     )
     @patch.object(
-        MonthPaymentBuilderUtils,
-        "build_payment_for_contract_and_member",
+        MonthPaymentBuilderDeliveryCharges,
+        "build_payments_for_member",
         autospec=True,
     )
     @patch.object(
@@ -34,10 +33,10 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
         "get_current_and_renewed_subscriptions",
         autospec=True,
     )
-    def test_buildPaymentsForDeliveryCharges_notInTrial_callsBuildPaymentCorrectlyAndReturnsPayments(
+    def test_buildPaymentsForDeliveryCharges_notInTrial_callsBuildPerMemberAndFlattensPayments(
         self,
         mock_get_current_and_renewed_subscriptions: Mock,
-        mock_build_payment_for_contract_and_member: Mock,
+        mock_build_payments_for_member: Mock,
         mock_get_member_payment_rhythm: Mock,
     ):
         members = MemberFactory.build_batch(size=3)
@@ -73,14 +72,15 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
         )
 
         payment_one = PaymentFactory.build()
-        payment_two = PaymentFactory.build()
-        payments = {
-            member_one: payment_one,
-            member_two: payment_two,
-            member_three: None,
+        payment_two_first = PaymentFactory.build()
+        payment_two_second = PaymentFactory.build()
+        payments_per_member = {
+            member_one: [payment_one],
+            member_two: [payment_two_first, payment_two_second],
+            member_three: [],
         }
-        mock_build_payment_for_contract_and_member.side_effect = (
-            lambda **kwargs: payments[kwargs["member"]]
+        mock_build_payments_for_member.side_effect = (
+            lambda **kwargs: payments_per_member[kwargs["member"]]
         )
 
         cache = Mock()
@@ -94,26 +94,25 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
             in_trial=False,
         )
 
-        self.assertEqual({payment_one, payment_two}, set(result))
+        self.assertEqual(
+            {payment_one, payment_two_first, payment_two_second}, set(result)
+        )
 
         mock_get_current_and_renewed_subscriptions.assert_called_once_with(
             cache=cache, first_of_month=current_month, is_in_trial=False
         )
         self.assertEqual(3, mock_get_member_payment_rhythm.call_count)
-        self.assertEqual(3, mock_build_payment_for_contract_and_member.call_count)
-        mock_build_payment_for_contract_and_member.assert_has_calls(
+        self.assertEqual(3, mock_build_payments_for_member.call_count)
+        mock_build_payments_for_member.assert_has_calls(
             [
                 call(
                     member=member,
-                    first_of_month=current_month,
                     contracts=subscriptions_per_member[member],
+                    first_of_month=current_month,
                     rhythm=rhythms[member],
                     cache=cache,
                     generated_payments=generated_payments,
                     in_trial=False,
-                    payment_type=MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE,
-                    total_to_pay_function=MonthPaymentBuilderDeliveryCharges.get_total_to_pay,
-                    allow_negative_amounts=True,
                 )
                 for member in members
             ],
@@ -124,8 +123,8 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
         MemberPaymentRhythmService, "get_member_payment_rhythm", autospec=True
     )
     @patch.object(
-        MonthPaymentBuilderUtils,
-        "build_payment_for_contract_and_member",
+        MonthPaymentBuilderDeliveryCharges,
+        "build_payments_for_member",
         autospec=True,
     )
     @patch.object(
@@ -136,14 +135,14 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
     def test_buildPaymentsForDeliveryCharges_inTrial_usesMonthlyRhythmAndShiftedMonth(
         self,
         mock_get_current_and_renewed_subscriptions: Mock,
-        mock_build_payment_for_contract_and_member: Mock,
+        mock_build_payments_for_member: Mock,
         mock_get_member_payment_rhythm: Mock,
     ):
         member = MemberFactory.build()
         member.pk = "test_id_member"
         subscription = SubscriptionFactory.build(member=member)
         mock_get_current_and_renewed_subscriptions.return_value = [subscription]
-        mock_build_payment_for_contract_and_member.return_value = None
+        mock_build_payments_for_member.return_value = []
 
         current_month = datetime.date(year=2026, month=5, day=1)
         target_month = datetime.date(year=2026, month=4, day=1)
@@ -161,15 +160,12 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
             cache=cache, first_of_month=target_month, is_in_trial=True
         )
         mock_get_member_payment_rhythm.assert_not_called()
-        mock_build_payment_for_contract_and_member.assert_called_once_with(
+        mock_build_payments_for_member.assert_called_once_with(
             member=member,
-            first_of_month=target_month,
             contracts={subscription},
+            first_of_month=target_month,
             rhythm=MemberPaymentRhythm.Rhythm.MONTHLY.value,
             cache=cache,
             generated_payments=generated_payments,
             in_trial=True,
-            payment_type=MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE,
-            total_to_pay_function=MonthPaymentBuilderDeliveryCharges.get_total_to_pay,
-            allow_negative_amounts=True,
         )

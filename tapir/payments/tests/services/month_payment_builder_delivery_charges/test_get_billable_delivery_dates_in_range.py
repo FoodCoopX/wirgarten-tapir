@@ -143,7 +143,7 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
         self.assertNotIn(datetime.date(year=2026, month=5, day=13), result)
         self.assertEqual(3, len(result))
 
-    def test_getBillableDeliveryDatesInRange_memberHasDonationInWeek_thatDeliverySkipped(
+    def test_getBillableDeliveryDatesInRange_memberHasDonationInWeek_thatDeliveryStillBilled(
         self,
     ):
         subscription = self._make_subscription()
@@ -161,8 +161,8 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
             )
         )
 
-        self.assertNotIn(datetime.date(year=2026, month=5, day=20), result)
-        self.assertEqual(3, len(result))
+        self.assertIn(datetime.date(year=2026, month=5, day=20), result)
+        self.assertEqual(4, len(result))
 
     def test_getBillableDeliveryDatesInRange_subscriptionEndsMidRange_returnsOnlyDatesBeforeEnd(
         self,
