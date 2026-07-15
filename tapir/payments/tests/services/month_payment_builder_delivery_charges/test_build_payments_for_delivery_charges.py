@@ -34,7 +34,7 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
         "get_current_and_renewed_subscriptions",
         autospec=True,
     )
-    def test_buildPaymentsForDeliveryCharges_notInTrial_oneCallPerMember(
+    def test_buildPaymentsForDeliveryCharges_notInTrial_callsBuildPaymentCorrectlyAndReturnsPayments(
         self,
         mock_get_current_and_renewed_subscriptions: Mock,
         mock_build_payment_for_contract_and_member: Mock,

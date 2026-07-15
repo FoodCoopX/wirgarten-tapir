@@ -26,12 +26,9 @@ class TestSaveCharge(TapirIntegrationTest):
             cache={},
         )
 
-        entries = list(
-            PickupLocationDeliveryCharge.objects.filter(
-                pickup_location=self.pickup_location
-            )
-        )
+        entries = list(PickupLocationDeliveryCharge.objects.all())
         self.assertEqual(1, len(entries))
+        self.assertEqual(self.pickup_location, entries[0].pickup_location)
         self.assertEqual(Decimal("2.50"), entries[0].amount)
         self.assertEqual(self.valid_from, entries[0].valid_from)
 
@@ -49,12 +46,9 @@ class TestSaveCharge(TapirIntegrationTest):
             cache={},
         )
 
-        entries = list(
-            PickupLocationDeliveryCharge.objects.filter(
-                pickup_location=self.pickup_location
-            )
-        )
+        entries = list(PickupLocationDeliveryCharge.objects.all())
         self.assertEqual(1, len(entries))
+        self.assertEqual(self.pickup_location, entries[0].pickup_location)
         self.assertEqual(existing.id, entries[0].id)
         self.assertEqual(Decimal("3.00"), entries[0].amount)
 
@@ -73,10 +67,10 @@ class TestSaveCharge(TapirIntegrationTest):
         )
 
         entries = list(
-            PickupLocationDeliveryCharge.objects.filter(
-                pickup_location=self.pickup_location
-            ).order_by("valid_from")
+            PickupLocationDeliveryCharge.objects.all().order_by("valid_from")
         )
         self.assertEqual(2, len(entries))
+        self.assertEqual(self.pickup_location, entries[0].pickup_location)
+        self.assertEqual(self.pickup_location, entries[1].pickup_location)
         self.assertEqual(Decimal("1.00"), entries[0].amount)
         self.assertEqual(Decimal("3.00"), entries[1].amount)

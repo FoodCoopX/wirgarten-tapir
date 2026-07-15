@@ -230,7 +230,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                 f"Member {member_id} has a delivery charge payment {payment.id} "
                 f"around {reference_date} but no pickup location assigned on that date."
             )
-        return PickupLocation.objects.filter(id=pickup_location_id).first()
+        return PickupLocation.objects.get(id=pickup_location_id)
 
     @classmethod
     def get_relevant_subscriptions(
