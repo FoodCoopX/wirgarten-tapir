@@ -11,6 +11,7 @@ from django.db import transaction
 from icecream import ic
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.utils.config import (
     MEMBER_IMPORT_STATUS_SKIPPED,
@@ -34,6 +35,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
     TransferCoopSharesLogEntry,
     SubscriptionChangeLogEntry,
+    PaymentTransaction,
 )
 
 
@@ -163,7 +165,12 @@ class Command(BaseCommand):
                         if import_type == "subscriptions":
                             SubscriptionChangeLogEntry.objects.all().delete()
                             Subscription.objects.all().delete()
-                            Payment.objects.all().delete()
+                            PaymentTransaction.objects.exclude(
+                                type=PAYMENT_TYPE_COOP_SHARES
+                            ).delete()
+                            Payment.objects.exclude(
+                                type=PAYMENT_TYPE_COOP_SHARES
+                            ).delete()
 
                     self.import_generic(
                         reader=reader,

@@ -1,18 +1,18 @@
+import dayjs from "dayjs";
 import React, { useState } from "react";
 import { Accordion, Col, Form, Nav, Row } from "react-bootstrap";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import {
   DeliveryCycleEnum,
   GrowingPeriod,
   NoticePeriodUnitEnum,
   type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
-import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
-import { getNoticePeriodUnitDisplay } from "./getNoticePeriodUnitDispay.ts";
-import CustomCycleDeliveryWeeksInput from "./CustomCycleDeliveryWeeksInput.tsx";
 import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { HTML_ALLOWED_TEXT } from "../utils/HTML_ALLOWED_TEXT.ts";
+import CustomCycleDeliveryWeeksInput from "./CustomCycleDeliveryWeeksInput.tsx";
+import { getNoticePeriodUnitDisplay } from "./getNoticePeriodUnitDispay.ts";
 
 interface ProductTypeFormProps {
   name: string;
@@ -39,9 +39,6 @@ interface ProductTypeFormProps {
   setSingleSubscriptionOnly: (single: boolean) => void;
   mustBeSubscribedTo: boolean;
   setMustBeSubscribedTo: (mustBeSubscribedTo: boolean) => void;
-  showAssociationMembership: boolean;
-  isAssociationMembership: boolean;
-  setIsAssociationMembership: (is: boolean) => void;
   descriptionBestellwizardShort: string;
   setDescriptionBestellwizardShort: (short: string) => void;
   descriptionBestellwizardLong: string;
@@ -97,9 +94,6 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setSingleSubscriptionOnly,
   mustBeSubscribedTo,
   setMustBeSubscribedTo,
-  showAssociationMembership,
-  isAssociationMembership,
-  setIsAssociationMembership,
   descriptionBestellwizardShort,
   setDescriptionBestellwizardShort,
   descriptionBestellwizardLong,
@@ -395,20 +389,6 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                   />
                 </Form.Group>
               </Row>
-              {showAssociationMembership && (
-                <Row className={"mt-2"}>
-                  <Form.Group controlId={"is_association_membership"}>
-                    <Form.Check
-                      onChange={(event) =>
-                        setIsAssociationMembership(event.target.checked)
-                      }
-                      required={false}
-                      checked={isAssociationMembership}
-                      label={"Ist die Vereinsmitgliedschaft"}
-                    />
-                  </Form.Group>
-                </Row>
-              )}
               <Row className={"mt-2"}>
                 <Form.Group controlId={"force_waiting_list"}>
                   <Form.Check

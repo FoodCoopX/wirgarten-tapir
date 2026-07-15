@@ -5,10 +5,10 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta, get_parameter_value
+from tapir.payments.config import IntendedUseTokens
 from tapir.payments.services.mandate_reference_pattern_validator import (
     MandateReferencePatternValidator,
 )
-from tapir.payments.config import IntendedUseTokens
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -250,5 +250,27 @@ class ParameterDefinitionsPayments:
                 vars_hint=IntendedUseTokens.COMMON_TOKENS
                 + IntendedUseTokens.CONTRACT_TOKENS,
             ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_SEND_CSV_FILE_PER_MAIL,
+            label="CSV-Datei zu Lastschriften automatisch beim Export per Mail an dem Admin versenden",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_SEND_XML_FILE_PER_MAIL,
+            label="XML-Datei zu Lastschriften automatisch beim Export per Mail an dem Admin versenden",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="",
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
         )
         order_priority -= 1

@@ -1,13 +1,13 @@
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import React, { useEffect, useState } from "react";
 import { Col, ListGroup, ListGroupItem, Row, Spinner } from "react-bootstrap";
-import formatAddress from "../../utils/formatAddress.ts";
-import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import "../map.css";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import { PublicPickupLocation } from "../../api-client";
 import { MapRef } from "react-leaflet/MapContainer";
+import { PublicPickupLocation } from "../../api-client";
+import formatAddress from "../../utils/formatAddress.ts";
+import "../map.css";
+import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 
 interface PickupLocationSelectorProps {
   pickupLocations: PublicPickupLocation[];
@@ -119,7 +119,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
             Number.parseFloat(pickupLocations[0].coordsLat),
           ]}
           zoom={13}
-          scrollWheelZoom={false}
+          scrollWheelZoom={true}
           ref={setMap}
         >
           <TileLayer
@@ -136,6 +136,8 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
               icon={L.icon({
                 iconUrl: "/static/subscriptions/marker-icon.png",
                 shadowUrl: "/static/subscriptions/marker-shadow.png",
+                iconAnchor: [13, 35],
+                popupAnchor: [0, -33],
               })}
               key={pickupLocation.id}
             >

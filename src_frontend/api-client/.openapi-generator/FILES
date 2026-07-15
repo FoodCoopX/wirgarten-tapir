@@ -1,3 +1,4 @@
+apis/AssociationsApi.ts
 apis/BestellWizardApi.ts
 apis/ConfigApi.ts
 apis/CoopApi.ts
@@ -13,6 +14,12 @@ apis/TapirmailApi.ts
 apis/WaitingListApi.ts
 apis/index.ts
 index.ts
+models/AdminSetAssociationMembershipRequestRequest.ts
+models/AssociationMembership.ts
+models/AssociationMembershipType.ts
+models/AssociationMembershipTypePrice.ts
+models/AssociationMembershipTypePriceRequest.ts
+models/AssociationMembershipTypeRequest.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableSegmentsResponse.ts
 models/BestellWizardBaseDataResponse.ts
@@ -64,6 +71,7 @@ models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
 models/ExistingMemberPurchasesSharesRequestRequest.ts
+models/ExistingMemberUpdatesAssociationMembershipRequestRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
 models/ExtendedMemberCredit.ts
@@ -88,6 +96,7 @@ models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MandateReferencePreviewResponse.ts
 models/Member.ts
+models/MemberAssociationMembershipDetails.ts
 models/MemberBankDataResponse.ts
 models/MemberCountry.ts
 models/MemberCredit.ts
@@ -95,6 +104,7 @@ models/MemberCreditCreateRequest.ts
 models/MemberCreditSettleRequest.ts
 models/MemberDataToConfirm.ts
 models/MemberExtraEmail.ts
+models/MemberExtraEmailCreateRequestRequest.ts
 models/MemberExtraMailData.ts
 models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts
@@ -119,7 +129,10 @@ models/PaginatedEmailDispatchList.ts
 models/PaginatedEmailDispatchWithRetriesList.ts
 models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
+models/PaginatedPaymentTransactionList.ts
 models/PaginatedWaitingListEntryDetailsList.ts
+models/PatchedAssociationMembershipTypePriceRequest.ts
+models/PatchedAssociationMembershipTypeRequest.ts
 models/PatchedBundledEmailConfigurationRequest.ts
 models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts
@@ -129,6 +142,7 @@ models/PatchedExtendedProductRequest.ts
 models/PatchedGrowingPeriodRequest.ts
 models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
 models/PatchedMailCategoryRequest.ts
+models/PatchedMemberExtraEmailUpdateRequestRequest.ts
 models/PatchedMemberProfilePersonalDataRequestRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedPickupLocationCapacitiesRequest.ts
@@ -141,10 +155,14 @@ models/PatchedUpdateMemberBankDataRequestRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/Payment.ts
 models/PaymentIntendedUsePreviewResponse.ts
+models/PaymentList.ts
 models/PaymentRhythmSerializerRequest.ts
 models/PaymentStatusEnum.ts
+models/PaymentTransaction.ts
+models/PaymentTransactionDetails.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
+models/PdfExportTemplate.ts
 models/PersonalDataRequest.ts
 models/PickingModeEnum.ts
 models/PickupLocation.ts
@@ -177,7 +195,6 @@ models/PublicProductType.ts
 models/PublicSubscription.ts
 models/PublicWaitingListEntryDetails.ts
 models/PublicWaitingListEntryExistingMemberCreateRequest.ts
-models/PublicWaitingListEntryNewMemberCreateRequest.ts
 models/PublicWaitingListProductWish.ts
 models/RecipientRequest.ts
 models/RhythmEnum.ts
@@ -185,6 +202,7 @@ models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts
+models/SetAssociationMembershipEndDateRequestRequest.ts
 models/SolidarityContribution.ts
 models/SolidarityContributionCancellationData.ts
 models/SolidarityStepPositionEnum.ts

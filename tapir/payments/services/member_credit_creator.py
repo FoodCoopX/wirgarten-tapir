@@ -39,14 +39,16 @@ class MemberCreditCreator:
             cache=cache,
         )
         if amount_to_credit == 0:
-            return
+            return None
 
-        cls.create_credit_and_log_entry(
+        return cls.create_credit_and_log_entry(
             member=member,
             actor=actor,
             amount_to_credit=amount_to_credit,
             reference_date=reference_date,
             comment=comment,
+            product_type_id_or_soli=product_type_id_or_soli,
+            cache=cache,
         )
 
     @classmethod
@@ -57,18 +59,32 @@ class MemberCreditCreator:
         amount_to_credit: Decimal,
         reference_date: datetime.date,
         comment: str,
+        product_type_id_or_soli: str,
+        cache: dict,
     ):
+        source = product_type_id_or_soli
+        if (
+            source
+            != MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
+        ):
+            source = TapirCache.get_product_type_by_id(
+                cache=cache, product_type_id=source
+            ).name
+
         member_credit = MemberCredit.objects.create(
             due_date=get_last_day_of_month(reference_date),
             member=member,
             amount=amount_to_credit,
             purpose="TODO, warten auf US 2.2 und 2.6",
             comment=comment,
+            source=source,
         )
 
         MemberCreditCreatedLogEntry().populate(
             user=member, actor=actor, model=member_credit
         ).save()
+
+        return member_credit
 
     @classmethod
     def get_amount_to_credit(

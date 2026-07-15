@@ -17,20 +17,24 @@ import type {
   CsvExportModel,
   CsvExportModelRequest,
   ExportSegment,
+  OrderConfirmationResponse,
   PatchedCsvExportModelRequest,
   PatchedPdfExportModelRequest,
   PdfExportModel,
   PdfExportModelRequest,
+  PdfExportTemplate,
 } from "../models/index";
 import {
   BuildCsvExportResponseFromJSON,
   CsvExportModelFromJSON,
   CsvExportModelRequestToJSON,
   ExportSegmentFromJSON,
+  OrderConfirmationResponseFromJSON,
   PatchedCsvExportModelRequestToJSON,
   PatchedPdfExportModelRequestToJSON,
   PdfExportModelFromJSON,
   PdfExportModelRequestToJSON,
+  PdfExportTemplateFromJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
 
@@ -42,6 +46,10 @@ export interface GenericExportsBuildCsvExportRetrieveRequest {
 export interface GenericExportsBuildPdfExportRetrieveRequest {
   pdfExportId?: string;
   referenceDatetime?: Date;
+}
+
+export interface GenericExportsCreatePdfExportFromTemplatesCreateRequest {
+  templateId?: string;
 }
 
 export interface GenericExportsCsvExportsCreateRequest {
@@ -215,6 +223,63 @@ export class GenericExportsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async genericExportsCreatePdfExportFromTemplatesCreateRaw(
+    requestParameters: GenericExportsCreatePdfExportFromTemplatesCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["templateId"] != null) {
+      queryParameters["template_id"] = requestParameters["templateId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/generic_exports/create_pdf_export_from_templates`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async genericExportsCreatePdfExportFromTemplatesCreate(
+    requestParameters: GenericExportsCreatePdfExportFromTemplatesCreateRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.genericExportsCreatePdfExportFromTemplatesCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 
@@ -636,6 +701,54 @@ export class GenericExportsApi extends runtime.BaseAPI {
   ): Promise<Array<ExportSegment>> {
     const response =
       await this.genericExportsExportSegmentsListRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async genericExportsPdfExportTemplatesListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<PdfExportTemplate>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/generic_exports/pdf_export_templates`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(PdfExportTemplateFromJSON),
+    );
+  }
+
+  /**
+   */
+  async genericExportsPdfExportTemplatesList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<PdfExportTemplate>> {
+    const response =
+      await this.genericExportsPdfExportTemplatesListRaw(initOverrides);
     return await response.value();
   }
 

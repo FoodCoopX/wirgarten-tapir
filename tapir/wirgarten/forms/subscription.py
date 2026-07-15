@@ -388,7 +388,9 @@ class BaseProductForm(forms.Form):
 
             self.subscriptions.append(sub)
 
-        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=self.cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
 
         member.sepa_consent = now
         member.save(cache=self.cache)
@@ -795,7 +797,9 @@ class AdditionalProductForm(forms.Form):
 
         Subscription.objects.bulk_create(self.subscriptions)
 
-        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=self.cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
@@ -811,6 +815,7 @@ class AdditionalProductForm(forms.Form):
                 cache=self.cache,
                 from_waiting_list=False,
                 coop_share_transaction=None,
+                association_membership=None,
                 solidarity_contribution=None,
             )
 

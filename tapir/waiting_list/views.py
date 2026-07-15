@@ -45,7 +45,6 @@ from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
     WaitingListEntrySerializer,
     WaitingListEntryUpdateSerializer,
-    PublicWaitingListEntryNewMemberCreateSerializer,
     PublicWaitingListEntryExistingMemberCreateSerializer,
     PublicConfirmWaitingListEntryRequestSerializer,
     OptionalWaitingListEntryDetailsSerializer,
@@ -85,7 +84,6 @@ from tapir.wirgarten.utils import (
     get_today,
     get_now,
     check_permission_or_self,
-    legal_status_is_cooperative,
 )
 
 
@@ -148,7 +146,7 @@ class WaitingListApiView(APIView):
         pagination = self.pagination_class()
 
         entries = WaitingListEntry.objects.prefetch_related(
-            "product_wishes__product",
+            "product_wishes__product__type",
             "pickup_location_wishes__pickup_location",
         ).select_related(
             "member",
@@ -179,7 +177,9 @@ class WaitingListApiView(APIView):
         entries = pagination.paginate_queryset(entries, request)
 
         data = [self.build_entry_data(entry, cache=self.cache) for entry in entries]
-        serializer = WaitingListEntryDetailsSerializer(data, many=True)
+        serializer = WaitingListEntryDetailsSerializer(
+            data, many=True, context={"cache": self.cache}
+        )
 
         return pagination.get_paginated_response(serializer.data)
 
@@ -600,72 +600,6 @@ class WaitingListShowsCoopContentView(APIView):
         )
 
 
-class PublicWaitingListCreateEntryPotentialMemberView(APIView):
-    permission_classes = []
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.cache = {}
-
-    @extend_schema(
-        request=PublicWaitingListEntryNewMemberCreateSerializer,
-        responses={200: OrderConfirmationResponseSerializer},
-    )
-    def post(self, request):
-        serializer = PublicWaitingListEntryNewMemberCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=serializer.validated_data["shopping_cart"],
-            cache=self.cache,
-        )
-
-        number_of_coop_shares = serializer.validated_data["number_of_coop_shares"]
-        if not legal_status_is_cooperative(cache=self.cache):
-            number_of_coop_shares = 0
-
-        try:
-            WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
-                order=order,
-                number_of_coop_shares=number_of_coop_shares,
-                email=serializer.validated_data["email"],
-                cache=self.cache,
-            )
-        except ValidationError as error:
-            return Response(
-                OrderConfirmationResponseSerializer(
-                    {"order_confirmed": False, "error": error.message}
-                ).data
-            )
-
-        with transaction.atomic():
-            entry = WaitingListEntryCreator.create_entry_potential_member(
-                order=order,
-                pickup_location_ids_in_priority_order=serializer.validated_data[
-                    "pickup_location_ids"
-                ],
-                number_of_coop_shares=serializer.validated_data[
-                    "number_of_coop_shares"
-                ],
-                personal_data=serializer.validated_data,
-                cache=self.cache,
-            )
-            WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
-                entry=entry,
-                potential_member_info=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
-                    email=serializer.validated_data["email"],
-                    first_name=serializer.validated_data["first_name"],
-                    last_name=serializer.validated_data["last_name"],
-                ),
-            )
-
-        return Response(
-            OrderConfirmationResponseSerializer(
-                {"order_confirmed": True, "error": ""}
-            ).data
-        )
-
-
 class WaitingListCreateEntryExistingMemberView(APIView):
     permission_classes = []
 
@@ -860,8 +794,11 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             )
         )
 
-        data = self.build_public_entry_data(waiting_list_entry, cache={})
-        serializer = PublicWaitingListEntryDetailsSerializer(data)
+        cache = {}
+        data = self.build_public_entry_data(waiting_list_entry, cache=cache)
+        serializer = PublicWaitingListEntryDetailsSerializer(
+            data, context={"cache": cache}
+        )
 
         return Response(serializer.data)
 
@@ -961,6 +898,7 @@ class GetMemberWaitingListEntryDetailsApiView(APIView):
     def get(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
+        cache = {}
 
         waiting_list_entry = WaitingListEntry.objects.filter(
             member_id=member_id
@@ -969,8 +907,10 @@ class GetMemberWaitingListEntryDetailsApiView(APIView):
         entry_data = None
         if waiting_list_entry is not None:
             entry_data = WaitingListApiView.build_entry_data(
-                waiting_list_entry, cache={}
+                waiting_list_entry, cache=cache
             )
-        serializer = OptionalWaitingListEntryDetailsSerializer({"entry": entry_data})
+        serializer = OptionalWaitingListEntryDetailsSerializer(
+            {"entry": entry_data}, context={"cache": cache}
+        )
 
         return Response(serializer.data)

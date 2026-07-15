@@ -11,3 +11,16 @@ class MemberMailCategoryRequestSerializer(serializers.Serializer):
 class MemberExtraMailDataSerializer(serializers.Serializer):
     extra_mails = MemberExtraEmailSerializer(many=True)
     explanation_text = serializers.CharField()
+
+
+class MemberExtraEmailCreateRequest(serializers.Serializer):
+    member_id = serializers.CharField()
+    extra_email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+
+
+class MemberExtraEmailUpdateRequest(serializers.Serializer):
+    extra_email_id = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()

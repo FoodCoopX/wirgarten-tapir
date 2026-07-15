@@ -119,6 +119,12 @@ export interface PublicProductType {
    * @memberof PublicProductType
    */
   readonly pricePerDelivery: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof PublicProductType
+   */
+  readonly taxRate: number;
 }
 
 /**
@@ -135,6 +141,7 @@ export function instanceOfPublicProductType(
     return false;
   if (!("pricePerDelivery" in value) || value["pricePerDelivery"] === undefined)
     return false;
+  if (!("taxRate" in value) || value["taxRate"] === undefined) return false;
   return true;
 }
 
@@ -195,6 +202,7 @@ export function PublicProductTypeFromJSONTyped(
         ? undefined
         : json["background_image_in_bestellwizard"],
     pricePerDelivery: json["price_per_delivery"],
+    taxRate: json["tax_rate"],
   };
 }
 
@@ -205,7 +213,11 @@ export function PublicProductTypeToJSON(json: any): PublicProductType {
 export function PublicProductTypeToJSONTyped(
   value?: Omit<
     PublicProductType,
-    "products" | "no_delivery" | "accordions" | "price_per_delivery"
+    | "products"
+    | "no_delivery"
+    | "accordions"
+    | "price_per_delivery"
+    | "tax_rate"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {

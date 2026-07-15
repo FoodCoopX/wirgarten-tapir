@@ -20,6 +20,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.models import CoopSharesCancelledLogEntry
 from tapir.coop.services.membership_text_service import MembershipTextService
@@ -281,7 +282,7 @@ def send_cancellation_confirmation_email(
 def send_contract_change_confirmation(
     member: Member, subs: List[Subscription], cache: dict
 ):
-    if not len(subs):
+    if len(subs) == 0:
         raise Exception(
             "No subscriptions provided for sending contract change confirmation for member: ",
             member,
@@ -325,15 +326,20 @@ def send_contract_change_confirmation(
 
 def send_investing_membership_confirmation(
     member_id: str,
-    coop_share_transaction: CoopShareTransaction,
+    coop_share_transaction: CoopShareTransaction | None,
+    association_membership: AssociationMembership | None,
     solidarity_contribution: SolidarityContribution | None,
+    cache: dict,
 ):
     TransactionalTrigger.fire_action(
         trigger_data=TransactionalTriggerData(
             key=Events.REGISTER_MEMBERSHIP_ONLY,
             recipient_id_in_base_queryset=member_id,
             token_data=TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
-                coop_share_transaction, solidarity_contribution
+                coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
+                solidarity_contribution=solidarity_contribution,
+                cache=cache,
             ),
         ),
     )
@@ -345,6 +351,7 @@ def send_product_order_confirmation(
     cache: dict,
     from_waiting_list: bool,
     coop_share_transaction: CoopShareTransaction | None,
+    association_membership: AssociationMembership | None,
     solidarity_contribution: SolidarityContribution | None,
 ):
     min_contract_start_date = min([subscription.start_date for subscription in subs])
@@ -387,7 +394,10 @@ def send_product_order_confirmation(
                 "contract_list": format_subscription_list_html(list(subs)),
             }
             | TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
-                coop_share_transaction, solidarity_contribution
+                coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
+                solidarity_contribution=solidarity_contribution,
+                cache=cache,
             ),
         ),
     )

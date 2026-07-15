@@ -79,7 +79,7 @@ export interface Subscription {
    * @type {Date}
    * @memberof Subscription
    */
-  endDate?: Date | null;
+  endDate: Date;
   /**
    *
    * @type {Date}
@@ -163,6 +163,7 @@ export function instanceOfSubscription(value: object): value is Subscription {
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("quantity" in value) || value["quantity"] === undefined) return false;
   if (!("startDate" in value) || value["startDate"] === undefined) return false;
+  if (!("endDate" in value) || value["endDate"] === undefined) return false;
   if (
     !("noticePeriodDuration" in value) ||
     value["noticePeriodDuration"] === undefined
@@ -202,7 +203,7 @@ export function SubscriptionFromJSONTyped(
         : new Date(json["auto_confirmed"]),
     quantity: json["quantity"],
     startDate: new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
+    endDate: new Date(json["end_date"]),
     cancellationTs:
       json["cancellation_ts"] == null
         ? undefined
@@ -258,10 +259,7 @@ export function SubscriptionToJSONTyped(
         : (value["autoConfirmed"] as any).toISOString(),
     quantity: value["quantity"],
     start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? undefined
-        : (value["endDate"] as any).toISOString().substring(0, 10),
+    end_date: value["endDate"].toISOString().substring(0, 10),
     cancellation_ts:
       value["cancellationTs"] == null
         ? undefined

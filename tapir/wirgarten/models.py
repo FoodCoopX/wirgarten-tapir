@@ -102,23 +102,6 @@ class PickupLocation(TapirModel):
             )
         return ", ".join(formatted_times)
 
-    @property
-    def delivery_date_offset(self):
-        opening_times = PickupLocationOpeningTime.objects.filter(
-            pickup_location_id=self.id
-        ).order_by("day_of_week")
-        delivery_day = get_parameter_value(ParameterKeys.DELIVERY_DAY)
-        smallest_offset = None
-        for ot in opening_times:
-            offset = ot.day_of_week - delivery_day
-            if ot.day_of_week < delivery_day:
-                offset += 7
-            smallest_offset = (
-                min(smallest_offset, offset) if smallest_offset is not None else offset
-            )
-
-        return smallest_offset if smallest_offset is not None else 0
-
 
 class PickupLocationOpeningTime(TapirModel):
     pickup_location = models.ForeignKey(
@@ -202,9 +185,6 @@ class ProductType(TapirModel):
             "Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen."
         ),
     )
-    is_association_membership = models.BooleanField(
-        default=False, verbose_name=_("Repräsentiert Vereinsmitgliedschaften")
-    )
     description_bestellwizard_short = models.TextField(
         default="",
         verbose_name=_(
@@ -225,21 +205,6 @@ class ProductType(TapirModel):
     title_bestellwizard_intro = models.CharField(max_length=512, default="")
     title_bestellwizard_product_choice = models.CharField(max_length=512, default="")
     background_image_in_bestellwizard = models.CharField(max_length=512, default="")
-
-    def base_price(self, reference_date=None):
-        if reference_date is None:
-            reference_date = get_today()
-
-        product = self.product_set.get(base=True)
-        price_queryset = product.productprice_set.filter(
-            valid_from__lte=reference_date
-        ).order_by("-valid_from")
-
-        price = price_queryset.first()
-        if price is None:
-            price = product.productprice_set.order_by("-valid_from").first()
-
-        return price.price if price else None
 
     class Meta:
         constraints = [
@@ -369,6 +334,7 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
     is_student = models.BooleanField(_("Student*in"), default=False)
+    has_received_membership_started_mail = models.BooleanField(default=False)
 
     @property
     def pickup_location(self):
@@ -384,16 +350,16 @@ class Member(TapirUser):
         if all_locations.count() == 1:
             return all_locations.first().pickup_location
         else:
-            found = (
-                self.memberpickuplocation_set.filter(valid_from__lte=reference_date)
-                .order_by("-valid_from")
-                .values("pickup_location")
-            )
-            return (
-                PickupLocation.objects.get(id=found[0]["pickup_location"])
-                if found.exists()
-                else None
-            )
+            member_pickup_location_object = (
+                self.memberpickuplocation_set.filter(
+                    valid_from__lte=reference_date
+                ).order_by("-valid_from")
+            ).first()
+
+            if member_pickup_location_object is None:
+                return None
+
+            return member_pickup_location_object.pickup_location
 
     @transaction.atomic
     def save(self, *args, **kwargs):
@@ -449,17 +415,9 @@ class Member(TapirUser):
         )
 
     @property
-    def coop_entry_date(self):
-        from tapir.coop.services.membership_cancellation_manager import (
-            MembershipCancellationManager,
-        )
-
-        return MembershipCancellationManager.get_coop_entry_date(self)
-
-    @property
     def base_subscriptions_text(self):
         """
-        Returns a human readable string stating which base products the member has subscribed,
+        Returns a human-readable string stating which base products the member has subscribed,
         sorted by their price in ascending order.
 
         Examples:
@@ -519,17 +477,13 @@ class Member(TapirUser):
     def __str__(self):
         return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
 
-    def get_extra_recipient_addresses(self, cache: dict):
+    def get_extra_recipients(self, cache: dict):
         if not get_parameter_value(
             ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
         ):
             return []
 
-        return list(
-            self.memberextraemail_set.filter(confirmed_on__isnull=False).values_list(
-                "email"
-            )
-        )
+        return list(self.memberextraemail_set.filter(confirmed_on__isnull=False))
 
 
 class MemberPickupLocation(TapirModel):
@@ -676,7 +630,7 @@ class Subscription(TapirModel, AdminConfirmableMixin):
     period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=True)
     quantity = models.PositiveSmallIntegerField(null=False)
     start_date = models.DateField(null=False)
-    end_date = models.DateField(null=True)
+    end_date = models.DateField(null=False)
     cancellation_ts = models.DateTimeField(null=True)
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
@@ -744,6 +698,7 @@ class ExportedFile(TapirModel):
     class FileType(models.TextChoices):
         CSV = "csv", _("CSV")
         PDF = "pdf", _("PDF")
+        XML = "xml", _("XML")
 
     name = models.CharField(max_length=256, null=False)
     type = models.CharField(max_length=8, choices=FileType.choices, null=False)
@@ -759,7 +714,15 @@ class PaymentTransaction(TapirModel):
     The relevant payments must reference the transaction in the same step.
     """
 
-    file = models.ForeignKey(ExportedFile, on_delete=models.PROTECT)
+    csv_file = models.ForeignKey(
+        ExportedFile, on_delete=models.PROTECT, related_name="transaction_csv"
+    )
+    xml_file = models.ForeignKey(
+        ExportedFile,
+        on_delete=models.PROTECT,
+        related_name="transaction_xml",
+        null=True,
+    )
     type = models.CharField(max_length=100)
     month = models.DateField()
 
@@ -1052,7 +1015,7 @@ class SubscriptionChangeLogEntry(LogEntry):
 
 
 class WaitingListEntry(TapirModel):
-    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
+    member = models.ForeignKey(Member, on_delete=models.PROTECT, null=True)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     phone_number = PhoneNumberField(_("Phone number"))
@@ -1117,7 +1080,7 @@ class QuestionaireTrafficSourceResponse(TapirModel):
 
 class QuestionaireCancellationReasonResponse(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
-    reason = models.CharField(max_length=150)
+    reason = models.CharField(max_length=1000)
     custom = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True, null=True)
 
@@ -1183,6 +1146,8 @@ class MemberExtraEmail(TapirModel):
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     email = models.EmailField()
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     confirmed_on = models.DateTimeField(null=True)
     secret = models.UUIDField(default=uuid.uuid4)
 
@@ -1194,12 +1159,23 @@ class MemberExtraEmailCreatedLogEntry(LogEntry):
     template_name = "wirgarten/log/member_extra_email_created_log_entry.html"
 
     email = models.EmailField(max_length=1024)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
 
-    def populate_email(self, email: str, actor: TapirUser, user: Member):
+    def populate_email(
+        self, extra_email_object: MemberExtraEmail, actor: TapirUser, user: Member
+    ):
         self.populate(actor=actor, user=user)
-        self.email = email
+        self.email = extra_email_object.email
+        self.first_name = extra_email_object.first_name
+        self.last_name = extra_email_object.last_name
 
         return self
+
+
+class MemberExtraEmailUpdatedLogEntry(UpdateModelLogEntry):
+    template_name = "wirgarten/log/member_extra_email_updated_log_entry.html"
+    excluded_fields = ["updated_at"]
 
 
 class MemberExtraEmailDeletedLogEntry(LogEntry):

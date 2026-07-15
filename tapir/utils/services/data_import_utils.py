@@ -43,11 +43,12 @@ class DataImportUtils:
         if not v:
             return None
         d = parse_date(v)
-        if d is None:
+        for format in ["%d.%m.%Y", "%d/%m/%Y"]:
             try:
-                d = datetime.date.strptime(v, "%d.%m.%Y")
+                d = datetime.date.strptime(v, format)
             except ValueError:
-                return None
+                continue
+            break
         return d
 
     @classmethod

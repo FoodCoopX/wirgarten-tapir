@@ -69,6 +69,18 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/configuration/configuration_entry.tsx",
           ),
+          payment_transactions: join(
+            INPUT_DIR,
+            "payment_transactions/payment_transactions_list_view_entry.tsx",
+          ),
+          association_memberships_config: join(
+            INPUT_DIR,
+            "/association_memberships_config/association_memberships_config_entry.tsx",
+          ),
+          bestell_wizard_association_membership: join(
+            INPUT_DIR,
+            "/member_profile/association_membership/bestell_wizard_association_membership.tsx",
+          ),
         },
       },
     },

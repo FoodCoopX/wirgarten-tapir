@@ -4,6 +4,7 @@ from typing import Set, List
 from django.db.models import QuerySet, OuterRef, Subquery
 
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import Member, MemberPickupLocation, PickupLocation
 
@@ -104,6 +105,11 @@ class MemberPickupLocationGetter:
         cache_for_pickup_location = get_from_cache_or_compute(
             cache, pickup_location, lambda: {}
         )
+        TapirCacheManager.register_key_in_category(
+            cache=cache,
+            key=pickup_location,
+            category=TapirCacheManager.CATEGORY_MEMBER_PICKUP_LOCATIONS,
+        )
 
         members_at_date = get_from_cache_or_compute(
             cache_for_pickup_location, "members_at_date", lambda: {}
@@ -117,6 +123,14 @@ class MemberPickupLocationGetter:
     def get_member_pickup_locations_objects_by_member_id(
         cls, cache: dict
     ) -> dict[str, List[MemberPickupLocation]]:
+        key = "member_pickup_locations_objects_by_member_id"
+
+        TapirCacheManager.register_key_in_category(
+            cache=cache,
+            key=key,
+            category=TapirCacheManager.CATEGORY_MEMBER_PICKUP_LOCATIONS,
+        )
+
         def build_if_cache_miss():
             member_pickup_locations = {}
             for member_pickup_location in MemberPickupLocation.objects.order_by(
@@ -129,9 +143,7 @@ class MemberPickupLocationGetter:
                 )
             return member_pickup_locations
 
-        return get_from_cache_or_compute(
-            cache, "member_pickup_locations_objects_by_member_id", build_if_cache_miss
-        )
+        return get_from_cache_or_compute(cache, key, build_if_cache_miss)
 
     @classmethod
     def get_member_pickup_location_id_from_cache(

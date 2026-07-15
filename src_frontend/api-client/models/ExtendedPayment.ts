@@ -12,6 +12,11 @@
  * Do not edit the class manually.
  */
 
+import type { AssociationMembership } from "./AssociationMembership";
+import {
+  AssociationMembershipFromJSON,
+  AssociationMembershipToJSON,
+} from "./AssociationMembership";
 import type { CoopShareTransaction } from "./CoopShareTransaction";
 import {
   CoopShareTransactionFromJSON,
@@ -68,6 +73,12 @@ export interface ExtendedPayment {
    * @memberof ExtendedPayment
    */
   deliveryChargePickupLocation: PublicPickupLocation | null;
+  /**
+   *
+   * @type {Array<AssociationMembership>}
+   * @memberof ExtendedPayment
+   */
+  associationMemberships: Array<AssociationMembership>;
 }
 
 /**
@@ -92,6 +103,11 @@ export function instanceOfExtendedPayment(
   if (
     !("deliveryChargePickupLocation" in value) ||
     value["deliveryChargePickupLocation"] === undefined
+  )
+    return false;
+  if (
+    !("associationMemberships" in value) ||
+    value["associationMemberships"] === undefined
   )
     return false;
   return true;
@@ -122,6 +138,9 @@ export function ExtendedPaymentFromJSONTyped(
     deliveryChargePickupLocation: PublicPickupLocationFromJSON(
       json["delivery_charge_pickup_location"],
     ),
+    associationMemberships: (json["association_memberships"] as Array<any>).map(
+      AssociationMembershipFromJSON,
+    ),
   };
 }
 
@@ -151,5 +170,8 @@ export function ExtendedPaymentToJSONTyped(
     delivery_charge_pickup_location: PublicPickupLocationToJSON(
       value["deliveryChargePickupLocation"],
     ),
+    association_memberships: (
+      value["associationMemberships"] as Array<any>
+    ).map(AssociationMembershipToJSON),
   };
 }

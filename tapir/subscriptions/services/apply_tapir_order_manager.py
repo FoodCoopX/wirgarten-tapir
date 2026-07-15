@@ -1,6 +1,7 @@
 import datetime
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -67,7 +68,9 @@ class ApplyTapirOrderManager:
             actor=actor,
             cache=cache,
         )
-        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
 
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=contract_start_date, cache=cache
@@ -121,7 +124,9 @@ class ApplyTapirOrderManager:
             )
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
-        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
         if len(new_subscriptions) > 0:
             OnboardingTrigger.on_subscription_updated(new_subscriptions[0])
 
@@ -186,6 +191,7 @@ class ApplyTapirOrderManager:
         cache: dict,
         from_waiting_list: bool,
         coop_share_transaction: CoopShareTransaction | None,
+        association_membership: AssociationMembership | None,
         solidarity_contribution: SolidarityContribution | None,
     ):
         if subscriptions_existed_before_changes:
@@ -199,5 +205,6 @@ class ApplyTapirOrderManager:
                 cache=cache,
                 from_waiting_list=from_waiting_list,
                 coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
                 solidarity_contribution=solidarity_contribution,
             )

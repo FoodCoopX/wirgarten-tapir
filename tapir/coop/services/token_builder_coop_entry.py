@@ -1,3 +1,7 @@
+from tapir.associations.models import AssociationMembership
+from tapir.associations.services.association_membership_price_type_getter import (
+    AssociationMembershipTypePriceGetter,
+)
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.utils import format_currency, format_date
@@ -8,7 +12,9 @@ class TokenBuilderCoopEntry:
     def build_mail_tokens_for_coop_entry(
         cls,
         coop_share_transaction: CoopShareTransaction | None,
+        association_membership: AssociationMembership | None,
         solidarity_contribution: SolidarityContribution | None,
+        cache: dict,
     ):
         tokens = {
             "number_of_coop_shares": "0",
@@ -17,6 +23,7 @@ class TokenBuilderCoopEntry:
             "membership_start_date": "Keine Datum",
             "solidarity_contribution_amount": format_currency(0),
             "solidarity_contribution_start_date": "Kein Datum",
+            "membership_monthly_price": format_currency(0),
         }
         if coop_share_transaction is not None:
             tokens |= {
@@ -35,6 +42,17 @@ class TokenBuilderCoopEntry:
                 ),
                 "solidarity_contribution_start_date": (
                     format_date(solidarity_contribution.start_date)
+                ),
+            }
+        if association_membership is not None:
+            tokens |= {
+                "membership_start_date": format_date(association_membership.start_date),
+                "membership_monthly_price": format_currency(
+                    AssociationMembershipTypePriceGetter.get_price(
+                        membership_type=association_membership.type,
+                        reference_date=association_membership.start_date,
+                        cache=cache,
+                    )
                 ),
             }
 

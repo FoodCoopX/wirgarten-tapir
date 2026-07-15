@@ -1,17 +1,21 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
+from tapir.payments.tests.factories import MemberCreditFactory
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.factories import PaymentFactory, MandateReferenceFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetAlreadyPaidAmount(TapirUnitTest):
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
     @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
     def test_getAlreadyPaidAmount_default_considersOnlyPaymentsThatOverlapWithTheGivenRange(
-        self, mock_get_payments_by_mandate_ref_and_type: Mock
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
     ):
         range_start = datetime.date(year=2028, month=1, day=1)
         range_end = datetime.date(year=2028, month=1, day=31)
@@ -44,6 +48,8 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
             payment_3,
         }
 
+        mock_get_member_credits.return_value = []
+
         cache = Mock()
         result = MonthPaymentBuilderUtils.get_already_paid_amount(
             range_start=range_start,
@@ -58,10 +64,16 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
         mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
             mandate_ref=mandate_ref, payment_type=product_type_name, cache=cache
         )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref.member_id
+        )
 
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
     @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
     def test_getAlreadyPaidAmount_noRelevantPayment_returns0(
-        self, mock_get_payments_by_mandate_ref_and_type: Mock
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
     ):
         range_start = datetime.date(year=2028, month=1, day=1)
         range_end = datetime.date(year=2028, month=1, day=31)
@@ -75,6 +87,7 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
             type=product_type_name,
         )
         mock_get_payments_by_mandate_ref_and_type.return_value = {payment}
+        mock_get_member_credits.return_value = []
         cache = Mock()
 
         result = MonthPaymentBuilderUtils.get_already_paid_amount(
@@ -90,10 +103,16 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
         mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
             mandate_ref=mandate_ref, payment_type=product_type_name, cache=cache
         )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref.member_id
+        )
 
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
     @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
     def test_getAlreadyPaidAmount_generatedPaymentHasOtherMandateRef_generatedPaymentNotCounted(
-        self, mock_get_payments_by_mandate_ref_and_type: Mock
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
     ):
         range_start = datetime.date(year=2028, month=1, day=1)
         range_end = datetime.date(year=2028, month=1, day=31)
@@ -108,6 +127,7 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
             type=product_type_name,
         )
         mock_get_payments_by_mandate_ref_and_type.return_value = set()
+        mock_get_member_credits.return_value = []
         cache = Mock()
 
         result = MonthPaymentBuilderUtils.get_already_paid_amount(
@@ -123,10 +143,16 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
         mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
             mandate_ref=mandate_ref_1, payment_type=product_type_name, cache=cache
         )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref_1.member_id
+        )
 
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
     @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
     def test_getAlreadyPaidAmount_generatedPaymentHasOtherType_generatedPaymentNotCounted(
-        self, mock_get_payments_by_mandate_ref_and_type: Mock
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
     ):
         range_start = datetime.date(year=2028, month=1, day=1)
         range_end = datetime.date(year=2028, month=1, day=31)
@@ -140,6 +166,7 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
             type="other_type_name",
         )
         mock_get_payments_by_mandate_ref_and_type.return_value = set()
+        mock_get_member_credits.return_value = []
         cache = Mock()
 
         result = MonthPaymentBuilderUtils.get_already_paid_amount(
@@ -155,10 +182,16 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
         mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
             mandate_ref=mandate_ref, payment_type=product_type_name, cache=cache
         )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref.member_id
+        )
 
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
     @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
     def test_getAlreadyPaidAmount_generatedPaymentDoesNotOverlapWithRange_generatedPaymentNotCounted(
-        self, mock_get_payments_by_mandate_ref_and_type: Mock
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
     ):
         range_start = datetime.date(year=2028, month=1, day=1)
         range_end = datetime.date(year=2028, month=1, day=31)
@@ -172,6 +205,7 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
             type=product_type_name,
         )
         mock_get_payments_by_mandate_ref_and_type.return_value = set()
+        mock_get_member_credits.return_value = []
         cache = Mock()
 
         result = MonthPaymentBuilderUtils.get_already_paid_amount(
@@ -187,10 +221,16 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
         mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
             mandate_ref=mandate_ref, payment_type=product_type_name, cache=cache
         )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref.member_id
+        )
 
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
     @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
     def test_getAlreadyPaidAmount_generatedPaymentIsRelevant_generatedPaymentCounted(
-        self, mock_get_payments_by_mandate_ref_and_type: Mock
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
     ):
         range_start = datetime.date(year=2028, month=1, day=1)
         range_end = datetime.date(year=2028, month=1, day=31)
@@ -204,6 +244,7 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
             type=product_type_name,
         )
         mock_get_payments_by_mandate_ref_and_type.return_value = set()
+        mock_get_member_credits.return_value = []
         cache = Mock()
 
         result = MonthPaymentBuilderUtils.get_already_paid_amount(
@@ -218,4 +259,121 @@ class TestGetAlreadyPaidAmount(TapirUnitTest):
         self.assertEqual(7, result)
         mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
             mandate_ref=mandate_ref, payment_type=product_type_name, cache=cache
+        )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref.member_id
+        )
+
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
+    @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
+    def test_getAlreadyPaidAmount_memberHasRelevantCredit_creditCounted(
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
+    ):
+        range_start = datetime.date(year=2028, month=1, day=1)
+        range_end = datetime.date(year=2028, month=1, day=31)
+        mandate_ref = MandateReferenceFactory.build(ref="test_ref")
+        product_type_name = "product_type_test_name"
+        mock_get_payments_by_mandate_ref_and_type.return_value = set()
+        mock_get_member_credits.return_value = [
+            MemberCreditFactory.build(
+                source=product_type_name,
+                due_date=datetime.date(year=2028, month=1, day=15),
+                amount=Decimal("15.77"),
+            )
+        ]
+        cache = Mock()
+
+        result = MonthPaymentBuilderUtils.get_already_paid_amount(
+            range_start=range_start,
+            range_end=range_end,
+            mandate_ref=mandate_ref,
+            payment_type=product_type_name,
+            generated_payments=set(),
+            cache=cache,
+        )
+
+        self.assertEqual(Decimal("-15.77"), result)
+        mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
+            mandate_ref=mandate_ref, payment_type=product_type_name, cache=cache
+        )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref.member_id
+        )
+
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
+    @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
+    def test_getAlreadyPaidAmount_memberHasCreditOfWrongType_creditNotCounted(
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
+    ):
+        range_start = datetime.date(year=2028, month=1, day=1)
+        range_end = datetime.date(year=2028, month=1, day=31)
+        mandate_ref = MandateReferenceFactory.build(ref="test_ref")
+        product_type_name = "product_type_test_name"
+        mock_get_payments_by_mandate_ref_and_type.return_value = set()
+        mock_get_member_credits.return_value = [
+            MemberCreditFactory.build(
+                source="other_type",
+                due_date=datetime.date(year=2028, month=1, day=15),
+                amount=Decimal("15.77"),
+            )
+        ]
+        cache = Mock()
+
+        result = MonthPaymentBuilderUtils.get_already_paid_amount(
+            range_start=range_start,
+            range_end=range_end,
+            mandate_ref=mandate_ref,
+            payment_type=product_type_name,
+            generated_payments=set(),
+            cache=cache,
+        )
+
+        self.assertEqual(Decimal("0"), result)
+        mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
+            mandate_ref=mandate_ref, payment_type=product_type_name, cache=cache
+        )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref.member_id
+        )
+
+    @patch.object(TapirCache, "get_member_credits", autospec=True)
+    @patch.object(TapirCache, "get_payments_by_mandate_ref_and_type", autospec=True)
+    def test_getAlreadyPaidAmount_memberHasCreditOutsideOfRange_creditNotCounted(
+        self,
+        mock_get_payments_by_mandate_ref_and_type: Mock,
+        mock_get_member_credits: Mock,
+    ):
+        range_start = datetime.date(year=2028, month=1, day=1)
+        range_end = datetime.date(year=2028, month=1, day=31)
+        mandate_ref = MandateReferenceFactory.build(ref="test_ref")
+        product_type_name = "product_type_test_name"
+        mock_get_payments_by_mandate_ref_and_type.return_value = set()
+        mock_get_member_credits.return_value = [
+            MemberCreditFactory.build(
+                source=product_type_name,
+                due_date=datetime.date(year=2028, month=2, day=1),
+                amount=Decimal("15.77"),
+            )
+        ]
+        cache = Mock()
+
+        result = MonthPaymentBuilderUtils.get_already_paid_amount(
+            range_start=range_start,
+            range_end=range_end,
+            mandate_ref=mandate_ref,
+            payment_type=product_type_name,
+            generated_payments=set(),
+            cache=cache,
+        )
+
+        self.assertEqual(Decimal("0"), result)
+        mock_get_payments_by_mandate_ref_and_type.assert_called_once_with(
+            mandate_ref=mandate_ref, payment_type=product_type_name, cache=cache
+        )
+        mock_get_member_credits.assert_called_once_with(
+            cache=cache, member_id=mandate_ref.member_id
         )

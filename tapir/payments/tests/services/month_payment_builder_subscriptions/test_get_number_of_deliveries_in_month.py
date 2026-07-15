@@ -1,8 +1,6 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
@@ -11,6 +9,7 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.wirgarten.tests.factories import SubscriptionFactory
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
@@ -37,20 +36,14 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         cache = Mock()
 
         mock_get_member_pickup_location_id_from_cache.side_effect = (
-            lambda member_id, reference_date, cache: (
+            lambda member_id, reference_date, **kwargs: (
                 "pl_id_1"
                 if reference_date < datetime.date(year=2025, month=8, day=16)
                 else "pl_id_2"
             )
         )
 
-        def mock_get_next_delivery_date(
-            reference_date,
-            pickup_location_id,
-            product_type,
-            check_for_weeks_without_delivery,
-            cache,
-        ):
+        def mock_get_next_delivery_date(reference_date, **_):
             if reference_date < first_of_month:
                 return first_of_month
             return reference_date + datetime.timedelta(days=7)
@@ -146,13 +139,7 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
 
         mock_get_member_pickup_location_id_from_cache.return_value = "pl_id"
 
-        def mock_get_next_delivery_date(
-            reference_date,
-            pickup_location_id,
-            product_type,
-            check_for_weeks_without_delivery,
-            cache,
-        ):
+        def mock_get_next_delivery_date(reference_date, **_):
             if reference_date < first_of_month:
                 return first_of_month
             return reference_date + datetime.timedelta(days=7)
@@ -195,10 +182,7 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
 
         def mock_get_next_delivery_date(
             reference_date,
-            pickup_location_id,
-            product_type,
-            check_for_weeks_without_delivery,
-            cache,
+            **_,
         ):
             if reference_date < first_of_month:
                 return first_of_month
@@ -240,13 +224,7 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
 
         mock_get_member_pickup_location_id_from_cache.return_value = "pl_id"
 
-        def mock_get_next_delivery_date(
-            reference_date,
-            pickup_location_id,
-            product_type,
-            check_for_weeks_without_delivery,
-            cache,
-        ):
+        def mock_get_next_delivery_date(reference_date, **_):
             if reference_date < first_of_month:
                 return first_of_month
             return reference_date + datetime.timedelta(days=7)
@@ -260,3 +238,47 @@ class TestGetNumberOfDeliveriesInMonth(TapirUnitTest):
         )
 
         self.assertEqual(3, result, "There should be a delivery on the 8th, 15th, 22nd")
+
+    @patch.object(
+        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
+    )
+    @patch.object(
+        DeliveryDateCalculator,
+        "get_next_delivery_date_for_product_type",
+    )
+    def test_getNumberOfDeliveriesInMonth_subscriptionEndsInGivenMonth_returnsDeliveriesBeforeEndOnly(
+        self,
+        mock_get_next_delivery_date_for_product_type: Mock,
+        mock_get_member_pickup_location_id_from_cache: Mock,
+    ):
+        delivery_cycle = Mock()
+        subscription = SubscriptionFactory.build(
+            start_date=datetime.date(year=2025, month=1, day=1),
+            end_date=datetime.date(year=2025, month=8, day=23),
+            product__type__delivery_cycle=delivery_cycle,
+            member_id="test_member_id",
+        )
+        first_of_month = datetime.date(year=2025, month=8, day=1)
+        cache = Mock()
+
+        mock_get_member_pickup_location_id_from_cache.return_value = "pl_id"
+
+        def mock_get_next_delivery_date(
+            reference_date,
+            **_,
+        ):
+            if reference_date < first_of_month:
+                return first_of_month
+            return reference_date + datetime.timedelta(days=7)
+
+        mock_get_next_delivery_date_for_product_type.side_effect = (
+            mock_get_next_delivery_date
+        )
+
+        result = MonthPaymentBuilderSubscriptions.get_number_of_deliveries_in_month(
+            subscription=subscription, first_of_month=first_of_month, cache=cache
+        )
+
+        self.assertEqual(
+            4, result, "There should be a delivery on the 1st, 8th, 15th, 22nd"
+        )

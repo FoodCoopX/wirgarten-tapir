@@ -247,6 +247,8 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
       showProgress={false}
       hideFooterButtonsOnLastStep={false}
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+      goToProductTypeStep={() => {}}
+      contractStartDate={new Date()} // This parameter won't be used since it's only for relevant for contracts
     />
   );
 };

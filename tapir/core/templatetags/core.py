@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import SidebarLinkGroup
 from tapir.subscriptions.views.confirmations import (
     MemberDataToConfirmApiView,
@@ -13,7 +14,8 @@ from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :
 from tapir.wirgarten.models import (
     WaitingListEntry,
 )
-from tapir.wirgarten.utils import is_debug_instance
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import is_debug_instance, legal_status_is_association
 
 register = template.Library()
 
@@ -76,6 +78,18 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="settings",
             url=reverse_lazy("configuration:parameters"),
         )
+    if (
+        request.user.has_perm(Permission.Coop.MANAGE)
+        and legal_status_is_association(cache=cache)
+        and get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS, cache=cache
+        )
+    ):
+        admin_group.add_link(
+            display_name=_("Vereinsmitgliedschaften"),
+            material_icon="id_card",
+            url=reverse_lazy("associations:association_memberships_config"),
+        )
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
             display_name=_("Vertragsperiode & Produkte"),
@@ -100,7 +114,7 @@ def add_admin_links(groups, request, cache: dict):
         admin_group.add_link(
             display_name=_("Lastschrift"),
             material_icon="euro",
-            url=reverse_lazy("wirgarten:payment_transactions"),
+            url=reverse_lazy("payments:payment_transaction_list"),
         )
         admin_group.add_link(
             display_name=_("Gutschriften"),

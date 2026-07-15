@@ -1,9 +1,4 @@
-from functools import reduce
-from django_filters import OrderingFilter, Filter
-import operator
-from django.db.models import (
-    Q,
-)
+from django_filters import OrderingFilter
 
 
 class SecondaryOrderingFilter(OrderingFilter):
@@ -24,22 +19,3 @@ class SecondaryOrderingFilter(OrderingFilter):
             ordering_fields = ["-created_at", f"-{self.secondary_ordering}"]
 
         return qs.order_by(*ordering_fields)
-
-
-class MultiFieldFilter(Filter):
-    """
-    Allows filtering on multiple fields using the same value.
-    The implementation is far from perfect, e.g. if you search for firstname + lastname, you will never get a result.
-    """
-
-    # FIXME: tokenize search value and search for each token in each field
-
-    def __init__(self, fields=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields = fields or []
-
-    def filter(self, qs, value):
-        if value:
-            lookups = [Q(**{f"{field}__icontains": value}) for field in self.fields]
-            qs = qs.filter(reduce(operator.or_, lookups))
-        return qs

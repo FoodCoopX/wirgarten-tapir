@@ -69,6 +69,12 @@ class MemberCredit(TapirModel):
     purpose = models.CharField(max_length=1024)
     comment = models.TextField()
     settled_on = models.DateTimeField(null=True, blank=True, default=None)
+    source = models.CharField(
+        max_length=1024
+    )  # either a product type ID or "payment_type_solidarity_contribution"
+
+    def __str__(self):
+        return f"{self.member} Due:{self.due_date} Amount:{self.amount} Comment:{self.comment} Settled:{format_date(self.settled_on)}"
 
 
 class MemberCreditCreatedLogEntry(ModelLogEntry):

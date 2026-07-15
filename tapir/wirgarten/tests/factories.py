@@ -24,6 +24,7 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     ProductPrice,
     PickupLocationCapability,
+    MemberExtraEmail,
 )
 
 NOW = datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc)
@@ -221,7 +222,8 @@ class PaymentTransactionFactory(factory.django.DjangoModelFactory[PaymentTransac
         model = PaymentTransaction
 
     created_at = NOW
-    file = factory.SubFactory(ExportedFileFactory)
+    csv_file = factory.SubFactory(ExportedFileFactory)
+    xml_file = factory.SubFactory(ExportedFileFactory)
     month = factory.LazyAttribute(
         lambda transaction: transaction.created_at.date().replace(day=1)
     )
@@ -260,3 +262,13 @@ class CoopShareTransactionFactory(
         ),
         mandate_ref__member=factory.SelfAttribute("...member"),
     )
+
+
+class MemberExtraEmailFactory(factory.django.DjangoModelFactory[MemberExtraEmail]):
+    class Meta:
+        model = MemberExtraEmail
+
+    member = factory.SubFactory(MemberFactory)
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    email = factory.Faker("email")

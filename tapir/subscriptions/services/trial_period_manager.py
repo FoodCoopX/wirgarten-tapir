@@ -71,7 +71,7 @@ class TrialPeriodManager:
         )
         date_of_first_delivery = (
             DeliveryDateCalculator.get_next_delivery_date_for_product_type(
-                reference_date=contract.start_date,
+                reference_date=contract.start_date - datetime.timedelta(days=1),
                 product_type=product.type,
                 check_for_weeks_without_delivery=False,
                 pickup_location_id=pickup_location_id,

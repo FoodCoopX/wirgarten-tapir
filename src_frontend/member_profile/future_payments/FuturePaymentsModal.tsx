@@ -1,28 +1,20 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Badge, Form, Modal, Table } from "react-bootstrap";
-import "dayjs/locale/de";
 
-import "../../fixed_header.css";
-import { formatDateText } from "../../utils/formatDateText.ts";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import {
-  ExtendedPayment,
-  MemberCredit,
-  Payment,
-  PaymentsApi,
-} from "../../api-client";
-import formatSubscription from "../../utils/formatSubscription.ts";
-import { formatCurrency } from "../../utils/formatCurrency.ts";
-import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import { ExtendedPayment, MemberCredit, PaymentsApi } from "../../api-client";
 import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
-import { getMinimumDate } from "../../utils/getMinimumDate.ts";
-import { getMaximumDate } from "../../utils/getMaximumDate.ts";
-import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
-import { useApi } from "../../hooks/useApi.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { ToastData } from "../../types/ToastData.ts";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import "../../fixed_header.css";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { formatDateText } from "../../utils/formatDateText.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import PaymentComponent from "./PaymentComponent.tsx";
 
 interface FuturePaymentsModalProps {
   transactionsByDueDate: TransactionsByDueDate;
@@ -33,106 +25,6 @@ interface FuturePaymentsModalProps {
   memberId: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   trialPeriodEnabled: boolean;
-}
-
-function getBadgeBackground(payment: Payment) {
-  if (payment.dueDate > new Date()) {
-    return "info";
-  }
-
-  switch (payment.status) {
-    case "DUE":
-      return "danger";
-    case "PAID":
-      return "success";
-    default:
-      return "info";
-  }
-}
-
-function getBadgeText(payment: Payment) {
-  if (payment.dueDate > new Date()) {
-    return "UPCOMING";
-  }
-
-  return payment.status;
-}
-
-function getStartDate(extendedPayment: ExtendedPayment) {
-  const paymentRangeStart =
-    extendedPayment.payment.subscriptionPaymentRangeStart;
-
-  const subscriptionStartDates = extendedPayment.subscriptions.map(
-    (subscription) => subscription.startDate,
-  );
-
-  const contributionsStartDates = extendedPayment.solidarityContributions.map(
-    (contribution) => contribution.startDate,
-  );
-
-  const candidates = [
-    ...subscriptionStartDates,
-    ...contributionsStartDates,
-  ];
-
-  if (candidates.length === 0) {
-    return paymentRangeStart!;
-  }
-
-  return getMaximumDate([getMinimumDate(candidates), paymentRangeStart!]);
-}
-
-function getEndDate(extendedPayment: ExtendedPayment) {
-  const paymentRangeEnd = extendedPayment.payment.subscriptionPaymentRangeEnd;
-
-  const subscriptionEndDates = extendedPayment.subscriptions.map(
-    (subscription) => subscription.endDate ?? new Date("9999-12-31"),
-  );
-
-  const contributionEndDates = extendedPayment.solidarityContributions.map(
-    (contribution) => contribution.endDate,
-  );
-
-  const candidates = [...subscriptionEndDates, ...contributionEndDates];
-
-  if (candidates.length === 0) {
-    return paymentRangeEnd!;
-  }
-
-  return getMinimumDate([getMaximumDate(candidates), paymentRangeEnd!]);
-}
-
-function partialMonthText(extendedPayment: ExtendedPayment) {
-  if (
-    getStartDate(extendedPayment) !==
-      extendedPayment.payment.subscriptionPaymentRangeStart ||
-    getEndDate(extendedPayment) !==
-      extendedPayment.payment.subscriptionPaymentRangeEnd
-  ) {
-    return " (anteilig für Monat)";
-  }
-  return "";
-}
-
-function trialPeriodText(
-  extendedPayment: ExtendedPayment,
-  trialPeriodEnabled: boolean,
-) {
-  if (
-    !trialPeriodEnabled ||
-    !extendedPayment.payment.subscriptionPaymentRangeEnd
-  ) {
-    return "";
-  }
-
-  if (
-    extendedPayment.payment.dueDate >
-    extendedPayment.payment.subscriptionPaymentRangeEnd
-  ) {
-    return " (Probezeit)";
-  }
-
-  return "";
 }
 
 const EXPLANATION_TEXT = (
@@ -158,8 +50,9 @@ const EXPLANATION_TEXT = (
     <p>
       In Monaten in denen du aufgrund deines Vertragsstartes nicht alle
       Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
-      auf Basis des Kistenpreises berechnet ((Monatspreis / 52 Wochen) und mit
-      der Anzahl der wahrgenommenen Lieferungen multipliziert.
+      auf Basis des Kistenpreises berechnet (((Monatspreis * 12 Monate) / 52
+      Wochen) * Anzahl wahrgenommener Lieferungen) und mit der Anzahl der
+      wahrgenommenen Lieferungen multipliziert.
     </p>
     <p>
       Ein ggf. ausgewählter Solidarpreis wird taggenau auf den Monat
@@ -211,58 +104,6 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
       });
   }, [show]);
 
-  function buildExtendedPayment(extendedPayment: ExtendedPayment) {
-    return (
-      <div key={extendedPayment.payment.id}>
-        <div className={"d-flex flex-column align-items-center"}>
-          <strong>{formatCurrency(extendedPayment.payment.amount)}</strong>
-          <span>{extendedPayment.payment.mandateRef}</span>
-          {extendedPayment.subscriptions.map((subscription) => (
-            <span key={subscription.id}>
-              {formatSubscription(subscription)}
-              {partialMonthText(extendedPayment)}
-              {trialPeriodText(extendedPayment, trialPeriodEnabled)}
-            </span>
-          ))}
-          {extendedPayment.coopShareTransactions.map((transaction) => (
-            <span key={transaction.id}>
-              {transaction.quantity}
-              {" × Genossenschaftsanteile"}
-            </span>
-          ))}
-          {extendedPayment.solidarityContributions.length > 0 && (
-            <span>
-              Solidarbeitrag{partialMonthText(extendedPayment)}
-              {trialPeriodText(extendedPayment, trialPeriodEnabled)}
-            </span>
-          )}
-          {extendedPayment.payment.type === "payment_type_delivery_charge" && (
-            <span>
-              {extendedPayment.deliveryChargePickupLocation
-                ? `Lieferzuschlag Verteilstation ${extendedPayment.deliveryChargePickupLocation.name}`
-                : "Lieferzuschlag"}
-              {partialMonthText(extendedPayment)}
-              {trialPeriodText(extendedPayment, trialPeriodEnabled)}
-            </span>
-          )}
-          {(extendedPayment.subscriptions.length > 0 ||
-            extendedPayment.solidarityContributions.length > 0 ||
-            extendedPayment.payment.type ===
-              "payment_type_delivery_charge") && (
-            <span>
-              {formatDateNumeric(getStartDate(extendedPayment))}
-              {" -> "}
-              {formatDateNumeric(getEndDate(extendedPayment))}
-            </span>
-          )}
-          <Badge bg={getBadgeBackground(extendedPayment.payment)}>
-            {getBadgeText(extendedPayment.payment)}
-          </Badge>
-        </div>
-      </div>
-    );
-  }
-
   function buildCredit(credit: MemberCredit) {
     return (
       <div key={credit.id}>
@@ -299,7 +140,10 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
         </td>
         <td>
           <div className={"d-flex flex-column"}>
-            {buildExtendedPayment(extendedPayment)}
+            <PaymentComponent
+              extendedPayment={extendedPayment}
+              trialPeriodEnabled={trialPeriodEnabled}
+            />
           </div>
         </td>
       </tr>
@@ -319,9 +163,15 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
           <td>
             <div className={"d-flex flex-column"}>
               {objects.map((object) =>
-                "payment" in object
-                  ? buildExtendedPayment(object)
-                  : buildCredit(object),
+                "payment" in object ? (
+                  <PaymentComponent
+                    key={object.payment.id}
+                    extendedPayment={object}
+                    trialPeriodEnabled={trialPeriodEnabled}
+                  />
+                ) : (
+                  buildCredit(object)
+                ),
               )}
             </div>
           </td>

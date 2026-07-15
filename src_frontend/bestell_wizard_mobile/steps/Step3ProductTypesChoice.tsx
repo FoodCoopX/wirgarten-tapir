@@ -100,6 +100,14 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
     }
   }
 
+  function showInvestingMembership() {
+    if (settings.legalStatus !== "association") {
+      return true;
+    }
+
+    return settings.associationsAllowInvestingMembership;
+  }
+
   return (
     <>
       {settings.strings.step3Text && (
@@ -161,28 +169,36 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
             </div>
           ))}
         </div>
-
-        <hr />
-        <div className={"d-flex justify-content-center"}>
-          <input
-            type="checkbox"
-            className="btn-check"
-            id={"investing"}
-            autoComplete="off"
-            onChange={(event) => setInvestingMembership(event.target.checked)}
-            checked={investingMembership}
-          />
-          <label className={"btn btn-" + BUTTON_VARIANT} htmlFor={"investing"}>
-            <div className={"d-flex flex-row gap-2 align-items-center"}>
-              <Form.Check
+        {showInvestingMembership() && (
+          <>
+            <hr />
+            <div className={"d-flex justify-content-center"}>
+              <input
+                type="checkbox"
+                className="btn-check"
+                id={"investing"}
+                autoComplete="off"
+                onChange={(event) =>
+                  setInvestingMembership(event.target.checked)
+                }
                 checked={investingMembership}
-                style={{ pointerEvents: "none" }}
-                readOnly={true}
               />
-              <span>{settings.strings.step3SupportingMembershipName}</span>
+              <label
+                className={"btn btn-" + BUTTON_VARIANT}
+                htmlFor={"investing"}
+              >
+                <div className={"d-flex flex-row gap-2 align-items-center"}>
+                  <Form.Check
+                    checked={investingMembership}
+                    style={{ pointerEvents: "none" }}
+                    readOnly={true}
+                  />
+                  <span>{settings.strings.step3SupportingMembershipName}</span>
+                </div>
+              </label>
             </div>
-          </label>
-        </div>
+          </>
+        )}
         {showError && (
           <>
             <hr />

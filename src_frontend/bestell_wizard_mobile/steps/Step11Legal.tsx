@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { Accordion } from "react-bootstrap";
-import NextStepButton from "../components/NextStepButton.tsx";
-import { scrollIntoView } from "../utils/scrollIntoView.ts";
-import TapirCheckbox from "../components/TapirCheckbox.tsx";
-import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { PublicProductType } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import NextStepButton from "../components/NextStepButton.tsx";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step11LegalProps {
   settings: BestellWizardSettings;
@@ -20,6 +20,9 @@ interface Step11LegalProps {
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;
   solidarityContribution: number;
+  confirmOrder?: () => void | undefined;
+  confirmOrderLoading?: boolean;
+  isOrderStep: boolean;
 }
 
 const Step11Legal: React.FC<Step11LegalProps> = ({
@@ -33,6 +36,9 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
   shoppingCart,
   productTypesInWaitingList,
   solidarityContribution,
+  isOrderStep,
+  confirmOrder,
+  confirmOrderLoading,
 }) => {
   const scrollDiv = useRef<HTMLDivElement>(null);
   const [showValidation, setShowValidation] = useState(false);
@@ -62,7 +68,11 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
       return;
     }
 
-    goToNextStep();
+    if (isOrderStep) {
+      confirmOrder!();
+    } else {
+      goToNextStep();
+    }
   }
 
   function showCheckboxCancellationPolicy() {
@@ -129,7 +139,11 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
         </Accordion.Item>
       </Accordion>
 
-      <NextStepButton onClick={validate} />
+      <NextStepButton
+        onClick={validate}
+        isOrderStep={isOrderStep}
+        loading={confirmOrderLoading}
+      />
     </>
   );
 };

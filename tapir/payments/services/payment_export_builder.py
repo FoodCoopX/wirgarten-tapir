@@ -2,13 +2,14 @@ import csv
 import datetime
 import io
 import locale
-from collections.abc import Iterable
 from decimal import Decimal
+from typing import Iterable
 
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.services.pain_008_xml_generator import Pain008XmlGenerator
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
@@ -17,7 +18,6 @@ from tapir.wirgarten.models import (
     Payment,
     ExportedFile,
     PaymentTransaction,
-    MandateReference,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
@@ -49,7 +49,7 @@ class PaymentExportBuilder:
 
         combined_contract_payments = cls.combine_contract_payments_by_mandate_ref(
             contract_payments
-        )
+        ).values()
 
         cls.export_payments_if_necessary(
             combined_payments=combined_contract_payments,
@@ -84,7 +84,7 @@ class PaymentExportBuilder:
         ):
             return
 
-        exported_file = cls.export_payments(
+        csv_file, xml_file = cls.create_csv_and_xml_files(
             payments=combined_payments,
             is_contract_payments=is_contract_payments,
             send_mail=send_mail,
@@ -93,7 +93,8 @@ class PaymentExportBuilder:
         )
 
         cls.create_and_assign_transaction(
-            file=exported_file,
+            csv_file=csv_file,
+            xml_file=xml_file,
             is_contract_payments=is_contract_payments,
             payments=database_payments,
             reference_date=reference_date,
@@ -123,13 +124,15 @@ class PaymentExportBuilder:
     @classmethod
     def create_and_assign_transaction(
         cls,
-        file: ExportedFile,
+        csv_file: ExportedFile,
+        xml_file: ExportedFile | None,
         is_contract_payments: bool,
         payments: Iterable[Payment],
         reference_date: datetime.date,
     ):
         payment_transaction = PaymentTransaction.objects.create(
-            file=file,
+            csv_file=csv_file,
+            xml_file=xml_file,
             type=PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(
                 is_contract_payments
             ),
@@ -142,31 +145,43 @@ class PaymentExportBuilder:
 
     @classmethod
     def combine_contract_payments_by_mandate_ref(cls, payments: list[Payment]):
-        combined_payments: dict[MandateReference, Payment] = {}
+        combined_payments: dict[str, Payment] = {}
 
         for payment in payments:
-            if payment.mandate_ref not in combined_payments:
-                combined_payments[payment.mandate_ref] = Payment(
+            if payment.mandate_ref.ref not in combined_payments:
+                combined_payments[payment.mandate_ref.ref] = Payment(
                     mandate_ref=payment.mandate_ref,
                     amount=Decimal(0),
                     subscription_payment_range_start=payment.subscription_payment_range_start,
                     subscription_payment_range_end=payment.subscription_payment_range_end,
                 )
-            combined_payments[payment.mandate_ref].amount += payment.amount
-            combined_payments[payment.mandate_ref].subscription_payment_range_start = (
-                min(
-                    combined_payments[
-                        payment.mandate_ref
-                    ].subscription_payment_range_start,
-                    payment.subscription_payment_range_start,
-                )
+
+            combined_payments[payment.mandate_ref.ref].amount += payment.amount
+            combined_payments[
+                payment.mandate_ref.ref
+            ].subscription_payment_range_start = min(
+                combined_payments[
+                    payment.mandate_ref.ref
+                ].subscription_payment_range_start,
+                payment.subscription_payment_range_start,
             )
-            combined_payments[payment.mandate_ref].subscription_payment_range_end = max(
-                combined_payments[payment.mandate_ref].subscription_payment_range_end,
+            combined_payments[
+                payment.mandate_ref.ref
+            ].subscription_payment_range_end = max(
+                combined_payments[
+                    payment.mandate_ref.ref
+                ].subscription_payment_range_end,
                 payment.subscription_payment_range_end,
             )
+            combined_payments[payment.mandate_ref.ref].type += f", {payment.type}"
 
-        return combined_payments.values()
+        combined_payments = {
+            mandate_ref: payment
+            for mandate_ref, payment in combined_payments.items()
+            if payment.amount > 0
+        }
+
+        return combined_payments
 
     @classmethod
     def get_unexported_payments(cls, reference_date: datetime.date):
@@ -176,7 +191,7 @@ class PaymentExportBuilder:
         )
 
     @classmethod
-    def export_payments(
+    def create_csv_and_xml_files(
         cls,
         payments: Iterable[Payment],
         is_contract_payments: bool,
@@ -184,6 +199,43 @@ class PaymentExportBuilder:
         reference_date: datetime.date,
         cache: dict,
     ):
+        file_name = f"{PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(is_contract_payments)}-Einzahlungen {format_month_and_year(reference_date)}"
+        payments = list(payments)
+
+        csv_string = cls.build_csv_string(payments, is_contract_payments, cache)
+        csv_file = export_file(
+            filename=file_name,
+            filetype=ExportedFile.FileType.CSV,
+            content=bytes(csv_string, "utf-8"),
+            send_email=send_mail
+            and get_parameter_value(
+                key=ParameterKeys.PAYMENT_SEND_CSV_FILE_PER_MAIL, cache=cache
+            ),
+            cache=cache,
+        )
+
+        xml_file = None
+        if len(payments) > 0:
+            xml_bytes = Pain008XmlGenerator.build_xml_string(
+                payments=payments, collection_date=reference_date, cache=cache
+            )
+            xml_file = export_file(
+                filename=file_name,
+                filetype=ExportedFile.FileType.XML,
+                content=xml_bytes,
+                send_email=send_mail
+                and get_parameter_value(
+                    key=ParameterKeys.PAYMENT_SEND_XML_FILE_PER_MAIL, cache=cache
+                ),
+                cache=cache,
+            )
+
+        return csv_file, xml_file
+
+    @classmethod
+    def build_csv_string(
+        cls, payments: Iterable[Payment], is_contract_payments: bool, cache: dict
+    ) -> str:
         previous_locale = locale.getlocale()
         locale.setlocale(locale.LC_ALL, "de_DE.UTF-8")
 
@@ -220,14 +272,7 @@ class PaymentExportBuilder:
 
         file_content = "".join(output.csv_string)
         file_content = cls.add_header(file_content, cache)
-
-        return export_file(
-            filename=f"{PaymentExportIntendedUseBuilder.get_payment_type_display_legacy(is_contract_payments)}-Einzahlungen {format_month_and_year(reference_date)}",
-            filetype=ExportedFile.FileType.CSV,
-            content=bytes(file_content, "utf-8"),
-            send_email=send_mail,
-            cache=cache,
-        )
+        return file_content
 
     @classmethod
     def add_header(cls, file_content: str, cache: dict):

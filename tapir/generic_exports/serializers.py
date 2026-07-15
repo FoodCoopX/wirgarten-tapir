@@ -31,3 +31,9 @@ class PdfExportModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = PdfExport
         fields = "__all__"
+
+
+class PdfExportTemplateSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    description = serializers.CharField()

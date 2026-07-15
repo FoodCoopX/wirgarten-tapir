@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.urls import reverse_lazy
 from django.views import generic
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -14,6 +15,13 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 class MemberNumberPreviewView(APIView):
     permission_classes = []
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="prefix", type=str),
+            OpenApiParameter(name="length", type=int),
+        ],
+        responses={200: dict[str, list[str]]},
+    )
     def get(self, request):
         prefix = request.GET.get("prefix", "")
         try:

@@ -4,6 +4,10 @@ from django.urls import reverse
 from rest_framework import status
 from tapir_mail.service.shortcuts import make_timezone_aware
 
+from tapir.associations.tests.factories import (
+    AssociationMembershipFactory,
+    AssociationMembershipTypePriceFactory,
+)
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.utils.shortcuts import get_last_day_of_month
@@ -771,3 +775,79 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             self.assertEqual(
                 subscription.id, extended_payment["subscriptions"][0]["id"]
             )
+
+    def test_get_memberHasAssociationMembership_returnsCorrectPayments(self):
+        self.now = mock_timezone(
+            self, now=datetime.datetime(year=2020, month=8, day=12)
+        )
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        self._set_parameter(key=ParameterKeys.PAYMENT_DUE_DAY, value=15)
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            value=datetime.date(year=2020, month=4, day=1),
+        )
+
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=1, day=1),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=1, day=1),
+        )
+
+        membership_1 = AssociationMembershipFactory.create(
+            member=member,
+            start_date=datetime.date(year=2020, month=1, day=1),
+            end_date=datetime.date(year=2021, month=5, day=31),
+        )
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_1.type,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+            price=10,
+        )
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_1.type,
+            valid_from=datetime.date(year=2021, month=3, day=1),
+            price=15,
+        )
+        membership_2 = AssociationMembershipFactory.create(
+            member=member,
+            start_date=datetime.date(year=2021, month=6, day=1),
+            end_date=None,
+        )
+
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+
+        response_content = response.json()["payments"]
+        self.assertEqual(2, len(response_content))
+        extended_payment_2020 = response_content[0]
+        self.assertEqual("2020-08-15", extended_payment_2020["payment"]["due_date"])
+        self.assertEqual(60, extended_payment_2020["payment"]["amount"])
+        self.assertEqual(1, len(extended_payment_2020["association_memberships"]))
+        self.assertEqual(
+            membership_1.id, extended_payment_2020["association_memberships"][0]["id"]
+        )
+
+        extended_payment_2021 = response_content[1]
+        self.assertEqual("2021-01-15", extended_payment_2021["payment"]["due_date"])
+        self.assertEqual(
+            65, extended_payment_2021["payment"]["amount"]
+        )  # Jan and Fe cost 10/month, Mar Apr May cost 15/month, Jun is free
+        self.assertEqual(2, len(extended_payment_2021["association_memberships"]))
+        self.assertEqual(
+            membership_1.id, extended_payment_2021["association_memberships"][0]["id"]
+        )
+        self.assertEqual(
+            membership_2.id, extended_payment_2021["association_memberships"][1]["id"]
+        )

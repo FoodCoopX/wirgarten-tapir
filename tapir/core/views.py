@@ -29,8 +29,11 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.serializers import (
     MemberMailCategoryRequestSerializer,
     MemberExtraMailDataSerializer,
+    MemberExtraEmailCreateRequest,
+    MemberExtraEmailUpdateRequest,
 )
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
+from tapir.log.util import freeze_for_log
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
@@ -38,6 +41,7 @@ from tapir.wirgarten.models import (
     MemberExtraEmailCreatedLogEntry,
     MemberExtraEmailDeletedLogEntry,
     MemberExtraEmailConfirmedLogEntry,
+    MemberExtraEmailUpdatedLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import check_permission_or_self, get_now
@@ -178,10 +182,7 @@ class MemberExtraEmailApiView(APIView):
 
     @extend_schema(
         responses={200: bool},
-        parameters=[
-            OpenApiParameter(name="extra_email", type=str),
-            OpenApiParameter(name="member_id", type=str),
-        ],
+        request=MemberExtraEmailCreateRequest,
     )
     @transaction.atomic
     def post(self, request):
@@ -189,12 +190,14 @@ class MemberExtraEmailApiView(APIView):
             key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=self.cache
         ):
             raise RestValidationError(self.FEATURE_DISABLED_MESSAGE)
+        serializer = MemberExtraEmailCreateRequest(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        member_id = request.query_params.get("member_id")
+        member_id = serializer.validated_data["member_id"]
         check_permission_or_self(pk=member_id, request=request)
         member = get_object_or_404(Member, id=member_id)
 
-        extra_email_address = request.query_params.get("extra_email").strip()
+        extra_email_address = serializer.validated_data["extra_email"].strip()
         try:
             validate_email(extra_email_address)
         except DjangoValidationError:
@@ -206,11 +209,14 @@ class MemberExtraEmailApiView(APIView):
             raise RestValidationError("Diese zusätzliche Adresse existiert bereits")
 
         member_extra_email = MemberExtraEmail.objects.create(
-            member=member, email=extra_email_address
+            member=member,
+            email=extra_email_address,
+            first_name=serializer.validated_data["first_name"],
+            last_name=serializer.validated_data["last_name"],
         )
 
         MemberExtraEmailCreatedLogEntry().populate_email(
-            email=extra_email_address, user=member, actor=request.user
+            extra_email_object=member_extra_email, user=member, actor=request.user
         ).save()
 
         confirmation_link = f"{settings.SITE_URL}{reverse('core:member_extra_email_confirm', kwargs={"secret": member_extra_email.secret})}"
@@ -228,6 +234,39 @@ class MemberExtraEmailApiView(APIView):
                 ),
             ),
         )
+
+        return Response(True)
+
+    @extend_schema(
+        responses={200: bool},
+        request=MemberExtraEmailUpdateRequest,
+    )
+    def patch(self, request):
+        if not get_parameter_value(
+            key=ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=self.cache
+        ):
+            raise RestValidationError(self.FEATURE_DISABLED_MESSAGE)
+        serializer = MemberExtraEmailUpdateRequest(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        extra_email_id = serializer.validated_data["extra_email_id"]
+        extra_email = get_object_or_404(MemberExtraEmail, id=extra_email_id)
+        check_permission_or_self(pk=extra_email.member_id, request=request)
+
+        before_changes = freeze_for_log(extra_email)
+
+        extra_email.first_name = serializer.validated_data["first_name"].strip()
+        extra_email.last_name = serializer.validated_data["last_name"].strip()
+
+        with transaction.atomic():
+            extra_email.save()
+
+            MemberExtraEmailUpdatedLogEntry().populate(
+                user=extra_email.member,
+                actor=request.user,
+                old_frozen=before_changes,
+                new_model=extra_email,
+            ).save()
 
         return Response(True)
 

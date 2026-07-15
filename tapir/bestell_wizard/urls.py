@@ -30,6 +30,11 @@ urlpatterns = [
         name="bestell_wizard_coop_shares",
     ),
     path(
+        "bestell_wizard_association_membership/<str:member_id>",
+        views.BestellWizardAssociationMembershipView.as_view(),
+        name="bestell_wizard_association_membership",
+    ),
+    path(
         "bestell_wizard_product_type/<str:member_id>/<str:product_type_id>",
         views.BestellWizardProductTypeView.as_view(),
         name="bestell_wizard_product_type",

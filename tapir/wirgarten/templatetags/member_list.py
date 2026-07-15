@@ -1,11 +1,11 @@
 from django import template
 
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today
 
 register = template.Library()
@@ -20,13 +20,10 @@ def pickup_location_warning(member: Member, cache: dict):
     if pickup_location_id is None:
         return context
 
-    if (
-        get_active_and_future_subscriptions(
-            reference_date=get_today(cache=cache), cache=cache
-        )
-        .filter(member=member)
-        .exists()
-    ):
+    subscriptions = TapirCache.get_active_and_future_subscriptions_by_member_id(
+        cache=cache, reference_date=get_today(cache=cache)
+    ).get(member.id, [])
+    if len(subscriptions) > 0:
         return context
 
     context["show_warning"] = True

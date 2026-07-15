@@ -1,57 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { ExtendedPayment, MemberCredit, PaymentsApi } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import { Card, Spinner } from "react-bootstrap";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
+import { Card, Spinner } from "react-bootstrap";
+import { ExtendedPayment, MemberCredit, PaymentsApi } from "../../api-client";
+import TapirButton from "../../components/TapirButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
-import TapirButton from "../../components/TapirButton.tsx";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 import FuturePaymentsModal from "./FuturePaymentsModal.tsx";
-import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
+import { sortGroupedTransactions } from "./sortGroupedTransactions.ts";
 
 interface FuturePaymentsCardProps {
   memberId: string;
   csrfToken: string;
-}
-
-function sortGroupedTransactions(groupedTransactions: TransactionsByDueDate) {
-  for (const key of Object.keys(groupedTransactions)) {
-    groupedTransactions[key] =
-      groupedTransactions[key].toSorted(compareTransactions);
-  }
-}
-
-function compareTransactions(
-  a: MemberCredit | ExtendedPayment,
-  b: MemberCredit | ExtendedPayment,
-) {
-  const a_is_payment = "subscriptions" in a;
-  const b_is_payment = "subscriptions" in b;
-  if (a_is_payment !== b_is_payment) {
-    return a_is_payment ? 1 : -1;
-  }
-
-  if (!a_is_payment || !b_is_payment) {
-    return 0;
-  }
-
-  if (
-    a.payment.subscriptionPaymentRangeStart &&
-    b.payment.subscriptionPaymentRangeStart &&
-    a.payment.subscriptionPaymentRangeStart.getTime() !==
-      b.payment.subscriptionPaymentRangeStart.getTime()
-  ) {
-    return (
-      a.payment.subscriptionPaymentRangeStart.getTime() -
-      b.payment.subscriptionPaymentRangeStart.getTime()
-    );
-  }
-
-  return b.payment.amount - a.payment.amount;
 }
 
 const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({

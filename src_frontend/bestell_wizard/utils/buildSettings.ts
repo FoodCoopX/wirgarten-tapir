@@ -1,7 +1,7 @@
-import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
-import { TapirTheme } from "../../types/TapirTheme.ts";
-import { sortProductTypes } from "./sortProductTypes.ts";
 import { BestellWizardBaseDataResponse } from "../../api-client";
+import { TapirTheme } from "../../types/TapirTheme.ts";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
+import { sortProductTypes } from "./sortProductTypes.ts";
 
 export function buildSettings(
   baseData: BestellWizardBaseDataResponse,
@@ -10,8 +10,11 @@ export function buildSettings(
     theme: baseData.theme as TapirTheme,
     pickupLocations: baseData.pickupLocations,
     productTypes: sortProductTypes(baseData.productTypes),
+    associationMembershipTypes: baseData.associationMembershipTypes,
     priceOfAShare: baseData.priceOfAShare,
     allowInvestingMembership: baseData.allowInvestingMembership,
+    associationsAllowInvestingMembership:
+      baseData.associationsAllowInvestingMembership,
     forceWaitingList: baseData.forceWaitingList,
     showCoopContent: baseData.showCoopContent,
     introStepText: baseData.introStepText,
@@ -36,6 +39,7 @@ export function buildSettings(
     feedbackStepEnabled: baseData.feedbackStepEnabled,
     growingPeriodChoices: baseData.growingPeriodChoices,
     solidarityStepPosition: baseData.solidarityStepPosition,
+    legalStatus: baseData.legalStatus,
     strings: baseData.strings,
     images: baseData.images,
     debug: baseData.debug,

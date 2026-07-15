@@ -10,7 +10,6 @@ from tapir.wirgarten.forms.member import (
     CoopShareTransferForm,
     PersonalDataForm,
 )
-from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
 from tapir.wirgarten.views.modal import get_form_modal
 
@@ -65,8 +64,10 @@ def get_member_personal_data_create_form(request, **kwargs):
     )
 
 
-def save_member_and_assign_number(member: Member):
-    member.save()
+def save_member_and_assign_number(form: PersonalDataForm):
+    form.save()
     cache = {}
-    if not MemberNumberService.assign_member_number_if_eligible(member, cache=cache):
-        member.save()  # second save persists keycloak ID (#947)
+    if not MemberNumberService.assign_member_number_if_eligible(
+        form.instance, cache=cache
+    ):
+        form.instance.save()  # second save persists keycloak ID (#947)

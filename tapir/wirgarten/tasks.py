@@ -30,7 +30,6 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
-    format_currency,
 )
 
 logger = logging.getLogger(__name__)
@@ -175,34 +174,8 @@ def send_email_member_contract_end_reminder(member_id: str):
         )
 
 
-def _fire_membership_entry_trigger(member: Member, cache: dict):
-    number_of_coop_shares = member.coop_shares_quantity
-    price_of_a_share = get_parameter_value(
-        key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
-    )
-    TransactionalTrigger.fire_action(
-        TransactionalTriggerData(
-            key=Events.MEMBERSHIP_ENTRY,
-            recipient_id_in_base_queryset=member.id,
-            token_data={
-                "number_of_coop_shares": number_of_coop_shares,
-                "price_of_a_share": format_currency(price_of_a_share),
-                "price_of_all_shares": format_currency(
-                    number_of_coop_shares * price_of_a_share
-                ),
-            },
-        ),
-    )
-
-
 @shared_task
-def generate_member_numbers(cache: dict = None):
-    """
-    Assigns member numbers to members that don't have one yet.
-    Handles members whose trial period has ended (when MEMBER_NUMBER_ONLY_AFTER_TRIAL
-    is enabled) and catches any members that slipped through immediate assignment.
-    Fires the MEMBERSHIP_ENTRY mail trigger on success.
-    """
+def assign_member_numbers(cache: dict = None):
     if cache is None:
         cache = {}
     members = Member.objects.filter(member_no__isnull=True)
@@ -214,5 +187,4 @@ def generate_member_numbers(cache: dict = None):
             ):
                 continue
 
-            _fire_membership_entry_trigger(member, cache)
-            logger.info(f"generate_member_numbers: generated member_no for {member}")
+            logger.info(f"assign_member_numbers: generated member_no for {member}")

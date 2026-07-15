@@ -36,7 +36,7 @@ from tapir.subscriptions.services.subscription_update_view_validator import (
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import Member, ProductType, GrowingPeriod
+from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
@@ -52,9 +52,10 @@ class GetMemberSubscriptionDataApiView(APIView):
         member_id = request.query_params.get("member_id")
         get_object_or_404(Member, id=member_id)
         check_permission_or_self(member_id, request)
+        cache = {}
 
         subscriptions = (
-            get_active_and_future_subscriptions()
+            get_active_and_future_subscriptions(cache=cache)
             .filter(member_id=member_id)
             .select_related("product", "product__type")
         )
@@ -65,11 +66,13 @@ class GetMemberSubscriptionDataApiView(APIView):
 
         data = {
             "subscriptions": subscriptions,
-            "product_types": ProductType.objects.all(),
+            "product_types": TapirCache.get_all_product_types(cache=cache),
             "bestell_wizard_url_template": bestell_wizard_url_template,
         }
 
-        return Response(MemberSubscriptionDataSerializer(data).data)
+        return Response(
+            MemberSubscriptionDataSerializer(data, context={"cache": cache}).data
+        )
 
 
 class UpdateSubscriptionsApiView(APIView):

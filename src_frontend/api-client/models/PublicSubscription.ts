@@ -56,13 +56,19 @@ export interface PublicSubscription {
    * @type {Date}
    * @memberof PublicSubscription
    */
-  endDate?: Date | null;
+  endDate: Date;
   /**
    *
    * @type {number}
    * @memberof PublicSubscription
    */
   readonly monthlyPrice: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicSubscription
+   */
+  id?: string;
 }
 
 /**
@@ -78,6 +84,7 @@ export function instanceOfPublicSubscription(
     return false;
   if (!("quantity" in value) || value["quantity"] === undefined) return false;
   if (!("startDate" in value) || value["startDate"] === undefined) return false;
+  if (!("endDate" in value) || value["endDate"] === undefined) return false;
   if (!("monthlyPrice" in value) || value["monthlyPrice"] === undefined)
     return false;
   return true;
@@ -100,8 +107,9 @@ export function PublicSubscriptionFromJSONTyped(
     productType: PublicProductTypeFromJSON(json["product_type"]),
     quantity: json["quantity"],
     startDate: new Date(json["start_date"]),
-    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
+    endDate: new Date(json["end_date"]),
     monthlyPrice: json["monthly_price"],
+    id: json["id"] == null ? undefined : json["id"],
   };
 }
 
@@ -123,9 +131,7 @@ export function PublicSubscriptionToJSONTyped(
   return {
     quantity: value["quantity"],
     start_date: value["startDate"].toISOString().substring(0, 10),
-    end_date:
-      value["endDate"] == null
-        ? undefined
-        : (value["endDate"] as any).toISOString().substring(0, 10),
+    end_date: value["endDate"].toISOString().substring(0, 10),
+    id: value["id"],
   };
 }

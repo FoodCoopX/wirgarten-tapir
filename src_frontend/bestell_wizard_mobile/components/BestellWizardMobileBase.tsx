@@ -1,22 +1,26 @@
 import React, { ReactNode } from "react";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { Step } from "../types/Step.ts";
-import { Phase } from "../types/Phase.ts";
+import {
+  AssociationMembershipType,
+  PublicPickupLocation,
+  PublicProductType,
+} from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { CONTENT_HEIGHT, HEADER_HEIGHT } from "../utils/DIMENSIONS.ts";
-import "./footer.css";
-import BestellWizardMobileHeader from "./BestellWizardMobileHeader.tsx";
-import { getStepTopPosition } from "../utils/getStepTopPosition.ts";
-import StepBase from "./StepBase.tsx";
-import { getStepTitle } from "../utils/getStepTitle.ts";
-import { getStepBackground } from "../utils/getStepBackground.ts";
-import BestellWizardMobileFooter from "./BestellWizardMobileFooter.tsx";
-import TapirToastContainer from "../../components/TapirToastContainer.tsx";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { ToastData } from "../../types/ToastData.ts";
+import { Phase } from "../types/Phase.ts";
+import { Step } from "../types/Step.ts";
+import { CONTENT_HEIGHT, HEADER_HEIGHT } from "../utils/DIMENSIONS.ts";
+import { getStepBackground } from "../utils/getStepBackground.ts";
+import { getStepTitle } from "../utils/getStepTitle.ts";
+import { getStepTopPosition } from "../utils/getStepTopPosition.ts";
+import BestellWizardMobileFooter from "./BestellWizardMobileFooter.tsx";
+import BestellWizardMobileHeader from "./BestellWizardMobileHeader.tsx";
+import "./footer.css";
+import StepBase from "./StepBase.tsx";
 
 interface BestellWizardMobileBaseProps {
   settings: BestellWizardSettings;
@@ -36,6 +40,9 @@ interface BestellWizardMobileBaseProps {
   showProgress: boolean;
   hideFooterButtonsOnLastStep: boolean;
   selectedNumberOfCoopShares: number;
+  goToProductTypeStep: (productType: PublicProductType) => void;
+  associationMembershipType?: AssociationMembershipType;
+  contractStartDate: Date;
 }
 
 const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
@@ -56,6 +63,9 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
   showProgress,
   hideFooterButtonsOnLastStep,
   selectedNumberOfCoopShares,
+  goToProductTypeStep,
+  associationMembershipType,
+  contractStartDate,
 }) => {
   return (
     <div
@@ -92,6 +102,9 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
           selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+          goToProductTypeStep={goToProductTypeStep}
+          associationMembershipType={associationMembershipType}
+          contractStartDate={contractStartDate}
         />
       </div>
       <div

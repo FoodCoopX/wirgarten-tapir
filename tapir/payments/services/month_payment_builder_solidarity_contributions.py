@@ -37,8 +37,10 @@ class MonthPaymentBuilderSolidarityContributions:
         if in_trial:
             target_month = (target_month - relativedelta(months=1)).replace(day=1)
 
-        solidarity_contributions = cls.get_current_and_renewed_solidarity_contributions(
-            cache=cache, first_of_month=target_month, is_in_trial=in_trial
+        solidarity_contributions = (
+            cls.get_solidarity_contributions_for_this_and_the_next_growing_period(
+                cache=cache, first_of_month=target_month, is_in_trial=in_trial
+            )
         )
 
         contributions_by_member = cls.group_contributions_by_member(
@@ -106,7 +108,7 @@ class MonthPaymentBuilderSolidarityContributions:
         return total_to_pay
 
     @classmethod
-    def get_current_and_renewed_solidarity_contributions(
+    def get_solidarity_contributions_for_this_and_the_next_growing_period(
         cls, cache: dict, first_of_month: datetime.date, is_in_trial: bool
     ) -> list[SolidarityContribution]:
         existing_contributions = TapirCache.get_all_solidarity_contributions(
@@ -122,14 +124,34 @@ class MonthPaymentBuilderSolidarityContributions:
             )
         ]
 
+        current_growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=first_of_month, cache=cache
+        )
+        if current_growing_period is None:
+            return []
+
+        next_growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=current_growing_period.end_date + datetime.timedelta(days=1),
+            cache=cache,
+        )
+        range_start = current_growing_period.start_date
+        range_end = (
+            next_growing_period.end_date
+            if next_growing_period
+            else current_growing_period.end_date
+        )
+
         return [
             contribution
             for contribution in existing_contributions.union(
                 planned_renewed_contributions
             )
-            if contribution.start_date.replace(day=1)
-            <= first_of_month
-            <= contribution.end_date
+            if DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=contribution.start_date,
+                range_1_end=contribution.end_date,
+                range_2_start=range_start,
+                range_2_end=range_end,
+            )
             and TrialPeriodManager.is_contract_in_trial(
                 contract=contribution, reference_date=first_of_month, cache=cache
             )

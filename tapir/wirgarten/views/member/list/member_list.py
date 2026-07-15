@@ -10,6 +10,7 @@ from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
     BooleanFilter,
+    CharFilter,
     ChoiceFilter,
     FilterSet,
     ModelChoiceFilter,
@@ -18,7 +19,11 @@ from django_filters import (
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_search_service import MemberSearchService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
+from tapir.core.services.organisation_entry_date_annotator import (
+    OrganisationEntryDateAnnotator,
+)
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -37,8 +42,10 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_monthly_payment,
 )
 from tapir.wirgarten.service.products import get_next_growing_period
-from tapir.wirgarten.utils import get_today
-from tapir.wirgarten.views.filters import MultiFieldFilter
+from tapir.wirgarten.utils import (
+    get_today,
+    legal_status_is_cooperative,
+)
 
 
 class ContractStatusFilter(ChoiceFilter):
@@ -114,9 +121,7 @@ class ContractStatusFilter(ChoiceFilter):
 
 
 class MemberFilter(FilterSet):
-    search = MultiFieldFilter(
-        fields=["first_name", "last_name", "email"], label="Suche"
-    )
+    search = CharFilter(method="filter_search", label="Suche")
     pickup_location = ModelChoiceFilter(
         label="Abholort",
         queryset=PickupLocation.objects.all().order_by("name"),
@@ -157,8 +162,8 @@ class MemberFilter(FilterSet):
             ("last_name", "⮝ Nachname"),
             ("-email", "⮟ Email"),
             ("email", "⮝ Email"),
-            ("created_at", "⮝ Registriert am"),
-            ("-created_at", "⮟ Registriert am"),
+            ("organisation_entry_date", "⮝ Registriert am"),
+            ("-organisation_entry_date", "⮟ Registriert am"),
             ("coop_shares_total_value", "⮝ Genoanteile"),
             ("-coop_shares_total_value", "⮟ Genoanteile"),
             ("monthly_payment", "⮝ Umsatz"),
@@ -169,22 +174,27 @@ class MemberFilter(FilterSet):
     )
 
     def __init__(self, data=None, *args, **kwargs):
-        self.cache = {}
+        self.cache = kwargs.pop("cache", {})
 
         if data is None:
-            data = {"o": "-created_at"}
+            data = {"o": "-organisation_entry_date"}
         else:
             data = data.copy()
 
             if "o" not in data:
-                data["o"] = "-created_at"
+                data["o"] = "-organisation_entry_date"
 
         super(MemberFilter, self).__init__(data, *args, **kwargs)
 
-        if get_next_growing_period() is None:
+        if get_next_growing_period(cache=self.cache) is None:
             w = self.form.fields["contract_status"].widget
             w.attrs["disabled"] = True
             w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
+
+    def filter_search(self, queryset, name, value):
+        return MemberSearchService.filter_queryset(
+            queryset, search_value=value, cache=self.cache
+        )
 
     def filter_pickup_location(self, queryset, name, value):
         if value:
@@ -258,11 +268,14 @@ class MemberListView(PermissionRequiredMixin, FilterView):
         context["cache"] = self.cache
         return context
 
+    def get_filterset_kwargs(self, filterset_class):
+        kwargs = super().get_filterset_kwargs(filterset_class)
+        kwargs["cache"] = self.cache
+        return kwargs
+
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = annotate_member_queryset_with_coop_shares_total_value(
-            queryset, cache=self.cache
-        )
+
         today = get_today(cache=self.cache)
         queryset = annotate_member_queryset_with_monthly_payment(queryset, today)
         queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_id_at_date(
@@ -277,5 +290,14 @@ class MemberListView(PermissionRequiredMixin, FilterView):
         queryset = MemberSolidarityContributionService.annotate_member_queryset_with_future_contribution(
             queryset, today
         )
+
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_entry_date(
+            queryset, cache=self.cache
+        )
+
+        if legal_status_is_cooperative(cache=self.cache):
+            queryset = annotate_member_queryset_with_coop_shares_total_value(
+                queryset, cache=self.cache
+            )
 
         return queryset

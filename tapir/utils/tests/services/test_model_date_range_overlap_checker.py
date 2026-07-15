@@ -1,6 +1,6 @@
 import datetime
 
-from tapir.payments.services.intended_use_pattern_expander import (
+from tapir.utils.services.model_date_range_overlap_checker import (
     ModelDateRangeOverlapChecker,
 )
 from tapir.wirgarten.models import Subscription

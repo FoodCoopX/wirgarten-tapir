@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.views.decorators.http import require_GET
 
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.solidarity_contribution.services.solidarity_validator import (
@@ -136,6 +137,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         current_growing_period = TapirCache.get_growing_period_at_date(
             reference_date=get_today(cache=self.cache), cache=self.cache
         )
+        context["recent_feedbacks"] = get_recent_feedbacks()
         if not current_growing_period:
             context["no_growing_period"] = True
             return context
@@ -196,7 +198,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancellations_during_trial"] = len(
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
-        context["recent_feedbacks"] = get_recent_feedbacks()
 
         context["solidarity_overplus"] = SolidarityValidator.get_solidarity_excess(
             reference_date=get_today(cache=self.cache), cache=self.cache
@@ -249,8 +250,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_cancelled_association_memberships_context(self, context):
         cancellations_per_year = {}
-        for cancelled_membership in Subscription.objects.filter(
-            product__type__is_association_membership=True, end_date__isnull=False
+        for cancelled_membership in AssociationMembership.objects.filter(
+            end_date__isnull=False
         ).order_by("end_date"):
             if cancelled_membership.end_date.year not in cancellations_per_year:
                 cancellations_per_year[cancelled_membership.end_date.year] = 0

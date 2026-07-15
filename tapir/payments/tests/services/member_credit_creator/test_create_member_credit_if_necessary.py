@@ -1,8 +1,7 @@
 from unittest.mock import patch, Mock
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestCreateMemberCreditIfNecessary(TapirUnitTest):
@@ -70,4 +69,6 @@ class TestCreateMemberCreditIfNecessary(TapirUnitTest):
             amount_to_credit=0.01,
             reference_date=reference_date,
             comment=comment,
+            product_type_id_or_soli=product_type.id,
+            cache=cache,
         )

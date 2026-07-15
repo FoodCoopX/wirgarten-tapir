@@ -7,14 +7,15 @@ from unittest.mock import patch, Mock
 from django.urls import reverse
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
-    TransactionalTriggerData,
 )
 
+from tapir.associations.models import AssociationMembership
+from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
 from tapir.configuration.models import TapirParameter
-from tapir.core.config import LEGAL_STATUS_COMPANY
+from tapir.core.config import LEGAL_STATUS_COMPANY, LEGAL_STATUS_ASSOCIATION
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -26,6 +27,7 @@ from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.config import (
     SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -42,6 +44,7 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
     OrderFeedback,
+    PickupLocationOpeningTime,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -53,6 +56,7 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     ProductCapacityFactory,
     PickupLocationCapabilityFactory,
+    MemberPickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
@@ -64,7 +68,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         configure_mail_module()
 
         cls.product_1, cls.product_2, cls.product_3 = ProductFactory.create_batch(
@@ -993,17 +997,6 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
         return waiting_list_entry
 
-    def assert_mail_event_has_been_triggered(self, mock_fire_action: Mock, key: str):
-        mock_fire_action.assert_called()
-        for call in mock_fire_action.mock_calls:
-            trigger_data: TransactionalTriggerData = call.kwargs["trigger_data"]
-            if trigger_data.key == key:
-                return
-
-        self.fail(
-            f"Expected trigger ({key}) not found in {mock_fire_action.mock_calls}"
-        )
-
     def assert_solidarity_contribution_created_correctly(
         self, member_id: str, amount_as_string: str, growing_period: GrowingPeriod
     ):
@@ -1107,3 +1100,156 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             pickup_location_wishes=data["pickup_location_ids"],
             mock_fire_action=mock_fire_action,
         )
+
+    def test_post_selectedPickupLocationHasACapacityLimit_endOfTrialPeriodIsCorrect(
+        self,
+    ):
+        # This is a regression test for infra#92 https://github.com/FoodCoopX/infra/issues/92
+        # The fix is in 064b3783b41d0ada2e86e12549b9f8730b427ded and d85bd6666c20e7585f8138ee4d25dd91bb79fe60
+        # During capacity checks (before member creation), the member<->pickup_location links were cached
+        # so the new member was cached has having no pickup location, which meant the member was getting delivered on a monday
+        # pushing the first delivery by one week.
+
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_DURATION, value=4)
+        self._set_parameter(key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=True)
+
+        # The selected location must have a capacity limit in order to trigger the calculations that cache MemberPickupLocation
+        PickupLocationCapabilityFactory.create(
+            product_type=self.product_1.type, pickup_location=self.pickup_location_1
+        )
+        # There must be a change in the future so that PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change gives a date in the future
+        MemberPickupLocationFactory.create(
+            pickup_location=self.pickup_location_1,
+            valid_from=self.growing_period_future.end_date,
+        )
+
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=self.pickup_location_1,
+            day_of_week=3,
+            open_time=datetime.time(hour=10),
+            close_time=datetime.time(hour=11),
+        )
+
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["shopping_cart_order"] = {self.product_1.id: 1}
+        post_data["pickup_location_ids"] = [self.pickup_location_1.id]
+        post_data["growing_period_id"] = self.growing_period.id
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, expected_status_code=200)
+        self.assert_order_confirmed(response.json())
+
+        transaction = CoopShareTransaction.objects.get()
+        self.assertEqual(datetime.date(2027, 7, 25), transaction.valid_at)
+        self.assertEqual(
+            self.CONTRACT_START_DATE, Subscription.objects.get().start_date
+        )
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_legalStatusIsAssociation_membershipCreatedAndNotCoopSharesCreated(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        membership_types = AssociationMembershipTypeFactory.create_batch(size=3)
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["association_membership_type_id"] = membership_types[1].id
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assert_order_confirmed(response_content)
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+        self.assertFalse(CoopShareTransaction.objects.exists())
+        self.assertEqual(1, AssociationMembership.objects.count())
+        membership = AssociationMembership.objects.get()
+        self.assertEqual(membership_types[1].id, membership.type_id)
+
+        subscription = Subscription.objects.first()
+        end_of_trial_period = TrialPeriodManager.get_last_day_of_trial_period(
+            contract=subscription, cache={}
+        )
+        self.assertEqual(
+            end_of_trial_period + datetime.timedelta(days=1), membership.start_date
+        )
+
+        mock_fire_action.assert_called_once()
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action=mock_fire_action,
+            key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        )
+        self.assertEqual(2, mock_on_subscription_updated.call_count)
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_legalStatusIsAssociationButNoMembershipTypeSelected_orderNotConfirmed(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        AssociationMembershipTypeFactory.create_batch(size=3)
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Keine Vereinsmitgliedschaft ausgewählt", response_content["error"]
+        )
+        self.assertFalse(Member.objects.exists())
+        mock_fire_action.assert_not_called()
+        mock_on_subscription_updated.assert_not_called()
+
+    @patch.object(OnboardingTrigger, "on_subscription_updated", autospec=True)
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_associationSupportingMembershipNotAllowedAndOrderIsEmpty_orderNotConfirmed(
+        self, mock_fire_action: Mock, mock_on_subscription_updated: Mock
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        self._set_parameter(
+            key=ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP, value=False
+        )
+        membership_types = AssociationMembershipTypeFactory.create_batch(size=3)
+        post_data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        post_data["association_membership_type_id"] = membership_types[1].id
+        post_data["shopping_cart_order"] = {}
+        post_data["become_member_now"] = True
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(post_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Fördermitgliedschaften sind nicht erlaubt, es muss mindestens 1 Product ausgewählt werden",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        mock_fire_action.assert_not_called()
+        mock_on_subscription_updated.assert_not_called()

@@ -13,24 +13,31 @@
  */
 
 import type {
+  MemberExtraEmailCreateRequestRequest,
   MemberExtraMailData,
   MemberMailCategoryData,
   MemberMailCategoryRequestRequest,
+  PatchedMemberExtraEmailUpdateRequestRequest,
 } from "../models/index";
 import {
+  MemberExtraEmailCreateRequestRequestToJSON,
   MemberExtraMailDataFromJSON,
   MemberMailCategoryDataFromJSON,
   MemberMailCategoryRequestRequestToJSON,
+  PatchedMemberExtraEmailUpdateRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
 
 export interface CoreApiMemberExtraEmailsCreateRequest {
-  extraEmail?: string;
-  memberId?: string;
+  memberExtraEmailCreateRequestRequest: MemberExtraEmailCreateRequestRequest;
 }
 
 export interface CoreApiMemberExtraEmailsDestroyRequest {
   extraEmailId?: string;
+}
+
+export interface CoreApiMemberExtraEmailsPartialUpdateRequest {
+  patchedMemberExtraEmailUpdateRequestRequest?: PatchedMemberExtraEmailUpdateRequestRequest;
 }
 
 export interface CoreApiMemberExtraEmailsRetrieveRequest {
@@ -104,17 +111,18 @@ export class CoreApi extends runtime.BaseAPI {
     requestParameters: CoreApiMemberExtraEmailsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<boolean>> {
+    if (requestParameters["memberExtraEmailCreateRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "memberExtraEmailCreateRequestRequest",
+        'Required parameter "memberExtraEmailCreateRequestRequest" was null or undefined when calling coreApiMemberExtraEmailsCreate().',
+      );
+    }
+
     const queryParameters: any = {};
 
-    if (requestParameters["extraEmail"] != null) {
-      queryParameters["extra_email"] = requestParameters["extraEmail"];
-    }
-
-    if (requestParameters["memberId"] != null) {
-      queryParameters["member_id"] = requestParameters["memberId"];
-    }
-
     const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
 
     if (this.configuration && this.configuration.apiKey) {
       headerParameters["Authorization"] =
@@ -136,6 +144,9 @@ export class CoreApi extends runtime.BaseAPI {
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
+        body: MemberExtraEmailCreateRequestRequestToJSON(
+          requestParameters["memberExtraEmailCreateRequestRequest"],
+        ),
       },
       initOverrides,
     );
@@ -150,7 +161,7 @@ export class CoreApi extends runtime.BaseAPI {
   /**
    */
   async coreApiMemberExtraEmailsCreate(
-    requestParameters: CoreApiMemberExtraEmailsCreateRequest = {},
+    requestParameters: CoreApiMemberExtraEmailsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<boolean> {
     const response = await this.coreApiMemberExtraEmailsCreateRaw(
@@ -212,6 +223,65 @@ export class CoreApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<boolean> {
     const response = await this.coreApiMemberExtraEmailsDestroyRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberExtraEmailsPartialUpdateRaw(
+    requestParameters: CoreApiMemberExtraEmailsPartialUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_extra_emails`,
+        method: "PATCH",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PatchedMemberExtraEmailUpdateRequestRequestToJSON(
+          requestParameters["patchedMemberExtraEmailUpdateRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberExtraEmailsPartialUpdate(
+    requestParameters: CoreApiMemberExtraEmailsPartialUpdateRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response = await this.coreApiMemberExtraEmailsPartialUpdateRaw(
       requestParameters,
       initOverrides,
     );

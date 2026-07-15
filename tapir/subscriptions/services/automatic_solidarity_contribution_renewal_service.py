@@ -122,6 +122,7 @@ class AutomaticSolidarityContributionRenewalService:
             contribution
             for contribution in contributions_from_previous_growing_period
             if contribution.member_id not in member_ids_that_already_have_a_contribution
+            and contribution.cancellation_ts is None
         }
 
     @classmethod
