@@ -64,9 +64,6 @@ from tapir.payments.services.payment_export_intended_use_builder import (
 from tapir.payments.services.subscription_payments_rebuilder import (
     SubscriptionPaymentsRebuilder,
 )
-from tapir.pickup_locations.services.member_pickup_location_getter import (
-    MemberPickupLocationGetter,
-)
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
@@ -222,7 +219,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                 case MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE:
                     delivery_charge_pickup_location = (
                         cls.get_delivery_charge_pickup_location(
-                            member_id=member_id, payment=payment, cache=cache
+                            payment=payment, cache=cache
                         )
                     )
                 case (
@@ -257,20 +254,13 @@ class GetFutureMemberPaymentsApiView(APIView):
 
     @classmethod
     def get_delivery_charge_pickup_location(
-        cls, member_id: str, payment: Payment, cache: dict
-    ) -> PickupLocation:
-        reference_date = payment.subscription_payment_range_start or payment.due_date
-        pickup_location_id = (
-            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
-                member_id=member_id, reference_date=reference_date, cache=cache
-            )
+        cls, payment: Payment, cache: dict
+    ) -> PickupLocation | None:
+        if payment.pickup_location_id is None:
+            return None
+        return TapirCache.get_pickup_location_by_id(
+            cache=cache, pickup_location_id=payment.pickup_location_id
         )
-        if pickup_location_id is None:
-            raise ValueError(
-                f"Member {member_id} has a delivery charge payment {payment.id} "
-                f"around {reference_date} but no pickup location assigned on that date."
-            )
-        return PickupLocation.objects.get(id=pickup_location_id)
 
     @classmethod
     def get_relevant_subscriptions(

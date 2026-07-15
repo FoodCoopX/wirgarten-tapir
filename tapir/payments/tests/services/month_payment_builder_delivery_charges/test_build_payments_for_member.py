@@ -2,13 +2,14 @@ import datetime
 from decimal import Decimal
 
 from tapir.configuration.models import TapirParameter
+from tapir.deliveries.tests.factories import JokerFactory
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.month_payment_builder_delivery_charges import (
     MonthPaymentBuilderDeliveryCharges,
 )
 from tapir.pickup_locations.tests.factories import PickupLocationDeliveryChargeFactory
 from tapir.wirgarten.constants import WEEKLY
-from tapir.wirgarten.models import PickupLocationOpeningTime
+from tapir.wirgarten.models import Payment, PickupLocationOpeningTime
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -117,6 +118,7 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE,
             payment.type,
         )
+        self.assertEqual(self.pickup_location_a.id, payment.pickup_location_id)
 
     def test_buildPaymentsForMember_movesMidMonth_returnsOnePaymentPerLocation(self):
         member = self._make_member_at_location(self.pickup_location_a)
@@ -160,6 +162,7 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             datetime.date(year=2026, month=5, day=13),
             payment_a.subscription_payment_range_end,
         )
+        self.assertEqual(self.pickup_location_a.id, payment_a.pickup_location_id)
 
         payment_b = payments_by_start[datetime.date(year=2026, month=5, day=20)]
         self.assertEqual(Decimal("4.00"), payment_b.amount)
@@ -167,3 +170,113 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             datetime.date(year=2026, month=5, day=27),
             payment_b.subscription_payment_range_end,
         )
+        self.assertEqual(self.pickup_location_b.id, payment_b.pickup_location_id)
+
+    def test_buildPaymentsForMember_returnsToFormerLocationThenRerun_doesNotDoubleBill(
+        self,
+    ):
+        # A -> B -> A within the same month, so A's date span [May 6, May 27]
+        # contains B's span [May 13, May 20]. A range-only already_paid lookup
+        # would let the two locations contaminate each other on the second run;
+        # scoping by pickup location must keep them independent.
+        member = self._make_member_at_location(self.pickup_location_a)
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=self.pickup_location_b,
+            valid_from=datetime.date(year=2026, month=5, day=11),
+        )
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=self.pickup_location_a,
+            valid_from=datetime.date(year=2026, month=5, day=25),
+        )
+        subscription = self._make_subscription(member)
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_a,
+            amount=Decimal("3.50"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_b,
+            amount=Decimal("2.00"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+
+        first_run = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
+            member=member,
+            contracts={subscription},
+            first_of_month=self.first_of_month,
+            rhythm=MONTHLY,
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+        self.assertEqual(2, len(first_run))
+        amounts_by_location = {
+            payment.pickup_location_id: payment.amount for payment in first_run
+        }
+        # A: May 6 + May 27 = 2 * 3.50; B: May 13 + May 20 = 2 * 2.00
+        self.assertEqual(
+            Decimal("7.00"), amounts_by_location[self.pickup_location_a.id]
+        )
+        self.assertEqual(
+            Decimal("4.00"), amounts_by_location[self.pickup_location_b.id]
+        )
+
+        Payment.objects.bulk_create(first_run)
+
+        second_run = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
+            member=member,
+            contracts={subscription},
+            first_of_month=self.first_of_month,
+            rhythm=MONTHLY,
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+
+        self.assertEqual([], second_run)
+
+    def test_buildPaymentsForMember_allDeliveriesAtLocationJokeredAfterBilling_refundsIt(
+        self,
+    ):
+        member = self._make_member_at_location(self.pickup_location_a)
+        subscription = self._make_subscription(member)
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_a,
+            amount=Decimal("3.50"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+
+        first_run = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
+            member=member,
+            contracts={subscription},
+            first_of_month=self.first_of_month,
+            rhythm=MONTHLY,
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+        self.assertEqual(1, len(first_run))
+        self.assertEqual(Decimal("14.00"), first_run[0].amount)
+        Payment.objects.bulk_create(first_run)
+
+        for day in [6, 13, 20, 27]:
+            JokerFactory.create(
+                member=member, date=datetime.date(year=2026, month=5, day=day)
+            )
+
+        second_run = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
+            member=member,
+            contracts={subscription},
+            first_of_month=self.first_of_month,
+            rhythm=MONTHLY,
+            cache={},
+            generated_payments=set(),
+            in_trial=False,
+        )
+
+        self.assertEqual(1, len(second_run))
+        refund = second_run[0]
+        self.assertEqual(Decimal("-14.00"), refund.amount)
+        self.assertEqual(self.pickup_location_a.id, refund.pickup_location_id)

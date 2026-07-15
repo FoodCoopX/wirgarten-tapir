@@ -6,6 +6,7 @@ from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MissingPickupLocationError,
     MonthPaymentBuilderDeliveryCharges,
 )
 from tapir.payments.services.month_payment_builder_subscriptions import (
@@ -168,4 +169,62 @@ class TestBuildPaymentsForDeliveryCharges(TapirIntegrationTest):
             cache=cache,
             generated_payments=generated_payments,
             in_trial=True,
+        )
+
+    @patch.object(
+        MemberPaymentRhythmService, "get_member_payment_rhythm", autospec=True
+    )
+    @patch.object(
+        MonthPaymentBuilderDeliveryCharges,
+        "build_payments_for_member",
+        autospec=True,
+    )
+    @patch.object(
+        MonthPaymentBuilderSubscriptions,
+        "get_current_and_renewed_subscriptions",
+        autospec=True,
+    )
+    def test_buildPaymentsForDeliveryCharges_memberMissesPickupLocation_skipsThatMemberAndKeepsOthers(
+        self,
+        mock_get_current_and_renewed_subscriptions: Mock,
+        mock_build_payments_for_member: Mock,
+        mock_get_member_payment_rhythm: Mock,
+    ):
+        member_ok, member_broken = MemberFactory.build_batch(size=2)
+        member_ok.pk = "member_ok"
+        member_broken.pk = "member_broken"
+        subscription_ok = SubscriptionFactory.build(member=member_ok)
+        subscription_broken = SubscriptionFactory.build(member=member_broken)
+        mock_get_current_and_renewed_subscriptions.return_value = [
+            subscription_ok,
+            subscription_broken,
+        ]
+        mock_get_member_payment_rhythm.return_value = MemberPaymentRhythm.Rhythm.MONTHLY
+
+        payment_ok = PaymentFactory.build()
+
+        def side_effect(**kwargs):
+            if kwargs["member"] is member_broken:
+                raise MissingPickupLocationError("no pickup location")
+            return [payment_ok]
+
+        mock_build_payments_for_member.side_effect = side_effect
+
+        with self.assertLogs(
+            "tapir.payments.services.month_payment_builder_delivery_charges",
+            level="ERROR",
+        ) as logs:
+            result = (
+                MonthPaymentBuilderDeliveryCharges.build_payments_for_delivery_charges(
+                    current_month=datetime.date(year=2026, month=5, day=1),
+                    cache=Mock(),
+                    generated_payments=Mock(),
+                    in_trial=False,
+                )
+            )
+
+        self.assertEqual([payment_ok], result)
+        self.assertTrue(
+            any(str(member_broken.id) in message for message in logs.output),
+            logs.output,
         )
