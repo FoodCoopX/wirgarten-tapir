@@ -43,16 +43,34 @@ const PickupLocationDeliveryChargeModal: React.FC<
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  // valid_from is parsed by the API client as UTC midnight, so we compare on
+  // calendar-date strings to avoid a local-vs-UTC offset shifting the boundary.
+  function toDateString(date: Date): string {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function getTodayDateString(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
   function getTomorrowInputValue(): string {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().slice(0, 10);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const day = String(tomorrow.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    return new Date(entry.validFrom) > startOfToday;
+    return toDateString(new Date(entry.validFrom)) > getTodayDateString();
   }
 
   useEffect(() => {
@@ -87,8 +105,10 @@ const PickupLocationDeliveryChargeModal: React.FC<
   }, [show]);
 
   function getCurrentEntry(): PickupLocationDeliveryChargeEntry | undefined {
-    const today = new Date();
-    return entries.find((entry) => new Date(entry.validFrom) <= today);
+    const today = getTodayDateString();
+    return entries.find(
+      (entry) => toDateString(new Date(entry.validFrom)) <= today,
+    );
   }
 
   function onSave() {
