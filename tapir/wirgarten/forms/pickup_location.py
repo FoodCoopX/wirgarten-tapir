@@ -138,6 +138,7 @@ def pickup_location_to_dict(
         .count(),
         "location_route": getattr(pickup_location.location_route, "name", ""),
         "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
+        "route_info": pickup_location.route_info,
     }
 
 
@@ -334,10 +335,17 @@ class PickupLocationEditForm(forms.Form):
             help_text="z.B.: im Hinterhof. " + HTML_ALLOWED_TEXT,
             widget=Textarea,
         )
+        self.fields["route_info"] = forms.CharField(
+            label=_("Kommentar für die Verteilung"),
+            required=False,
+            help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste.",
+            widget=Textarea,
+        )
 
         self.colspans = {
             "coords": 1,
             "info": 2,
+            "route_info": 2,
             "monday_times": 2,
             "tuesday_times": 2,
             "wednesday_times": 2,
@@ -394,6 +402,7 @@ class PickupLocationEditForm(forms.Form):
             self.fields["postcode"].initial = self.pickup_location.postcode
             self.fields["city"].initial = self.pickup_location.city
             self.fields["info"].initial = self.pickup_location.info
+            self.fields["route_info"].initial = self.pickup_location.route_info
             self.fields["access_code"].initial = self.pickup_location.access_code
             self.fields["messenger_group_link"].initial = (
                 self.pickup_location.messenger_group_link
@@ -517,6 +526,7 @@ class PickupLocationEditForm(forms.Form):
         pl.postcode = self.cleaned_data["postcode"]
         pl.city = self.cleaned_data["city"]
         pl.info = self.cleaned_data["info"]
+        pl.route_info = self.cleaned_data["route_info"]
         pl.access_code = self.cleaned_data["access_code"]
         pl.contact_name = self.cleaned_data["contact_name"]
         pl.messenger_group_link = self.cleaned_data["messenger_group_link"]

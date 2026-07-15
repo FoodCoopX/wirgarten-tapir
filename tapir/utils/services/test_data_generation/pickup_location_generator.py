@@ -260,6 +260,7 @@ class PickupLocationGenerator:
             coords_lon=47.7603882,
             coords_lat=11.5542721,
             location_route=toelzer_route,
+            route_info="kleine Kisten links, große Tauschkiste",
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=biodelikat,
@@ -295,6 +296,7 @@ class PickupLocationGenerator:
             coords_lon=47.7574811,
             coords_lat=11.569017,
             location_route=toelzer_route,
+            route_info="kleine Kisten rechts, kleine Tauschkiste",
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",

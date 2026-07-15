@@ -60,6 +60,9 @@
                                         {{ pl.street }}
                                         <br />
                                         <small>{{ pl.postcode }} {{ pl.city }}</small>
+                                        {% if pl.route_info %}
+	                                        <br /><em>{{ pl.route_info }}</em>
+                                        {% endif %}
                                     </td>
                                     <td style="white-space:nowrap; text-align:left;">
                                         {% for cap in pl.capabilities %}
