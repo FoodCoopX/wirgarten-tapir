@@ -752,6 +752,12 @@ class Payment(TapirModel):
     type = models.CharField(max_length=64)
     subscription_payment_range_start = models.DateField(null=True)
     subscription_payment_range_end = models.DateField(null=True)
+    # Only set for delivery-charge payments: identifies which pickup location the
+    # charge belongs to, so payments stay distinguishable per location and the
+    # already_paid idempotency can be scoped per location.
+    pickup_location = models.ForeignKey(
+        PickupLocation, on_delete=models.DO_NOTHING, null=True
+    )
 
     class Meta:
         indexes = [

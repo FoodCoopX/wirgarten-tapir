@@ -1,9 +1,32 @@
 from django.db import models
+from django.db.models import UniqueConstraint
 
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry
 from tapir.wirgarten.models import Product, PickupLocation, MemberPickupLocation
+
+
+class PickupLocationDeliveryCharge(TapirModel):
+    """
+    Time-dependent extra charge that applies once per delivery for members
+    assigned to this pickup location.
+    """
+
+    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.CASCADE)
+    amount = models.DecimalField(decimal_places=2, max_digits=8)
+    valid_from = models.DateField()
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["pickup_location", "valid_from"],
+                name="unique_pickup_location_delivery_charge_date",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.pickup_location_id} {self.amount} valid from {self.valid_from} ({self.id})"
 
 
 class ProductBasketSizeEquivalence(TapirModel):

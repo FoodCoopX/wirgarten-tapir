@@ -24,6 +24,11 @@ import {
 } from "./CoopShareTransaction";
 import type { Payment } from "./Payment";
 import { PaymentFromJSON, PaymentToJSON } from "./Payment";
+import type { PublicPickupLocation } from "./PublicPickupLocation";
+import {
+  PublicPickupLocationFromJSON,
+  PublicPickupLocationToJSON,
+} from "./PublicPickupLocation";
 import type { SolidarityContribution } from "./SolidarityContribution";
 import {
   SolidarityContributionFromJSON,
@@ -64,6 +69,12 @@ export interface ExtendedPayment {
   solidarityContributions: Array<SolidarityContribution>;
   /**
    *
+   * @type {PublicPickupLocation}
+   * @memberof ExtendedPayment
+   */
+  deliveryChargePickupLocation: PublicPickupLocation | null;
+  /**
+   *
    * @type {Array<AssociationMembership>}
    * @memberof ExtendedPayment
    */
@@ -87,6 +98,11 @@ export function instanceOfExtendedPayment(
   if (
     !("solidarityContributions" in value) ||
     value["solidarityContributions"] === undefined
+  )
+    return false;
+  if (
+    !("deliveryChargePickupLocation" in value) ||
+    value["deliveryChargePickupLocation"] === undefined
   )
     return false;
   if (
@@ -119,6 +135,9 @@ export function ExtendedPaymentFromJSONTyped(
     solidarityContributions: (
       json["solidarity_contributions"] as Array<any>
     ).map(SolidarityContributionFromJSON),
+    deliveryChargePickupLocation: PublicPickupLocationFromJSON(
+      json["delivery_charge_pickup_location"],
+    ),
     associationMemberships: (json["association_memberships"] as Array<any>).map(
       AssociationMembershipFromJSON,
     ),
@@ -148,6 +167,9 @@ export function ExtendedPaymentToJSONTyped(
     solidarity_contributions: (
       value["solidarityContributions"] as Array<any>
     ).map(SolidarityContributionToJSON),
+    delivery_charge_pickup_location: PublicPickupLocationToJSON(
+      value["deliveryChargePickupLocation"],
+    ),
     association_memberships: (
       value["associationMemberships"] as Array<any>
     ).map(AssociationMembershipToJSON),

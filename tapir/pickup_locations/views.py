@@ -16,10 +16,13 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.serializers import (
     PickupLocationCapacitiesSerializer,
     PickupLocationCapacityEvolutionSerializer,
+    PickupLocationDeliveryChargeCreateRequestSerializer,
+    PickupLocationDeliveryChargesResponseSerializer,
     PublicPickupLocationSerializer,
     PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityCheckRequestSerializer,
 )
+from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -31,6 +34,9 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
+)
+from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
+    PickupLocationDeliveryChargeService,
 )
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
@@ -221,10 +227,19 @@ class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = []
     serializer_class = PublicPickupLocationSerializer
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get_queryset(self):
         return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-            cache={}
+            cache=self.cache
         )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["cache"] = self.cache
+        return context
 
 
 class PickupLocationCapacityCheckApiView(APIView):
@@ -343,7 +358,9 @@ class GetMemberPickupLocationApiView(APIView):
         return Response(
             {
                 "has_location": True,
-                "location": PublicPickupLocationSerializer(pickup_location).data,
+                "location": PublicPickupLocationSerializer(
+                    pickup_location, context={"cache": self.cache}
+                ).data,
             }
         )
 
@@ -451,3 +468,86 @@ class ChangeMemberPickupLocationApiView(APIView):
             raise ValidationError(
                 "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
+
+
+class PickupLocationDeliveryChargesView(APIView):
+    @extend_schema(
+        responses={200: PickupLocationDeliveryChargesResponseSerializer()},
+        parameters=[OpenApiParameter(name="pickup_location_id", type=str)],
+    )
+    def get(self, request):
+        if not request.user.has_perm(Permission.Products.VIEW):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        pickup_location = get_object_or_404(
+            PickupLocation, id=request.query_params.get("pickup_location_id")
+        )
+        entries = PickupLocationDeliveryCharge.objects.filter(
+            pickup_location=pickup_location
+        ).order_by("-valid_from")
+
+        return Response(
+            PickupLocationDeliveryChargesResponseSerializer(
+                {
+                    "pickup_location_id": pickup_location.id,
+                    "pickup_location_name": pickup_location.name,
+                    "entries": entries,
+                }
+            ).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(
+        responses={200: str, 400: str},
+        request=PickupLocationDeliveryChargeCreateRequestSerializer(),
+    )
+    def post(self, request):
+        if not request.user.has_perm(Permission.Products.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        request_serializer = PickupLocationDeliveryChargeCreateRequestSerializer(
+            data=request.data
+        )
+        request_serializer.is_valid(raise_exception=True)
+
+        pickup_location = get_object_or_404(
+            PickupLocation,
+            id=request_serializer.validated_data["pickup_location_id"],
+        )
+
+        try:
+            PickupLocationDeliveryChargeService.save_charge(
+                pickup_location=pickup_location,
+                amount=request_serializer.validated_data["amount"],
+                valid_from=request_serializer.validated_data["valid_from"],
+                cache={},
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": error.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+    @extend_schema(
+        responses={200: str, 400: str},
+        parameters=[OpenApiParameter(name="id", type=str)],
+    )
+    def delete(self, request):
+        if not request.user.has_perm(Permission.Products.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        charge_id = request.query_params.get("id")
+
+        try:
+            PickupLocationDeliveryChargeService.delete_charge(
+                charge_id=charge_id, cache={}
+            )
+        except PickupLocationDeliveryCharge.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as error:
+            return Response(
+                {"error": error.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response("OK", status=status.HTTP_200_OK)

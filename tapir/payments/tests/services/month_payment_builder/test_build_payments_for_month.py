@@ -5,6 +5,9 @@ from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.payments.services.month_payment_builder_association_membership import (
     MonthPaymentBuilderAssociationMembership,
 )
+from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MonthPaymentBuilderDeliveryCharges,
+)
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
@@ -16,19 +19,31 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 class TestBuildPaymentForMonth(TapirUnitTest):
     @patch.object(
+        MonthPaymentBuilderDeliveryCharges,
+        "build_payments_for_delivery_charges",
+        autospec=True,
+    )
+    @patch.object(
         MonthPaymentBuilderAssociationMembership,
         "build_payments_for_association_memberships",
+        autospec=True,
     )
     @patch.object(
         MonthPaymentBuilderSolidarityContributions,
         "build_payments_for_solidarity_contributions",
+        autospec=True,
     )
-    @patch.object(MonthPaymentBuilderSubscriptions, "build_payments_for_subscriptions")
-    def test_buildPaymentsForMonth_default_returnsPaymentsFromTrialAndNotTrialSubscriptions(
+    @patch.object(
+        MonthPaymentBuilderSubscriptions,
+        "build_payments_for_subscriptions",
+        autospec=True,
+    )
+    def test_buildPaymentsForMonth_default_returnsPaymentsFromAllBuilders(
         self,
         mock_build_payments_for_subscriptions: Mock,
         mock_build_payments_for_solidarity_contributions: Mock,
         mock_build_payments_for_association_memberships: Mock,
+        mock_build_payments_for_delivery_charges: Mock,
     ):
         payment_1 = Mock()
         payment_2 = Mock()
@@ -41,6 +56,8 @@ class TestBuildPaymentForMonth(TapirUnitTest):
         payment_9 = Mock()
         payment_10 = Mock()
         payment_11 = Mock()
+        payment_12 = Mock()
+        payment_13 = Mock()
         cache = Mock()
         generated_payments = {payment_6}
 
@@ -64,9 +81,19 @@ class TestBuildPaymentForMonth(TapirUnitTest):
             )
         )
 
-        membership_payments = [payment_10, payment_11]
+        membership_payments = [payment_12, payment_13]
         mock_build_payments_for_association_memberships.return_value = (
             membership_payments
+        )
+
+        delivery_charge_trial_payments = [payment_10]
+        delivery_charge_not_trial_payments = [payment_11]
+        mock_build_payments_for_delivery_charges.side_effect = (
+            lambda current_month, cache, generated_payments, in_trial: (
+                delivery_charge_trial_payments
+                if in_trial
+                else delivery_charge_not_trial_payments
+            )
         )
 
         result = MonthPaymentBuilder.build_payments_for_month(
@@ -87,6 +114,8 @@ class TestBuildPaymentForMonth(TapirUnitTest):
                 payment_9,
                 payment_10,
                 payment_11,
+                payment_12,
+                payment_13,
             },
             set(result),
         )
@@ -130,4 +159,22 @@ class TestBuildPaymentForMonth(TapirUnitTest):
             current_month=datetime.date(year=2022, month=5, day=1),
             cache=cache,
             generated_payments=generated_payments,
+        )
+
+        self.assertEqual(2, mock_build_payments_for_delivery_charges.call_count)
+        mock_build_payments_for_delivery_charges.assert_has_calls(
+            [
+                call(
+                    current_month=datetime.date(year=2022, month=5, day=1),
+                    cache=cache,
+                    generated_payments=generated_payments,
+                    in_trial=True,
+                ),
+                call(
+                    current_month=datetime.date(year=2022, month=5, day=1),
+                    cache=cache,
+                    generated_payments={payment_6, payment_10},
+                    in_trial=False,
+                ),
+            ]
         )

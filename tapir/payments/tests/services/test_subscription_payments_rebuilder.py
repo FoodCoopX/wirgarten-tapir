@@ -12,6 +12,7 @@ from tapir.wirgarten.tests.factories import (
     PaymentFactory,
     SubscriptionFactory,
     ProductPriceFactory,
+    MemberPickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -82,6 +83,10 @@ class TestSubscriptionPaymentsRebuilder(TapirIntegrationTest):
         )
         ProductPriceFactory.create(
             product=subscription.product, valid_from=subscription.start_date
+        )
+        MemberPickupLocationFactory.create(
+            member=subscription.member,
+            valid_from=datetime.date(year=2017, month=1, day=1),
         )
 
         transaction_1 = PaymentTransactionFactory.create(

@@ -5,6 +5,7 @@ from rest_framework import serializers
 from tapir.associations.serializers import AssociationMembershipSerializer
 from tapir.deliveries.serializers import SubscriptionSerializer
 from tapir.payments.models import MemberPaymentRhythm, MemberCredit
+from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
 from tapir.solidarity_contribution.serializers import SolidarityContributionSerializer
 from tapir.subscriptions.serializers import (
     CoopShareTransactionSerializer,
@@ -26,6 +27,7 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     subscriptions = SubscriptionSerializer(many=True)
     coop_share_transactions = CoopShareTransactionSerializer(many=True)
     solidarity_contributions = SolidarityContributionSerializer(many=True)
+    delivery_charge_pickup_location = PublicPickupLocationSerializer(allow_null=True)
     association_memberships = AssociationMembershipSerializer(many=True)
 
 

@@ -51,6 +51,9 @@ from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.payments.services.month_payment_builder_association_membership import (
     MonthPaymentBuilderAssociationMembership,
 )
+from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MonthPaymentBuilderDeliveryCharges,
+)
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
@@ -78,6 +81,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     MandateReference,
     Member,
+    PickupLocation,
     Subscription,
     ProductType,
     PaymentTransaction,
@@ -193,6 +197,7 @@ class GetFutureMemberPaymentsApiView(APIView):
             subscriptions = []
             coop_share_transactions = []
             solidarity_contributions = []
+            delivery_charge_pickup_location = None
             association_memberships = []
 
             match payment.type:
@@ -209,6 +214,12 @@ class GetFutureMemberPaymentsApiView(APIView):
                             member_id=member_id,
                             payment=payment,
                             cache=cache,
+                        )
+                    )
+                case MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE:
+                    delivery_charge_pickup_location = (
+                        cls.get_delivery_charge_pickup_location(
+                            payment=payment, cache=cache
                         )
                     )
                 case (
@@ -232,6 +243,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                     "subscriptions": subscriptions,
                     "coop_share_transactions": coop_share_transactions,
                     "solidarity_contributions": solidarity_contributions,
+                    "delivery_charge_pickup_location": delivery_charge_pickup_location,
                     "association_memberships": sorted(
                         association_memberships,
                         key=lambda membership: membership.start_date,
@@ -239,6 +251,16 @@ class GetFutureMemberPaymentsApiView(APIView):
                 }
             )
         return extended_payments
+
+    @classmethod
+    def get_delivery_charge_pickup_location(
+        cls, payment: Payment, cache: dict
+    ) -> PickupLocation | None:
+        if payment.pickup_location_id is None:
+            return None
+        return TapirCache.get_pickup_location_by_id(
+            cache=cache, pickup_location_id=payment.pickup_location_id
+        )
 
     @classmethod
     def get_relevant_subscriptions(

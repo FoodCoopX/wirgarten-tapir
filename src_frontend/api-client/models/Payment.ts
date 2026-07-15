@@ -96,6 +96,12 @@ export interface Payment {
    * @memberof Payment
    */
   transaction?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof Payment
+   */
+  pickupLocation?: string | null;
 }
 
 /**
@@ -145,6 +151,8 @@ export function PaymentFromJSONTyped(
         : new Date(json["subscription_payment_range_end"]),
     mandateRef: json["mandate_ref"],
     transaction: json["transaction"] == null ? undefined : json["transaction"],
+    pickupLocation:
+      json["pickup_location"] == null ? undefined : json["pickup_location"],
   };
 }
 
@@ -181,5 +189,6 @@ export function PaymentToJSONTyped(
             .substring(0, 10),
     mandate_ref: value["mandateRef"],
     transaction: value["transaction"],
+    pickup_location: value["pickupLocation"],
   };
 }
