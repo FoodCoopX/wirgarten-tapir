@@ -80,3 +80,25 @@ class TestPickupLocationDeliveryChargesViewPost(TapirIntegrationTest):
 
         self.assertEqual(response.status_code, 400)
         self.assertFalse(PickupLocationDeliveryCharge.objects.exists())
+
+    @patch(
+        "tapir.pickup_locations.services.pickup_location_delivery_charge_service.get_today"
+    )
+    def test_post_validFromInThePast_returns400(self, mock_get_today):
+        mock_get_today.return_value = datetime.date(year=2026, month=6, day=1)
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
+        pickup_location = PickupLocationFactory.create()
+
+        url = reverse("pickup_locations:pickup_location_delivery_charges")
+        response = self.client.post(
+            url,
+            data={
+                "pickup_location_id": pickup_location.id,
+                "amount": "2.50",
+                "valid_from": "2026-05-01",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(PickupLocationDeliveryCharge.objects.exists())

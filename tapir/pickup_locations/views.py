@@ -515,11 +515,39 @@ class PickupLocationDeliveryChargesView(APIView):
             id=request_serializer.validated_data["pickup_location_id"],
         )
 
-        PickupLocationDeliveryChargeService.save_charge(
-            pickup_location=pickup_location,
-            amount=request_serializer.validated_data["amount"],
-            valid_from=request_serializer.validated_data["valid_from"],
-            cache={},
-        )
+        try:
+            PickupLocationDeliveryChargeService.save_charge(
+                pickup_location=pickup_location,
+                amount=request_serializer.validated_data["amount"],
+                valid_from=request_serializer.validated_data["valid_from"],
+                cache={},
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": error.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+    @extend_schema(
+        responses={200: str, 400: str},
+        parameters=[OpenApiParameter(name="id", type=str)],
+    )
+    def delete(self, request):
+        if not request.user.has_perm(Permission.Products.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        charge_id = request.query_params.get("id")
+
+        try:
+            PickupLocationDeliveryChargeService.delete_charge(
+                charge_id=charge_id, cache={}
+            )
+        except PickupLocationDeliveryCharge.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as error:
+            return Response(
+                {"error": error.message}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         return Response("OK", status=status.HTTP_200_OK)

@@ -40,7 +40,20 @@ const PickupLocationDeliveryChargeModal: React.FC<
   );
   const [amountInput, setAmountInput] = useState("");
   const [validFromInput, setValidFromInput] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  function getTomorrowInputValue(): string {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().slice(0, 10);
+  }
+
+  function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    return new Date(entry.validFrom) > startOfToday;
+  }
 
   useEffect(() => {
     if (!show) return;
@@ -102,6 +115,35 @@ const PickupLocationDeliveryChargeModal: React.FC<
       .finally(() => setSaving(false));
   }
 
+  function onDelete(entry: PickupLocationDeliveryChargeEntry) {
+    if (entry.id === undefined) return;
+
+    if (
+      !window.confirm(
+        `Lieferzuschlag gültig ab ${formatDateNumeric(
+          new Date(entry.validFrom),
+        )} löschen?`,
+      )
+    ) {
+      return;
+    }
+
+    const chargeId = entry.id;
+    setDeletingId(chargeId);
+
+    api
+      .pickupLocationsApiPickupLocationDeliveryChargesDestroy({ id: chargeId })
+      .then(() => location.reload())
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Löschen des Lieferzuschlags",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setDeletingId(null));
+  }
+
   function buildCurrentSection() {
     const currentEntry = getCurrentEntry();
     if (!currentEntry) {
@@ -125,6 +167,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
           <tr>
             <th>Betrag</th>
             <th>Gültig ab</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -132,6 +175,17 @@ const PickupLocationDeliveryChargeModal: React.FC<
             <tr key={entry.id}>
               <td>{formatAmount(entry.amount)}</td>
               <td>{formatDateNumeric(new Date(entry.validFrom))}</td>
+              <td className={"text-end"}>
+                {isFutureEntry(entry) && (
+                  <TapirButton
+                    variant={"outline-danger"}
+                    size={"sm"}
+                    icon={"delete"}
+                    loading={deletingId === entry.id}
+                    onClick={() => onDelete(entry)}
+                  />
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -175,9 +229,13 @@ const PickupLocationDeliveryChargeModal: React.FC<
                 <Form.Control
                   type={"date"}
                   value={validFromInput}
+                  min={getTomorrowInputValue()}
                   required={true}
                   onChange={(event) => setValidFromInput(event.target.value)}
                 />
+                <Form.Text muted>
+                  Änderungen gelten nur für die Zukunft.
+                </Form.Text>
               </Form.Group>
             </Form>
           </div>
