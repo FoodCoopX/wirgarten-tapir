@@ -2499,6 +2499,7 @@ paths:
         name: id
         schema:
           type: string
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -10134,6 +10135,9 @@ components:
         mandate_ref:
           type: string
         transaction:
+          type: string
+          nullable: true
+        pickup_location:
           type: string
           nullable: true
       required:
