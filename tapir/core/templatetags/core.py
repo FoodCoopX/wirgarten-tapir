@@ -10,7 +10,7 @@ from tapir.core.models import SidebarLinkGroup
 from tapir.subscriptions.views.confirmations import (
     MemberDataToConfirmApiView,
 )
-from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     WaitingListEntry,
 )

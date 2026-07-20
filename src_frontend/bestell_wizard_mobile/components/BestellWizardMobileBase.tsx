@@ -3,6 +3,7 @@ import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import {
   AssociationMembershipType,
+  PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
 } from "../../api-client";
@@ -43,6 +44,7 @@ interface BestellWizardMobileBaseProps {
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
   contractStartDate: Date;
+  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
 }
 
 const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
@@ -66,6 +68,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
   goToProductTypeStep,
   associationMembershipType,
   contractStartDate,
+  selectedGrowingPeriod,
 }) => {
   return (
     <div
@@ -105,6 +108,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
           goToProductTypeStep={goToProductTypeStep}
           associationMembershipType={associationMembershipType}
           contractStartDate={contractStartDate}
+          selectedGrowingPeriod={selectedGrowingPeriod}
         />
       </div>
       <div

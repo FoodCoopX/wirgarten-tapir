@@ -249,6 +249,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
       goToProductTypeStep={() => {}}
       contractStartDate={new Date()} // This parameter won't be used since it's only for relevant for contracts
+      selectedGrowingPeriod={undefined}
     />
   );
 };

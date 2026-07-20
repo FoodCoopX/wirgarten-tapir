@@ -243,6 +243,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     );
 
     setContractStartDate(selectedGrowingPeriod.contractStartDate);
+
+    setSelectedProductTypes(
+      settings.introEnabled ? [] : selectedGrowingPeriod.productTypes,
+    );
   }, [selectedGrowingPeriod]);
 
   useEffect(() => {
@@ -434,9 +438,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
   function setTestData() {
     setPersonalData(getTestPersonalData());
-    setSelectedProductTypes(settings.productTypes);
+    setSelectedProductTypes(selectedGrowingPeriod?.productTypes ?? []);
     const newShoppingCart: ShoppingCart = {};
-    for (const productType of settings.productTypes) {
+    for (const productType of selectedGrowingPeriod?.productTypes ??
+      settings.productTypes) {
       for (const product of productType.products) {
         newShoppingCart[product.id!] = 1;
       }
@@ -617,6 +622,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             investingMembership={investingMembership}
             setInvestingMembership={setInvestingMembership}
             setShoppingCart={setShoppingCart}
+            selectedGrowingPeriod={selectedGrowingPeriod}
           />
         );
       case "3b_growing_period_choice":
@@ -806,6 +812,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             confirmOrder={onConfirmOrder}
             waitingListEntryDetails={waitingListEntryDetails}
             associationMembershipType={selectedAssociationMembershipType}
+            selectedGrowingPeriod={selectedGrowingPeriod}
           />
         );
       case "11_legal":
@@ -937,6 +944,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       goToProductTypeStep={goToProductTypeStep}
       associationMembershipType={selectedAssociationMembershipType}
       contractStartDate={contractStartDate}
+      selectedGrowingPeriod={selectedGrowingPeriod}
     />
   );
 };

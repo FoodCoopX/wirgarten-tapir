@@ -8824,6 +8824,8 @@ components:
         is_student:
           type: boolean
           title: Student*in
+        has_received_membership_started_mail:
+          type: boolean
       required:
       - created_at
       - first_name
@@ -10829,9 +10831,15 @@ components:
           type: string
           format: date
           readOnly: true
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProductType'
+          readOnly: true
       required:
       - contract_start_date
       - end_date
+      - product_types
       - start_date
     PublicPickupLocation:
       type: object
