@@ -1,4 +1,4 @@
-import React, { ReactNode, Ref } from "react";
+import React, { ReactNode, Ref, useEffect, useRef } from "react";
 import { Button, Spinner } from "react-bootstrap";
 
 interface TapirButtonProps {
@@ -21,6 +21,23 @@ interface TapirButtonProps {
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const element = buttonRef.current;
+    if (!element || !props.tooltip || !window.bootstrap?.Tooltip) {
+      return;
+    }
+
+    const existingTooltip = window.bootstrap.Tooltip.getInstance(element);
+    existingTooltip?.dispose();
+
+    const tooltip = new window.bootstrap.Tooltip(element);
+    return () => {
+      tooltip.dispose();
+    };
+  }, [props.tooltip]);
+
   function textContent() {
     return props.loading ? "Laden..." : props.text;
   }
@@ -75,7 +92,14 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       title={props.tooltip}
       data-bs-placement={props.tootlipPosition}
       className={props.className}
-      ref={props.ref}
+      ref={(node) => {
+        buttonRef.current = node;
+        if (typeof props.ref === "function") {
+          props.ref(node);
+        } else if (props.ref) {
+          props.ref.current = node;
+        }
+      }}
       data-bs-toggle={"tooltip"}
     >
       {(props.iconPosition === "left" || !props.iconPosition) && buildIcon()}

@@ -67,7 +67,7 @@ class ParameterDefinitionsSolidarity:
 
         importer.parameter_definition(
             key=ParameterKeys.HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE,
-            label="Mitglieder dürfen der Solibeitrag laufend ändern",
+            label="Mitglieder dürfen den Solibeitrag laufend ändern",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "

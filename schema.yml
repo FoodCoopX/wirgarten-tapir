@@ -2419,7 +2419,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -2851,6 +2850,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /subscriptions/api/subscription_trial_change:
+    post:
+      operationId: subscriptions_api_subscription_trial_change_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionTrialChangeRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubscriptionTrialChangeRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubscriptionTrialChangeRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /subscriptions/api/update_subscription:
     post:
       operationId: subscriptions_api_update_subscription_create
@@ -3026,7 +3053,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Subscription'
+                  $ref: '#/components/schemas/SubscriptionTrialFields'
           description: ''
   /subscriptions/subscriptions/{id}/:
     get:
@@ -3049,7 +3076,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Subscription'
+                $ref: '#/components/schemas/SubscriptionTrialFields'
           description: ''
   /tapirmail/api/create_missing_trigger:
     post:
@@ -10406,6 +10433,13 @@ components:
         photo_link:
           type: string
           maxLength: 512
+        route_info:
+          type: string
+          title: Driver/Route info
+          maxLength: 1024
+        location_route:
+          type: string
+          nullable: true
       required:
       - city
       - coords_lat
@@ -11621,6 +11655,118 @@ components:
       required:
       - price_override
       - subscription_id
+    SubscriptionTrialChangeRequestRequest:
+      type: object
+      properties:
+        subscription_id:
+          type: string
+          minLength: 1
+        trial_disabled:
+          type: boolean
+        trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - subscription_id
+      - trial_disabled
+    SubscriptionTrialFields:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        product:
+          $ref: '#/components/schemas/Product'
+        is_in_trial:
+          type: boolean
+          readOnly: true
+        default_trial_end_date:
+          type: string
+          readOnly: true
+        effective_trial_end_date:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        admin_confirmed:
+          type: string
+          format: date-time
+          nullable: true
+        auto_confirmed:
+          type: string
+          format: date-time
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        cancellation_ts:
+          type: string
+          format: date-time
+          nullable: true
+        consent_ts:
+          type: string
+          format: date-time
+          nullable: true
+        withdrawal_consent_ts:
+          type: string
+          format: date-time
+          nullable: true
+        trial_disabled:
+          type: boolean
+        trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
+        price_override:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        notice_period_duration:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        notice_period_unit:
+          $ref: '#/components/schemas/NoticePeriodUnitEnum'
+        cancellation_admin_confirmed:
+          type: string
+          format: date-time
+          nullable: true
+        member:
+          type: string
+        period:
+          type: string
+          nullable: true
+        mandate_ref:
+          type: string
+      required:
+      - created_at
+      - default_trial_end_date
+      - effective_trial_end_date
+      - end_date
+      - is_in_trial
+      - mandate_ref
+      - member
+      - notice_period_duration
+      - notice_period_unit
+      - product
+      - quantity
+      - start_date
+      - updated_at
     TemporaryUpload:
       type: object
       properties:

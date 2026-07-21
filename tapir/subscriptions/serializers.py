@@ -15,6 +15,7 @@ from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import (
     Member,
     CoopShareTransaction,
@@ -211,3 +212,31 @@ class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
 class SubscriptionPriceOverrideChangeRequestSerializer(serializers.Serializer):
     subscription_id = serializers.CharField()
     price_override = serializers.FloatField(allow_null=True)
+
+
+class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):
+    is_in_trial = serializers.SerializerMethodField()
+    default_trial_end_date = serializers.SerializerMethodField()
+    effective_trial_end_date = serializers.SerializerMethodField()
+
+    def get_is_in_trial(self, subscription) -> bool:
+        cache = self.context["cache"]
+        return TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
+
+    def get_default_trial_end_date(self, subscription):
+        cache = self.context["cache"]
+        return TrialPeriodManager.get_last_day_of_trial_period_by_weeks(
+            subscription, cache=cache
+        )
+
+    def get_effective_trial_end_date(self, subscription):
+        cache = self.context["cache"]
+        return TrialPeriodManager.get_last_day_of_trial_period(
+            subscription, cache=cache
+        )
+
+
+class SubscriptionTrialChangeRequestSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    trial_disabled = serializers.BooleanField()
+    trial_end_date_override = serializers.DateField(allow_null=True, required=False)

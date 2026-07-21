@@ -200,6 +200,8 @@ export * from "./SubscriptionChange";
 export * from "./SubscriptionChangeLogEntry";
 export * from "./SubscriptionDateChangeRequestRequest";
 export * from "./SubscriptionPriceOverrideChangeRequestRequest";
+export * from "./SubscriptionTrialChangeRequestRequest";
+export * from "./SubscriptionTrialFields";
 export * from "./TapirmailApiSegmentCombineCreate200Response";
 export * from "./TapirmailApiSegmentCombineCreate200ResponseRecipientsInner";
 export * from "./TemporaryUpload";

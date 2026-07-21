@@ -108,6 +108,18 @@ export interface PickupLocation {
    * @memberof PickupLocation
    */
   photoLink?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PickupLocation
+   */
+  routeInfo?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PickupLocation
+   */
+  locationRoute?: string | null;
 }
 
 /**
@@ -158,6 +170,9 @@ export function PickupLocationFromJSONTyped(
     contactName:
       json["contact_name"] == null ? undefined : json["contact_name"],
     photoLink: json["photo_link"] == null ? undefined : json["photo_link"],
+    routeInfo: json["route_info"] == null ? undefined : json["route_info"],
+    locationRoute:
+      json["location_route"] == null ? undefined : json["location_route"],
   };
 }
 
@@ -187,5 +202,7 @@ export function PickupLocationToJSONTyped(
     messenger_group_link: value["messengerGroupLink"],
     contact_name: value["contactName"],
     photo_link: value["photoLink"],
+    route_info: value["routeInfo"],
+    location_route: value["locationRoute"],
   };
 }
