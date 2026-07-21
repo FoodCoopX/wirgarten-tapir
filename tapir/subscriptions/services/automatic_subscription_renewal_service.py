@@ -57,7 +57,21 @@ class AutomaticSubscriptionRenewalService:
                 subscription, cache=cache
             )
         )
-        if max_cancellation_date >= get_today():
+        today = get_today(cache=cache)
+        if max_cancellation_date >= today:
+            return False
+
+        if subscription.product.deleted:
+            return False
+
+        if (
+            TapirCache.get_product_type_capacity_at_date(
+                cache=cache,
+                product_type=subscription.product.type,
+                reference_date=today,
+            )
+            is None
+        ):
             return False
 
         return True
