@@ -26,6 +26,7 @@ from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     Subscription,
     Member,
+    LocationRoute,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
@@ -135,6 +136,7 @@ def pickup_location_to_dict(
         .values("member_id")
         .distinct()
         .count(),
+        "location_route": getattr(pickup_location.location_route, "name", ""),
         "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
     }
 
@@ -182,13 +184,15 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         selected_product_types = {
             product_type_name: sum(
                 map(
-                    lambda subscription: float(
-                        get_product_price(
-                            subscription.product,
-                            cache=self.cache,
-                        ).size
-                    )
-                    * (subscription.quantity or 0),
+                    lambda subscription: (
+                        float(
+                            get_product_price(
+                                subscription.product,
+                                cache=self.cache,
+                            ).size
+                        )
+                        * (subscription.quantity or 0)
+                    ),
                     subscriptions,
                 )
             )
@@ -298,6 +302,11 @@ class PickupLocationEditForm(forms.Form):
         self.fields["coords"] = forms.CharField(
             label=_("Koordinaten"), help_text="z.B: 53.2731785,10.3741756"
         )
+        self.fields["location_route"] = forms.ModelChoiceField(
+            label=_("Ausfahrrunde"),
+            queryset=LocationRoute.objects.all(),
+            required=False,
+        )
         self.fields["name"] = forms.CharField(label=_("Name"), required=True)
         self.fields["street"] = forms.CharField(
             label=_("Straße & Hausnummer"), required=True
@@ -327,7 +336,7 @@ class PickupLocationEditForm(forms.Form):
         )
 
         self.colspans = {
-            "coords": 2,
+            "coords": 1,
             "info": 2,
             "monday_times": 2,
             "tuesday_times": 2,
@@ -379,6 +388,7 @@ class PickupLocationEditForm(forms.Form):
             self.fields["coords"].initial = (
                 f"{self.pickup_location.coords_lon},{self.pickup_location.coords_lat}"
             )
+            self.fields["location_route"].initial = self.pickup_location.location_route
             self.fields["name"].initial = self.pickup_location.name
             self.fields["street"].initial = self.pickup_location.street
             self.fields["postcode"].initial = self.pickup_location.postcode
@@ -500,6 +510,7 @@ class PickupLocationEditForm(forms.Form):
 
         pl.coords_lon = coords[0].strip()
         pl.coords_lat = coords[1].strip()
+        pl.location_route = self.cleaned_data["location_route"]
 
         pl.name = self.cleaned_data["name"]
         pl.street = self.cleaned_data["street"]
