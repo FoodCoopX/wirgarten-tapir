@@ -9,6 +9,7 @@ from tapir.wirgarten.tests.factories import (
     ProductCapacityFactory,
     SubscriptionFactory,
     ProductPriceFactory,
+    ProductFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -17,21 +18,25 @@ class TestGetLowestCapacityAfterDate(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
-        current_period = GrowingPeriodFactory.create(
+        cls.current_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2020, month=1, day=1)
         )
         product_capacity = ProductCapacityFactory.create(
-            period=current_period, capacity=10
+            period=cls.current_period, capacity=10
         )
-        cls.subscription = SubscriptionFactory.create(
-            period=current_period,
-            product__type=product_capacity.product_type,
-            quantity=1,
-        )
+        cls.product = ProductFactory.create(type=product_capacity.product_type)
         ProductPriceFactory.create(
-            product=cls.subscription.product,
+            product=cls.product,
             size=1,
-            valid_from=current_period.start_date,
+            valid_from=cls.current_period.start_date,
+        )
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.subscription = SubscriptionFactory.create(
+            period=self.current_period,
+            product=self.product,
+            quantity=1,
         )
 
     def test_getLowestCapacityAfterDate_singleGrowingPeriod_returnsLowestCapacityInCurrentGrowingPeriod(

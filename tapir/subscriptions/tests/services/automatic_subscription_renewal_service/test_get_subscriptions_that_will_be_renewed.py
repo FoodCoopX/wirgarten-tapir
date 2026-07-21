@@ -10,6 +10,7 @@ from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
     ProductCapacityFactory,
     GrowingPeriodFactory,
+    ProductFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -20,14 +21,19 @@ class TestGetSubscriptionsThatWillBeRenewed(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
         cls._set_parameter(key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True)
 
-        cls.subscription = SubscriptionFactory.create(
-            period__start_date=datetime.date(year=2024, month=1, day=1)
-        )
+        cls.product = ProductFactory.create()
         cls.new_growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2025, month=1, day=1)
         )
         ProductCapacityFactory(
-            period=cls.new_growing_period, product_type=cls.subscription.product.type
+            period=cls.new_growing_period, product_type=cls.product.type
+        )
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.subscription = SubscriptionFactory.create(
+            period__start_date=datetime.date(year=2024, month=1, day=1),
+            product=self.product,
         )
 
     def test_getSubscriptionsThatWillBeRenewed_subscriptionShouldBeRenewed_subscriptionReturned(
