@@ -243,6 +243,7 @@ const BestellWizardAssociationMembership: React.FC<
           ? settings.growingPeriodChoices[0].contractStartDate
           : new Date()
       }
+      selectedGrowingPeriod={undefined}
     />
   );
 };

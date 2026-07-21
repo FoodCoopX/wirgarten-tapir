@@ -8,7 +8,6 @@ from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import (
-    ProductSerializer,
     SubscriptionSerializer,
 )
 from tapir.deliveries.services.subscription_price_type_decider import (
@@ -19,12 +18,15 @@ from tapir.log.util import freeze_for_log
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
+from tapir.products.serializers import (
+    ExtendedProductSerializer,
+    PublicProductTypeSerializer,
+    ProductSerializer,
+)
 from tapir.subscriptions.models import (
     SubscriptionPriceChangedLogEntry,
 )
 from tapir.subscriptions.serializers import (
-    ExtendedProductSerializer,
-    PublicProductTypeSerializer,
     OrderConfirmationResponseSerializer,
     SubscriptionDateChangeRequestSerializer,
     ConvertWeekToDateForSubscriptionChangesResponseSerializer,

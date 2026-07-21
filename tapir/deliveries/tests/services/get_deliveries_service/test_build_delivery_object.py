@@ -28,6 +28,7 @@ from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
     ProductTypeFactory,
     GrowingPeriodFactory,
+    ProductCapacityFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -303,12 +304,15 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             start_date=datetime.date(year=2022, month=1, day=1),
             end_date=datetime.date(year=2022, month=12, day=31),
         )
-        GrowingPeriodFactory.create(
+        growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2023, month=1, day=1),
             end_date=datetime.date(year=2023, month=12, day=31),
         )
         past_subscription = SubscriptionFactory.create(
             member=member, period=past_growing_period
+        )
+        ProductCapacityFactory(
+            product_type=past_subscription.product.type, period=growing_period
         )
 
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
@@ -335,16 +339,19 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             start_date=datetime.date(year=2022, month=1, day=1),
             end_date=datetime.date(year=2022, month=12, day=31),
         )
-        GrowingPeriodFactory.create(
+        growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2023, month=1, day=1),
             end_date=datetime.date(year=2023, month=12, day=31),
         )
-        SubscriptionFactory.create(
+        subscription = SubscriptionFactory.create(
             member=member,
             period=past_growing_period,
             cancellation_ts=make_timezone_aware(
                 datetime.datetime(year=2022, month=11, day=15)
             ),
+        )
+        ProductCapacityFactory(
+            product_type=subscription.product.type, period=growing_period
         )
 
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
@@ -369,11 +376,16 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             start_date=datetime.date(year=2022, month=1, day=1),
             end_date=datetime.date(year=2022, month=12, day=31),
         )
-        GrowingPeriodFactory.create(
+        growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2023, month=1, day=1),
             end_date=datetime.date(year=2023, month=12, day=31),
         )
-        SubscriptionFactory.create(member=member, period=past_growing_period)
+        subscription = SubscriptionFactory.create(
+            member=member, period=past_growing_period
+        )
+        ProductCapacityFactory(
+            product_type=subscription.product.type, period=growing_period
+        )
 
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
 
@@ -425,16 +437,21 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=False
         )
         self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
-        GrowingPeriodFactory.create(start_date=datetime.date(year=2027, month=1, day=1))
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2027, month=1, day=1)
+        )
 
         member = MemberFactory.create()
-        SubscriptionFactory.create(
+        subscription = SubscriptionFactory.create(
             member=member,
             period__start_date=datetime.date(year=2026, month=1, day=1),
             product__type__delivery_cycle=WEEKLY[0],
             end_date=datetime.date(
                 year=2026, month=12, day=31
             ),  # Subscription ends on a Wednesday: Tuesday 29.09. should not get delivered
+        )
+        ProductCapacityFactory(
+            product_type=subscription.product.type, period=growing_period
         )
 
         given_delivery_date = datetime.date(year=2026, month=12, day=29)
@@ -453,16 +470,20 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
         )
         self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
-        GrowingPeriodFactory.create(start_date=datetime.date(year=2027, month=1, day=1))
-
+        future_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2027, month=1, day=1)
+        )
         member = MemberFactory.create()
-        SubscriptionFactory.create(
+        subscription = SubscriptionFactory.create(
             member=member,
             period__start_date=datetime.date(year=2026, month=1, day=1),
             product__type__delivery_cycle=WEEKLY[0],
             end_date=datetime.date(
                 year=2026, month=12, day=31
             ),  # Subscription ends on a Wednesday: Tuesday 29.09. should not get delivered
+        )
+        ProductCapacityFactory.create(
+            period=future_growing_period, product_type=subscription.product.type
         )
 
         given_delivery_date = datetime.date(year=2026, month=12, day=29)

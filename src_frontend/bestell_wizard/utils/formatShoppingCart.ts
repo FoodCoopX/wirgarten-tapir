@@ -1,5 +1,5 @@
-import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 
 export function formatShoppingCart(
   shoppingCart: ShoppingCart,

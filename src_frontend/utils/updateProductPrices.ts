@@ -34,10 +34,10 @@ export function updateProductPrices(
         }
       }
 
-      setSettings(Object.assign({}, settings));
+      setSettings({ ...settings });
     })
     .catch(async (error) => {
-      if (error.cause && error.cause.name === "AbortError") return;
+      if (error.cause?.name === "AbortError") return;
       await handleRequestError(
         error,
         "Fehler beim Laden der Produkt-Preise",

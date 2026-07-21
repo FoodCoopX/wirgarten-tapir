@@ -367,25 +367,26 @@ class TapirCache:
     def get_product_type_capacity_at_date(
         cls, cache: dict, product_type: ProductType, reference_date: datetime.date
     ):
+        def compute_full():
+            result = {}
+            for product_capacity in ProductCapacity.objects.all().select_related(
+                "period", "product_type"
+            ):
+                result.setdefault(product_capacity.period, {})[
+                    product_capacity.product_type
+                ] = product_capacity
+            return result
+
         product_type_capacities_by_growing_period = get_from_cache_or_compute(
-            cache, "product_type_capacities_by_growing_period", lambda: {}
+            cache, "product_type_capacities_by_growing_period", compute_full
         )
+
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=reference_date, cache=cache
         )
-        product_type_capacities_by_product_type = get_from_cache_or_compute(
-            product_type_capacities_by_growing_period, growing_period, lambda: {}
-        )
 
-        def compute():
-            return ProductCapacity.objects.filter(
-                product_type=product_type, period=growing_period
-            ).first()
-
-        return get_from_cache_or_compute(
-            product_type_capacities_by_product_type,
-            product_type,
-            compute,
+        return product_type_capacities_by_growing_period.get(growing_period, {}).get(
+            product_type, None
         )
 
     @classmethod

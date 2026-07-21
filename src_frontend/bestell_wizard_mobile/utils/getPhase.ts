@@ -34,12 +34,13 @@ export function getPhase(step: Step): Phase {
     case "14b_confirmation_waiting_list":
       return "confirmation";
 
-    default:
+    default: {
       const separatorIndex = step.lastIndexOf("_");
       if (separatorIndex == -1) {
         alert("Missing phase for step " + step);
         return "unknown";
       }
       return step.slice(0, separatorIndex);
+    }
   }
 }

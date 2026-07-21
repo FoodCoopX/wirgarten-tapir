@@ -57,7 +57,21 @@ class AutomaticSubscriptionRenewalService:
                 subscription, cache=cache
             )
         )
-        if max_cancellation_date >= get_today():
+        today = get_today(cache=cache)
+        if max_cancellation_date >= today:
+            return False
+
+        if subscription.product.deleted:
+            return False
+
+        if (
+            TapirCache.get_product_type_capacity_at_date(
+                cache=cache,
+                product_type=subscription.product.type,
+                reference_date=today,
+            )
+            is None
+        ):
             return False
 
         return True
@@ -150,6 +164,13 @@ class AutomaticSubscriptionRenewalService:
             if subscription.cancellation_ts is None
             and subscription.member_id
             not in members_ids_currently_subbed_to_product_id[subscription.product_id]
+            and not subscription.product.deleted
+            and TapirCache.get_product_type_capacity_at_date(
+                cache=cache,
+                product_type=subscription.product.type,
+                reference_date=reference_date,
+            )
+            is not None
         }
 
     @classmethod

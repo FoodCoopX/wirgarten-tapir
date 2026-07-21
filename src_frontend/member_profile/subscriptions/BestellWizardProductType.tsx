@@ -231,10 +231,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     const newSteps = [];
     if (
       !memberAlreadyHasASubscriptionForThisProductType &&
-      shouldIncludeStepGrowingPeriodChoice(
-        [productType],
-        settings.growingPeriodChoices,
-      )
+      shouldIncludeStepGrowingPeriodChoice(settings.growingPeriodChoices)
     ) {
       newSteps.push("3b_growing_period_choice");
     }
@@ -515,6 +512,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             waitingListEntryDetails={undefined}
             contractStartDate={selectedGrowingPeriod?.contractStartDate!}
             singleProductType={productType}
+            selectedGrowingPeriod={selectedGrowingPeriod}
           />
         );
       case "11_legal":
@@ -610,6 +608,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
         setCurrentStep(productTypeId + "_order");
       }}
       contractStartDate={selectedGrowingPeriod?.contractStartDate!}
+      selectedGrowingPeriod={selectedGrowingPeriod}
     />
   );
 };
