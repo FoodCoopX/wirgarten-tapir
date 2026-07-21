@@ -10,7 +10,6 @@ from tapir.payments.services.mandate_reference_pattern_validator import (
     MandateReferencePatternValidator,
 )
 from tapir.wirgarten.constants import ParameterCategory
-from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import legal_status_is_cooperative
 
@@ -46,7 +45,6 @@ class ParameterDefinitionsPayments:
                     MaxValueValidator(limit_value=31),
                 ]
             ),
-            enabled=is_debug_instance(),
             order_priority=order_priority,
         )
         order_priority -= 1
