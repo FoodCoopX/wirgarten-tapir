@@ -28,10 +28,16 @@ if not DEBUG:
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
-    "default": env.db(
-        "DATABASE_CONNECTION", default="postgresql://tapir:tapir@db:5432/tapir"
-    ),
+    "default": {
+        "ENGINE": "django_tenants.postgresql_backend",
+        "NAME": "tapir",
+        "USER": "tapir",
+        "PASSWORD": "tapir",
+        "HOST": "localhost",
+        "PORT": "5432",
+    },
 }
+DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://redis:6379")
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://redis:6379")
@@ -207,6 +213,11 @@ TAPIRMAIL_REACT_APP_BASENAME = TAPIR_MAIL_PATH
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]
+    CSRF_COOKIE_HTTPONLY = (
+        False  # JS needs to read the token; HttpOnly would break the SPA
+    )
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
 
 SOCIALACCOUNT_PROVIDERS = {
     "openid_connect": {
@@ -230,3 +241,40 @@ if DEBUG:
 EMAIL_ADDRESS_ERRORS = env.str("EMAIL_ADDRESS_ERRORS", None)
 if EMAIL_ADDRESS_ERRORS:
     ADMINS = [EMAIL_ADDRESS_ERRORS]
+
+
+DEFAULT_FIELD_ENCRYPTION_KEY = "HeQ7tkqHP7nVB1hA7VkX0SVIan3y_NUFrjyeDnfzcXk="
+FIELD_ENCRYPTION_KEY = env.str("FIELD_ENCRYPTION_KEY", DEFAULT_FIELD_ENCRYPTION_KEY)
+if not DEBUG and FIELD_ENCRYPTION_KEY == DEFAULT_FIELD_ENCRYPTION_KEY:
+    raise ValueError(
+        "FIELD_ENCRYPTION_KEY must be set in production (and must not be the dev default)."
+    )
+
+SIMPLE_JWT = {
+    # Short access token = small blast radius if a token is leaked.
+    # Refresh token rotates on every refresh and old ones are blacklisted.
+    "ACCESS_TOKEN_LIFETIME": datetime.timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": str(SECRET_KEY),
+    "VERIFYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "JWK_URL": None,
+    "LEEWAY": 0,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+    "JTI_CLAIM": "jti",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": datetime.timedelta(minutes=15),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": datetime.timedelta(days=7),
+}

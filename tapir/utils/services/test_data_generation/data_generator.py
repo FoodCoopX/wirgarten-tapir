@@ -1,6 +1,7 @@
 import datetime
 
 import factory.random
+from apps.shared.tenants.models import Tenant, Domain
 from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
@@ -104,6 +105,9 @@ class DataGenerator:
         MemberCreditGenerator.generate_member_credits()
         print("Creating payment history...")
         call_command("rebuild_payment_history", "--no-confirm")
+        print("Creating tenants and domain...")
+        tenant = Tenant.objects.create(name="Tapir", schema_name="public")
+        Domain.objects.create(domain="localhost", tenant=tenant)
         print("Test data generation done")
 
     @classmethod

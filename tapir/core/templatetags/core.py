@@ -72,6 +72,11 @@ def add_admin_links(groups, request, cache: dict):
         material_icon="dashboard",
         url=reverse_lazy("wirgarten:admin_dashboard"),
     )
+    admin_group.add_link(
+        display_name=_("Kommissionierung"),
+        material_icon="construction",
+        url=reverse_lazy("picking"),
+    )
     if request.user.has_perm(Permission.Coop.MANAGE):
         admin_group.add_link(
             display_name=_("Konfiguration"),
@@ -185,6 +190,7 @@ def javascript_environment_variables(context):
             "REACT_APP_API_ROOT": api_root,
             "TAPIRMAIL_REACT_APP_BASENAME": settings.TAPIRMAIL_REACT_APP_BASENAME,
             "TAPIRMAIL_REACT_APP_API_ROOT": settings.TAPIRMAIL_REACT_APP_API_ROOT,
+            "COMMISSIONING_API_BASE_URL": settings.SITE_URL + "/commissioning",
         },
     }
 
