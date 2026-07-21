@@ -11700,7 +11700,6 @@ components:
         end_date:
           type: string
           format: date
-          nullable: true
         cancellation_ts:
           type: string
           format: date-time
@@ -11745,6 +11744,7 @@ components:
       - created_at
       - default_trial_end_date
       - effective_trial_end_date
+      - end_date
       - is_in_trial
       - mandate_ref
       - member
