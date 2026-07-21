@@ -73,6 +73,7 @@ class PickupLocation(TapirModel):
     location_route = models.ForeignKey(
         LocationRoute, blank=True, null=True, on_delete=models.SET_NULL
     )
+    route_info = models.CharField(_("Driver/Route info"), max_length=1024, blank=True)
 
     class Meta:
         constraints = [

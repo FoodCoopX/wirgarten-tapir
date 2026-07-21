@@ -193,6 +193,7 @@ class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
     info = factory.Faker("sentence")
     coords_lon = 0
     coords_lat = 0
+    route_info = factory.Faker("sentence")
 
 
 class PickupLocationCapabilityFactory(
