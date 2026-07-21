@@ -21,6 +21,7 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     PaymentFactory,
     MandateReferenceFactory,
+    ProductCapacityFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -185,7 +186,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             start_date=datetime.date(year=2020, month=7, day=1),
             end_date=datetime.date(year=2021, month=6, day=30),
         )
-        GrowingPeriodFactory.create(
+        future_growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2021, month=7, day=1),
             end_date=datetime.date(year=2022, month=6, day=30),
         )
@@ -193,6 +194,9 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             member=member,
             period=growing_period,
             quantity=1,
+        )
+        ProductCapacityFactory.create(
+            period=future_growing_period, product_type=subscription.product.type
         )
 
         ProductPriceFactory.create(
@@ -264,7 +268,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             start_date=datetime.date(year=2020, month=7, day=1),
             end_date=datetime.date(year=2021, month=6, day=30),
         )
-        GrowingPeriodFactory.create(
+        future_growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2021, month=7, day=1),
             end_date=datetime.date(year=2022, month=6, day=30),
         )
@@ -274,6 +278,9 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             period=growing_period,
             quantity=1,
             mandate_ref=mandate_ref,
+        )
+        ProductCapacityFactory.create(
+            product_type=subscription.product.type, period=future_growing_period
         )
 
         ProductPriceFactory.create(

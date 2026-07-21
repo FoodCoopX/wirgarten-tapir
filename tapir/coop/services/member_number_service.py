@@ -7,7 +7,7 @@ from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import legal_status_is_cooperative
 
@@ -56,6 +56,8 @@ class MemberNumberService:
             return True
 
         if legal_status_is_cooperative(cache=cache):
+            if not CoopShareTransaction.objects.filter(member=member).exists():
+                return False
             return not MembershipCancellationManager.is_in_coop_trial(member)
 
         return not cls.is_member_in_subscription_trial(member, cache=cache)

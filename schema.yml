@@ -10433,6 +10433,13 @@ components:
         photo_link:
           type: string
           maxLength: 512
+        route_info:
+          type: string
+          title: Driver/Route info
+          maxLength: 1024
+        location_route:
+          type: string
+          nullable: true
       required:
       - city
       - coords_lat
@@ -10858,9 +10865,15 @@ components:
           type: string
           format: date
           readOnly: true
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProductType'
+          readOnly: true
       required:
       - contract_start_date
       - end_date
+      - product_types
       - start_date
     PublicPickupLocation:
       type: object

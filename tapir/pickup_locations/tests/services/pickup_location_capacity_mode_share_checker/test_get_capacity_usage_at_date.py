@@ -16,6 +16,7 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     ProductFactory,
     GrowingPeriodFactory,
+    ProductCapacityFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -99,6 +100,9 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
         current_growing_period = GrowingPeriod.objects.get()
+        ProductCapacityFactory.create(
+            period=current_growing_period, product_type=self.product_type
+        )
         past_growing_period = GrowingPeriodFactory.create(
             start_date=current_growing_period.start_date - datetime.timedelta(days=2),
             end_date=current_growing_period.start_date - datetime.timedelta(days=1),

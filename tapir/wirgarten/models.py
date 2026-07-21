@@ -34,6 +34,17 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 
+class LocationRoute(TapirModel):
+    """
+    Groups pickup locations that are supplied together.
+    """
+
+    name = models.TextField(_("Name"), max_length=150, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class PickupLocation(TapirModel):
     """
     This is a place where a Member can pick up his/her products.
@@ -59,6 +70,10 @@ class PickupLocation(TapirModel):
         _("Name of the contact"), max_length=150, blank=True
     )
     photo_link = models.CharField(_("Photo Link"), max_length=512, blank=True)
+    location_route = models.ForeignKey(
+        LocationRoute, blank=True, null=True, on_delete=models.SET_NULL
+    )
+    route_info = models.CharField(_("Driver/Route info"), max_length=1024, blank=True)
 
     class Meta:
         constraints = [

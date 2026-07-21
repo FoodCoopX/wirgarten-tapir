@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.serializers import PickupLocationSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.serializers import (
     PickupLocationCapacitiesSerializer,
@@ -19,6 +18,7 @@ from tapir.pickup_locations.serializers import (
     PublicPickupLocationSerializer,
     PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityCheckRequestSerializer,
+    PickupLocationSerializer,
 )
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,

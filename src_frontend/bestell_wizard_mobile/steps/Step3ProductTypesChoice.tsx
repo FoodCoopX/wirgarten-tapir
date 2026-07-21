@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import { PublicProductType } from "../../api-client";
+import { PublicGrowingPeriod, PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
@@ -22,6 +22,7 @@ interface Step3ProductTypeChoiceProps {
   investingMembership: boolean;
   setInvestingMembership: (investing: boolean) => void;
   setShoppingCart: (cart: ShoppingCart) => void;
+  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
 }
 
 const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
@@ -33,6 +34,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   investingMembership,
   setInvestingMembership,
   setShoppingCart,
+  selectedGrowingPeriod,
 }) => {
   const [productTypeForModal, setProductTypeForModal] =
     useState<PublicProductType>();
@@ -44,7 +46,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       setShoppingCart(buildEmptyShoppingCart(settings.productTypes));
     } else {
       selectAllRequiredProductTypes(
-        settings.productTypes,
+        selectedGrowingPeriod?.productTypes ?? settings.productTypes,
         selectedProductTypes,
         setSelectedProductTypes,
       );
@@ -121,53 +123,55 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           id={"product_types_choice"}
           className={"d-flex gap-2 justify-content-center align-items-center"}
         >
-          {settings.productTypes.map((productType) => (
-            <div key={productType.id}>
-              <input
-                type="checkbox"
-                className="btn-check"
-                id={productType.id}
-                autoComplete="off"
-                onChange={(event) =>
-                  updateSelection(productType, event.target.checked)
-                }
-                checked={selectedProductTypes.includes(productType)}
-                disabled={
-                  productType.mustBeSubscribedTo && !investingMembership
-                }
-              />
-              <label
-                className={"btn btn-" + BUTTON_VARIANT}
-                htmlFor={productType.id}
-              >
-                <div className={"d-flex flex-row gap-2 align-items-center"}>
-                  <Form.Check
-                    checked={selectedProductTypes.includes(productType)}
-                    readOnly={true}
-                    style={{ pointerEvents: "none" }}
-                  />
-                  {productType.iconLink && (
-                    <img
-                      src={productType.iconLink}
-                      alt={"Produkt-Icon"}
-                      style={{ height: "1.5rem" }}
+          {(selectedGrowingPeriod?.productTypes ?? settings.productTypes).map(
+            (productType) => (
+              <div key={productType.id}>
+                <input
+                  type="checkbox"
+                  className="btn-check"
+                  id={productType.id}
+                  autoComplete="off"
+                  onChange={(event) =>
+                    updateSelection(productType, event.target.checked)
+                  }
+                  checked={selectedProductTypes.includes(productType)}
+                  disabled={
+                    productType.mustBeSubscribedTo && !investingMembership
+                  }
+                />
+                <label
+                  className={"btn btn-" + BUTTON_VARIANT}
+                  htmlFor={productType.id}
+                >
+                  <div className={"d-flex flex-row gap-2 align-items-center"}>
+                    <Form.Check
+                      checked={selectedProductTypes.includes(productType)}
+                      readOnly={true}
+                      style={{ pointerEvents: "none" }}
                     />
-                  )}
-                  <span>{productType.name}</span>
-                  {productType.descriptionBestellwizardShort && (
-                    <TapirButton
-                      variant={"outline-secondary"}
-                      icon={"help"}
-                      size={"sm"}
-                      onClick={() => {
-                        setProductTypeForModal(productType);
-                      }}
-                    />
-                  )}
-                </div>
-              </label>
-            </div>
-          ))}
+                    {productType.iconLink && (
+                      <img
+                        src={productType.iconLink}
+                        alt={"Produkt-Icon"}
+                        style={{ height: "1.5rem" }}
+                      />
+                    )}
+                    <span>{productType.name}</span>
+                    {productType.descriptionBestellwizardShort && (
+                      <TapirButton
+                        variant={"outline-secondary"}
+                        icon={"help"}
+                        size={"sm"}
+                        onClick={() => {
+                          setProductTypeForModal(productType);
+                        }}
+                      />
+                    )}
+                  </div>
+                </label>
+              </div>
+            ),
+          )}
         </div>
         {showInvestingMembership() && (
           <>
