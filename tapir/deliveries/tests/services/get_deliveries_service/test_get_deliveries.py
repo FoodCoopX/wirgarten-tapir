@@ -10,6 +10,7 @@ from tapir.wirgarten.tests.factories import (
     ProductFactory,
     SubscriptionFactory,
     GrowingPeriodFactory,
+    ProductCapacityFactory,
 )
 from tapir.wirgarten.tests.test_utils import mock_timezone, TapirIntegrationTest
 
@@ -22,7 +23,12 @@ class TestGetDeliveriesServiceGetDeliveries(TapirIntegrationTest):
         cls.growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2024, month=1, day=1)
         )
-        GrowingPeriodFactory.create(start_date=datetime.date(year=2025, month=1, day=1))
+        future_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2025, month=1, day=1)
+        )
+        ProductCapacityFactory.create(
+            product_type=cls.product.type, period=future_growing_period
+        )
 
     def setUp(self):
         super().setUp()
