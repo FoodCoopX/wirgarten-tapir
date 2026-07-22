@@ -116,7 +116,8 @@
             header.prepend(sortSymbol);
             header.style.cursor = 'pointer';
 
-            if (sortField.value.includes(sort)) {
+            const index = sortField.value.indexOf(sort)
+            if (index === 0 || index===1) {
                 sortOrders[sort] = sortField.value.startsWith('-') ? -1 : 1;
                 sortSymbol.innerHTML = sortField.value.startsWith('-') ? '⮟ ' : '⮝ ';
             }

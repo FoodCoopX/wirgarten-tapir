@@ -177,12 +177,18 @@ class MemberFilter(FilterSet):
         self.cache = kwargs.pop("cache", {})
 
         if data is None:
-            data = {"o": "-organisation_entry_date"}
+            data = {"o": "-organisation_entry_date,-member_no,last_name"}
         else:
             data = data.copy()
 
             if "o" not in data:
-                data["o"] = "-organisation_entry_date"
+                data["o"] = "-organisation_entry_date,-member_no,last_name"
+
+            if "member_no" not in data["o"]:
+                data["o"] += ",-member_no"
+
+            if "last_name" not in data["o"]:
+                data["o"] += ",last_name"
 
         super(MemberFilter, self).__init__(data, *args, **kwargs)
 
