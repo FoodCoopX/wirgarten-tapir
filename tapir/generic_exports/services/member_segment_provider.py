@@ -11,7 +11,12 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
 )
-from tapir.wirgarten.utils import get_now, get_today
+from tapir.wirgarten.utils import (
+    get_now,
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 
 class MemberSegmentProvider:
@@ -63,10 +68,24 @@ class MemberSegmentProvider:
     ) -> QuerySet:
         from tapir.wirgarten.models import Member
 
-        members = annotate_member_queryset_with_coop_shares_total_value(
-            Member.objects.all(), reference_date=reference_datetime.date()
-        )
-        return members.filter(coop_shares_total_value__gt=0).order_by("member_no")
+        cache = {}
+        if legal_status_is_cooperative(cache=cache):
+            members = annotate_member_queryset_with_coop_shares_total_value(
+                Member.objects.all(), reference_date=reference_datetime.date()
+            )
+            return members.filter(coop_shares_total_value__gt=0).order_by("member_no")
+        elif legal_status_is_association(cache=cache):
+            members_ids_with_a_membership = [
+                member.id
+                for member in Member.objects.all()
+                if TapirCache.get_member_association_membership_at_date(
+                    member=member, reference_date=reference_datetime.date(), cache=cache
+                )
+                is not None
+            ]
+            return Member.objects.filter(id__in=members_ids_with_a_membership)
+
+        return Member.objects.all()
 
     @classmethod
     def get_queryset_all_members_with_subscription(
