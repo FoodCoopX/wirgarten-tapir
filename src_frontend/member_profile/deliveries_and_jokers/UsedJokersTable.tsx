@@ -1,12 +1,13 @@
-import React from "react";
-import { Joker, JokerWithCancellationLimit } from "../../api-client";
-import "dayjs/locale/de";
-import { Button, OverlayTrigger, Table, Tooltip } from "react-bootstrap";
 import dayjs from "dayjs";
-import { formatDateText } from "../../utils/formatDateText.ts";
-import TapirButton from "../../components/TapirButton.tsx";
-import { getWeekdayDisplay } from "../../utils/getWeekdayDisplay.ts";
+import "dayjs/locale/de";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import React from "react";
+import { Button, OverlayTrigger, Table, Tooltip } from "react-bootstrap";
+import { Joker, JokerWithCancellationLimit } from "../../api-client";
 import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
+import TapirButton from "../../components/TapirButton.tsx";
+import { formatDateText } from "../../utils/formatDateText.ts";
+import { getWeekdayDisplay } from "../../utils/getWeekdayDisplay.ts";
 
 interface UsedJokersTableProps {
   jokers: JokerWithCancellationLimit[];
@@ -25,6 +26,8 @@ const UsedJokersTable: React.FC<UsedJokersTableProps> = ({
   weekdayLimit,
   deliveriesLoading,
 }) => {
+  dayjs.extend(isSameOrAfter);
+
   return (
     <Table striped hover responsive className={"fixed_header"}>
       <thead>
@@ -44,7 +47,10 @@ const UsedJokersTable: React.FC<UsedJokersTableProps> = ({
                 <td>KW{dayjs(jokerWithCancellation.joker.date).week()}</td>
                 <td>{formatDateText(jokerWithCancellation.deliveryDate)}</td>
                 <td>
-                  {jokerWithCancellation.cancellationLimit >= new Date() ? (
+                  {dayjs(jokerWithCancellation.cancellationLimit).isSameOrAfter(
+                    new Date(),
+                    "day",
+                  ) ? (
                     <TapirButton
                       text={"Joker absagen"}
                       variant={"outline-primary"}
