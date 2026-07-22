@@ -61,23 +61,27 @@ class TestNoRunawaySinglePass(TapirIntegrationTest):
         ProductPriceFactory.create(
             product=cls.product, valid_from=datetime.date(year=2026, month=1, day=1)
         )
-
-        cls.member = MemberFactory.create()
-        MemberPickupLocationFactory.create(
-            member=cls.member,
-            pickup_location=cls.pickup_location,
-            valid_from=datetime.date(year=2026, month=1, day=1),
-        )
-        SubscriptionFactory.create(
-            member=cls.member,
-            product=cls.product,
-            start_date=datetime.date(year=2026, month=1, day=1),
-            end_date=datetime.date(year=2026, month=12, day=31),
-        )
         PickupLocationDeliveryChargeFactory.create(
             pickup_location=cls.pickup_location,
             amount=Decimal("3.50"),
             valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+
+    def setUp(self):
+        # Member creation reaches the Keycloak client, which is only mocked by
+        # TapirIntegrationTest.setUp (per instance), not in setUpTestData.
+        super().setUp()
+        self.member = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=self.member,
+            pickup_location=self.pickup_location,
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+        SubscriptionFactory.create(
+            member=self.member,
+            product=self.product,
+            start_date=datetime.date(year=2026, month=1, day=1),
+            end_date=datetime.date(year=2026, month=12, day=31),
         )
 
     def _run(self):
