@@ -5,7 +5,7 @@ from django.db import models
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, ModelLogEntry
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, PickupLocation
 from tapir.wirgarten.utils import format_date
 
 
@@ -63,15 +63,24 @@ class MemberPaymentRhythmChangeLogEntry(LogEntry):
 
 
 class MemberCredit(TapirModel):
+    PLACEHOLDER_PURPOSE = "TODO, warten auf US 2.2 und 2.6"
+
     due_date = models.DateField()
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     amount = models.DecimalField(decimal_places=2, max_digits=8)
     purpose = models.CharField(max_length=1024)
     comment = models.TextField()
     settled_on = models.DateTimeField(null=True, blank=True, default=None)
-    source = models.CharField(
-        max_length=1024
-    )  # either a product type ID or "payment_type_solidarity_contribution"
+    # A product type name, "payment_type_solidarity_contribution", or
+    # "payment_type_delivery_charge" - matched against Payment.type to scope the
+    # already_paid idempotency to the credit's billing stream.
+    source = models.CharField(max_length=1024)
+    # Only set for delivery-charge credits: the pickup location the refunded
+    # charge belongs to, so credits stay distinguishable per location and the
+    # already_paid idempotency can be scoped per location, like Payment.
+    pickup_location = models.ForeignKey(
+        PickupLocation, on_delete=models.DO_NOTHING, null=True
+    )
 
     def __str__(self):
         return f"{self.member} Due:{self.due_date} Amount:{self.amount} Comment:{self.comment} Settled:{format_date(self.settled_on)}"

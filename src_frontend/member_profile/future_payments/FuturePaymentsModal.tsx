@@ -61,9 +61,10 @@ const EXPLANATION_TEXT = (
     <p>
       Wenn deine Verteilstation einen Lieferzuschlag erhebt, wird dieser pro
       Lieferung berechnet (z.B. 2,00 € pro Lieferung, bei 4 Lieferungen im
-      Monat 8,00 €). In Wochen, in denen du einen Joker einsetzt, entfällt der
-      Lieferzuschlag. Bei einer Spende bleibt er bestehen, da deine Kiste
-      geliefert und weitergegeben wird.
+      Monat 8,00 €). Der Zuschlag fällt auch in Wochen an, in denen du einen
+      Joker einsetzt oder deine Kiste spendest, da die Kiste geliefert und
+      weitergegeben wird. Beim Joker wird der Zuschlag als Teil deiner
+      Joker-Gutschrift wieder verrechnet.
     </p>
     <p>
       In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die

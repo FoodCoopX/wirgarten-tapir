@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import locale
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.db.models import (
@@ -13,6 +14,12 @@ from django.db.models import (
 
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
+    PickupLocationDeliveryChargeService,
+)
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
@@ -75,8 +82,9 @@ class MemberColumnProvider:
             ExportSegmentColumn(
                 id="member_joker_credit_value",
                 display_name="Joker Gutschriftwert",
-                description="der Gutschriftwert ermittelt sich aus = (hinterlegter Basisbetrag für Größe des "
-                "Ernteanteils (ohne Solidarbeitrag!) / Anzahl der Lieferwochen) * Anzahl der genutzten Joker",
+                description="der Gutschriftwert ermittelt sich aus = ((hinterlegter Basisbetrag für Größe des "
+                "Ernteanteils (ohne Solidarbeitrag!) / Anzahl der Lieferwochen) + Lieferzuschlag der "
+                "Verteilstation) * Anzahl der genutzten Joker",
                 get_value=cls.get_value_member_joker_credit_value,
             ),
             ExportSegmentColumn(
@@ -174,17 +182,34 @@ class MemberColumnProvider:
             date__lte=reference_datetime,
             member=member,
         )
-        credit_value = sum(
-            [
+        credit_value = Decimal(0)
+        for joker in jokers:
+            subscription_price = (
                 DeliveryPriceCalculator.get_price_of_subscriptions_delivered_in_week(
                     member=member,
                     reference_date=joker.date,
                     only_subscriptions_affected_by_jokers=True,
                     cache=cache,
                 )
-                for joker in jokers
-            ]
-        )
+            )
+            if subscription_price <= 0:
+                continue
+            credit_value += subscription_price
+            # The joker week is still billed the pickup-location delivery charge,
+            # so it is part of what gets credited back to the member.
+            pickup_location_id = (
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                    member_id=member.id, reference_date=joker.date, cache=cache
+                )
+            )
+            if pickup_location_id is not None:
+                credit_value += (
+                    PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
+                        pickup_location_id=pickup_location_id,
+                        reference_date=joker.date,
+                        cache=cache,
+                    )
+                )
         return locale.format_string("%.2f", credit_value)
 
     @classmethod

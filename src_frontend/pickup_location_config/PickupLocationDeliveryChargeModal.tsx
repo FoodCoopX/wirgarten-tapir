@@ -70,17 +70,12 @@ const PickupLocationDeliveryChargeModal: React.FC<
   }
 
   function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
-    return toDateString(new Date(entry.validFrom)) > getTodayDateString();
+    return toDateString(entry.validFrom) > getTodayDateString();
   }
 
-  useEffect(() => {
-    if (!show) return;
-
+  function loadEntries() {
     setDataLoading(true);
-    setAmountInput("");
-    setValidFromInput("");
-
-    api
+    return api
       .pickupLocationsApiPickupLocationDeliveryChargesRetrieve({
         pickupLocationId: pickupLocationId,
       })
@@ -88,9 +83,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
         setLocationName(response.pickupLocationName);
         setEntries(
           response.entries.toSorted(
-            (a, b) =>
-              new Date(b.validFrom).getTime() -
-              new Date(a.validFrom).getTime(),
+            (a, b) => b.validFrom.getTime() - a.validFrom.getTime(),
           ),
         );
       })
@@ -102,13 +95,23 @@ const PickupLocationDeliveryChargeModal: React.FC<
         ),
       )
       .finally(() => setDataLoading(false));
+  }
+
+  function resetForm() {
+    setAmountInput("");
+    setValidFromInput("");
+  }
+
+  useEffect(() => {
+    if (!show) return;
+
+    resetForm();
+    loadEntries();
   }, [show]);
 
   function getCurrentEntry(): PickupLocationDeliveryChargeEntry | undefined {
     const today = getTodayDateString();
-    return entries.find(
-      (entry) => toDateString(new Date(entry.validFrom)) <= today,
-    );
+    return entries.find((entry) => toDateString(entry.validFrom) <= today);
   }
 
   function onSave() {
@@ -124,7 +127,10 @@ const PickupLocationDeliveryChargeModal: React.FC<
           validFrom: new Date(validFromInput),
         },
       })
-      .then(() => location.reload())
+      .then(() => {
+        resetForm();
+        return loadEntries();
+      })
       .catch((error) =>
         handleRequestError(
           error,
@@ -141,7 +147,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
     if (
       !window.confirm(
         `Lieferzuschlag gültig ab ${formatDateNumeric(
-          new Date(entry.validFrom),
+          entry.validFrom,
         )} löschen?`,
       )
     ) {
@@ -153,7 +159,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
 
     api
       .pickupLocationsApiPickupLocationDeliveryChargesDestroy({ id: chargeId })
-      .then(() => location.reload())
+      .then(() => loadEntries())
       .catch((error) =>
         handleRequestError(
           error,
@@ -172,7 +178,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
     return (
       <span>
         {formatAmount(currentEntry.amount)} - gültig seit{" "}
-        {formatDateNumeric(new Date(currentEntry.validFrom))}
+        {formatDateNumeric(currentEntry.validFrom)}
       </span>
     );
   }
@@ -194,7 +200,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
           {entries.map((entry) => (
             <tr key={entry.id}>
               <td>{formatAmount(entry.amount)}</td>
-              <td>{formatDateNumeric(new Date(entry.validFrom))}</td>
+              <td>{formatDateNumeric(entry.validFrom)}</td>
               <td className={"text-end"}>
                 {isFutureEntry(entry) && (
                   <TapirButton
@@ -276,8 +282,8 @@ const PickupLocationDeliveryChargeModal: React.FC<
       {getModalBody()}
       <Modal.Footer>
         <TapirButton
-          text={"Speichern"}
-          icon={"save"}
+          text={"Neuen Zuschlag anlegen"}
+          icon={"add"}
           variant={"primary"}
           loading={saving}
           onClick={onSave}

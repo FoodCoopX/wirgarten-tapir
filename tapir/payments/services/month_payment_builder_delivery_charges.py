@@ -1,13 +1,9 @@
 import datetime
-import logging
 from decimal import Decimal
-
-from dateutil.relativedelta import relativedelta
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.models import MemberCredit
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -22,11 +18,10 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
     PickupLocationDeliveryChargeService,
 )
-from tapir.utils.shortcuts import get_any_element_from_set
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, Payment, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
-
-logger = logging.getLogger(__name__)
 
 
 class MissingPickupLocationError(ValueError):
@@ -45,51 +40,41 @@ class MonthPaymentBuilderDeliveryCharges:
         current_month: datetime.date,
         cache: dict,
         generated_payments: set[Payment],
-        in_trial: bool,
-    ) -> list[Payment]:
-        target_month = current_month
-        if in_trial:
-            target_month = (target_month - relativedelta(months=1)).replace(day=1)
-
-        subscriptions = (
-            MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions(
-                cache=cache, first_of_month=target_month, is_in_trial=in_trial
-            )
+        generated_credits: set[MemberCredit],
+    ) -> tuple[list[Payment], list[MemberCredit]]:
+        # Delivery charges are billed in a single pass over all of a member's
+        # subscriptions at the member's real rhythm, deliberately NOT split into
+        # trial/non-trial passes like subscription payments are. The charge is one
+        # amount per delivery date per pickup location, and the already_paid
+        # idempotency is scoped by mandate + pickup location. A trial/non-trial
+        # split would bill the same dates in two differently-sized windows against
+        # that one scope, which makes the daily rerun oscillate between spurious
+        # refunds and counter-charges. A trial cancellation is refunded by the
+        # normal credit mechanism (fewer delivery dates next run).
+        subscriptions = MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions_ignoring_trial_state(
+            cache=cache, first_of_month=current_month
         )
-
         subscriptions_by_member = cls._group_subscriptions_by_member(subscriptions)
 
-        payments_to_create = []
+        payments_to_create: list[Payment] = []
+        credits_to_create: list[MemberCredit] = []
         for member, member_subscriptions in subscriptions_by_member.items():
-            if in_trial:
-                rhythm = MemberPaymentRhythm.Rhythm.MONTHLY.value
-            else:
-                rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
-                    member=member, reference_date=target_month, cache=cache
-                )
+            rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=member, reference_date=current_month, cache=cache
+            )
+            member_payments, member_credits = cls.build_payments_for_member(
+                member=member,
+                contracts=member_subscriptions,
+                first_of_month=current_month,
+                rhythm=rhythm,
+                cache=cache,
+                generated_payments=generated_payments,
+                generated_credits=generated_credits,
+            )
+            payments_to_create.extend(member_payments)
+            credits_to_create.extend(member_credits)
 
-            try:
-                payments_to_create.extend(
-                    cls.build_payments_for_member(
-                        member=member,
-                        contracts=member_subscriptions,
-                        first_of_month=target_month,
-                        rhythm=rhythm,
-                        cache=cache,
-                        generated_payments=generated_payments,
-                        in_trial=in_trial,
-                    )
-                )
-            except MissingPickupLocationError as error:
-                # Isolate the fault to this member: a single member with an
-                # incomplete pickup-location history must not abort the whole
-                # payment run (this builder runs for every member at once, both
-                # in the daily cron and the future-payments view).
-                logger.error(
-                    "Skipping delivery charges for member %s: %s", member.id, error
-                )
-
-        return payments_to_create
+        return payments_to_create, credits_to_create
 
     @classmethod
     def build_payments_for_member(
@@ -100,8 +85,8 @@ class MonthPaymentBuilderDeliveryCharges:
         rhythm,
         cache: dict,
         generated_payments: set[Payment],
-        in_trial: bool,
-    ) -> list[Payment]:
+        generated_credits: set[MemberCredit],
+    ) -> tuple[list[Payment], list[MemberCredit]]:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
                 rhythm=rhythm, reference_date=first_of_month, cache=cache
@@ -117,7 +102,7 @@ class MonthPaymentBuilderDeliveryCharges:
         )
         first_day_of_rhythm_period = max(payment_start_date, first_day_of_rhythm_period)
         if first_day_of_rhythm_period > last_day_of_rhythm_period:
-            return []
+            return [], []
 
         delivery_dates = cls.get_billable_delivery_dates_in_range(
             subscriptions=contracts,
@@ -125,8 +110,8 @@ class MonthPaymentBuilderDeliveryCharges:
             range_end=last_day_of_rhythm_period,
             cache=cache,
         )
-        delivery_dates_by_pickup_location = (
-            cls._group_delivery_dates_by_pickup_location(
+        delivery_dates_by_pickup_location_id = (
+            cls._group_delivery_dates_by_pickup_location_id(
                 member_id=member.id, delivery_dates=delivery_dates, cache=cache
             )
         )
@@ -136,43 +121,49 @@ class MonthPaymentBuilderDeliveryCharges:
         )
         due_date = MonthPaymentBuilderUtils.get_payment_due_date(
             first_of_month=first_of_month,
-            in_trial=in_trial,
+            in_trial=False,
             contracts=contracts,
             cache=cache,
         )
 
-        # Past delivery-charge payments for this member and period, grouped by the
-        # pickup location they belong to. The per-location grouping is what makes
-        # the already_paid idempotency location-scoped: two locations can have
-        # overlapping date ranges (a member returning to a former location), so a
-        # range-only lookup would let them contaminate each other.
-        past_payments_by_pickup_location = cls._group_past_payments_by_pickup_location(
+        # Past delivery-charge payments and credits for this member and period,
+        # grouped by the pickup location they belong to. The per-location grouping
+        # is what makes the already_paid idempotency location-scoped: two locations
+        # can have overlapping date ranges (a member returning to a former
+        # location), so a range-only lookup would let them contaminate each other.
+        past_payments_by_pickup_location_id = (
+            cls._group_past_payments_by_pickup_location_id(
+                range_start=first_day_of_rhythm_period,
+                range_end=last_day_of_rhythm_period,
+                mandate_ref=mandate_ref,
+                cache=cache,
+                generated_payments=generated_payments,
+            )
+        )
+        credits_by_pickup_location_id = cls._group_credits_by_pickup_location_id(
+            member_id=member.id,
             range_start=first_day_of_rhythm_period,
             range_end=last_day_of_rhythm_period,
-            mandate_ref=mandate_ref,
             cache=cache,
-            generated_payments=generated_payments,
+            generated_credits=generated_credits,
         )
 
         # A location that no longer has any billable delivery this period but was
         # billed before still needs a group so its charge can be refunded.
-        pickup_location_ids = set(delivery_dates_by_pickup_location) | set(
-            past_payments_by_pickup_location
+        pickup_location_ids = set(delivery_dates_by_pickup_location_id) | set(
+            past_payments_by_pickup_location_id
         )
 
-        payments = []
-        for pickup_location_id in sorted(
-            pickup_location_ids,
-            key=lambda location_id: cls._sort_key_for_pickup_location(
-                location_id,
-                delivery_dates_by_pickup_location,
-                past_payments_by_pickup_location,
-            ),
-        ):
-            location_dates = delivery_dates_by_pickup_location.get(
+        payments: list[Payment] = []
+        credits: list[MemberCredit] = []
+        for pickup_location_id in pickup_location_ids:
+            location_dates = delivery_dates_by_pickup_location_id.get(
                 pickup_location_id, set()
             )
-            past_payments = past_payments_by_pickup_location.get(pickup_location_id, [])
+            past_payments = past_payments_by_pickup_location_id.get(
+                pickup_location_id, []
+            )
+            location_credits = credits_by_pickup_location_id.get(pickup_location_id, [])
 
             total_to_pay = sum(
                 (
@@ -187,7 +178,7 @@ class MonthPaymentBuilderDeliveryCharges:
             )
             already_paid = sum(
                 (payment.amount for payment in past_payments), start=Decimal(0)
-            )
+            ) - sum((credit.amount for credit in location_credits), start=Decimal(0))
             amount = (total_to_pay - already_paid).quantize(Decimal("0.01"))
             if amount == 0:
                 continue
@@ -204,38 +195,39 @@ class MonthPaymentBuilderDeliveryCharges:
                     payment.subscription_payment_range_end for payment in past_payments
                 )
 
-            payments.append(
-                Payment(
-                    due_date=due_date,
-                    amount=amount,
-                    mandate_ref=mandate_ref,
-                    status=Payment.PaymentStatus.DUE,
-                    type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
-                    subscription_payment_range_start=range_start,
-                    subscription_payment_range_end=range_end,
-                    pickup_location_id=pickup_location_id,
+            if amount > 0:
+                payments.append(
+                    Payment(
+                        due_date=due_date,
+                        amount=amount,
+                        mandate_ref=mandate_ref,
+                        status=Payment.PaymentStatus.DUE,
+                        type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
+                        subscription_payment_range_start=range_start,
+                        subscription_payment_range_end=range_end,
+                        pickup_location_id=pickup_location_id,
+                    )
                 )
-            )
+            else:
+                pickup_location_name = TapirCache.get_pickup_location_by_id(
+                    cache=cache, pickup_location_id=pickup_location_id
+                ).name
+                credits.append(
+                    MemberCredit(
+                        due_date=range_start,
+                        member=member,
+                        amount=-amount,
+                        purpose=MemberCredit.PLACEHOLDER_PURPOSE,
+                        comment=f"Gutschrift Lieferzuschlag, Abholort {pickup_location_name}",
+                        source=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
+                        pickup_location_id=pickup_location_id,
+                    )
+                )
 
-        return payments
+        return payments, credits
 
     @classmethod
-    def _sort_key_for_pickup_location(
-        cls,
-        pickup_location_id: str,
-        delivery_dates_by_pickup_location: dict[str, set[datetime.date]],
-        past_payments_by_pickup_location: dict[str, list[Payment]],
-    ) -> datetime.date:
-        location_dates = delivery_dates_by_pickup_location.get(pickup_location_id)
-        if location_dates:
-            return min(location_dates)
-        return min(
-            payment.subscription_payment_range_start
-            for payment in past_payments_by_pickup_location[pickup_location_id]
-        )
-
-    @classmethod
-    def _group_past_payments_by_pickup_location(
+    def _group_past_payments_by_pickup_location_id(
         cls,
         range_start: datetime.date,
         range_end: datetime.date,
@@ -251,12 +243,36 @@ class MonthPaymentBuilderDeliveryCharges:
             cache=cache,
             generated_payments=generated_payments,
         )
-        past_payments_by_pickup_location: dict[str, list[Payment]] = {}
+        past_payments_by_pickup_location_id: dict[str, list[Payment]] = {}
         for payment in past_payments:
-            past_payments_by_pickup_location.setdefault(
+            past_payments_by_pickup_location_id.setdefault(
                 payment.pickup_location_id, []
             ).append(payment)
-        return past_payments_by_pickup_location
+        return past_payments_by_pickup_location_id
+
+    @classmethod
+    def _group_credits_by_pickup_location_id(
+        cls,
+        member_id: str,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        cache: dict,
+        generated_credits: set[MemberCredit],
+    ) -> dict[str, list[MemberCredit]]:
+        relevant_credits = MonthPaymentBuilderUtils.get_relevant_credits(
+            range_start=range_start,
+            range_end=range_end,
+            member_id=member_id,
+            payment_type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
+            cache=cache,
+            generated_credits=generated_credits,
+        )
+        credits_by_pickup_location_id: dict[str, list[MemberCredit]] = {}
+        for credit in relevant_credits:
+            credits_by_pickup_location_id.setdefault(
+                credit.pickup_location_id, []
+            ).append(credit)
+        return credits_by_pickup_location_id
 
     @classmethod
     def _group_subscriptions_by_member(
@@ -270,28 +286,26 @@ class MonthPaymentBuilderDeliveryCharges:
         return subscriptions_by_member
 
     @classmethod
-    def _group_delivery_dates_by_pickup_location(
+    def _group_delivery_dates_by_pickup_location_id(
         cls,
         member_id: str,
         delivery_dates: set[datetime.date],
         cache: dict,
     ) -> dict[str, set[datetime.date]]:
-        delivery_dates_by_pickup_location: dict[str, set[datetime.date]] = {}
+        # Every delivery date here already passed through
+        # _get_delivery_dates_within_range, which raises if the member has no
+        # pickup location on that date, so the lookup below is never None.
+        delivery_dates_by_pickup_location_id: dict[str, set[datetime.date]] = {}
         for delivery_date in delivery_dates:
             pickup_location_id = (
                 MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=member_id, reference_date=delivery_date, cache=cache
                 )
             )
-            if pickup_location_id is None:
-                raise MissingPickupLocationError(
-                    f"Member {member_id} has a billable delivery on {delivery_date} "
-                    f"but no pickup location assigned on that date."
-                )
-            delivery_dates_by_pickup_location.setdefault(pickup_location_id, set()).add(
-                delivery_date
-            )
-        return delivery_dates_by_pickup_location
+            delivery_dates_by_pickup_location_id.setdefault(
+                pickup_location_id, set()
+            ).add(delivery_date)
+        return delivery_dates_by_pickup_location_id
 
     @classmethod
     def get_billable_delivery_dates_in_range(
@@ -301,15 +315,19 @@ class MonthPaymentBuilderDeliveryCharges:
         range_end: datetime.date,
         cache: dict,
     ) -> set[datetime.date]:
-        member = get_any_element_from_set(subscriptions).member
-
-        candidate_dates: set[datetime.date] = set()
+        # Joker and donation weeks are both billed: the box is still produced and
+        # reaches the pickup location, so the charge applies. The joker's value
+        # (including this charge) is credited to the member separately, via the
+        # "Joker Gutschriftwert" export column, not by skipping the charge here.
+        delivery_dates: set[datetime.date] = set()
         for subscription in subscriptions:
+            if subscription.product.type.delivery_cycle == NO_DELIVERY[0]:
+                continue
             window_start = max(range_start, subscription.start_date)
             window_end = min(range_end, subscription.end_date)
             if window_start > window_end:
                 continue
-            candidate_dates.update(
+            delivery_dates.update(
                 cls._get_delivery_dates_within_range(
                     subscription=subscription,
                     window_start=window_start,
@@ -317,19 +335,7 @@ class MonthPaymentBuilderDeliveryCharges:
                     cache=cache,
                 )
             )
-
-        # A joker replaces a delivery with a paid week off, so no delivery reaches
-        # the pickup location and no charge applies. A donation still produces a
-        # delivery (it is redistributed), so the charge does apply - donation weeks
-        # are intentionally not filtered out here.
-        result: set[datetime.date] = set()
-        for delivery_date in candidate_dates:
-            if JokerManagementService.does_member_have_a_joker_in_week(
-                member=member, reference_date=delivery_date, cache=cache
-            ):
-                continue
-            result.add(delivery_date)
-        return result
+        return delivery_dates
 
     @classmethod
     def _get_delivery_dates_within_range(
@@ -364,7 +370,6 @@ class MonthPaymentBuilderDeliveryCharges:
             )
             if next_date is None or next_date > window_end:
                 return result
-            if next_date >= window_start:
-                result.append(next_date)
+            result.append(next_date)
             current_date = next_date
         return result

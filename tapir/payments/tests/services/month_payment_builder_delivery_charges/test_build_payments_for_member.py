@@ -2,8 +2,7 @@ import datetime
 from decimal import Decimal
 
 from tapir.configuration.models import TapirParameter
-from tapir.deliveries.tests.factories import JokerFactory
-from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.models import MemberCredit, MemberPaymentRhythm
 from tapir.payments.services.month_payment_builder_delivery_charges import (
     MonthPaymentBuilderDeliveryCharges,
 )
@@ -81,6 +80,22 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             end_date=datetime.date(year=2026, month=12, day=31),
         )
 
+    def _build(self, member, subscription, rhythm=MONTHLY):
+        return MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
+            member=member,
+            contracts={subscription},
+            first_of_month=self.first_of_month,
+            rhythm=rhythm,
+            cache={},
+            generated_payments=set(),
+            generated_credits=set(),
+        )
+
+    @staticmethod
+    def _persist(payments, credits):
+        Payment.objects.bulk_create(payments)
+        MemberCredit.objects.bulk_create(credits)
+
     def test_buildPaymentsForMember_singleLocation_returnsOnePaymentForTheWholeSpan(
         self,
     ):
@@ -92,16 +107,9 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             valid_from=datetime.date(year=2026, month=1, day=1),
         )
 
-        payments = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
-            member=member,
-            contracts={subscription},
-            first_of_month=self.first_of_month,
-            rhythm=MONTHLY,
-            cache={},
-            generated_payments=set(),
-            in_trial=False,
-        )
+        payments, credits = self._build(member, subscription)
 
+        self.assertEqual([], credits)
         self.assertEqual(1, len(payments))
         payment = payments[0]
         # 4 Wednesdays in May 2026 * 3.50
@@ -141,16 +149,9 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             valid_from=datetime.date(year=2026, month=1, day=1),
         )
 
-        payments = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
-            member=member,
-            contracts={subscription},
-            first_of_month=self.first_of_month,
-            rhythm=MONTHLY,
-            cache={},
-            generated_payments=set(),
-            in_trial=False,
-        )
+        payments, credits = self._build(member, subscription)
 
+        self.assertEqual([], credits)
         self.assertEqual(2, len(payments))
         payments_by_start = {
             payment.subscription_payment_range_start: payment for payment in payments
@@ -202,18 +203,11 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             valid_from=datetime.date(year=2026, month=1, day=1),
         )
 
-        first_run = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
-            member=member,
-            contracts={subscription},
-            first_of_month=self.first_of_month,
-            rhythm=MONTHLY,
-            cache={},
-            generated_payments=set(),
-            in_trial=False,
-        )
-        self.assertEqual(2, len(first_run))
+        first_run_payments, first_run_credits = self._build(member, subscription)
+        self.assertEqual([], first_run_credits)
+        self.assertEqual(2, len(first_run_payments))
         amounts_by_location = {
-            payment.pickup_location_id: payment.amount for payment in first_run
+            payment.pickup_location_id: payment.amount for payment in first_run_payments
         }
         # A: May 6 + May 27 = 2 * 3.50; B: May 13 + May 20 = 2 * 2.00
         self.assertEqual(
@@ -223,21 +217,14 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             Decimal("4.00"), amounts_by_location[self.pickup_location_b.id]
         )
 
-        Payment.objects.bulk_create(first_run)
+        self._persist(first_run_payments, first_run_credits)
 
-        second_run = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
-            member=member,
-            contracts={subscription},
-            first_of_month=self.first_of_month,
-            rhythm=MONTHLY,
-            cache={},
-            generated_payments=set(),
-            in_trial=False,
-        )
+        second_run_payments, second_run_credits = self._build(member, subscription)
 
-        self.assertEqual([], second_run)
+        self.assertEqual([], second_run_payments)
+        self.assertEqual([], second_run_credits)
 
-    def test_buildPaymentsForMember_allDeliveriesAtLocationJokeredAfterBilling_refundsIt(
+    def test_buildPaymentsForMember_movesAwayAfterBilling_createsCreditForOldLocationAndPaymentForNewLocation(
         self,
     ):
         member = self._make_member_at_location(self.pickup_location_a)
@@ -247,36 +234,155 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             amount=Decimal("3.50"),
             valid_from=datetime.date(year=2026, month=1, day=1),
         )
-
-        first_run = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
-            member=member,
-            contracts={subscription},
-            first_of_month=self.first_of_month,
-            rhythm=MONTHLY,
-            cache={},
-            generated_payments=set(),
-            in_trial=False,
-        )
-        self.assertEqual(1, len(first_run))
-        self.assertEqual(Decimal("14.00"), first_run[0].amount)
-        Payment.objects.bulk_create(first_run)
-
-        for day in [6, 13, 20, 27]:
-            JokerFactory.create(
-                member=member, date=datetime.date(year=2026, month=5, day=day)
-            )
-
-        second_run = MonthPaymentBuilderDeliveryCharges.build_payments_for_member(
-            member=member,
-            contracts={subscription},
-            first_of_month=self.first_of_month,
-            rhythm=MONTHLY,
-            cache={},
-            generated_payments=set(),
-            in_trial=False,
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_b,
+            amount=Decimal("2.00"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
         )
 
-        self.assertEqual(1, len(second_run))
-        refund = second_run[0]
-        self.assertEqual(Decimal("-14.00"), refund.amount)
-        self.assertEqual(self.pickup_location_a.id, refund.pickup_location_id)
+        first_run_payments, first_run_credits = self._build(member, subscription)
+        self.assertEqual([], first_run_credits)
+        self.assertEqual(Decimal("14.00"), first_run_payments[0].amount)
+        self._persist(first_run_payments, first_run_credits)
+
+        # The member moves to B from May 14, so A now only keeps May 6 + 13.
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=self.pickup_location_b,
+            valid_from=datetime.date(year=2026, month=5, day=14),
+        )
+
+        second_run_payments, second_run_credits = self._build(member, subscription)
+
+        self.assertEqual(1, len(second_run_payments))
+        payment_b = second_run_payments[0]
+        self.assertEqual(Decimal("4.00"), payment_b.amount)
+        self.assertEqual(self.pickup_location_b.id, payment_b.pickup_location_id)
+
+        self.assertEqual(1, len(second_run_credits))
+        credit_a = second_run_credits[0]
+        # A was prepaid 14.00 but only owes 7.00 (May 6 + 13), so 7.00 is credited.
+        self.assertEqual(Decimal("7.00"), credit_a.amount)
+        self.assertEqual(self.pickup_location_a.id, credit_a.pickup_location_id)
+        self.assertEqual(
+            MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE,
+            credit_a.source,
+        )
+        self.assertEqual(member.id, credit_a.member_id)
+
+    def test_buildPaymentsForMember_movesAwayAfterBillingThenRerun_doesNotCreateDuplicateCredit(
+        self,
+    ):
+        member = self._make_member_at_location(self.pickup_location_a)
+        subscription = self._make_subscription(member)
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_a,
+            amount=Decimal("3.50"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_b,
+            amount=Decimal("2.00"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+
+        first_run_payments, first_run_credits = self._build(member, subscription)
+        self._persist(first_run_payments, first_run_credits)
+
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=self.pickup_location_b,
+            valid_from=datetime.date(year=2026, month=5, day=14),
+        )
+
+        second_run_payments, second_run_credits = self._build(member, subscription)
+        self._persist(second_run_payments, second_run_credits)
+
+        third_run_payments, third_run_credits = self._build(member, subscription)
+
+        self.assertEqual([], third_run_payments)
+        self.assertEqual([], third_run_credits)
+
+    def test_buildPaymentsForMember_movesToLocationWithoutDeliveryCharge_createsCreditWithoutPayment(
+        self,
+    ):
+        member = self._make_member_at_location(self.pickup_location_a)
+        subscription = self._make_subscription(member)
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_a,
+            amount=Decimal("3.50"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+        # location B has no delivery charge configured.
+
+        first_run_payments, first_run_credits = self._build(member, subscription)
+        self._persist(first_run_payments, first_run_credits)
+
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=self.pickup_location_b,
+            valid_from=datetime.date(year=2026, month=5, day=14),
+        )
+
+        second_run_payments, second_run_credits = self._build(member, subscription)
+
+        self.assertEqual([], second_run_payments)
+        self.assertEqual(1, len(second_run_credits))
+        self.assertEqual(Decimal("7.00"), second_run_credits[0].amount)
+        self.assertEqual(
+            self.pickup_location_a.id, second_run_credits[0].pickup_location_id
+        )
+
+    def test_buildPaymentsForMember_returnsToFormerLocationAfterCreditWasCreated_reBillsRematerializedDeliveries(
+        self,
+    ):
+        member = self._make_member_at_location(self.pickup_location_a)
+        subscription = self._make_subscription(member)
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_a,
+            amount=Decimal("3.50"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_b,
+            amount=Decimal("2.00"),
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+
+        # Run 1: everything billed at A (14.00).
+        run_one_payments, run_one_credits = self._build(member, subscription)
+        self._persist(run_one_payments, run_one_credits)
+
+        # Run 2: switch to B from May 11 -> A keeps May 6, B gets May 13/20/27.
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=self.pickup_location_b,
+            valid_from=datetime.date(year=2026, month=5, day=11),
+        )
+        run_two_payments, run_two_credits = self._build(member, subscription)
+        # A: owes 3.50 (May 6), prepaid 14.00 -> credit 10.50; B: 3 * 2.00 payment.
+        self.assertEqual(Decimal("6.00"), run_two_payments[0].amount)
+        self.assertEqual(Decimal("10.50"), run_two_credits[0].amount)
+        self._persist(run_two_payments, run_two_credits)
+
+        # Run 3: back to A from May 25 -> A regains May 27.
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=self.pickup_location_a,
+            valid_from=datetime.date(year=2026, month=5, day=25),
+        )
+        run_three_payments, run_three_credits = self._build(member, subscription)
+
+        # A owes 7.00 (May 6 + 27); already paid 14.00 minus 10.50 credit = 3.50,
+        # so the re-materialized May 27 is re-billed as +3.50.
+        self.assertEqual(1, len(run_three_payments))
+        self.assertEqual(Decimal("3.50"), run_three_payments[0].amount)
+        self.assertEqual(
+            self.pickup_location_a.id, run_three_payments[0].pickup_location_id
+        )
+        # B owes 4.00 (May 13 + 20); paid 6.00 -> credit 2.00.
+        self.assertEqual(1, len(run_three_credits))
+        self.assertEqual(Decimal("2.00"), run_three_credits[0].amount)
+        self.assertEqual(
+            self.pickup_location_b.id, run_three_credits[0].pickup_location_id
+        )

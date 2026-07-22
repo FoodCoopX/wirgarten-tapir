@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import Mock, call, patch
 
 from tapir.deliveries.models import Joker
@@ -8,9 +9,12 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 )
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.pickup_locations.tests.factories import PickupLocationDeliveryChargeFactory
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
+    MemberPickupLocationFactory,
+    PickupLocationFactory,
     SubscriptionFactory,
     CoopShareTransactionFactory,
 )
@@ -212,6 +216,35 @@ class TestMemberColumnProvider(TapirIntegrationTest):
             ],
             any_order=True,
         )
+
+    @patch.object(
+        DeliveryPriceCalculator, "get_price_of_subscriptions_delivered_in_week"
+    )
+    def test_getValueMemberJokerCreditValue_pickupLocationHasDeliveryCharge_addsChargePerJoker(
+        self, mock_get_price_of_subscriptions_delivered_in_week: Mock
+    ):
+        member = MemberFactory.create()
+        mock_get_price_of_subscriptions_delivered_in_week.side_effect = [12, 27]
+        self.setupJokerData(member)
+
+        pickup_location = PickupLocationFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=pickup_location,
+            valid_from=datetime.date(year=2025, month=1, day=1),
+        )
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=pickup_location,
+            amount=Decimal("2.00"),
+            valid_from=datetime.date(year=2025, month=1, day=1),
+        )
+
+        result = MemberColumnProvider.get_value_member_joker_credit_value(
+            member, datetime.datetime(year=2025, month=1, day=3), {}
+        )
+
+        # 12 + 27 subscription value + 2.00 delivery charge per joker week
+        self.assertEqual("43.00", result)
 
     def test_getValueMemberJokerCreditDetails_default_returnsCorrectDetails(self):
         member = MemberFactory.create()

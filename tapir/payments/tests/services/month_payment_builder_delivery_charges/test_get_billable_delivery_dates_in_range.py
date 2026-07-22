@@ -5,7 +5,7 @@ from tapir.deliveries.tests.factories import DeliveryDonationFactory, JokerFacto
 from tapir.payments.services.month_payment_builder_delivery_charges import (
     MonthPaymentBuilderDeliveryCharges,
 )
-from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.constants import NO_DELIVERY, WEEKLY
 from tapir.wirgarten.models import PickupLocationOpeningTime
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -122,7 +122,7 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
 
         self.assertEqual(4, len(result))
 
-    def test_getBillableDeliveryDatesInRange_memberHasJokerInWeek_thatDeliverySkipped(
+    def test_getBillableDeliveryDatesInRange_memberHasJokerInWeek_thatDeliveryStillBilled(
         self,
     ):
         subscription = self._make_subscription()
@@ -140,8 +140,30 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
             )
         )
 
-        self.assertNotIn(datetime.date(year=2026, month=5, day=13), result)
-        self.assertEqual(3, len(result))
+        self.assertIn(datetime.date(year=2026, month=5, day=13), result)
+        self.assertEqual(4, len(result))
+
+    def test_getBillableDeliveryDatesInRange_productTypeWithoutDelivery_contributesNoDates(
+        self,
+    ):
+        no_delivery_type = ProductTypeFactory.create(delivery_cycle=NO_DELIVERY[0])
+        no_delivery_product = ProductFactory.create(type=no_delivery_type)
+        ProductPriceFactory.create(
+            product=no_delivery_product,
+            valid_from=datetime.date(year=2026, month=1, day=1),
+        )
+        no_delivery_subscription = self._make_subscription(product=no_delivery_product)
+
+        result = (
+            MonthPaymentBuilderDeliveryCharges.get_billable_delivery_dates_in_range(
+                subscriptions=[no_delivery_subscription],
+                range_start=self.range_start,
+                range_end=self.range_end,
+                cache={},
+            )
+        )
+
+        self.assertEqual(set(), result)
 
     def test_getBillableDeliveryDatesInRange_memberHasDonationInWeek_thatDeliveryStillBilled(
         self,

@@ -75,7 +75,7 @@ class MemberCreditCreator:
             due_date=get_last_day_of_month(reference_date),
             member=member,
             amount=amount_to_credit,
-            purpose="TODO, warten auf US 2.2 und 2.6",
+            purpose=MemberCredit.PLACEHOLDER_PURPOSE,
             comment=comment,
             source=source,
         )
@@ -85,6 +85,16 @@ class MemberCreditCreator:
         ).save()
 
         return member_credit
+
+    @classmethod
+    def bulk_create_credits_with_log_entries(
+        cls, member_credits: list[MemberCredit], actor: TapirUser | None
+    ) -> None:
+        MemberCredit.objects.bulk_create(member_credits)
+        for member_credit in member_credits:
+            MemberCreditCreatedLogEntry().populate(
+                user=member_credit.member, actor=actor, model=member_credit
+            ).save()
 
     @classmethod
     def get_amount_to_credit(

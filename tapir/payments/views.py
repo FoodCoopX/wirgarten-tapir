@@ -1,4 +1,5 @@
 import datetime
+import logging
 import random
 
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -52,6 +53,7 @@ from tapir.payments.services.month_payment_builder_association_membership import
     MonthPaymentBuilderAssociationMembership,
 )
 from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MissingPickupLocationError,
     MonthPaymentBuilderDeliveryCharges,
 )
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
@@ -93,6 +95,8 @@ from tapir.wirgarten.utils import (
     format_date,
     format_currency,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class GetFutureMemberPaymentsApiView(APIView):
@@ -156,21 +160,36 @@ class GetFutureMemberPaymentsApiView(APIView):
         current_month = get_today(cache=self.cache)
         current_month = current_month.replace(day=1)
         generated_payments = set()
-        for _ in range(12):
-            payments = MonthPaymentBuilder.build_payments_for_month(
-                reference_date=current_month,
-                cache=self.cache,
-                generated_payments=generated_payments,
-            )
-            member_payments.update(
-                [
-                    payment
-                    for payment in payments
-                    if payment.mandate_ref_id in mandate_ref_ids
-                ]
-            )
-            generated_payments.update(member_payments)
-            current_month = get_first_of_next_month(current_month)
+        generated_credits = set()
+        try:
+            for _ in range(12):
+                payments, projected_credits = (
+                    MonthPaymentBuilder.build_payments_for_month(
+                        reference_date=current_month,
+                        cache=self.cache,
+                        generated_payments=generated_payments,
+                        generated_credits=generated_credits,
+                    )
+                )
+                member_payments.update(
+                    [
+                        payment
+                        for payment in payments
+                        if payment.mandate_ref_id in mandate_ref_ids
+                    ]
+                )
+                generated_payments.update(member_payments)
+                # Projected credits are threaded so the passes stay consistent,
+                # but never persisted here - this projection is read-only.
+                generated_credits.update(projected_credits)
+                current_month = get_first_of_next_month(current_month)
+        except MissingPickupLocationError as error:
+            # A single member with an incomplete pickup-location history must
+            # abort the daily billing run (loud failure), but here in the
+            # read-only projection - which builds for all members - it must not
+            # break every member's payment view. Degrade to the persisted
+            # payments and surface the gap in the logs.
+            logger.error("Cannot project future payments: %s", error)
         return member_payments
 
     @classmethod

@@ -55,11 +55,12 @@ class TestBuildPaymentForMonth(TapirUnitTest):
         payment_8 = Mock()
         payment_9 = Mock()
         payment_10 = Mock()
-        payment_11 = Mock()
         payment_12 = Mock()
         payment_13 = Mock()
+        credit_1 = Mock()
         cache = Mock()
         generated_payments = {payment_6}
+        generated_credits = set()
 
         subscriptions_trial_payments = [payment_1, payment_3]
         subscriptions_not_trial_payments = [payment_2, payment_4, payment_5]
@@ -86,20 +87,18 @@ class TestBuildPaymentForMonth(TapirUnitTest):
             membership_payments
         )
 
-        delivery_charge_trial_payments = [payment_10]
-        delivery_charge_not_trial_payments = [payment_11]
-        mock_build_payments_for_delivery_charges.side_effect = (
-            lambda current_month, cache, generated_payments, in_trial: (
-                delivery_charge_trial_payments
-                if in_trial
-                else delivery_charge_not_trial_payments
-            )
+        delivery_charge_payments = [payment_10]
+        delivery_charge_credits = [credit_1]
+        mock_build_payments_for_delivery_charges.return_value = (
+            delivery_charge_payments,
+            delivery_charge_credits,
         )
 
-        result = MonthPaymentBuilder.build_payments_for_month(
+        payments, credits = MonthPaymentBuilder.build_payments_for_month(
             reference_date=datetime.date(year=2022, month=5, day=12),
             cache=cache,
             generated_payments=generated_payments,
+            generated_credits=generated_credits,
         )
 
         self.assertEqual(
@@ -113,12 +112,12 @@ class TestBuildPaymentForMonth(TapirUnitTest):
                 payment_8,
                 payment_9,
                 payment_10,
-                payment_11,
                 payment_12,
                 payment_13,
             },
-            set(result),
+            set(payments),
         )
+        self.assertEqual({credit_1}, set(credits))
         self.assertEqual(2, mock_build_payments_for_subscriptions.call_count)
         mock_build_payments_for_subscriptions.assert_has_calls(
             [
@@ -161,20 +160,9 @@ class TestBuildPaymentForMonth(TapirUnitTest):
             generated_payments=generated_payments,
         )
 
-        self.assertEqual(2, mock_build_payments_for_delivery_charges.call_count)
-        mock_build_payments_for_delivery_charges.assert_has_calls(
-            [
-                call(
-                    current_month=datetime.date(year=2022, month=5, day=1),
-                    cache=cache,
-                    generated_payments=generated_payments,
-                    in_trial=True,
-                ),
-                call(
-                    current_month=datetime.date(year=2022, month=5, day=1),
-                    cache=cache,
-                    generated_payments={payment_6, payment_10},
-                    in_trial=False,
-                ),
-            ]
+        mock_build_payments_for_delivery_charges.assert_called_once_with(
+            current_month=datetime.date(year=2022, month=5, day=1),
+            cache=cache,
+            generated_payments=generated_payments,
+            generated_credits=generated_credits,
         )

@@ -1,4 +1,5 @@
 import json
+import logging
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -11,7 +12,12 @@ from django.views.decorators.http import require_GET
 
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.models import MemberCredit
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MissingPickupLocationError,
+    MonthPaymentBuilderDeliveryCharges,
+)
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
@@ -59,6 +65,8 @@ from tapir.wirgarten.utils import (
     legal_status_is_association,
 )
 
+logger = logging.getLogger(__name__)
+
 
 @require_GET
 def get_cashflow_chart_data(request):
@@ -72,33 +80,50 @@ def get_cashflow_chart_data(request):
         payment_dates.append(payment_dates[-1] + relativedelta(months=1))
 
     generated_payments = set()
+    generated_credits = set()
     monthly_sums = []
     all_payments = Payment.objects.all()
-    for payment_date in payment_dates:
-        generated_payments_for_this_month = (
-            MonthPaymentBuilder.build_payments_for_month(
-                reference_date=payment_date,
-                cache=cache,
-                generated_payments=generated_payments,
+    # Delivery-charge over-payments become credits instead of negative payments,
+    # so they are subtracted here to keep the cashflow projection net of refunds.
+    all_delivery_charge_credits = MemberCredit.objects.filter(
+        source=MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE
+    )
+    try:
+        for payment_date in payment_dates:
+            generated_payments_for_this_month, generated_credits_for_this_month = (
+                MonthPaymentBuilder.build_payments_for_month(
+                    reference_date=payment_date,
+                    cache=cache,
+                    generated_payments=generated_payments,
+                    generated_credits=generated_credits,
+                )
             )
-        )
-        generated_payments.update(generated_payments_for_this_month)
+            generated_payments.update(generated_payments_for_this_month)
+            generated_credits.update(generated_credits_for_this_month)
 
-        sum_for_this_month = sum(
-            [payment.amount for payment in generated_payments_for_this_month]
-        ) + sum(
-            [
+            projected_sum = sum(
+                payment.amount for payment in generated_payments_for_this_month
+            ) - sum(credit.amount for credit in generated_credits_for_this_month)
+            persisted_sum = sum(
                 payment.amount
                 for payment in all_payments
                 if payment.due_date.year == payment_date.year
                 and payment.due_date.month == payment_date.month
-            ]
-        )
-        monthly_sums.append(sum_for_this_month)
+            ) - sum(
+                credit.amount
+                for credit in all_delivery_charge_credits
+                if credit.due_date.year == payment_date.year
+                and credit.due_date.month == payment_date.month
+            )
+            monthly_sums.append(projected_sum + persisted_sum)
+    except MissingPickupLocationError as error:
+        # One member with an incomplete pickup-location history must not blank the
+        # whole admin chart; project up to the failing month and log the gap.
+        logger.error("Cashflow projection stopped early: %s", error)
 
     return JsonResponse(
         {
-            "labels": [format_date(x) for x in payment_dates],
+            "labels": [format_date(x) for x in payment_dates[: len(monthly_sums)]],
             "data": monthly_sums,
         },
         safe=True,
