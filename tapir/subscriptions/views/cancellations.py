@@ -241,7 +241,7 @@ class CancelSubscriptionsView(APIView):
                             all_relevant_subscriptions
                         ),
                         "contract_end_date": format_date(
-                            all_relevant_subscriptions[0].end_date
+                            all_relevant_subscriptions[-1].end_date
                         ),
                     },
                 ),

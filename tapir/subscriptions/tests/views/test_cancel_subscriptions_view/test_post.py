@@ -721,3 +721,56 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.assertEqual(
             datetime.date(year=2013, month=1, day=20), contribution.end_date
         )
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_post_severalSubscriptionsCancelledWithDifferentEndDates_mailTokenContainsMaxEndDate(
+        self,
+        mock_fire_action: Mock,
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=TODAY.replace(month=1, day=1)
+        )
+        subscription = SubscriptionFactory.create(member=member, period=growing_period)
+        future_growing_period = GrowingPeriodFactory.create(
+            start_date=growing_period.end_date + datetime.timedelta(days=1)
+        )
+        future_subscription = SubscriptionFactory.create(
+            member=member, period=future_growing_period
+        )
+
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=subscription.product.type_id
+        )
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id, future_subscription.product_id],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(0, len(response.json()["errors"]))
+
+        mock_fire_action.assert_called_once_with(
+            TransactionalTriggerData(
+                key=Events.CONTRACT_CANCELLED,
+                recipient_id_in_base_queryset=member.id,
+                token_data={
+                    "contract_list": format_subscription_list_html(
+                        [subscription, future_subscription]
+                    ),
+                    "contract_end_date": format_date(future_subscription.end_date),
+                },
+            )
+        )
