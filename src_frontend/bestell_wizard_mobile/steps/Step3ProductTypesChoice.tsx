@@ -165,6 +165,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                         onClick={() => {
                           setProductTypeForModal(productType);
                         }}
+                        style={{ pointerEvents: "auto" }}
                       />
                     )}
                   </div>
