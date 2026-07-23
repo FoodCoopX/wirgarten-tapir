@@ -65,17 +65,6 @@ class ParameterDefinitionsSubscriptions:
         )
 
         importer.parameter_definition(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-            label="Zusatzproduktverträge erlauben ohne Basisproduktvertrag",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=False,
-            description="Wenn dieses Feld aus ist, können Zusatzproduktverträge nur gezeichnet werden "
-            "wenn das Mitglied mindestens ein Basisproduktvertrag gezeichnet hat.",
-            category=ParameterCategory.SUBSCRIPTIONS,
-            order_priority=0,
-        )
-
-        importer.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_WAITING_LIST_CATEGORIES,
             label="Warteliste-Kategorien",
             datatype=TapirParameterDatatype.STRING,

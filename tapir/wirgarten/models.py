@@ -25,9 +25,6 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.utils.models import CountryField
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDAYS
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -448,11 +445,10 @@ class Member(TapirUser):
             get_active_subscriptions,
         )
 
-        base_product_type = BaseProductTypeService.get_base_product_type(cache={})
+        cache = {}
 
-        # Get all active base subscriptions for the member
-        subscriptions = get_active_subscriptions().filter(
-            member_id=self.id, product__type=base_product_type
+        subscriptions = get_active_subscriptions(cache={}).filter(
+            member_id=self.id, product__type__must_be_subscribed_to=True
         )
 
         if not subscriptions:
@@ -465,7 +461,7 @@ class Member(TapirUser):
 
         # Create a list of tuples (product, quantity, price) and sort by price
         product_info = []
-        today = get_today()
+        today = get_today(cache=cache)
         for product, quantity in product_counts.items():
             price = get_product_price(product, today).price
             product_info.append(

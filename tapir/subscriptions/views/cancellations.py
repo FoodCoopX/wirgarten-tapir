@@ -23,9 +23,6 @@ from tapir.subscriptions.serializers import (
     CancelSubscriptionsViewResponseSerializer,
     CancelSubscriptionsRequestSerializer,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
 )
@@ -33,6 +30,7 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import WEEKLY, NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -323,19 +321,17 @@ class CancelSubscriptionsView(APIView):
             )
 
         if (
-            not get_parameter_value(
-                ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-                cache=self.cache,
+            any(
+                product_type.must_be_subscribed_to
+                for product_type in TapirCache.get_all_product_types(cache=self.cache)
             )
-            and self.is_at_least_one_additional_product_not_selected(
+            and self.is_at_least_one_optional_product_not_selected(
                 subscribed_products,
                 products_selected_for_cancellation,
-                cache=self.cache,
             )
-            and self.are_all_base_products_selected(
+            and self.are_all_required_products_selected(
                 subscribed_products,
                 products_selected_for_cancellation,
-                cache=self.cache,
             )
         ):
             raise ValidationError(
@@ -367,32 +363,27 @@ class CancelSubscriptionsView(APIView):
                 raise ValidationError("Es kann kein Solidarbeitrag gekündigt werden.")
 
     @staticmethod
-    def are_all_base_products_selected(
+    def are_all_required_products_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
-        cache: dict,
     ):
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        for subscribed_product in subscribed_products:
+        for product in subscribed_products:
             if (
-                subscribed_product.type_id == base_product_type.id
-                and subscribed_product not in products_selected_for_cancellation
+                product.type.must_be_subscribed_to
+                and product not in products_selected_for_cancellation
             ):
                 return False
-
         return True
 
     @staticmethod
-    def is_at_least_one_additional_product_not_selected(
+    def is_at_least_one_optional_product_not_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
-        cache: dict,
     ):
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        for subscribed_product in subscribed_products:
+        for product in subscribed_products:
             if (
-                subscribed_product.type_id != base_product_type.id
-                and subscribed_product not in products_selected_for_cancellation
+                product not in products_selected_for_cancellation
+                and not product.type.must_be_subscribed_to
             ):
                 return True
 

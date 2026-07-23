@@ -9,7 +9,6 @@ from tapir.core.config import (
 )
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.utils.config import Organization
-from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
@@ -61,17 +60,10 @@ class ConfigurationGenerator:
             value=delivery_day[organization]
         )
 
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=ProductType.objects.get(name="Ernteanteile").id
-        )
-
         if organization == Organization.BIOTOP:
             TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
                 value=5
             )
-            TapirParameter.objects.filter(
-                key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-            ).update(value=True)
             TapirParameter.objects.filter(
                 key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
             ).update(value=True)

@@ -20,7 +20,6 @@ class ParameterKeys:
     COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
-    COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT = (
         f"{PREFIX}.coop.threshold_warning_on_many_coop_shares_bought"
@@ -97,9 +96,6 @@ class ParameterKeys:
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT = (
         f"{PREFIX}.subscriptions.default_notice_period_unit"
-    )
-    SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT = (
-        f"{PREFIX}.subscriptions.additional_product_allowed_without_base_product"
     )
     SUBSCRIPTION_WAITING_LIST_CATEGORIES = (
         f"{PREFIX}.subscriptions.waiting_list_categories"

@@ -2,11 +2,9 @@ from unittest.mock import Mock
 
 from django.core.exceptions import ValidationError
 
-from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -23,9 +21,6 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
         cls.product_type = ProductTypeFactory.create()
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=cls.product_type.id
-        )
 
         cls.product_not_subbed_to = ProductFactory.create(type=cls.product_type)
 

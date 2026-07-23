@@ -1,3 +1,4 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Modal, Spinner } from "react-bootstrap";
 import {
@@ -6,14 +7,13 @@ import {
   SolidarityContributionCancellationData,
   SubscriptionsApi,
 } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import "dayjs/locale/de";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { ToastData } from "../../types/ToastData.ts";
-import CancellationStepSubscriptions from "./steps/CancellationStepSubscriptions.tsx";
-import CancellationStepReasons from "./steps/CancellationStepReasons.tsx";
-import CancellationStepConfirmation from "./steps/CancellationStepConfirmation.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import CancellationStepConfirmation from "./steps/CancellationStepConfirmation.tsx";
+import CancellationStepReasons from "./steps/CancellationStepReasons.tsx";
+import CancellationStepSubscriptions from "./steps/CancellationStepSubscriptions.tsx";
 
 interface SubscriptionCancellationModalProps {
   onHide: () => void;
@@ -125,6 +125,7 @@ const SubscriptionCancellationModal: React.FC<
           onHide();
         } else {
           setErrors(response.errors);
+          setCurrentStep("subscriptions");
         }
       })
       .catch((error) =>

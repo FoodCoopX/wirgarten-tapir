@@ -15,9 +15,6 @@ from tapir.payments.services.mandate_reference_provider import MandateReferenceP
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
@@ -103,8 +100,10 @@ class BaseProductForm(forms.Form):
 
         super().__init__(*args, **kwargs)
 
-        base_product_type = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
+        base_product_type = (
+            ProductType.objects.filter(must_be_subscribed_to=True)
+            .order_by("name")
+            .first()
         )
         harvest_share_products = Product.objects.filter(
             deleted=False, type=base_product_type
@@ -461,9 +460,6 @@ class BaseProductForm(forms.Form):
                 None, f"Bitte wähle mindestens einen {self.product_type.name}!"
             )
 
-        product_type_id = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
-        ).id
         if has_harvest_shares:
             self.validate_harvest_shares_consent()
             if self.member_id:
@@ -479,7 +475,7 @@ class BaseProductForm(forms.Form):
             SubscriptionChangeValidator.validate_total_capacity(
                 form=self,
                 field_prefix=BASE_PRODUCT_FIELD_PREFIX,
-                product_type_id=product_type_id,
+                product_type_id=self.product_type.id,
                 member_id=self.member_id,
                 subscription_start_date=self.start_date,
                 cache=self.cache,
@@ -491,7 +487,7 @@ class BaseProductForm(forms.Form):
             member_id=self.member_id,
             form=self,
             field_prefix=BASE_PRODUCT_FIELD_PREFIX,
-            product_type_id=product_type_id,
+            product_type_id=self.product_type.id,
             cache=self.cache,
         )
 
@@ -884,43 +880,8 @@ class AdditionalProductForm(forms.Form):
         if not latest_member_pickup_location:
             raise ValidationError(_("Bitte wähle einen Abholort aus!"))
 
-    def validate_has_base_product_subscription_at_same_growing_period(
-        self, cache: dict
-    ):
-        if not self.member_id or not self.has_shares_selected():
-            return
-
-        growing_period = getattr(
-            self,
-            "growing_period",
-            self.cleaned_data.pop(
-                "growing_period",
-                TapirCache.get_growing_period_at_date(
-                    reference_date=get_today(cache), cache=cache
-                ),
-            ),
-        )
-        if not Subscription.objects.filter(
-            member__id=self.member_id,
-            period=growing_period,
-            product__type=BaseProductTypeService.get_base_product_type(cache=cache),
-        ).exists():
-            self.add_error(
-                None,
-                "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-                "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben.",
-            )
-
     def clean(self):
         self.validate_contract_signed()
-
-        if not get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-            cache=self.cache,
-        ):
-            self.validate_has_base_product_subscription_at_same_growing_period(
-                cache=self.cache
-            )
 
         if self.member_id:
             self.validate_pickup_location(cache=self.cache)

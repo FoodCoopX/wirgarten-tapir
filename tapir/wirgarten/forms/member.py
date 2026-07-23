@@ -23,9 +23,6 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.utils.forms import TapirPhoneNumberField
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.constants import Permission
@@ -38,6 +35,7 @@ from tapir.wirgarten.models import (
     Payment,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -419,8 +417,10 @@ class SubscriptionRenewalForm(Form):
         )
         self.start_date = kwargs["start_date"]
         self.cache = {}
-        base_product_type = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
+        base_product_type = (
+            ProductType.objects.filter(must_be_subscribed_to=True)
+            .order_by("name")
+            .first()
         )
         self.product_forms = [
             BaseProductForm(*args, **kwargs, enable_validation=True, cache=self.cache),
