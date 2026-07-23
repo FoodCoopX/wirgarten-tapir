@@ -1,19 +1,16 @@
 import typing
 
-from django.conf import settings
 from django.core.validators import URLValidator, MinValueValidator
 
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import ParameterMeta
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.is_debug_instance import is_debug_instance
-from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import (
     legal_status_is_cooperative,
     legal_status_is_association,
 )
-from tapir.wirgarten.validators import validate_base_product_type_exists
 
 if typing.TYPE_CHECKING:
     from tapir.wirgarten.parameters import (
@@ -109,40 +106,6 @@ class ParameterDefinitionsBusiness:
                 ],
                 show_only_when=legal_status_is_cooperative,
             ),
-            order_priority=order_priority,
-        )
-        order_priority -= 1
-
-        def get_default_product_type():
-            if not hasattr(settings, "BASE_PRODUCT_NAME"):
-                raise ValueError(
-                    "BASE_PRODUCT_NAME is not set in tapir/wirgarten/settings/site.py"
-                )
-
-            default_product_type = ProductType.objects.filter(
-                name=settings.BASE_PRODUCT_NAME
-            )
-            return (
-                default_product_type.first().id
-                if default_product_type.exists()
-                else None
-            )
-
-        importer.parameter_definition(
-            key=ParameterKeys.COOP_BASE_PRODUCT_TYPE,
-            label="Basis Produkttyp",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=get_default_product_type(),
-            description="Der Basis Produkttyp. Wird als erste im BestellWizard angezeigt.",
-            category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(
-                options_callable=lambda cache: [
-                    (product_type.id, product_type.name)
-                    for product_type in ProductType.objects.all()
-                ],
-                validators=[validate_base_product_type_exists],
-            ),
-            enabled=True,
             order_priority=order_priority,
         )
         order_priority -= 1

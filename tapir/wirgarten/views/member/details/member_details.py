@@ -14,9 +14,6 @@ from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
@@ -28,6 +25,7 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
     WaitingListEntry,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.payment import (
@@ -232,8 +230,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             next_month >= next_growing_period.start_date
         )  # 1 month before
 
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        if not base_product_type:
+        base_product_type = (
+            ProductType.objects.filter(must_be_subscribed_to=True)
+            .order_by("name")
+            .first()
+        )
+        if base_product_type is None:
             context["show_renewal_warning"] = False
             return
 

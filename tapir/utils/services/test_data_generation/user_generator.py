@@ -17,9 +17,6 @@ from tapir.payments.services.mandate_reference_provider import MandateReferenceP
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
@@ -92,22 +89,13 @@ class UserGenerator:
         parsed_users = cls.get_test_users()
 
         cache = {}
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
 
-        products_from_base_type = Product.objects.filter(
-            type=base_product_type
+        products_from_required_types = Product.objects.filter(
+            type__must_be_subscribed_to=True
         ).select_related("type")
-        products_from_base_type = [product for product in products_from_base_type]
-        additional_products = (
-            Product.objects.exclude(type=base_product_type)
-            .exclude(type__must_be_subscribed_to=True)
-            .select_related("type")
-        )
-        additional_products = [product for product in additional_products]
-        required_products = [
-            product
-            for product in Product.objects.filter(type__must_be_subscribed_to=True)
-        ]
+        products_from_optional_types = Product.objects.filter(
+            type__must_be_subscribed_to=False
+        ).select_related("type")
 
         members_that_need_a_pickup_location = set()
 
@@ -118,10 +106,10 @@ class UserGenerator:
                 parsed_user=parsed_user,
                 cache=cache,
                 fake=fake,
-                products_from_base_type=products_from_base_type,
-                additional_products=additional_products,
+                products_from_base_type=products_from_required_types,
+                additional_products=products_from_optional_types,
                 members_that_need_a_pickup_location=members_that_need_a_pickup_location,
-                required_products=required_products,
+                required_products=products_from_required_types,
             )
             CoopShareTransaction.objects.filter(
                 valid_at__lte=get_today(cache=cache) - datetime.timedelta(days=60)
@@ -376,7 +364,7 @@ class UserGenerator:
             member=member,
             product=random.choice(products),
             start_date=growing_period.start_date,
-            end_date=None,
+            end_date=growing_period.end_date,
             period=None,
             quantity=1,
             mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(

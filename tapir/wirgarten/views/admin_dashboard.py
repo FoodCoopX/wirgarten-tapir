@@ -15,9 +15,6 @@ from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
@@ -36,6 +33,7 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceResponse,
     Subscription,
     Payment,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -142,12 +140,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context["no_growing_period"] = True
             return context
 
-        base_product_type = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
+        base_product_type = (
+            ProductType.objects.filter(must_be_subscribed_to=True)
+            .order_by("name")
+            .first()
         )
-        if base_product_type is None:
-            context["no_base_product_type"] = True
-            return context
         self.harvest_share_type = base_product_type
 
         next_contract_start_date = (

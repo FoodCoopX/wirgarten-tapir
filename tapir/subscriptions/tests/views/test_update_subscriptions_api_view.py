@@ -53,9 +53,6 @@ class TestUpdateSubscriptionsApiView(TapirIntegrationTest):
             period=cls.growing_period, product_type=cls.product_1.type, capacity=1000
         )
         cls._set_parameter(
-            key=ParameterKeys.COOP_BASE_PRODUCT_TYPE, value=cls.product_1.type_id
-        )
-        cls._set_parameter(
             key=ParameterKeys.PAYMENT_DEFAULT_RHYTHM,
             value=MemberPaymentRhythm.Rhythm.QUARTERLY,
         )

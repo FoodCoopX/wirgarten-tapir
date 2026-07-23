@@ -20,7 +20,6 @@ class ParameterKeys:
     COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
-    COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT = (
         f"{PREFIX}.coop.threshold_warning_on_many_coop_shares_bought"
