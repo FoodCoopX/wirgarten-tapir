@@ -205,6 +205,9 @@ class CancelSubscriptionsView(APIView):
                 )
                 all_cancelled_subscriptions.extend(cancelled_subscriptions)
                 if len(cancelled_subscriptions) > 0:
+                    all_cancelled_subscriptions.sort(
+                        key=lambda subscription: subscription.end_date, reverse=False
+                    )
                     TransactionalTrigger.fire_action(
                         TransactionalTriggerData(
                             key=Events.CONTRACT_CANCELLED,
@@ -214,7 +217,7 @@ class CancelSubscriptionsView(APIView):
                                     cancelled_subscriptions
                                 ),
                                 "contract_end_date": format_date(
-                                    cancelled_subscriptions[0].end_date
+                                    cancelled_subscriptions[-1].end_date
                                 ),
                             },
                         ),
