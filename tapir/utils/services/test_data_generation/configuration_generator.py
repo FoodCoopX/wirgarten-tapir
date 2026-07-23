@@ -70,9 +70,6 @@ class ConfigurationGenerator:
                 value=5
             )
             TapirParameter.objects.filter(
-                key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-            ).update(value=True)
-            TapirParameter.objects.filter(
                 key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
             ).update(value=True)
 

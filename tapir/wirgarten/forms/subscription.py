@@ -914,14 +914,6 @@ class AdditionalProductForm(forms.Form):
     def clean(self):
         self.validate_contract_signed()
 
-        if not get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-            cache=self.cache,
-        ):
-            self.validate_has_base_product_subscription_at_same_growing_period(
-                cache=self.cache
-            )
-
         if self.member_id:
             self.validate_pickup_location(cache=self.cache)
             SubscriptionChangeValidator.validate_pickup_location_capacity(

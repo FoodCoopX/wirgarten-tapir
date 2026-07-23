@@ -21,6 +21,7 @@ from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
     QuestionaireCancellationReasonResponse,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -30,7 +31,6 @@ from tapir.wirgarten.tests.factories import (
     NOW,
     GrowingPeriodFactory,
     TODAY,
-    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 from tapir.wirgarten.utils import format_date, format_subscription_list_html
@@ -57,9 +57,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.client.force_login(actor)
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=target)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": target.id,
@@ -85,9 +82,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": member.id,
@@ -113,9 +107,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=target)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": target.id,
@@ -177,9 +168,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": member.id,
@@ -217,9 +205,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": member.id,
@@ -238,7 +223,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_coop_membership.assert_not_called()
 
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    def test_post_cantHaveAdditionalProductsWithoutBaseProduct_returnsError(
+    def test_post_tryingToCancelARequiredSubscriptionWhileOptionalSubscriptionsAreActive_returnsError(
         self,
         mock_cancel_subscriptions: Mock,
     ):
@@ -247,12 +232,10 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=False)
+        ProductType.objects.update(must_be_subscribed_to=False)
+        required_product_type = subscriptions[0].product.type
+        required_product_type.must_be_subscribed_to = True
+        required_product_type.save()
 
         post_data = {
             "member_id": member.id,
@@ -266,42 +249,13 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
-        self.assertEqual(1, len(response.json()["errors"]))
+        errors = response.json()["errors"]
+        self.assertEqual(1, len(errors), errors)
+        self.assertEqual(
+            "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst.",
+            errors[0],
+        )
         mock_cancel_subscriptions.assert_not_called()
-
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    def test_post_additionalProductsWithoutBaseProductAllowed_cancelsBaseProduct(
-        self,
-        mock_cancel_subscriptions: Mock,
-    ):
-        member = MemberFactory.create()
-        self.client.force_login(member)
-        mock_cancel_subscriptions.return_value = [], []
-
-        subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
-
-        post_data = {
-            "member_id": member.id,
-            "product_ids": [subscriptions[0].product_id],
-            "cancel_coop_membership": False,
-            "cancellation_reasons": [],
-            "custom_cancellation_reason": "Test reason",
-        }
-
-        url = reverse("subscriptions:cancel_subscriptions")
-        response = self.client.post(url, data=post_data)
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(0, len(response.json()["errors"]))
-        mock_cancel_subscriptions.assert_called_once_with(
-            subscriptions[0].product, member, cache=ANY
-        )
 
     @patch.object(TransactionalTrigger, "fire_action")
     def test_post_default_sendsMailTriggerAndCreatesLogEntryAndSavesCancellationReasons(
@@ -320,12 +274,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             period=growing_period,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -407,12 +355,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         subscriptions[1].start_date = TODAY + datetime.timedelta(days=5)
         subscriptions[1].save()
 
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -430,8 +372,9 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         url = reverse("subscriptions:cancel_subscriptions")
         response = self.client.post(url, data=post_data)
 
-        self.assertStatusCode(response, 200)
-        self.assertEqual(0, len(response.json()["errors"]))
+        self.assertStatusCode(response, 200)  #
+        errors = response.json()["errors"]
+        self.assertEqual(0, len(errors), errors)
 
         mock_fire_action.assert_called_once_with(
             TransactionalTriggerData(
@@ -491,13 +434,8 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             size=3,
             member=member,
             period=growing_period,
+            product__type__must_be_subscribed_to=False,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -545,12 +483,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             period=growing_period,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -595,12 +527,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             period=growing_period,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -641,9 +567,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         )
 
     def test_post_memberCancelsSolidarityButItCannotBeCancelled_returnsError(self):
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=ProductTypeFactory.create().id
-        )
         member = MemberFactory.create()
         self.client.force_login(member)
 
@@ -670,9 +593,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
     def test_post_memberCancelsSolidarity_correctlyUpdatesContribution(self):
         mock_timezone(
             test=self, now=datetime.datetime(year=2013, month=1, day=20, hour=10)
-        )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=ProductTypeFactory.create().id
         )
         TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
             value=True
@@ -741,9 +661,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member, period=future_growing_period
         )
 
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscription.product.type_id
-        )
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
