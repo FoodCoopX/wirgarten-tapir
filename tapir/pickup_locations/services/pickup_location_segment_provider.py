@@ -30,7 +30,6 @@ class PickupLocationSegmentProvider:
                 description="",
                 get_queryset=cls.get_queryset_all_location_routes,
                 get_available_columns=LocationRouteColumnProvider.get_location_route_columns,
-                use_typst=True,
             ),
         ]
 
