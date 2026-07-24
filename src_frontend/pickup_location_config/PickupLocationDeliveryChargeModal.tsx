@@ -47,17 +47,16 @@ const PickupLocationDeliveryChargeModal: React.FC<
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // valid_from is parsed by the API client as UTC midnight, so we read it in UTC
-  // and compare on day granularity to avoid a local-vs-UTC offset shifting the
-  // boundary.
-  function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
-    return dayjs.utc(entry.validFrom).isAfter(dayjs.utc(), "day");
+  // valid_from is a calendar date that the API client parses as UTC midnight, so
+  // we read the date part in UTC and re-anchor it locally: comparing UTC midnight
+  // against the local "today" would classify the whole validity day as future in
+  // any timezone east of UTC.
+  function getValidFromAsLocalDate(entry: PickupLocationDeliveryChargeEntry) {
+    return dayjs(dayjs.utc(entry.validFrom).format("YYYY-MM-DD"));
   }
 
-  function isValidOnOrBeforeToday(
-    entry: PickupLocationDeliveryChargeEntry,
-  ): boolean {
-    return !dayjs.utc(entry.validFrom).isAfter(dayjs.utc(), "day");
+  function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
+    return getValidFromAsLocalDate(entry).isAfter(dayjs(), "day");
   }
 
   function getTomorrowInputValue(): string {
@@ -106,7 +105,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
   }, [show]);
 
   function getCurrentEntry(): PickupLocationDeliveryChargeEntry | undefined {
-    return entries.find((entry) => isValidOnOrBeforeToday(entry));
+    return entries.find((entry) => !isFutureEntry(entry));
   }
 
   function onSave() {
