@@ -24,13 +24,14 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestNoRunawaySinglePass(TapirIntegrationTest):
+class TestNoRunawayTwoPass(TapirIntegrationTest):
     """
-    A yearly-rhythm member billed for the whole year, who then gains a second
-    subscription mid-year on the same delivery dates, must not produce a spurious
-    refund credit on the next payment run. Billing delivery charges in a single
-    real-rhythm pass (not split into trial/non-trial windows) keeps the daily
-    rerun a converging fixpoint.
+    A yearly-rhythm member billed for the whole year who then gains a second
+    subscription mid-year (which enters its trial period) must not produce a
+    spurious refund on the next payment run. The two-pass split bills the same
+    dates in two differently-sized windows, but because the delivery-charge
+    builder never emits a negative amount, the daily rerun stays a converging
+    fixpoint and no MemberCredit is ever created here.
     """
 
     @classmethod
@@ -84,22 +85,31 @@ class TestNoRunawaySinglePass(TapirIntegrationTest):
             end_date=datetime.date(year=2026, month=12, day=31),
         )
 
-    def _run(self):
-        return MonthPaymentBuilderDeliveryCharges.build_payments_for_delivery_charges(
-            current_month=self.current_month,
-            cache={},
-            generated_payments=set(),
-            generated_credits=set(),
+    def _run_both_passes(self):
+        in_trial_payments = (
+            MonthPaymentBuilderDeliveryCharges.build_payments_for_delivery_charges(
+                current_month=self.current_month,
+                cache={},
+                generated_payments=set(),
+                in_trial=True,
+            )
         )
+        not_in_trial_payments = (
+            MonthPaymentBuilderDeliveryCharges.build_payments_for_delivery_charges(
+                current_month=self.current_month,
+                cache={},
+                generated_payments=set(in_trial_payments),
+                in_trial=False,
+            )
+        )
+        return in_trial_payments + not_in_trial_payments
 
-    def test_buildPaymentsForDeliveryCharges_yearlyMemberGainsSecondSubscription_noSpuriousCredit(
+    def test_buildPaymentsForDeliveryCharges_yearlyMemberGainsSecondSubscription_noSpuriousRefund(
         self,
     ):
-        first_run_payments, first_run_credits = self._run()
-        self.assertEqual([], first_run_credits)
-        self.assertEqual(1, len(first_run_payments))
+        first_run_payments = self._run_both_passes()
         # The whole 2026: all Wednesdays * 3.50, billed up front.
-        yearly_amount = first_run_payments[0].amount
+        yearly_amount = sum(payment.amount for payment in first_run_payments)
         self.assertGreater(yearly_amount, Decimal("100.00"))
         Payment.objects.bulk_create(first_run_payments)
 
@@ -112,8 +122,7 @@ class TestNoRunawaySinglePass(TapirIntegrationTest):
             end_date=datetime.date(year=2026, month=12, day=31),
         )
 
-        second_run_payments, second_run_credits = self._run()
+        second_run_payments = self._run_both_passes()
 
         self.assertEqual([], second_run_payments)
-        self.assertEqual([], second_run_credits)
         self.assertEqual(0, MemberCredit.objects.count())

@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Form, Modal, Spinner, Table } from "react-bootstrap";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import {
   PickupLocationDeliveryChargeEntry,
   PickupLocationsApi,
@@ -10,6 +12,8 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+
+dayjs.extend(utc);
 
 interface PickupLocationDeliveryChargeModalProps {
   show: boolean;
@@ -43,21 +47,17 @@ const PickupLocationDeliveryChargeModal: React.FC<
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // valid_from is parsed by the API client as UTC midnight, so we compare on
-  // calendar-date strings to avoid a local-vs-UTC offset shifting the boundary.
-  function toDateString(date: Date): string {
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+  // valid_from is parsed by the API client as UTC midnight, so we read it in UTC
+  // and compare on day granularity to avoid a local-vs-UTC offset shifting the
+  // boundary.
+  function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
+    return dayjs.utc(entry.validFrom).isAfter(dayjs.utc(), "day");
   }
 
-  function getTodayDateString(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+  function isValidOnOrBeforeToday(
+    entry: PickupLocationDeliveryChargeEntry,
+  ): boolean {
+    return !dayjs.utc(entry.validFrom).isAfter(dayjs.utc(), "day");
   }
 
   function getTomorrowInputValue(): string {
@@ -67,10 +67,6 @@ const PickupLocationDeliveryChargeModal: React.FC<
     const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
     const day = String(tomorrow.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
-  }
-
-  function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
-    return toDateString(entry.validFrom) > getTodayDateString();
   }
 
   function loadEntries() {
@@ -110,8 +106,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
   }, [show]);
 
   function getCurrentEntry(): PickupLocationDeliveryChargeEntry | undefined {
-    const today = getTodayDateString();
-    return entries.find((entry) => toDateString(entry.validFrom) <= today);
+    return entries.find((entry) => isValidOnOrBeforeToday(entry));
   }
 
   function onSave() {

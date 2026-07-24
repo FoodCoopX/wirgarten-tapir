@@ -64,7 +64,9 @@ const EXPLANATION_TEXT = (
       Monat 8,00 €). Der Zuschlag fällt auch in Wochen an, in denen du einen
       Joker einsetzt oder deine Kiste spendest, da die Kiste geliefert und
       weitergegeben wird. Beim Joker wird der Zuschlag als Teil deiner
-      Joker-Gutschrift wieder verrechnet.
+      Joker-Gutschrift wieder verrechnet. Wenn du deine Kiste spendest, bleibt
+      der Zuschlag bestehen, da die Lieferung trotzdem bezahlt wird (keine
+      Erstattung).
     </p>
     <p>
       In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die

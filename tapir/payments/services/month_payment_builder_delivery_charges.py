@@ -1,9 +1,11 @@
 import datetime
 from decimal import Decimal
 
+from dateutil.relativedelta import relativedelta
+
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.payments.models import MemberCredit
+from tapir.payments.models import MemberCredit, MemberPaymentRhythm
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -31,6 +33,20 @@ class MissingPickupLocationError(ValueError):
     """
 
 
+class LocationDelta:
+    def __init__(
+        self,
+        pickup_location_id: str,
+        amount: Decimal,
+        range_start: datetime.date,
+        range_end: datetime.date,
+    ):
+        self.pickup_location_id = pickup_location_id
+        self.amount = amount
+        self.range_start = range_start
+        self.range_end = range_end
+
+
 class MonthPaymentBuilderDeliveryCharges:
     PAYMENT_TYPE_DELIVERY_CHARGE = "payment_type_delivery_charge"
 
@@ -40,41 +56,48 @@ class MonthPaymentBuilderDeliveryCharges:
         current_month: datetime.date,
         cache: dict,
         generated_payments: set[Payment],
-        generated_credits: set[MemberCredit],
-    ) -> tuple[list[Payment], list[MemberCredit]]:
-        # Delivery charges are billed in a single pass over all of a member's
-        # subscriptions at the member's real rhythm, deliberately NOT split into
-        # trial/non-trial passes like subscription payments are. The charge is one
-        # amount per delivery date per pickup location, and the already_paid
-        # idempotency is scoped by mandate + pickup location. A trial/non-trial
-        # split would bill the same dates in two differently-sized windows against
-        # that one scope, which makes the daily rerun oscillate between spurious
-        # refunds and counter-charges. A trial cancellation is refunded by the
-        # normal credit mechanism (fewer delivery dates next run).
-        subscriptions = MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions_ignoring_trial_state(
-            cache=cache, first_of_month=current_month
+        in_trial: bool,
+    ) -> list[Payment]:
+        # Like the subscription and solidarity builders, delivery charges are
+        # billed in two passes so that contracts still in their trial period are
+        # only billed in arrears (never prepaid): the in-trial pass bills the
+        # previous month at a forced monthly rhythm, the non-trial pass bills the
+        # current month forward at the member's real rhythm. Refunds (a member
+        # switching away from a pickup location they prepaid) are not created
+        # here - they are created synchronously when the location changes, see
+        # build_refund_credits_for_pickup_location_change.
+        target_month = current_month
+        if in_trial:
+            target_month = (target_month - relativedelta(months=1)).replace(day=1)
+
+        subscriptions = (
+            MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions(
+                cache=cache, first_of_month=target_month, is_in_trial=in_trial
+            )
         )
         subscriptions_by_member = cls._group_subscriptions_by_member(subscriptions)
 
         payments_to_create: list[Payment] = []
-        credits_to_create: list[MemberCredit] = []
         for member, member_subscriptions in subscriptions_by_member.items():
-            rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=member, reference_date=current_month, cache=cache
+            if in_trial:
+                rhythm = MemberPaymentRhythm.Rhythm.MONTHLY.value
+            else:
+                rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+                    member=member, reference_date=target_month, cache=cache
+                )
+            payments_to_create.extend(
+                cls.build_payments_for_member(
+                    member=member,
+                    contracts=member_subscriptions,
+                    first_of_month=target_month,
+                    rhythm=rhythm,
+                    in_trial=in_trial,
+                    cache=cache,
+                    generated_payments=generated_payments,
+                )
             )
-            member_payments, member_credits = cls.build_payments_for_member(
-                member=member,
-                contracts=member_subscriptions,
-                first_of_month=current_month,
-                rhythm=rhythm,
-                cache=cache,
-                generated_payments=generated_payments,
-                generated_credits=generated_credits,
-            )
-            payments_to_create.extend(member_payments)
-            credits_to_create.extend(member_credits)
 
-        return payments_to_create, credits_to_create
+        return payments_to_create
 
     @classmethod
     def build_payments_for_member(
@@ -83,10 +106,131 @@ class MonthPaymentBuilderDeliveryCharges:
         contracts: set[Subscription],
         first_of_month: datetime.date,
         rhythm,
+        in_trial: bool,
         cache: dict,
         generated_payments: set[Payment],
-        generated_credits: set[MemberCredit],
-    ) -> tuple[list[Payment], list[MemberCredit]]:
+    ) -> list[Payment]:
+        rhythm_period = cls._get_rhythm_period(
+            rhythm=rhythm, first_of_month=first_of_month, cache=cache
+        )
+        if rhythm_period is None:
+            return []
+        first_day_of_rhythm_period, last_day_of_rhythm_period = rhythm_period
+
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache=cache
+        )
+        due_date = MonthPaymentBuilderUtils.get_payment_due_date(
+            first_of_month=first_of_month,
+            in_trial=in_trial,
+            contracts=contracts,
+            cache=cache,
+        )
+
+        payments: list[Payment] = []
+        for delta in cls._get_location_deltas(
+            member=member,
+            contracts=contracts,
+            first_day_of_rhythm_period=first_day_of_rhythm_period,
+            last_day_of_rhythm_period=last_day_of_rhythm_period,
+            mandate_ref=mandate_ref,
+            cache=cache,
+            generated_payments=generated_payments,
+        ):
+            # Never bill a negative amount: an over-payment (e.g. a shorter trial
+            # window seeing a longer prepaid payment) is left untouched here, the
+            # same way the subscription builder clamps at zero. Genuine refunds
+            # are created at pickup-location switch time instead.
+            if delta.amount <= 0:
+                continue
+            payments.append(
+                Payment(
+                    due_date=due_date,
+                    amount=delta.amount,
+                    mandate_ref=mandate_ref,
+                    status=Payment.PaymentStatus.DUE,
+                    type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
+                    subscription_payment_range_start=delta.range_start,
+                    subscription_payment_range_end=delta.range_end,
+                    pickup_location_id=delta.pickup_location_id,
+                )
+            )
+
+        return payments
+
+    @classmethod
+    def build_refund_credits_for_pickup_location_change(
+        cls,
+        member: Member,
+        reference_date: datetime.date,
+        cache: dict,
+    ) -> list[MemberCredit]:
+        # A member who prepaid a pickup location's delivery charge and then moves
+        # away from it mid-period is refunded the prepaid-but-no-longer-owed part
+        # as a MemberCredit for that location. Because it runs once, at the moment
+        # the location changes (not on every daily payment rerun), it cannot
+        # oscillate. The credit is netted back against the member's delivery
+        # charges by the payment builder via its pickup-location-scoped
+        # already_paid computation.
+        first_of_month = reference_date.replace(day=1)
+        subscriptions = MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions_ignoring_trial_state(
+            cache=cache, first_of_month=first_of_month
+        )
+        contracts = {
+            subscription
+            for subscription in subscriptions
+            if subscription.member_id == member.id
+        }
+        if len(contracts) == 0:
+            return []
+
+        rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+            member=member, reference_date=first_of_month, cache=cache
+        )
+        rhythm_period = cls._get_rhythm_period(
+            rhythm=rhythm, first_of_month=first_of_month, cache=cache
+        )
+        if rhythm_period is None:
+            return []
+        first_day_of_rhythm_period, last_day_of_rhythm_period = rhythm_period
+
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache=cache
+        )
+
+        credits: list[MemberCredit] = []
+        for delta in cls._get_location_deltas(
+            member=member,
+            contracts=contracts,
+            first_day_of_rhythm_period=first_day_of_rhythm_period,
+            last_day_of_rhythm_period=last_day_of_rhythm_period,
+            mandate_ref=mandate_ref,
+            cache=cache,
+            generated_payments=set(),
+        ):
+            if delta.amount >= 0:
+                continue
+            pickup_location_name = TapirCache.get_pickup_location_by_id(
+                cache=cache, pickup_location_id=delta.pickup_location_id
+            ).name
+            credits.append(
+                MemberCredit(
+                    due_date=delta.range_start,
+                    member=member,
+                    amount=-delta.amount,
+                    purpose=MemberCredit.PLACEHOLDER_PURPOSE,
+                    comment=f"Gutschrift Lieferzuschlag, Abholort {pickup_location_name}",
+                    source=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
+                    pickup_location_id=delta.pickup_location_id,
+                )
+            )
+
+        return credits
+
+    @classmethod
+    def _get_rhythm_period(
+        cls, rhythm, first_of_month: datetime.date, cache: dict
+    ) -> tuple[datetime.date, datetime.date] | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
                 rhythm=rhythm, reference_date=first_of_month, cache=cache
@@ -102,8 +246,23 @@ class MonthPaymentBuilderDeliveryCharges:
         )
         first_day_of_rhythm_period = max(payment_start_date, first_day_of_rhythm_period)
         if first_day_of_rhythm_period > last_day_of_rhythm_period:
-            return [], []
+            return None
+        return first_day_of_rhythm_period, last_day_of_rhythm_period
 
+    @classmethod
+    def _get_location_deltas(
+        cls,
+        member: Member,
+        contracts: set[Subscription],
+        first_day_of_rhythm_period: datetime.date,
+        last_day_of_rhythm_period: datetime.date,
+        mandate_ref,
+        cache: dict,
+        generated_payments: set[Payment],
+    ) -> list[LocationDelta]:
+        # The single source of truth for "what does each pickup location owe or
+        # over-pay this member for this period": the payment path keeps the
+        # positive deltas, the refund path keeps the negative ones.
         delivery_dates = cls.get_billable_delivery_dates_in_range(
             subscriptions=contracts,
             range_start=first_day_of_rhythm_period,
@@ -114,16 +273,6 @@ class MonthPaymentBuilderDeliveryCharges:
             cls._group_delivery_dates_by_pickup_location_id(
                 member_id=member.id, delivery_dates=delivery_dates, cache=cache
             )
-        )
-
-        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
-            member=member, cache=cache
-        )
-        due_date = MonthPaymentBuilderUtils.get_payment_due_date(
-            first_of_month=first_of_month,
-            in_trial=False,
-            contracts=contracts,
-            cache=cache,
         )
 
         # Past delivery-charge payments and credits for this member and period,
@@ -145,17 +294,15 @@ class MonthPaymentBuilderDeliveryCharges:
             range_start=first_day_of_rhythm_period,
             range_end=last_day_of_rhythm_period,
             cache=cache,
-            generated_credits=generated_credits,
         )
 
         # A location that no longer has any billable delivery this period but was
-        # billed before still needs a group so its charge can be refunded.
+        # billed before still needs a delta so its charge can be refunded.
         pickup_location_ids = set(delivery_dates_by_pickup_location_id) | set(
             past_payments_by_pickup_location_id
         )
 
-        payments: list[Payment] = []
-        credits: list[MemberCredit] = []
+        deltas: list[LocationDelta] = []
         for pickup_location_id in pickup_location_ids:
             location_dates = delivery_dates_by_pickup_location_id.get(
                 pickup_location_id, set()
@@ -195,36 +342,16 @@ class MonthPaymentBuilderDeliveryCharges:
                     payment.subscription_payment_range_end for payment in past_payments
                 )
 
-            if amount > 0:
-                payments.append(
-                    Payment(
-                        due_date=due_date,
-                        amount=amount,
-                        mandate_ref=mandate_ref,
-                        status=Payment.PaymentStatus.DUE,
-                        type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
-                        subscription_payment_range_start=range_start,
-                        subscription_payment_range_end=range_end,
-                        pickup_location_id=pickup_location_id,
-                    )
+            deltas.append(
+                LocationDelta(
+                    pickup_location_id=pickup_location_id,
+                    amount=amount,
+                    range_start=range_start,
+                    range_end=range_end,
                 )
-            else:
-                pickup_location_name = TapirCache.get_pickup_location_by_id(
-                    cache=cache, pickup_location_id=pickup_location_id
-                ).name
-                credits.append(
-                    MemberCredit(
-                        due_date=range_start,
-                        member=member,
-                        amount=-amount,
-                        purpose=MemberCredit.PLACEHOLDER_PURPOSE,
-                        comment=f"Gutschrift Lieferzuschlag, Abholort {pickup_location_name}",
-                        source=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
-                        pickup_location_id=pickup_location_id,
-                    )
-                )
+            )
 
-        return payments, credits
+        return deltas
 
     @classmethod
     def _group_past_payments_by_pickup_location_id(
@@ -257,7 +384,6 @@ class MonthPaymentBuilderDeliveryCharges:
         range_start: datetime.date,
         range_end: datetime.date,
         cache: dict,
-        generated_credits: set[MemberCredit],
     ) -> dict[str, list[MemberCredit]]:
         relevant_credits = MonthPaymentBuilderUtils.get_relevant_credits(
             range_start=range_start,
@@ -265,7 +391,7 @@ class MonthPaymentBuilderDeliveryCharges:
             member_id=member_id,
             payment_type=cls.PAYMENT_TYPE_DELIVERY_CHARGE,
             cache=cache,
-            generated_credits=generated_credits,
+            generated_credits=set(),
         )
         credits_by_pickup_location_id: dict[str, list[MemberCredit]] = {}
         for credit in relevant_credits:

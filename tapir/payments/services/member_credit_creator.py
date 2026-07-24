@@ -87,11 +87,11 @@ class MemberCreditCreator:
         return member_credit
 
     @classmethod
-    def bulk_create_credits_with_log_entries(
+    def save_credits_with_log_entries(
         cls, member_credits: list[MemberCredit], actor: TapirUser | None
     ) -> None:
-        MemberCredit.objects.bulk_create(member_credits)
         for member_credit in member_credits:
+            member_credit.save()
             MemberCreditCreatedLogEntry().populate(
                 user=member_credit.member, actor=actor, model=member_credit
             ).save()

@@ -5,9 +5,6 @@ from unittest.mock import patch
 from django.urls import reverse
 
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
-from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
-    PickupLocationDeliveryChargeService,
-)
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -39,8 +36,11 @@ class TestPickupLocationDeliveryChargesViewPost(TapirIntegrationTest):
         self.assertEqual(response.status_code, 403)
         self.assertFalse(PickupLocationDeliveryCharge.objects.exists())
 
-    @patch.object(PickupLocationDeliveryChargeService, "save_charge", autospec=True)
-    def test_post_validData_forwardsToService(self, mock_save_charge):
+    @patch(
+        "tapir.pickup_locations.services.pickup_location_delivery_charge_service.get_today"
+    )
+    def test_post_validData_createsCharge(self, mock_get_today):
+        mock_get_today.return_value = datetime.date(year=2026, month=1, day=1)
         admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
         pickup_location = PickupLocationFactory.create()
@@ -56,12 +56,10 @@ class TestPickupLocationDeliveryChargesViewPost(TapirIntegrationTest):
         )
 
         self.assertEqual(response.status_code, 200)
-        mock_save_charge.assert_called_once_with(
-            pickup_location=pickup_location,
-            amount=Decimal("2.50"),
-            valid_from=datetime.date(year=2026, month=6, day=1),
-            cache={},
-        )
+        charge = PickupLocationDeliveryCharge.objects.get()
+        self.assertEqual(pickup_location.id, charge.pickup_location_id)
+        self.assertEqual(Decimal("2.50"), charge.amount)
+        self.assertEqual(datetime.date(year=2026, month=6, day=1), charge.valid_from)
 
     def test_post_negativeAmount_returns400(self):
         admin = MemberFactory.create(is_superuser=True)

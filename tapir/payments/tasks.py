@@ -1,9 +1,7 @@
 import datetime
 
 from celery import shared_task
-from django.db import transaction
 
-from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.wirgarten.models import (
@@ -19,17 +17,10 @@ def create_payments_for_this_month(reference_date: datetime.date = None):
     cache = {}
     if reference_date is None:
         reference_date = get_today(cache=cache)
-    payments, member_credits = MonthPaymentBuilder.build_payments_for_month(
-        reference_date=reference_date,
-        cache=cache,
-        generated_payments=set(),
-        generated_credits=set(),
+    payments = MonthPaymentBuilder.build_payments_for_month(
+        reference_date=reference_date, cache=cache, generated_payments=set()
     )
-    with transaction.atomic():
-        Payment.objects.bulk_create(payments)
-        MemberCreditCreator.bulk_create_credits_with_log_entries(
-            member_credits, actor=None
-        )
+    Payment.objects.bulk_create(payments)
 
 
 @shared_task

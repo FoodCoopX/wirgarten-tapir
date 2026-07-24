@@ -8,6 +8,10 @@ from tapir_mail.triggers.transactional_trigger import (
 from tapir.accounts.models import TapirUser
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
+from tapir.payments.services.member_credit_creator import MemberCreditCreator
+from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MonthPaymentBuilderDeliveryCharges,
+)
 from tapir.pickup_locations.models import PickupLocationChangedLogEntry
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -56,6 +60,16 @@ class MemberPickupLocationSetter:
         ).save()
 
         if old_pickup_location is not None and pickup_location_id is not None:
+            # Refund any delivery charge the member prepaid for the location they
+            # are leaving but will no longer use this period. Done here, once per
+            # switch, rather than as a negative payment in the daily billing run.
+            refund_credits = MonthPaymentBuilderDeliveryCharges.build_refund_credits_for_pickup_location_change(
+                member=member, reference_date=valid_from, cache=cache
+            )
+            MemberCreditCreator.save_credits_with_log_entries(
+                refund_credits, actor=actor
+            )
+
             TransactionalTrigger.fire_action(
                 TransactionalTriggerData(
                     key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
