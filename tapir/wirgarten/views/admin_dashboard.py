@@ -131,9 +131,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        today = get_today(cache=self.cache)
 
         current_growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=get_today(cache=self.cache), cache=self.cache
+            reference_date=today, cache=self.cache
         )
         context["recent_feedbacks"] = get_recent_feedbacks()
         if not current_growing_period:
@@ -149,7 +150,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         next_contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=self.cache),
+                reference_date=today,
                 apply_buffer_time=True,
                 cache=self.cache,
             )
@@ -176,28 +177,29 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         self.add_cancelled_coop_shares_context(context)
         self.add_cancelled_association_memberships_context(context)
 
-        members_with_shares = annotate_member_queryset_with_coop_shares_total_value(
-            Member.objects.all(), cache=self.cache
-        ).filter(coop_shares_total_value__gt=0)
-        context["active_members"] = members_with_shares.count()
-        context["coop_shares_value"] = format_currency(
-            (
-                CoopShareTransaction.objects.filter(
-                    valid_at__lt=next_contract_start_date
+        if legal_status_is_cooperative(cache=self.cache):
+            members_with_shares = annotate_member_queryset_with_coop_shares_total_value(
+                Member.objects.all(), cache=self.cache
+            ).filter(coop_shares_total_value__gt=0)
+            context["active_members"] = members_with_shares.count()
+            context["coop_shares_value"] = format_currency(
+                (
+                    CoopShareTransaction.objects.filter(
+                        valid_at__lt=next_contract_start_date
+                    )
+                    .aggregate(quantity=Sum("quantity"))
+                    .get("quantity", 0)
+                    or 0
                 )
-                .aggregate(quantity=Sum("quantity"))
-                .get("quantity", 0)
-                or 0
-            )
-            * get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=self.cache)
-        ).replace(",00", "")
+                * get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=self.cache)
+            ).replace(",00", "")
 
         context["cancellations_during_trial"] = len(
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
 
         context["solidarity_overplus"] = SolidarityValidator.get_solidarity_excess(
-            reference_date=get_today(cache=self.cache), cache=self.cache
+            reference_date=today, cache=self.cache
         )
         context["status_seperate_coop_shares"] = get_parameter_value(
             ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=self.cache
@@ -206,7 +208,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=self.cache
         )
 
-        today = get_today(cache=self.cache)
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],

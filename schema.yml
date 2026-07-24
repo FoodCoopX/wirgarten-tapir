@@ -80,6 +80,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberAssociationMembershipDetails'
           description: ''
+  /associations/api/number_of_association_members_per_month:
+    get:
+      operationId: associations_api_number_of_association_members_per_month_retrieve
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NumberOfAssociationMembersPerMonthResponse'
+          description: ''
   /associations/api/set_membership_end_date:
     post:
       operationId: associations_api_set_membership_end_date_create
@@ -8466,6 +8493,21 @@ components:
       required:
       - custom_cycle_delivery_weeks_dates
       - error
+    GraphDataset:
+      type: object
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+        values:
+          type: array
+          items:
+            type: integer
+      required:
+      - color
+      - name
+      - values
     GroupedEmailDispatch:
       type: object
       properties:
@@ -9264,6 +9306,20 @@ components:
       description: |-
         * `months` - Monate
         * `weeks` - Wochen
+    NumberOfAssociationMembersPerMonthResponse:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+        datasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphDataset'
+      required:
+      - datasets
+      - labels
     OptionalWaitingListEntryDetails:
       type: object
       properties:
