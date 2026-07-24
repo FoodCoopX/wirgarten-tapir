@@ -813,6 +813,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             waitingListEntryDetails={waitingListEntryDetails}
             associationMembershipType={selectedAssociationMembershipType}
             selectedGrowingPeriod={selectedGrowingPeriod}
+            hideTrialPeriod={false}
           />
         );
       case "11_legal":

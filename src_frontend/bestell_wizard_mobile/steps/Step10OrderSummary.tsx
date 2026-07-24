@@ -56,6 +56,7 @@ interface Step10OrderSummaryProps {
   singleProductType?: PublicProductType;
   associationMembershipType?: AssociationMembershipType;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  hideTrialPeriod: boolean;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -80,6 +81,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   singleProductType,
   associationMembershipType,
   selectedGrowingPeriod,
+  hideTrialPeriod,
 }) => {
   const [activePickupLocation, setActivePickupLocation] =
     useState<PublicPickupLocation>();
@@ -306,7 +308,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       {productTypesInWaitingList.has(productType) && (
                         <li>Warteliste</li>
                       )}
-                      {!productTypesInWaitingList.has(productType) &&
+                      {!hideTrialPeriod &&
+                        !productTypesInWaitingList.has(productType) &&
                         settings.trialPeriodLengthInWeeks > 0 && (
                           <li>
                             Probezeit bis{" "}
