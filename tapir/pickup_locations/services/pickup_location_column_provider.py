@@ -52,7 +52,7 @@ class PickupLocationColumnProvider:
         return location.name
 
     @classmethod
-    def get_value_pickup_location_deliveries_current_week(
+    def get_subscriptions_with_deliveries_current_week(
         cls,
         location: PickupLocation,
         reference_datetime: datetime.datetime,
@@ -92,7 +92,7 @@ class PickupLocationColumnProvider:
             id__in=subscription_ids
         ).select_related("member", "product__type")
 
-        subscriptions = sorted(
+        return sorted(
             subscriptions,
             key=lambda subscription: (
                 subscription.member.last_name,
@@ -103,6 +103,17 @@ class PickupLocationColumnProvider:
                     cache=cache,
                 ).price,
             ),
+        )
+
+    @classmethod
+    def get_value_pickup_location_deliveries_current_week(
+        cls,
+        location: PickupLocation,
+        reference_datetime: datetime.datetime,
+        cache: dict,
+    ):
+        subscriptions = cls.get_subscriptions_with_deliveries_current_week(
+            location, reference_datetime, cache
         )
 
         return [
