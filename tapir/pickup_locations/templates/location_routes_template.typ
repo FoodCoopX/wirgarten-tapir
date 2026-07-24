@@ -16,9 +16,6 @@
 )
 
 
-#let product-key = p => str(p.product_type_name + " " + p.product_name)
-#let product-key = p => str(p.product_name)
-
 
 #let total-cell = (rowspan: 1, content) => table.cell(
   stroke: (y: 1pt),
@@ -36,16 +33,18 @@
   entries
     .fold((:), (acc, route) => {
       for location in route.pickup_locations {
-        for x in location.subscriptions {
-          let key = product-key(x)
-          let current = acc.at(key, default: 0) + x.quantity
-          acc.insert(key, current)
+        for sub in location.subscriptions {
+          for p in sub.products {
+            let key = p.name
+            let current = acc.at(key, default: 0) + p.quantity
+            acc.insert(key, current)
+          }
         }
       }
       return acc
     })
     .pairs()
-    .sorted(key: x => x.at(0))
+    .sorted(key: p => p.at(0))
 )
 = #products.map(p => p.at(0) + " " + str(p.at(1))).join(" / ") #h(1fr) KW #datetime.today().display("[week_number]")
 
@@ -57,10 +56,12 @@
       locations,
       location,
     ) => {
-      let sum_by_product = location.subscriptions.fold((:), (acc, x) => {
-        let key = product-key(x)
-        let current = acc.at(key, default: 0) + x.quantity
-        acc.insert(key, current)
+      let sum_by_product = location.subscriptions.fold((:), (acc, sub) => {
+        for p in sub.products {
+          let key = p.name
+          let current = acc.at(key, default: 0) + p.quantity
+          acc.insert(key, current)
+        }
         return acc
       })
       locations.insert(location.name, sum_by_product)
@@ -135,14 +136,16 @@
   #let sums = (
     location
       .subscriptions
-      .fold((:), (acc, x) => {
-        let key = product-key(x)
-        let current = acc.at(key, default: 0) + x.quantity
-        acc.insert(key, current)
+      .fold((:), (acc, sub) => {
+        for p in sub.products {
+          let key = p.name
+          let current = acc.at(key, default: 0) + p.quantity
+          acc.insert(key, current)
+        }
         return acc
       })
       .pairs()
-      .sorted(key: x => x.at(0))
+      .sorted(key: p => p.at(0))
   )
 
   #strong(table(
@@ -199,17 +202,12 @@
   #let members = (
     location
       .subscriptions
-      .fold((:), (acc, x) => {
-        let key = str(x.member_no)
+      .fold((:), (acc, sub) => {
+        let key = str(sub.member_no)
         let current = acc.at(key, default: (
-          "first_name": x.first_name,
-          "last_name": x.last_name.clusters().slice(0, 2).join("") + ".",
-          "products": (),
-          "basket": x.basket, // TODO: replace all usage of products with basket
-        ))
-        current.products.push((
-          "key": product-key(x),
-          "quantity": x.quantity,
+          "first_name": sub.first_name,
+          "last_name": sub.last_name.clusters().slice(0, 2).join("") + ".",
+          "products": sub.products,
         ))
         acc.insert(key, current)
         return acc
@@ -237,7 +235,7 @@
     ..for member in members {
       (
         strong(member.first_name) + " " + member.last_name,
-        for product in member.basket {
+        for product in member.products {
           (
             str(product.quantity) + sym.times + " " + product.name + "\n"
           )

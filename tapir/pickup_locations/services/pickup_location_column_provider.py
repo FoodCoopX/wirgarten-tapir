@@ -1,7 +1,3 @@
-from tapir.pickup_locations.models import ProductBasketSizeEquivalence
-from tapir.pickup_locations.services.basket_size_capacities_service import (
-    BasketSizeCapacitiesService,
-)
 import datetime
 
 from tapir.configuration.parameter import get_parameter_value
@@ -56,7 +52,7 @@ class PickupLocationColumnProvider:
         return location.name
 
     @classmethod
-    def get_value_pickup_location_deliveries_current_week(
+    def get_subscriptions_with_deliveries_current_week(
         cls,
         location: PickupLocation,
         reference_datetime: datetime.datetime,
@@ -96,7 +92,7 @@ class PickupLocationColumnProvider:
             id__in=subscription_ids
         ).select_related("member", "product__type")
 
-        subscriptions = sorted(
+        return sorted(
             subscriptions,
             key=lambda subscription: (
                 subscription.member.last_name,
@@ -109,27 +105,16 @@ class PickupLocationColumnProvider:
             ),
         )
 
-        baskets_cache = {}
-        equivalences = dict.fromkeys(
-            BasketSizeCapacitiesService.get_basket_sizes(cache=cache), 0
+    @classmethod
+    def get_value_pickup_location_deliveries_current_week(
+        cls,
+        location: PickupLocation,
+        reference_datetime: datetime.datetime,
+        cache: dict,
+    ):
+        subscriptions = cls.get_subscriptions_with_deliveries_current_week(
+            location, reference_datetime, cache
         )
-
-        def basket(product, quantity):
-            if product not in baskets_cache:
-                baskets_cache[product] = [
-                    {
-                        "name": e.basket_size_name,
-                        "quantity": e.quantity,
-                    }
-                    for e in ProductBasketSizeEquivalence.objects.filter(
-                        product=product
-                    )
-                    if e.basket_size_name in equivalences and e.quantity > 0
-                ]
-            return [
-                {"name": e["name"], "quantity": e["quantity"] * quantity}
-                for e in baskets_cache[product]
-            ]
 
         return [
             {
@@ -141,7 +126,6 @@ class PickupLocationColumnProvider:
                 "product_type_name": subscription.product.type.name,
                 "product_name": subscription.product.name,
                 "quantity": subscription.quantity,
-                "basket": basket(subscription.product, subscription.quantity),
                 "usual_pickup_location": TapirCache.get_pickup_location_by_id(
                     cache=cache,
                     pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
