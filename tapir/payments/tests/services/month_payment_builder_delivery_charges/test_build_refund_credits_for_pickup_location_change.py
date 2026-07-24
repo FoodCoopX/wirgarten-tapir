@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.month_payment_builder_delivery_charges import (
     MonthPaymentBuilderDeliveryCharges,
 )
@@ -121,6 +122,42 @@ class TestBuildRefundCreditsForPickupLocationChange(TapirIntegrationTest):
             MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE,
             credit.source,
         )
+
+    def test_buildRefundCredits_pastPaymentHasNoPickupLocation_ignoresItAndDoesNotCrash(
+        self,
+    ):
+        member = self._make_member_with_prepaid_may()
+        # A stray delivery-charge payment with no pickup location (e.g. a row
+        # from before the pickup_location field existed) must not crash the
+        # refund and must not become a credit for a nonexistent location.
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache={}
+        )
+        Payment.objects.create(
+            due_date=datetime.date(year=2026, month=5, day=1),
+            amount=Decimal("5.00"),
+            mandate_ref=mandate_ref,
+            status=Payment.PaymentStatus.DUE,
+            type=MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE,
+            subscription_payment_range_start=datetime.date(year=2026, month=5, day=6),
+            subscription_payment_range_end=datetime.date(year=2026, month=5, day=27),
+            pickup_location=None,
+        )
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=self.pickup_location_b,
+            valid_from=datetime.date(year=2026, month=5, day=14),
+        )
+
+        credits = MonthPaymentBuilderDeliveryCharges.build_refund_credits_for_pickup_location_change(
+            member=member,
+            reference_date=datetime.date(year=2026, month=5, day=14),
+            cache={},
+        )
+
+        self.assertEqual(1, len(credits))
+        self.assertEqual(self.pickup_location_a.id, credits[0].pickup_location_id)
+        self.assertEqual(Decimal("7.00"), credits[0].amount)
 
     def test_buildRefundCredits_noOverpayment_returnsNoCredit(self):
         member = self._make_member_with_prepaid_may()

@@ -301,6 +301,10 @@ class MonthPaymentBuilderDeliveryCharges:
         pickup_location_ids = set(delivery_dates_by_pickup_location_id) | set(
             past_payments_by_pickup_location_id
         )
+        # A delivery-charge payment with no pickup location is an anomaly we
+        # cannot attribute to a location, so it takes part in neither a charge
+        # nor a refund (and there is no location to name for a credit).
+        pickup_location_ids.discard(None)
 
         deltas: list[LocationDelta] = []
         for pickup_location_id in pickup_location_ids:
