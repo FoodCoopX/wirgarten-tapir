@@ -78,7 +78,7 @@ class TestNoRunawayTwoPass(TapirIntegrationTest):
             pickup_location=self.pickup_location,
             valid_from=datetime.date(year=2026, month=1, day=1),
         )
-        SubscriptionFactory.create(
+        self.subscription = SubscriptionFactory.create(
             member=self.member,
             product=self.product,
             start_date=datetime.date(year=2026, month=1, day=1),
@@ -108,16 +108,22 @@ class TestNoRunawayTwoPass(TapirIntegrationTest):
         self,
     ):
         first_run_payments = self._run_both_passes()
-        # The whole 2026: all Wednesdays * 3.50, billed up front.
-        yearly_amount = sum(payment.amount for payment in first_run_payments)
-        self.assertGreater(yearly_amount, Decimal("100.00"))
+        # All 52 Wednesdays of 2026 * 3.50, billed up front.
+        self.assertEqual(
+            Decimal("182.00"),
+            sum(payment.amount for payment in first_run_payments),
+        )
         Payment.objects.bulk_create(first_run_payments)
 
         # A second subscription is added mid-year on the same delivery dates
         # (this is what a subscription entering the trial period looks like).
+        # It reuses the existing mandate reference: a second one would carry the
+        # same start_ts as the first (see MandateReferenceFactory), and the
+        # tie-break between them decides which past payments the builder sees.
         SubscriptionFactory.create(
             member=self.member,
             product=self.product,
+            mandate_ref=self.subscription.mandate_ref,
             start_date=datetime.date(year=2026, month=6, day=1),
             end_date=datetime.date(year=2026, month=12, day=31),
         )
