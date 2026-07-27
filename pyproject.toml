@@ -29,7 +29,7 @@ nanoid = "^2.0.0"
 lxml = "^6.1.1"
 python-keycloak = "^7.1.1"
 unidecode = "^1.4.0"
-tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1784790244/tapir_mail-0.0.0.dev1784790244-py3-none-any.whl" }
+tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1785157617/tapir_mail-0.0.0.dev1785157617-py3-none-any.whl" }
 djangorestframework = "^3.17.1"
 drf-spectacular = "^0.29.0"
 django-vite = "^3.1.0"
@@ -38,7 +38,7 @@ whitenoise = { extras = ["brotli"], version = "^6.12.0" }
 legacy-cgi = "^2.6.3"
 django-allauth = { extras = ["socialaccount"], version = "^65.10.0" }
 djhtml = "^3.0.11"
-distinctipy = {extras = ["extras"], version = "^1.3.4"}
+distinctipy = { extras = ["extras"], version = "^1.3.4" }
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.6.0"
