@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("payments", "0010_membercredit_source"),
-        ("wirgarten", "0125_payment_pickup_location"),
+        ("wirgarten", "0127_auto_20260723_1341"),
     ]
 
     operations = [
