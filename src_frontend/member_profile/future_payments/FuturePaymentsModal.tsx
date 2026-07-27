@@ -25,56 +25,62 @@ interface FuturePaymentsModalProps {
   memberId: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   trialPeriodEnabled: boolean;
+  deliveryChargeEnabled: boolean;
 }
 
-const EXPLANATION_TEXT = (
-  <div>
-    <p>
-      Die Zahlungsreihe zeigt dir an, wie sich der Betrag zusammensetzt, der von
-      deinem Konto abgebucht wird.
-    </p>
-    <p>
-      Sofern im Monat eine Abholung / Lieferung noch in eine ggf. vorhandene
-      Probezeit fällt, wird dieser Monat nachträglich, d.h. im nächsten Monat
-      bezahlt (z.B. am 5. Mai für April).
-    </p>
-    <p>
-      Erst sobald alle Abholungen / Lieferungen eines Monats außerhalb der
-      Probezeit liegen, wird der Monat vorschüssig, d.h. im Monat selbst für den
-      laufenden Monat bezahlt (z.B. am 5. April für April).
-    </p>
-    <p>
-      Im Übergang zahlst du daher in einem Monat einmal nachträglich für den
-      bereits abgelaufenen Monat und einmal vorschüssig für den nächsten Monat.
-    </p>
-    <p>
-      In Monaten in denen du aufgrund deines Vertragsstartes nicht alle
-      Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
-      auf Basis des Kistenpreises berechnet (((Monatspreis * 12 Monate) / 52
-      Wochen) * Anzahl wahrgenommener Lieferungen) und mit der Anzahl der
-      wahrgenommenen Lieferungen multipliziert.
-    </p>
-    <p>
-      Ein ggf. ausgewählter Solidarpreis wird taggenau auf den Monat
-      hochgerechnet.
-    </p>
-    <p>
-      Wenn deine Verteilstation einen Lieferzuschlag erhebt, wird dieser pro
-      Lieferung berechnet (z.B. 2,00 € pro Lieferung, bei 4 Lieferungen im
-      Monat 8,00 €). Der Zuschlag fällt auch in Wochen an, in denen du einen
-      Joker einsetzt oder deine Kiste spendest, da die Kiste geliefert und
-      weitergegeben wird. Beim Joker wird der Zuschlag als Teil deiner
-      Joker-Gutschrift wieder verrechnet. Wenn du deine Kiste spendest, bleibt
-      der Zuschlag bestehen, da die Lieferung trotzdem bezahlt wird (keine
-      Erstattung).
-    </p>
-    <p>
-      In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die
-      nächsten 12 Monate angezeigt. Sie passen sich automatisch je nach deinen
-      Aktionen (z.B. Zeichnung weiterer Anteile) an.
-    </p>
-  </div>
-);
+function getExplanationText(deliveryChargeEnabled: boolean) {
+  return (
+    <div>
+      <p>
+        Die Zahlungsreihe zeigt dir an, wie sich der Betrag zusammensetzt, der
+        von deinem Konto abgebucht wird.
+      </p>
+      <p>
+        Sofern im Monat eine Abholung / Lieferung noch in eine ggf. vorhandene
+        Probezeit fällt, wird dieser Monat nachträglich, d.h. im nächsten Monat
+        bezahlt (z.B. am 5. Mai für April).
+      </p>
+      <p>
+        Erst sobald alle Abholungen / Lieferungen eines Monats außerhalb der
+        Probezeit liegen, wird der Monat vorschüssig, d.h. im Monat selbst für
+        den laufenden Monat bezahlt (z.B. am 5. April für April).
+      </p>
+      <p>
+        Im Übergang zahlst du daher in einem Monat einmal nachträglich für den
+        bereits abgelaufenen Monat und einmal vorschüssig für den nächsten
+        Monat.
+      </p>
+      <p>
+        In Monaten in denen du aufgrund deines Vertragsstartes nicht alle
+        Abholungen / Lieferungen mitmachen kannst, wird dein monatlicher Betrag
+        auf Basis des Kistenpreises berechnet (((Monatspreis * 12 Monate) / 52
+        Wochen) * Anzahl wahrgenommener Lieferungen) und mit der Anzahl der
+        wahrgenommenen Lieferungen multipliziert.
+      </p>
+      <p>
+        Ein ggf. ausgewählter Solidarpreis wird taggenau auf den Monat
+        hochgerechnet.
+      </p>
+      {deliveryChargeEnabled && (
+        <p>
+          Wenn deine Verteilstation einen Lieferzuschlag erhebt, wird dieser pro
+          Lieferung berechnet (z.B. 2,00 € pro Lieferung, bei 4 Lieferungen im
+          Monat 8,00 €). Der Zuschlag fällt auch in Wochen an, in denen du einen
+          Joker einsetzt oder deine Kiste spendest, da die Kiste geliefert und
+          weitergegeben wird. Beim Joker wird der Zuschlag als Teil deiner
+          Joker-Gutschrift wieder verrechnet. Wenn du deine Kiste spendest,
+          bleibt der Zuschlag bestehen, da die Lieferung trotzdem bezahlt wird
+          (keine Erstattung).
+        </p>
+      )}
+      <p>
+        In der Zahlungsreihe werden nur die vorhergesehenen Zahlungen für die
+        nächsten 12 Monate angezeigt. Sie passen sich automatisch je nach deinen
+        Aktionen (z.B. Zeichnung weiterer Anteile) an.
+      </p>
+    </div>
+  );
+}
 
 const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   onHide,
@@ -85,6 +91,7 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   memberId,
   setToastDatas,
   trialPeriodEnabled,
+  deliveryChargeEnabled,
 }) => {
   dayjs.extend(RelativeTime);
   const api = useApi(PaymentsApi, csrfToken);
@@ -204,7 +211,10 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
               onChange={(event) => setShowPastPayments(event.target.checked)}
               label={"Vergangene Zahlungen anzeigen"}
             />
-            <TapirHelpButton text={EXPLANATION_TEXT} width={"700px"} />
+            <TapirHelpButton
+              text={getExplanationText(deliveryChargeEnabled)}
+              width={"700px"}
+            />
           </span>
         </span>
       </Modal.Header>

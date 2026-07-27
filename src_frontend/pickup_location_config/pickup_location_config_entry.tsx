@@ -4,7 +4,7 @@ import PickupLocationCapacityBase from "./PickupLocationCapacityBase.tsx";
 
 const domNode = document.getElementById("pickup_location_capacity_edit_button");
 if (domNode) {
-  const enableDeliveryCharge = domNode.dataset.enableDeliveryCharge == "True";
+  const enableDeliveryCharge = domNode.dataset.enableDeliveryCharge === "True";
   const root = createRoot(domNode);
 
   root.render(

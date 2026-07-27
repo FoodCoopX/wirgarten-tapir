@@ -17,11 +17,13 @@ import { sortGroupedTransactions } from "./sortGroupedTransactions.ts";
 interface FuturePaymentsCardProps {
   memberId: string;
   csrfToken: string;
+  deliveryChargeEnabled: boolean;
 }
 
 const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   memberId,
   csrfToken,
+  deliveryChargeEnabled,
 }) => {
   const api = useApi(PaymentsApi, csrfToken);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -162,6 +164,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         memberId={memberId}
         setToastDatas={setToastDatas}
         trialPeriodEnabled={trialPeriodEnabled}
+        deliveryChargeEnabled={deliveryChargeEnabled}
       />
       <TapirToastContainer
         toastDatas={toastDatas}
