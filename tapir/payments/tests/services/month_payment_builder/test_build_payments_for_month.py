@@ -14,6 +14,8 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
 )
+from tapir.utils.tests_utils import mock_parameter_value
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
@@ -58,7 +60,12 @@ class TestBuildPaymentForMonth(TapirUnitTest):
         payment_11 = Mock()
         payment_12 = Mock()
         payment_13 = Mock()
-        cache = Mock()
+        cache = {}
+        mock_parameter_value(
+            cache=cache,
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
+            value=True,
+        )
         generated_payments = {payment_6}
 
         subscriptions_trial_payments = [payment_1, payment_3]

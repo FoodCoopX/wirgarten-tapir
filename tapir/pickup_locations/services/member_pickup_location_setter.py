@@ -6,6 +6,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
@@ -20,6 +21,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member, MemberPickupLocation
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today, format_date
 
 
@@ -60,15 +62,19 @@ class MemberPickupLocationSetter:
         ).save()
 
         if old_pickup_location is not None and pickup_location_id is not None:
-            # Refund any delivery charge the member prepaid for the location they
-            # are leaving but will no longer use this period. Done here, once per
-            # switch, rather than as a negative payment in the daily billing run.
-            refund_credits = MonthPaymentBuilderDeliveryCharges.build_refund_credits_for_pickup_location_change(
-                member=member, reference_date=valid_from, cache=cache
-            )
-            MemberCreditCreator.save_credits_with_log_entries(
-                refund_credits, actor=actor
-            )
+            if get_parameter_value(
+                key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
+                cache=cache,
+            ):
+                # Refund any delivery charge the member prepaid for the location they
+                # are leaving but will no longer use this period. Done here, once per
+                # switch, rather than as a negative payment in the daily billing run.
+                refund_credits = MonthPaymentBuilderDeliveryCharges.build_refund_credits_for_pickup_location_change(
+                    member=member, reference_date=valid_from, cache=cache
+                )
+                MemberCreditCreator.save_credits_with_log_entries(
+                    refund_credits, actor=actor
+                )
 
             TransactionalTrigger.fire_action(
                 TransactionalTriggerData(

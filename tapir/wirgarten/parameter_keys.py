@@ -61,6 +61,9 @@ class ParameterKeys:
         f"{PREFIX}.member.dashboard.members_can_update_their_contracts"
     )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
+    DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
+        f"{PREFIX}.delivery.charge_per_pickup_location.enabled"
+    )
     MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
         f"{PREFIX}.member.dashboard.renewal_alert.unkown.header"
     )

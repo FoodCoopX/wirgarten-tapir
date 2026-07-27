@@ -248,6 +248,9 @@ class TestLinkMemberToPickupLocation(TapirIntegrationTest):
     ):
         member = MemberFactory.create()
         actor = MemberFactory.create()
+        self._set_parameter(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED, value=True
+        )
 
         old_pickup_location = PickupLocationFactory.create()
         MemberPickupLocationFactory.create(
