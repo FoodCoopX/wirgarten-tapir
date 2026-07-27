@@ -2459,6 +2459,159 @@ paths:
               schema:
                 type: string
           description: ''
+  /pickup_locations/location_routes/:
+    get:
+      operationId: pickup_locations_location_routes_list
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocationRoute'
+          description: ''
+    post:
+      operationId: pickup_locations_location_routes_create
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationRoute'
+          description: ''
+  /pickup_locations/location_routes/{id}/:
+    get:
+      operationId: pickup_locations_location_routes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der location route identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationRoute'
+          description: ''
+    put:
+      operationId: pickup_locations_location_routes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der location route identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationRoute'
+          description: ''
+    patch:
+      operationId: pickup_locations_location_routes_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der location route identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRouteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRouteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRouteRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationRoute'
+          description: ''
+    delete:
+      operationId: pickup_locations_location_routes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der location route identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
   /pickup_locations/pickup_locations/:
     get:
       operationId: pickup_locations_pickup_locations_list
@@ -8789,6 +8942,46 @@ components:
       description: |-
         * `de_DE.utf-8` - Deutsch (DE)
         * `en_US.utf-8` - English (US)
+    LocationRoute:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        pickup_location_names:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+      required:
+      - created_at
+      - name
+      - pickup_location_names
+      - updated_at
+    LocationRouteRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+      required:
+      - name
     MailCategory:
       type: object
       properties:
@@ -9882,6 +10075,17 @@ components:
           minLength: 1
         is_available_in_bestell_wizard:
           type: boolean
+    PatchedLocationRouteRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
     PatchedMailCategoryRequest:
       type: object
       properties:

@@ -93,6 +93,8 @@ models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
 models/LegalStatusEnum.ts
 models/LocaleEnum.ts
+models/LocationRoute.ts
+models/LocationRouteRequest.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MandateReferencePreviewResponse.ts
@@ -143,6 +145,7 @@ models/PatchedEmailTemplateRequest.ts
 models/PatchedExtendedProductRequest.ts
 models/PatchedGrowingPeriodRequest.ts
 models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
+models/PatchedLocationRouteRequest.ts
 models/PatchedMailCategoryRequest.ts
 models/PatchedMemberExtraEmailUpdateRequestRequest.ts
 models/PatchedMemberProfilePersonalDataRequestRequest.ts

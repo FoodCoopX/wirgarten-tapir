@@ -46,4 +46,9 @@ router.register(
     views.PublicPickupLocationViewSet,
     basename="public_pickup_locations",
 )
+router.register(
+    r"location_routes",
+    views.LocationRouteViewSet,
+    basename="location_routes",
+)
 urlpatterns += router.urls

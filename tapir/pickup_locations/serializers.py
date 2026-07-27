@@ -6,7 +6,11 @@ from tapir.pickup_locations.services.pickup_location_delivery_charge_service imp
     PickupLocationDeliveryChargeService,
 )
 from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
-from tapir.wirgarten.models import PickupLocation, PickupLocationOpeningTime
+from tapir.wirgarten.models import (
+    PickupLocation,
+    PickupLocationOpeningTime,
+    LocationRoute,
+)
 from tapir.wirgarten.utils import get_today
 
 
@@ -128,3 +132,19 @@ class PickupLocationDeliveryChargeCreateRequestSerializer(serializers.Serializer
     pickup_location_id = serializers.CharField()
     amount = serializers.DecimalField(max_digits=8, decimal_places=2, min_value=0)
     valid_from = serializers.DateField()
+
+
+class LocationRouteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LocationRoute
+        fields = "__all__"
+
+    pickup_location_names = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_pickup_location_names(location_route: LocationRoute) -> list[str]:
+        return list(
+            PickupLocation.objects.filter(location_route=location_route)
+            .order_by("name")
+            .values_list("name", flat=True)
+        )

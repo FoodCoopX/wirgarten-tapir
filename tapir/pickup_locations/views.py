@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.serializers import (
     PickupLocationCapacitiesSerializer,
     PickupLocationCapacityEvolutionSerializer,
@@ -21,8 +22,8 @@ from tapir.pickup_locations.serializers import (
     PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityCheckRequestSerializer,
     PickupLocationSerializer,
+    LocationRouteSerializer,
 )
-from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
@@ -62,6 +63,7 @@ from tapir.wirgarten.models import (
     ProductType,
     Member,
     GrowingPeriod,
+    LocationRoute,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
@@ -551,3 +553,9 @@ class PickupLocationDeliveryChargesView(APIView):
             )
 
         return Response("OK", status=status.HTTP_200_OK)
+
+
+class LocationRouteViewSet(viewsets.ModelViewSet):
+    queryset = LocationRoute.objects.order_by("name")
+    serializer_class = LocationRouteSerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
