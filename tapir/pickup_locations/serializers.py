@@ -1,7 +1,6 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from tapir.deliveries.serializers import PickupLocationOpeningTimeSerializer
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
     PickupLocationDeliveryChargeService,
