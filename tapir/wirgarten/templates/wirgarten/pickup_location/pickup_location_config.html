@@ -48,6 +48,9 @@
                                     class="tr-clickable location-row"
                                     onclick="handleRowClick('{{ pl.id }}')">
                                     <td style="text-align:left">
+                                        {% if pl.location_route %}
+	                                        {{ pl.location_route }}
+                                        {% endif %}
                                         <strong>{{ pl.name }}</strong>
                                     </td>
                                     <td>
@@ -57,6 +60,9 @@
                                         {{ pl.street }}
                                         <br />
                                         <small>{{ pl.postcode }} {{ pl.city }}</small>
+                                        {% if pl.route_info %}
+	                                        <br /><em>{{ pl.route_info }}</em>
+                                        {% endif %}
                                     </td>
                                     <td style="white-space:nowrap; text-align:left;">
                                         {% for cap in pl.capabilities %}

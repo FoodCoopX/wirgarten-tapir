@@ -25,6 +25,7 @@ from tapir.wirgarten.models import (
     ProductPrice,
     PickupLocationCapability,
     MemberExtraEmail,
+    LocationRoute,
 )
 
 NOW = datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc)
@@ -136,8 +137,9 @@ class GrowingPeriodFactory(factory.django.DjangoModelFactory[GrowingPeriod]):
 
     start_date = TODAY + relativedelta(day=1)
     end_date = factory.LazyAttribute(
-        lambda growing_period: growing_period.start_date
-        + relativedelta(years=1, days=-1)
+        lambda growing_period: (
+            growing_period.start_date + relativedelta(years=1, days=-1)
+        )
     )
 
 
@@ -173,6 +175,13 @@ class SubscriptionFactory(factory.django.DjangoModelFactory[Subscription]):
     )
 
 
+class LocationRouteFactory(factory.django.DjangoModelFactory[LocationRoute]):
+    class Meta:
+        model = LocationRoute
+
+    name = factory.Faker("catch_phrase")
+
+
 class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
     class Meta:
         model = PickupLocation
@@ -184,6 +193,7 @@ class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
     info = factory.Faker("sentence")
     coords_lon = 0
     coords_lat = 0
+    route_info = factory.Faker("sentence")
 
 
 class PickupLocationCapabilityFactory(
@@ -257,8 +267,9 @@ class CoopShareTransactionFactory(
     payment = factory.SubFactory(
         PaymentFactory,
         amount=factory.LazyAttribute(
-            lambda payment: payment.factory_parent.quantity
-            * payment.factory_parent.share_price
+            lambda payment: (
+                payment.factory_parent.quantity * payment.factory_parent.share_price
+            )
         ),
         mandate_ref__member=factory.SelfAttribute("...member"),
     )

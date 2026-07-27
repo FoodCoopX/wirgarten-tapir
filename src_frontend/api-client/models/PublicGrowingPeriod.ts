@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { PublicProductType } from "./PublicProductType";
+import { PublicProductTypeFromJSON } from "./PublicProductType";
+
 /**
  *
  * @export
@@ -42,6 +45,12 @@ export interface PublicGrowingPeriod {
    * @memberof PublicGrowingPeriod
    */
   readonly contractStartDate: Date;
+  /**
+   *
+   * @type {Array<PublicProductType>}
+   * @memberof PublicGrowingPeriod
+   */
+  readonly productTypes: Array<PublicProductType>;
 }
 
 /**
@@ -56,6 +65,8 @@ export function instanceOfPublicGrowingPeriod(
     !("contractStartDate" in value) ||
     value["contractStartDate"] === undefined
   )
+    return false;
+  if (!("productTypes" in value) || value["productTypes"] === undefined)
     return false;
   return true;
 }
@@ -76,6 +87,9 @@ export function PublicGrowingPeriodFromJSONTyped(
     startDate: new Date(json["start_date"]),
     endDate: new Date(json["end_date"]),
     contractStartDate: new Date(json["contract_start_date"]),
+    productTypes: (json["product_types"] as Array<any>).map(
+      PublicProductTypeFromJSON,
+    ),
   };
 }
 
@@ -84,7 +98,10 @@ export function PublicGrowingPeriodToJSON(json: any): PublicGrowingPeriod {
 }
 
 export function PublicGrowingPeriodToJSONTyped(
-  value?: Omit<PublicGrowingPeriod, "contract_start_date"> | null,
+  value?: Omit<
+    PublicGrowingPeriod,
+    "contract_start_date" | "product_types"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

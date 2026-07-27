@@ -41,13 +41,15 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
         current_date = get_monday(reference_date)
 
         lowest_free_capacity = float("inf")
-        last_date = cls.get_date_of_last_possible_capacity_change(cache=cache)
+        last_date = cls.get_date_of_last_possible_capacity_change(
+            product_type=product_type, cache=cache
+        )
         while current_date < last_date:
             lowest_free_capacity = min(
                 lowest_free_capacity,
                 cls.get_free_capacity_at_date(
                     product_type=product_type,
-                    reference_date=current_date,
+                    reference_date=max(current_date, reference_date),
                     cache=cache,
                 ),
             )
@@ -103,5 +105,22 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
         return usage
 
     @classmethod
-    def get_date_of_last_possible_capacity_change(cls, cache: dict):
+    def get_date_of_last_possible_capacity_change(
+        cls,
+        product_type: ProductType,
+        cache: dict,
+    ):
+        for growing_period in reversed(
+            TapirCache.get_all_growing_periods_ascending(cache=cache)
+        ):
+            if (
+                TapirCache.get_product_type_capacity_at_date(
+                    product_type=product_type,
+                    reference_date=growing_period.start_date,
+                    cache=cache,
+                )
+                is not None
+            ):
+                return growing_period.end_date
+
         return TapirCache.get_all_growing_periods_ascending(cache=cache)[-1].end_date

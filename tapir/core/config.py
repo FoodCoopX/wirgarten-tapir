@@ -44,6 +44,7 @@ THEME_GEBAECK = "gbk"
 THEME_SOLAWI_ODERSCHWALBE = "sos"
 THEME_AUERGARDEN = "aug"
 THEME_LANDLMUEHLE = "lnd"
+THEME_SCHINKELER_HOEFE = "sch"
 
 
 THEME_OPTIONS = [
@@ -61,6 +62,7 @@ THEME_OPTIONS = [
     (THEME_LEISTENMUEHLE, "Leistenmühle"),
     (THEME_MM, "Möllers Morgen"),
     (THEME_SACHERL_TANNBERG, "Sacherl Tannberg"),
+    (THEME_SCHINKELER_HOEFE, "Schinkeler Höfe"),
     (THEME_SOLAWI_ODERSCHWALBE, "Solawi Oderschwalbe"),
     (THEME_SOLAWI_HALL, "Solawi Hall"),
     (THEME_WIRGARTEN, "WirGarten Lüneburg"),

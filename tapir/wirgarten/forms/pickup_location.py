@@ -26,6 +26,7 @@ from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     Subscription,
     Member,
+    LocationRoute,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
@@ -135,7 +136,9 @@ def pickup_location_to_dict(
         .values("member_id")
         .distinct()
         .count(),
+        "location_route": getattr(pickup_location.location_route, "name", ""),
         "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
+        "route_info": pickup_location.route_info,
     }
 
 
@@ -182,13 +185,15 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         selected_product_types = {
             product_type_name: sum(
                 map(
-                    lambda subscription: float(
-                        get_product_price(
-                            subscription.product,
-                            cache=self.cache,
-                        ).size
-                    )
-                    * (subscription.quantity or 0),
+                    lambda subscription: (
+                        float(
+                            get_product_price(
+                                subscription.product,
+                                cache=self.cache,
+                            ).size
+                        )
+                        * (subscription.quantity or 0)
+                    ),
                     subscriptions,
                 )
             )
@@ -298,6 +303,11 @@ class PickupLocationEditForm(forms.Form):
         self.fields["coords"] = forms.CharField(
             label=_("Koordinaten"), help_text="z.B: 53.2731785,10.3741756"
         )
+        self.fields["location_route"] = forms.ModelChoiceField(
+            label=_("Ausfahrrunde"),
+            queryset=LocationRoute.objects.all(),
+            required=False,
+        )
         self.fields["name"] = forms.CharField(label=_("Name"), required=True)
         self.fields["street"] = forms.CharField(
             label=_("Straße & Hausnummer"), required=True
@@ -325,10 +335,17 @@ class PickupLocationEditForm(forms.Form):
             help_text="z.B.: im Hinterhof. " + HTML_ALLOWED_TEXT,
             widget=Textarea,
         )
+        self.fields["route_info"] = forms.CharField(
+            label=_("Kommentar für die Verteilung"),
+            required=False,
+            help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste.",
+            widget=Textarea,
+        )
 
         self.colspans = {
-            "coords": 2,
+            "coords": 1,
             "info": 2,
+            "route_info": 2,
             "monday_times": 2,
             "tuesday_times": 2,
             "wednesday_times": 2,
@@ -379,11 +396,13 @@ class PickupLocationEditForm(forms.Form):
             self.fields["coords"].initial = (
                 f"{self.pickup_location.coords_lon},{self.pickup_location.coords_lat}"
             )
+            self.fields["location_route"].initial = self.pickup_location.location_route
             self.fields["name"].initial = self.pickup_location.name
             self.fields["street"].initial = self.pickup_location.street
             self.fields["postcode"].initial = self.pickup_location.postcode
             self.fields["city"].initial = self.pickup_location.city
             self.fields["info"].initial = self.pickup_location.info
+            self.fields["route_info"].initial = self.pickup_location.route_info
             self.fields["access_code"].initial = self.pickup_location.access_code
             self.fields["messenger_group_link"].initial = (
                 self.pickup_location.messenger_group_link
@@ -500,12 +519,14 @@ class PickupLocationEditForm(forms.Form):
 
         pl.coords_lon = coords[0].strip()
         pl.coords_lat = coords[1].strip()
+        pl.location_route = self.cleaned_data["location_route"]
 
         pl.name = self.cleaned_data["name"]
         pl.street = self.cleaned_data["street"]
         pl.postcode = self.cleaned_data["postcode"]
         pl.city = self.cleaned_data["city"]
         pl.info = self.cleaned_data["info"]
+        pl.route_info = self.cleaned_data["route_info"]
         pl.access_code = self.cleaned_data["access_code"]
         pl.contact_name = self.cleaned_data["contact_name"]
         pl.messenger_group_link = self.cleaned_data["messenger_group_link"]

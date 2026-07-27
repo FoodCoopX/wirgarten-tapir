@@ -6,8 +6,27 @@ from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
     PickupLocationDeliveryChargeService,
 )
+from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
 from tapir.wirgarten.models import PickupLocation, PickupLocationOpeningTime
 from tapir.wirgarten.utils import get_today
+
+
+class PickupLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickupLocation
+        fields = "__all__"
+
+
+class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickupLocationOpeningTime
+        fields = "__all__"
+
+    day_of_week_string = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_day_of_week_string(opening_time: PickupLocationOpeningTime) -> str:
+        return OPTIONS_WEEKDAYS[opening_time.day_of_week][1]
 
 
 class ProductBasketSizeEquivalenceSerializer(serializers.Serializer):

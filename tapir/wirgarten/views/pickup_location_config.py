@@ -31,7 +31,9 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         cache = {}
-        pickup_locations = list(PickupLocation.objects.all().order_by("name"))
+        pickup_locations = list(
+            PickupLocation.objects.all().order_by("location_route__name", "name")
+        )
         capabilities = get_active_pickup_location_capabilities(cache=cache).values(
             "pickup_location_id",
             "product_type_id",
@@ -75,9 +77,9 @@ def get_pickup_location_add_form(request, **kwargs):
         request=request,
         form_class=PickupLocationEditForm,
         handler=lambda x: x.save(),
-        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:pickup_locations")
-        + "?selected="
-        + x.id,
+        redirect_url_resolver=lambda x: (
+            reverse_lazy("wirgarten:pickup_locations") + "?selected=" + x.id
+        ),
     )
 
 
@@ -93,7 +95,7 @@ def get_pickup_location_edit_form(request, **kwargs):
         form_class=PickupLocationEditForm,
         handler=lambda x: x.save(),
         redirect_url_resolver=lambda x: PAGE_ROOT + "?selected=" + x.id,
-        **kwargs
+        **kwargs,
     )
 
 

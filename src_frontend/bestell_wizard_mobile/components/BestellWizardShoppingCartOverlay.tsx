@@ -3,6 +3,7 @@ import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import {
   AssociationMembershipType,
+  PublicGrowingPeriod,
   PublicPickupLocation,
   type PublicProductType,
 } from "../../api-client";
@@ -33,6 +34,7 @@ interface BestellWizardShoppingCartOverlayProps {
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
   contractStartDate: Date;
+  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -52,11 +54,20 @@ const BestellWizardShoppingCartOverlay: React.FC<
   goToProductTypeStep,
   associationMembershipType,
   contractStartDate,
+  selectedGrowingPeriod,
 }) => {
   function canEditProductTypeOrder(productType: PublicProductType) {
     return (
       steps.indexOf(productType.id! + "_intro") < steps.indexOf(currentStep)
     );
+  }
+
+  function getProductTypeList() {
+    if (selectedGrowingPeriod) {
+      return selectedGrowingPeriod.productTypes;
+    }
+
+    return settings.productTypes;
   }
 
   return (
@@ -104,7 +115,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
           close
         </div>
         <ul style={{ marginTop: "7vh" }}>
-          {settings.productTypes.map((productType) => (
+          {getProductTypeList().map((productType) => (
             <li
               key={productType.id}
               className={

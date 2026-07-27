@@ -25,13 +25,21 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.utils.models import CountryField
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDAYS
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
+
+
+class LocationRoute(TapirModel):
+    """
+    Groups pickup locations that are supplied together.
+    """
+
+    name = models.TextField(_("Name"), max_length=150, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class PickupLocation(TapirModel):
@@ -59,6 +67,10 @@ class PickupLocation(TapirModel):
         _("Name of the contact"), max_length=150, blank=True
     )
     photo_link = models.CharField(_("Photo Link"), max_length=512, blank=True)
+    location_route = models.ForeignKey(
+        LocationRoute, blank=True, null=True, on_delete=models.SET_NULL
+    )
+    route_info = models.CharField(_("Driver/Route info"), max_length=1024, blank=True)
 
     class Meta:
         constraints = [
@@ -433,11 +445,10 @@ class Member(TapirUser):
             get_active_subscriptions,
         )
 
-        base_product_type = BaseProductTypeService.get_base_product_type(cache={})
+        cache = {}
 
-        # Get all active base subscriptions for the member
-        subscriptions = get_active_subscriptions().filter(
-            member_id=self.id, product__type=base_product_type
+        subscriptions = get_active_subscriptions(cache={}).filter(
+            member_id=self.id, product__type__must_be_subscribed_to=True
         )
 
         if not subscriptions:
@@ -450,7 +461,7 @@ class Member(TapirUser):
 
         # Create a list of tuples (product, quantity, price) and sort by price
         product_info = []
-        today = get_today()
+        today = get_today(cache=cache)
         for product, quantity in product_counts.items():
             price = get_product_price(product, today).price
             product_info.append(

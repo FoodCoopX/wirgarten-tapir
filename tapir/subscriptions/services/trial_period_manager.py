@@ -39,7 +39,20 @@ class TrialPeriodManager:
     def get_last_day_of_trial_period_by_weeks(
         cls, contract: Subscription | SolidarityContribution, cache: dict
     ) -> datetime.date:
-        start_date = cls.get_trial_period_start_date(contract=contract, cache=cache)
+        return cls.get_last_day_of_trial_period_by_weeks_from_reference(
+            contract, contract.start_date, cache=cache
+        )
+
+    @classmethod
+    def get_last_day_of_trial_period_by_weeks_from_reference(
+        cls,
+        contract: Subscription | SolidarityContribution,
+        reference_date: datetime.date,
+        cache: dict,
+    ) -> datetime.date:
+        start_date = cls.get_trial_period_start_date_for_reference(
+            contract=contract, reference_date=reference_date, cache=cache
+        )
 
         return (
             start_date
@@ -55,23 +68,34 @@ class TrialPeriodManager:
     def get_trial_period_start_date(
         cls, contract: Subscription | SolidarityContribution, cache: dict
     ):
+        return cls.get_trial_period_start_date_for_reference(
+            contract=contract, reference_date=contract.start_date, cache=cache
+        )
+
+    @classmethod
+    def get_trial_period_start_date_for_reference(
+        cls,
+        contract: Subscription | SolidarityContribution,
+        reference_date: datetime.date,
+        cache: dict,
+    ):
         # For subscriptions that are delivered, the trial period starts on the monday before the first delivery,
         # not on the contract start date
 
         product = getattr(contract, "product", None)
         if product is None:
-            return contract.start_date
+            return reference_date
 
         pickup_location_id = (
             MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                 member_id=contract.member_id,
-                reference_date=contract.start_date,
+                reference_date=reference_date,
                 cache=cache,
             )
         )
         date_of_first_delivery = (
             DeliveryDateCalculator.get_next_delivery_date_for_product_type(
-                reference_date=contract.start_date - datetime.timedelta(days=1),
+                reference_date=reference_date - datetime.timedelta(days=1),
                 product_type=product.type,
                 check_for_weeks_without_delivery=False,
                 pickup_location_id=pickup_location_id,
@@ -79,7 +103,7 @@ class TrialPeriodManager:
             )
         )
         if date_of_first_delivery is None:
-            date_of_first_delivery = contract.start_date
+            date_of_first_delivery = reference_date
         return get_monday(date_of_first_delivery)
 
     @classmethod

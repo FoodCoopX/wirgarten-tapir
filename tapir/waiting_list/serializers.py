@@ -1,12 +1,13 @@
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import (
-    ProductSerializer,
-    PickupLocationSerializer,
     SubscriptionSerializer,
 )
-from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
-from tapir.subscriptions.serializers import PublicProductSerializer
+from tapir.pickup_locations.serializers import (
+    PublicPickupLocationSerializer,
+    PickupLocationSerializer,
+)
+from tapir.products.serializers import PublicProductSerializer, ProductSerializer
 from tapir.wirgarten.models import (
     WaitingListEntry,
     WaitingListProductWish,

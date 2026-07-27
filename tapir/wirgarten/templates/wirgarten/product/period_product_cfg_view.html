@@ -97,7 +97,7 @@
                                     {% if capacity.product_type.icon_link %}
                                         <img width="28"
                                              src="{{ capacity.product_type.icon_link }}"
-                                             alt="Produkt-Typ Icon" />
+                                             alt="Produkt-Typ Icon"/>
                                     {% endif %}
                                     {% if capacity.product_type.force_waiting_list %}
                                         <span class="material-icons"
@@ -160,15 +160,14 @@
                                     {% else %}
                                         {% translate product.name %}
                                     {% endif %}
-                                    {% if product.base %}&nbsp;&nbsp;<span class="badge bg-danger">Basis</span>{% endif %}
                                 </th>
                                 <td>
                                     {% if product.prices.1 and product.prices.1.size != product.prices.0.size %}
                                         <del>{{ product.prices.1.size|floatformat:-2 }}</del>
                                         {{ product.prices.0.size|floatformat:-2 }}
-                                        <br />
+                                        <br/>
                                         <small>gültig ab {{ product.prices.0.valid_from }}
-                                            <br />
+                                            <br/>
                                         </small>
                                     {% else %}
                                         {{ product.prices.0.size|floatformat:-2 }}
@@ -178,9 +177,9 @@
                                     {% if product.prices.1 and product.prices.1.price != product.prices.0.price %}
                                         <del>{{ product.prices.1.price }} €</del>
                                         {{ product.prices.0.price }} €
-                                        <br />
+                                        <br/>
                                         <small>gültig ab {{ product.prices.0.valid_from }}
-                                            <br />
+                                            <br/>
                                         </small>
                                     {% else %}
                                         {{ product.prices.0.price }} €

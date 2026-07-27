@@ -1,9 +1,5 @@
 from django.db.models import Case, When, Value, IntegerField
 
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
-
 
 def product_type_order_by(
     id_field: str = "id", name_field: str = "name", cache: dict | None = None
@@ -22,14 +18,20 @@ def product_type_order_by(
     :return: an array of order conditions
     """
 
+    from tapir.utils.services.tapir_cache import TapirCache
+
     try:
         return [
             Case(
                 When(
                     **{
-                        id_field: BaseProductTypeService.get_base_product_type(
-                            cache=cache
-                        ).id
+                        f"{id_field}__in": [
+                            product_type.id
+                            for product_type in TapirCache.get_all_product_types(
+                                cache=cache
+                            )
+                            if product_type.must_be_subscribed_to
+                        ]
                     },
                     then=Value(0),
                 ),

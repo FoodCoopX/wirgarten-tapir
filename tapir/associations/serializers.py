@@ -2,7 +2,13 @@ from decimal import Decimal
 
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField, CharField, DateField
+from rest_framework.fields import (
+    SerializerMethodField,
+    CharField,
+    DateField,
+    ListField,
+    IntegerField,
+)
 from rest_framework.serializers import ModelSerializer, Serializer
 
 from tapir.associations.models import (
@@ -74,3 +80,14 @@ class ExistingMemberUpdatesAssociationMembershipRequest(Serializer):
 class SetAssociationMembershipEndDateRequestSerializer(Serializer):
     membership_id = CharField()
     end_date = DateField()
+
+
+class GraphDatasetSerializer(Serializer):
+    name = CharField()
+    color = CharField()
+    values = ListField(child=IntegerField())
+
+
+class NumberOfAssociationMembersPerMonthResponseSerializer(Serializer):
+    labels = ListField(child=CharField())
+    datasets = GraphDatasetSerializer(many=True)

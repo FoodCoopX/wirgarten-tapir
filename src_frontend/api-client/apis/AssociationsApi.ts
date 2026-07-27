@@ -20,6 +20,7 @@ import type {
   AssociationMembershipTypeRequest,
   ExistingMemberUpdatesAssociationMembershipRequestRequest,
   MemberAssociationMembershipDetails,
+  NumberOfAssociationMembersPerMonthResponse,
   OrderConfirmationResponse,
   PatchedAssociationMembershipTypePriceRequest,
   PatchedAssociationMembershipTypeRequest,
@@ -33,6 +34,7 @@ import {
   AssociationMembershipTypeRequestToJSON,
   ExistingMemberUpdatesAssociationMembershipRequestRequestToJSON,
   MemberAssociationMembershipDetailsFromJSON,
+  NumberOfAssociationMembersPerMonthResponseFromJSON,
   OrderConfirmationResponseFromJSON,
   PatchedAssociationMembershipTypePriceRequestToJSON,
   PatchedAssociationMembershipTypeRequestToJSON,
@@ -50,6 +52,11 @@ export interface AssociationsApiExistingMemberUpdatesMembershipCreateRequest {
 
 export interface AssociationsApiMemberAssociationMembershipsRetrieveRequest {
   memberId?: string;
+}
+
+export interface AssociationsApiNumberOfAssociationMembersPerMonthRetrieveRequest {
+  endDate?: Date;
+  startDate?: Date;
 }
 
 export interface AssociationsApiSetMembershipEndDateCreateRequest {
@@ -292,6 +299,71 @@ export class AssociationsApi extends runtime.BaseAPI {
   ): Promise<MemberAssociationMembershipDetails> {
     const response =
       await this.associationsApiMemberAssociationMembershipsRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiNumberOfAssociationMembersPerMonthRetrieveRaw(
+    requestParameters: AssociationsApiNumberOfAssociationMembersPerMonthRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<NumberOfAssociationMembersPerMonthResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["endDate"] != null) {
+      queryParameters["end_date"] = (requestParameters["endDate"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    if (requestParameters["startDate"] != null) {
+      queryParameters["start_date"] = (requestParameters["startDate"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/number_of_association_members_per_month`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      NumberOfAssociationMembersPerMonthResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiNumberOfAssociationMembersPerMonthRetrieve(
+    requestParameters: AssociationsApiNumberOfAssociationMembersPerMonthRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<NumberOfAssociationMembersPerMonthResponse> {
+    const response =
+      await this.associationsApiNumberOfAssociationMembersPerMonthRetrieveRaw(
         requestParameters,
         initOverrides,
       );

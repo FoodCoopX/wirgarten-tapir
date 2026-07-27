@@ -25,7 +25,9 @@ from tapir.wirgarten.tests.factories import (
 
 
 class TestBuildPaymentForContractAndMember(TapirUnitTest):
-    @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
+    @patch.object(
+        TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
+    )
     @patch.object(
         MonthPaymentBuilderUtils, "get_payment_due_date_on_month", autospec=True
     )
@@ -50,7 +52,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
-        mock_get_trial_period_start_date: Mock,
+        mock_get_trial_period_start_date_for_reference: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -63,7 +65,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=7, day=13)
         mock_get_payment_due_date_on_month.return_value = due_date
-        mock_get_trial_period_start_date.return_value = datetime.date(
+        mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
             year=2026, month=1, day=1
         )
 
@@ -147,10 +149,14 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_payment_due_date_on_month.assert_called_once_with(
             reference_date=first_of_month, cache=cache
         )
-        self.assertEqual(3, mock_get_trial_period_start_date.call_count)
-        mock_get_trial_period_start_date.assert_has_calls(
+        self.assertEqual(3, mock_get_trial_period_start_date_for_reference.call_count)
+        mock_get_trial_period_start_date_for_reference.assert_has_calls(
             [
-                call(contract=subscription, cache=cache)
+                call(
+                    contract=subscription,
+                    reference_date=subscription.start_date,
+                    cache=cache,
+                )
                 for subscription in subscriptions
             ],
             any_order=True,
@@ -330,7 +336,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             key=ParameterKeys.PAYMENT_START_DATE, cache=cache
         )
 
-    @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
+    @patch.object(
+        TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
@@ -349,7 +357,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
-        mock_get_trial_period_start_date: Mock,
+        mock_get_trial_period_start_date_for_reference: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -362,7 +370,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=7, day=13)
         mock_get_payment_due_date_on_month.return_value = due_date
-        mock_get_trial_period_start_date.return_value = datetime.date(
+        mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
             year=2026, month=1, day=1
         )
 
@@ -443,16 +451,22 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_payment_due_date_on_month.assert_called_once_with(
             reference_date=first_of_month, cache=cache
         )
-        self.assertEqual(3, mock_get_trial_period_start_date.call_count)
-        mock_get_trial_period_start_date.assert_has_calls(
+        self.assertEqual(3, mock_get_trial_period_start_date_for_reference.call_count)
+        mock_get_trial_period_start_date_for_reference.assert_has_calls(
             [
-                call(contract=subscription, cache=cache)
+                call(
+                    contract=subscription,
+                    reference_date=subscription.start_date,
+                    cache=cache,
+                )
                 for subscription in subscriptions
             ],
             any_order=True,
         )
 
-    @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
+    @patch.object(
+        TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
@@ -471,7 +485,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
-        mock_get_trial_period_start_date: Mock,
+        mock_get_trial_period_start_date_for_reference: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -484,7 +498,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=7, day=13)
         mock_get_payment_due_date_on_month.return_value = due_date
-        mock_get_trial_period_start_date.return_value = datetime.date(
+        mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
             year=2026, month=7, day=1
         )
 
@@ -567,10 +581,14 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_payment_due_date_on_month.assert_called_once_with(
             reference_date=datetime.date(year=2026, month=7, day=1), cache=cache
         )
-        self.assertEqual(3, mock_get_trial_period_start_date.call_count)
-        mock_get_trial_period_start_date.assert_has_calls(
+        self.assertEqual(3, mock_get_trial_period_start_date_for_reference.call_count)
+        mock_get_trial_period_start_date_for_reference.assert_has_calls(
             [
-                call(contract=subscription, cache=cache)
+                call(
+                    contract=subscription,
+                    reference_date=subscription.start_date,
+                    cache=cache,
+                )
                 for subscription in subscriptions
             ],
             any_order=True,
@@ -641,7 +659,9 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             key=ParameterKeys.PAYMENT_START_DATE, cache=cache
         )
 
-    @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
+    @patch.object(
+        TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
+    )
     @patch.object(MonthPaymentBuilderUtils, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay")
     @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount")
@@ -660,7 +680,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
-        mock_get_trial_period_start_date: Mock,
+        mock_get_trial_period_start_date_for_reference: Mock,
     ):
         range_start = datetime.date(year=2026, month=6, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -674,7 +694,7 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         due_date = datetime.date(year=2026, month=6, day=5)
         mock_get_payment_due_date_on_month.return_value = due_date
         payment_start_date = datetime.date(year=2026, month=7, day=12)
-        mock_get_trial_period_start_date.return_value = datetime.date(
+        mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
             year=2026, month=1, day=1
         )
 
@@ -758,10 +778,14 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
         mock_get_payment_due_date_on_month.assert_called_once_with(
             reference_date=first_of_month, cache=cache
         )
-        self.assertEqual(3, mock_get_trial_period_start_date.call_count)
-        mock_get_trial_period_start_date.assert_has_calls(
+        self.assertEqual(3, mock_get_trial_period_start_date_for_reference.call_count)
+        mock_get_trial_period_start_date_for_reference.assert_has_calls(
             [
-                call(contract=subscription, cache=cache)
+                call(
+                    contract=subscription,
+                    reference_date=subscription.start_date,
+                    cache=cache,
+                )
                 for subscription in subscriptions
             ],
             any_order=True,

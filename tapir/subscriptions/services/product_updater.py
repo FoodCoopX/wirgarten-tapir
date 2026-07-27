@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db import transaction
 
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
-from tapir.subscriptions.serializers import ExtendedProductSerializer
+from tapir.products.serializers import ExtendedProductSerializer
 from tapir.wirgarten.models import Product
 from tapir.wirgarten.service.products import update_product
 

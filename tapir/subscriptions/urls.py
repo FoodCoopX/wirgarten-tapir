@@ -68,6 +68,11 @@ urlpatterns = [
         other.SubscriptionPriceOverrideApiView.as_view(),
         name="subscription_price_override",
     ),
+    path(
+        "api/subscription_trial_change",
+        other.SubscriptionTrialChangeApiView.as_view(),
+        name="subscription_trial_change",
+    ),
 ]
 
 router = DefaultRouter()

@@ -43,6 +43,7 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
     QuestionaireCancellationReasonResponse,
     OrderFeedback,
+    LocationRoute,
 )
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
@@ -55,6 +56,7 @@ class DataGenerator:
         model_classes = [
             WaitingListEntry,
             MemberPickupLocation,
+            LocationRoute,
             PickupLocation,
             Subscription,
             ProductCapacity,

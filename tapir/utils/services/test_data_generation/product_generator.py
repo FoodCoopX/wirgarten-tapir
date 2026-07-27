@@ -1,7 +1,6 @@
 import datetime
 
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
-from tapir.configuration.models import TapirParameter
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.utils.config import Organization
@@ -14,7 +13,6 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     TaxRate,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
 
@@ -84,6 +82,7 @@ class ProductGenerator:
             description_bestellwizard_short=description_bestellwizard_short,
             description_bestellwizard_long="Der Ernteanteil besteht aus regional angebautem Bio-Gemüse und wird in Form von Kisten je Mitglied aufgeteilt. Pro Jahr werden im Regelfall 50 Kisten geliefert.",
             order_in_bestellwizard=1,
+            must_be_subscribed_to=True,
         )
         ProductTypeAccordionInBestellWizard.objects.create(
             product_type=ernteanteile,
@@ -113,9 +112,6 @@ class ProductGenerator:
             product_type=ernteanteile,
             tax_rate=0,
             valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
-        )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=ernteanteile.id
         )
 
         match organization:

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import {
   AssociationMembershipType,
+  PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
   PublicWaitingListEntryDetails,
@@ -54,6 +55,8 @@ interface Step10OrderSummaryProps {
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
   singleProductType?: PublicProductType;
   associationMembershipType?: AssociationMembershipType;
+  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  hideTrialPeriod: boolean;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -77,6 +80,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   waitingListEntryDetails,
   singleProductType,
   associationMembershipType,
+  selectedGrowingPeriod,
+  hideTrialPeriod,
 }) => {
   const [activePickupLocation, setActivePickupLocation] =
     useState<PublicPickupLocation>();
@@ -206,6 +211,18 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       .toDate();
   }
 
+  function getProductTypeList() {
+    if (singleProductType) {
+      return [singleProductType];
+    }
+
+    if (selectedGrowingPeriod) {
+      return selectedGrowingPeriod.productTypes;
+    }
+
+    return settings.productTypes;
+  }
+
   return (
     <>
       <div>
@@ -219,10 +236,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               ></span>
             </div>
           )}
-          {(singleProductType
-            ? [singleProductType]
-            : settings.productTypes
-          ).map((productType) => (
+          {getProductTypeList().map((productType) => (
             <Accordion key={productType.id}>
               <Accordion.Item
                 eventKey={productType.id!.toString()}
@@ -294,7 +308,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       {productTypesInWaitingList.has(productType) && (
                         <li>Warteliste</li>
                       )}
-                      {!productTypesInWaitingList.has(productType) &&
+                      {!hideTrialPeriod &&
+                        !productTypesInWaitingList.has(productType) &&
                         settings.trialPeriodLengthInWeeks > 0 && (
                           <li>
                             Probezeit bis{" "}

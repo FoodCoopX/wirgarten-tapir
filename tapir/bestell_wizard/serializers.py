@@ -6,10 +6,10 @@ from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
 )
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
+from tapir.products.serializers import PublicProductTypeSerializer
 from tapir.solidarity_contribution.config import (
     OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
 )
-from tapir.subscriptions.serializers import PublicProductTypeSerializer
 
 
 class PersonalDataSerializer(serializers.Serializer):

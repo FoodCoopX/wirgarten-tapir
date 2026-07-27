@@ -1,3 +1,7 @@
+import dayjs from "dayjs";
+import "dayjs/locale/de";
+import Weekday from "dayjs/plugin/weekday";
+import WeekOfYear from "dayjs/plugin/weekOfYear";
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -20,20 +24,16 @@ import {
   JokerWithCancellationLimit,
   UsedJokerInGrowingPeriod,
 } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import dayjs from "dayjs";
-import "dayjs/locale/de";
-import Weekday from "dayjs/plugin/weekday";
-import WeekOfYear from "dayjs/plugin/weekOfYear";
 import TapirButton from "../../components/TapirButton.tsx";
-import { formatDateText } from "../../utils/formatDateText.ts";
+import { useApi } from "../../hooks/useApi.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import { formatDateText } from "../../utils/formatDateText.ts";
 
 import "../../fixed_header.css";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import UsedJokersTable from "./UsedJokersTable.tsx";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 import UsedDonationsTable from "./UsedDonationsTable.tsx";
+import UsedJokersTable from "./UsedJokersTable.tsx";
 
 interface ManageJokersAndDonationsModalProps {
   onHide: () => void;
@@ -365,7 +365,7 @@ const ManageJokersAndDonationsModal: React.FC<
           )}
           {areJokersEnabled && (
             <ListGroup.Item>
-              <p>Überischt deiner Joker:</p>
+              <p>Übersicht deiner Joker:</p>
               <ul>
                 {usedJokerInGrowingPeriods.map((usedJokerInGrowingPeriod) => {
                   return (

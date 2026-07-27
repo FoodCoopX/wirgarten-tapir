@@ -1,12 +1,9 @@
 from tapir_mail.service.token import token_registry
 
-from tapir.configuration.models import TapirParameter
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import _register_tokens
 from tapir.wirgarten.tests.factories import (
     MemberWithSubscriptionFactory,
-    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -15,10 +12,6 @@ class TokenTest(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
-        product_type = ProductTypeFactory.create()
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=product_type.id
-        )
 
     def setUp(self):
         super().setUp()

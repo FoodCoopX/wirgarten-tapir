@@ -18,6 +18,9 @@
     <h4 class="mb-0">{{ number_of_contracts }} {% translate 'Verträge' %}, {{ quantity_sum }} Anteile</h4>
     <span style="display: flex; flex-direction:row;">
         <span id="subscription_change_dates_button" class="mx-1 p-0"></span>
+        {% if trial_period_enabled %}
+            <span id="subscription_trial_period_button" class="mx-1 p-0"></span>
+        {% endif %}
         <span id="subscription_change_price_button" class="mx-1 p-0"></span>
         <div style="width: 1em"></div>
         {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' class="d-flex" %}
@@ -56,6 +59,12 @@
                           data-bs-placement="top"
                           title="Probezeitraum läuft bis zum {{ subscriptions_trial_end_dates|get_value:entry.id|format_date }}"
                           class="material-icons">calendar_month</span>
+                {% elif trial_period_enabled and entry.trial_disabled %}
+                    <span style="color:var(--bs-warning)"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Probezeit manuell deaktiviert"
+                          class="material-icons">event_busy</span>
                 {% else %}
                     <span style="color:var(--primary)"
                           data-bs-toggle="tooltip"

@@ -3,7 +3,6 @@ import datetime
 from django.core.exceptions import ValidationError
 from localflavor.generic.validators import IBANValidator
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
@@ -13,14 +12,10 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
@@ -87,7 +82,7 @@ class SubscriptionUpdateViewValidator:
             order=order,
         )
 
-        cls.validate_additional_product_can_be_ordered_without_base_product_subscription(
+        cls.validate_optional_product_can_be_ordered_without_required_product_subscription(
             product_type=product_type,
             member=member,
             contract_start_date=contract_start_date,
@@ -183,35 +178,31 @@ class SubscriptionUpdateViewValidator:
                 )
 
     @classmethod
-    def validate_additional_product_can_be_ordered_without_base_product_subscription(
+    def validate_optional_product_can_be_ordered_without_required_product_subscription(
         cls,
         product_type: ProductType,
         member: Member,
         contract_start_date: datetime.date,
         cache: dict,
     ):
-        if get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-            cache=cache,
+        if product_type.must_be_subscribed_to:
+            return
+
+        for other_product_type in ProductType.objects.filter(
+            must_be_subscribed_to=True
         ):
-            return
-
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        if product_type == base_product_type:
-            return
-
-        has_subscription_to_base_product_type = (
-            get_active_and_future_subscriptions(reference_date=contract_start_date)
-            .filter(
-                member__id=member.id,
-                product__type__id=base_product_type.id,
+            has_subscription_to_required_product_type = (
+                get_active_and_future_subscriptions(
+                    reference_date=contract_start_date, cache=cache
+                )
+                .filter(
+                    member_id=member.id,
+                    product__type_id=other_product_type.id,
+                )
+                .exists()
             )
-            .exists()
-        )
-        if has_subscription_to_base_product_type:
-            return
-
-        raise ValidationError(
-            "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-            "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben."
-        )
+            if not has_subscription_to_required_product_type:
+                raise ValidationError(
+                    f"Um Anteile von diese zusätzliche Produkte ({product_type.name}) zu bestellen, "
+                    f"musst du Anteile von der Basis-Produkt ({other_product_type.name}) an der gleiche Vertragsperiode haben."
+                )

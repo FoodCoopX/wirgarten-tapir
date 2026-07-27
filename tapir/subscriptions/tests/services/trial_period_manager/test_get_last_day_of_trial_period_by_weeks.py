@@ -8,7 +8,9 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class TestGetLastDayOfTrialPeriodByWeeks(TapirUnitTest):
-    @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
+    @patch.object(
+        TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
+    )
     @patch(
         "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
         autospec=True,
@@ -16,12 +18,12 @@ class TestGetLastDayOfTrialPeriodByWeeks(TapirUnitTest):
     def test_getLastDayOfTrialPeriodByWeeks_durationIsOneWeek_returnsCorrectDate(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_trial_period_start_date: Mock,
+        mock_get_trial_period_start_date_for_reference: Mock,
     ):
         subscription = Mock()
         subscription.start_date = datetime.date(year=2025, month=1, day=1)
         mock_get_parameter_value.return_value = 1
-        mock_get_trial_period_start_date.return_value = datetime.date(
+        mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
             year=2025, month=1, day=13
         )
         cache = {}
@@ -34,8 +36,13 @@ class TestGetLastDayOfTrialPeriodByWeeks(TapirUnitTest):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
         )
+        mock_get_trial_period_start_date_for_reference.assert_called_once_with(
+            contract=subscription, reference_date=subscription.start_date, cache=cache
+        )
 
-    @patch.object(TrialPeriodManager, "get_trial_period_start_date", autospec=True)
+    @patch.object(
+        TrialPeriodManager, "get_trial_period_start_date_for_reference", autospec=True
+    )
     @patch(
         "tapir.subscriptions.services.trial_period_manager.get_parameter_value",
         autospec=True,
@@ -43,12 +50,12 @@ class TestGetLastDayOfTrialPeriodByWeeks(TapirUnitTest):
     def test_getLastDayOfTrialPeriodByWeeks_durationIs5Week_returnsCorrectDate(
         self,
         mock_get_parameter_value: Mock,
-        mock_get_trial_period_start_date: Mock,
+        mock_get_trial_period_start_date_for_reference: Mock,
     ):
         subscription = Mock()
         subscription.start_date = datetime.date(year=2025, month=5, day=6)
         mock_get_parameter_value.return_value = 5
-        mock_get_trial_period_start_date.return_value = datetime.date(
+        mock_get_trial_period_start_date_for_reference.return_value = datetime.date(
             year=2025, month=6, day=16
         )
         cache = {}
@@ -60,4 +67,7 @@ class TestGetLastDayOfTrialPeriodByWeeks(TapirUnitTest):
         self.assertEqual(datetime.date(year=2025, month=7, day=20), result)
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
+        )
+        mock_get_trial_period_start_date_for_reference.assert_called_once_with(
+            contract=subscription, reference_date=subscription.start_date, cache=cache
         )
