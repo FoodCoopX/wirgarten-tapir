@@ -533,7 +533,11 @@ class BestellWizardBaseDataApiView(APIView):
 
         return Response(
             BestellWizardBaseDataResponseSerializer(
-                response_data, context={"cache": self.cache}
+                response_data,
+                context={
+                    "cache": self.cache,
+                    "reference_date_for_delivery_charge": earliest_contract_start_date,
+                },
             ).data
         )
 

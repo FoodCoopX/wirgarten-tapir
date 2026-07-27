@@ -94,12 +94,15 @@ const domNodeFuturePaymentsCard = document.getElementById(
   "future_payments_card",
 );
 if (domNodeFuturePaymentsCard) {
+  const deliveryChargeEnabled =
+    domNodeFuturePaymentsCard.dataset.deliveryChargeEnabled === "True";
   const root = createRoot(domNodeFuturePaymentsCard);
 
   root.render(
     <FuturePaymentsCard
       memberId={domNodeFuturePaymentsCard.dataset.memberId!}
       csrfToken={getCsrfToken()}
+      deliveryChargeEnabled={deliveryChargeEnabled}
     />,
   );
 }

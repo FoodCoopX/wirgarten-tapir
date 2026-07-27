@@ -20,7 +20,8 @@
                 {% if perms.coop.manage %}
                     {% include 'wirgarten/generic/action-button.html' with onclick='handleAddPickupLocation()' title='Abholort hinzufügen' type='success' icon='add_location_alt' %}
                     {% include 'wirgarten/generic/action-button.html' with onclick='handleEdit()' id='edit-location' title='Abholort bearbeiten' disabled=True type='primary' icon='edit' %}
-                    <div id="pickup_location_capacity_edit_button">
+                    <div id="pickup_location_capacity_edit_button"
+                         data-enable-delivery-charge="{{ enable_delivery_charge }}">
                         <span class="spinner-border"></span>
                     </div>
                     {% include 'wirgarten/generic/action-button.html' with onclick='handleDelete()' id='delete-location' title='Abholort löschen' disabled=True type='danger' icon='delete' %}
@@ -49,7 +50,7 @@
                                     onclick="handleRowClick('{{ pl.id }}')">
                                     <td style="text-align:left">
                                         {% if pl.location_route %}
-	                                        {{ pl.location_route }}
+                                            {{ pl.location_route }}
                                         {% endif %}
                                         <strong>{{ pl.name }}</strong>
                                     </td>
@@ -58,22 +59,23 @@
                                     </td>
                                     <td>
                                         {{ pl.street }}
-                                        <br />
+                                        <br/>
                                         <small>{{ pl.postcode }} {{ pl.city }}</small>
                                         {% if pl.route_info %}
-	                                        <br /><em>{{ pl.route_info }}</em>
+                                            <br/><em>{{ pl.route_info }}</em>
                                         {% endif %}
                                     </td>
                                     <td style="white-space:nowrap; text-align:left;">
                                         {% for cap in pl.capabilities %}
-                                            <img width="24em" title="{{ cap.name }}" src="{{ cap.icon }}" />
+                                            <img width="24em" title="{{ cap.name }}" src="{{ cap.icon }}"/>
                                             <small> {{ cap.current_capacity }} / {{ cap.max_capacity|default:'∞' }}
                                                 {% if cap.capacity_percent %}
                                                     (
                                                     {{ cap.capacity_percent|format_percent }})
                                                 {% endif %}
-                                                &nbsp;&nbsp;&nbsp;<span style="color:{% if cap.next_capacity_diff.0 == '+' %}green{% else %}red{% endif %}">{{ cap.next_capacity_diff }}</span></small>
-                                            <br />
+                                                &nbsp;&nbsp;&nbsp;<span
+                                                    style="color:{% if cap.next_capacity_diff.0 == '+' %}green{% else %}red{% endif %}">{{ cap.next_capacity_diff }}</span></small>
+                                            <br/>
                                         {% endfor %}
                                     </td>
                                     <td>

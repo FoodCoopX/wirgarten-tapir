@@ -6,7 +6,6 @@ import {
 } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
 
@@ -15,6 +14,7 @@ interface ProductModalProps {
   onHide: () => void;
   csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  pickupLocationId: string;
 }
 
 function parseIntOrUndefined(valueAstring: string): number | undefined {
@@ -30,6 +30,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
   onHide,
   csrfToken,
   setToastDatas,
+  pickupLocationId,
 }) => {
   const api = useApi(PickupLocationsApi, csrfToken);
 
@@ -40,17 +41,10 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
     PickupLocationCapacityByShare[]
   >([]);
 
-  const URL_PARAMETER_PICKUP_LOCATION_ID = "selected";
-
   useEffect(() => {
     if (!show) return;
 
     setDataLoading(true);
-
-    const pickupLocationId = getParameterFromUrl(
-      URL_PARAMETER_PICKUP_LOCATION_ID,
-    );
-    if (!pickupLocationId) return;
 
     api
       .pickupLocationsApiPickupLocationCapacitiesRetrieve({
@@ -81,9 +75,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
     api
       .pickupLocationsApiPickupLocationCapacitiesPartialUpdate({
         patchedPickupLocationCapacitiesRequest: {
-          pickupLocationId: getParameterFromUrl(
-            URL_PARAMETER_PICKUP_LOCATION_ID,
-          ),
+          pickupLocationId: pickupLocationId,
           pickupLocationName: locationName,
           capacitiesByShares: capacitiesByShare,
         },

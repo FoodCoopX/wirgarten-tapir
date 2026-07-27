@@ -272,6 +272,10 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             == LEGAL_STATUS_ASSOCIATION
         )
         context["cache"] = self.cache
+        context["delivery_charge_enabled"] = get_parameter_value(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
+            cache=self.cache,
+        )
         return context
 
     def get_filterset_kwargs(self, filterset_class):

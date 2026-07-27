@@ -11,6 +11,11 @@ urlpatterns = [
         name="pickup_location_capacities",
     ),
     path(
+        "api/pickup_location_delivery_charges",
+        views.PickupLocationDeliveryChargesView.as_view(),
+        name="pickup_location_delivery_charges",
+    ),
+    path(
         "api/pickup_location_capacity_evolution",
         views.PickupLocationCapacityEvolutionView.as_view(),
         name="pickup_location_capacity_evolution",

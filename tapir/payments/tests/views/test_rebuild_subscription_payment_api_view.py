@@ -13,6 +13,7 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     SubscriptionFactory,
     ProductPriceFactory,
+    MemberPickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
@@ -84,6 +85,10 @@ class TestRebuildSubscriptionPaymentsApiView(TapirIntegrationTest):
         )
         ProductPriceFactory.create(
             product=subscription.product, valid_from=subscription.start_date
+        )
+        MemberPickupLocationFactory.create(
+            member=subscription.member,
+            valid_from=datetime.date(year=2023, month=1, day=1),
         )
 
         url = reverse("payments:rebuild_subscription_payments")

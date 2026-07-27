@@ -29,8 +29,15 @@ if (domNodeMemberDeleteButton) {
 
 const domNodePaymentButton = document.getElementById("payments_button");
 if (domNodePaymentButton) {
+  const deliveryChargeEnabled =
+    domNodePaymentButton.dataset.deliveryChargeEnabled === "True";
   const root = createRoot(domNodePaymentButton);
-  root.render(<PaymentsButton csrfToken={getCsrfToken()} />);
+  root.render(
+    <PaymentsButton
+      csrfToken={getCsrfToken()}
+      deliveryChargeEnabled={deliveryChargeEnabled}
+    />,
+  );
 } else {
   console.error("Member payments button not found");
 }

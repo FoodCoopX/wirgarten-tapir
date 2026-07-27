@@ -71,7 +71,8 @@
                     </span>
                 </span>
                 {% if show_payments_card %}
-                    <span id="future_payments_card" data-member-id="{{ object.pk }}">
+                    <span id="future_payments_card" data-member-id="{{ object.pk }}"
+                          data-delivery-charge-enabled="{{ delivery_charge_enabled }}">
                         <span class="spinner-border">
                             <span class="visually-hidden">Loading...</span>
                         </span>

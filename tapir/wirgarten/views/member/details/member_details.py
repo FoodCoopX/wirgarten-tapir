@@ -199,6 +199,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             key=ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS, cache=cache
         )
 
+        context["delivery_charge_enabled"] = get_parameter_value(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED, cache=cache
+        )
+
         return context
 
     def add_renewal_notice_context(self, context, next_month, today, cache: dict):
