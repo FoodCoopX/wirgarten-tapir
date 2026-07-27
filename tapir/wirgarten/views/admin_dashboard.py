@@ -146,6 +146,22 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             .order_by("name")
             .first()
         )
+        if base_product_type is None:
+            biggest_product_type = ProductType.objects.order_by("name").first()
+            max_number_of_subscriptions = 0
+            for product_type in TapirCache.get_all_product_types(cache=self.cache):
+                number_of_subscriptions = Subscription.objects.filter(
+                    product__type=product_type
+                ).count()
+                if number_of_subscriptions > max_number_of_subscriptions:
+                    max_number_of_subscriptions = number_of_subscriptions
+                    biggest_product_type = product_type
+            base_product_type = biggest_product_type
+
+        if base_product_type is None:
+            context["no_base_product_type"] = True
+            return context
+
         self.harvest_share_type = base_product_type
 
         next_contract_start_date = (
