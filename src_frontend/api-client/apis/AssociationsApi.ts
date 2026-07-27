@@ -59,6 +59,16 @@ export interface AssociationsApiNumberOfAssociationMembersPerMonthRetrieveReques
   startDate?: Date;
 }
 
+export interface AssociationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieveRequest {
+  endDate?: Date;
+  startDate?: Date;
+}
+
+export interface AssociationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieveRequest {
+  endDate?: Date;
+  startDate?: Date;
+}
+
 export interface AssociationsApiSetMembershipEndDateCreateRequest {
   setAssociationMembershipEndDateRequestRequest: SetAssociationMembershipEndDateRequestRequest;
 }
@@ -364,6 +374,136 @@ export class AssociationsApi extends runtime.BaseAPI {
   ): Promise<NumberOfAssociationMembersPerMonthResponse> {
     const response =
       await this.associationsApiNumberOfAssociationMembersPerMonthRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieveRaw(
+    requestParameters: AssociationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<NumberOfAssociationMembersPerMonthResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["endDate"] != null) {
+      queryParameters["end_date"] = (requestParameters["endDate"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    if (requestParameters["startDate"] != null) {
+      queryParameters["start_date"] = (requestParameters["startDate"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/number_of_association_membership_cancellations_per_month_relative_to_cancellation`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      NumberOfAssociationMembersPerMonthResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieve(
+    requestParameters: AssociationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<NumberOfAssociationMembersPerMonthResponse> {
+    const response =
+      await this.associationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieveRaw(
+    requestParameters: AssociationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<NumberOfAssociationMembersPerMonthResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["endDate"] != null) {
+      queryParameters["end_date"] = (requestParameters["endDate"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    if (requestParameters["startDate"] != null) {
+      queryParameters["start_date"] = (requestParameters["startDate"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/number_of_association_membership_cancellations_per_month`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      NumberOfAssociationMembersPerMonthResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async associationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieve(
+    requestParameters: AssociationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<NumberOfAssociationMembersPerMonthResponse> {
+    const response =
+      await this.associationsApiNumberOfAssociationMembershipCancellationsPerMonthRetrieveRaw(
         requestParameters,
         initOverrides,
       );

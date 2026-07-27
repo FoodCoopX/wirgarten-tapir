@@ -10,7 +10,7 @@ from django.db.models import F
 from faker import Faker
 from tapir_mail.service.shortcuts import make_timezone_aware
 
-from tapir.associations.models import AssociationMembershipType
+from tapir.associations.models import AssociationMembershipType, AssociationMembership
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
 )
@@ -426,6 +426,17 @@ class UserGenerator:
             actor=None,
             cache=cache,
         )
+
+        cancelled_subscription = (
+            Subscription.objects.filter(member=member, cancellation_ts__isnull=False)
+            .order_by("end_date")
+            .last()
+        )
+        if cancelled_subscription is not None:
+            AssociationMembership.objects.filter(member=member).update(
+                end_date=cancelled_subscription.end_date,
+                cancellation_ts=cancelled_subscription.cancellation_ts,
+            )
 
     @classmethod
     def link_members_to_pickup_location(

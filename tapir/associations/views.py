@@ -1,6 +1,5 @@
 import datetime
 
-import distinctipy
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
@@ -36,6 +35,7 @@ from tapir.associations.serializers import (
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
 )
+from tapir.associations.services.dashboard_data_builder import DashboardDataBuilder
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
@@ -49,7 +49,6 @@ from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member
@@ -355,46 +354,9 @@ class NumberOfAssociationMembersPerMonthApiView(APIView):
         end_date_as_string = request.query_params.get("end_date")
         end_date = datetime.datetime.strptime(end_date_as_string, "%Y-%m-%d").date()
 
-        membership_types = AssociationMembershipType.objects.order_by("name")
-        labels = []
-        colors = distinctipy.get_colors(
-            len(membership_types) + 1, rng=123456, pastel_factor=0.5
+        labels, datasets = DashboardDataBuilder.build_dashboard_data(
+            start_date=start_date, end_date=end_date, count_function=self.count_function
         )
-        datasets = {
-            membership_type: {
-                "name": membership_type.name,
-                "color": distinctipy.get_hex(colors[index]),
-            }
-            for index, membership_type in enumerate(membership_types)
-        }
-
-        current_date = start_date.replace(day=1)
-        while current_date < end_date:
-            labels.append(current_date.strftime("%m.%Y"))
-            current_date = get_first_of_next_month(current_date)
-
-        for membership_type in membership_types:
-            datasets[membership_type]["values"] = self._build_dataset_values(
-                membership_type=membership_type,
-                start_date=start_date,
-                end_date=end_date,
-            )
-
-        datasets = list(datasets.values())
-
-        if len(membership_types) > 1:
-            totals = [0 for _ in labels]
-            for dataset in datasets:
-                for index, value in enumerate(dataset["values"]):
-                    totals[index] += value
-
-            datasets.append(
-                {
-                    "name": "Gesamt",
-                    "color": distinctipy.get_hex(colors[-1]),
-                    "values": totals,
-                }
-            )
 
         return Response(
             NumberOfAssociationMembersPerMonthResponseSerializer(
@@ -406,22 +368,97 @@ class NumberOfAssociationMembersPerMonthApiView(APIView):
         )
 
     @classmethod
-    def _build_dataset_values(
-        cls,
-        membership_type: AssociationMembershipType,
-        start_date: datetime.date,
-        end_date: datetime.date,
+    def count_function(
+        cls, current_date: datetime.date, membership_type: AssociationMembershipType
     ):
-        current_date = start_date.replace(day=1)
-        values = []
-        while current_date < end_date:
-            values.append(
-                AssociationMembership.objects.filter(
-                    start_date__lte=current_date, type=membership_type
-                )
-                .filter(Q(end_date=None) | Q(end_date__gte=current_date))
-                .count()
+        return (
+            AssociationMembership.objects.filter(
+                start_date__lte=current_date, type=membership_type
             )
-            current_date = get_first_of_next_month(current_date)
+            .filter(Q(end_date=None) | Q(end_date__gte=current_date))
+            .count()
+        )
 
-        return values
+
+class NumberOfAssociationMembershipCancellationRelativeToEndDatePerMonthApiView(
+    APIView
+):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="start_date", type=datetime.date),
+            OpenApiParameter(name="end_date", type=datetime.date),
+        ],
+        responses={200: NumberOfAssociationMembersPerMonthResponseSerializer},
+    )
+    def get(self, request):
+        start_date_as_string = request.query_params.get("start_date")
+        start_date = datetime.datetime.strptime(start_date_as_string, "%Y-%m-%d").date()
+        end_date_as_string = request.query_params.get("end_date")
+        end_date = datetime.datetime.strptime(end_date_as_string, "%Y-%m-%d").date()
+
+        labels, datasets = DashboardDataBuilder.build_dashboard_data(
+            start_date=start_date, end_date=end_date, count_function=self.count_function
+        )
+
+        return Response(
+            NumberOfAssociationMembersPerMonthResponseSerializer(
+                {
+                    "labels": labels,
+                    "datasets": datasets,
+                }
+            ).data
+        )
+
+    @classmethod
+    def count_function(
+        cls, current_date: datetime.date, membership_type: AssociationMembershipType
+    ):
+        return AssociationMembership.objects.filter(
+            type=membership_type,
+            end_date__year=current_date.year,
+            end_date__month=current_date.month,
+        ).count()
+
+
+class NumberOfAssociationMembershipCancellationRelativeToCancellationDatePerMonthApiView(
+    APIView
+):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="start_date", type=datetime.date),
+            OpenApiParameter(name="end_date", type=datetime.date),
+        ],
+        responses={200: NumberOfAssociationMembersPerMonthResponseSerializer},
+    )
+    def get(self, request):
+        start_date_as_string = request.query_params.get("start_date")
+        start_date = datetime.datetime.strptime(start_date_as_string, "%Y-%m-%d").date()
+        end_date_as_string = request.query_params.get("end_date")
+        end_date = datetime.datetime.strptime(end_date_as_string, "%Y-%m-%d").date()
+
+        labels, datasets = DashboardDataBuilder.build_dashboard_data(
+            start_date=start_date, end_date=end_date, count_function=self.count_function
+        )
+
+        return Response(
+            NumberOfAssociationMembersPerMonthResponseSerializer(
+                {
+                    "labels": labels,
+                    "datasets": datasets,
+                }
+            ).data
+        )
+
+    @classmethod
+    def count_function(
+        cls, current_date: datetime.date, membership_type: AssociationMembershipType
+    ):
+        return AssociationMembership.objects.filter(
+            type=membership_type,
+            cancellation_ts__year=current_date.year,
+            cancellation_ts__month=current_date.month,
+        ).count()

@@ -1,10 +1,10 @@
 import {
+  BarElement,
   CategoryScale,
   ChartData,
   Chart as ChartJS,
   Legend,
   LinearScale,
-  LineElement,
   PointElement,
   Title,
   Tooltip,
@@ -12,19 +12,19 @@ import {
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
-import { Line } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import { AssociationsApi, type GraphDataset } from "../api-client";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
-interface AdminDashboardAssociationDataProps {
+interface AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDateProps {
   csrfToken: string;
 }
 
-const AdminDashboardAssociationData: React.FC<
-  AdminDashboardAssociationDataProps
+const AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate: React.FC<
+  AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDateProps
 > = ({ csrfToken }) => {
   const api = useApi(AssociationsApi, csrfToken);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -64,10 +64,12 @@ const AdminDashboardAssociationData: React.FC<
     }
 
     api
-      .associationsApiNumberOfAssociationMembersPerMonthRetrieve({
-        startDate: startDate,
-        endDate: endDate,
-      })
+      .associationsApiNumberOfAssociationMembershipCancellationsPerMonthRelativeToCancellationRetrieve(
+        {
+          startDate: startDate,
+          endDate: endDate,
+        },
+      )
       .then((data) => {
         setLabels(data.labels);
         setDatasets(data.datasets);
@@ -86,7 +88,7 @@ const AdminDashboardAssociationData: React.FC<
     CategoryScale,
     LinearScale,
     PointElement,
-    LineElement,
+    BarElement,
     Title,
     Tooltip,
     Legend,
@@ -94,7 +96,7 @@ const AdminDashboardAssociationData: React.FC<
 
   const POINT_STYLES = ["circle", "cross", "crossRot", "dash"];
 
-  function buildData(): ChartData<"line"> {
+  function buildDataNumberOfMembers(): ChartData<"bar"> {
     Object.entries(datasets);
     return {
       labels,
@@ -115,7 +117,10 @@ const AdminDashboardAssociationData: React.FC<
       <Card>
         <Card.Header>
           <div className={"d-flex justify-content-between align-items-center"}>
-            <Card.Title className={"mb-0"}>Anzahl an Mitglieder</Card.Title>
+            <Card.Title className={"mb-0"}>
+              Anzahl an Mitgliedschaft-Enden (relative zu wann die Kündigung
+              registriert worden ist)
+            </Card.Title>
             <div className={"d-flex gap-2"}>
               <Form.Control
                 type={"date"}
@@ -135,14 +140,15 @@ const AdminDashboardAssociationData: React.FC<
           {loading ? (
             <Spinner />
           ) : (
-            <Line
-              style={{ minWidth: "500px" }}
-              data={buildData()}
-              options={{
-                responsive: true,
-                scales: { y: { suggestedMin: 0 } },
-              }}
-            />
+            <div style={{ width: "833px" }}>
+              <Bar
+                data={buildDataNumberOfMembers()}
+                options={{
+                  responsive: true,
+                  scales: { y: { suggestedMin: 0 } },
+                }}
+              />
+            </div>
           )}
         </Card.Body>
       </Card>
@@ -154,4 +160,4 @@ const AdminDashboardAssociationData: React.FC<
   );
 };
 
-export default AdminDashboardAssociationData;
+export default AdminDashboardNumberOfAssociationCancellationsRelativeToCancellationDate;

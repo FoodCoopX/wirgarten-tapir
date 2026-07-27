@@ -107,6 +107,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/NumberOfAssociationMembersPerMonthResponse'
           description: ''
+  /associations/api/number_of_association_membership_cancellations_per_month:
+    get:
+      operationId: associations_api_number_of_association_membership_cancellations_per_month_retrieve
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NumberOfAssociationMembersPerMonthResponse'
+          description: ''
+  /associations/api/number_of_association_membership_cancellations_per_month_relative_to_cancellation:
+    get:
+      operationId: associations_api_number_of_association_membership_cancellations_per_month_relative_to_cancellation_retrieve
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NumberOfAssociationMembersPerMonthResponse'
+          description: ''
   /associations/api/set_membership_end_date:
     post:
       operationId: associations_api_set_membership_end_date_create

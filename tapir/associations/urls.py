@@ -35,6 +35,16 @@ urlpatterns = [
         views.NumberOfAssociationMembersPerMonthApiView.as_view(),
         name="number_of_association_members_per_month",
     ),
+    path(
+        "api/number_of_association_membership_cancellations_per_month",
+        views.NumberOfAssociationMembershipCancellationRelativeToEndDatePerMonthApiView.as_view(),
+        name="number_of_association_membership_cancellations_per_month",
+    ),
+    path(
+        "api/number_of_association_membership_cancellations_per_month_relative_to_cancellation",
+        views.NumberOfAssociationMembershipCancellationRelativeToCancellationDatePerMonthApiView.as_view(),
+        name="number_of_association_membership_cancellations_per_month_relative_to_cancellation",
+    ),
 ]
 
 router = DefaultRouter()
