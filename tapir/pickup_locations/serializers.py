@@ -91,9 +91,12 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.DecimalField(max_digits=8, decimal_places=2))
     def get_current_delivery_charge(self, pickup_location: PickupLocation):
         cache = self.context.get("cache", {})
+        reference_date = self.context.get(
+            "reference_date_for_delivery_charge", get_today(cache=cache)
+        )
         amount = PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
             pickup_location_id=pickup_location.id,
-            reference_date=get_today(cache=cache),
+            reference_date=reference_date,
             cache=cache,
         )
         return str(amount)
