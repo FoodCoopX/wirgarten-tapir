@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.associations.models import AssociationMembershipType
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
@@ -104,3 +105,15 @@ class ConfigurationGenerator:
         TapirParameter.objects.filter(
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER
         ).update(value="TEST-IDENTIFIER")
+
+        if organization == Organization.VEREIN:
+            AssociationMembershipType.objects.create(
+                name="Test membership type 1",
+                order_in_bestell_wizard=1,
+                description_in_bestell_wizard="Test description 1",
+            )
+            AssociationMembershipType.objects.create(
+                name="Test membership type 2",
+                order_in_bestell_wizard=2,
+                description_in_bestell_wizard="Test description 2",
+            )

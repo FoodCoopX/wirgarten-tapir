@@ -10,6 +10,10 @@ from django.db.models import F
 from faker import Faker
 from tapir_mail.service.shortcuts import make_timezone_aware
 
+from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.association_membership_change_handler import (
+    AssociationMembershipChangeHandler,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.payments.models import MemberPaymentRhythm
@@ -36,7 +40,11 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tasks import assign_member_numbers
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import (
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 
 class UserGenerator:
@@ -195,7 +203,14 @@ class UserGenerator:
         if not member_without_subscriptions and random.random() < 0.3:
             cls.generate_feedback_for_member(member)
 
-        cls.create_coop_shares_for_user(member, min_coop_shares, cache)
+        if legal_status_is_cooperative(cache=cache):
+            cls.create_coop_shares_for_user(member, min_coop_shares, cache)
+        elif (
+            legal_status_is_association(cache=cache)
+            and not member_without_subscriptions
+        ):
+            cls.create_association_membership(member, cache=cache)
+
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,
             rhythm=random.choice(MemberPaymentRhythm.Rhythm.choices)[0],
@@ -395,6 +410,21 @@ class UserGenerator:
             shares_valid_at=member.date_joined.date(),
             cache=cache,
             actor=None,
+        )
+
+    @classmethod
+    def create_association_membership(cls, member: Member, cache: dict):
+        AssociationMembershipChangeHandler.start_membership(
+            member=member,
+            association_membership_type=AssociationMembershipType.objects.order_by(
+                "?"
+            ).first(),
+            start_date=Subscription.objects.filter(member=member)
+            .order_by("start_date")
+            .first()
+            .start_date,
+            actor=None,
+            cache=cache,
         )
 
     @classmethod

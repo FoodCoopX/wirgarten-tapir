@@ -114,7 +114,7 @@ const AdminDashboardAssociationData: React.FC<
     <>
       <Card>
         <Card.Header>
-          <div className={"d-flex justify-content-between"}>
+          <div className={"d-flex justify-content-between align-items-center"}>
             <Card.Title className={"mb-0"}>Anzahl an Mitglieder</Card.Title>
             <div className={"d-flex gap-2"}>
               <Form.Control
