@@ -3751,13 +3751,13 @@ yaml = ["pyyaml"]
 
 [[package]]
 name = "tapir-mail"
-version = "0.0.0.dev1785157617"
+version = "0.0.0.dev1785159062"
 description = ""
 optional = false
 python-versions = ">=3.14,<4.0"
 groups = ["main"]
 files = [
-    {file = "tapir_mail-0.0.0.dev1785157617-py3-none-any.whl", hash = "sha256:fa18710966919430e79db51a5add053657e11057e03ed0a7dfb2f9be54d2c182"},
+    {file = "tapir_mail-0.0.0.dev1785159062-py3-none-any.whl", hash = "sha256:a85eae8fe825ac2a87d61e6751f0f194d0cabed0c535bcfae3bfd34ad0b1e055"},
 ]
 
 [package.dependencies]
@@ -3782,7 +3782,7 @@ whitenoise = ">=6.11.0,<7.0.0"
 
 [package.source]
 type = "url"
-url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1785157617/tapir_mail-0.0.0.dev1785157617-py3-none-any.whl"
+url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1785159062/tapir_mail-0.0.0.dev1785159062-py3-none-any.whl"
 
 [[package]]
 name = "termcolor"
@@ -4143,4 +4143,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.14"
-content-hash = "be3ef71861518ee69a495a0e9ec076d52406f8ebd170373a0603d04fc092109e"
+content-hash = "3b5a045203c71753612b6ba9e6e482995351c0991b2eeb51db893820bb54aebc"
