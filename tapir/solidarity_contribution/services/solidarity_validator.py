@@ -90,8 +90,13 @@ class SolidarityValidator:
                 ParameterKeys.SOLIDARITY_CHOICES, cache=cache
             )
 
-        values_as_string = parameter_value.split(",")
-        values: list[float | str] = [float(value.strip()) for value in values_as_string]
+        if parameter_value.strip() == "":
+            values = []
+        else:
+            values_as_string = parameter_value.split(",")
+            values: list[float | str] = [
+                float(value.strip()) for value in values_as_string
+            ]
 
         if 0 not in values:
             values.append(0)
@@ -115,4 +120,4 @@ class SolidarityValidator:
         try:
             cls.get_solidarity_dropdown_values(solidarity_values_as_string, cache={})
         except Exception as e:
-            raise ValidationError(f"Invalid solidarity values: {e}")
+            raise ValidationError(f"Ungültiger Solidarbeitrag-Wert: {e}")
