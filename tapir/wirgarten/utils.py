@@ -19,6 +19,7 @@ from tapir.core.config import (
     TEST_DATE_OVERRIDE_DECEMBER_FIFTEENTH_THIS_YEAR,
     TEST_DATE_OVERRIDE_LAST_MINUTE_OF_THIS_YEAR,
     TEST_DATE_OVERRIDE_END_OF_FIRST_DAY_NEXT_YEAR,
+    LEGAL_STATUS_COMPANY,
 )
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.is_debug_instance import is_debug_instance
@@ -128,15 +129,22 @@ def format_subscription_list_html(subscriptions: list[Subscription]) -> str:
     return f"<ul><li>{'</li><li>'.join(formatted_subscriptions)}</li></ul>"
 
 
-def legal_status_is_cooperative(cache):
+def legal_status_is_cooperative(cache: dict):
     return (
         get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
         == LEGAL_STATUS_COOPERATIVE
     )
 
 
-def legal_status_is_association(cache):
+def legal_status_is_association(cache: dict):
     return (
         get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
         == LEGAL_STATUS_ASSOCIATION
+    )
+
+
+def legal_status_is_company(cache: dict):
+    return (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+        == LEGAL_STATUS_COMPANY
     )
