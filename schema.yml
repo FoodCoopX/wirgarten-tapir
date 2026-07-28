@@ -31,6 +31,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /associations/api/association_membership_type_hard_delete:
+    delete:
+      operationId: associations_api_association_membership_type_hard_delete_destroy
+      parameters:
+      - in: query
+        name: type_id
+        schema:
+          type: string
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /associations/api/association_membership_type_soft_delete:
+    delete:
+      operationId: associations_api_association_membership_type_soft_delete_destroy
+      parameters:
+      - in: query
+        name: type_id
+        schema:
+          type: string
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /associations/api/existing_member_updates_membership:
     post:
       operationId: associations_api_existing_member_updates_membership_create
@@ -6276,6 +6318,9 @@ components:
           items:
             $ref: '#/components/schemas/AssociationMembershipTypePrice'
           readOnly: true
+        can_be_hard_deleted:
+          type: boolean
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -6296,6 +6341,7 @@ components:
           maximum: 2147483647
           minimum: -2147483648
       required:
+      - can_be_hard_deleted
       - created_at
       - description_in_bestell_wizard
       - name

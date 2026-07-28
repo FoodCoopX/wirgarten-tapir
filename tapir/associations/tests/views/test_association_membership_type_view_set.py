@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.associations.models import AssociationMembershipType
 from tapir.associations.tests.factories import AssociationMembershipTypeFactory
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
@@ -36,3 +37,16 @@ class TestAssociationMembershipTypeViewSet(TapirIntegrationTest):
         self.assertEqual(
             type_ids, {membership_type["id"] for membership_type in response_content}
         )
+
+    def test_delete_default_returnsError(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        membership_type = AssociationMembershipTypeFactory.create()
+
+        url = reverse(
+            "associations:association_membership_types-detail",
+            args=[membership_type.id],
+        )
+        response = self.client.delete(url)
+
+        self.assertStatusCode(response, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(1, AssociationMembershipType.objects.count())

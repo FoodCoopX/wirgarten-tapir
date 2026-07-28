@@ -46,6 +46,14 @@ export interface AssociationsApiAdminCreateMembershipCreateRequest {
   adminSetAssociationMembershipRequestRequest: AdminSetAssociationMembershipRequestRequest;
 }
 
+export interface AssociationsApiAssociationMembershipTypeHardDeleteDestroyRequest {
+  typeId?: string;
+}
+
+export interface AssociationsApiAssociationMembershipTypeSoftDeleteDestroyRequest {
+  typeId?: string;
+}
+
 export interface AssociationsApiExistingMemberUpdatesMembershipCreateRequest {
   existingMemberUpdatesAssociationMembershipRequestRequest: ExistingMemberUpdatesAssociationMembershipRequestRequest;
 }
@@ -184,6 +192,124 @@ export class AssociationsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiAssociationMembershipTypeHardDeleteDestroyRaw(
+    requestParameters: AssociationsApiAssociationMembershipTypeHardDeleteDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["typeId"] != null) {
+      queryParameters["type_id"] = requestParameters["typeId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/association_membership_type_hard_delete`,
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async associationsApiAssociationMembershipTypeHardDeleteDestroy(
+    requestParameters: AssociationsApiAssociationMembershipTypeHardDeleteDestroyRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response =
+      await this.associationsApiAssociationMembershipTypeHardDeleteDestroyRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async associationsApiAssociationMembershipTypeSoftDeleteDestroyRaw(
+    requestParameters: AssociationsApiAssociationMembershipTypeSoftDeleteDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["typeId"] != null) {
+      queryParameters["type_id"] = requestParameters["typeId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/associations/api/association_membership_type_soft_delete`,
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async associationsApiAssociationMembershipTypeSoftDeleteDestroy(
+    requestParameters: AssociationsApiAssociationMembershipTypeSoftDeleteDestroyRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response =
+      await this.associationsApiAssociationMembershipTypeSoftDeleteDestroyRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

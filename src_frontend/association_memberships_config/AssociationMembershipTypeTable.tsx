@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { Table } from "react-bootstrap";
-import { AssociationMembershipType } from "../api-client";
+import { AssociationMembershipType, AssociationsApi } from "../api-client";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
+import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 import AssociationMembershipTypeEditModal from "./AssociationMembershipTypeEditModal.tsx";
 import AssociationMembershipTypePriceModal from "./AssociationMembershipTypePriceModal.tsx";
 import { getAssociationMembershipTypeCurrentPrice } from "./getAssociationMembershipTypeCurrentPrice.ts";
@@ -19,10 +23,14 @@ interface AssociationMembershipTypeTableProps {
 const AssociationMembershipTypeTable: React.FC<
   AssociationMembershipTypeTableProps
 > = ({ csrfToken, setToastDatas, membershipTypes, loadData }) => {
+  const api = useApi(AssociationsApi, csrfToken);
   const [typeSelectedForEdit, setTypeSelectedForEdit] =
     useState<AssociationMembershipType>();
   const [typeSelectedForPrice, setTypeSelectedForPrice] =
     useState<AssociationMembershipType>();
+  const [typeSelectedForDeletion, setTypeSelectedForDeletion] =
+    useState<AssociationMembershipType>();
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   function getNextPrice(type: AssociationMembershipType) {
     const now = new Date();
@@ -56,6 +64,65 @@ const AssociationMembershipTypeTable: React.FC<
     return result.join(", ");
   }
 
+  function onConfirmDelete() {
+    if (!typeSelectedForDeletion) {
+      alert("No type selected for deletion");
+      return;
+    }
+
+    setDeleteLoading(true);
+
+    const apiCall = typeSelectedForDeletion.canBeHardDeleted
+      ? api.associationsApiAssociationMembershipTypeHardDeleteDestroy.bind(api)
+      : api.associationsApiAssociationMembershipTypeSoftDeleteDestroy.bind(api);
+
+    apiCall({
+      typeId: typeSelectedForDeletion.id!,
+    })
+      .then(() => {
+        loadData();
+        setTypeSelectedForDeletion(undefined);
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Löschen der Mitgliedschaft-Typ",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setDeleteLoading(false));
+  }
+
+  function getDeleteModalText() {
+    if (typeSelectedForDeletion === undefined) {
+      return <p>error</p>;
+    }
+
+    if (typeSelectedForDeletion.canBeHardDeleted) {
+      return (
+        <p>
+          Es existieren keine Mitgliedschaften mit dem Mitgliedschaft-Typ "
+          {typeSelectedForDeletion.name}". Der Mitgliedschaft-Typ wir gelöscht.
+        </p>
+      );
+    } else {
+      return (
+        <div>
+          <p>
+            Es gibt Mitgliedschaften die mit dem Mitgliedschaft-Typ "
+            {typeSelectedForDeletion.name}" verbunden sind (egal ob aktuell
+            vergangen), deswegen kann er nicht gelöscht werden.
+          </p>
+          <p>
+            Stattdessen wird es aus der BestellWizard versteckt so dass neue
+            Mitglieder diesen Typ nicht mehr auswählen können.
+          </p>
+          <p>Bestehende Mitgliedschaften dieses Types bleiben unverändert.</p>
+        </div>
+      );
+    }
+  }
+
   return (
     <>
       <Table hover responsive bordered>
@@ -70,7 +137,13 @@ const AssociationMembershipTypeTable: React.FC<
         <tbody>
           {membershipTypes.map((type) => (
             <tr key={type.id}>
-              <td>{type.name}</td>
+              <td>
+                <span
+                  className={type.deleted ? "text-decoration-line-through" : ""}
+                >
+                  {type.name}
+                </span>
+              </td>
               <td>{buildPrice(type)}</td>
               <td>{type.orderInBestellWizard}</td>
               <td>
@@ -87,12 +160,21 @@ const AssociationMembershipTypeTable: React.FC<
                     size={"sm"}
                     onClick={() => setTypeSelectedForPrice(type)}
                   />
-                  <TapirButton
-                    variant={"outline-danger"}
-                    icon={"delete"}
-                    size={"sm"}
-                    onClick={() => alert("WIP")}
-                  />
+                  {type.deleted ? (
+                    <TapirHelpButton
+                      text={
+                        "Dieser Mitgliedschaft-Typ ist versteckt. Es kann nicht gelöscht werden weil es mit bestehende Mitgliedschaften verbunden ist. Es wird neue Mitglieder nicht angeboten."
+                      }
+                      buttonSize={"sm"}
+                    />
+                  ) : (
+                    <TapirButton
+                      variant={"outline-danger"}
+                      icon={"delete"}
+                      size={"sm"}
+                      onClick={() => setTypeSelectedForDeletion(type)}
+                    />
+                  )}
                 </div>
               </td>
             </tr>
@@ -122,6 +204,18 @@ const AssociationMembershipTypeTable: React.FC<
           }}
           setToastDatas={setToastDatas}
           membershipType={typeSelectedForPrice}
+        />
+      )}
+      {typeSelectedForDeletion && (
+        <ConfirmDeleteModal
+          message={getDeleteModalText()}
+          open={true}
+          onConfirm={onConfirmDelete}
+          onCancel={() => setTypeSelectedForDeletion(undefined)}
+          loading={deleteLoading}
+          confirmButtonText={
+            typeSelectedForDeletion.canBeHardDeleted ? "Löschen" : "Verstecken"
+          }
         />
       )}
     </>

@@ -9,6 +9,10 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, permissions
+from rest_framework.exceptions import (
+    MethodNotAllowed,
+    ValidationError as RestValidationError,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import (
@@ -69,6 +73,55 @@ class AssociationMembershipTypeViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context["cache"] = context.get("cache", {})
         return context
+
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed(
+            method="DELETE",
+            detail="Association membership types must be deleted via the dedicated hard-delete / soft-delete calls",
+        )
+
+
+class AssociationMembershipTypeSoftDeleteApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[OpenApiParameter(name="type_id", type=str)],
+    )
+    def delete(self, request):
+        type_id = request.query_params.get("type_id")
+        membership_type = get_object_or_404(AssociationMembershipType, id=type_id)
+
+        if not AssociationMembership.objects.filter(type=membership_type).exists():
+            raise RestValidationError(
+                "This membership type has no membership, it should be hard-deleted instead of soft-deleted"
+            )
+
+        membership_type.deleted = True
+        membership_type.save()
+
+        return Response("Marked as deleted")
+
+
+class AssociationMembershipTypeHardDeleteApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[OpenApiParameter(name="type_id", type=str)],
+    )
+    def delete(self, request):
+        type_id = request.query_params.get("type_id")
+        membership_type = get_object_or_404(AssociationMembershipType, id=type_id)
+
+        if AssociationMembership.objects.filter(type=membership_type).exists():
+            raise RestValidationError(
+                "Memberships with this type exist, it should be soft-deleted instead of hard-deleted"
+            )
+
+        membership_type.delete()
+
+        return Response("deleted")
 
 
 class AssociationMembershipTypePriceViewSet(viewsets.ModelViewSet):

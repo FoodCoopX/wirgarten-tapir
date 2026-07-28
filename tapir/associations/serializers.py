@@ -37,6 +37,7 @@ class AssociationMembershipTypeSerializer(ModelSerializer):
         fields = "__all__"
 
     prices = SerializerMethodField()
+    can_be_hard_deleted = SerializerMethodField()
 
     @extend_schema_field(AssociationMembershipTypePriceSerializer(many=True))
     def get_prices(
@@ -49,6 +50,16 @@ class AssociationMembershipTypeSerializer(ModelSerializer):
             ),
             many=True,
         ).data
+
+    def get_can_be_hard_deleted(
+        self, membership_type: AssociationMembershipType
+    ) -> bool:
+        cache = self.context["cache"]
+        at_least_one_membership_exists = any(
+            membership.type_id == membership_type.id
+            for membership in TapirCache.get_all_association_memberships(cache=cache)
+        )
+        return not at_least_one_membership_exists
 
 
 class AssociationMembershipSerializer(ModelSerializer):

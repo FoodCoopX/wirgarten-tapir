@@ -35,6 +35,12 @@ export interface AssociationMembershipType {
   readonly prices: Array<AssociationMembershipTypePrice>;
   /**
    *
+   * @type {boolean}
+   * @memberof AssociationMembershipType
+   */
+  readonly canBeHardDeleted: boolean;
+  /**
+   *
    * @type {Date}
    * @memberof AssociationMembershipType
    */
@@ -78,6 +84,8 @@ export function instanceOfAssociationMembershipType(
   value: object,
 ): value is AssociationMembershipType {
   if (!("prices" in value) || value["prices"] === undefined) return false;
+  if (!("canBeHardDeleted" in value) || value["canBeHardDeleted"] === undefined)
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
@@ -112,6 +120,7 @@ export function AssociationMembershipTypeFromJSONTyped(
     prices: (json["prices"] as Array<any>).map(
       AssociationMembershipTypePriceFromJSON,
     ),
+    canBeHardDeleted: json["can_be_hard_deleted"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
@@ -130,7 +139,7 @@ export function AssociationMembershipTypeToJSON(
 export function AssociationMembershipTypeToJSONTyped(
   value?: Omit<
     AssociationMembershipType,
-    "prices" | "created_at" | "updated_at"
+    "prices" | "can_be_hard_deleted" | "created_at" | "updated_at"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {

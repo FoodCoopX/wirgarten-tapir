@@ -488,6 +488,8 @@ class BestellWizardBaseDataApiView(APIView):
                 "product_types": ProductType.objects.all(),
                 "association_membership_types": AssociationMembershipType.objects.order_by(
                     "order_in_bestell_wizard"
+                ).filter(
+                    deleted=None
                 ),
                 "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
                     cache=self.cache
