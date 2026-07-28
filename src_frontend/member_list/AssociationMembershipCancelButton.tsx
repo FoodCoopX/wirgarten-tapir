@@ -31,7 +31,7 @@ const AssociationMembershipCancelButton: React.FC<
           setMemberId(memberId);
           setShowModal(true);
         }}
-        tooltip={"Vereinsmitgliedschaft anpassen"}
+        tooltip={"Vereinsmitgliedschaft kündigen"}
         tootlipPosition={"bottom"}
       />
       {memberId && (

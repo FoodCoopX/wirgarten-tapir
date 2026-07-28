@@ -44,6 +44,7 @@ class AssociationMembership(TapirModel):
     start_date = models.DateField()
     end_date = models.DateField(null=True)
     cancellation_ts = models.DateTimeField(null=True)
+    membership_ended_mail_sent_on = models.DateTimeField(null=True, default=None)
 
     def __str__(self):
         return f"{self.member.get_display_name()} {self.type.name} {self.start_date} -> {self.end_date}"

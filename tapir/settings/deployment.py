@@ -104,6 +104,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tapir.pickup_locations.tasks.clean_members_without_subscription_task",
         "schedule": celery.schedules.crontab(hour="3", minute="0"),
     },
+    "trigger_association_membership_ends_today_mails": {
+        "task": "tapir.associations.tasks.trigger_association_membership_ends_today_mails",
+        "schedule": celery.schedules.crontab(hour="13", minute="0"),
+    },
 }
 
 EMAIL_DISPATCH_BATCH_SIZE = (

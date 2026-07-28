@@ -1,8 +1,14 @@
 import datetime
+from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from rest_framework import status
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
+from tapir.associations.apps import AssociationsConfig
 from tapir.associations.models import AssociationMembershipUpdatedLogEntry
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -36,13 +42,17 @@ class SetAssociationMembershipEndDateApiView(TapirIntegrationTest):
         )
         self.assertFalse(AssociationMembershipUpdatedLogEntry.objects.exists())
 
-    def test_post_adminSetsEndDate_endDateSetAndLogEntryCreated(self):
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_adminSetsEndDate_endDateSetAndLogEntryCreated(
+        self, mock_fire_action: Mock
+    ):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
         target_membership = AssociationMembershipFactory.create(
             member=member,
             start_date=datetime.date(year=2000, month=1, day=1),
             end_date=datetime.date(year=2000, month=12, day=31),
+            type__name="test type name",
         )
         other_membership = AssociationMembershipFactory.create(
             member=member,
@@ -69,7 +79,22 @@ class SetAssociationMembershipEndDateApiView(TapirIntegrationTest):
 
         self.assertEqual(1, AssociationMembershipUpdatedLogEntry.objects.count())
 
-    def test_post_adminSetsEndDateBeforeStartDate_returnsError(self):
+        mock_fire_action.assert_called_once_with(
+            trigger_data=TransactionalTriggerData(
+                key=AssociationsConfig.MAIL_TRIGGER_ASSOCIATION_MEMBERSHIP_END_DATE_SET,
+                token_data={
+                    "end_date_before": "31.12.2000",
+                    "end_date_after": "01.01.2021",
+                    "membership_type_name": "test type name",
+                },
+                recipient_id_in_base_queryset=member.id,
+            )
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_adminSetsEndDateBeforeStartDate_returnsError(
+        self, mock_fire_action: Mock
+    ):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
         membership = AssociationMembershipFactory.create(
@@ -96,3 +121,4 @@ class SetAssociationMembershipEndDateApiView(TapirIntegrationTest):
             datetime.date(year=2000, month=12, day=31), membership.end_date
         )
         self.assertFalse(AssociationMembershipUpdatedLogEntry.objects.exists())
+        mock_fire_action.assert_not_called()

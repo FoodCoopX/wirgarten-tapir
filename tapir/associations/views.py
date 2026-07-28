@@ -21,6 +21,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
+from tapir.associations.apps import AssociationsConfig
 from tapir.associations.models import (
     AssociationMembershipType,
     AssociationMembershipTypePrice,
@@ -56,7 +57,12 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.utils import check_permission_or_self, get_today, get_now
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    get_today,
+    get_now,
+    format_date,
+)
 
 
 class AssociationMembershipConfigView(PermissionRequiredMixin, TemplateView):
@@ -360,6 +366,8 @@ class SetAssociationMembershipEndDateApiView(APIView):
         serializer = SetAssociationMembershipEndDateRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        cache = {}
+
         membership = get_object_or_404(
             AssociationMembership, id=serializer.validated_data["membership_id"]
         )
@@ -377,7 +385,9 @@ class SetAssociationMembershipEndDateApiView(APIView):
 
         with transaction.atomic():
             before_changes = freeze_for_log(membership)
+            end_date_before = membership.end_date
             membership.end_date = end_date
+            membership.cancellation_ts = get_now(cache=cache)
             membership.save()
             AssociationMembershipUpdatedLogEntry().populate(
                 old_frozen=before_changes,
@@ -385,6 +395,18 @@ class SetAssociationMembershipEndDateApiView(APIView):
                 actor=request.user,
                 user=membership.member,
             ).save()
+
+            TransactionalTrigger.fire_action(
+                trigger_data=TransactionalTriggerData(
+                    key=AssociationsConfig.MAIL_TRIGGER_ASSOCIATION_MEMBERSHIP_END_DATE_SET,
+                    recipient_id_in_base_queryset=membership.member_id,
+                    token_data={
+                        "end_date_before": format_date(end_date_before),
+                        "end_date_after": format_date(membership.end_date),
+                        "membership_type_name": membership.type.name,
+                    },
+                ),
+            )
 
         return Response(
             OrderConfirmationResponseSerializer({"order_confirmed": True}).data
