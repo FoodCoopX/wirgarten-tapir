@@ -164,6 +164,8 @@ class MemberFilter(FilterSet):
             ("email", "⮝ Email"),
             ("organisation_entry_date", "⮝ Registriert am"),
             ("-organisation_entry_date", "⮟ Registriert am"),
+            ("organisation_exit_date", "⮝ Registriert am"),
+            ("-organisation_exit_date", "⮟ Registriert am"),
             ("coop_shares_total_value", "⮝ Genoanteile"),
             ("-coop_shares_total_value", "⮟ Genoanteile"),
             ("monthly_payment", "⮝ Umsatz"),
@@ -302,6 +304,9 @@ class MemberListView(PermissionRequiredMixin, FilterView):
         )
 
         queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_entry_date(
+            queryset, cache=self.cache
+        )
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_exit_date(
             queryset, cache=self.cache
         )
 

@@ -20,7 +20,7 @@ const AdminDashboardAssociationDataBase: React.FC<
         <TapirButton
           icon={"bar_chart"}
           variant={"outline-secondary"}
-          text={"Grafiken zu Vereinsmitgliedschaften anzeigen"}
+          text={"Graphen zu Vereinsmitgliedschaften anzeigen"}
           onClick={() => setShowModal(true)}
         />
       </div>
