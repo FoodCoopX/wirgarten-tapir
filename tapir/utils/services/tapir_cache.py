@@ -13,8 +13,8 @@ from tapir.deliveries.models import (
     CustomCycleScheduledDeliveryWeek,
 )
 from tapir.payments.models import MemberPaymentRhythm, MemberCredit
-from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
+from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import NoticePeriod
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
