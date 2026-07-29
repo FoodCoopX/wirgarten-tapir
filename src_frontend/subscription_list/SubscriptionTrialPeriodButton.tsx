@@ -31,6 +31,7 @@ const SubscriptionTrialPeriodButton: React.FC<
           setShowModal(true);
         }}
         tooltip={"Probezeit aktivieren/deaktivieren"}
+        tootlipPosition={"bottom"}
       />
       {subscriptionId && (
         <SubscriptionTrialPeriodModal

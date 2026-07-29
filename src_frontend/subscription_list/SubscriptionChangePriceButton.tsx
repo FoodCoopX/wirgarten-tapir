@@ -32,6 +32,7 @@ const SubscriptionChangePriceButton: React.FC<
           setShowModal(true);
         }}
         tooltip={"Betrag ändern"}
+        tootlipPosition={"bottom"}
       />
       {subscriptionId && (
         <SubscriptionChangePriceModal

@@ -32,6 +32,7 @@ const SubscriptionChangeDatesButton: React.FC<
           setShowModal(true);
         }}
         tooltip={"Vertragsstart-anpassen/Sonderkündigung"}
+        tootlipPosition={"bottom"}
       />
       {subscriptionId && (
         <SubscriptionChangeDatesModal
