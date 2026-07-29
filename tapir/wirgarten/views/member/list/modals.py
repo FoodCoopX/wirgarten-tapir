@@ -68,6 +68,6 @@ def save_member_and_assign_number(form: PersonalDataForm):
     form.save()
     cache = {}
     if not MemberNumberService.assign_member_number_if_eligible(
-        form.instance, cache=cache
+        form.instance, cache=cache, actor=form.request.user
     ):
         form.instance.save()  # second save persists keycloak ID (#947)

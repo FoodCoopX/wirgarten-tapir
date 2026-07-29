@@ -140,7 +140,7 @@ class WaitingListEntryConfirmationApplier:
             )
 
         if MemberNumberService.assign_member_number_if_eligible(
-            member=member, cache=cache
+            member=member, cache=cache, actor=actor
         ):
             member.save()
 

@@ -1,61 +1,57 @@
-from unittest.mock import Mock, patch
+import datetime
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
+from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.tests.factories import MemberFactory, CoopShareTransactionFactory
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
-class TestAssignMemberNumberIfEligible(TapirUnitTest):
-    @patch.object(
-        MemberNumberService,
-        "compute_next_member_number",
-        autospec=True,
-        return_value=42,
-    )
-    @patch.object(
-        MemberNumberService,
-        "should_assign_member_number",
-        autospec=True,
-        return_value=True,
-    )
+class TestAssignMemberNumberIfEligible(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls) -> None:
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
     def test_assignMemberNumberIfEligible_eligible_assignsNumberSavesAndReturnsTrue(
-        self, mock_should_assign, mock_compute_next
+        self,
     ):
-        member = Mock()
-        cache = {}
+        member = MemberFactory.create()
+        member.member_no = None
+        member.save()
+
+        self._set_parameter(
+            key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, value=False
+        )
 
         result = MemberNumberService.assign_member_number_if_eligible(
-            member, cache=cache
+            member, cache={}, actor=None
         )
 
         self.assertTrue(result)
-        self.assertEqual(42, member.member_no)
-        member.save.assert_called_once_with()
-        mock_should_assign.assert_called_once_with(member, cache=cache)
-        mock_compute_next.assert_called_once_with(cache=cache)
+        member.refresh_from_db()
+        self.assertIsNotNone(member.member_no)
+        self.assertTrue(UpdateTapirUserLogEntry.objects.exists())
 
-    @patch.object(
-        MemberNumberService,
-        "compute_next_member_number",
-        autospec=True,
-    )
-    @patch.object(
-        MemberNumberService,
-        "should_assign_member_number",
-        autospec=True,
-        return_value=False,
-    )
-    def test_assignMemberNumberIfEligible_notEligible_doesNothingAndReturnsFalse(
-        self, mock_should_assign, mock_compute_next
-    ):
-        member = Mock()
-        cache = {}
+    def test_assignMemberNumberIfEligible_notEligible_doesNothingAndReturnsFalse(self):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_COOPERATIVE
+        )
+        member = MemberFactory.create()
+        member.member_no = None
+        member.save()
+
+        mock_timezone(test=self, now=datetime.datetime(year=2020, month=1, day=1))
+        CoopShareTransactionFactory.create(
+            member=member, valid_at=datetime.date(year=2021, month=1, day=1)
+        )
 
         result = MemberNumberService.assign_member_number_if_eligible(
-            member, cache=cache
+            member, cache={}, actor=None
         )
 
         self.assertFalse(result)
-        member.save.assert_not_called()
-        mock_compute_next.assert_not_called()
-        mock_should_assign.assert_called_once_with(member, cache=cache)
+        member.refresh_from_db()
+        self.assertIsNone(member.member_no)
+        self.assertFalse(UpdateTapirUserLogEntry.objects.exists())

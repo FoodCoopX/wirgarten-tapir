@@ -183,7 +183,7 @@ def assign_member_numbers(cache: dict = None):
     with transaction.atomic():
         for member in members:
             if not MemberNumberService.assign_member_number_if_eligible(
-                member, cache=cache
+                member, cache=cache, actor=None
             ):
                 continue
 

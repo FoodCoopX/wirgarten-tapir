@@ -32,7 +32,7 @@ class Command(BaseCommand):
             with transaction.atomic():
                 for member in members_without_number:
                     if MemberNumberService.assign_member_number_if_eligible(
-                        member, cache=cache
+                        member, cache=cache, actor=None
                     ):
                         self.stdout.write(
                             self.style.SUCCESS(

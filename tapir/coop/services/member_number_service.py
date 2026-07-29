@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from django.db import transaction
 from django.db.models import Max
 
+from tapir.accounts.models import UpdateTapirUserLogEntry, TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.log.util import freeze_for_log
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -63,10 +66,23 @@ class MemberNumberService:
         return not cls.is_member_in_subscription_trial(member, cache=cache)
 
     @classmethod
-    def assign_member_number_if_eligible(cls, member: Member, cache: dict) -> bool:
+    def assign_member_number_if_eligible(
+        cls, member: Member, cache: dict, actor: TapirUser | None
+    ) -> bool:
         if not cls.should_assign_member_number(member, cache=cache):
             return False
 
+        member_before = freeze_for_log(member)
         member.member_no = cls.compute_next_member_number(cache=cache)
-        member.save()
+        log_entry = UpdateTapirUserLogEntry().populate(
+            old_frozen=member_before,
+            new_model=member,
+            user=member,
+            actor=actor,
+        )
+
+        with transaction.atomic():
+            member.save()
+            log_entry.save()
+
         return True

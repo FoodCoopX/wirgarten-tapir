@@ -77,6 +77,7 @@ class BestellWizardOrderFulfiller:
             personal_data=validated_serializer_data["personal_data"],
             is_student=is_student,
             cache=cache,
+            request=request,
         )
         actor = request.user if request.user.is_authenticated else member
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
@@ -174,7 +175,7 @@ class BestellWizardOrderFulfiller:
         response.sources.set(sources)
 
     @classmethod
-    def create_member(cls, personal_data, is_student: bool, cache: dict):
+    def create_member(cls, personal_data, is_student: bool, cache: dict, request):
         now = get_now(cache=cache)
         contracts_signed = dict.fromkeys(
             ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
@@ -192,7 +193,11 @@ class BestellWizardOrderFulfiller:
         member = Member.objects.create(
             **personal_data, **contracts_signed, is_student=is_student
         )
-        MemberNumberService.assign_member_number_if_eligible(member, cache=cache)
+        MemberNumberService.assign_member_number_if_eligible(
+            member,
+            cache=cache,
+            actor=request.user if request.user.is_authenticated else member,
+        )
 
         return member
 
