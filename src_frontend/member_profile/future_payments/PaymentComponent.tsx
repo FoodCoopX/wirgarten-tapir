@@ -28,13 +28,20 @@ function getStartDate(extendedPayment: ExtendedPayment) {
     (membership) => membership.startDate,
   );
 
-  const minDate = getMinimumDate([
+  const candidates = [
     ...subscriptionStartDates,
     ...contributionsStartDates,
     ...membershipStartDates,
-  ]);
+  ];
 
-  return getMaximumDate([minDate, paymentRangeStart!]);
+  // Delivery-charge payments carry no subscriptions/contributions/memberships,
+  // so there are no candidate dates to derive the range from - fall back to the
+  // payment's own range, which is the actual delivery span for that location.
+  if (candidates.length === 0) {
+    return paymentRangeStart!;
+  }
+
+  return getMaximumDate([getMinimumDate(candidates), paymentRangeStart!]);
 }
 
 function getEndDate(extendedPayment: ExtendedPayment) {
@@ -52,13 +59,17 @@ function getEndDate(extendedPayment: ExtendedPayment) {
     (membership) => membership.endDate ?? new Date("9999-12-31"),
   );
 
-  const maxDate = getMaximumDate([
+  const candidates = [
     ...subscriptionEndDates,
     ...contributionEndDates,
     ...membershipEndDates,
-  ]);
+  ];
 
-  return getMinimumDate([maxDate, paymentRangeEnd!]);
+  if (candidates.length === 0) {
+    return paymentRangeEnd!;
+  }
+
+  return getMinimumDate([getMaximumDate(candidates), paymentRangeEnd!]);
 }
 
 function partialMonthText(extendedPayment: ExtendedPayment) {
@@ -158,9 +169,19 @@ const PaymentComponent: React.FC<PaymentProps> = ({
             )}
           </span>
         ))}
+        {extendedPayment.payment.type === "payment_type_delivery_charge" && (
+          <span>
+            {extendedPayment.deliveryChargePickupLocation
+              ? `Lieferzuschlag Verteilstation ${extendedPayment.deliveryChargePickupLocation.name}`
+              : "Lieferzuschlag"}
+            {partialMonthText(extendedPayment)}
+            {trialPeriodText(extendedPayment, trialPeriodEnabled)}
+          </span>
+        )}
         {(extendedPayment.subscriptions.length > 0 ||
           extendedPayment.solidarityContributions.length > 0 ||
-          extendedPayment.associationMemberships.length > 0) && (
+          extendedPayment.associationMemberships.length > 0 ||
+          extendedPayment.payment.type === "payment_type_delivery_charge") && (
           <span>
             {formatDateNumeric(getStartDate(extendedPayment))}
             {" -> "}

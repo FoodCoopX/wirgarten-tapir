@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.models import MemberCredit
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -56,6 +57,29 @@ class MonthPaymentBuilderUtils:
         return payments_for_this_period
 
     @classmethod
+    def get_relevant_credits(
+        cls,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        member_id: str,
+        payment_type: str,
+        cache: dict,
+        generated_credits: set[MemberCredit],
+    ) -> list[MemberCredit]:
+        member_credits = list(
+            TapirCache.get_member_credits(cache=cache, member_id=member_id)
+        )
+        member_credits.extend(
+            credit for credit in generated_credits if credit.member_id == member_id
+        )
+        return [
+            credit
+            for credit in member_credits
+            if credit.source == payment_type
+            and range_start <= credit.due_date <= range_end
+        ]
+
+    @classmethod
     def get_already_paid_amount(
         cls,
         range_start: datetime.date,
@@ -77,17 +101,16 @@ class MonthPaymentBuilderUtils:
             [payment.amount for payment in relevant_payments], start=Decimal(0)
         )
 
-        member_credits = TapirCache.get_member_credits(
-            cache=cache, member_id=mandate_ref.member_id
+        relevant_credits = cls.get_relevant_credits(
+            range_start=range_start,
+            range_end=range_end,
+            member_id=mandate_ref.member_id,
+            payment_type=payment_type,
+            cache=cache,
+            generated_credits=set(),
         )
         sum_credits = sum(
-            [
-                credit.amount
-                for credit in member_credits
-                if credit.source == payment_type
-                and range_start <= credit.due_date <= range_end
-            ],
-            start=Decimal(0),
+            [credit.amount for credit in relevant_credits], start=Decimal(0)
         )
 
         return sum_paid - sum_credits

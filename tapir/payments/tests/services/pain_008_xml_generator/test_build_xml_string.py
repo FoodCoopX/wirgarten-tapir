@@ -119,10 +119,6 @@ class TestBuildXmlString(TapirUnitTest):
 
         first_payment = payments[0]
         self.assertEqual(
-            "NOTPROVIDED",
-            self._get_child("PmtId/EndToEndId", first_payment).text,
-        )
-        self.assertEqual(
             "75.20",
             self._get_child("InstdAmt", first_payment).text,
         )

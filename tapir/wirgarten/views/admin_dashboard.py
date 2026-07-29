@@ -15,9 +15,6 @@ from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
@@ -36,6 +33,7 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceResponse,
     Subscription,
     Payment,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -133,26 +131,42 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        today = get_today(cache=self.cache)
 
         current_growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=get_today(cache=self.cache), cache=self.cache
+            reference_date=today, cache=self.cache
         )
         context["recent_feedbacks"] = get_recent_feedbacks()
         if not current_growing_period:
             context["no_growing_period"] = True
             return context
 
-        base_product_type = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
+        base_product_type = (
+            ProductType.objects.filter(must_be_subscribed_to=True)
+            .order_by("name")
+            .first()
         )
+        if base_product_type is None:
+            biggest_product_type = ProductType.objects.order_by("name").first()
+            max_number_of_subscriptions = 0
+            for product_type in TapirCache.get_all_product_types(cache=self.cache):
+                number_of_subscriptions = Subscription.objects.filter(
+                    product__type=product_type
+                ).count()
+                if number_of_subscriptions > max_number_of_subscriptions:
+                    max_number_of_subscriptions = number_of_subscriptions
+                    biggest_product_type = product_type
+            base_product_type = biggest_product_type
+
         if base_product_type is None:
             context["no_base_product_type"] = True
             return context
+
         self.harvest_share_type = base_product_type
 
         next_contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=self.cache),
+                reference_date=today,
                 apply_buffer_time=True,
                 cache=self.cache,
             )
@@ -179,28 +193,29 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         self.add_cancelled_coop_shares_context(context)
         self.add_cancelled_association_memberships_context(context)
 
-        members_with_shares = annotate_member_queryset_with_coop_shares_total_value(
-            Member.objects.all(), cache=self.cache
-        ).filter(coop_shares_total_value__gt=0)
-        context["active_members"] = members_with_shares.count()
-        context["coop_shares_value"] = format_currency(
-            (
-                CoopShareTransaction.objects.filter(
-                    valid_at__lt=next_contract_start_date
+        if legal_status_is_cooperative(cache=self.cache):
+            members_with_shares = annotate_member_queryset_with_coop_shares_total_value(
+                Member.objects.all(), cache=self.cache
+            ).filter(coop_shares_total_value__gt=0)
+            context["active_members"] = members_with_shares.count()
+            context["coop_shares_value"] = format_currency(
+                (
+                    CoopShareTransaction.objects.filter(
+                        valid_at__lt=next_contract_start_date
+                    )
+                    .aggregate(quantity=Sum("quantity"))
+                    .get("quantity", 0)
+                    or 0
                 )
-                .aggregate(quantity=Sum("quantity"))
-                .get("quantity", 0)
-                or 0
-            )
-            * get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=self.cache)
-        ).replace(",00", "")
+                * get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=self.cache)
+            ).replace(",00", "")
 
         context["cancellations_during_trial"] = len(
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
 
         context["solidarity_overplus"] = SolidarityValidator.get_solidarity_excess(
-            reference_date=get_today(cache=self.cache), cache=self.cache
+            reference_date=today, cache=self.cache
         )
         context["status_seperate_coop_shares"] = get_parameter_value(
             ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=self.cache
@@ -209,7 +224,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=self.cache
         )
 
-        today = get_today(cache=self.cache)
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],

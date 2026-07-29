@@ -31,6 +31,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /associations/api/association_membership_type_hard_delete:
+    delete:
+      operationId: associations_api_association_membership_type_hard_delete_destroy
+      parameters:
+      - in: query
+        name: type_id
+        schema:
+          type: string
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /associations/api/association_membership_type_soft_delete:
+    delete:
+      operationId: associations_api_association_membership_type_soft_delete_destroy
+      parameters:
+      - in: query
+        name: type_id
+        schema:
+          type: string
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /associations/api/existing_member_updates_membership:
     post:
       operationId: associations_api_existing_member_updates_membership_create
@@ -79,6 +121,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberAssociationMembershipDetails'
+          description: ''
+  /associations/api/number_of_association_members_per_month:
+    get:
+      operationId: associations_api_number_of_association_members_per_month_retrieve
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NumberOfAssociationMembersPerMonthResponse'
+          description: ''
+  /associations/api/number_of_association_membership_cancellations_per_month:
+    get:
+      operationId: associations_api_number_of_association_membership_cancellations_per_month_retrieve
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NumberOfAssociationMembersPerMonthResponse'
+          description: ''
+  /associations/api/number_of_association_membership_cancellations_per_month_relative_to_cancellation:
+    get:
+      operationId: associations_api_number_of_association_membership_cancellations_per_month_relative_to_cancellation_retrieve
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+      tags:
+      - associations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NumberOfAssociationMembersPerMonthResponse'
           description: ''
   /associations/api/set_membership_end_date:
     post:
@@ -2352,6 +2475,239 @@ paths:
               schema:
                 $ref: '#/components/schemas/PickupLocationCapacityEvolution'
           description: ''
+  /pickup_locations/api/pickup_location_delivery_charges:
+    get:
+      operationId: pickup_locations_api_pickup_location_delivery_charges_retrieve
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationDeliveryChargesResponse'
+          description: ''
+    post:
+      operationId: pickup_locations_api_pickup_location_delivery_charges_create
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationDeliveryChargeCreateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationDeliveryChargeCreateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationDeliveryChargeCreateRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+    delete:
+      operationId: pickup_locations_api_pickup_location_delivery_charges_destroy
+      parameters:
+      - in: query
+        name: id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /pickup_locations/location_routes/:
+    get:
+      operationId: pickup_locations_location_routes_list
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocationRoute'
+          description: ''
+    post:
+      operationId: pickup_locations_location_routes_create
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationRoute'
+          description: ''
+  /pickup_locations/location_routes/{id}/:
+    get:
+      operationId: pickup_locations_location_routes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der location route identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationRoute'
+          description: ''
+    put:
+      operationId: pickup_locations_location_routes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der location route identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LocationRouteRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationRoute'
+          description: ''
+    patch:
+      operationId: pickup_locations_location_routes_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der location route identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRouteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRouteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRouteRequest'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationRoute'
+          description: ''
+    delete:
+      operationId: pickup_locations_location_routes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: Ein eindeutiger Wert, der location route identifiziert.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '204':
+          description: No response body
   /pickup_locations/pickup_locations/:
     get:
       operationId: pickup_locations_pickup_locations_list
@@ -5962,6 +6318,9 @@ components:
           items:
             $ref: '#/components/schemas/AssociationMembershipTypePrice'
           readOnly: true
+        can_be_hard_deleted:
+          type: boolean
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -5982,6 +6341,7 @@ components:
           maximum: 2147483647
           minimum: -2147483648
       required:
+      - can_be_hard_deleted
       - created_at
       - description_in_bestell_wizard
       - name
@@ -8194,6 +8554,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SolidarityContribution'
+        delivery_charge_pickup_location:
+          allOf:
+          - $ref: '#/components/schemas/PublicPickupLocation'
+          nullable: true
         association_memberships:
           type: array
           items:
@@ -8201,6 +8565,7 @@ components:
       required:
       - association_memberships
       - coop_share_transactions
+      - delivery_charge_pickup_location
       - payment
       - solidarity_contributions
       - subscriptions
@@ -8466,6 +8831,21 @@ components:
       required:
       - custom_cycle_delivery_weeks_dates
       - error
+    GraphDataset:
+      type: object
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+        values:
+          type: array
+          items:
+            type: integer
+      required:
+      - color
+      - name
+      - values
     GroupedEmailDispatch:
       type: object
       properties:
@@ -8662,6 +9042,46 @@ components:
       description: |-
         * `de_DE.utf-8` - Deutsch (DE)
         * `en_US.utf-8` - English (US)
+    LocationRoute:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        pickup_location_names:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+      required:
+      - created_at
+      - name
+      - pickup_location_names
+      - updated_at
+    LocationRouteRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+      required:
+      - name
     MailCategory:
       type: object
       properties:
@@ -9264,6 +9684,20 @@ components:
       description: |-
         * `months` - Monate
         * `weeks` - Wochen
+    NumberOfAssociationMembersPerMonthResponse:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+        datasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphDataset'
+      required:
+      - datasets
+      - labels
     OptionalWaitingListEntryDetails:
       type: object
       properties:
@@ -9741,6 +10175,17 @@ components:
           minLength: 1
         is_available_in_bestell_wizard:
           type: boolean
+    PatchedLocationRouteRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
     PatchedMailCategoryRequest:
       type: object
       properties:
@@ -10078,6 +10523,9 @@ components:
         mandate_ref:
           type: string
         transaction:
+          type: string
+          nullable: true
+        pickup_location:
           type: string
           nullable: true
       required:
@@ -10543,6 +10991,54 @@ components:
       required:
       - data_points
       - table_headers
+    PickupLocationDeliveryChargeCreateRequestRequest:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+          minLength: 1
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        valid_from:
+          type: string
+          format: date
+      required:
+      - amount
+      - pickup_location_id
+      - valid_from
+    PickupLocationDeliveryChargeEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        valid_from:
+          type: string
+          format: date
+      required:
+      - amount
+      - valid_from
+    PickupLocationDeliveryChargesResponse:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+        pickup_location_name:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationDeliveryChargeEntry'
+      required:
+      - entries
+      - pickup_location_id
+      - pickup_location_name
     PickupLocationOpeningTime:
       type: object
       properties:
@@ -10914,10 +11410,16 @@ components:
           items:
             $ref: '#/components/schemas/PickupLocationOpeningTime'
           readOnly: true
+        current_delivery_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          readOnly: true
       required:
       - city
       - coords_lat
       - coords_lon
+      - current_delivery_charge
       - name
       - opening_times
       - postcode

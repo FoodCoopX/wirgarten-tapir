@@ -10,15 +10,16 @@ from django.db.models import F
 from faker import Faker
 from tapir_mail.service.shortcuts import make_timezone_aware
 
+from tapir.associations.models import AssociationMembershipType, AssociationMembership
+from tapir.associations.services.association_membership_change_handler import (
+    AssociationMembershipChangeHandler,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
-)
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.config import Organization
@@ -39,7 +40,11 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tasks import assign_member_numbers
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import (
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 
 class UserGenerator:
@@ -92,22 +97,13 @@ class UserGenerator:
         parsed_users = cls.get_test_users()
 
         cache = {}
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
 
-        products_from_base_type = Product.objects.filter(
-            type=base_product_type
+        products_from_required_types = Product.objects.filter(
+            type__must_be_subscribed_to=True
         ).select_related("type")
-        products_from_base_type = [product for product in products_from_base_type]
-        additional_products = (
-            Product.objects.exclude(type=base_product_type)
-            .exclude(type__must_be_subscribed_to=True)
-            .select_related("type")
-        )
-        additional_products = [product for product in additional_products]
-        required_products = [
-            product
-            for product in Product.objects.filter(type__must_be_subscribed_to=True)
-        ]
+        products_from_optional_types = Product.objects.filter(
+            type__must_be_subscribed_to=False
+        ).select_related("type")
 
         members_that_need_a_pickup_location = set()
 
@@ -118,10 +114,10 @@ class UserGenerator:
                 parsed_user=parsed_user,
                 cache=cache,
                 fake=fake,
-                products_from_base_type=products_from_base_type,
-                additional_products=additional_products,
+                products_from_base_type=products_from_required_types,
+                additional_products=products_from_optional_types,
                 members_that_need_a_pickup_location=members_that_need_a_pickup_location,
-                required_products=required_products,
+                required_products=products_from_required_types,
             )
             CoopShareTransaction.objects.filter(
                 valid_at__lte=get_today(cache=cache) - datetime.timedelta(days=60)
@@ -184,13 +180,7 @@ class UserGenerator:
                 products_from_base_type=products_from_base_type,
                 additional_products=additional_products,
             )
-            if len(additional_products) > 0 and (
-                min_coop_shares > 0
-                or get_parameter_value(
-                    ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-                    cache=cache,
-                )
-            ):
+            if len(additional_products) > 0 and (min_coop_shares > 0):
                 _, needs_pickup_location_additional_products = (
                     cls.create_subscriptions_for_user(
                         member,
@@ -213,7 +203,14 @@ class UserGenerator:
         if not member_without_subscriptions and random.random() < 0.3:
             cls.generate_feedback_for_member(member)
 
-        cls.create_coop_shares_for_user(member, min_coop_shares, cache)
+        if legal_status_is_cooperative(cache=cache):
+            cls.create_coop_shares_for_user(member, min_coop_shares, cache)
+        elif (
+            legal_status_is_association(cache=cache)
+            and not member_without_subscriptions
+        ):
+            cls.create_association_membership(member, cache=cache)
+
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,
             rhythm=random.choice(MemberPaymentRhythm.Rhythm.choices)[0],
@@ -382,7 +379,7 @@ class UserGenerator:
             member=member,
             product=random.choice(products),
             start_date=growing_period.start_date,
-            end_date=None,
+            end_date=growing_period.end_date,
             period=None,
             quantity=1,
             mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
@@ -414,6 +411,32 @@ class UserGenerator:
             cache=cache,
             actor=None,
         )
+
+    @classmethod
+    def create_association_membership(cls, member: Member, cache: dict):
+        AssociationMembershipChangeHandler.start_membership(
+            member=member,
+            association_membership_type=AssociationMembershipType.objects.order_by(
+                "?"
+            ).first(),
+            start_date=Subscription.objects.filter(member=member)
+            .order_by("start_date")
+            .first()
+            .start_date,
+            actor=None,
+            cache=cache,
+        )
+
+        cancelled_subscription = (
+            Subscription.objects.filter(member=member, cancellation_ts__isnull=False)
+            .order_by("end_date")
+            .last()
+        )
+        if cancelled_subscription is not None:
+            AssociationMembership.objects.filter(member=member).update(
+                end_date=cancelled_subscription.end_date,
+                cancellation_ts=cancelled_subscription.cancellation_ts,
+            )
 
     @classmethod
     def link_members_to_pickup_location(

@@ -9,7 +9,7 @@ from tapir.core.config import (
 from tapir.core.services.organisation_entry_date_annotator import (
     OrganisationEntryDateAnnotator,
 )
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, CoopShareTransactionFactory
@@ -30,10 +30,20 @@ class TestOrganisationEntryDateAnnotator(TapirIntegrationTest):
             )
         )
         CoopShareTransactionFactory.create(
-            member=member, valid_at=datetime.date(year=1998, month=6, day=12)
+            member=member,
+            valid_at=datetime.date(year=1998, month=6, day=12),
+            quantity=4,
+        )
+        CoopShareTransactionFactory.create(
+            member=member,
+            valid_at=datetime.date(year=1999, month=9, day=9),
+            quantity=-4,
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
         )
         AssociationMembershipFactory.create(
-            member=member, start_date=datetime.date(year=2017, month=12, day=14)
+            member=member,
+            start_date=datetime.date(year=2017, month=12, day=14),
+            end_date=datetime.date(year=2028, month=7, day=18),
         )
 
     def test_annotateWithOrganisationEntryDate_legalStatusIsAssociation_annotatesWithAssociationMembershipStartDate(
@@ -86,3 +96,54 @@ class TestOrganisationEntryDateAnnotator(TapirIntegrationTest):
             member, OrganisationEntryDateAnnotator.ANNOTATION_ORGANISATION_ENTRY_DATE
         )
         self.assertEqual(datetime.date(year=2023, month=4, day=15), annotated_value)
+
+    def test_annotateWithOrganisationExitDate_legalStatusIsAssociation_annotatesWithAssociationMembershipEndDate(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_exit_date(
+            queryset=Member.objects.all(), cache={}
+        )
+
+        member = queryset.get()
+        annotated_value = getattr(
+            member, OrganisationEntryDateAnnotator.ANNOTATION_ORGANISATION_EXIT_DATE
+        )
+        self.assertEqual(datetime.date(year=2028, month=7, day=18), annotated_value)
+
+    def test_annotateWithOrganisationExitDate_legalStatusIsCooperative_annotatesWithShareTransactionValidityDate(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_COOPERATIVE
+        )
+
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_exit_date(
+            queryset=Member.objects.all(), cache={}
+        )
+
+        member = queryset.get()
+        annotated_value = getattr(
+            member, OrganisationEntryDateAnnotator.ANNOTATION_ORGANISATION_EXIT_DATE
+        )
+        self.assertEqual(datetime.date(year=1999, month=9, day=9), annotated_value)
+
+    def test_annotateWithOrganisationExitDate_legalStatusIsCompany_annotatesWithNone(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_COMPANY
+        )
+
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_exit_date(
+            queryset=Member.objects.all(), cache={}
+        )
+
+        member = queryset.get()
+        annotated_value = getattr(
+            member, OrganisationEntryDateAnnotator.ANNOTATION_ORGANISATION_EXIT_DATE
+        )
+        self.assertEqual(None, annotated_value)

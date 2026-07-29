@@ -513,6 +513,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             contractStartDate={selectedGrowingPeriod?.contractStartDate!}
             singleProductType={productType}
             selectedGrowingPeriod={selectedGrowingPeriod}
+            hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
           />
         );
       case "11_legal":

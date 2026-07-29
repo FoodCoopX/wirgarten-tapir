@@ -9,7 +9,7 @@
     </title>
     <link rel="stylesheet"
           href="{% static 'wirgarten/css/admin_dashboard.css' %}">
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
     {% vite_asset "dashboard/dashboard_entry.tsx" %}
 {% endblock %}
 {% block content %}
@@ -19,7 +19,9 @@
                  role="alert"
                  style="margin:auto;
                         width:fit-content">
-                Es gibt <strong>keine aktive</strong> Vertragsperiode. <a href="{% url 'wirgarten:product' %}" class="alert-link">Klicke hier</a> um eine neue Vertragsperiode anzulegen.
+                Es gibt <strong>keine aktive</strong> Vertragsperiode. <a href="{% url 'wirgarten:product' %}"
+                                                                          class="alert-link">Klicke hier</a> um eine
+                neue Vertragsperiode anzulegen.
             </div>
         </div>
     {% elif no_base_product_type %}
@@ -28,8 +30,9 @@
                  role="alert"
                  style="margin:auto;
                         width:fit-content">
-                Es gibt <strong>keinen</strong> Basis Produkttyp (z.B. Ernteanteile). <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.base_product_type"
-                                                                                         class="alert-link">Klicke hier</a> um den Basis Produkttyp festzulegen.
+                Es gibt <strong>keinen</strong> Produkttyp (z.B. Ernteanteile). <a
+                    href="{% url 'configuration:parameters' %}?q=wirgarten.coop.base_product_type"
+                    class="alert-link">Klicke hier</a> um einen Produkttyp festzulegen.
             </div>
         </div>
     {% else %}
@@ -82,7 +85,7 @@
             </div>
     {% endif %}
     <div class="dashboard-section-heading">
-        <hr />
+        <hr/>
         Freiwerdende Kapazitäten pro Verteilort
     </div>
     <div id="dashboard_pickup_location_entry"
@@ -92,7 +95,7 @@
     </div>
     {% if next_capacity_labels %}
         <div class="dashboard-section-heading">
-            <hr />
+            <hr/>
             Daten für die kommende Saison/Vertragslaufzeit
         </div>
         <div class="dashboard-tile card capacity-tile clickable">
@@ -107,7 +110,7 @@
     {% endif %}
     {% if not no_growing_period %}
         <div class="dashboard-section-heading">
-            <hr />
+            <hr/>
             Cashflow/Zahlungsdaten
         </div>
         <div class="dashboard-tile card harvest-share-variants-tile"
@@ -120,7 +123,7 @@
         </div>
         {% if show_cooperative_content %}
             <div class="dashboard-section-heading">
-                <hr />
+                <hr/>
                 Daten der Genossenschaft
             </div>
             <div class="dashboard-tile card clickable"
@@ -149,38 +152,20 @@
                         <strong>{{ coop_shares_value }}</strong> €
                     </div>
                     <small><strong>Geschäftsguthaben</strong>
-                        <br />
+                        <br/>
                         (gesamt)</small>
                 </div>
             </div>
         {% endif %}
         {% if show_association_content %}
             <div class="dashboard-section-heading">
-                <hr />
+                <hr/>
                 Daten des Vereins
             </div>
-            <div class="dashboard-tile card clickable"
-                 style="grid-area: span 1 / span 2">
-                <a href="{% url 'wirgarten:member_list' %}">
-                    <div class="card-body">
-                        <div class="dashboard-tile-number">
-                            <strong>{{ active_members }}</strong>
-                            <span class="material-icons">groups</span>
-                        </div>
-                        <small><strong>Mitglieder</strong></small>
-                    </div>
-                </a>
-            </div>
-            <div class="dashboard-tile card harvest-share-variants-tile"
-                 style="grid-area: span 2 / span 4">
-                <div class="card-body">
-                    <h4>Gekündigtes Mitgliedschaften pro Jahr (Anzahl)</h4>
-                    <canvas style="max-height:20em" id="cancellation-association_memberships"></canvas>
-                </div>
-            </div>
+            <div id="association_memberships_dashboard"></div>
         {% endif %}
         <div class="dashboard-section-heading">
-            <hr />
+            <hr/>
             Statusanzeigen
         </div>
         {% if show_cooperative_content %}
@@ -197,7 +182,7 @@
                             </div>
                         {% endif %}
                         <small><strong>Geno-Anteile</strong>
-                            <br />
+                            <br/>
                             {% if not status_seperate_coop_shares %}<strong>nicht</strong>{% endif %}
                             separat zeichenbar</small>
                     </div>
@@ -217,7 +202,7 @@
                         </div>
                     {% endif %}
                     <small><strong>Solidarpreise</strong>
-                        <br />
+                        <br/>
                         {% if status_negative_soli_price_allowed is 0 %}<strong>nicht</strong>{% endif %}
                         möglich
                         {% if status_negative_soli_price_allowed is 2 %}(auto){% endif %}
@@ -237,7 +222,7 @@
                         throw new Error("HTTP error " + response.status);
                     }
                     return response.json();
-                }).then(({ labels, data }) => {
+                }).then(({labels, data}) => {
                     document.getElementById("cashflow-loading").remove();
                     new Chart(document.getElementById('cashflow-forecast-chart'), {
                         type: 'line',
@@ -268,7 +253,6 @@
                         }
                     });
                 })
-
 
 
             const showOtherCancellationReasons = () => ConfirmationModal.open('Sonstige Kündigungsgründe', {{ cancellations_other_reasons| safe}}.map((reason) => `<li>${reason}</li>`).join(''))
@@ -447,7 +431,8 @@
                 },
                 options: {
                     responsive: true,
-                }});
+                }
+            });
 
 
             new Chart(document.getElementById('cancellation-reason-chart'), {
@@ -543,7 +528,7 @@
     {% endif %}
     {% if recent_feedbacks %}
         <div class="dashboard-section-heading">
-            <hr />
+            <hr/>
             Feedbacks
         </div>
         <div style="grid-column: 1 / -1;">
@@ -556,12 +541,15 @@
                                     <strong>{{ feedback.member__first_name }} {{ feedback.member__last_name }}</strong>
                                 </a>
                             {% else %}
-                                <span><strong>{{ feedback.waiting_list_entry__first_name }} {{ feedback.waiting_list_entry__last_name }}</strong> <small class="text-muted">(Wartelisten-Eintrag)</small></span>
+                                <span><strong>{{ feedback.waiting_list_entry__first_name }} {{ feedback.waiting_list_entry__last_name }}</strong> <small
+                                    class="text-muted">(Wartelisten-Eintrag)</small></span>
                             {% endif %}
                             <small class="text-muted">{{ feedback.created_at|date:"d.m.Y H:i" }}</small>
                         </div>
                         {% if feedback.member__pk %}
-                            <small class="text-muted">{{ feedback.member__email }}{% if feedback.member__phone_number %} | {{ feedback.member__phone_number }}{% endif %}</small>
+                            <small class="text-muted">
+                                {{ feedback.member__email }}{% if feedback.member__phone_number %} |
+                                    {{ feedback.member__phone_number }}{% endif %}</small>
                         {% else %}
                             <small class="text-muted">{{ feedback.waiting_list_entry__email }}</small>
                         {% endif %}

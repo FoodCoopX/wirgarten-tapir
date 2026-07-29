@@ -11,6 +11,11 @@ urlpatterns = [
         name="pickup_location_capacities",
     ),
     path(
+        "api/pickup_location_delivery_charges",
+        views.PickupLocationDeliveryChargesView.as_view(),
+        name="pickup_location_delivery_charges",
+    ),
+    path(
         "api/pickup_location_capacity_evolution",
         views.PickupLocationCapacityEvolutionView.as_view(),
         name="pickup_location_capacity_evolution",
@@ -40,5 +45,10 @@ router.register(
     r"public_pickup_locations",
     views.PublicPickupLocationViewSet,
     basename="public_pickup_locations",
+)
+router.register(
+    r"location_routes",
+    views.LocationRouteViewSet,
+    basename="location_routes",
 )
 urlpatterns += router.urls

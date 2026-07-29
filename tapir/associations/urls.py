@@ -30,6 +30,31 @@ urlpatterns = [
         views.SetAssociationMembershipEndDateApiView.as_view(),
         name="set_membership_end_date",
     ),
+    path(
+        "api/number_of_association_members_per_month",
+        views.NumberOfAssociationMembersPerMonthApiView.as_view(),
+        name="number_of_association_members_per_month",
+    ),
+    path(
+        "api/number_of_association_membership_cancellations_per_month",
+        views.NumberOfAssociationMembershipCancellationRelativeToEndDatePerMonthApiView.as_view(),
+        name="number_of_association_membership_cancellations_per_month",
+    ),
+    path(
+        "api/number_of_association_membership_cancellations_per_month_relative_to_cancellation",
+        views.NumberOfAssociationMembershipCancellationRelativeToCancellationDatePerMonthApiView.as_view(),
+        name="number_of_association_membership_cancellations_per_month_relative_to_cancellation",
+    ),
+    path(
+        "api/association_membership_type_hard_delete",
+        views.AssociationMembershipTypeHardDeleteApiView.as_view(),
+        name="association_membership_type_hard_delete",
+    ),
+    path(
+        "api/association_membership_type_soft_delete",
+        views.AssociationMembershipTypeSoftDeleteApiView.as_view(),
+        name="association_membership_type_soft_delete",
+    ),
 ]
 
 router = DefaultRouter()

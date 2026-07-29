@@ -32,8 +32,7 @@ class ParameterDefinitionsSolidarity:
             initial_value="-15,-10,-5,0,5,10,15",
             description="Komma-getrennte Liste der Werte die beim Solidarbeitrag zu auswahl stehen."
             "Es gibt immer dazu für das Mitglied die Möglichkeit eine andere Wert anzugeben."
-            "Beispiel: '-15,-10,-5,0,5,10,15'"
-            "Je nach dem was im Feld 'Einheit des Solidarbeitrag' eingetragen ist sind die Werte Prozente (5%, 10%, ...) oder Euros (5€, 10€,...)",
+            "Beispiel: '-15,-10,-5,0,5,10,15'",
             category=ParameterCategory.SOLIDARITY,
             meta=ParameterMeta(
                 validators=[SolidarityValidator.validate_solidarity_dropdown_values]

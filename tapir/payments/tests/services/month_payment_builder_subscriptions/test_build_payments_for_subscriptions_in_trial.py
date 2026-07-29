@@ -185,10 +185,6 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
         MemberPickupLocationFactory.create(
             member=member, valid_from=growing_period.start_date
         )
-        self._set_parameter(
-            key=ParameterKeys.COOP_BASE_PRODUCT_TYPE,
-            value=old_subscription.product.type_id,
-        )
         ProductCapacityFactory.create(
             period=growing_period,
             product_type=old_subscription.product.type,
@@ -292,10 +288,6 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
         )
         MemberPickupLocationFactory.create(
             member=member, valid_from=growing_period.start_date
-        )
-        self._set_parameter(
-            key=ParameterKeys.COOP_BASE_PRODUCT_TYPE,
-            value=old_subscription.product.type_id,
         )
         ProductCapacityFactory.create(
             period=growing_period,

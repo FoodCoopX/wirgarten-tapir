@@ -1,0 +1,290 @@
+import React, { useEffect, useRef, useState } from "react";
+import { Form, Modal, Spinner, Table } from "react-bootstrap";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import {
+  PickupLocationDeliveryChargeEntry,
+  PickupLocationsApi,
+} from "../api-client";
+import { useApi } from "../hooks/useApi.ts";
+import TapirButton from "../components/TapirButton.tsx";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { formatCurrency } from "../utils/formatCurrency.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+
+dayjs.extend(utc);
+
+interface PickupLocationDeliveryChargeModalProps {
+  show: boolean;
+  onHide: () => void;
+  csrfToken: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  pickupLocationId: string;
+}
+
+function parseAmountInput(input: string): string {
+  return input.replace(",", ".").trim();
+}
+
+function formatAmount(amountAsString: string): string {
+  return formatCurrency(Number.parseFloat(amountAsString));
+}
+
+const PickupLocationDeliveryChargeModal: React.FC<
+  PickupLocationDeliveryChargeModalProps
+> = ({ show, onHide, csrfToken, setToastDatas, pickupLocationId }) => {
+  const api = useApi(PickupLocationsApi, csrfToken);
+
+  const [dataLoading, setDataLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [locationName, setLocationName] = useState("");
+  const [entries, setEntries] = useState<PickupLocationDeliveryChargeEntry[]>(
+    [],
+  );
+  const [amountInput, setAmountInput] = useState("");
+  const [validFromInput, setValidFromInput] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // valid_from is a calendar date that the API client parses as UTC midnight, so
+  // we read the date part in UTC and re-anchor it locally: comparing UTC midnight
+  // against the local "today" would classify the whole validity day as future in
+  // any timezone east of UTC.
+  function getValidFromAsLocalDate(entry: PickupLocationDeliveryChargeEntry) {
+    return dayjs(dayjs.utc(entry.validFrom).format("YYYY-MM-DD"));
+  }
+
+  function isFutureEntry(entry: PickupLocationDeliveryChargeEntry): boolean {
+    return getValidFromAsLocalDate(entry).isAfter(dayjs(), "day");
+  }
+
+  function getTomorrowInputValue(): string {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const day = String(tomorrow.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function loadEntries() {
+    setDataLoading(true);
+    return api
+      .pickupLocationsApiPickupLocationDeliveryChargesRetrieve({
+        pickupLocationId: pickupLocationId,
+      })
+      .then((response) => {
+        setLocationName(response.pickupLocationName);
+        setEntries(
+          response.entries.toSorted(
+            (a, b) => b.validFrom.getTime() - a.validFrom.getTime(),
+          ),
+        );
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Lieferzuschläge",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setDataLoading(false));
+  }
+
+  function resetForm() {
+    setAmountInput("");
+    setValidFromInput("");
+  }
+
+  useEffect(() => {
+    if (!show) return;
+
+    resetForm();
+    loadEntries();
+  }, [show]);
+
+  function getCurrentEntry(): PickupLocationDeliveryChargeEntry | undefined {
+    return entries.find((entry) => !isFutureEntry(entry));
+  }
+
+  function onSave() {
+    if (!formRef.current?.reportValidity()) return;
+
+    setSaving(true);
+
+    api
+      .pickupLocationsApiPickupLocationDeliveryChargesCreate({
+        pickupLocationDeliveryChargeCreateRequestRequest: {
+          pickupLocationId: pickupLocationId,
+          amount: parseAmountInput(amountInput),
+          validFrom: new Date(validFromInput),
+        },
+      })
+      .then(() => {
+        resetForm();
+        return loadEntries();
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern des Lieferzuschlags",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setSaving(false));
+  }
+
+  function onDelete(entry: PickupLocationDeliveryChargeEntry) {
+    if (entry.id === undefined) return;
+
+    if (
+      !window.confirm(
+        `Lieferzuschlag gültig ab ${formatDateNumeric(
+          entry.validFrom,
+        )} löschen?`,
+      )
+    ) {
+      return;
+    }
+
+    const chargeId = entry.id;
+    setDeletingId(chargeId);
+
+    api
+      .pickupLocationsApiPickupLocationDeliveryChargesDestroy({ id: chargeId })
+      .then(() => loadEntries())
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Löschen des Lieferzuschlags",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setDeletingId(null));
+  }
+
+  function buildCurrentSection() {
+    const currentEntry = getCurrentEntry();
+    if (!currentEntry) {
+      return <span>Kein Zuschlag konfiguriert (0,00 €)</span>;
+    }
+    return (
+      <span>
+        {formatAmount(currentEntry.amount)} - gültig seit{" "}
+        {formatDateNumeric(currentEntry.validFrom)}
+      </span>
+    );
+  }
+
+  function buildHistoryTable() {
+    if (entries.length === 0) {
+      return <span>Keine Einträge vorhanden.</span>;
+    }
+    return (
+      <Table size={"sm"} striped>
+        <thead>
+          <tr>
+            <th>Betrag</th>
+            <th>Gültig ab</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry) => (
+            <tr key={entry.id}>
+              <td>{formatAmount(entry.amount)}</td>
+              <td>{formatDateNumeric(entry.validFrom)}</td>
+              <td className={"text-end"}>
+                {isFutureEntry(entry) && (
+                  <TapirButton
+                    variant={"outline-danger"}
+                    size={"sm"}
+                    icon={"delete"}
+                    loading={deletingId === entry.id}
+                    onClick={() => onDelete(entry)}
+                  />
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    );
+  }
+
+  function getModalBody() {
+    if (dataLoading) {
+      return (
+        <Modal.Body>
+          <Spinner />
+        </Modal.Body>
+      );
+    }
+
+    return (
+      <Modal.Body>
+        <div className={"d-flex flex-column gap-3"}>
+          <div>
+            <h6>Aktueller Zuschlag</h6>
+            {buildCurrentSection()}
+          </div>
+          <div>
+            <h6>Neuen Zuschlag planen</h6>
+            <Form ref={formRef}>
+              <Form.Group>
+                <Form.Label>Betrag (€)</Form.Label>
+                <Form.Control
+                  type={"text"}
+                  inputMode={"decimal"}
+                  pattern={"^\\d+([.,]\\d{1,2})?$"}
+                  placeholder={"0,00"}
+                  value={amountInput}
+                  required={true}
+                  onChange={(event) => setAmountInput(event.target.value)}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Gültig ab</Form.Label>
+                <Form.Control
+                  type={"date"}
+                  value={validFromInput}
+                  min={getTomorrowInputValue()}
+                  required={true}
+                  onChange={(event) => setValidFromInput(event.target.value)}
+                />
+                <Form.Text muted>
+                  Änderungen gelten nur für die Zukunft.
+                </Form.Text>
+              </Form.Group>
+            </Form>
+          </div>
+          <div>
+            <h6>Verlauf</h6>
+            {buildHistoryTable()}
+          </div>
+        </div>
+      </Modal.Body>
+    );
+  }
+
+  return (
+    <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
+      <Modal.Header closeButton>
+        <Modal.Title>Lieferzuschlag: {locationName}</Modal.Title>
+      </Modal.Header>
+      {getModalBody()}
+      <Modal.Footer>
+        <TapirButton
+          text={"Neuen Zuschlag anlegen"}
+          icon={"add"}
+          variant={"primary"}
+          loading={saving}
+          onClick={onSave}
+        />
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+export default PickupLocationDeliveryChargeModal;

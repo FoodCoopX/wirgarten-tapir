@@ -488,6 +488,8 @@ class BestellWizardBaseDataApiView(APIView):
                 "product_types": ProductType.objects.all(),
                 "association_membership_types": AssociationMembershipType.objects.order_by(
                     "order_in_bestell_wizard"
+                ).filter(
+                    deleted=False
                 ),
                 "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
                     cache=self.cache
@@ -533,7 +535,11 @@ class BestellWizardBaseDataApiView(APIView):
 
         return Response(
             BestellWizardBaseDataResponseSerializer(
-                response_data, context={"cache": self.cache}
+                response_data,
+                context={
+                    "cache": self.cache,
+                    "reference_date_for_delivery_charge": earliest_contract_start_date,
+                },
             ).data
         )
 

@@ -4,6 +4,7 @@ import factory.random
 from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.associations.models import AssociationMembership, AssociationMembershipType
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.log.models import LogEntry
 from tapir.payments.models import MemberCredit
@@ -73,6 +74,8 @@ class DataGenerator:
             EmailChangeRequest,
             OrderFeedback,
             MemberCredit,
+            AssociationMembership,
+            AssociationMembershipType,
         ]
 
         for model_class in model_classes:

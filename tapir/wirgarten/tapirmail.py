@@ -9,6 +9,7 @@ from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.core.services.member_mail_token_service import MemberMailTokenService
 from tapir.core.services.newsletter_management_link_provider import (
     NewsletterManagementLinkProvider,
@@ -341,8 +342,14 @@ def register_transactional_trigger(
 
 
 def get_default_mail_content(key: str) -> str:
-    with open(f"tapir/wirgarten/email_drafts/{key}.mjml", "r") as file:
-        return file.read()
+    file_path = f"tapir/wirgarten/email_drafts/{key}.mjml"
+    try:
+        with open(file_path, "r") as file:
+            return file.read()
+    except FileNotFoundError:
+        raise TapirImproperlyConfigured(
+            f"Mail with key {key} is required, there should be a draft file at {file_path}"
+        )
 
 
 def synchronize_waitlist_segment_for_entry(entry):

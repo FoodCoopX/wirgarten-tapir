@@ -1,12 +1,12 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.subscription_update_view_validator import (
     SubscriptionUpdateViewValidator,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
@@ -48,7 +48,7 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
 
     @patch.object(
         SubscriptionUpdateViewValidator,
-        "validate_additional_product_can_be_ordered_without_base_product_subscription",
+        "validate_optional_product_can_be_ordered_without_required_product_subscription",
         autospec=True,
     )
     @patch.object(OrderValidator, "validate_at_least_one_change", autospec=True)

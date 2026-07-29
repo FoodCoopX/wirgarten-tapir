@@ -45,6 +45,7 @@ THEME_SOLAWI_ODERSCHWALBE = "sos"
 THEME_AUERGARDEN = "aug"
 THEME_LANDLMUEHLE = "lnd"
 THEME_SCHINKELER_HOEFE = "sch"
+THEME_FALKENHOF = "fkh"
 
 
 THEME_OPTIONS = [
@@ -52,6 +53,7 @@ THEME_OPTIONS = [
     (THEME_AUERGARDEN, "Auergarden"),
     (THEME_BIOTOP, "Biotop Oberland"),
     (THEME_ERNTEUNIONOST, "Ernte Union Ost"),
+    (THEME_FALKENHOF, "Falkenhof"),
     (THEME_GEBAECK, "Ge:Bäck"),
     (THEME_GKH, "GemüseKollektiv Hebenshausen"),
     (THEME_GROSSHOECHBERG, "Grosshöchberg"),

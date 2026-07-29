@@ -14,7 +14,7 @@
     "@types/iban": "^0.0.35",
     "@types/node": "^22.15.29",
     "bootstrap": "^5.3.8",
-    "chart.js": "^4.4.9",
+    "chart.js": "^4.5.0",
     "dayjs": "^1.11.20",
     "email-validator": "^2.0.4",
     "iban": "^0.0.14",
@@ -44,5 +44,6 @@
     "prettier-plugin-organize-imports": "^4.3.0",
     "typescript-eslint": "^8.33.1",
     "vite": "^8.0.8"
-  }
+  },
+  "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72"
 }

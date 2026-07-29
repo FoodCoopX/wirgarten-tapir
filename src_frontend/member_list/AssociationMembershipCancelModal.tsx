@@ -226,7 +226,7 @@ const AssociationMembershipCancelModal: React.FC<
       <Modal.Footer>
         <TapirButton
           variant={"primary"}
-          text={"Erzeugen"}
+          text={"End-Datum setzen"}
           icon={"save"}
           onClick={onSave}
           loading={saving}

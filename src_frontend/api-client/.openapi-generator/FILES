@@ -83,6 +83,7 @@ models/ExtendedProductTypeRequest.ts
 models/FuturePaymentsResponse.ts
 models/GetCoopShareTransactionsResponse.ts
 models/GetDatesFromCustomCycleDeliveryWeeksResponse.ts
+models/GraphDataset.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
@@ -92,6 +93,8 @@ models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
 models/LegalStatusEnum.ts
 models/LocaleEnum.ts
+models/LocationRoute.ts
+models/LocationRouteRequest.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MandateReferencePreviewResponse.ts
@@ -120,6 +123,7 @@ models/MissingTrigger.ts
 models/ModeEnum.ts
 models/Mpl.ts
 models/NoticePeriodUnitEnum.ts
+models/NumberOfAssociationMembersPerMonthResponse.ts
 models/OptionalWaitingListEntryDetails.ts
 models/OrderConfirmationResponse.ts
 models/PaginatedEmailConfigurationDispatchList.ts
@@ -141,6 +145,7 @@ models/PatchedEmailTemplateRequest.ts
 models/PatchedExtendedProductRequest.ts
 models/PatchedGrowingPeriodRequest.ts
 models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
+models/PatchedLocationRouteRequest.ts
 models/PatchedMailCategoryRequest.ts
 models/PatchedMemberExtraEmailUpdateRequestRequest.ts
 models/PatchedMemberProfilePersonalDataRequestRequest.ts
@@ -173,6 +178,9 @@ models/PickupLocationCapacityChangePoint.ts
 models/PickupLocationCapacityCheckRequestRequest.ts
 models/PickupLocationCapacityCheckResponse.ts
 models/PickupLocationCapacityEvolution.ts
+models/PickupLocationDeliveryChargeCreateRequestRequest.ts
+models/PickupLocationDeliveryChargeEntry.ts
+models/PickupLocationDeliveryChargesResponse.ts
 models/PickupLocationOpeningTime.ts
 models/PreferredLanguageEnum.ts
 models/Product.ts

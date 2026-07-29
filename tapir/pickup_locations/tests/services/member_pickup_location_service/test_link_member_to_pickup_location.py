@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import patch, Mock
 
 from tapir_mail.triggers.transactional_trigger import (
@@ -7,6 +8,10 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.models import TapirParameter
+from tapir.payments.models import MemberCredit, MemberCreditCreatedLogEntry
+from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MonthPaymentBuilderDeliveryCharges,
+)
 from tapir.pickup_locations.models import PickupLocationChangedLogEntry
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
@@ -231,3 +236,64 @@ class TestLinkMemberToPickupLocation(TapirIntegrationTest):
             },
             trigger_data.token_data,
         )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    @patch.object(
+        MonthPaymentBuilderDeliveryCharges,
+        "build_refund_credits_for_pickup_location_change",
+        autospec=True,
+    )
+    def test_linkMemberToPickupLocation_switchAwayFromPrepaidLocation_persistsRefundCredit(
+        self, mock_build_refund_credits: Mock, mock_fire_action: Mock
+    ):
+        member = MemberFactory.create()
+        actor = MemberFactory.create()
+        self._set_parameter(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED, value=True
+        )
+
+        old_pickup_location = PickupLocationFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=old_pickup_location,
+            valid_from=datetime.date(year=2019, month=6, day=1),
+        )
+        new_pickup_location = PickupLocationFactory.create()
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=new_pickup_location,
+            day_of_week=4,
+            open_time=datetime.time(hour=10),
+            close_time=datetime.time(hour=18),
+        )
+
+        refund_credit = MemberCredit(
+            member=member,
+            amount=Decimal("7.00"),
+            due_date=datetime.date(year=2020, month=2, day=1),
+            purpose=MemberCredit.PLACEHOLDER_PURPOSE,
+            comment="refund",
+            source=MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE,
+            pickup_location=old_pickup_location,
+        )
+        mock_build_refund_credits.return_value = [refund_credit]
+
+        MemberPickupLocationSetter.link_member_to_pickup_location(
+            pickup_location_id=new_pickup_location.id,
+            member=member,
+            actor=actor,
+            valid_from=datetime.date(year=2020, month=2, day=1),
+            cache={},
+        )
+
+        mock_build_refund_credits.assert_called_once()
+        call_kwargs = mock_build_refund_credits.call_args.kwargs
+        self.assertEqual(member, call_kwargs["member"])
+        self.assertEqual(
+            datetime.date(year=2020, month=2, day=1), call_kwargs["reference_date"]
+        )
+
+        saved_credit = MemberCredit.objects.get()
+        self.assertEqual(Decimal("7.00"), saved_credit.amount)
+        self.assertEqual(old_pickup_location.id, saved_credit.pickup_location_id)
+        self.assertEqual(member.id, saved_credit.member_id)
+        self.assertEqual(1, MemberCreditCreatedLogEntry.objects.count())

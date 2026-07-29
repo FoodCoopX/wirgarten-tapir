@@ -1,12 +1,13 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
+from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestGetSolidarityDropdownValues(TapirUnitTest):
@@ -61,3 +62,19 @@ class TestGetSolidarityDropdownValues(TapirUnitTest):
         SolidarityValidator.validate_solidarity_dropdown_values("aaa")
 
         mock_get_solidarity_dropdown_values.assert_called_once_with("aaa", cache={})
+
+    def test_getSolidarityDropdownValues_valueIsEmpty_returnsOnlyZeroAndCustom(self):
+        cache = {}
+        mock_parameter_value(
+            cache=cache, key=ParameterKeys.SOLIDARITY_CHOICES, value="  \n  \t "
+        )
+
+        result = SolidarityValidator.get_solidarity_dropdown_values(cache=cache)
+
+        self.assertEqual(
+            {
+                0.0: "0€",
+                "custom": "Ich möchte einen anderen Betrag zahlen",
+            },
+            result,
+        )

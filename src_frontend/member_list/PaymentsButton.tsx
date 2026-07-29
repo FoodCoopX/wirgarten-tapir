@@ -14,9 +14,13 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PaymentsButtonProps {
   csrfToken: string;
+  deliveryChargeEnabled: boolean;
 }
 
-const PaymentsButton: React.FC<PaymentsButtonProps> = ({ csrfToken }) => {
+const PaymentsButton: React.FC<PaymentsButtonProps> = ({
+  csrfToken,
+  deliveryChargeEnabled,
+}) => {
   const paymentsApi = useApi(PaymentsApi, csrfToken);
   const [showModal, setShowModal] = useState(false);
   const [memberId, setMemberId] = useState();
@@ -109,6 +113,7 @@ const PaymentsButton: React.FC<PaymentsButtonProps> = ({ csrfToken }) => {
           setToastDatas={setToastDatas}
           trialPeriodEnabled={trialPeriodEnabled}
           transactionsByDueDate={transactionsByDueDate}
+          deliveryChargeEnabled={deliveryChargeEnabled}
         />
       )}
       <TapirToastContainer

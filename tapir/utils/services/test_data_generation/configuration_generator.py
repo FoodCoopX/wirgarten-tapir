@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.associations.models import AssociationMembershipType
 from tapir.configuration.models import TapirParameter
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
@@ -9,7 +10,6 @@ from tapir.core.config import (
 )
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.utils.config import Organization
-from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
@@ -61,17 +61,10 @@ class ConfigurationGenerator:
             value=delivery_day[organization]
         )
 
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=ProductType.objects.get(name="Ernteanteile").id
-        )
-
         if organization == Organization.BIOTOP:
             TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
                 value=5
             )
-            TapirParameter.objects.filter(
-                key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-            ).update(value=True)
             TapirParameter.objects.filter(
                 key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
             ).update(value=True)
@@ -112,3 +105,15 @@ class ConfigurationGenerator:
         TapirParameter.objects.filter(
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER
         ).update(value="TEST-IDENTIFIER")
+
+        if organization == Organization.VEREIN:
+            AssociationMembershipType.objects.create(
+                name="Test membership type 1",
+                order_in_bestell_wizard=1,
+                description_in_bestell_wizard="Test description 1",
+            )
+            AssociationMembershipType.objects.create(
+                name="Test membership type 2",
+                order_in_bestell_wizard=2,
+                description_in_bestell_wizard="Test description 2",
+            )

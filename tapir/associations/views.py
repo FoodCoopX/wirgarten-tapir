@@ -3,11 +3,16 @@ import datetime
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, permissions
+from rest_framework.exceptions import (
+    MethodNotAllowed,
+    ValidationError as RestValidationError,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import (
@@ -16,6 +21,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
+from tapir.associations.apps import AssociationsConfig
 from tapir.associations.models import (
     AssociationMembershipType,
     AssociationMembershipTypePrice,
@@ -29,10 +35,12 @@ from tapir.associations.serializers import (
     MemberAssociationMembershipDetailsSerializer,
     ExistingMemberUpdatesAssociationMembershipRequest,
     SetAssociationMembershipEndDateRequestSerializer,
+    NumberOfAssociationMembersPerMonthResponseSerializer,
 )
 from tapir.associations.services.association_membership_change_handler import (
     AssociationMembershipChangeHandler,
 )
+from tapir.associations.services.dashboard_data_builder import DashboardDataBuilder
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
@@ -49,7 +57,12 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.utils import check_permission_or_self, get_today, get_now
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    get_today,
+    get_now,
+    format_date,
+)
 
 
 class AssociationMembershipConfigView(PermissionRequiredMixin, TemplateView):
@@ -66,6 +79,55 @@ class AssociationMembershipTypeViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context["cache"] = context.get("cache", {})
         return context
+
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed(
+            method="DELETE",
+            detail="Association membership types must be deleted via the dedicated hard-delete / soft-delete calls",
+        )
+
+
+class AssociationMembershipTypeSoftDeleteApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[OpenApiParameter(name="type_id", type=str)],
+    )
+    def delete(self, request):
+        type_id = request.query_params.get("type_id")
+        membership_type = get_object_or_404(AssociationMembershipType, id=type_id)
+
+        if not AssociationMembership.objects.filter(type=membership_type).exists():
+            raise RestValidationError(
+                "This membership type has no membership, it should be hard-deleted instead of soft-deleted"
+            )
+
+        membership_type.deleted = True
+        membership_type.save()
+
+        return Response("Marked as deleted")
+
+
+class AssociationMembershipTypeHardDeleteApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[OpenApiParameter(name="type_id", type=str)],
+    )
+    def delete(self, request):
+        type_id = request.query_params.get("type_id")
+        membership_type = get_object_or_404(AssociationMembershipType, id=type_id)
+
+        if AssociationMembership.objects.filter(type=membership_type).exists():
+            raise RestValidationError(
+                "Memberships with this type exist, it should be soft-deleted instead of hard-deleted"
+            )
+
+        membership_type.delete()
+
+        return Response("deleted")
 
 
 class AssociationMembershipTypePriceViewSet(viewsets.ModelViewSet):
@@ -304,6 +366,8 @@ class SetAssociationMembershipEndDateApiView(APIView):
         serializer = SetAssociationMembershipEndDateRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        cache = {}
+
         membership = get_object_or_404(
             AssociationMembership, id=serializer.validated_data["membership_id"]
         )
@@ -321,7 +385,9 @@ class SetAssociationMembershipEndDateApiView(APIView):
 
         with transaction.atomic():
             before_changes = freeze_for_log(membership)
+            end_date_before = membership.end_date
             membership.end_date = end_date
+            membership.cancellation_ts = get_now(cache=cache)
             membership.save()
             AssociationMembershipUpdatedLogEntry().populate(
                 old_frozen=before_changes,
@@ -330,6 +396,144 @@ class SetAssociationMembershipEndDateApiView(APIView):
                 user=membership.member,
             ).save()
 
+            TransactionalTrigger.fire_action(
+                trigger_data=TransactionalTriggerData(
+                    key=AssociationsConfig.MAIL_TRIGGER_ASSOCIATION_MEMBERSHIP_END_DATE_SET,
+                    recipient_id_in_base_queryset=membership.member_id,
+                    token_data={
+                        "end_date_before": format_date(end_date_before),
+                        "end_date_after": format_date(membership.end_date),
+                        "membership_type_name": membership.type.name,
+                    },
+                ),
+            )
+
         return Response(
             OrderConfirmationResponseSerializer({"order_confirmed": True}).data
         )
+
+
+class NumberOfAssociationMembersPerMonthApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="start_date", type=datetime.date),
+            OpenApiParameter(name="end_date", type=datetime.date),
+        ],
+        responses={200: NumberOfAssociationMembersPerMonthResponseSerializer},
+    )
+    def get(self, request):
+        start_date_as_string = request.query_params.get("start_date")
+        start_date = datetime.datetime.strptime(start_date_as_string, "%Y-%m-%d").date()
+        end_date_as_string = request.query_params.get("end_date")
+        end_date = datetime.datetime.strptime(end_date_as_string, "%Y-%m-%d").date()
+
+        labels, datasets = DashboardDataBuilder.build_dashboard_data(
+            start_date=start_date, end_date=end_date, count_function=self.count_function
+        )
+
+        return Response(
+            NumberOfAssociationMembersPerMonthResponseSerializer(
+                {
+                    "labels": labels,
+                    "datasets": datasets,
+                }
+            ).data
+        )
+
+    @classmethod
+    def count_function(
+        cls, current_date: datetime.date, membership_type: AssociationMembershipType
+    ):
+        return (
+            AssociationMembership.objects.filter(
+                start_date__lte=current_date, type=membership_type
+            )
+            .filter(Q(end_date=None) | Q(end_date__gte=current_date))
+            .count()
+        )
+
+
+class NumberOfAssociationMembershipCancellationRelativeToEndDatePerMonthApiView(
+    APIView
+):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="start_date", type=datetime.date),
+            OpenApiParameter(name="end_date", type=datetime.date),
+        ],
+        responses={200: NumberOfAssociationMembersPerMonthResponseSerializer},
+    )
+    def get(self, request):
+        start_date_as_string = request.query_params.get("start_date")
+        start_date = datetime.datetime.strptime(start_date_as_string, "%Y-%m-%d").date()
+        end_date_as_string = request.query_params.get("end_date")
+        end_date = datetime.datetime.strptime(end_date_as_string, "%Y-%m-%d").date()
+
+        labels, datasets = DashboardDataBuilder.build_dashboard_data(
+            start_date=start_date, end_date=end_date, count_function=self.count_function
+        )
+
+        return Response(
+            NumberOfAssociationMembersPerMonthResponseSerializer(
+                {
+                    "labels": labels,
+                    "datasets": datasets,
+                }
+            ).data
+        )
+
+    @classmethod
+    def count_function(
+        cls, current_date: datetime.date, membership_type: AssociationMembershipType
+    ):
+        return AssociationMembership.objects.filter(
+            type=membership_type,
+            end_date__year=current_date.year,
+            end_date__month=current_date.month,
+        ).count()
+
+
+class NumberOfAssociationMembershipCancellationRelativeToCancellationDatePerMonthApiView(
+    APIView
+):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="start_date", type=datetime.date),
+            OpenApiParameter(name="end_date", type=datetime.date),
+        ],
+        responses={200: NumberOfAssociationMembersPerMonthResponseSerializer},
+    )
+    def get(self, request):
+        start_date_as_string = request.query_params.get("start_date")
+        start_date = datetime.datetime.strptime(start_date_as_string, "%Y-%m-%d").date()
+        end_date_as_string = request.query_params.get("end_date")
+        end_date = datetime.datetime.strptime(end_date_as_string, "%Y-%m-%d").date()
+
+        labels, datasets = DashboardDataBuilder.build_dashboard_data(
+            start_date=start_date, end_date=end_date, count_function=self.count_function
+        )
+
+        return Response(
+            NumberOfAssociationMembersPerMonthResponseSerializer(
+                {
+                    "labels": labels,
+                    "datasets": datasets,
+                }
+            ).data
+        )
+
+    @classmethod
+    def count_function(
+        cls, current_date: datetime.date, membership_type: AssociationMembershipType
+    ):
+        return AssociationMembership.objects.filter(
+            type=membership_type,
+            cancellation_ts__year=current_date.year,
+            cancellation_ts__month=current_date.month,
+        ).count()

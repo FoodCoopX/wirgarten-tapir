@@ -18,14 +18,16 @@
         <h4 class="alert-heading"></h4>
         <button type="button"
                 class="btn btn-primary"
-                onclick="document.getElementById('success-alert').style.display='none'">Alles klar</button>
+                onclick="document.getElementById('success-alert').style.display='none'">Alles klar
+        </button>
     </div>
     <div id="error-alert" style="display:none" class="alert alert-danger">
         <h4 class="alert-heading">Es ist ein Fehler aufgetreten :(</h4>
         <p class="alert-content"></p>
         <button type="button"
                 class="btn btn-primary"
-                onclick="document.getElementById('error-alert').style.display='none'">Alles klar</button>
+                onclick="document.getElementById('error-alert').style.display='none'">Alles klar
+        </button>
     </div>
 {% endblock %}
 {% block card_header %}
@@ -43,7 +45,7 @@
         {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
         {% include 'wirgarten/generic/action-button.html' with onclick='handleShowContractPage()' disabled=True title='Verträge anzeigen' type='info' icon='history_edu' class='needs-member' %}
         <div class="d-flex gap-2">
-            <span id="payments_button"></span>
+            <span id="payments_button" data-delivery-charge-enabled="{{ delivery_charge_enabled }}"></span>
             <span id="deliveries_button"></span>
         </div>
         <div style="width: 1em"></div>
@@ -79,6 +81,7 @@
         <th>{% translate "Solidarbeitrag" %}</th>
         <th>{% translate "Abholort" %}</th>
         <th class="sort-header" data-sort="organisation_entry_date">{% translate "Eintritt" %}</th>
+        <th class="sort-header" data-sort="organisation_exit_date">{% translate "Ausstieg" %}</th>
     </tr>
 {% endblock %}
 {% block table_body %}
@@ -114,12 +117,13 @@
                     <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}:</small>{{ member.future_member_contribution_amount|format_currency }} €</span>
                 {% elif member.current_member_contribution and member.future_member_contribution_amount %}
                     <span><small>Aktuell:</small>{{ member.current_member_contribution|format_currency }} €</span>
-                    <br />
+                    <br/>
                     <span><small>Ab {{ member.future_member_contribution_start_date|format_date }}:</small>{{ member.future_member_contribution_amount|format_currency }} €</span>
                 {% endif %}
             </td>
             <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
             <td>{{ member.organisation_entry_date|format_date }}</td>
+            <td>{{ member.organisation_exit_date|format_date }}</td>
         </tr>
     {% endfor %}
 {% endblock %}
