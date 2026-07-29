@@ -13,6 +13,7 @@ from tapir.deliveries.models import (
     CustomCycleScheduledDeliveryWeek,
 )
 from tapir.payments.models import MemberPaymentRhythm, MemberCredit
+from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.models import NoticePeriod
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
@@ -216,7 +217,9 @@ class TapirCache:
     @classmethod
     def get_all_products(cls, cache: dict):
         return get_from_cache_or_compute(
-            cache, "all_products", lambda: set(Product.objects.order_by("id"))
+            cache,
+            "all_products",
+            lambda: set(Product.objects.order_by("id").select_related("type")),
         )
 
     @classmethod
@@ -600,16 +603,16 @@ class TapirCache:
 
     @classmethod
     def get_all_jokers_for_member(cls, member_id: str, cache: dict):
-        jokers_by_member_id = get_from_cache_or_compute(
-            cache=cache, key="jokers_by_member_id", compute_function=lambda: {}
-        )
-
         def compute():
-            return list(Joker.objects.filter(member_id=member_id).order_by("date"))
+            result = {}
+            for joker in Joker.objects.order_by("date"):
+                result.setdefault(joker.member_id, []).append(joker)
+            return result
 
-        return get_from_cache_or_compute(
-            cache=jokers_by_member_id, key=member_id, compute_function=compute
+        jokers_by_member_id = get_from_cache_or_compute(
+            cache=cache, key="jokers_by_member_id", compute_function=compute
         )
+        return jokers_by_member_id.get(member_id, [])
 
     @classmethod
     def get_delivery_day_adjustment(
@@ -814,4 +817,20 @@ class TapirCache:
 
         return get_from_cache_or_compute(
             cache=cache_by_date, key=reference_date, compute_function=compute
+        )
+
+    @classmethod
+    def get_product_basket_size_equivalence_objects_by_product(cls, cache: dict):
+        def compute():
+            result = {}
+            for equivalence in ProductBasketSizeEquivalence.objects.select_related(
+                "product"
+            ):
+                result.setdefault(equivalence.product, []).append(equivalence)
+            return result
+
+        return get_from_cache_or_compute(
+            cache=cache,
+            key="product_basket_size_equivalence_objects_by_product",
+            compute_function=compute,
         )

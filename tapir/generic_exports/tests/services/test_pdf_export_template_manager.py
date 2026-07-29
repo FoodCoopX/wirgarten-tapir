@@ -26,6 +26,6 @@ class TestPdfExportTemplateManager(TapirUnitTest):
             PdfExportTemplateManager.create_exports_from_template("unknown")
 
         self.assertEqual(
-            "Unknown template id \"unknown\", available IDs: ['pick_list_by_pickup_location']",
+            "Unknown template id \"unknown\", available IDs: ['pick_list_by_pickup_location', 'location_routes']",
             str(error.exception),
         )
