@@ -154,7 +154,7 @@ const SubscriptionCancellationModal: React.FC<
               text={
                 "Um zu bestimmen wann die Probezeit endet, werden die " +
                 trialPeriodDuration +
-                " Wochen ab der Montag vor der erste Lieferung berechnet, nicht ab dem Vertragsstart-Datum."
+                " Wochen ab der Montag vor der erste Abholung berechnet, nicht ab dem Vertragsstart-Datum."
               }
             />
           )}

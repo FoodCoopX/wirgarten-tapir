@@ -269,7 +269,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         !productTypesInWaitingList.has(productType) && (
                           <>
                             <li>
-                              Erste Lieferung:{" "}
+                              Erste Abholung:{" "}
                               {selectedPickupLocations.length > 0 &&
                                 formatDateNumeric(
                                   getDateOfFirstDelivery(productType.id!),
