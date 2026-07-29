@@ -20,6 +20,7 @@ class TestTriggerAssociationMembershipEndsTodayMails(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(
             test=self, now=datetime.datetime(year=2020, month=12, day=31)
         )

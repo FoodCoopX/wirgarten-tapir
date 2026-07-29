@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestTemplatePickListByPickupLocation(TapirIntegrationTest):
-    def test_createTemplate_default_createsOneExportPerPickupLocation(self):
+    def test_createExports_default_createsOneExportPerPickupLocation(self):
         PickupLocationFactory.create(name="PL1")
         PickupLocationFactory.create(name="PL2")
 

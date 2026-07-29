@@ -26,12 +26,13 @@ class PdfExportBuilder:
         cache = {}
         contexts = cls.build_contexts(pdf_export, reference_datetime, cache=cache)
 
+        base_context = {"today": get_today(cache=cache)}
         if pdf_export.generate_one_file_for_every_segment_entry:
             return [
                 cls.create_single_file(
                     pdf_export,
                     reference_datetime,
-                    context | {"today": get_today(cache=cache)},
+                    context | base_context,
                 )
                 for context in contexts
             ]
@@ -40,7 +41,7 @@ class PdfExportBuilder:
             cls.create_single_file(
                 pdf_export,
                 reference_datetime,
-                {"entries": contexts, "today": get_today(cache=cache)},
+                {"entries": contexts} | base_context,
             )
         ]
 
@@ -98,9 +99,7 @@ class PdfExportBuilder:
     def render_pdf(cls, template_as_string: str, context: dict) -> Document:
         template_object = cls.build_template_object(template_as_string)
         rendered_template = template_object.render(context)
-        document = weasyprint.HTML(
-            string=rendered_template,
-        )
+        document = weasyprint.HTML(string=rendered_template)
         return document.render()
 
     @classmethod

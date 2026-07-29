@@ -8,7 +8,7 @@ class ExportSegmentColumn:
     id: str
     display_name: str
     description: str
-    get_value: Callable[[Any, datetime.datetime, dict], str]
+    get_value: Callable[[Any, datetime.datetime, dict], Any]
 
 
 @dataclass
