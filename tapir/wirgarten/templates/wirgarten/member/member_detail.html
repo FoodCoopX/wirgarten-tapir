@@ -10,7 +10,7 @@
 {% block head %}
     {{ block.super }}
     <title>
-        {% block title %}Mitgliederbereich - {{ 'wirgarten.site.name' | parameter }}{% endblock %}
+        {% block title %}Mitgliederbereich - {{ object.first_name }} {{ object.last_name }} - {{ 'wirgarten.site.name' | parameter }}{% endblock %}
     </title>
     <link rel="stylesheet"
           href="{% static 'wirgarten/css/member_detail.css' %}">
