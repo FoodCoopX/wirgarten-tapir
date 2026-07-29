@@ -12,7 +12,6 @@ from tapir.pickup_locations.services.subscription_with_deliveries_provider impor
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import PickupLocation, Subscription
 from tapir.wirgarten.service.products import get_product_price
-from tapir.wirgarten.utils import get_today
 
 
 class PickupLocationDataForLocationRouteBuilder:
@@ -83,7 +82,7 @@ class PickupLocationDataForLocationRouteBuilder:
                 }
                 for member in members
             ],
-            "calendar_week": get_today(cache=cache).isocalendar().week,
+            "calendar_week": reference_datetime.isocalendar().week,
         }
 
     @classmethod
