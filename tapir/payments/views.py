@@ -743,6 +743,10 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             Subscription.objects.order_by("start_date").last().start_date,
             get_today(cache=cache),
         )
+        if max_date <= min_date:
+            temp = max_date
+            max_date = min_date
+            min_date = temp
         random_date = min_date + datetime.timedelta(
             days=random.randint(0, (max_date - min_date).days)
         )

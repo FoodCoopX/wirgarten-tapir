@@ -120,3 +120,44 @@ class TestPaymentIntendedUsePreviewContractsApiView(TapirIntegrationTest):
         )
         self.assertEqual("", response_content["error"])
         self.assertEqual(member.id, response_content["members"][2]["id"])
+
+    def test_get_everySubscriptionStartsAfterToday_viewDoesntCrash(self):
+        now = mock_timezone(test=self, now=datetime.datetime(2026, 6, 1))
+        self._login_as_admin()
+
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(2026, 6, 1),
+            end_date=datetime.date(2027, 5, 31),
+        )
+        member = MemberFactory.create(first_name="Julius", last_name="Caesar")
+        subscription = SubscriptionFactory.create(
+            member=member,
+            period=period,
+            start_date=now.date() + datetime.timedelta(days=10),
+        )
+        ProductPriceFactory.create(
+            product=subscription.product,
+            valid_from=datetime.date(2026, 1, 1),
+            price=10,
+        )
+        PaymentFactory.create(
+            mandate_ref__member=member,
+            due_date=datetime.date(2026, 6, 15),
+            subscription_payment_range_start=datetime.date(2026, 6, 1),
+            subscription_payment_range_end=datetime.date(2026, 6, 30),
+        )
+
+        response = self.client.get(
+            reverse(self.URL_NAME) + "?pattern_old={vorname}&pattern_new={nachname}"
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertEqual(
+            ["Maximilian", "John", "Julius"], response_content["previews_old"]
+        )
+        self.assertEqual(
+            ["Mustermann", "Doe", "Caesar"], response_content["previews_new"]
+        )
+        self.assertEqual("", response_content["error"])
+        self.assertEqual(member.id, response_content["members"][2]["id"])
