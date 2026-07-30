@@ -64,7 +64,6 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "localflavor",
     "django_extensions",
-    "formtools",
     "rest_framework",
     "rest_framework.authtoken",
     "drf_spectacular",
