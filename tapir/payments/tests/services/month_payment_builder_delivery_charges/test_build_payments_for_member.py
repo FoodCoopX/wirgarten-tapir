@@ -255,3 +255,34 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
             self.pickup_location_a.id,
             {payment.pickup_location_id for payment in second_run_payments},
         )
+
+    def test_buildPaymentsForMember_locationChargeStartsInTheMiddleOfThePaymentInterval_paymentRangeIsCorrect(
+        self,
+    ):
+        member = self._make_member_at_location(self.pickup_location_a)
+        subscription = self._make_subscription(member)
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=self.pickup_location_a,
+            amount=Decimal("3.50"),
+            valid_from=datetime.date(year=2026, month=5, day=18),
+        )
+
+        payments = self._build(member, subscription)
+
+        self.assertEqual(1, len(payments))
+        payment = payments[0]
+        # 2 Wednesdays in May 2026 after the 18th
+        self.assertEqual(Decimal("7.00"), payment.amount)
+        self.assertEqual(
+            datetime.date(year=2026, month=5, day=20),
+            payment.subscription_payment_range_start,
+        )
+        self.assertEqual(
+            datetime.date(year=2026, month=5, day=27),
+            payment.subscription_payment_range_end,
+        )
+        self.assertEqual(
+            MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE,
+            payment.type,
+        )
+        self.assertEqual(self.pickup_location_a.id, payment.pickup_location_id)

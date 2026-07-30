@@ -198,7 +198,7 @@ class MonthPaymentBuilderDeliveryCharges:
             member=member, cache=cache
         )
 
-        credits: list[MemberCredit] = []
+        member_credits: list[MemberCredit] = []
         for delta in cls._get_location_deltas(
             member=member,
             contracts=contracts,
@@ -213,7 +213,7 @@ class MonthPaymentBuilderDeliveryCharges:
             pickup_location_name = TapirCache.get_pickup_location_by_id(
                 cache=cache, pickup_location_id=delta.pickup_location_id
             ).name
-            credits.append(
+            member_credits.append(
                 MemberCredit(
                     due_date=delta.range_start,
                     member=member,
@@ -225,7 +225,7 @@ class MonthPaymentBuilderDeliveryCharges:
                 )
             )
 
-        return credits
+        return member_credits
 
     @classmethod
     def _get_rhythm_period(
@@ -500,6 +500,11 @@ class MonthPaymentBuilderDeliveryCharges:
             )
             if next_date is None or next_date > window_end:
                 return result
-            result.append(next_date)
+            if PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
+                pickup_location_id=pickup_location_id,
+                reference_date=next_date,
+                cache=cache,
+            ) > Decimal(0):
+                result.append(next_date)
             current_date = next_date
         return result

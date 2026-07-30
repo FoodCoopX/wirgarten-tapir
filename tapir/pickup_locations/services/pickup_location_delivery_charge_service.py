@@ -13,6 +13,7 @@ class PickupLocationDeliveryChargeService:
     FUTURE_ONLY_ERROR_MESSAGE = (
         "Ein Lieferzuschlag kann nur für die Zukunft angelegt oder geändert werden."
     )
+    MONDAYS_ONLY_ERROR_MESSAGE = "Lieferzuschläge müssen am Montag starten"
     PAST_DELETE_ERROR_MESSAGE = "Nur zukünftige Lieferzuschläge können gelöscht werden."
 
     @classmethod
@@ -42,6 +43,9 @@ class PickupLocationDeliveryChargeService:
     ) -> PickupLocationDeliveryCharge:
         if valid_from <= get_today(cache=cache):
             raise ValidationError(cls.FUTURE_ONLY_ERROR_MESSAGE)
+
+        if valid_from.weekday() != 0:
+            raise ValidationError(cls.MONDAYS_ONLY_ERROR_MESSAGE)
 
         charge, _ = PickupLocationDeliveryCharge.objects.update_or_create(
             pickup_location=pickup_location,

@@ -5,7 +5,9 @@ from tapir.deliveries.tests.factories import DeliveryDonationFactory, JokerFacto
 from tapir.payments.services.month_payment_builder_delivery_charges import (
     MonthPaymentBuilderDeliveryCharges,
 )
-from tapir.wirgarten.constants import NO_DELIVERY, WEEKLY
+from tapir.pickup_locations.models import PickupLocationDeliveryCharge
+from tapir.pickup_locations.tests.factories import PickupLocationDeliveryChargeFactory
+from tapir.wirgarten.constants import NO_DELIVERY, WEEKLY, ODD_WEEKS
 from tapir.wirgarten.models import PickupLocationOpeningTime
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -31,9 +33,6 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
             value=True
         )
-        TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DONATION_MODE).update(
-            value="opt_in"
-        )
 
         cls.range_start = datetime.date(year=2026, month=5, day=1)
         cls.range_end = datetime.date(year=2026, month=5, day=31)
@@ -44,7 +43,11 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
         )
 
         cls.pickup_location = PickupLocationFactory.create()
-
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=cls.pickup_location,
+            valid_from=datetime.date(year=2026, month=1, day=1),
+            amount=10,
+        )
         PickupLocationOpeningTime.objects.create(
             pickup_location=cls.pickup_location,
             day_of_week=2,
@@ -209,3 +212,48 @@ class TestGetBillableDeliveryDatesInRange(TapirIntegrationTest):
             },
             result,
         )
+
+    def test_getBillableDeliveryDatesInRange_subscriptionDeliveredOnOddWeeks_returnsWednesdaysOnOddWeeksOnly(
+        self,
+    ):
+        subscription = self._make_subscription()
+        self.product_type.delivery_cycle = ODD_WEEKS[0]
+        self.product_type.save()
+
+        result = (
+            MonthPaymentBuilderDeliveryCharges.get_billable_delivery_dates_in_range(
+                subscriptions=[subscription],
+                range_start=self.range_start,
+                range_end=self.range_end,
+                cache={},
+            )
+        )
+
+        expected = {
+            datetime.date(year=2026, month=5, day=6),
+            datetime.date(year=2026, month=5, day=20),
+        }
+        self.assertEqual(expected, result)
+
+    def test_getBillableDeliveryDatesInRange_deliveryChargeStartsMidRange_returnsWednesdaysAfterChargeStartOnly(
+        self,
+    ):
+        subscription = self._make_subscription()
+        PickupLocationDeliveryCharge.objects.update(
+            valid_from=datetime.date(year=2026, month=5, day=18)
+        )
+
+        result = (
+            MonthPaymentBuilderDeliveryCharges.get_billable_delivery_dates_in_range(
+                subscriptions=[subscription],
+                range_start=self.range_start,
+                range_end=self.range_end,
+                cache={},
+            )
+        )
+
+        expected = {
+            datetime.date(year=2026, month=5, day=20),
+            datetime.date(year=2026, month=5, day=27),
+        }
+        self.assertEqual(expected, result)

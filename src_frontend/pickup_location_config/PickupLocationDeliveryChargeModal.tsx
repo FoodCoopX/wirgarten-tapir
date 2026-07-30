@@ -1,17 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Form, Modal, Spinner, Table } from "react-bootstrap";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import React, { useEffect, useRef, useState } from "react";
+import { Alert, Form, Modal, Spinner, Table } from "react-bootstrap";
 import {
   PickupLocationDeliveryChargeEntry,
   PickupLocationsApi,
 } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import { handleRequestError } from "../utils/handleRequestError.ts";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
+import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 dayjs.extend(utc);
 
@@ -45,6 +46,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
   const [amountInput, setAmountInput] = useState("");
   const [validFromInput, setValidFromInput] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
   // valid_from is a calendar date that the API client parses as UTC midnight, so
@@ -110,6 +112,12 @@ const PickupLocationDeliveryChargeModal: React.FC<
 
   function onSave() {
     if (!formRef.current?.reportValidity()) return;
+
+    const validFrom = new Date(validFromInput);
+    if (validFrom.getDay() !== 1) {
+      setError("Das Start-Datum muss ein Montag sein.");
+      return;
+    }
 
     setSaving(true);
 
@@ -231,6 +239,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
           </div>
           <div>
             <h6>Neuen Zuschlag planen</h6>
+            {error && <Alert variant={"danger"}>{error}</Alert>}
             <Form ref={formRef}>
               <Form.Group>
                 <Form.Label>Betrag (€)</Form.Label>
@@ -238,7 +247,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
                   type={"text"}
                   inputMode={"decimal"}
                   pattern={"^\\d+([.,]\\d{1,2})?$"}
-                  placeholder={"0,00"}
+                  placeholder={"Betrag"}
                   value={amountInput}
                   required={true}
                   onChange={(event) => setAmountInput(event.target.value)}
@@ -251,7 +260,10 @@ const PickupLocationDeliveryChargeModal: React.FC<
                   value={validFromInput}
                   min={getTomorrowInputValue()}
                   required={true}
-                  onChange={(event) => setValidFromInput(event.target.value)}
+                  onChange={(event) => {
+                    setValidFromInput(event.target.value);
+                    setError("");
+                  }}
                 />
                 <Form.Text muted>
                   Änderungen gelten nur für die Zukunft.
@@ -271,7 +283,13 @@ const PickupLocationDeliveryChargeModal: React.FC<
   return (
     <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
       <Modal.Header closeButton>
-        <Modal.Title>Lieferzuschlag: {locationName}</Modal.Title>
+        <div
+          style={{ width: "100%" }}
+          className={"d-flex justify-content-between"}
+        >
+          <Modal.Title>Lieferzuschlag: {locationName}</Modal.Title>
+          <TapirHelpButton text={"Text kommt bald"} />
+        </div>
       </Modal.Header>
       {getModalBody()}
       <Modal.Footer>
