@@ -7,8 +7,10 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, viewsets, permissions
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from weasyprint.urls import FatalURLFetchingError
 
 from tapir.generic_exports.exceptions import TemplateAlreadyExistsException
 from tapir.generic_exports.models import CsvExport, PdfExport
@@ -138,9 +140,12 @@ class BuildPdfExportView(APIView):
             request.query_params.get("reference_datetime")
         )
 
-        exported_files = PdfExportBuilder.create_exported_files(
-            pdf_export, reference_datetime
-        )
+        try:
+            exported_files = PdfExportBuilder.create_exported_files(
+                pdf_export, reference_datetime
+            )
+        except FatalURLFetchingError as error:
+            raise ValidationError(error)
 
         return Response(
             reverse("wirgarten:exported_files_download", args=[exported_files[0].id]),

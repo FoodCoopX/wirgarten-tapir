@@ -10,6 +10,7 @@ from tapir.generic_exports.services.export_segment_manager import (
     ExportSegment,
     ExportSegmentManager,
 )
+from tapir.generic_exports.services.tapir_url_fetcher import TapirUrlFetcher
 from tapir.wirgarten.models import ExportedFile
 from tapir.wirgarten.utils import get_today
 
@@ -99,7 +100,9 @@ class PdfExportBuilder:
     def render_pdf(cls, template_as_string: str, context: dict) -> Document:
         template_object = cls.build_template_object(template_as_string)
         rendered_template = template_object.render(context)
-        document = weasyprint.HTML(string=rendered_template)
+        document = weasyprint.HTML(
+            string=rendered_template, url_fetcher=TapirUrlFetcher()
+        )
         return document.render()
 
     @classmethod

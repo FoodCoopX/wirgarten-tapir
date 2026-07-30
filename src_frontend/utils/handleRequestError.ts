@@ -1,7 +1,7 @@
+import React from "react";
+import { v4 as uuidv4 } from "uuid";
 import { ResponseError } from "../api-client";
 import { ToastData } from "../types/ToastData.ts";
-import { v4 as uuidv4 } from "uuid";
-import React from "react";
 import { addToast } from "./addToast.ts";
 
 export async function handleRequestError(
@@ -11,8 +11,9 @@ export async function handleRequestError(
 ) {
   console.error(error);
   let text = await error.response.text();
-  if (text.length > 100) {
-    text = text.substring(0, 100) + "...";
+  const maxLength = 200;
+  if (text.length > maxLength) {
+    text = text.substring(0, maxLength) + "...";
   }
   if (setToastDatas) {
     addToast(
