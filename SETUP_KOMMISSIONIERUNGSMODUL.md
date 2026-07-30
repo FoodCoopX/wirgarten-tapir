@@ -1,6 +1,8 @@
 This branch contains a prototype for the integration of [Jasmin](https://github.com/birgit-seyr/jasmin) in Tapir. Those
 changes are not meant to be final, instead they serve as a proof-of-concept that Jasmin can be integrated.
 
+The commit a052ba3c62679c0247b9efe4df0945668836092c from Jasmin was used, I haven't tested the latest changes.
+
 Here is an explanation of the process:
 
 ## On the Jasmin-Repo
