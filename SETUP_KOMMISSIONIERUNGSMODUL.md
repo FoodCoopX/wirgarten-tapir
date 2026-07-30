@@ -3,7 +3,7 @@ changes are not meant to be final, instead they serve as a proof-of-concept that
 
 Here is an explanation of the process:
 
-### On the Jasmin-Repo
+## On the Jasmin-Repo
 
 #### Replace user model imports
 
@@ -145,7 +145,7 @@ poetry-build:
 If everything works, a wheel file will be created: jasmin-core/django-core/dist/picking_module-[VERSION_NUMBER]
 -py3-none-any.whl
 
-### On the Tapir repo
+## On the Tapir repo
 
 Changes applied to the Tapir repo can be seen in the pull request
 (https://github.com/FoodCoopX/wirgarten-tapir/pull/1204/changes).
