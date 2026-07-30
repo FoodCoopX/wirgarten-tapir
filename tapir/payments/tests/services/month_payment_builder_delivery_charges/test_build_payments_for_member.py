@@ -167,9 +167,7 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
         self,
     ):
         # A -> B -> A within the same month, so A's date span [May 6, May 27]
-        # contains B's span [May 13, May 20]. A range-only already_paid lookup
-        # would let the two locations contaminate each other on the second run;
-        # scoping by pickup location must keep them independent.
+        # contains B's span [May 13, May 20].
         member = self._make_member_at_location(self.pickup_location_a)
         MemberPickupLocationFactory.create(
             member=member,
@@ -215,10 +213,6 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
     def test_buildPaymentsForMember_movesAwayAfterBilling_billsOnlyNewLocationAndNeverRefundsHere(
         self,
     ):
-        # Over-payments (the member moved away from a location they prepaid) are
-        # NOT refunded by the payment builder - that happens at pickup-location
-        # switch time. Here the builder only ever adds a payment for the new
-        # location and leaves the over-paid old location untouched.
         member = self._make_member_at_location(self.pickup_location_a)
         subscription = self._make_subscription(member)
         PickupLocationDeliveryChargeFactory.create(
@@ -250,7 +244,6 @@ class TestBuildPaymentsForMember(TapirIntegrationTest):
         payment_b = second_run_payments[0]
         self.assertEqual(Decimal("4.00"), payment_b.amount)
         self.assertEqual(self.pickup_location_b.id, payment_b.pickup_location_id)
-        # A is over-paid but the builder does not emit a negative payment for it.
         self.assertNotIn(
             self.pickup_location_a.id,
             {payment.pickup_location_id for payment in second_run_payments},

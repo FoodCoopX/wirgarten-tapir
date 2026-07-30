@@ -58,14 +58,6 @@ class MonthPaymentBuilderDeliveryCharges:
         generated_payments: set[Payment],
         in_trial: bool,
     ) -> list[Payment]:
-        # Like the subscription and solidarity builders, delivery charges are
-        # billed in two passes so that contracts still in their trial period are
-        # only billed in arrears (never prepaid): the in-trial pass bills the
-        # previous month at a forced monthly rhythm, the non-trial pass bills the
-        # current month forward at the member's real rhythm. Refunds (a member
-        # switching away from a pickup location they prepaid) are not created
-        # here - they are created synchronously when the location changes, see
-        # build_refund_credits_for_pickup_location_change.
         target_month = current_month
         if in_trial:
             target_month = (target_month - relativedelta(months=1)).replace(day=1)
@@ -137,10 +129,6 @@ class MonthPaymentBuilderDeliveryCharges:
             cache=cache,
             generated_payments=generated_payments,
         ):
-            # Never bill a negative amount: an over-payment (e.g. a shorter trial
-            # window seeing a longer prepaid payment) is left untouched here, the
-            # same way the subscription builder clamps at zero. Genuine refunds
-            # are created at pickup-location switch time instead.
             if delta.amount <= 0:
                 continue
             payments.append(
@@ -165,13 +153,6 @@ class MonthPaymentBuilderDeliveryCharges:
         reference_date: datetime.date,
         cache: dict,
     ) -> list[MemberCredit]:
-        # A member who prepaid a pickup location's delivery charge and then moves
-        # away from it mid-period is refunded the prepaid-but-no-longer-owed part
-        # as a MemberCredit for that location. Because it runs once, at the moment
-        # the location changes (not on every daily payment rerun), it cannot
-        # oscillate. The credit is netted back against the member's delivery
-        # charges by the payment builder via its pickup-location-scoped
-        # already_paid computation.
         first_of_month = reference_date.replace(day=1)
         subscriptions = MonthPaymentBuilderSubscriptions.get_current_and_renewed_subscriptions_ignoring_trial_state(
             cache=cache, first_of_month=first_of_month
@@ -260,9 +241,6 @@ class MonthPaymentBuilderDeliveryCharges:
         cache: dict,
         generated_payments: set[Payment],
     ) -> list[LocationDelta]:
-        # The single source of truth for "what does each pickup location owe or
-        # over-pay this member for this period": the payment path keeps the
-        # positive deltas, the refund path keeps the negative ones.
         delivery_dates = cls.get_billable_delivery_dates_in_range(
             subscriptions=contracts,
             range_start=first_day_of_rhythm_period,
@@ -275,11 +253,6 @@ class MonthPaymentBuilderDeliveryCharges:
             )
         )
 
-        # Past delivery-charge payments and credits for this member and period,
-        # grouped by the pickup location they belong to. The per-location grouping
-        # is what makes the already_paid idempotency location-scoped: two locations
-        # can have overlapping date ranges (a member returning to a former
-        # location), so a range-only lookup would let them contaminate each other.
         past_payments_by_pickup_location_id = (
             cls._group_past_payments_by_pickup_location_id(
                 range_start=first_day_of_rhythm_period,
@@ -296,14 +269,11 @@ class MonthPaymentBuilderDeliveryCharges:
             cache=cache,
         )
 
-        # A location that no longer has any billable delivery this period but was
-        # billed before still needs a delta so its charge can be refunded.
         pickup_location_ids = set(delivery_dates_by_pickup_location_id) | set(
             past_payments_by_pickup_location_id
         )
-        # A delivery-charge payment with no pickup location is an anomaly we
-        # cannot attribute to a location, so it takes part in neither a charge
-        # nor a refund (and there is no location to name for a credit).
+
+        # There could be "None"s in the ID list coming from payments created before the pickup location id field existed.
         pickup_location_ids.discard(None)
 
         deltas: list[LocationDelta] = []
@@ -422,9 +392,6 @@ class MonthPaymentBuilderDeliveryCharges:
         delivery_dates: set[datetime.date],
         cache: dict,
     ) -> dict[str, set[datetime.date]]:
-        # Every delivery date here already passed through
-        # _get_delivery_dates_within_range, which raises if the member has no
-        # pickup location on that date, so the lookup below is never None.
         delivery_dates_by_pickup_location_id: dict[str, set[datetime.date]] = {}
         for delivery_date in delivery_dates:
             pickup_location_id = (
@@ -445,10 +412,6 @@ class MonthPaymentBuilderDeliveryCharges:
         range_end: datetime.date,
         cache: dict,
     ) -> set[datetime.date]:
-        # Joker and donation weeks are both billed: the box is still produced and
-        # reaches the pickup location, so the charge applies. The joker's value
-        # (including this charge) is credited to the member separately, via the
-        # "Joker Gutschriftwert" export column, not by skipping the charge here.
         delivery_dates: set[datetime.date] = set()
         for subscription in subscriptions:
             if subscription.product.type.delivery_cycle == NO_DELIVERY[0]:

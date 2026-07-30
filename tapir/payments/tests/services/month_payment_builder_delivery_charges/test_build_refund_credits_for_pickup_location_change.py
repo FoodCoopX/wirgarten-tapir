@@ -99,8 +99,6 @@ class TestBuildRefundCreditsForPickupLocationChange(TapirIntegrationTest):
         self,
     ):
         member = self._make_member_with_prepaid_may()
-        # From May 14 the member is at B (no delivery charge): A keeps only
-        # May 6 + 13 (7.00 owed) of the 14.00 prepaid, so 7.00 is refunded.
         MemberPickupLocationFactory.create(
             member=member,
             pickup_location=self.pickup_location_b,
