@@ -1,17 +1,20 @@
-from typing import Literal
+from typing import Literal, Any
 
 from django.conf import settings
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import (
     ValidationError as DjangoValidationError,
     PermissionDenied,
 )
 from django.core.validators import validate_email
 from django.db import transaction
+from django.http import HttpRequest, HttpResponse
+from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView, RedirectView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
-from rest_framework import status, serializers
+from rest_framework import status, serializers, permissions
 from rest_framework.exceptions import (
     ValidationError as RestValidationError,
 )
@@ -31,9 +34,16 @@ from tapir.core.serializers import (
     MemberExtraMailDataSerializer,
     MemberExtraEmailCreateRequest,
     MemberExtraEmailUpdateRequest,
+    MailingListSerializer,
 )
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
+from tapir.core.services.mailman.mailing_lists_enabled_checker import (
+    MailingListsEnabledChecker,
+)
+from tapir.core.services.mailman.mailman_request_sender import MailmanRequestSender
+from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.log.util import freeze_for_log
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
@@ -338,3 +348,99 @@ class MemberExtraEmailConfirmedView(TemplateView):
             ParameterKeys.SITE_NAME, cache={}
         )
         return context_data
+
+
+class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Coop.MANAGE
+    template_name = "core/mailing_lists_base_view.html"
+
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        MailmanRequestSender.ensure_instance_domain_exists(cache=self.cache)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context_data = super().get_context_data(**kwargs)
+        context_data["cache"] = self.cache
+        return context_data
+
+
+class MailingListsListView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: MailingListSerializer(many=True)},
+    )
+    def get(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        cache = {}
+        client = MailmanRequestSender.get_client(cache)
+        domain = client.get_domain(mail_host=settings.EMAIL_HOST)
+
+        mailing_lists = [
+            {"name": mailing_list.fqdn_listname} for mailing_list in domain.lists
+        ]
+        mailing_lists = sorted(
+            mailing_lists, key=lambda mailing_list: mailing_list["name"]
+        )
+        return Response(
+            MailingListSerializer(
+                mailing_lists,
+                many=True,
+            ).data
+        )
+
+
+class MailListCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        request=MailingListSerializer(),
+        responses={200: MailingListSerializer()},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        create_serializer = MailingListSerializer(data=request.data)
+        create_serializer.is_valid(raise_exception=True)
+
+        cache = {}
+        domain = MailmanRequestSender.get_domain(cache)
+
+        list_name: str = create_serializer.validated_data["name"]
+        suffix = f"@{settings.EMAIL_HOST}"
+        if list_name.endswith(suffix):
+            list_name = list_name.replace(suffix, "")
+        created_list = domain.create_list(list_name=list_name)
+
+        return Response(
+            MailingListSerializer({"name": created_list.fqdn_listname}).data
+        )
+
+
+class MailListDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="list_name", type=str, required=True)],
+        responses={200: str},
+    )
+    def delete(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        list_name = request.query_params.get("list_name")
+
+        cache = {}
+        domain = MailmanRequestSender.get_domain(cache)
+        for mailing_list in domain.lists:
+            if mailing_list.fqdn_listname == list_name:
+                mailing_list.delete()
+                return Response("deleted")
+
+        raise Http404(f"Keine Liste mit Name {list_name} gefunden")

@@ -1,0 +1,12 @@
+{% extends "core/base.html" %}
+{% load django_vite %}
+{% block head %}
+    {% vite_asset 'mailing_lists/mailing_lists_entry.tsx' %}
+{% endblock head %}
+{% block title %}
+    {{ block.super }}- Mailing-Listen
+{% endblock %}
+{% block content %}
+    {% csrf_token %}
+    <div id="mailing_lists_entry" ></div>
+{% endblock content %}

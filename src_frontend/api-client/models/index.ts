@@ -83,6 +83,8 @@ export * from "./LocationRoute";
 export * from "./LocationRouteRequest";
 export * from "./MailCategory";
 export * from "./MailCategoryRequest";
+export * from "./MailingList";
+export * from "./MailingListRequest";
 export * from "./MandateReferencePreviewResponse";
 export * from "./Member";
 export * from "./MemberAssociationMembershipDetails";

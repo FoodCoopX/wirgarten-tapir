@@ -24,3 +24,7 @@ class MemberExtraEmailUpdateRequest(serializers.Serializer):
     extra_email_id = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
+
+
+class MailingListSerializer(serializers.Serializer):
+    name = serializers.CharField()
