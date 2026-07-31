@@ -223,3 +223,8 @@ SOCIALACCOUNT_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
 SOCIALACCOUNT_ADAPTER = "tapir.accounts.adapter.MySocialAccountAdapter"
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+MAILMAN_URL = env.str("MAILMAN_URL", default="http://localhost:8001/3.1/")
+MAILMAN_ADMIN_USER = env.str("MAILMAN_ADMIN_USER", default="restadmin")
+MAILMAN_ADMIN_PASSWORD = env.str("MAILMAN_ADMIN_USER", default="restpass")
+MAILMAN_ENABLED = env.bool("MAILMAN_ENABLED", default=False)
