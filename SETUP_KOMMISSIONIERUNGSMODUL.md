@@ -11,7 +11,7 @@ Here is an explanation of the process:
 
 - Replaced all usages of `JasminUser` with `get_user_model()`.
     - Typically this looks like removing a
-      `from ..models import JasminUser` line an adding
+      `from ..models import JasminUser` line and adding
 
 ```python 
 from django.contrib.auth import authenticate, get_user_model
