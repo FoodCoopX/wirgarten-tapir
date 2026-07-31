@@ -6299,6 +6299,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        membership_ended_mail_sent_on:
+          type: string
+          format: date-time
+          nullable: true
         member:
           type: string
       required:
@@ -8600,7 +8604,6 @@ components:
           type: string
         url_of_image_in_bestellwizard:
           type: string
-          format: uri
         capacity:
           type: integer
           nullable: true
@@ -8609,12 +8612,15 @@ components:
         price_per_delivery:
           type: boolean
           readOnly: true
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - base
       - basket_size_equivalences
       - capacity
       - deleted
       - description_in_bestellwizard
+      - hidden_in_bestell_wizard
       - id
       - min_coop_shares
       - name
@@ -8638,7 +8644,6 @@ components:
           type: string
         contract_link:
           type: string
-          format: uri
         capacity:
           type: number
           format: double
@@ -8730,7 +8735,6 @@ components:
           type: string
         contract_link:
           type: string
-          format: uri
         capacity:
           type: number
           format: double
@@ -10113,12 +10117,13 @@ components:
           minLength: 1
         url_of_image_in_bestellwizard:
           type: string
-          format: uri
         capacity:
           type: integer
           nullable: true
         min_coop_shares:
           type: integer
+        hidden_in_bestell_wizard:
+          type: boolean
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -11092,6 +11097,8 @@ components:
           maxLength: 10
         type:
           $ref: '#/components/schemas/ProductType'
+        url_of_image_in_bestellwizard:
+          type: string
         created_at:
           type: string
           format: date-time
@@ -11110,10 +11117,6 @@ components:
           nullable: true
         description_in_bestellwizard:
           type: string
-        url_of_image_in_bestellwizard:
-          type: string
-          format: uri
-          maxLength: 200
         capacity:
           type: integer
           maximum: 2147483647
@@ -11123,11 +11126,14 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - created_at
       - name
       - type
       - updated_at
+      - url_of_image_in_bestellwizard
     ProductBasketSizeEquivalence:
       type: object
       properties:
@@ -11441,11 +11447,12 @@ components:
           type: string
         url_of_image_in_bestellwizard:
           type: string
-          format: uri
-          maxLength: 200
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - name
       - price
+      - url_of_image_in_bestellwizard
     PublicProductPricesResponse:
       type: object
       properties:

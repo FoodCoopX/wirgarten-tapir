@@ -27,6 +27,9 @@ class ProductUpdater:
             ),
             capacity=serializer.validated_data.get("capacity", None),
             min_coop_shares=serializer.validated_data.get("min_coop_shares"),
+            hidden_in_bestell_wizard=serializer.validated_data[
+                "hidden_in_bestell_wizard"
+            ],
         )
 
         ProductBasketSizeEquivalence.objects.filter(product=product).delete()

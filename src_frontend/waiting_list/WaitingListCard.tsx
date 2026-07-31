@@ -23,12 +23,14 @@ import {
   WaitingListEntryDetails,
 } from "../api-client";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
+import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 import "./waiting_list_card.css";
+import WaitingListEntryCreateModal from "./WaitingListEntryCreateModal.tsx";
 import WaitingListEntryEditModal from "./WaitingListEntryEditModal.tsx";
 import WaitingListTable from "./WaitingListTable.tsx";
 
@@ -67,6 +69,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const [orderBy, setOrderBy] =
     useState<WaitingListApiListListOrderByEnum>("-created_at");
   const [counts, setCounts] = useState<Counts>();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     pickupLocationApi
@@ -190,6 +193,12 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                 }
               >
                 <h5 className={"mb-0"}>Warteliste</h5>
+                <TapirButton
+                  text={"Warteliste-Eintrag erzeugen"}
+                  icon={"add"}
+                  variant={"outline-primary"}
+                  onClick={() => setShowCreateModal(true)}
+                />
               </div>
               <Tabs
                 defaultActiveKey={"all"}
@@ -417,6 +426,14 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           entryReloading={loading}
         />
       )}
+      <WaitingListEntryCreateModal
+        show={showCreateModal}
+        csrfToken={csrfToken}
+        onClose={() => setShowCreateModal(false)}
+        reloadEntries={loadPage}
+        setToastDatas={setToastDatas}
+        entryReloading={loading}
+      />
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}

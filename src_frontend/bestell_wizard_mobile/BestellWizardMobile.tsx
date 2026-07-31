@@ -913,6 +913,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
                 waitingListLinkConfirmationModeEnabled={
                   waitingListEntryDetails !== undefined
                 }
+                waitingListEntryDetails={waitingListEntryDetails}
                 productTypesInWaitingList={productTypesInWaitingList}
                 isOrderStep={false}
                 orderLoading={false}

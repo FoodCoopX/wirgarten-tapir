@@ -96,6 +96,12 @@ export interface PatchedExtendedProductRequest {
    * @memberof PatchedExtendedProductRequest
    */
   minCoopShares?: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PatchedExtendedProductRequest
+   */
+  hiddenInBestellWizard?: boolean;
 }
 
 /**
@@ -146,6 +152,10 @@ export function PatchedExtendedProductRequestFromJSONTyped(
     capacity: json["capacity"] == null ? undefined : json["capacity"],
     minCoopShares:
       json["min_coop_shares"] == null ? undefined : json["min_coop_shares"],
+    hiddenInBestellWizard:
+      json["hidden_in_bestell_wizard"] == null
+        ? undefined
+        : json["hidden_in_bestell_wizard"],
   };
 }
 
@@ -181,5 +191,6 @@ export function PatchedExtendedProductRequestToJSONTyped(
     url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
     capacity: value["capacity"],
     min_coop_shares: value["minCoopShares"],
+    hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
   };
 }

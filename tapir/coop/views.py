@@ -323,7 +323,7 @@ class GetCoopShareTransactionsApiView(APIView):
 
 class MemberViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-    queryset = Member.objects.all()
+    queryset = Member.objects.order_by("member_no", "last_name", "first_name")
     serializer_class = MemberSerializer
 
 

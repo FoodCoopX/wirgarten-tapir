@@ -110,6 +110,12 @@ export interface ExtendedProduct {
    * @memberof ExtendedProduct
    */
   readonly pricePerDelivery: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ExtendedProduct
+   */
+  hiddenInBestellWizard: boolean;
 }
 
 /**
@@ -146,6 +152,11 @@ export function instanceOfExtendedProduct(
     return false;
   if (!("pricePerDelivery" in value) || value["pricePerDelivery"] === undefined)
     return false;
+  if (
+    !("hiddenInBestellWizard" in value) ||
+    value["hiddenInBestellWizard"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -178,6 +189,7 @@ export function ExtendedProductFromJSONTyped(
     capacity: json["capacity"],
     minCoopShares: json["min_coop_shares"],
     pricePerDelivery: json["price_per_delivery"],
+    hiddenInBestellWizard: json["hidden_in_bestell_wizard"],
   };
 }
 
@@ -208,5 +220,6 @@ export function ExtendedProductToJSONTyped(
     url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
     capacity: value["capacity"],
     min_coop_shares: value["minCoopShares"],
+    hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
   };
 }

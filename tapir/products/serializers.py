@@ -29,6 +29,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     type = ProductTypeSerializer()
+    url_of_image_in_bestellwizard = serializers.CharField()
 
 
 class ProductTypeAccordionInBestellWizardSerializer(serializers.Serializer):
@@ -47,7 +48,7 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
     )
     order_in_bestellwizard = serializers.IntegerField()
     icon_link = serializers.CharField(required=False, allow_blank=True)
-    contract_link = serializers.URLField(required=False, allow_blank=True)
+    contract_link = serializers.CharField(required=False, allow_blank=True)
     capacity = serializers.FloatField()
     delivery_cycle = serializers.ChoiceField(choices=DeliveryCycle)
     notice_period_duration = serializers.IntegerField(required=False)
@@ -104,10 +105,11 @@ class ExtendedProductSerializer(serializers.Serializer):
     growing_period_id = serializers.CharField(required=False)
     picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
     description_in_bestellwizard = serializers.CharField()
-    url_of_image_in_bestellwizard = serializers.URLField(allow_blank=True)
+    url_of_image_in_bestellwizard = serializers.CharField(allow_blank=True)
     capacity = serializers.IntegerField(allow_null=True)
     min_coop_shares = serializers.IntegerField()
     price_per_delivery = serializers.BooleanField(read_only=True)
+    hidden_in_bestell_wizard = serializers.BooleanField()
 
 
 class PublicProductSerializer(serializers.ModelSerializer):
@@ -119,9 +121,11 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "price",
             "description_in_bestellwizard",
             "url_of_image_in_bestellwizard",
+            "hidden_in_bestell_wizard",
         ]
 
     price = SerializerMethodField()
+    url_of_image_in_bestellwizard = serializers.CharField()
 
     @extend_schema_field(OpenApiTypes.FLOAT)
     def get_price(self, product: Product):

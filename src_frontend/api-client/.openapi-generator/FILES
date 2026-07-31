@@ -1,3 +1,4 @@
+.openapi-generator-ignore
 apis/AssociationsApi.ts
 apis/BestellWizardApi.ts
 apis/ConfigApi.ts

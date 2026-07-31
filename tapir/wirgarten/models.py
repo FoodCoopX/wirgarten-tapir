@@ -529,6 +529,7 @@ class Product(TapirModel):
     url_of_image_in_bestellwizard = models.URLField(default="", blank=True)
     capacity = models.PositiveIntegerField(null=True, blank=False)
     min_coop_shares = models.IntegerField(default=0)
+    hidden_in_bestell_wizard = models.BooleanField(default=False)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType

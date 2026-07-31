@@ -68,6 +68,12 @@ export interface AssociationMembership {
   cancellationTs?: Date | null;
   /**
    *
+   * @type {Date}
+   * @memberof AssociationMembership
+   */
+  membershipEndedMailSentOn?: Date | null;
+  /**
+   *
    * @type {string}
    * @memberof AssociationMembership
    */
@@ -112,6 +118,10 @@ export function AssociationMembershipFromJSONTyped(
       json["cancellation_ts"] == null
         ? undefined
         : new Date(json["cancellation_ts"]),
+    membershipEndedMailSentOn:
+      json["membership_ended_mail_sent_on"] == null
+        ? undefined
+        : new Date(json["membership_ended_mail_sent_on"]),
     member: json["member"],
   };
 }
@@ -140,6 +150,10 @@ export function AssociationMembershipToJSONTyped(
       value["cancellationTs"] == null
         ? undefined
         : (value["cancellationTs"] as any).toISOString(),
+    membership_ended_mail_sent_on:
+      value["membershipEndedMailSentOn"] == null
+        ? undefined
+        : (value["membershipEndedMailSentOn"] as any).toISOString(),
     member: value["member"],
   };
 }

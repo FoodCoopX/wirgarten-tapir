@@ -35,6 +35,12 @@ export interface Product {
   type: ProductType;
   /**
    *
+   * @type {string}
+   * @memberof Product
+   */
+  urlOfImageInBestellwizard: string;
+  /**
+   *
    * @type {Date}
    * @memberof Product
    */
@@ -71,12 +77,6 @@ export interface Product {
   descriptionInBestellwizard?: string;
   /**
    *
-   * @type {string}
-   * @memberof Product
-   */
-  urlOfImageInBestellwizard?: string;
-  /**
-   *
    * @type {number}
    * @memberof Product
    */
@@ -87,6 +87,12 @@ export interface Product {
    * @memberof Product
    */
   minCoopShares?: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof Product
+   */
+  hiddenInBestellWizard?: boolean;
 }
 
 /**
@@ -94,6 +100,11 @@ export interface Product {
  */
 export function instanceOfProduct(value: object): value is Product {
   if (!("type" in value) || value["type"] === undefined) return false;
+  if (
+    !("urlOfImageInBestellwizard" in value) ||
+    value["urlOfImageInBestellwizard"] === undefined
+  )
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
@@ -114,6 +125,7 @@ export function ProductFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     type: ProductTypeFromJSON(json["type"]),
+    urlOfImageInBestellwizard: json["url_of_image_in_bestellwizard"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
@@ -123,13 +135,13 @@ export function ProductFromJSONTyped(
       json["description_in_bestellwizard"] == null
         ? undefined
         : json["description_in_bestellwizard"],
-    urlOfImageInBestellwizard:
-      json["url_of_image_in_bestellwizard"] == null
-        ? undefined
-        : json["url_of_image_in_bestellwizard"],
     capacity: json["capacity"] == null ? undefined : json["capacity"],
     minCoopShares:
       json["min_coop_shares"] == null ? undefined : json["min_coop_shares"],
+    hiddenInBestellWizard:
+      json["hidden_in_bestell_wizard"] == null
+        ? undefined
+        : json["hidden_in_bestell_wizard"],
   };
 }
 
@@ -148,12 +160,13 @@ export function ProductToJSONTyped(
   return {
     id: value["id"],
     type: ProductTypeToJSON(value["type"]),
+    url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
     name: value["name"],
     deleted: value["deleted"],
     base: value["base"],
     description_in_bestellwizard: value["descriptionInBestellwizard"],
-    url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
     capacity: value["capacity"],
     min_coop_shares: value["minCoopShares"],
+    hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
   };
 }
