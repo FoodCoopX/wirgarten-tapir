@@ -573,6 +573,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
                 productTypeIdsOverCapacity={productTypeIdsOverCapacity}
                 productIdsOverCapacity={productIdsOverCapacity}
                 waitingListLinkConfirmationModeEnabled={false}
+                waitingListEntryDetails={undefined}
                 productTypesInWaitingList={productTypesInWaitingList}
                 isOrderStep={step === steps.at(-1)}
                 orderLoading={orderLoading}
