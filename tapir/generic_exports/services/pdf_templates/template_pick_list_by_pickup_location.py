@@ -23,7 +23,7 @@ class TemplatePickListByPickupLocation:
         export_name = f"Kommissionierungsliste {pickup_location.name}"
         if PdfExport.objects.filter(name=export_name).exists():
             raise TemplateAlreadyExistsException(
-                f'Ein PDF-Export mit name "{export_name}" existiert bereits, wenn du den neu erzeugen willst muss du die alte löschen.'
+                f'Ein PDF-Export mit dem Namen "{export_name}" existiert bereits. Falls dieser neu erzeugt werden soll, bitte zuerst den alten Export-Eintrag aus der Liste löschen.'
             )
 
         with open(

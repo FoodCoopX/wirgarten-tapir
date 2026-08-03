@@ -9,15 +9,15 @@ from tapir.pickup_locations.services.pickup_location_segment_provider import (
 
 class TemplateLocationRoutes:
     ID = "location_routes"
-    NAME = "Ausfahrrunden"
+    NAME = "Abhakzettel"
     DESCRIPTION = "Erzeugt ein einziges PDF mit all Ausfahrrunden drin."
 
     @classmethod
     def create_exports(cls):
-        export_name = "Ausfahrrunden"
+        export_name = cls.NAME
         if PdfExport.objects.filter(name=export_name).exists():
             raise TemplateAlreadyExistsException(
-                f'Ein PDF-Export mit name "{export_name}" existiert bereits, wenn du den neu erzeugen willst muss du die alte löschen.'
+                f'Ein PDF-Export mit dem Namen "{export_name}"  existiert bereits. Falls dieser neu erzeugt werden soll, bitte zuerst den alten Export-Eintrag aus der Liste löschen.'
             )
 
         with open(
