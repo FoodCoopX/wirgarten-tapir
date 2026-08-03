@@ -288,7 +288,26 @@ const PickupLocationDeliveryChargeModal: React.FC<
           className={"d-flex justify-content-between"}
         >
           <Modal.Title>Lieferzuschlag: {locationName}</Modal.Title>
-          <TapirHelpButton text={"Text kommt bald"} />
+          <TapirHelpButton
+            text={
+              <>
+                <p>
+                  Preiszuschläge für Abholorte können jeweils ab einem Montag
+                  festgelegt werden. Der Preis gilt pro Lieferung für einen
+                  abgeschlossenen Produktvertrag, der an den Abholort geliefert
+                  wird. Liegen mehrere Produktverträge vor, die am gleichen Tag
+                  an die Verteilstation geliefert werden, fällt die Gebühr nur
+                  einmal für die Lieferung an.
+                </p>
+                <p>
+                  Der Zeitpunkt der Zahlung erfolgt gleich zu der Zahlung der
+                  Produktverträge und ist an diese gekoppelt. Sie wird aber
+                  separat im Mitgliederbereich in der Zahlungsreihe zur besseren
+                  Übersicht dargestellt.
+                </p>
+              </>
+            }
+          />
         </div>
       </Modal.Header>
       {getModalBody()}
