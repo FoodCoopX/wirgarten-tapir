@@ -35,15 +35,19 @@ class WaitingListEntryConfirmationEmailSender:
         )
         contract_list = f"<ul><li>{contract_list}</li></ul>"
 
-        pickup_location_list = "</li><li>".join(
-            [
-                f"{pickup_location_wish.pickup_location.name}"
-                for pickup_location_wish in entry.pickup_location_wishes.all()
-                .select_related("pickup_location")
-                .order_by("priority")
-            ]
-        )
-        pickup_location_list = f"<ol><li>{pickup_location_list}</li></ol>"
+        pickup_location_wishes = list(entry.pickup_location_wishes.all())
+        if len(pickup_location_wishes) == 0:
+            pickup_location_list = "Keine"
+        else:
+            pickup_location_list = "</li><li>".join(
+                [
+                    f"{pickup_location_wish.pickup_location.name}"
+                    for pickup_location_wish in entry.pickup_location_wishes.all()
+                    .select_related("pickup_location")
+                    .order_by("priority")
+                ]
+            )
+            pickup_location_list = f"<ol><li>{pickup_location_list}</li></ol>"
 
         TransactionalTrigger.fire_action(
             trigger_data=TransactionalTriggerData(

@@ -151,6 +151,39 @@ class TestWaitingListCreateEntryExistingMemberView(TapirIntegrationTest):
         )
 
     @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
+    def test_post_memberAlreadyHasAPickupLocation_createsEntryAndSendsConfirmationMailWithCorrectPickupLocationToken(
+        self, mock_fire_action: Mock
+    ):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+
+        request_data = self.build_request_data(member.id)
+        request_data["pickup_location_ids"] = []
+        response = self.post_request(request_data)
+
+        self.assertEqual(200, response.status_code)
+        response_content = response.json()
+        self.assert_order_confirmed(response_content)
+
+        mock_fire_action.assert_called_once()
+        trigger_data: TransactionalTriggerData = mock_fire_action.call_args.kwargs[
+            "trigger_data"
+        ]
+        self.assertEqual(
+            Events.CONFIRMATION_REGISTRATION_IN_WAITING_LIST, trigger_data.key
+        )
+        self.assertEqual(member.id, trigger_data.recipient_id_in_base_queryset)
+        self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
+        self.assertEqual(
+            {
+                "contract_list": f"<ul><li>{self.product.name} x 2</li></ul>",
+                "pickup_location_list": "Keine",
+                "desired_start_date": "so früh wie möglich",
+            },
+            trigger_data.token_data,
+        )
+
+    @patch("tapir_mail.triggers.transactional_trigger.TransactionalTrigger.fire_action")
     def test_post_noGrowingPeriodCoveringToday_stillCreatesEntry(
         self, mock_fire_action: Mock
     ):
