@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
@@ -10,7 +11,7 @@ from tapir.pickup_locations.services.subscription_with_deliveries_provider impor
     SubscriptionsWithDeliveriesProvider,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import PickupLocation, Subscription
+from tapir.wirgarten.models import PickupLocation, Subscription, Product
 from tapir.wirgarten.service.products import get_product_price
 
 
@@ -126,9 +127,18 @@ class PickupLocationDataForLocationRouteBuilder:
             products,
             key=lambda product: (
                 product.type.order_in_bestellwizard,
-                get_product_price(
+                cls.get_price_or_zero(
                     product=product, reference_date=reference_date, cache=cache
                 ),
             ),
         )
         return [product.id for product in products]
+
+    @classmethod
+    def get_price_or_zero(
+        cls, product: Product, reference_date: datetime.date, cache: dict
+    ):
+        price_object = get_product_price(
+            product=product, reference_date=reference_date, cache=cache
+        )
+        return Decimal(0) if price_object is None else price_object.price
