@@ -3,6 +3,9 @@ from typing import Callable
 
 from django.http import Http404
 
+from tapir.generic_exports.services.pdf_templates.template_crate_totals_by_route import (
+    TemplateCrateTotalsByRoute,
+)
 from tapir.generic_exports.services.pdf_templates.template_location_routes import (
     TemplateLocationRoutes,
 )
@@ -29,7 +32,11 @@ class PdfExportTemplateManager:
                 description=template.DESCRIPTION,
                 create_method=template.create_exports,
             )
-            for template in [TemplatePickListByPickupLocation, TemplateLocationRoutes]
+            for template in [
+                TemplatePickListByPickupLocation,
+                TemplateLocationRoutes,
+                TemplateCrateTotalsByRoute,
+            ]
         }
 
     @classmethod

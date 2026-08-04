@@ -1,0 +1,108 @@
+{% load wirgarten %}
+<style>
+    @page {
+        size: A4 portrait;
+        margin: 1cm;
+        @top-right {
+            content: "Seite " counter(page) " aus " counter(pages);
+        }
+        @top-left {
+            content: "KW {{ entries.0.route_crate_totals.calendar_week }}"
+        }
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5rem;
+    }
+
+    th, td {
+        border: 1px solid #000;
+        padding: 4px 6px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    h1 {
+        margin-bottom: 0.25rem;
+    }
+
+    h2 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .route-block {
+        margin-bottom: 2rem;
+        break-inside: avoid;
+    }
+</style>
+
+<h1>Kistenzahl pro Ausfahrrunde — KW {{ entries.0.route_crate_totals.calendar_week }}</h1>
+
+{% for entry in entries %}
+    <div class="route-block">
+        <h2>
+            {% if entry.route_name %}
+                {{ entry.route_name }}
+            {% else %}
+                Ohne Ausfahrrunde
+            {% endif %}
+        </h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Summe Tour</th>
+                    {% for header in entry.route_crate_totals.headers %}
+                        <th>
+                            {% if entry.route_crate_totals.convert_headers %}
+                                {{ entry.route_crate_totals.product_name_by_id|get_value:header }}
+                            {% else %}
+                                {{ header }}
+                            {% endif %}
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Gesamt</td>
+                    {% for header in entry.route_crate_totals.headers %}
+                        <td>{{ entry.route_crate_totals.totals|get_value:header }}</td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+
+        {% if entry.route_crate_totals.stations %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Verteilstation</th>
+                        {% for header in entry.route_crate_totals.headers %}
+                            <th>
+                                {% if entry.route_crate_totals.convert_headers %}
+                                    {{ entry.route_crate_totals.product_name_by_id|get_value:header }}
+                                {% else %}
+                                    {{ header }}
+                                {% endif %}
+                            </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for station in entry.route_crate_totals.stations %}
+                        <tr>
+                            <td>{{ station.name }}</td>
+                            {% for header in entry.route_crate_totals.headers %}
+                                <td>{{ station.totals|get_value:header }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endfor %}
