@@ -38,7 +38,6 @@ class PickupLocationDataForLocationRouteBuilder:
         members = sorted(
             members,
             key=lambda member: (
-                member.member_no,
                 member.last_name,
                 member.first_name,
             ),
