@@ -97,7 +97,7 @@
                         {% for member in pickup_location.members %}
                             <tr>
                                 <td>{{ member.member_no }}</td>
-                                <td>{{ member.first_name }} {{ member.last_name }}</td>
+                                <td>{{ member.last_name }}, {{ member.first_name }} </td>
                                 {% for header in pickup_location.headers %}
                                     <td>{{ member.member_values|get_value:header }}</td>
                                 {% endfor %}
