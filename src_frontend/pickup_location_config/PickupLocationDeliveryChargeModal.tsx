@@ -114,7 +114,7 @@ const PickupLocationDeliveryChargeModal: React.FC<
     if (!formRef.current?.reportValidity()) return;
 
     const validFrom = new Date(validFromInput);
-    if (validFrom.getDay() !== 1) {
+    if (validFrom.getUTCDay() !== 1) {
       setError("Das Start-Datum muss ein Montag sein.");
       return;
     }
