@@ -7,14 +7,14 @@ import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
-interface MailingListCardProps {
+interface MailingListCreateModalProps {
   show: boolean;
   onHide: () => void;
   loadData: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
-const MailingListCard: React.FC<MailingListCardProps> = ({
+const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
   show,
   onHide,
   loadData,
@@ -35,7 +35,7 @@ const MailingListCard: React.FC<MailingListCardProps> = ({
 
     api
       .coreApiMailingListCreateCreate({
-        mailingListRequest: { name: listName },
+        mailingListCreateRequest: { name: listName },
       })
       .then(() => {
         loadData();
@@ -56,7 +56,6 @@ const MailingListCard: React.FC<MailingListCardProps> = ({
       <Modal.Header closeButton={true}>
         <Modal.Title className={"mb-0"}>Mailing-List erzeugen</Modal.Title>
       </Modal.Header>
-
       <Modal.Body>
         <Form
           onSubmit={(event) => {
@@ -87,4 +86,4 @@ const MailingListCard: React.FC<MailingListCardProps> = ({
   );
 };
 
-export default MailingListCard;
+export default MailingListCreateModal;

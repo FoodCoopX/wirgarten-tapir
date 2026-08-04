@@ -1012,13 +1012,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MailingListRequest'
+              $ref: '#/components/schemas/MailingListCreateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/MailingListRequest'
+              $ref: '#/components/schemas/MailingListCreateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/MailingListRequest'
+              $ref: '#/components/schemas/MailingListCreateRequest'
         required: true
       security:
       - tokenAuth: []
@@ -1070,6 +1070,114 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MailingList'
+          description: ''
+  /core/api/mailing_list_recipient_list:
+    get:
+      operationId: core_api_mailing_list_recipient_list_list
+      parameters:
+      - in: query
+        name: list_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MailingListRecipient'
+          description: ''
+  /core/api/mailing_list_subscribe_external:
+    post:
+      operationId: core_api_mailing_list_subscribe_external_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /core/api/mailing_list_subscribe_internal:
+    post:
+      operationId: core_api_mailing_list_subscribe_internal_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /core/api/mailing_list_unsubscribe:
+    post:
+      operationId: core_api_mailing_list_unsubscribe_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /core/api/member_extra_emails:
     get:
@@ -9209,9 +9317,12 @@ components:
       properties:
         name:
           type: string
+        nb_recipients:
+          type: integer
       required:
       - name
-    MailingListRequest:
+      - nb_recipients
+    MailingListCreateRequest:
       type: object
       properties:
         name:
@@ -9219,6 +9330,46 @@ components:
           minLength: 1
       required:
       - name
+    MailingListRecipient:
+      type: object
+      properties:
+        address:
+          type: string
+          format: email
+        user_confirmed:
+          type: boolean
+        link_to_member_profile:
+          type: string
+          nullable: true
+      required:
+      - address
+      - link_to_member_profile
+      - user_confirmed
+    MailingListSubscribeExternalRecipientRequestRequest:
+      type: object
+      properties:
+        address:
+          type: string
+          format: email
+          minLength: 1
+        list_name:
+          type: string
+          minLength: 1
+      required:
+      - address
+      - list_name
+    MailingListSubscribeInternalRecipientRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        list_name:
+          type: string
+          minLength: 1
+      required:
+      - list_name
+      - member_id
     MandateReferencePreviewResponse:
       type: object
       properties:

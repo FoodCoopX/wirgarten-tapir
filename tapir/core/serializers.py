@@ -28,3 +28,24 @@ class MemberExtraEmailUpdateRequest(serializers.Serializer):
 
 class MailingListSerializer(serializers.Serializer):
     name = serializers.CharField()
+    nb_recipients = serializers.IntegerField()
+
+
+class MailingListCreateSerializer(serializers.Serializer):
+    name = serializers.CharField()
+
+
+class MailingListRecipientSerializer(serializers.Serializer):
+    address = serializers.EmailField()
+    user_confirmed = serializers.BooleanField()
+    link_to_member_profile = serializers.CharField(allow_null=True)
+
+
+class MailingListSubscribeExternalRecipientRequestSerializer(serializers.Serializer):
+    address = serializers.EmailField()
+    list_name = serializers.CharField()
+
+
+class MailingListSubscribeInternalRecipientRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    list_name = serializers.CharField()

@@ -109,6 +109,12 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="email",
             url=reverse_lazy("tapir_mail"),
         )
+    if settings.MAILING_LISTS_ENABLED:
+        admin_group.add_link(
+            display_name=_("Mailing-Listen"),
+            material_icon="mail_asterisk",
+            url=reverse_lazy("core:mailing_lists"),
+        )
 
     if request.user.has_perm(Permission.Payments.VIEW):
         admin_group.add_link(
@@ -132,13 +138,6 @@ def add_admin_links(groups, request, cache: dict):
             display_name=_("PDF-Exports"),
             material_icon="picture_as_pdf",
             url=reverse_lazy("generic_exports:pdf_export_editor"),
-        )
-
-    if settings.MAILING_LISTS_ENABLED:
-        admin_group.add_link(
-            display_name=_("Mailing-Listen"),
-            material_icon="mail_asterisk",
-            url=reverse_lazy("core:mailing_lists"),
         )
 
     if request.user.has_perm(Permission.Accounts.VIEW):

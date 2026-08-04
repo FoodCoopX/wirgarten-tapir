@@ -35,8 +35,13 @@ from tapir.core.serializers import (
     MemberExtraEmailCreateRequest,
     MemberExtraEmailUpdateRequest,
     MailingListSerializer,
+    MailingListRecipientSerializer,
+    MailingListCreateSerializer,
+    MailingListSubscribeExternalRecipientRequestSerializer,
+    MailingListSubscribeInternalRecipientRequestSerializer,
 )
 from tapir.core.services.internal_recipient_manager import InternalRecipientManager
+from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
 from tapir.core.services.mailman.mailing_lists_enabled_checker import (
     MailingListsEnabledChecker,
 )
@@ -384,7 +389,11 @@ class MailingListsListView(APIView):
         domain = client.get_domain(mail_host=settings.EMAIL_HOST)
 
         mailing_lists = [
-            {"name": mailing_list.fqdn_listname} for mailing_list in domain.lists
+            {
+                "name": mailing_list.fqdn_listname,
+                "nb_recipients": len(mailing_list.members) + len(mailing_list.requests),
+            }
+            for mailing_list in domain.lists
         ]
         mailing_lists = sorted(
             mailing_lists, key=lambda mailing_list: mailing_list["name"]
@@ -397,11 +406,11 @@ class MailingListsListView(APIView):
         )
 
 
-class MailListCreateView(APIView):
+class MailingListCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
-        request=MailingListSerializer(),
+        request=MailingListCreateSerializer(),
         responses={200: MailingListSerializer()},
     )
     def post(self, request):
@@ -420,11 +429,17 @@ class MailListCreateView(APIView):
         created_list = domain.create_list(list_name=list_name)
 
         return Response(
-            MailingListSerializer({"name": created_list.fqdn_listname}).data
+            MailingListSerializer(
+                {
+                    "name": created_list.fqdn_listname,
+                    "nb_recipients": len(created_list.members)
+                    + len(created_list.requests),
+                }
+            ).data
         )
 
 
-class MailListDeleteView(APIView):
+class MailingListDeleteView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
@@ -435,12 +450,150 @@ class MailListDeleteView(APIView):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
 
         list_name = request.query_params.get("list_name")
+        cache = {}
+
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=list_name, cache=cache
+        )
+        mailing_list.delete()
+        return Response("deleted")
+
+
+class MailingListRecipientListView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="list_name", type=str, required=True)],
+        responses={200: MailingListRecipientSerializer(many=True)},
+    )
+    def get(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        list_name = request.query_params.get("list_name")
+        cache = {}
+
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=list_name, cache=cache
+        )
+        recipients = [
+            {
+                "address": recipient.address,
+                "user_confirmed": True,
+            }
+            for recipient in mailing_list.members
+        ]
+        recipients += [
+            {"address": request["email"], "user_confirmed": False}
+            for request in mailing_list.requests
+        ]
+
+        members_by_email_address = {
+            member.email: member for member in Member.objects.all()
+        }
+
+        for recipient in recipients:
+            member = members_by_email_address.get(recipient["address"], None)
+            recipient["link_to_member_profile"] = (
+                reverse("wirgarten:member_detail", kwargs={"pk": member.id})
+                if member is not None
+                else None
+            )
+
+        recipients = sorted(recipients, key=lambda recipient: recipient["address"])
+        return Response(MailingListRecipientSerializer(recipients, many=True).data)
+
+
+class MailingListSubscribeExternalRecipientView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        request=MailingListSubscribeExternalRecipientRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListSubscribeExternalRecipientRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
 
         cache = {}
-        domain = MailmanRequestSender.get_domain(cache)
-        for mailing_list in domain.lists:
-            if mailing_list.fqdn_listname == list_name:
-                mailing_list.delete()
-                return Response("deleted")
 
-        raise Http404(f"Keine Liste mit Name {list_name} gefunden")
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=serializer.validated_data["list_name"], cache=cache
+        )
+        mailing_list.subscribe(
+            address=serializer.validated_data["address"],
+            invitation=True,
+        )
+
+        return Response("OK")
+
+
+class MailingListSubscribeInternalRecipientView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        request=MailingListSubscribeInternalRecipientRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        cache = {}
+
+        member = get_object_or_404(Member, id=serializer.validated_data["member_id"])
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=serializer.validated_data["list_name"], cache=cache
+        )
+        mailing_list.subscribe(
+            address=member.email,
+            invitation=True,
+        )
+
+        return Response("OK")
+
+
+class MailingListUnsubscribeRecipientView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        request=MailingListSubscribeExternalRecipientRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListSubscribeExternalRecipientRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        cache = {}
+
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=serializer.validated_data["list_name"], cache=cache
+        )
+        address = serializer.validated_data["address"]
+        if address in {member.address for member in mailing_list.members}:
+            mailing_list.unsubscribe(
+                email=serializer.validated_data["address"], pre_confirmed=True
+            )
+            return Response("OK")
+
+        list_requests = {
+            request["email"]: request["token"] for request in mailing_list.requests
+        }
+        if address in list_requests:
+            mailing_list.discard_request(request_id=list_requests[address])
+            return Response("OK")
+
+        raise Http404(
+            f"Keine passende Empfänger gefunden, Email:{address}, Liste:{serializer.validated_data["list_name"]}"
+        )

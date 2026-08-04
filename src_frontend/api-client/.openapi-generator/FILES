@@ -98,7 +98,10 @@ models/LocationRouteRequest.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
 models/MailingList.ts
-models/MailingListRequest.ts
+models/MailingListCreateRequest.ts
+models/MailingListRecipient.ts
+models/MailingListSubscribeExternalRecipientRequestRequest.ts
+models/MailingListSubscribeInternalRecipientRequestRequest.ts
 models/MandateReferencePreviewResponse.ts
 models/Member.ts
 models/MemberAssociationMembershipDetails.ts

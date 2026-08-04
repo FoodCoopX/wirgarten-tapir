@@ -41,12 +41,32 @@ urlpatterns = [
     ),
     path(
         "api/mailing_list_create",
-        views.MailListCreateView.as_view(),
+        views.MailingListCreateView.as_view(),
         name="mailing_list_create",
     ),
     path(
         "api/mailing_list_delete",
-        views.MailListDeleteView.as_view(),
+        views.MailingListDeleteView.as_view(),
         name="mailing_list_delete",
+    ),
+    path(
+        "api/mailing_list_recipient_list",
+        views.MailingListRecipientListView.as_view(),
+        name="mailing_list_recipient_list",
+    ),
+    path(
+        "api/mailing_list_subscribe_external",
+        views.MailingListSubscribeExternalRecipientView.as_view(),
+        name="mailing_list_subscribe_external",
+    ),
+    path(
+        "api/mailing_list_unsubscribe",
+        views.MailingListUnsubscribeRecipientView.as_view(),
+        name="mailing_list_unsubscribe",
+    ),
+    path(
+        "api/mailing_list_subscribe_internal",
+        views.MailingListSubscribeInternalRecipientView.as_view(),
+        name="mailing_list_subscribe_internal",
     ),
 ]

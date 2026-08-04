@@ -24,6 +24,12 @@ export interface MailingList {
    * @memberof MailingList
    */
   name: string;
+  /**
+   *
+   * @type {number}
+   * @memberof MailingList
+   */
+  nbRecipients: number;
 }
 
 /**
@@ -31,6 +37,8 @@ export interface MailingList {
  */
 export function instanceOfMailingList(value: object): value is MailingList {
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("nbRecipients" in value) || value["nbRecipients"] === undefined)
+    return false;
   return true;
 }
 
@@ -47,6 +55,7 @@ export function MailingListFromJSONTyped(
   }
   return {
     name: json["name"],
+    nbRecipients: json["nb_recipients"],
   };
 }
 
@@ -64,5 +73,6 @@ export function MailingListToJSONTyped(
 
   return {
     name: value["name"],
+    nb_recipients: value["nbRecipients"],
   };
 }
