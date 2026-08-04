@@ -74,7 +74,12 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_first_of_next_month, get_last_day_of_month
+from tapir.utils.shortcuts import (
+    get_first_of_next_month,
+    get_last_day_of_month,
+    get_monday,
+    get_next_sunday,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Payment,
@@ -199,6 +204,7 @@ class GetFutureMemberPaymentsApiView(APIView):
             solidarity_contributions = []
             delivery_charge_pickup_location = None
             association_memberships = []
+            delivery_dates = []
 
             match payment.type:
                 case payments_config.PAYMENT_TYPE_COOP_SHARES:
@@ -222,6 +228,22 @@ class GetFutureMemberPaymentsApiView(APIView):
                             payment=payment, cache=cache
                         )
                     )
+                    delivery_dates = MonthPaymentBuilderDeliveryCharges.get_billable_delivery_dates_in_range(
+                        subscriptions=cls.get_relevant_subscriptions(
+                            existing_subscriptions=existing_subscriptions,
+                            member_id=member_id,
+                            payment=payment,
+                            cache=cache,
+                            filter_by_payment_type=False,
+                        ),
+                        range_start=get_monday(
+                            payment.subscription_payment_range_start
+                        ),
+                        range_end=get_next_sunday(
+                            payment.subscription_payment_range_end
+                        ),
+                        cache=cache,
+                    )
                 case (
                     MonthPaymentBuilderAssociationMembership.PAYMENT_TYPE_ASSOCIATION_MEMBERSHIP
                 ):
@@ -235,6 +257,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                         member_id=member_id,
                         payment=payment,
                         cache=cache,
+                        filter_by_payment_type=True,
                     )
 
             extended_payments.append(
@@ -248,6 +271,7 @@ class GetFutureMemberPaymentsApiView(APIView):
                         association_memberships,
                         key=lambda membership: membership.start_date,
                     ),
+                    "delivery_dates": delivery_dates,
                 }
             )
         return extended_payments
@@ -269,6 +293,7 @@ class GetFutureMemberPaymentsApiView(APIView):
         member_id: str,
         payment: Payment,
         cache: dict,
+        filter_by_payment_type: bool,
     ):
         planned_renewed_subscriptions = [
             AutomaticSubscriptionRenewalService.build_renewed_subscription(
@@ -283,7 +308,10 @@ class GetFutureMemberPaymentsApiView(APIView):
             subscription
             for subscription in existing_subscriptions + planned_renewed_subscriptions
             if subscription.mandate_ref == payment.mandate_ref
-            and subscription.product.type.name == payment.type
+            and (
+                subscription.product.type.name == payment.type
+                or not filter_by_payment_type
+            )
             and DateRangeOverlapChecker.do_ranges_overlap(
                 range_1_start=subscription.start_date,
                 range_1_end=subscription.end_date,

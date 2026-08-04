@@ -17,5 +17,6 @@ export function formatDateNumeric(
     options.minute = "2-digit";
   }
 
+  console.log(date);
   return date.toLocaleDateString("de-DE", options);
 }

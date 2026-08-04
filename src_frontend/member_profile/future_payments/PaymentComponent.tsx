@@ -170,12 +170,20 @@ const PaymentComponent: React.FC<PaymentProps> = ({
           </span>
         ))}
         {extendedPayment.payment.type === "payment_type_delivery_charge" && (
-          <span>
+          <span style={{ textAlign: "center" }}>
             {extendedPayment.deliveryChargePickupLocation
-              ? `Lieferzuschlag Verteilstation ${extendedPayment.deliveryChargePickupLocation.name}`
-              : "Lieferzuschlag"}
-            {partialMonthText(extendedPayment)}
-            {trialPeriodText(extendedPayment, trialPeriodEnabled)}
+              ? `Lieferzuschlag ${extendedPayment.deliveryChargePickupLocation.name}`
+              : "Lieferzuschlag"}{" "}
+            {formatCurrency(
+              extendedPayment.payment.amount /
+                extendedPayment.deliveryDates.length,
+            )}{" "}
+            pro Lieferung
+            <br />
+            {extendedPayment.deliveryDates
+              .toSorted()
+              .map((deliveryDate) => formatDateNumeric(new Date(deliveryDate)))
+              .join(", ")}
           </span>
         )}
         {(extendedPayment.subscriptions.length > 0 ||

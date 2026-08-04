@@ -75,6 +75,12 @@ export interface ExtendedPayment {
   deliveryChargePickupLocation: PublicPickupLocation | null;
   /**
    *
+   * @type {Array<Date>}
+   * @memberof ExtendedPayment
+   */
+  deliveryDates: Array<Date>;
+  /**
+   *
    * @type {Array<AssociationMembership>}
    * @memberof ExtendedPayment
    */
@@ -104,6 +110,8 @@ export function instanceOfExtendedPayment(
     !("deliveryChargePickupLocation" in value) ||
     value["deliveryChargePickupLocation"] === undefined
   )
+    return false;
+  if (!("deliveryDates" in value) || value["deliveryDates"] === undefined)
     return false;
   if (
     !("associationMemberships" in value) ||
@@ -138,6 +146,7 @@ export function ExtendedPaymentFromJSONTyped(
     deliveryChargePickupLocation: PublicPickupLocationFromJSON(
       json["delivery_charge_pickup_location"],
     ),
+    deliveryDates: json["delivery_dates"],
     associationMemberships: (json["association_memberships"] as Array<any>).map(
       AssociationMembershipFromJSON,
     ),
@@ -170,6 +179,7 @@ export function ExtendedPaymentToJSONTyped(
     delivery_charge_pickup_location: PublicPickupLocationToJSON(
       value["deliveryChargePickupLocation"],
     ),
+    delivery_dates: value["deliveryDates"],
     association_memberships: (
       value["associationMemberships"] as Array<any>
     ).map(AssociationMembershipToJSON),

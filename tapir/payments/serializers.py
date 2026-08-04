@@ -28,6 +28,7 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     coop_share_transactions = CoopShareTransactionSerializer(many=True)
     solidarity_contributions = SolidarityContributionSerializer(many=True)
     delivery_charge_pickup_location = PublicPickupLocationSerializer(allow_null=True)
+    delivery_dates = serializers.ListField(child=serializers.DateField())
     association_memberships = AssociationMembershipSerializer(many=True)
 
 
