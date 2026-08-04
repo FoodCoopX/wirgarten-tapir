@@ -5,9 +5,10 @@ from pathlib import Path
 from django.core.exceptions import ValidationError
 from lxml import etree
 from lxml.etree import Element
+from nanoid import generate
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.models import generate_id
+from tapir.core.models import ID_LENGTH
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
@@ -120,7 +121,10 @@ class Pain008XmlGenerator:
 
         payment_id = cls._append_element(direct_debit_transaction_info, "PmtId")
         end_to_end_id = cls._append_element(payment_id, "EndToEndId")
-        end_to_end_id.text = generate_id()
+        end_to_end_id.text = generate(
+            size=ID_LENGTH,
+            alphabet="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        )
 
         instructed_amount = cls._append_element(
             direct_debit_transaction_info, "InstdAmt"
