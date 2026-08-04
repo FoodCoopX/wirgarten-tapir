@@ -23,15 +23,16 @@ def __send_email(file: ExportedFile, recipient: str = None, cache: dict = None):
     else:
         recipient = recipient.split(",")
 
-    filename = f"{file.name}_{file.created_at.strftime('%Y%m%d_%H%M%S')}.{ExportedFile.FileType.CSV.value}"
+    filename_long = (
+        f"{file.name}_{file.created_at.strftime('%Y%m%d_%H%M%S')}.{file.type}"
+    )
+    filename_short = f"{file.name}.{file.type}"
 
     email = EmailMultiAlternatives(
-        subject=_("{filename} ist bereit").format(
-            filename=f"{file.name}.{ExportedFile.FileType.CSV.value}"
-        ),
+        subject=_("{filename} ist bereit").format(filename=filename_short),
         body=_(
             "Hallo Admin,<br/><br/>im Anhang findest du die aktuelle {filename}.<br/><br/><br/>(Automatisch von Tapir versendet)"
-        ).format(filename=filename),
+        ).format(filename=filename_long),
         to=recipient,
         from_email=settings.EMAIL_HOST_SENDER,
         bcc=(
@@ -41,7 +42,7 @@ def __send_email(file: ExportedFile, recipient: str = None, cache: dict = None):
         ),
     )
     email.content_subtype = "html"
-    email.attach(filename, file.file)
+    email.attach(filename_long, file.file)
     email.send()
 
 
