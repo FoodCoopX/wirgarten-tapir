@@ -160,10 +160,10 @@ class PdfExportTemplateListApiView(APIView):
     def get(self, request):
         if not request.user.has_perm(Permission.Coop.MANAGE):
             return Response(status=status.HTTP_403_FORBIDDEN)
-
+        cache = {}
         return Response(
             PdfExportTemplateSerializer(
-                PdfExportTemplateManager.get_templates().values(), many=True
+                PdfExportTemplateManager.get_templates(cache=cache).values(), many=True
             ).data,
             status=status.HTTP_200_OK,
         )
@@ -178,10 +178,12 @@ class CreatePdfExportFromTemplateApiView(APIView):
         if not request.user.has_perm(Permission.Coop.MANAGE):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        cache = {}
+
         try:
             with transaction.atomic():
                 PdfExportTemplateManager.create_exports_from_template(
-                    request.query_params.get("template_id")
+                    request.query_params.get("template_id"), cache=cache
                 )
         except TemplateAlreadyExistsException as error:
             return Response(

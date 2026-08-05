@@ -7,10 +7,10 @@ from tapir.pickup_locations.services.pickup_location_segment_provider import (
 )
 
 
-class TemplateLocationRoutes:
-    ID = "location_routes"
+class TemplateLocationRoutesBiotop:
+    ID = "location_routes_biotop"
     NAME = "Abhakzettel"
-    DESCRIPTION = "Erzeugt ein einziges PDF mit alle Ausfahrrunden drin."
+    DESCRIPTION = "Erzeugt ein einziges PDF mit alle Ausfahrrunden drin (Biotop Oberland-Variante)"
 
     @classmethod
     def create_exports(cls):
@@ -21,7 +21,7 @@ class TemplateLocationRoutes:
             )
 
         with open(
-            "tapir/generic_exports/services/pdf_templates/location_routes.html",
+            "tapir/generic_exports/services/pdf_templates/location_routes_biotop.html",
             "r",
         ) as file:
             PdfExport.objects.create(
