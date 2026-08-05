@@ -1,72 +1,74 @@
 from django.urls import path
 
-from tapir.core import views
+from tapir.core.views import general
+from tapir.core.views import mailing_lists
+from tapir.core.views import member_extra_emails
 
 app_name = "core"
 urlpatterns = [
     path(
         "api/get_theme",
-        views.GetThemeView.as_view(),
+        general.GetThemeView.as_view(),
         name="get_theme",
     ),
     path(
         "api/member_mail_category_data",
-        views.MemberMailCategoryDataApiView.as_view(),
+        general.MemberMailCategoryDataApiView.as_view(),
         name="member_mail_category_data",
     ),
     path(
         "api/member_extra_emails",
-        views.MemberExtraEmailApiView.as_view(),
+        member_extra_emails.MemberExtraEmailApiView.as_view(),
         name="member_extra_emails",
     ),
     path(
         "member_extra_email_confirm/<uuid:secret>",
-        views.ConfirmMemberExtraEmailApiView.as_view(),
+        member_extra_emails.ConfirmMemberExtraEmailApiView.as_view(),
         name="member_extra_email_confirm",
     ),
     path(
         "member_extra_email_confirmed/<uuid:secret>",
-        views.MemberExtraEmailConfirmedView.as_view(),
+        member_extra_emails.MemberExtraEmailConfirmedView.as_view(),
         name="member_extra_email_confirmed",
     ),
     path(
         "mailing_lists",
-        views.MailingListsBaseView.as_view(),
+        mailing_lists.MailingListsBaseView.as_view(),
         name="mailing_lists",
     ),
     path(
         "api/mailing_list_list",
-        views.MailingListsListView.as_view(),
+        mailing_lists.MailingListsListView.as_view(),
         name="mailing_list_list",
     ),
     path(
         "api/mailing_list_create",
-        views.MailingListCreateView.as_view(),
+        mailing_lists.MailingListCreateView.as_view(),
         name="mailing_list_create",
     ),
     path(
         "api/mailing_list_delete",
-        views.MailingListDeleteView.as_view(),
+        mailing_lists.MailingListDeleteView.as_view(),
         name="mailing_list_delete",
     ),
     path(
         "api/mailing_list_recipient_list",
-        views.MailingListRecipientListView.as_view(),
+        mailing_lists.MailingListRecipientListView.as_view(),
         name="mailing_list_recipient_list",
     ),
     path(
         "api/mailing_list_subscribe_external",
-        views.MailingListSubscribeExternalRecipientView.as_view(),
+        mailing_lists.MailingListSubscribeExternalRecipientView.as_view(),
         name="mailing_list_subscribe_external",
     ),
     path(
         "api/mailing_list_unsubscribe",
-        views.MailingListUnsubscribeRecipientView.as_view(),
+        mailing_lists.MailingListUnsubscribeRecipientView.as_view(),
         name="mailing_list_unsubscribe",
     ),
     path(
         "api/mailing_list_subscribe_internal",
-        views.MailingListSubscribeInternalRecipientView.as_view(),
+        mailing_lists.MailingListSubscribeInternalRecipientView.as_view(),
         name="mailing_list_subscribe_internal",
     ),
 ]
