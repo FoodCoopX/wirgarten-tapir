@@ -96,7 +96,7 @@ class MailingListCreateView(APIView):
     def post(self, request):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
 
-        create_serializer = MailingListSerializer(data=request.data)
+        create_serializer = MailingListCreateSerializer(data=request.data)
         create_serializer.is_valid(raise_exception=True)
 
         cache = {}

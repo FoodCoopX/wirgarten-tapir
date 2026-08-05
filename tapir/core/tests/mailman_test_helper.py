@@ -2,6 +2,8 @@ import unittest
 from dataclasses import dataclass
 from unittest.mock import patch, Mock
 
+from django.conf import settings
+
 from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
 
 
@@ -29,11 +31,17 @@ class MailmanTestHelper:
         domain.lists = [
             cls.build_mock_list(mailing_list) for mailing_list in mailing_list_datas
         ]
+        domain.create_list.side_effect = lambda list_name: cls.build_mock_list(
+            MockMailingListData(
+                name=list_name, unconfirmed_recipients=[], confirmed_recipients=[]
+            )
+        )
+        return domain
 
     @classmethod
     def build_mock_list(cls, mailing_list_data: MockMailingListData):
         mock_list = Mock()
-        mock_list.fqdn_listname = mailing_list_data.name
+        mock_list.fqdn_listname = f"{mailing_list_data.name}@{settings.EMAIL_HOST}"
         mock_list.members = [
             Mock(address=recipient)
             for recipient in mailing_list_data.confirmed_recipients

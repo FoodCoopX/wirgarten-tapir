@@ -32,6 +32,7 @@ class TestMailingListListView(TapirIntegrationTest):
             response=response, expected_status_code=status.HTTP_403_FORBIDDEN
         )
 
+    @override_settings(EMAIL_HOST="example.com")
     def test_get_default_returnsCorrectList(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
         MailmanTestHelper.mock_domain(
@@ -59,8 +60,8 @@ class TestMailingListListView(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(
             [
-                {"name": "list_A", "nb_recipients": 5},
-                {"name": "list_B", "nb_recipients": 2},
+                {"name": "list_A@example.com", "nb_recipients": 5},
+                {"name": "list_B@example.com", "nb_recipients": 2},
             ],
             response_content,
         )
