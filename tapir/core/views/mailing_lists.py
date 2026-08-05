@@ -68,7 +68,6 @@ class MailingListsListView(APIView):
 
         cache = {}
         domain = TapirMailmanClient.get_domain(cache)
-
         mailing_lists = [
             {
                 "name": mailing_list.fqdn_listname,
