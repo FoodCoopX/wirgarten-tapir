@@ -1,5 +1,5 @@
 import unittest
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from unittest.mock import patch, Mock
 
 from django.conf import settings
@@ -10,8 +10,8 @@ from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
 @dataclass
 class MockMailingListData:
     name: str
-    confirmed_recipients: list[str]
-    unconfirmed_recipients: list[str]
+    confirmed_recipients: list[str] = field(default_factory=list)
+    unconfirmed_recipients: list[str] = field(default_factory=list)
 
 
 class MailmanTestHelper:
