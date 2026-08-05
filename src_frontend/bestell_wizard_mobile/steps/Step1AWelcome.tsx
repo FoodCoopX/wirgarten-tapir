@@ -15,7 +15,10 @@ const Step1AWelcome: React.FC<Step1AIntroProps> = ({
   return (
     <>
       {settings.strings.step1aText && (
-        <p className={"text-center"}>{settings.strings.step1aText}</p>
+        <p
+          className={"text-center"}
+          dangerouslySetInnerHTML={{ __html: settings.strings.step1aText }}
+        />
       )}
       <TapirButton
         variant={BUTTON_VARIANT}
