@@ -24,7 +24,7 @@ from tapir.core.services.mailman.mailing_list_provider import MailingListProvide
 from tapir.core.services.mailman.mailing_lists_enabled_checker import (
     MailingListsEnabledChecker,
 )
-from tapir.core.services.mailman.mailman_request_sender import MailmanRequestSender
+from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -45,7 +45,7 @@ class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
 
         try:
-            MailmanRequestSender.ensure_instance_domain_exists(cache=self.cache)
+            TapirMailmanClient.ensure_instance_domain_exists(cache=self.cache)
         except MailmanConnectionError:
             self.connection_with_mailman_failed = True
 
@@ -53,7 +53,6 @@ class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context_data = super().get_context_data(**kwargs)
-        context_data["cache"] = self.cache
         context_data["show_connection_error"] = self.connection_with_mailman_failed
         return context_data
 
@@ -68,8 +67,7 @@ class MailingListsListView(APIView):
         MailingListsEnabledChecker.check_mailing_lists_enabled()
 
         cache = {}
-        client = MailmanRequestSender.get_client(cache)
-        domain = client.get_domain(mail_host=settings.EMAIL_HOST)
+        domain = TapirMailmanClient.get_domain(cache)
 
         mailing_lists = [
             {
@@ -103,7 +101,7 @@ class MailingListCreateView(APIView):
         create_serializer.is_valid(raise_exception=True)
 
         cache = {}
-        domain = MailmanRequestSender.get_domain(cache)
+        domain = TapirMailmanClient.get_domain(cache)
 
         list_name: str = create_serializer.validated_data["name"]
         suffix = f"@{settings.EMAIL_HOST}"
