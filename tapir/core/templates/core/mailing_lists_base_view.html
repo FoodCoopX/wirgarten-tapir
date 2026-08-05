@@ -8,5 +8,9 @@
 {% endblock %}
 {% block content %}
     {% csrf_token %}
-    <div id="mailing_lists_entry" ></div>
+    {% if show_connection_error %}
+        <div class="alert alert-danger mt-2">Verbindung mit dem Mailing-List-System fehlgeschlagen, kontaktiere bitte ein Admin.</div>
+    {% else %}
+        <div id="mailing_lists_entry" ></div>
+    {% endif %}
 {% endblock content %}

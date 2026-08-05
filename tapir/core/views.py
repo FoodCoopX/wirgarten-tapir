@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView, RedirectView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from mailmanclient import MailmanConnectionError
 from rest_framework import status, serializers, permissions
 from rest_framework.exceptions import (
     ValidationError as RestValidationError,
@@ -362,16 +363,22 @@ class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         self.cache = {}
+        self.connection_with_mailman_failed = False
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         MailingListsEnabledChecker.check_mailing_lists_enabled()
 
-        MailmanRequestSender.ensure_instance_domain_exists(cache=self.cache)
+        try:
+            MailmanRequestSender.ensure_instance_domain_exists(cache=self.cache)
+        except MailmanConnectionError:
+            self.connection_with_mailman_failed = True
+
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context_data = super().get_context_data(**kwargs)
         context_data["cache"] = self.cache
+        context_data["show_connection_error"] = self.connection_with_mailman_failed
         return context_data
 
 
