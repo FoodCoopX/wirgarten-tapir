@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
-import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step2FirstNameProps {
@@ -52,7 +52,7 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         }}
         id={"first_name_input"}
         onKeyUp={(event) => {
-          if (event.key === "Enter") validate();
+          if (event.key === "Enter" && active) validate();
         }}
         isValid={showValidation && personalData.firstName.length > 0}
         isInvalid={showValidation && personalData.firstName.length === 0}
