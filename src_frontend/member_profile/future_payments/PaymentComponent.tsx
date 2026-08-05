@@ -180,10 +180,14 @@ const PaymentComponent: React.FC<PaymentProps> = ({
             )}{" "}
             pro Lieferung
             <br />
-            {extendedPayment.deliveryDates
-              .toSorted()
-              .map((deliveryDate) => formatDateNumeric(new Date(deliveryDate)))
-              .join(", ")}
+            <span style={{ textWrap: "wrap" }}>
+              {extendedPayment.deliveryDates
+                .toSorted()
+                .map((deliveryDate) =>
+                  formatDateNumeric(new Date(deliveryDate)),
+                )
+                .join(", ")}
+            </span>
           </span>
         )}
         {(extendedPayment.subscriptions.length > 0 ||
