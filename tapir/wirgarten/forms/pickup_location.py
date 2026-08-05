@@ -336,7 +336,7 @@ class PickupLocationEditForm(forms.Form):
             widget=Textarea,
         )
         self.fields["route_info"] = forms.CharField(
-            label=_("Kommentar für die Verteilung"),
+            label=_("Information Fahrer"),
             required=False,
             help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste.",
             widget=Textarea,

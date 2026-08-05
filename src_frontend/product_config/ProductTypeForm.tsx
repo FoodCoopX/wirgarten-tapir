@@ -527,12 +527,14 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                           <Form.Label>Akkordeon {index + 1} - Text</Form.Label>
                           <Form.Control
                             type={"text"}
+                            as={"textarea"}
                             onChange={(event) =>
                               setAccordionDescription(event.target.value, index)
                             }
                             required={true}
                             value={accordion.description}
                           />
+                          <Form.Text>{HTML_ALLOWED_TEXT}</Form.Text>
                         </Form.Group>
                         <div className={"mt-2 d-flex flew-row gap-2"}>
                           <TapirButton

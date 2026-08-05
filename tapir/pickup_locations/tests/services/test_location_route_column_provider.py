@@ -13,6 +13,8 @@ from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
     SubscriptionFactory,
     MemberFactory,
+    GrowingPeriodFactory,
+    MemberPickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -92,31 +94,52 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
     ):
         self._set_parameter(key=ParameterKeys.PICKING_MODE, value=PICKING_MODE_SHARE)
 
-        PickupLocationFactory.create()
+        pickup_location = PickupLocationFactory.create()
 
         member_1 = MemberFactory.create(
             member_no=123, first_name="John", last_name="Xi"
         )
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
+        MemberPickupLocationFactory.create(
+            member=member_1,
+            pickup_location=pickup_location,
+            valid_from=period.start_date,
+        )
+
         subscription_1 = SubscriptionFactory.create(
             quantity=2,
             product__type__delivery_cycle=WEEKLY[0],
             product__type__order_in_bestellwizard=1,
             member=member_1,
+            period=period,
         )
         subscription_2 = SubscriptionFactory.create(
             member=member_1,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
             product__type__order_in_bestellwizard=2,
+            period=period,
         )
         member_2 = MemberFactory.create(
             member_no=456, first_name="Jane", last_name="Mustermensch"
         )
-        SubscriptionFactory.create(
-            quantity=3, product=subscription_1.product, member=member_2
+        MemberPickupLocationFactory.create(
+            member=member_2,
+            pickup_location=pickup_location,
+            valid_from=period.start_date,
         )
         SubscriptionFactory.create(
-            quantity=7, product__type__delivery_cycle=NO_DELIVERY[0]
+            quantity=3,
+            product=subscription_1.product,
+            member=member_2,
+            period=period,
+        )
+        undelivered_subscription = SubscriptionFactory.create(
+            quantity=7,
+            product__type__delivery_cycle=NO_DELIVERY[0],
+            period=period,
         )
 
         result = LocationRouteColumnProvider.get_value_pickup_locations(
@@ -129,36 +152,48 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
 
         self.assertEqual(1, len(result))
         data = result[0]
-        data["headers"] = [subscription_1.product.id, subscription_2.product.id]
-        data["product_name_by_id"] = {
-            subscription_1.product.id: subscription_1.product.name,
-            subscription_2.product.id: subscription_2.product.name,
-        }
-        data["convert_headers"] = True
-        data["global_values"] = {
-            subscription_1.product.id: 5,
-            subscription_2.product.id: 1,
-        }
-        data["members"] = {
-            member_1: {
-                "member_no": 123,
-                "first_name": "John",
-                "last_name": "Xi",
-                "member_values": {
-                    subscription_1.product.id: 2,
-                    subscription_2.product.id: 1,
-                },
+        self.assertEqual(
+            [subscription_1.product.id, subscription_2.product.id], data["headers"]
+        )
+        self.assertEqual(
+            {
+                subscription_1.product.id: subscription_1.product.name,
+                subscription_2.product.id: subscription_2.product.name,
+                undelivered_subscription.product.id: undelivered_subscription.product.name,
             },
-            member_2: {
-                "member_no": 456,
-                "first_name": "Jane",
-                "last_name": "Mu",
-                "member_values": {
-                    subscription_1.product.id: 0,
-                    subscription_2.product.id: 3,
-                },
+            data["product_name_by_id"],
+        )
+        self.assertTrue(data["convert_headers"])
+        self.assertEqual(
+            {
+                subscription_1.product.id: 5,
+                subscription_2.product.id: 1,
             },
-        }
+            data["global_values"],
+        )
+        self.assertEqual(
+            [
+                {
+                    "member_no": 456,
+                    "first_name": "Jane",
+                    "last_name": "Mu",
+                    "member_values": {
+                        subscription_1.product.id: 3,
+                        subscription_2.product.id: 0,
+                    },
+                },
+                {
+                    "member_no": 123,
+                    "first_name": "John",
+                    "last_name": "Xi",
+                    "member_values": {
+                        subscription_1.product.id: 2,
+                        subscription_2.product.id: 1,
+                    },
+                },
+            ],
+            data["members"],
+        )
 
     def test_getValuePickupLocation_pickingModeBasket_returnsCorrectSubscriptionData(
         self,
@@ -168,31 +203,51 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             key=ParameterKeys.PICKING_BASKET_SIZES, value="small;normal"
         )
 
-        PickupLocationFactory.create()
-
+        pickup_location = PickupLocationFactory.create()
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
         member_1 = MemberFactory.create(
             member_no=123, first_name="John", last_name="Xi"
         )
+        MemberPickupLocationFactory.create(
+            member=member_1,
+            pickup_location=pickup_location,
+            valid_from=period.start_date,
+        )
+
         subscription_1 = SubscriptionFactory.create(
             quantity=2,
             product__type__delivery_cycle=WEEKLY[0],
             product__type__order_in_bestellwizard=1,
             member=member_1,
+            period=period,
         )
         subscription_2 = SubscriptionFactory.create(
             member=member_1,
             quantity=1,
             product__type__delivery_cycle=WEEKLY[0],
             product__type__order_in_bestellwizard=2,
+            period=period,
         )
         member_2 = MemberFactory.create(
             member_no=456, first_name="Jane", last_name="Mustermensch"
         )
-        SubscriptionFactory.create(
-            quantity=3, product=subscription_1.product, member=member_2
+        MemberPickupLocationFactory.create(
+            member=member_2,
+            pickup_location=pickup_location,
+            valid_from=period.start_date,
         )
         SubscriptionFactory.create(
-            quantity=7, product__type__delivery_cycle=NO_DELIVERY[0]
+            quantity=3,
+            product=subscription_1.product,
+            member=member_2,
+            period=period,
+        )
+        SubscriptionFactory.create(
+            quantity=7,
+            product__type__delivery_cycle=NO_DELIVERY[0],
+            period=period,
         )
 
         ProductBasketSizeEquivalence.objects.create(
@@ -215,29 +270,35 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
 
         self.assertEqual(1, len(result))
         data = result[0]
-        data["headers"] = ["small", "normal"]
-        data["convert_headers"] = False
-        data["global_values"] = {
-            "small": 6,
-            "normal": 2,
-        }
-        data["members"] = {
-            member_1: {
-                "member_no": 123,
-                "first_name": "John",
-                "last_name": "Xi",
-                "member_values": {
-                    "small": 3,
-                    "normal": 2,
-                },
+        self.assertEqual(["small", "normal"], data["headers"])
+        self.assertFalse(data["convert_headers"])
+        self.assertEqual(
+            {
+                "small": 6,
+                "normal": 5,
             },
-            member_2: {
-                "member_no": 456,
-                "first_name": "Jane",
-                "last_name": "Mu",
-                "member_values": {
-                    "small": 3,
-                    "normal": 0,
+            data["global_values"],
+        )
+        self.assertEqual(
+            [
+                {
+                    "member_no": 456,
+                    "first_name": "Jane",
+                    "last_name": "Mu",
+                    "member_values": {
+                        "small": 3,
+                        "normal": 3,
+                    },
                 },
-            },
-        }
+                {
+                    "member_no": 123,
+                    "first_name": "John",
+                    "last_name": "Xi",
+                    "member_values": {
+                        "small": 3,
+                        "normal": 2,
+                    },
+                },
+            ],
+            data["members"],
+        )

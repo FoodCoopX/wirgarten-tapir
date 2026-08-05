@@ -8738,6 +8738,11 @@ components:
           allOf:
           - $ref: '#/components/schemas/PublicPickupLocation'
           nullable: true
+        delivery_dates:
+          type: array
+          items:
+            type: string
+            format: date
         association_memberships:
           type: array
           items:
@@ -8746,6 +8751,7 @@ components:
       - association_memberships
       - coop_share_transactions
       - delivery_charge_pickup_location
+      - delivery_dates
       - payment
       - solidarity_contributions
       - subscriptions

@@ -86,7 +86,11 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
                 required={true}
                 value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
               />
-              <TapirHelpButton text={"WIP"} />
+              <TapirHelpButton
+                text={
+                  "Beachte: Es wird ein Datenexport auf Basis des Datenstandes zum ausgewählten Zeitpunkt erzeugt"
+                }
+              />
             </div>
           </Form.Group>
         </Form>

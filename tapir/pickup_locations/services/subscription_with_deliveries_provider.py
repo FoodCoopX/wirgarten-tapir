@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
@@ -7,7 +8,7 @@ from tapir.subscriptions.services.subscription_delivered_in_week_checked import 
     SubscriptionDeliveredInWeekChecker,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import PickupLocation, Subscription
+from tapir.wirgarten.models import PickupLocation, Subscription, Product
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_product_price
 
@@ -59,10 +60,19 @@ class SubscriptionsWithDeliveriesProvider:
             key=lambda subscription: (
                 subscription.member.last_name,
                 subscription.member.first_name,
-                -get_product_price(
+                -cls.get_price_or_zero(
                     product=subscription.product_id,
                     reference_date=reference_datetime.date(),
                     cache=cache,
-                ).price,
+                ),
             ),
         )
+
+    @classmethod
+    def get_price_or_zero(
+        cls, product: Product, reference_date: datetime.date, cache: dict
+    ):
+        price_object = get_product_price(
+            product=product, reference_date=reference_date, cache=cache
+        )
+        return Decimal(0) if price_object is None else price_object.price

@@ -65,6 +65,6 @@ class TestCreatePdfExportFromTemplateApiView(TapirIntegrationTest):
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertEqual(
-            f'Ein PDF-Export mit name "Kommissionierungsliste {pickup_locations[0].name}" existiert bereits, wenn du den neu erzeugen willst muss du die alte löschen.',
+            f'Ein PDF-Export mit dem Namen "Kommissionierungsliste {pickup_locations[0].name}" existiert bereits. Falls dieser neu erzeugt werden soll, bitte zuerst den alten Export-Eintrag aus der Liste löschen.',
             response_content["error"],
         )

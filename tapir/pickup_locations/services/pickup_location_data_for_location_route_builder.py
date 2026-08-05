@@ -38,7 +38,6 @@ class PickupLocationDataForLocationRouteBuilder:
         members = sorted(
             members,
             key=lambda member: (
-                member.member_no,
                 member.last_name,
                 member.first_name,
             ),
@@ -103,7 +102,7 @@ class PickupLocationDataForLocationRouteBuilder:
                     product=subscription.product, cache=cache
                 )
                 for basket_name, quantity in equivalences.items():
-                    values[basket_name] += quantity
+                    values[basket_name] += quantity * subscription.quantity
         elif picking_mode == PICKING_MODE_SHARE:
             for subscription in subscriptions:
                 values[subscription.product_id] += subscription.quantity
