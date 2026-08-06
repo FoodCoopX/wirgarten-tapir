@@ -27,10 +27,10 @@ class LocationRouteColumnProvider:
                 get_value=cls.get_value_pickup_locations,
             ),
             ExportSegmentColumn(
-                id="route_crate_totals",
+                id="route_basket_totals",
                 display_name="Kistenzahl pro Ausfahrrunde",
                 description="Summen je Kistengröße bzw. Ernteanteil über alle Verteilstationen der Tour",
-                get_value=cls.get_value_route_crate_totals,
+                get_value=cls.get_value_route_basket_totals,
             ),
         ]
 
@@ -59,7 +59,7 @@ class LocationRouteColumnProvider:
         ]
 
     @classmethod
-    def get_value_route_crate_totals(
+    def get_value_route_basket_totals(
         cls,
         route: LocationRoute | None,
         reference_datetime: datetime.datetime,

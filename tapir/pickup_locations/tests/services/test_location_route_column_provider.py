@@ -303,7 +303,7 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             data["members"],
         )
 
-    def test_getValueRouteCrateTotals_pickingModeBasket_sumsStationsAndExcludesJoker(
+    def test_getValueRouteBasketTotals_pickingModeBasket_sumsStationsAndExcludesJoker(
         self,
     ):
         self._set_parameter(key=ParameterKeys.PICKING_MODE, value=PICKING_MODE_BASKET)
@@ -369,7 +369,7 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             member=member_joker, date=datetime.date(year=2026, month=7, day=29)
         )
 
-        result = LocationRouteColumnProvider.get_value_route_crate_totals(
+        result = LocationRouteColumnProvider.get_value_route_basket_totals(
             route=route,
             reference_datetime=datetime.datetime(
                 year=2026, month=7, day=29, hour=12, tzinfo=datetime.timezone.utc

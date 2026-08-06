@@ -3,8 +3,8 @@ from typing import Callable
 
 from django.http import Http404
 
-from tapir.generic_exports.services.pdf_templates.template_crate_totals_by_route import (
-    TemplateCrateTotalsByRoute,
+from tapir.generic_exports.services.pdf_templates.template_basket_totals_by_route import (
+    TemplateBasketTotalsByRoute,
 )
 from tapir.generic_exports.services.pdf_templates.template_location_routes import (
     TemplateLocationRoutes,
@@ -35,7 +35,7 @@ class PdfExportTemplateManager:
             for template in [
                 TemplatePickListByPickupLocation,
                 TemplateLocationRoutes,
-                TemplateCrateTotalsByRoute,
+                TemplateBasketTotalsByRoute,
             ]
         }
 

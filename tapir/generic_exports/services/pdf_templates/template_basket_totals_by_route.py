@@ -9,8 +9,8 @@ from tapir.pickup_locations.services.pickup_location_segment_provider import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TemplateCrateTotalsByRoute:
-    ID = "crate_totals_by_route"
+class TemplateBasketTotalsByRoute:
+    ID = "basket_totals_by_route"
     NAME = "Kistenzahl pro Ausfahrrunde"
     DESCRIPTION = (
         "Erzeugt ein PDF mit den Kisten- bzw. Anteilssummen je Ausfahrrunde "
@@ -31,7 +31,7 @@ class TemplateCrateTotalsByRoute:
         email_recipients = [admin_email] if admin_email else []
 
         with open(
-            "tapir/generic_exports/services/pdf_templates/crate_totals_by_route.html",
+            "tapir/generic_exports/services/pdf_templates/basket_totals_by_route.html",
             "r",
         ) as file:
             PdfExport.objects.create(

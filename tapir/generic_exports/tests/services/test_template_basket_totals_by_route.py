@@ -1,7 +1,7 @@
 from tapir.configuration.models import TapirParameter
 from tapir.generic_exports.models import PdfExport, AutomatedExportCycle
-from tapir.generic_exports.services.pdf_templates.template_crate_totals_by_route import (
-    TemplateCrateTotalsByRoute,
+from tapir.generic_exports.services.pdf_templates.template_basket_totals_by_route import (
+    TemplateBasketTotalsByRoute,
 )
 from tapir.pickup_locations.services.pickup_location_segment_provider import (
     PickupLocationSegmentProvider,
@@ -11,7 +11,7 @@ from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestTemplateCrateTotalsByRoute(TapirIntegrationTest):
+class TestTemplateBasketTotalsByRoute(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -21,11 +21,11 @@ class TestTemplateCrateTotalsByRoute(TapirIntegrationTest):
             value="admin@example.com"
         )
 
-        TemplateCrateTotalsByRoute.create_exports()
+        TemplateBasketTotalsByRoute.create_exports()
 
         export = PdfExport.objects.get()
 
-        self.assertEqual(TemplateCrateTotalsByRoute.NAME, export.name)
+        self.assertEqual(TemplateBasketTotalsByRoute.NAME, export.name)
         self.assertEqual(
             PickupLocationSegmentProvider.SEGMENT_ID_ALL_LOCATION_ROUTES,
             export.export_segment_id,
@@ -36,5 +36,5 @@ class TestTemplateCrateTotalsByRoute(TapirIntegrationTest):
             export.automated_export_cycle,
         )
         self.assertEqual(["admin@example.com"], export.email_recipients)
-        self.assertIn("route_crate_totals", export.template)
+        self.assertIn("route_basket_totals", export.template)
         self.assertIn("route_name", export.template)

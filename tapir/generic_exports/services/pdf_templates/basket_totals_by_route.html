@@ -7,7 +7,7 @@
             content: "Seite " counter(page) " aus " counter(pages);
         }
         @top-left {
-            content: "KW {{ entries.0.route_crate_totals.calendar_week }}"
+            content: "KW {{ entries.0.route_basket_totals.calendar_week }}"
         }
     }
 
@@ -39,7 +39,7 @@
     }
 </style>
 
-<h1>Kistenzahl pro Ausfahrrunde — KW {{ entries.0.route_crate_totals.calendar_week }}</h1>
+<h1>Kistenzahl pro Ausfahrrunde — KW {{ entries.0.route_basket_totals.calendar_week }}</h1>
 
 {% for entry in entries %}
     <div class="route-block">
@@ -55,10 +55,10 @@
             <thead>
                 <tr>
                     <th>Summe Tour</th>
-                    {% for header in entry.route_crate_totals.headers %}
+                    {% for header in entry.route_basket_totals.headers %}
                         <th>
-                            {% if entry.route_crate_totals.convert_headers %}
-                                {{ entry.route_crate_totals.product_name_by_id|get_value:header }}
+                            {% if entry.route_basket_totals.convert_headers %}
+                                {{ entry.route_basket_totals.product_name_by_id|get_value:header }}
                             {% else %}
                                 {{ header }}
                             {% endif %}
@@ -69,22 +69,22 @@
             <tbody>
                 <tr>
                     <td>Gesamt</td>
-                    {% for header in entry.route_crate_totals.headers %}
-                        <td>{{ entry.route_crate_totals.totals|get_value:header }}</td>
+                    {% for header in entry.route_basket_totals.headers %}
+                        <td>{{ entry.route_basket_totals.totals|get_value:header }}</td>
                     {% endfor %}
                 </tr>
             </tbody>
         </table>
 
-        {% if entry.route_crate_totals.stations %}
+        {% if entry.route_basket_totals.stations %}
             <table>
                 <thead>
                     <tr>
                         <th>Verteilstation</th>
-                        {% for header in entry.route_crate_totals.headers %}
+                        {% for header in entry.route_basket_totals.headers %}
                             <th>
-                                {% if entry.route_crate_totals.convert_headers %}
-                                    {{ entry.route_crate_totals.product_name_by_id|get_value:header }}
+                                {% if entry.route_basket_totals.convert_headers %}
+                                    {{ entry.route_basket_totals.product_name_by_id|get_value:header }}
                                 {% else %}
                                     {{ header }}
                                 {% endif %}
@@ -93,10 +93,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for station in entry.route_crate_totals.stations %}
+                    {% for station in entry.route_basket_totals.stations %}
                         <tr>
                             <td>{{ station.name }}</td>
-                            {% for header in entry.route_crate_totals.headers %}
+                            {% for header in entry.route_basket_totals.headers %}
                                 <td>{{ station.totals|get_value:header }}</td>
                             {% endfor %}
                         </tr>
