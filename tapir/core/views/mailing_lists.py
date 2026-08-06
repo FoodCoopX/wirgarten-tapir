@@ -449,3 +449,79 @@ class MailingListMemberSelfUnsubscribeView(APIView):
         )
 
         return Response("Unsubscribed")
+
+
+class MailingListMemberSelfConfirmView(APIView):
+    @extend_schema(
+        request=MailingListSubscribeInternalRecipientRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        cache = {}
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        list_name = serializer.validated_data["list_name"]
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=list_name, cache=cache
+        )
+
+        if not MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
+            email=member.email, mailing_list=mailing_list
+        ):
+            raise ValidationError(
+                f"Mitglied {member.email} ist nicht zu {list_name} eingeladen"
+            )
+
+        for request in mailing_list.requests:
+            if request["email"] == member.email:
+                mailing_list.accept_request(request_id=request["token"])
+                return Response("Confirmed")
+
+        raise Http404("Einladung nicht gefunden")
+
+
+class MailingListMemberSelfRejectView(APIView):
+    @extend_schema(
+        request=MailingListSubscribeInternalRecipientRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        cache = {}
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        list_name = serializer.validated_data["list_name"]
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=list_name, cache=cache
+        )
+
+        if not MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
+            email=member.email, mailing_list=mailing_list
+        ):
+            raise ValidationError(
+                f"Mitglied {member.email} ist nicht zu {list_name} eingeladen"
+            )
+
+        for request in mailing_list.requests:
+            if request["email"] == member.email:
+                mailing_list.reject_request(request_id=request["token"])
+                return Response("Invite rejected")
+
+        raise Http404("Einladung nicht gefunden")

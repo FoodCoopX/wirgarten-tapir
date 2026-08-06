@@ -92,16 +92,89 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
       .finally(() => setListLoading(undefined));
   }
 
+  function onConfirm(list: MailingList) {
+    setListLoading(list);
+
+    api
+      .coreApiMemberSelfConfirmCreate({
+        mailingListSubscribeInternalRecipientRequestRequest: {
+          listName: list.name,
+          memberId: memberId,
+        },
+      })
+      .then(() => loadData())
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler bei der Bestätigung der Einladung an eine Liste",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setListLoading(undefined));
+  }
+
+  function onReject(list: MailingList) {
+    setListLoading(list);
+
+    api
+      .coreApiMemberSelfRejectCreate({
+        mailingListSubscribeInternalRecipientRequestRequest: {
+          listName: list.name,
+          memberId: memberId,
+        },
+      })
+      .then(() => loadData())
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Ablehnen der Einladung an eine Liste",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setListLoading(undefined));
+  }
+
   function buildParticipation(list: MailingList) {
     if (subscribedLists.includes(list.name)) {
       return "Ja";
     }
 
     if (waitingForConfirmationLists.includes(list.name)) {
-      return "Noch nicht bestätigt";
+      return (
+        <span className={"d-flex gap-2 align-items-start"}>
+          <span>Eingeladen</span>
+          <TapirHelpButton
+            buttonSize={"sm"}
+            text={buildInvitationHelpText(list)}
+          />
+        </span>
+      );
     }
 
     return "Nein";
+  }
+
+  function buildInvitationHelpText(list: MailingList) {
+    let text = (
+      <p>
+        Du bist zu diese Liste eingeladen. Du kannst die Einladung annehmen oder
+        ablehnen.
+      </p>
+    );
+
+    if (!list.advertised) {
+      text = (
+        <>
+          {text}
+          <p>
+            Wenn du die Einladung ablehnst, kannst du dich nicht mehr für die
+            Liste anmelden. Es müsste ein Administrator dich wieder einladen.
+          </p>
+        </>
+      );
+    }
+
+    return text;
   }
 
   function buildButtons(list: MailingList) {
@@ -125,12 +198,14 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
             variant={"primary"}
             icon={"mark_email_read"}
             text={"Anmeldung bestätigen"}
+            onClick={() => onConfirm(list)}
           />
           <TapirButton
             size={"sm"}
             variant={"primary"}
             icon={"unsubscribe"}
             text={"Anmeldung ablehnen"}
+            onClick={() => onReject(list)}
           />
         </span>
       );
@@ -182,6 +257,7 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
                       <TapirHelpButton
                         text={list.description}
                         buttonSize={"sm"}
+                        title={"Beschreibung"}
                       />
                     </td>
                     <td>{buildParticipation(list)}</td>

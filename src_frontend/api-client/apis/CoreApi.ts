@@ -96,6 +96,14 @@ export interface CoreApiMemberMailingListDataRetrieveRequest {
   memberId: string;
 }
 
+export interface CoreApiMemberSelfConfirmCreateRequest {
+  mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
+}
+
+export interface CoreApiMemberSelfRejectCreateRequest {
+  mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
+}
+
 export interface CoreApiMemberSelfSubscribeCreateRequest {
   mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
 }
@@ -1094,6 +1102,150 @@ export class CoreApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<MemberMailingListDataResponse> {
     const response = await this.coreApiMemberMailingListDataRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberSelfConfirmCreateRaw(
+    requestParameters: CoreApiMemberSelfConfirmCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeInternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeInternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeInternalRecipientRequestRequest" was null or undefined when calling coreApiMemberSelfConfirmCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_self_confirm`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeInternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeInternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberSelfConfirmCreate(
+    requestParameters: CoreApiMemberSelfConfirmCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMemberSelfConfirmCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberSelfRejectCreateRaw(
+    requestParameters: CoreApiMemberSelfRejectCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeInternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeInternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeInternalRecipientRequestRequest" was null or undefined when calling coreApiMemberSelfRejectCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_self_reject`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeInternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeInternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberSelfRejectCreate(
+    requestParameters: CoreApiMemberSelfRejectCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMemberSelfRejectCreateRaw(
       requestParameters,
       initOverrides,
     );

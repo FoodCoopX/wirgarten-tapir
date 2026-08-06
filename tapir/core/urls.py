@@ -91,4 +91,14 @@ urlpatterns = [
         mailing_lists.MailingListMemberSelfUnsubscribeView.as_view(),
         name="member_self_unsubscribe",
     ),
+    path(
+        "api/member_self_confirm",
+        mailing_lists.MailingListMemberSelfConfirmView.as_view(),
+        name="member_self_confirm",
+    ),
+    path(
+        "api/member_self_reject",
+        mailing_lists.MailingListMemberSelfRejectView.as_view(),
+        name="member_self_reject",
+    ),
 ]
