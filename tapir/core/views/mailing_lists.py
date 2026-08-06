@@ -393,6 +393,13 @@ class MailingListMemberSelfSubscribeView(APIView):
         if not mailing_list.settings["advertised"]:
             raise Http404(f"Keine Liste mit Name {mailing_list.listname} gefunden")
 
+        if MailingListSubscriptionChecker.is_member_subscribed_to_list(
+            email=member.email, mailing_list=mailing_list
+        ):
+            raise ValidationError(
+                f"Mitglied {member.email} ist schon zu Liste {mailing_list.fqdn_listname} angemeldet"
+            )
+
         mailing_list.subscribe(
             address=member.email,
             invitation=False,
