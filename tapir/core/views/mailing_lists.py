@@ -23,6 +23,9 @@ from tapir.core.serializers import (
     MemberMailingListDataResponseSerializer,
 )
 from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
+from tapir.core.services.mailman.mailing_list_self_request_preparer import (
+    MailingListSelfRequestPreparer,
+)
 from tapir.core.services.mailman.mailing_list_serializer_data_builder import (
     MailingListSerializerDataBuilder,
 )
@@ -385,24 +388,9 @@ class MailingListMemberSelfSubscribeView(APIView):
         responses={200: str},
     )
     def post(self, request):
-        MailingListsEnabledChecker.check_mailing_lists_enabled()
-
-        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
-            data=request.data
-        )
-        serializer.is_valid(raise_exception=True)
-
-        cache = {}
-        member_id = serializer.validated_data["member_id"]
-        check_permission_or_self(pk=member_id, request=request)
-        member = get_object_or_404(Member, id=member_id)
-
-        list_name = serializer.validated_data["list_name"]
-        mailing_list = MailingListProvider.get_list_by_name_or_404(
-            list_name=list_name, cache=cache
-        )
+        mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
         if not mailing_list.settings["advertised"]:
-            raise Http404(f"Keine Liste mit Name {list_name} gefunden")
+            raise Http404(f"Keine Liste mit Name {mailing_list.listname} gefunden")
 
         mailing_list.subscribe(
             address=member.email,
@@ -420,28 +408,13 @@ class MailingListMemberSelfUnsubscribeView(APIView):
         responses={200: str},
     )
     def post(self, request):
-        MailingListsEnabledChecker.check_mailing_lists_enabled()
-
-        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
-            data=request.data
-        )
-        serializer.is_valid(raise_exception=True)
-
-        cache = {}
-        member_id = serializer.validated_data["member_id"]
-        check_permission_or_self(pk=member_id, request=request)
-        member = get_object_or_404(Member, id=member_id)
-
-        list_name = serializer.validated_data["list_name"]
-        mailing_list = MailingListProvider.get_list_by_name_or_404(
-            list_name=list_name, cache=cache
-        )
+        mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
 
         if not MailingListSubscriptionChecker.is_member_subscribed_to_list(
             email=member.email, mailing_list=mailing_list
         ):
             raise ValidationError(
-                f"Mitglied {member.email} ist nicht zu {list_name} angemeldet"
+                f"Mitglied {member.email} ist nicht zu {mailing_list.fqdn_listname} angemeldet"
             )
 
         mailing_list.unsubscribe(
@@ -457,28 +430,13 @@ class MailingListMemberSelfConfirmView(APIView):
         responses={200: str},
     )
     def post(self, request):
-        MailingListsEnabledChecker.check_mailing_lists_enabled()
-
-        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
-            data=request.data
-        )
-        serializer.is_valid(raise_exception=True)
-
-        cache = {}
-        member_id = serializer.validated_data["member_id"]
-        check_permission_or_self(pk=member_id, request=request)
-        member = get_object_or_404(Member, id=member_id)
-
-        list_name = serializer.validated_data["list_name"]
-        mailing_list = MailingListProvider.get_list_by_name_or_404(
-            list_name=list_name, cache=cache
-        )
+        mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
 
         if not MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
             email=member.email, mailing_list=mailing_list
         ):
             raise ValidationError(
-                f"Mitglied {member.email} ist nicht zu {list_name} eingeladen"
+                f"Mitglied {member.email} ist nicht zu {mailing_list.fqdn_listname} eingeladen"
             )
 
         for request in mailing_list.requests:
@@ -495,28 +453,13 @@ class MailingListMemberSelfRejectView(APIView):
         responses={200: str},
     )
     def post(self, request):
-        MailingListsEnabledChecker.check_mailing_lists_enabled()
-
-        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
-            data=request.data
-        )
-        serializer.is_valid(raise_exception=True)
-
-        cache = {}
-        member_id = serializer.validated_data["member_id"]
-        check_permission_or_self(pk=member_id, request=request)
-        member = get_object_or_404(Member, id=member_id)
-
-        list_name = serializer.validated_data["list_name"]
-        mailing_list = MailingListProvider.get_list_by_name_or_404(
-            list_name=list_name, cache=cache
-        )
+        mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
 
         if not MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
             email=member.email, mailing_list=mailing_list
         ):
             raise ValidationError(
-                f"Mitglied {member.email} ist nicht zu {list_name} eingeladen"
+                f"Mitglied {member.email} ist nicht zu {mailing_list.fqdn_listname} eingeladen"
             )
 
         for request in mailing_list.requests:
