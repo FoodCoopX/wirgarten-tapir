@@ -4,6 +4,7 @@ from unittest.mock import patch, Mock
 
 from django.conf import settings
 
+from tapir.core.models import generate_id
 from tapir.core.services.mailman.tapir_mailman_client import TapirMailmanClient
 
 
@@ -47,7 +48,7 @@ class MailmanTestHelper:
             for recipient in mailing_list_data.confirmed_recipients
         ]
         mock_list.requests = [
-            {"email": recipient}
+            {"email": recipient, "token": generate_id()}
             for recipient in mailing_list_data.unconfirmed_recipients
         ]
         return mock_list
