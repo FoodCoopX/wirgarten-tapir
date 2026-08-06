@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { MailingList } from "./MailingList";
+import { MailingListFromJSON, MailingListToJSON } from "./MailingList";
+
 /**
  *
  * @export
@@ -20,10 +23,10 @@
 export interface MemberMailingListDataResponse {
   /**
    *
-   * @type {Array<string>}
+   * @type {Array<MailingList>}
    * @memberof MemberMailingListDataResponse
    */
-  availableLists: Array<string>;
+  availableLists: Array<MailingList>;
   /**
    *
    * @type {Array<string>}
@@ -70,7 +73,9 @@ export function MemberMailingListDataResponseFromJSONTyped(
     return json;
   }
   return {
-    availableLists: json["available_lists"],
+    availableLists: (json["available_lists"] as Array<any>).map(
+      MailingListFromJSON,
+    ),
     subscribedLists: json["subscribed_lists"],
     waitingForConfirmationLists: json["waiting_for_confirmation_lists"],
   };
@@ -91,7 +96,9 @@ export function MemberMailingListDataResponseToJSONTyped(
   }
 
   return {
-    available_lists: value["availableLists"],
+    available_lists: (value["availableLists"] as Array<any>).map(
+      MailingListToJSON,
+    ),
     subscribed_lists: value["subscribedLists"],
     waiting_for_confirmation_lists: value["waitingForConfirmationLists"],
   };

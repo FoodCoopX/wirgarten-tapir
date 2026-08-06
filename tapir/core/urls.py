@@ -81,4 +81,14 @@ urlpatterns = [
         mailing_lists.MemberMailingListDataView.as_view(),
         name="member_mailing_list_data",
     ),
+    path(
+        "api/member_self_subscribe",
+        mailing_lists.MailingListMemberSelfSubscribeView.as_view(),
+        name="member_self_subscribe",
+    ),
+    path(
+        "api/member_self_unsubscribe",
+        mailing_lists.MailingListMemberSelfUnsubscribeView.as_view(),
+        name="member_self_unsubscribe",
+    ),
 ]

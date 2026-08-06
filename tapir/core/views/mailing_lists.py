@@ -10,6 +10,7 @@ from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from mailmanclient import MailmanConnectionError, MailingList
 from rest_framework import permissions
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -24,6 +25,9 @@ from tapir.core.serializers import (
 from tapir.core.services.mailman.mailing_list_provider import MailingListProvider
 from tapir.core.services.mailman.mailing_list_serializer_data_builder import (
     MailingListSerializerDataBuilder,
+)
+from tapir.core.services.mailman.mailing_list_subscription_checker import (
+    MailingListSubscriptionChecker,
 )
 from tapir.core.services.mailman.mailing_lists_enabled_checker import (
     MailingListsEnabledChecker,
@@ -326,26 +330,23 @@ class MemberMailingListDataView(APIView):
         cache = {}
 
         domain = TapirMailmanClient.get_domain(cache=cache)
-        advertised_lists = [
+        relevant_lists = [
             mailing_list
             for mailing_list in domain.lists
-            if mailing_list.settings["advertised"]
-        ]
-        available_lists = [
-            mailing_list.fqdn_listname for mailing_list in advertised_lists
+            if self.should_show_list(email=member.email, mailing_list=mailing_list)
         ]
 
         subscribed_lists = [
             mailing_list.fqdn_listname
-            for mailing_list in advertised_lists
-            if self.is_member_subscribed_to_list(
+            for mailing_list in relevant_lists
+            if MailingListSubscriptionChecker.is_member_subscribed_to_list(
                 email=member.email, mailing_list=mailing_list
             )
         ]
         waiting_for_confirmation_lists = [
             mailing_list.fqdn_listname
-            for mailing_list in advertised_lists
-            if self.is_member_waiting_for_confirmation(
+            for mailing_list in relevant_lists
+            if MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
                 email=member.email, mailing_list=mailing_list
             )
         ]
@@ -353,7 +354,12 @@ class MemberMailingListDataView(APIView):
         return Response(
             MemberMailingListDataResponseSerializer(
                 {
-                    "available_lists": available_lists,
+                    "available_lists": [
+                        MailingListSerializerDataBuilder.build_serializer_data(
+                            mailing_list
+                        )
+                        for mailing_list in relevant_lists
+                    ],
                     "subscribed_lists": subscribed_lists,
                     "waiting_for_confirmation_lists": waiting_for_confirmation_lists,
                 }
@@ -361,9 +367,85 @@ class MemberMailingListDataView(APIView):
         )
 
     @classmethod
-    def is_member_subscribed_to_list(cls, email: str, mailing_list: MailingList):
-        return any(member.address == email for member in mailing_list.members)
+    def should_show_list(cls, email: str, mailing_list: MailingList):
+        return (
+            mailing_list.settings["advertised"]
+            or MailingListSubscriptionChecker.is_member_subscribed_to_list(
+                email, mailing_list
+            )
+            or MailingListSubscriptionChecker.is_member_waiting_for_confirmation(
+                email, mailing_list
+            )
+        )
 
-    @classmethod
-    def is_member_waiting_for_confirmation(cls, email: str, mailing_list: MailingList):
-        return any(request["email"] == email for request in mailing_list.requests)
+
+class MailingListMemberSelfSubscribeView(APIView):
+    @extend_schema(
+        request=MailingListSubscribeInternalRecipientRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        cache = {}
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        list_name = serializer.validated_data["list_name"]
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=list_name, cache=cache
+        )
+        if not mailing_list.settings["advertised"]:
+            raise Http404(f"Keine Liste mit Name {list_name} gefunden")
+
+        mailing_list.subscribe(
+            address=member.email,
+            invitation=False,
+            pre_confirmed=True,
+            pre_verified=True,
+        )
+
+        return Response("OK")
+
+
+class MailingListMemberSelfUnsubscribeView(APIView):
+    @extend_schema(
+        request=MailingListSubscribeInternalRecipientRequestSerializer(),
+        responses={200: str},
+    )
+    def post(self, request):
+        MailingListsEnabledChecker.check_mailing_lists_enabled()
+
+        serializer = MailingListSubscribeInternalRecipientRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        cache = {}
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        list_name = serializer.validated_data["list_name"]
+        mailing_list = MailingListProvider.get_list_by_name_or_404(
+            list_name=list_name, cache=cache
+        )
+
+        if not MailingListSubscriptionChecker.is_member_subscribed_to_list(
+            email=member.email, mailing_list=mailing_list
+        ):
+            raise ValidationError(
+                f"Mitglied {member.email} ist nicht zu {list_name} angemeldet"
+            )
+
+        mailing_list.unsubscribe(
+            email=member.email, pre_confirmed=True, pre_approved=True
+        )
+
+        return Response("Unsubscribed")

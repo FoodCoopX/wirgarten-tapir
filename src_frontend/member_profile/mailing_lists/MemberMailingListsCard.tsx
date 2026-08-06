@@ -1,7 +1,7 @@
 import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
-import { Card, Form, Spinner } from "react-bootstrap";
-import { CoreApi } from "../../api-client";
+import { Card, Spinner, Table } from "react-bootstrap";
+import { CoreApi, MailingList } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
@@ -19,12 +19,12 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
   csrfToken,
 }) => {
   const api = useApi(CoreApi, csrfToken);
-  const [allMailingLists, setAllMailingLists] = useState<string[]>([]);
+  const [allMailingLists, setAllMailingLists] = useState<MailingList[]>([]);
   const [subscribedLists, setSubscribedLists] = useState<string[]>([]);
   const [waitingForConfirmationLists, setWaitingForConfirmationLists] =
     useState<string[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [saveLoading, setSaveLoading] = useState(false);
+  const [listLoading, setListLoading] = useState<MailingList>();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
@@ -50,11 +50,102 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
       .finally(() => setDataLoading(false));
   }
 
-  function onSave() {
-    setSaveLoading(true);
+  function onSubscribe(list: MailingList) {
+    setListLoading(list);
 
-    alert("WIP");
-    return;
+    api
+      .coreApiMemberSelfSubscribeCreate({
+        mailingListSubscribeInternalRecipientRequestRequest: {
+          listName: list.name,
+          memberId: memberId,
+        },
+      })
+      .then(() => loadData())
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler bei der Anmeldung an eine Liste",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setListLoading(undefined));
+  }
+
+  function onUnsubscribe(list: MailingList) {
+    setListLoading(list);
+
+    api
+      .coreApiMemberSelfUnsubscribeCreate({
+        mailingListSubscribeInternalRecipientRequestRequest: {
+          listName: list.name,
+          memberId: memberId,
+        },
+      })
+      .then(() => loadData())
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler bei der Abmeldung an eine Liste",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setListLoading(undefined));
+  }
+
+  function buildParticipation(list: MailingList) {
+    if (subscribedLists.includes(list.name)) {
+      return "Ja";
+    }
+
+    if (waitingForConfirmationLists.includes(list.name)) {
+      return "Noch nicht bestätigt";
+    }
+
+    return "Nein";
+  }
+
+  function buildButtons(list: MailingList) {
+    if (subscribedLists.includes(list.name)) {
+      return (
+        <TapirButton
+          size={"sm"}
+          variant={"primary"}
+          icon={"unsubscribe"}
+          text={"Sich abmelden"}
+          onClick={() => onUnsubscribe(list)}
+        />
+      );
+    }
+
+    if (waitingForConfirmationLists.includes(list.name)) {
+      return (
+        <span className={"d-flex gap-2"}>
+          <TapirButton
+            size={"sm"}
+            variant={"primary"}
+            icon={"mark_email_read"}
+            text={"Anmeldung bestätigen"}
+          />
+          <TapirButton
+            size={"sm"}
+            variant={"primary"}
+            icon={"unsubscribe"}
+            text={"Anmeldung ablehnen"}
+          />
+        </span>
+      );
+    }
+
+    return (
+      <TapirButton
+        size={"sm"}
+        variant={"primary"}
+        icon={"mail"}
+        text={"Sich anmelden"}
+        onClick={() => onSubscribe(list)}
+        loading={listLoading === list}
+      />
+    );
   }
 
   return (
@@ -74,43 +165,33 @@ const MemberMailingListsCard: React.FC<MemberMailCategoryModalProps> = ({
           {dataLoading ? (
             <Spinner />
           ) : (
-            <Form>
-              {allMailingLists.map((list) => (
-                <Form.Group key={list} controlId={list}>
-                  <Form.Check
-                    label={list}
-                    checked={subscribedLists.includes(list)}
-                    onChange={(event) => {
-                      if (event.target.checked) {
-                        setSubscribedLists([...subscribedLists, list]);
-                      } else {
-                        setSubscribedLists(
-                          subscribedLists.filter(
-                            (otherList) => otherList != list,
-                          ),
-                        );
-                      }
-                    }}
-                  />
-                  {waitingForConfirmationLists.includes(list) && (
-                    <div>WAITING FOR CONFIRMATION</div>
-                  )}
-                </Form.Group>
-              ))}
-            </Form>
+            <Table responsive bordered striped>
+              <thead>
+                <tr>
+                  <th>Liste</th>
+                  <th>Beschreibung</th>
+                  <th>Teilnahme</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {allMailingLists.map((list) => (
+                  <tr key={list.name}>
+                    <td>{list.name}</td>
+                    <td>
+                      <TapirHelpButton
+                        text={list.description}
+                        buttonSize={"sm"}
+                      />
+                    </td>
+                    <td>{buildParticipation(list)}</td>
+                    <td>{buildButtons(list)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           )}
         </Card.Body>
-        <Card.Footer>
-          <span className={"d-flex flex-row justify-content-end"}>
-            <TapirButton
-              variant={"primary"}
-              text={"Mailing-List Teilnahme anpassen"}
-              icon={"save"}
-              onClick={onSave}
-              loading={saveLoading}
-            />
-          </span>
-        </Card.Footer>
       </Card>
       <TapirToastContainer
         toastDatas={toastDatas}
