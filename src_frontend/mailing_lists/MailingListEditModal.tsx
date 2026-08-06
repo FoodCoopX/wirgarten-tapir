@@ -1,55 +1,51 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import { CoreApi } from "../api-client";
+import { CoreApi, MailingList } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 
-interface MailingListCreateModalProps {
+interface MailingListEditModalProps {
   show: boolean;
   onHide: () => void;
   loadData: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  mailingList: MailingList;
 }
 
-const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
+const MailingListEditModal: React.FC<MailingListEditModalProps> = ({
   show,
   onHide,
   loadData,
   setToastDatas,
+  mailingList,
 }) => {
   const api = useApi(CoreApi, getCsrfToken());
   const [listName, setListName] = useState("");
   const [saving, setSaving] = useState(false);
   const [advertised, setAdvertised] = useState(false);
   const [description, setDescription] = useState("");
-  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (show) {
-      setListName("");
-      setDescription("");
-      setAdvertised(false);
+    if (!show) {
+      return;
     }
-  }, [show]);
+
+    setListName(mailingList.name);
+    setDescription(mailingList.description);
+    setAdvertised(mailingList.advertised);
+  }, [show, mailingList]);
 
   function onSave() {
-    if (!formRef.current) {
-      return;
-    }
-
-    if (!formRef.current.reportValidity()) {
-      return;
-    }
-
     setSaving(true);
 
     api
-      .coreApiMailingListCreateCreate({
+      .coreApiMailingListEditUpdate({
         mailingListCreateRequest: {
-          name: listName,
+          name: mailingList.name,
           advertised: advertised,
           description: description,
         },
@@ -61,7 +57,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Erzeugen der Mailing-List",
+          "Fehler beim Editieren der Mailing-List",
           setToastDatas,
         ),
       )
@@ -71,7 +67,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton={true}>
-        <Modal.Title className={"mb-0"}>Mailing-List erzeugen</Modal.Title>
+        <Modal.Title className={"mb-0"}>Mailing-List editieren</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form
@@ -79,16 +75,10 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
             event.preventDefault();
             onSave();
           }}
-          ref={formRef}
         >
           <Form.Group>
             <Form.Label>Name</Form.Label>
-            <Form.Control
-              value={listName}
-              onChange={(event) => setListName(event.target.value)}
-              placeholder={"Name"}
-              required={true}
-            />
+            <Form.Control value={listName} disabled={true} />
           </Form.Group>
           <Form.Group>
             <Form.Label>Beschreibung</Form.Label>
@@ -102,7 +92,17 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
           </Form.Group>
           <Form.Group controlId={"advertised"} className={"mt-2"}>
             <Form.Check
-              label={"Mitglieder können sich selber ein- und austragen."}
+              label={
+                <span className={"d-flex gap-2"}>
+                  <span>Mitglieder können sich selber ein- und austragen.</span>
+                  <TapirHelpButton
+                    text={
+                      "Mitglieder die schon eingetragen sind werden werden nicht automatisch ausgetragen."
+                    }
+                    buttonSize={"sm"}
+                  />
+                </span>
+              }
               checked={advertised}
               onChange={(event) => setAdvertised(event.target.checked)}
             />
@@ -122,4 +122,4 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
   );
 };
 
-export default MailingListCreateModal;
+export default MailingListEditModal;

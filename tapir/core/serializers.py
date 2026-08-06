@@ -29,10 +29,14 @@ class MemberExtraEmailUpdateRequest(serializers.Serializer):
 class MailingListSerializer(serializers.Serializer):
     name = serializers.CharField()
     nb_recipients = serializers.IntegerField()
+    advertised = serializers.BooleanField()
+    description = serializers.CharField()
 
 
 class MailingListCreateSerializer(serializers.Serializer):
     name = serializers.CharField()
+    advertised = serializers.BooleanField()
+    description = serializers.CharField()
 
 
 class MailingListRecipientSerializer(serializers.Serializer):
@@ -49,3 +53,11 @@ class MailingListSubscribeExternalRecipientRequestSerializer(serializers.Seriali
 class MailingListSubscribeInternalRecipientRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     list_name = serializers.CharField()
+
+
+class MemberMailingListDataResponseSerializer(serializers.Serializer):
+    available_lists = serializers.ListField(child=serializers.CharField())
+    subscribed_lists = serializers.ListField(child=serializers.CharField())
+    waiting_for_confirmation_lists = serializers.ListField(
+        child=serializers.CharField()
+    )

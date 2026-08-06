@@ -1053,6 +1053,34 @@ paths:
               schema:
                 type: string
           description: ''
+  /core/api/mailing_list_edit:
+    put:
+      operationId: core_api_mailing_list_edit_update
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailingList'
+          description: ''
   /core/api/mailing_list_list:
     get:
       operationId: core_api_mailing_list_list_list
@@ -1320,6 +1348,28 @@ paths:
             application/json:
               schema:
                 type: boolean
+          description: ''
+  /core/api/member_mailing_list_data:
+    get:
+      operationId: core_api_member_mailing_list_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberMailingListDataResponse'
           description: ''
   /deliveries/api/cancel_donation:
     post:
@@ -9325,7 +9375,13 @@ components:
           type: string
         nb_recipients:
           type: integer
+        advertised:
+          type: boolean
+        description:
+          type: string
       required:
+      - advertised
+      - description
       - name
       - nb_recipients
     MailingListCreateRequest:
@@ -9334,7 +9390,14 @@ components:
         name:
           type: string
           minLength: 1
+        advertised:
+          type: boolean
+        description:
+          type: string
+          minLength: 1
       required:
+      - advertised
+      - description
       - name
     MailingListRecipient:
       type: object
@@ -9760,6 +9823,25 @@ components:
       required:
       - categories_registered_to
       - member_id
+    MemberMailingListDataResponse:
+      type: object
+      properties:
+        available_lists:
+          type: array
+          items:
+            type: string
+        subscribed_lists:
+          type: array
+          items:
+            type: string
+        waiting_for_confirmation_lists:
+          type: array
+          items:
+            type: string
+      required:
+      - available_lists
+      - subscribed_lists
+      - waiting_for_confirmation_lists
     MemberPaymentRhythm:
       type: object
       properties:

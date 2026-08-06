@@ -13,13 +13,27 @@ class MockMailingListData:
     name: str
     confirmed_recipients: list[str] = field(default_factory=list)
     unconfirmed_recipients: list[str] = field(default_factory=list)
+    advertised: bool = field(default=False)
+    description: str = field(default="")
+
+
+class MockListSettings:
+    def __init__(self):
+        self._settings = {}
+        self.save = Mock()
+
+    def __getitem__(self, key):
+        return self._settings.get(key)
+
+    def __setitem__(self, key, value):
+        self._settings[key] = value
 
 
 class MailmanTestHelper:
     @classmethod
     def mock_domain(
         cls, test: unittest.TestCase, mailing_list_datas: list[MockMailingListData]
-    ):
+    ) -> Mock:
         if not hasattr(test, "mock_client"):
             patcher_client = patch.object(TapirMailmanClient, "get_client")
             test.mock_get_client = patcher_client.start()
@@ -51,4 +65,8 @@ class MailmanTestHelper:
             {"email": recipient, "token": generate_id()}
             for recipient in mailing_list_data.unconfirmed_recipients
         ]
+        mock_list.settings = MockListSettings()
+        mock_list.settings["advertised"] = mailing_list_data.advertised
+        mock_list.settings["description"] = mailing_list_data.description
+
         return mock_list

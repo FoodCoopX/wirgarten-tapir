@@ -1,4 +1,5 @@
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.db.models import F, Sum
 from django.views import generic
 from tapir_mail.models import MailCategory
@@ -202,6 +203,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["delivery_charge_enabled"] = get_parameter_value(
             key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED, cache=cache
         )
+
+        context["show_mailing_list_content"] = settings.MAILING_LISTS_ENABLED
 
         return context
 

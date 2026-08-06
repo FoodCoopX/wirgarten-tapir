@@ -47,6 +47,11 @@ urlpatterns = [
         name="mailing_list_create",
     ),
     path(
+        "api/mailing_list_edit",
+        mailing_lists.MailingListEditView.as_view(),
+        name="mailing_list_edit",
+    ),
+    path(
         "api/mailing_list_delete",
         mailing_lists.MailingListDeleteView.as_view(),
         name="mailing_list_delete",
@@ -70,5 +75,10 @@ urlpatterns = [
         "api/mailing_list_subscribe_internal",
         mailing_lists.MailingListSubscribeInternalRecipientView.as_view(),
         name="mailing_list_subscribe_internal",
+    ),
+    path(
+        "api/member_mailing_list_data",
+        mailing_lists.MemberMailingListDataView.as_view(),
+        name="member_mailing_list_data",
     ),
 ]

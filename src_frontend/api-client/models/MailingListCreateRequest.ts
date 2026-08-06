@@ -24,6 +24,18 @@ export interface MailingListCreateRequest {
    * @memberof MailingListCreateRequest
    */
   name: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MailingListCreateRequest
+   */
+  advertised: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof MailingListCreateRequest
+   */
+  description: string;
 }
 
 /**
@@ -33,6 +45,10 @@ export function instanceOfMailingListCreateRequest(
   value: object,
 ): value is MailingListCreateRequest {
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("advertised" in value) || value["advertised"] === undefined)
+    return false;
+  if (!("description" in value) || value["description"] === undefined)
+    return false;
   return true;
 }
 
@@ -51,6 +67,8 @@ export function MailingListCreateRequestFromJSONTyped(
   }
   return {
     name: json["name"],
+    advertised: json["advertised"],
+    description: json["description"],
   };
 }
 
@@ -70,5 +88,7 @@ export function MailingListCreateRequestToJSONTyped(
 
   return {
     name: value["name"],
+    advertised: value["advertised"],
+    description: value["description"],
   };
 }

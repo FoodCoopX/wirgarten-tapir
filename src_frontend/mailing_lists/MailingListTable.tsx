@@ -7,24 +7,28 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import MailingListEditModal from "./MailingListEditModal.tsx";
 import MailingListManageRecipientsModal from "./MailingListManageRecipientsModal.tsx";
 
 interface MailingListsTableProps {
   mailingLists: MailingList[];
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   setMailingLists: (list: MailingList[]) => void;
+  loadData: () => void;
 }
 
 const MailingListTable: React.FC<MailingListsTableProps> = ({
   mailingLists,
   setToastDatas,
   setMailingLists,
+  loadData,
 }) => {
   const api = useApi(CoreApi, getCsrfToken());
   const [listSelectedForDeletion, setListSelectedForDeletion] =
     useState<MailingList>();
   const [listSelectedForManagement, setListSelectedForManagement] =
     useState<MailingList>();
+  const [listSelectedForEdit, setListSelectedForEdit] = useState<MailingList>();
   const [deleting, setDeleting] = useState(false);
 
   function onDelete() {
@@ -63,6 +67,8 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
         <thead>
           <tr>
             <th>Name</th>
+            <th>Beschreibung</th>
+            <th>Mitglieder können sich selber ein- und austragen</th>
             <th>Empfänger</th>
             <th></th>
           </tr>
@@ -71,7 +77,14 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
           {mailingLists.map((mailingList) => (
             <tr key={mailingList.name}>
               <td>{mailingList.name}</td>
+              <td>
+                <div className={"text-wrap"} style={{ maxWidth: "50dvw" }}>
+                  {mailingList.description}
+                </div>
+              </td>
+              <td>{mailingList.advertised ? "Ja" : "Nein"}</td>
               <td>{mailingList.nbRecipients}</td>
+
               <td>
                 <span className={"d-flex flex-row gap-2"}>
                   <TapirButton
@@ -79,6 +92,12 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
                     variant={"outline-primary"}
                     size={"sm"}
                     onClick={() => setListSelectedForManagement(mailingList)}
+                  />
+                  <TapirButton
+                    icon={"edit"}
+                    variant={"outline-primary"}
+                    size={"sm"}
+                    onClick={() => setListSelectedForEdit(mailingList)}
                   />
                   <TapirButton
                     icon={"delete"}
@@ -109,9 +128,18 @@ const MailingListTable: React.FC<MailingListsTableProps> = ({
         <MailingListManageRecipientsModal
           show={true}
           onHide={() => setListSelectedForManagement(undefined)}
-          loadData={() => alert("Missing load data")}
+          loadData={loadData}
           setToastDatas={setToastDatas}
           listName={listSelectedForManagement.name}
+        />
+      )}
+      {listSelectedForEdit && (
+        <MailingListEditModal
+          show={true}
+          onHide={() => setListSelectedForEdit(undefined)}
+          loadData={loadData}
+          setToastDatas={setToastDatas}
+          mailingList={listSelectedForEdit}
         />
       )}
     </>

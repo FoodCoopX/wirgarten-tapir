@@ -30,6 +30,18 @@ export interface MailingList {
    * @memberof MailingList
    */
   nbRecipients: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MailingList
+   */
+  advertised: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof MailingList
+   */
+  description: string;
 }
 
 /**
@@ -38,6 +50,10 @@ export interface MailingList {
 export function instanceOfMailingList(value: object): value is MailingList {
   if (!("name" in value) || value["name"] === undefined) return false;
   if (!("nbRecipients" in value) || value["nbRecipients"] === undefined)
+    return false;
+  if (!("advertised" in value) || value["advertised"] === undefined)
+    return false;
+  if (!("description" in value) || value["description"] === undefined)
     return false;
   return true;
 }
@@ -56,6 +72,8 @@ export function MailingListFromJSONTyped(
   return {
     name: json["name"],
     nbRecipients: json["nb_recipients"],
+    advertised: json["advertised"],
+    description: json["description"],
   };
 }
 
@@ -74,5 +92,7 @@ export function MailingListToJSONTyped(
   return {
     name: value["name"],
     nb_recipients: value["nbRecipients"],
+    advertised: value["advertised"],
+    description: value["description"],
   };
 }

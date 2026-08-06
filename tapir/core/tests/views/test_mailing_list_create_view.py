@@ -2,7 +2,9 @@ from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.core.tests.mailman_test_helper import MailmanTestHelper
+from tapir.core.tests.mailman_test_helper import (
+    MailmanTestHelper,
+)
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
@@ -16,7 +18,11 @@ class TestMailingListCreateView(TapirIntegrationTest):
     def test_post_loggedInAsNormalMember_returns403(self):
         self.client.force_login(MemberFactory.create(is_superuser=False))
 
-        post_data = {"name": "test_name"}
+        post_data = {
+            "name": "test_name",
+            "description": "test_description",
+            "advertised": False,
+        }
         response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
 
         self.assertStatusCode(
@@ -27,7 +33,11 @@ class TestMailingListCreateView(TapirIntegrationTest):
     def test_post_mailingListsDisabled_returns403(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        post_data = {"name": "test_name"}
+        post_data = {
+            "name": "test_name",
+            "description": "test_description",
+            "advertised": False,
+        }
         response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
 
         self.assertStatusCode(
@@ -39,7 +49,11 @@ class TestMailingListCreateView(TapirIntegrationTest):
 
         domain = MailmanTestHelper.mock_domain(test=self, mailing_list_datas=[])
 
-        post_data = {"name": "test_name"}
+        post_data = {
+            "name": "test_name",
+            "description": "test_description",
+            "advertised": False,
+        }
         response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
 
         self.assertStatusCode(
@@ -49,7 +63,13 @@ class TestMailingListCreateView(TapirIntegrationTest):
 
         response_content = response.json()
         self.assertEqual(
-            {"name": "test_name@example.com", "nb_recipients": 0}, response_content
+            {
+                "name": "test_name@example.com",
+                "nb_recipients": 0,
+                "description": "test_description",
+                "advertised": False,
+            },
+            response_content,
         )
 
     @override_settings(EMAIL_HOST="example.com")
@@ -58,7 +78,11 @@ class TestMailingListCreateView(TapirIntegrationTest):
 
         domain = MailmanTestHelper.mock_domain(test=self, mailing_list_datas=[])
 
-        post_data = {"name": "prefix@example.com"}
+        post_data = {
+            "name": "prefix",
+            "description": "test_description",
+            "advertised": False,
+        }
         response = self.client.post(reverse("core:mailing_list_create"), data=post_data)
 
         self.assertStatusCode(
@@ -68,5 +92,11 @@ class TestMailingListCreateView(TapirIntegrationTest):
 
         response_content = response.json()
         self.assertEqual(
-            {"name": "prefix@example.com", "nb_recipients": 0}, response_content
+            {
+                "name": "prefix@example.com",
+                "nb_recipients": 0,
+                "description": "test_description",
+                "advertised": False,
+            },
+            response_content,
         )

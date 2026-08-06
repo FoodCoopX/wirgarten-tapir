@@ -117,6 +117,7 @@ models/MemberExtraMailData.ts
 models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts
 models/MemberMailCategoryRequestRequest.ts
+models/MemberMailingListDataResponse.ts
 models/MemberPaymentRhythm.ts
 models/MemberPaymentRhythmData.ts
 models/MemberProfileCapacityCheckRequestRequest.ts

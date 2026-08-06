@@ -71,6 +71,7 @@ const MailingListCard: React.FC = () => {
                   mailingLists={mailingLists}
                   setMailingLists={setMailingLists}
                   setToastDatas={setToastDatas}
+                  loadData={loadData}
                 />
               )}
             </Card.Body>

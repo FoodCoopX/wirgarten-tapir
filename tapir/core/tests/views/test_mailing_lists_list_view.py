@@ -42,11 +42,14 @@ class TestMailingListListView(TapirIntegrationTest):
                     name="list_A",
                     confirmed_recipients=["1", "2", "3"],
                     unconfirmed_recipients=["4", "5"],
+                    description="description A",
+                    advertised=True,
                 ),
                 MockMailingListData(
                     name="list_B",
                     confirmed_recipients=["6", "7"],
                     unconfirmed_recipients=[],
+                    advertised=False,
                 ),
             ],
         )
@@ -60,8 +63,18 @@ class TestMailingListListView(TapirIntegrationTest):
         response_content = response.json()
         self.assertEqual(
             [
-                {"name": "list_A@example.com", "nb_recipients": 5},
-                {"name": "list_B@example.com", "nb_recipients": 2},
+                {
+                    "name": "list_A@example.com",
+                    "nb_recipients": 5,
+                    "description": "description A",
+                    "advertised": True,
+                },
+                {
+                    "name": "list_B@example.com",
+                    "nb_recipients": 2,
+                    "description": "",
+                    "advertised": False,
+                },
             ],
             response_content,
         )

@@ -22,6 +22,7 @@ import type {
   MemberExtraMailData,
   MemberMailCategoryData,
   MemberMailCategoryRequestRequest,
+  MemberMailingListDataResponse,
   PatchedMemberExtraEmailUpdateRequestRequest,
 } from "../models/index";
 import {
@@ -34,6 +35,7 @@ import {
   MemberExtraMailDataFromJSON,
   MemberMailCategoryDataFromJSON,
   MemberMailCategoryRequestRequestToJSON,
+  MemberMailingListDataResponseFromJSON,
   PatchedMemberExtraEmailUpdateRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
@@ -44,6 +46,10 @@ export interface CoreApiMailingListCreateCreateRequest {
 
 export interface CoreApiMailingListDeleteDestroyRequest {
   listName: string;
+}
+
+export interface CoreApiMailingListEditUpdateRequest {
+  mailingListCreateRequest: MailingListCreateRequest;
 }
 
 export interface CoreApiMailingListRecipientListListRequest {
@@ -84,6 +90,10 @@ export interface CoreApiMemberMailCategoryDataCreateRequest {
 
 export interface CoreApiMemberMailCategoryDataRetrieveRequest {
   memberId?: string;
+}
+
+export interface CoreApiMemberMailingListDataRetrieveRequest {
+  memberId: string;
 }
 
 /**
@@ -262,6 +272,70 @@ export class CoreApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<string> {
     const response = await this.coreApiMailingListDeleteDestroyRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListEditUpdateRaw(
+    requestParameters: CoreApiMailingListEditUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MailingList>> {
+    if (requestParameters["mailingListCreateRequest"] == null) {
+      throw new runtime.RequiredError(
+        "mailingListCreateRequest",
+        'Required parameter "mailingListCreateRequest" was null or undefined when calling coreApiMailingListEditUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_edit`,
+        method: "PUT",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListCreateRequestToJSON(
+          requestParameters["mailingListCreateRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MailingListFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coreApiMailingListEditUpdate(
+    requestParameters: CoreApiMailingListEditUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MailingList> {
+    const response = await this.coreApiMailingListEditUpdateRaw(
       requestParameters,
       initOverrides,
     );
@@ -949,6 +1023,69 @@ export class CoreApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<MemberMailCategoryData> {
     const response = await this.coreApiMemberMailCategoryDataRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberMailingListDataRetrieveRaw(
+    requestParameters: CoreApiMemberMailingListDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberMailingListDataResponse>> {
+    if (requestParameters["memberId"] == null) {
+      throw new runtime.RequiredError(
+        "memberId",
+        'Required parameter "memberId" was null or undefined when calling coreApiMemberMailingListDataRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_mailing_list_data`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberMailingListDataResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coreApiMemberMailingListDataRetrieve(
+    requestParameters: CoreApiMemberMailingListDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MemberMailingListDataResponse> {
+    const response = await this.coreApiMemberMailingListDataRetrieveRaw(
       requestParameters,
       initOverrides,
     );
