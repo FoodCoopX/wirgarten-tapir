@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Spinner } from "react-bootstrap";
 import { CoreApi, MailingList } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
@@ -49,12 +50,17 @@ const MailingListCard: React.FC = () => {
                 }
               >
                 <Card.Title className={"mb-0"}>Mailing-Listen</Card.Title>
-                <TapirButton
-                  icon={"add"}
-                  text={"Mailing-List erzeugen"}
-                  variant={"outline-primary"}
-                  onClick={() => setShowCreateModal(true)}
-                />
+                <span className={"d-flex gap-2"}>
+                  <TapirHelpButton
+                    text={"HelpText Mailing-List Config-Title"}
+                  />
+                  <TapirButton
+                    icon={"add"}
+                    text={"Mailing-List erzeugen"}
+                    variant={"outline-primary"}
+                    onClick={() => setShowCreateModal(true)}
+                  />
+                </span>
               </div>
             </Card.Header>
             <Card.Body>

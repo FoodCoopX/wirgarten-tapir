@@ -234,6 +234,7 @@ const MailingListManageRecipientsModal: React.FC<
   return (
     <>
       <Modal
+        centered={true}
         show={show && !recipientSelectedForUnsubscribe}
         onHide={() => {
           if (changesApplied) {
