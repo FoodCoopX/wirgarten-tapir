@@ -389,6 +389,7 @@ class MailingListMemberSelfSubscribeView(APIView):
     )
     def post(self, request):
         mailing_list, member = MailingListSelfRequestPreparer.prepare(request)
+
         if not mailing_list.settings["advertised"]:
             raise Http404(f"Keine Liste mit Name {mailing_list.listname} gefunden")
 
