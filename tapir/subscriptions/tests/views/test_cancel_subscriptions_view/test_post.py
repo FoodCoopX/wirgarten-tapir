@@ -8,6 +8,11 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.associations.models import (
+    AssociationMembership,
+    AssociationMembershipUpdatedLogEntry,
+)
+from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.configuration.models import TapirParameter
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -43,7 +48,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        mock_timezone(self, NOW)
+        self.now = mock_timezone(self, NOW)
 
     @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
@@ -697,3 +702,96 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
                 },
             )
         )
+
+    def test_post_cancelAllSubscriptionAndAssociationMembership_membershipEndDateSet(
+        self,
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1)
+        )
+        subscriptions = SubscriptionFactory.create_batch(
+            size=3, member=member, period=period
+        )
+        AssociationMembershipFactory.create(member=member, start_date=period.start_date)
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_association_membership": True,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assert_cancellation_confirmed(response_content)
+
+        membership = AssociationMembership.objects.get()
+        self.assertEqual(subscriptions[0].end_date, membership.end_date)
+        self.assertEqual(self.now, membership.cancellation_ts)
+
+        self.assertEqual(1, AssociationMembershipUpdatedLogEntry.objects.count())
+        log_entry = AssociationMembershipUpdatedLogEntry.objects.get()
+        self.assertEqual(member.email, log_entry.user.email)
+        self.assertEqual(member.email, log_entry.actor.email)
+
+    def test_post_cancelAssociationMembershipButNotAllSubscriptions_returnsError(
+        self,
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1)
+        )
+        subscriptions = SubscriptionFactory.create_batch(
+            size=3, member=member, period=period
+        )
+        AssociationMembershipFactory.create(member=member, start_date=period.start_date)
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [
+                subscription.product_id for subscription in subscriptions[:2]
+            ],
+            "cancel_association_membership": True,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assert_cancellation_not_confirmed(
+            response_content,
+            "Es ist nur möglich die Vereinsmitgliedschaft zu beenden wenn du alle Verträge auch kündigst.",
+        )
+
+        membership = AssociationMembership.objects.get()
+        self.assertIsNone(membership.end_date)
+        self.assertFalse(AssociationMembershipUpdatedLogEntry.objects.exists())
+
+    def assert_cancellation_confirmed(self, response_content: dict):
+        self.assertTrue(
+            response_content["subscriptions_cancelled"],
+            f"Cancellation should be confirmed, errors: {response_content["errors"]}",
+        )
+        self.assertEqual(0, len(response_content["errors"]))
+
+    def assert_cancellation_not_confirmed(self, response_content: dict, error: str):
+        self.assertFalse(response_content["subscriptions_cancelled"])
+        self.assertEqual(error, response_content["errors"][0])
