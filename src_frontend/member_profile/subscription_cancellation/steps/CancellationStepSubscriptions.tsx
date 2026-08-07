@@ -1,5 +1,5 @@
 import "dayjs/locale/de";
-import React, { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { Form, Modal } from "react-bootstrap";
 import {
   ProductForCancellation,
@@ -17,9 +17,11 @@ interface CancellationStepSubscriptionsProps {
   selectedProducts: ProductForCancellation[];
   setSelectedProducts: Dispatch<SetStateAction<ProductForCancellation[]>>;
   canCancelCoopMembership: boolean;
-  membershipText: string;
+  canCancelAssociationMembership: boolean;
   cancelCoopMembershipSelected: boolean;
   setCancelCoopMembershipSelected: Dispatch<SetStateAction<boolean>>;
+  cancelAssociationMembershipSelected: boolean;
+  setCancelAssociationMembershipSelected: Dispatch<SetStateAction<boolean>>;
   goToNextStep: () => void;
   solidarityContributionData?: SolidarityContributionCancellationData;
   cancelSolidarityContribution: boolean;
@@ -135,9 +137,11 @@ const CancellationStepSubscriptions: React.FC<
   selectedProducts,
   setSelectedProducts,
   canCancelCoopMembership,
-  membershipText,
   cancelCoopMembershipSelected,
   setCancelCoopMembershipSelected,
+  canCancelAssociationMembership,
+  cancelAssociationMembershipSelected,
+  setCancelAssociationMembershipSelected,
   goToNextStep,
   solidarityContributionData,
   cancelSolidarityContribution,
@@ -153,6 +157,12 @@ const CancellationStepSubscriptions: React.FC<
       );
     }
   }
+
+  useEffect(() => {
+    if (selectedProducts.length !== subscribedProducts.length) {
+      setCancelAssociationMembershipSelected(false);
+    }
+  }, [selectedProducts, subscribedProducts]);
 
   return (
     <>
@@ -224,7 +234,20 @@ const CancellationStepSubscriptions: React.FC<
                 }
                 required={false}
                 checked={cancelCoopMembershipSelected}
-                label={membershipText + " widerrufen"}
+                label={"Beitrittserklärung zur Genossenschaft widerrufen"}
+              />
+            </Form.Group>
+          )}
+          {canCancelAssociationMembership && (
+            <Form.Group controlId="cancelAssociationMembership">
+              <Form.Check
+                onChange={(event) =>
+                  setCancelAssociationMembershipSelected(event.target.checked)
+                }
+                required={false}
+                checked={cancelAssociationMembershipSelected}
+                label={"Beitrittserklärung zum Verein widerrufen"}
+                disabled={selectedProducts.length !== subscribedProducts.length}
               />
             </Form.Group>
           )}
@@ -239,6 +262,7 @@ const CancellationStepSubscriptions: React.FC<
           disabled={
             !cancelCoopMembershipSelected &&
             !cancelSolidarityContribution &&
+            !cancelAssociationMembershipSelected &&
             selectedProducts.length === 0
           }
         />

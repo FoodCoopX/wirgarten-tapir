@@ -11,6 +11,9 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.services.association_membership_cancellation_manager import (
+    AssociationMembershipCancellationManager,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
@@ -50,6 +53,8 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
 )
 
 
@@ -66,14 +71,21 @@ class GetCancellationDataView(APIView):
 
         cache = {}
         data = {
-            "can_cancel_coop_membership": CoopMembershipCancellationManager.can_member_cancel_coop_membership(
-                member, cache=cache
+            "can_cancel_coop_membership": legal_status_is_cooperative(cache=cache)
+            and CoopMembershipCancellationManager.can_member_cancel_coop_membership(
+                member=member, cache=cache
+            ),
+            "can_cancel_association_membership": legal_status_is_association(
+                cache=cache
+            )
+            and AssociationMembershipCancellationManager.can_member_cancel_association_membership(
+                member=member, reference_date=get_today(cache=cache), cache=cache
             ),
             "subscribed_products": ProductCancellationDataBuilder.build_data_for_all_products(
-                member, cache=cache
+                member=member, cache=cache
             ),
             "legal_status": get_parameter_value(
-                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache
+                key=ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache
             ),
             "default_cancellation_reasons": [
                 reason.strip()
@@ -82,7 +94,7 @@ class GetCancellationDataView(APIView):
                 ).split(";")
             ],
             "solidarity_contribution_data": self.build_solidarity_contribution_data(
-                member, cache=cache
+                member=member, cache=cache
             ),
             "show_trial_period_help_text": self.show_trial_period_help_text(
                 cache=cache, member=member
