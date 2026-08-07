@@ -1,5 +1,7 @@
 import datetime
 
+from django.db.models import F
+
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -126,7 +128,9 @@ class SubscriptionImporter:
                     cache={},
                 ),
             )
-
+            Subscription.objects.filter(id=subscription.id).update(
+                created_at=F("start_date")
+            )
             import_status = MEMBER_IMPORT_STATUS_CREATED
 
         cls.update_trial_period_for_solidarity_contributions(member, subscription)
