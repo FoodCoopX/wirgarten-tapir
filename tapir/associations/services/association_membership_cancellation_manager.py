@@ -79,6 +79,7 @@ class AssociationMembershipCancellationManager:
         membership.end_date = end_date
         membership.cancellation_ts = get_now(cache=cache)
         membership.save()
+
         AssociationMembershipUpdatedLogEntry().populate(
             old_frozen=before_changes,
             new_model=membership,
