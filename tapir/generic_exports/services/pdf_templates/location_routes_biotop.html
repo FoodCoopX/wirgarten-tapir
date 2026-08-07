@@ -7,9 +7,6 @@
         @top-right {
             content: "Seite " counter(page) " aus " counter(pages);
         }
-        @top-left {
-            content: "KW {{ entries.0.pickup_locations.0.calendar_week }}"
-        }
     }
 
     table {
@@ -39,10 +36,7 @@
         <div class="page" id="{{ pickup_location.id }}" data-locationname="{{ pickup_location.name }}">
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <h1>
-                    {% if location_route.route_name %}
-                        {{ location_route.route_name }},
-                    {% endif %}
-                    {{ pickup_location.name }}
+                    KW{{ pickup_location.calendar_week }}, {{ pickup_location.name }}
                 </h1>
                 <div style="display: flex; flex-direction: row; justify-content: space-between">
                     <table>
