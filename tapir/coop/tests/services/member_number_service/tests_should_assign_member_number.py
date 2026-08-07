@@ -1,9 +1,9 @@
 from unittest.mock import Mock, patch
 
-from tapir.coop.services.member_number_service import MemberNumberService
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -40,7 +40,7 @@ class TestShouldAssignMemberNumber(TapirUnitTest):
         return_value=True,
     )
     @patch.object(
-        MembershipCancellationManager,
+        CoopMembershipCancellationManager,
         "is_in_coop_trial",
         autospec=True,
         return_value=True,
@@ -113,7 +113,7 @@ class TestShouldAssignMemberNumber(TapirUnitTest):
         return_value=True,
     )
     @patch.object(
-        MembershipCancellationManager,
+        CoopMembershipCancellationManager,
         "is_in_coop_trial",
         autospec=True,
         return_value=False,

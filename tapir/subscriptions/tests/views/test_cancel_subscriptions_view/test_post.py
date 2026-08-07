@@ -9,8 +9,8 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.models import TapirParameter
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
@@ -45,7 +45,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         super().setUp()
         mock_timezone(self, NOW)
 
-    @patch.object(MembershipCancellationManager, "cancel_coop_membership")
+    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
     def test_post_memberCancelsSubscriptionsOfOtherMember_returns403(
         self,
@@ -122,9 +122,11 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(3, mock_cancel_subscriptions.call_count)
 
-    @patch.object(MembershipCancellationManager, "cancel_coop_membership")
+    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
+    @patch.object(
+        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+    )
     def test_post_memberTriesToCancelCoopMembershipButCannot_returnsError(
         self,
         mock_can_member_cancel_coop_membership: Mock,
@@ -153,9 +155,11 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.assert_not_called()
         mock_cancel_coop_membership.assert_not_called()
 
-    @patch.object(MembershipCancellationManager, "cancel_coop_membership")
+    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
+    @patch.object(
+        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+    )
     def test_post_memberTriesToCancelCoopMembershipAndIsAllowed_cancelsCoopMembership(
         self,
         mock_can_member_cancel_coop_membership: Mock,
@@ -190,9 +194,11 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member.email, mock_cancel_coop_membership.call_args.kwargs["actor"].email
         )
 
-    @patch.object(MembershipCancellationManager, "cancel_coop_membership")
+    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
+    @patch.object(
+        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+    )
     def test_post_memberDoesntCancelCoopMembership_coopMembershipNotCancelled(
         self,
         mock_can_member_cancel_coop_membership: Mock,

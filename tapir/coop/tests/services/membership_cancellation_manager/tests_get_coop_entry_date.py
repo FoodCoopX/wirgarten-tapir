@@ -1,7 +1,7 @@
 import datetime
 
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -17,7 +17,7 @@ class TestGetCoopEntryDate(TapirIntegrationTest):
     def test_getCoopEntryDate_memberHasNoShares_returnsNone(self):
         member = MemberFactory.create()
 
-        result = MembershipCancellationManager.get_coop_entry_date(member)
+        result = CoopMembershipCancellationManager.get_coop_entry_date(member)
 
         self.assertIsNone(result)
 
@@ -40,6 +40,6 @@ class TestGetCoopEntryDate(TapirIntegrationTest):
             quantity=-1,
         )
 
-        result = MembershipCancellationManager.get_coop_entry_date(member)
+        result = CoopMembershipCancellationManager.get_coop_entry_date(member)
 
         self.assertEqual(datetime.date(year=2024, month=12, day=6), result)

@@ -12,8 +12,8 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -66,7 +66,7 @@ class GetCancellationDataView(APIView):
 
         cache = {}
         data = {
-            "can_cancel_coop_membership": MembershipCancellationManager.can_member_cancel_coop_membership(
+            "can_cancel_coop_membership": CoopMembershipCancellationManager.can_member_cancel_coop_membership(
                 member, cache=cache
             ),
             "subscribed_products": ProductCancellationDataBuilder.build_data_for_all_products(
@@ -275,7 +275,7 @@ class CancelSubscriptionsView(APIView):
             ).save()
 
         if cancel_coop_membership:
-            MembershipCancellationManager.cancel_coop_membership(
+            CoopMembershipCancellationManager.cancel_coop_membership(
                 member, cache=self.cache, actor=actor
             )
 
@@ -301,7 +301,7 @@ class CancelSubscriptionsView(APIView):
     ):
         if (
             cancel_coop_membership
-            and not MembershipCancellationManager.can_member_cancel_coop_membership(
+            and not CoopMembershipCancellationManager.can_member_cancel_coop_membership(
                 member, cache=self.cache
             )
         ):

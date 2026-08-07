@@ -5,8 +5,8 @@ from django.urls import reverse
 from rest_framework import status
 
 from tapir.configuration.models import TapirParameter
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
@@ -128,7 +128,9 @@ class TestGet(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
     @patch.object(ProductCancellationDataBuilder, "build_data_for_all_products")
-    @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
+    @patch.object(
+        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+    )
     def test_get_adminAsksForDataOfOtherMember_returnsStatus200(self, *_):
         user = MemberFactory.create(is_superuser=True)
         other_member = MemberFactory.create()
