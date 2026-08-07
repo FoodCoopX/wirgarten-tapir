@@ -1,7 +1,6 @@
 import datetime
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
 
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import (
@@ -41,7 +40,6 @@ class AssociationMembershipCancellationManager:
         return True
 
     @classmethod
-    @transaction.atomic
     def cancel_association_membership(
         cls,
         member: Member,
