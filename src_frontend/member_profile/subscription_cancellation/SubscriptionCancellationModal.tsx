@@ -121,6 +121,7 @@ const SubscriptionCancellationModal: React.FC<
           memberId: memberId,
           productIds: productIds,
           cancelCoopMembership: cancelCoopMembershipSelected,
+          cancelAssociationMembership: cancelAssociationMembershipSelected,
           cancellationReasons: selectedCancellationReasons,
           customCancellationReason: customCancellationReason,
           cancelSolidarityContribution: cancelSolidarityContribution,

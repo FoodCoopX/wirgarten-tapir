@@ -13,12 +13,12 @@ from tapir.log.util import freeze_for_log
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.utils import get_now
+from tapir.wirgarten.utils import get_now, get_today
 
 
 class AssociationMembershipCancellationManager:
     @classmethod
-    def can_member_cancel_association_membership(
+    def does_member_have_a_cancellable_membership(
         cls, member: Member, reference_date: datetime.date, cache: dict
     ):
         return any(
@@ -99,10 +99,12 @@ class AssociationMembershipCancellationManager:
         ):
             raise ValidationError("Dieses Mitglied hat aktive Verträge")
 
-        return (
+        latest_subscription = (
             get_active_and_future_subscriptions(cache=cache)
             .filter(member=member, cancellation_ts__isnull=False)
             .order_by("end_date")
             .last()
-            .end_date
         )
+        if latest_subscription is None:
+            return get_today(cache=cache)
+        return latest_subscription.end_date

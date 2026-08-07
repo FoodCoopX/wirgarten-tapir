@@ -2,6 +2,14 @@
 Vereinsmitgliedschaft angepasst:
 <ul>
     {% for change in changes %}
-        <li>{{ change.0 }}: {{ change.1 }} → {{ change.2 }}</li>
+        {% if change.0 == "start_date" %}
+            <li>Start-Datum: {{ change.1|format_date }} → {{ change.2|format_date }}</li>
+        {% elif change.0 == "end_date" %}
+            <li>End-Datum: {{ change.1|format_date }} → {{ change.2|format_date }}</li>
+        {% elif change.0 == "cancellation_ts" %}
+            <li style="display: none">Cancellation-ts: {{ change.1|format_date }} → {{ change.2|format_date }}</li>
+        {% else %}
+            <li>{{ change.0 }}: {{ change.1 }} → {{ change.2 }}</li>
+        {% endif %}
     {% endfor %}
 </ul>
