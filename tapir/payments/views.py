@@ -307,8 +307,7 @@ class GetFutureMemberPaymentsApiView(APIView):
         subscriptions = [
             subscription
             for subscription in existing_subscriptions + planned_renewed_subscriptions
-            if subscription.mandate_ref == payment.mandate_ref
-            and (
+            if (
                 subscription.product.type.name == payment.type
                 or not filter_by_payment_type
             )
