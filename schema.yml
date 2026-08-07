@@ -7052,6 +7052,8 @@ components:
             minLength: 1
         cancel_coop_membership:
           type: boolean
+        cancel_association_membership:
+          type: boolean
         cancellation_reasons:
           type: array
           items:
@@ -7063,6 +7065,7 @@ components:
         cancel_solidarity_contribution:
           type: boolean
       required:
+      - cancel_association_membership
       - cancel_coop_membership
       - cancel_solidarity_contribution
       - member_id
@@ -7083,6 +7086,8 @@ components:
       properties:
         can_cancel_coop_membership:
           type: boolean
+        can_cancel_association_membership:
+          type: boolean
         subscribed_products:
           type: array
           items:
@@ -7102,6 +7107,7 @@ components:
         trial_period_is_flexible:
           type: boolean
       required:
+      - can_cancel_association_membership
       - can_cancel_coop_membership
       - default_cancellation_reasons
       - legal_status

@@ -5,8 +5,8 @@ from django.db.models import Max
 
 from tapir.accounts.models import UpdateTapirUserLogEntry, TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.log.util import freeze_for_log
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
@@ -61,7 +61,7 @@ class MemberNumberService:
         if legal_status_is_cooperative(cache=cache):
             if not CoopShareTransaction.objects.filter(member=member).exists():
                 return False
-            return not MembershipCancellationManager.is_in_coop_trial(member)
+            return not CoopMembershipCancellationManager.is_in_coop_trial(member)
 
         return not cls.is_member_in_subscription_trial(member, cache=cache)
 

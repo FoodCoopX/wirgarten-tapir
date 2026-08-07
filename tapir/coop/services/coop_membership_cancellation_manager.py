@@ -9,7 +9,7 @@ from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.utils import get_today
 
 
-class MembershipCancellationManager:
+class CoopMembershipCancellationManager:
     @classmethod
     def get_coop_entry_date(cls, member: Member):
         earliest_transaction = (

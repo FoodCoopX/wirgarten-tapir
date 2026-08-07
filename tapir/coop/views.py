@@ -30,12 +30,12 @@ from tapir.coop.serializers import (
     MemberProfilePersonalDataResponseSerializer,
     MemberProfilePersonalDataRequestSerializer,
 )
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
+)
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
-)
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
 )
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
@@ -248,7 +248,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 member=member,
             )
 
-        if MembershipCancellationManager.is_in_coop_trial(member) and not as_admin:
+        if CoopMembershipCancellationManager.is_in_coop_trial(member) and not as_admin:
             raise DjangoValidationError(
                 "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
             )

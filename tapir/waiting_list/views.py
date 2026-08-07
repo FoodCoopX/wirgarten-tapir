@@ -19,8 +19,8 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -315,7 +315,7 @@ class WaitingListApiView(APIView):
             member_no = entry.member.member_no
             cls.fill_entry_with_personal_data(entry)
             date_of_entry_in_cooperative = (
-                MembershipCancellationManager.get_coop_entry_date(entry.member)
+                CoopMembershipCancellationManager.get_coop_entry_date(entry.member)
             )
             pickup_location_id = (
                 MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(

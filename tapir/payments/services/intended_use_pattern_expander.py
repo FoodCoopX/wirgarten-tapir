@@ -3,10 +3,10 @@ import datetime
 from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.member_number_service import MemberNumberService
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.config import IntendedUseTokens
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -147,7 +147,7 @@ class IntendedUsePatternExpander:
         replacements = cls._get_common_token_replacers(member=member, cache=cache) | {
             IntendedUseTokens.NUMBER_OF_COOP_SHARES: lambda: str(number_of_shares),
             IntendedUseTokens.COOP_ENTRY_DATE: lambda: format_date(
-                MembershipCancellationManager.get_coop_entry_date(member)
+                CoopMembershipCancellationManager.get_coop_entry_date(member)
             ),
             IntendedUseTokens.PRICE_SINGLE_SHARE: lambda: format_currency(
                 get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)

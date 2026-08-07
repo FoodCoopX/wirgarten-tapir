@@ -1,5 +1,5 @@
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import (
@@ -36,5 +36,5 @@ class TestTransferCoopShares(TapirIntegrationTest):
         self.assertEqual(0, giving_member.coop_shares_quantity)
         self.assertEqual(
             get_today(),
-            MembershipCancellationManager.get_coop_entry_date(receiving_member),
+            CoopMembershipCancellationManager.get_coop_entry_date(receiving_member),
         )

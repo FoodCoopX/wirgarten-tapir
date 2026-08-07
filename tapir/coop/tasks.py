@@ -11,8 +11,8 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.pick_list_builder import PickListBuilder
@@ -211,7 +211,9 @@ def send_membership_entry_mails():
         for member in members:
             should_send_mail = False
             if legal_status_is_cooperative(cache=cache):
-                entry_date = MembershipCancellationManager.get_coop_entry_date(member)
+                entry_date = CoopMembershipCancellationManager.get_coop_entry_date(
+                    member
+                )
                 if entry_date is not None and entry_date <= today:
                     should_send_mail = True
 
