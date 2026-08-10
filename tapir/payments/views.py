@@ -777,9 +777,11 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         random_date = min_date + datetime.timedelta(
             days=random.randint(0, (max_date - min_date).days)
         )
-        payments = Payment.objects.exclude(
-            type=payments_config.PAYMENT_TYPE_COOP_SHARES
-        ).filter(due_date__year=random_date.year, due_date__month=random_date.month)
+        payments = (
+            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            .filter(due_date__year=random_date.year, due_date__month=random_date.month)
+            .select_related("mandate_ref")
+        )
 
         combined_payments = list(
             PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
@@ -790,7 +792,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         return sorted(
             payments,
             key=lambda payment: (
-                payment.mandate_ref.member.member_no,
+                payment.mandate_ref.member.member_no or 0,
                 payment.mandate_ref.member.last_name,
             ),
         )
