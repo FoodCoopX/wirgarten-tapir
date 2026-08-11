@@ -1,17 +1,29 @@
 import React from "react";
 import { Table } from "react-bootstrap";
-import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
-import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 import { WaitingListEntryDetails } from "../api-client";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import formatAddress from "../utils/formatAddress.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { formatDateText } from "../utils/formatDateText.ts";
+import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 
 interface WaitingListTableProps {
   loading: boolean;
   showCoopContent: boolean;
   waitingListEntries: WaitingListEntryDetails[];
   setSelectedEntryForEdition: (entry: WaitingListEntryDetails) => void;
+}
+
+function getRowClass(entry: WaitingListEntryDetails) {
+  if (entry.linkSentDate) {
+    return "table-warning";
+  }
+
+  if (entry.canBeFulfilled) {
+    return "table-success";
+  }
+
+  return "";
 }
 
 const WaitingListTable: React.FC<WaitingListTableProps> = ({
@@ -21,17 +33,12 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
   setSelectedEntryForEdition,
 }) => {
   function buildWaitingListEntryRow(entry: WaitingListEntryDetails) {
-    const rowClass = entry.canBeFulfilled
-      ? "table-success"
-      : entry.linkSentDate
-        ? "table-warning"
-        : "";
     return (
       <tr
         key={entry.id}
         style={{ cursor: "pointer" }}
         onClick={() => setSelectedEntryForEdition(entry)}
-        className={rowClass}
+        className={getRowClass(entry)}
       >
         <td>
           {entry.urlToMemberProfile && (
