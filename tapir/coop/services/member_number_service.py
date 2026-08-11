@@ -61,7 +61,9 @@ class MemberNumberService:
         if legal_status_is_cooperative(cache=cache):
             if not CoopShareTransaction.objects.filter(member=member).exists():
                 return False
-            return not CoopMembershipCancellationManager.is_in_coop_trial(member)
+            return not CoopMembershipCancellationManager.is_in_coop_trial(
+                member, cache=cache
+            )
 
         return not cls.is_member_in_subscription_trial(member, cache=cache)
 

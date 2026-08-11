@@ -724,7 +724,7 @@ class TapirCache:
         def compute():
             credits_by_member: dict[str, list[MemberCredit]] = {}
             for credit in MemberCredit.objects.order_by("due_date"):
-                credits_by_member.setdefault(credit.member_id, []).append(credit)
+                credits_by_member.setdefault(str(credit.member_id), []).append(credit)
             return credits_by_member
 
         credits_by_member_cache = get_from_cache_or_compute(
@@ -740,7 +740,7 @@ class TapirCache:
         def compute():
             prices_by_type: dict[str, list[AssociationMembershipTypePrice]] = {}
             for price in AssociationMembershipTypePrice.objects.order_by("valid_from"):
-                prices_by_type.setdefault(price.type_id, []).append(price)
+                prices_by_type.setdefault(str(price.type_id), []).append(price)
             return prices_by_type
 
         prices_by_type_cache = get_from_cache_or_compute(
@@ -856,3 +856,17 @@ class TapirCache:
             key="product_basket_size_equivalence_objects_by_product",
             compute_function=compute,
         )
+
+    @classmethod
+    def get_coop_share_transaction_by_member_id(cls, cache: dict, member_id: str):
+        def compute():
+            result: dict[str, list[CoopShareTransaction]] = {}
+            for transaction in CoopShareTransaction.objects.order_by("valid_at"):
+                result.setdefault(str(transaction.member_id), []).append(transaction)
+            return result
+
+        return get_from_cache_or_compute(
+            cache=cache,
+            key="coop_share_transaction_by_member_id",
+            compute_function=compute,
+        ).get(member_id, [])

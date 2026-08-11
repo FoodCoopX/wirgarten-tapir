@@ -17,7 +17,7 @@ class TestGetCoopEntryDate(TapirIntegrationTest):
     def test_getCoopEntryDate_memberHasNoShares_returnsNone(self):
         member = MemberFactory.create()
 
-        result = CoopMembershipCancellationManager.get_coop_entry_date(member)
+        result = CoopMembershipCancellationManager.get_coop_entry_date(member, cache={})
 
         self.assertIsNone(result)
 
@@ -40,6 +40,6 @@ class TestGetCoopEntryDate(TapirIntegrationTest):
             quantity=-1,
         )
 
-        result = CoopMembershipCancellationManager.get_coop_entry_date(member)
+        result = CoopMembershipCancellationManager.get_coop_entry_date(member, cache={})
 
         self.assertEqual(datetime.date(year=2024, month=12, day=6), result)

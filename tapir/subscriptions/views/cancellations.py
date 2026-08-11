@@ -73,7 +73,7 @@ class GetCancellationDataView(APIView):
         data = {
             "can_cancel_coop_membership": legal_status_is_cooperative(cache=cache)
             and CoopMembershipCancellationManager.can_member_cancel_coop_membership(
-                member=member, cache=cache
+                member=member, reference_date=get_today(cache), cache=cache
             ),
             "can_cancel_association_membership": legal_status_is_association(
                 cache=cache

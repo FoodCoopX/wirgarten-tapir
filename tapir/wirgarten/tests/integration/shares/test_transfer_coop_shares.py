@@ -36,5 +36,7 @@ class TestTransferCoopShares(TapirIntegrationTest):
         self.assertEqual(0, giving_member.coop_shares_quantity)
         self.assertEqual(
             get_today(),
-            CoopMembershipCancellationManager.get_coop_entry_date(receiving_member),
+            CoopMembershipCancellationManager.get_coop_entry_date(
+                receiving_member, cache={}
+            ),
         )

@@ -66,7 +66,7 @@ class TestShouldAssignMemberNumber(TapirUnitTest):
         self.assertFalse(
             MemberNumberService.should_assign_member_number(member, cache=cache)
         )
-        mock_is_in_coop_trial.assert_called_once_with(member)
+        mock_is_in_coop_trial.assert_called_once_with(member, cache=cache)
         mock_legal_status.assert_called_once_with(cache=cache)
         mock_coop_share_transaction_objects.filter.assert_called_once_with(
             member=member
@@ -139,7 +139,7 @@ class TestShouldAssignMemberNumber(TapirUnitTest):
         self.assertTrue(
             MemberNumberService.should_assign_member_number(member, cache=cache)
         )
-        mock_is_in_coop_trial.assert_called_once_with(member)
+        mock_is_in_coop_trial.assert_called_once_with(member, cache=cache)
         mock_legal_status.assert_called_once_with(cache=cache)
         mock_coop_share_transaction_objects.filter.assert_called_once_with(
             member=member

@@ -117,7 +117,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                     next_trial_end_date = trial_end_date
             context["next_trial_end_date"] = next_trial_end_date
         coop_entry_date = CoopMembershipCancellationManager.get_coop_entry_date(
-            self.object
+            self.object, cache=cache
         )
         if (
             coop_entry_date is not None

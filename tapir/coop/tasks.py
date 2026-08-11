@@ -212,7 +212,7 @@ def send_membership_entry_mails():
             should_send_mail = False
             if legal_status_is_cooperative(cache=cache):
                 entry_date = CoopMembershipCancellationManager.get_coop_entry_date(
-                    member
+                    member, cache=cache
                 )
                 if entry_date is not None and entry_date <= today:
                     should_send_mail = True

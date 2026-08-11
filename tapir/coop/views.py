@@ -248,7 +248,10 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 member=member,
             )
 
-        if CoopMembershipCancellationManager.is_in_coop_trial(member) and not as_admin:
+        if (
+            CoopMembershipCancellationManager.is_in_coop_trial(member, cache=self.cache)
+            and not as_admin
+        ):
             raise DjangoValidationError(
                 "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
             )

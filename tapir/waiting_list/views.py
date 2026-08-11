@@ -38,6 +38,7 @@ from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityC
 from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
+from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
@@ -315,7 +316,9 @@ class WaitingListApiView(APIView):
             member_no = entry.member.member_no
             cls.fill_entry_with_personal_data(entry)
             date_of_entry_in_cooperative = (
-                CoopMembershipCancellationManager.get_coop_entry_date(entry.member)
+                CoopMembershipCancellationManager.get_coop_entry_date(
+                    entry.member, cache=cache
+                )
             )
             pickup_location_id = (
                 MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
@@ -419,13 +422,25 @@ class WaitingListApiView(APIView):
 
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,
-            member_id=entry.member_id if entry.member else None,
+            member_id=str(entry.member_id) if entry.member else None,
             subscription_start_date=subscription_start,
             cache=cache,
             check_waiting_list_entries=False,
         )
 
         if product_type_ids_without_enough_capacity:
+            return False
+
+        if not all(
+            ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
+                member_id=str(entry.member_id) if entry.member else None,
+                product=product,
+                ordered_quantity=quantity,
+                subscription_start_date=subscription_start,
+                cache=cache,
+            )
+            for product, quantity in order.items()
+        ):
             return False
 
         for pickup_location_wish in pickup_location_wishes:
