@@ -123,56 +123,56 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           id={"product_types_choice"}
           className={"d-flex gap-2 justify-content-center align-items-center"}
         >
-          {(selectedGrowingPeriod?.productTypes ?? settings.productTypes).map(
-            (productType) => (
-              <div key={productType.id}>
-                <input
-                  type="checkbox"
-                  className="btn-check"
-                  id={productType.id}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateSelection(productType, event.target.checked)
-                  }
-                  checked={selectedProductTypes.includes(productType)}
-                  disabled={
-                    productType.mustBeSubscribedTo && !investingMembership
-                  }
-                />
-                <label
-                  className={"btn btn-" + BUTTON_VARIANT}
-                  htmlFor={productType.id}
-                >
-                  <div className={"d-flex flex-row gap-2 align-items-center"}>
-                    <Form.Check
-                      checked={selectedProductTypes.includes(productType)}
-                      readOnly={true}
-                      style={{ pointerEvents: "none" }}
+          {sortProductTypes(
+            selectedGrowingPeriod?.productTypes ?? settings.productTypes,
+          ).map((productType) => (
+            <div key={productType.id}>
+              <input
+                type="checkbox"
+                className="btn-check"
+                id={productType.id}
+                autoComplete="off"
+                onChange={(event) =>
+                  updateSelection(productType, event.target.checked)
+                }
+                checked={selectedProductTypes.includes(productType)}
+                disabled={
+                  productType.mustBeSubscribedTo && !investingMembership
+                }
+              />
+              <label
+                className={"btn btn-" + BUTTON_VARIANT}
+                htmlFor={productType.id}
+              >
+                <div className={"d-flex flex-row gap-2 align-items-center"}>
+                  <Form.Check
+                    checked={selectedProductTypes.includes(productType)}
+                    readOnly={true}
+                    style={{ pointerEvents: "none" }}
+                  />
+                  {productType.iconLink && (
+                    <img
+                      src={productType.iconLink}
+                      alt={"Produkt-Icon"}
+                      style={{ height: "1.5rem" }}
                     />
-                    {productType.iconLink && (
-                      <img
-                        src={productType.iconLink}
-                        alt={"Produkt-Icon"}
-                        style={{ height: "1.5rem" }}
-                      />
-                    )}
-                    <span>{productType.name}</span>
-                    {productType.descriptionBestellwizardShort && (
-                      <TapirButton
-                        variant={"outline-secondary"}
-                        icon={"help"}
-                        size={"sm"}
-                        onClick={() => {
-                          setProductTypeForModal(productType);
-                        }}
-                        style={{ pointerEvents: "auto" }}
-                      />
-                    )}
-                  </div>
-                </label>
-              </div>
-            ),
-          )}
+                  )}
+                  <span>{productType.name}</span>
+                  {productType.descriptionBestellwizardShort && (
+                    <TapirButton
+                      variant={"outline-secondary"}
+                      icon={"help"}
+                      size={"sm"}
+                      onClick={() => {
+                        setProductTypeForModal(productType);
+                      }}
+                      style={{ pointerEvents: "auto" }}
+                    />
+                  )}
+                </div>
+              </label>
+            </div>
+          ))}
         </div>
         {showInvestingMembership() && (
           <>
