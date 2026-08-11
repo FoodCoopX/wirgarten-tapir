@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Alert, Col, Form, Modal, Row, Spinner } from "react-bootstrap";
 import {
   Subscription,
-  SubscriptionTrialFields,
   SubscriptionsApi,
+  SubscriptionTrialFields,
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirHelpButton from "../components/TapirHelpButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
@@ -145,7 +146,9 @@ const SubscriptionTrialPeriodModal: React.FC<
               <li>
                 Vertrag: {formatSubscription(subscription as Subscription)}
               </li>
-              <li>Vertrags-Start: {formatDateNumeric(subscription.startDate)}</li>
+              <li>
+                Vertrags-Start: {formatDateNumeric(subscription.startDate)}
+              </li>
               <li>
                 Vertrags-Ende:{" "}
                 {subscription.endDate
@@ -167,7 +170,17 @@ const SubscriptionTrialPeriodModal: React.FC<
             <Form.Group className={"mb-3"}>
               <Form.Check
                 id={"trial_disabled"}
-                label={"Probezeit deaktiviert"}
+                label={
+                  <span className={"d-flex gap-2"}>
+                    <span>Probezeit deaktiviert</span>
+                    <TapirHelpButton
+                      text={
+                        "Mit Klick auf die Checkbox hat dieser Vertrag keine Probezeit."
+                      }
+                      buttonSize={"sm"}
+                    />
+                  </span>
+                }
                 checked={trialDisabled}
                 onChange={(event) => {
                   setTrialDisabled(event.target.checked);
@@ -191,17 +204,24 @@ const SubscriptionTrialPeriodModal: React.FC<
               </p>
               <Form.Check
                 id={"use_custom_trial_end"}
-                label={"Individuelles Probezeit-Ende"}
+                label={
+                  <span className={"d-flex gap-2"}>
+                    <span>Individuelles Probezeit-Ende</span>
+                    <TapirHelpButton
+                      buttonSize={"sm"}
+                      text={
+                        "Mit Klick auf die Checkbox kannst du ein individuelles Probezeit-Ende für den ausgewählten Vertrag einstellen. Beachte: Das gewählte Datum muss immer ein Sonntag sein."
+                      }
+                    />
+                  </span>
+                }
                 checked={useCustomEndDate}
                 onChange={(event) => {
                   const checked = event.target.checked;
                   setUseCustomEndDate(checked);
                   setError(undefined);
                   if (checked) {
-                    if (
-                      !customEndDate &&
-                      subscription.trialEndDateOverride
-                    ) {
+                    if (!customEndDate && subscription.trialEndDateOverride) {
                       setCustomEndDate(
                         formatDateForInput(subscription.trialEndDateOverride),
                       );
