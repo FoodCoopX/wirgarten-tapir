@@ -34,23 +34,32 @@ if TYPE_CHECKING:
 
 
 class MemberColumnProvider:
+    COLUMN_ID_MEMBER_NUMBER = "member_number"
+    COLUMN_ID_LAST_NAME = "member_last_name"
+    COLUMN_ID_FIRST_NAME = "member_first_name"
+    COLUMN_ID_FULL_ADDRESS = "member_full_address"
+    COLUMN_ID_ADMISSION_DATE = "member_admission_date"
+    COLUMN_ID_SHARE_QUANTITY = "member_share_quantity"
+    COLUMN_ID_SHARE_HISTORY = "member_share_history"
+    COLUMN_ID_TERMINATION_DATE = "member_termination_date"
+
     @classmethod
-    def get_member_columns(cls):
+    def get_member_columns(cls) -> list[ExportSegmentColumn]:
         return [
             ExportSegmentColumn(
-                id="member_first_name",
+                id=cls.COLUMN_ID_FIRST_NAME,
                 display_name="Vorname",
                 description="",
                 get_value=cls.get_value_member_first_name,
             ),
             ExportSegmentColumn(
-                id="member_last_name",
+                id=cls.COLUMN_ID_LAST_NAME,
                 display_name="Nachname",
                 description="",
                 get_value=cls.get_value_member_last_name,
             ),
             ExportSegmentColumn(
-                id="member_number",
+                id=cls.COLUMN_ID_MEMBER_NUMBER,
                 display_name="Mitgliedsnummer",
                 description="",
                 get_value=cls.get_value_member_number,
@@ -100,31 +109,31 @@ class MemberColumnProvider:
                 get_value=cls.get_value_member_joker_credit_details,
             ),
             ExportSegmentColumn(
-                id="member_full_address",
+                id=cls.COLUMN_ID_FULL_ADDRESS,
                 display_name="Anschrift",
                 description="",
                 get_value=cls.get_value_member_full_address,
             ),
             ExportSegmentColumn(
-                id="member_share_quantity",
+                id=cls.COLUMN_ID_SHARE_QUANTITY,
                 display_name="Anzahl Anteile",
                 description="",
                 get_value=cls.get_value_member_share_quantity,
             ),
             ExportSegmentColumn(
-                id="member_admission_date",
+                id=cls.COLUMN_ID_ADMISSION_DATE,
                 display_name="Beitrittsdatum",
                 description="",
                 get_value=cls.get_value_member_admission_date,
             ),
             ExportSegmentColumn(
-                id="member_termination_date",
+                id=cls.COLUMN_ID_TERMINATION_DATE,
                 display_name="Austrittsdatum",
                 description="",
                 get_value=cls.get_value_member_termination_date,
             ),
             ExportSegmentColumn(
-                id="member_share_history",
+                id=cls.COLUMN_ID_SHARE_HISTORY,
                 display_name="Anteilshistorie",
                 description="",
                 get_value=cls.get_value_member_share_history,
