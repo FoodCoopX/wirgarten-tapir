@@ -149,6 +149,7 @@ const BestellWizardAssociationMembership: React.FC<
             content={{
               text: settings.strings.step6aText,
             }}
+            stepActive={step === currentStep}
           />
         );
       case "6b_association_membership":
@@ -167,7 +168,7 @@ const BestellWizardAssociationMembership: React.FC<
                 ? settings.growingPeriodChoices[0].contractStartDate
                 : new Date()
             }
-            active={currentStep === step}
+            stepActive={currentStep === step}
             isOrderStep={step === steps.at(-1)}
           />
         );
@@ -184,7 +185,7 @@ const BestellWizardAssociationMembership: React.FC<
             settings={settings}
             shoppingCart={{}}
             solidarityContribution={0}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             productTypesInWaitingList={new Set()}
             isOrderStep={step === steps.at(-1)}
             orderLoading={orderLoading}
@@ -213,6 +214,7 @@ const BestellWizardAssociationMembership: React.FC<
               text: "Invalid step: " + step,
             }}
             goToNextStep={goToNextStep}
+            stepActive={step === currentStep}
           />
         );
     }

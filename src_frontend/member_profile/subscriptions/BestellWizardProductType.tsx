@@ -421,6 +421,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             settings={settings}
             selectedGrowingPeriod={selectedGrowingPeriod}
             setSelectedGrowingPeriod={setSelectedGrowingPeriod}
+            stepActive={step === currentStep}
           />
         );
       case "5a_pickup_location_intro":
@@ -430,6 +431,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
               text: settings.strings.step5aText,
             }}
             goToNextStep={goToNextStep}
+            stepActive={step === currentStep}
           />
         );
       case "5b_pickup_location_choice":
@@ -447,7 +449,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             firstDeliveryDatesByPickupLocationAndProductType={
               firstDeliveryDatesByPickupLocationAndProductType
             }
-            active={currentStep === step}
+            stepActive={currentStep === step}
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
             currentTab={currentPickupLocationTab}
@@ -476,7 +478,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             settings={settings}
             shoppingCart={shoppingCart}
             solidarityContribution={0}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             productTypesInWaitingList={new Set()}
             isOrderStep={step === steps.at(-1)}
             orderLoading={orderLoading}
@@ -514,6 +516,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             singleProductType={productType}
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
+            stepActive={step === currentStep}
           />
         );
       case "11_legal":
@@ -528,7 +531,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             setCancellationPolicyRead={setCancellationPolicyRead}
             privacyPolicyRead={privacyPolicyRead}
             setPrivacyPolicyRead={setPrivacyPolicyRead}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             isOrderStep={step === steps.at(-1)}
             confirmOrderLoading={orderLoading}
             confirmOrder={onConfirm}
@@ -558,6 +561,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
                   accordions: productType.accordions,
                 }}
                 goToNextStep={goToNextStep}
+                stepActive={step === currentStep}
               />
             );
           case "order":
@@ -568,7 +572,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
                 goToNextStep={goToNextStep}
                 shoppingCart={shoppingCart}
                 setShoppingCart={setShoppingCart}
-                active={step === currentStep}
+                stepActive={step === currentStep}
                 checkingCapacities={checkingCapacities}
                 productTypeIdsOverCapacity={productTypeIdsOverCapacity}
                 productIdsOverCapacity={productIdsOverCapacity}

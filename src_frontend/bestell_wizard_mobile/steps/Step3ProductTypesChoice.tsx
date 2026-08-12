@@ -23,6 +23,7 @@ interface Step3ProductTypeChoiceProps {
   setInvestingMembership: (investing: boolean) => void;
   setShoppingCart: (cart: ShoppingCart) => void;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  stepActive: boolean;
 }
 
 const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
@@ -35,6 +36,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   setInvestingMembership,
   setShoppingCart,
   selectedGrowingPeriod,
+  stepActive,
 }) => {
   const [productTypeForModal, setProductTypeForModal] =
     useState<PublicProductType>();
@@ -213,7 +215,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           </>
         )}
       </div>
-      <NextStepButton onClick={validate} />
+      <NextStepButton onClick={validate} stepActive={stepActive} />
       <Modal
         show={productTypeForModal !== undefined}
         fullscreen={"md-down"}

@@ -13,7 +13,7 @@ interface Step7SolidarityContributionProps {
   settings: BestellWizardSettings;
   solidarityContribution: number;
   setSolidarityContribution: (c: number) => void;
-  active: boolean;
+  stepActive: boolean;
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;
   associationMembershipType?: AssociationMembershipType;
@@ -28,7 +28,7 @@ const Step7SolidarityContribution: React.FC<
   goToNextStep,
   settings,
   setSolidarityContribution,
-  active,
+  stepActive,
   solidarityContribution,
   shoppingCart,
   productTypesInWaitingList,
@@ -69,10 +69,10 @@ const Step7SolidarityContribution: React.FC<
   }, [selectedValue, customValue]);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   function validate() {
     setShowValidation(true);
@@ -212,7 +212,7 @@ const Step7SolidarityContribution: React.FC<
           </Form.Group>
         )}
       </div>
-      <NextStepButton onClick={validate} />
+      <NextStepButton onClick={validate} stepActive={stepActive} />
     </div>
   );
 };

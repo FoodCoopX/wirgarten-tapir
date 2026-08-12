@@ -17,7 +17,7 @@ interface Step6BAssociationMembershipsProps {
     React.SetStateAction<AssociationMembershipType | undefined>
   >;
   contractStartDate: Date;
-  active: boolean;
+  stepActive: boolean;
   isOrderStep: boolean;
 }
 
@@ -42,7 +42,7 @@ const Step6BAssociationMemberships: React.FC<
   selectedAssociationMembershipType,
   setSelectedAssociationMembershipType,
   contractStartDate,
-  active,
+  stepActive,
   isOrderStep,
 }) => {
   const [showError, setShowError] = useState(false);
@@ -53,7 +53,7 @@ const Step6BAssociationMemberships: React.FC<
   }, [selectedAssociationMembershipType]);
 
   useEffect(() => {
-    if (!active) return;
+    if (!stepActive) return;
 
     if (
       selectedAssociationMembershipType === undefined &&
@@ -63,7 +63,7 @@ const Step6BAssociationMemberships: React.FC<
         settings.associationMembershipTypes[0],
       );
     }
-  }, [active]);
+  }, [stepActive]);
 
   function onNextClicked() {
     if (selectedAssociationMembershipType === undefined || !statuteAccepted) {
@@ -125,6 +125,7 @@ const Step6BAssociationMemberships: React.FC<
         onClick={onNextClicked}
         isOrderStep={isOrderStep}
         text={isOrderStep ? "Vereinsmitgliedschaft bestätigen" : undefined}
+        stepActive={stepActive}
       />
     </>
   );

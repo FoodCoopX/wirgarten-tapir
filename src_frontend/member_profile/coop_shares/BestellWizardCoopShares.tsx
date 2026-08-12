@@ -159,6 +159,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             content={{
               text: settings.strings.step6aText,
             }}
+            stepActive={step === currentStep}
           />
         );
       case "6b_coop_shares":
@@ -173,7 +174,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             setStudentStatusEnabled={() => {}}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             isOrderStep={step === steps.at(-1)}
             orderLoading={orderLoading}
             nextButtonText={
@@ -196,7 +197,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             settings={settings}
             shoppingCart={{}}
             solidarityContribution={0}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             productTypesInWaitingList={new Set()}
             isOrderStep={step === steps.at(-1)}
             orderLoading={orderLoading}
@@ -223,6 +224,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
               text: "Invalid step: " + step,
             }}
             goToNextStep={goToNextStep}
+            stepActive={step === currentStep}
           />
         );
     }

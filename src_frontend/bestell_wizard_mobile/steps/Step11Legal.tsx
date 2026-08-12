@@ -15,7 +15,7 @@ interface Step11LegalProps {
   setCancellationPolicyRead: (read: boolean) => void;
   privacyPolicyRead: boolean;
   setPrivacyPolicyRead: (read: boolean) => void;
-  active: boolean;
+  stepActive: boolean;
   goToNextStep: () => void;
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;
@@ -31,7 +31,7 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
   setCancellationPolicyRead,
   privacyPolicyRead,
   setPrivacyPolicyRead,
-  active,
+  stepActive,
   goToNextStep,
   shoppingCart,
   productTypesInWaitingList,
@@ -44,18 +44,18 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
   const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   useEffect(() => {
-    if (!active || !scrollDiv.current) {
+    if (!stepActive || !scrollDiv.current) {
       return;
     }
 
     scrollDiv.current.scrollTop = 0;
-  }, [active]);
+  }, [stepActive]);
 
   function validate() {
     setShowValidation(true);
@@ -143,6 +143,7 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
         onClick={validate}
         isOrderStep={isOrderStep}
         loading={confirmOrderLoading}
+        stepActive={stepActive}
       />
     </>
   );

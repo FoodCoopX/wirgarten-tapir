@@ -9,7 +9,7 @@ interface Step2FirstNameProps {
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
   settings: BestellWizardSettings;
-  active: boolean;
+  stepActive: boolean;
 }
 
 const Step2FirstName: React.FC<Step2FirstNameProps> = ({
@@ -17,12 +17,12 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
   personalData,
   setPersonalData,
   settings,
-  active,
+  stepActive,
 }) => {
   const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
-    if (active) {
+    if (stepActive) {
       setTimeout(
         () => document.getElementById("first_name_input")?.focus(),
         200,
@@ -30,7 +30,7 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
     } else {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   function validate() {
     setShowValidation(true);
@@ -52,12 +52,12 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         }}
         id={"first_name_input"}
         onKeyUp={(event) => {
-          if (event.key === "Enter" && active) validate();
+          if (event.key === "Enter" && stepActive) validate();
         }}
         isValid={showValidation && personalData.firstName.length > 0}
         isInvalid={showValidation && personalData.firstName.length === 0}
       />
-      <NextStepButton onClick={validate} />
+      <NextStepButton onClick={validate} stepActive={stepActive} />
     </>
   );
 };

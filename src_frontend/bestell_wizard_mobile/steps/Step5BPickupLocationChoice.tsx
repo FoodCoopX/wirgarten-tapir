@@ -27,7 +27,7 @@ interface Step5BPickupLocationChoiceProps {
   firstDeliveryDatesByPickupLocationAndProductType: {
     [key: string]: { [key: string]: Date };
   };
-  active: boolean;
+  stepActive: boolean;
   productTypesInWaitingList: Set<PublicProductType>;
   shoppingCart: ShoppingCart;
   currentTab: PickupLocationTab;
@@ -60,7 +60,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   goToNextStep,
   stepIsActive,
   firstDeliveryDatesByPickupLocationAndProductType,
-  active,
+  stepActive,
   productTypesInWaitingList,
   shoppingCart,
   currentTab,
@@ -77,10 +77,10 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   const [mapRef, setMapRef] = useState<MapRef>(null);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   function validate() {
     setShowValidation(true);
@@ -186,7 +186,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               pickupLocations={settings.pickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
-              stepIsActive={active}
+              stepIsActive={stepActive}
               tabIsActive={currentTab === "map" && stepIsActive}
               mapRef={mapRef}
               setMapRef={setMapRef}
@@ -241,6 +241,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
         showError={showValidation && selectedPickupLocations.length === 0}
         loading={orderLoading}
         isOrderStep={isOrderStep}
+        stepActive={stepActive}
       />
     </>
   );

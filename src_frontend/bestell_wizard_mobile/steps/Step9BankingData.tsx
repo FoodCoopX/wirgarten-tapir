@@ -24,7 +24,7 @@ interface Step9BankingDataProps {
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   solidarityContribution: number;
-  active: boolean;
+  stepActive: boolean;
   productTypesInWaitingList: Set<PublicProductType>;
   isOrderStep: boolean;
   orderLoading: boolean;
@@ -55,7 +55,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   settings,
   shoppingCart,
   solidarityContribution,
-  active,
+  stepActive,
   productTypesInWaitingList,
   isOrderStep,
   orderLoading,
@@ -68,10 +68,10 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   useEffect(() => {
     if (!autoFillAccountOwnerFromName || accountOwnerSetManually) {
@@ -204,6 +204,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
         loading={orderLoading}
         isOrderStep={isOrderStep}
         text={nextButtonText}
+        stepActive={stepActive}
       />
       <Modal
         show={paymentRhythmModalOpen}
