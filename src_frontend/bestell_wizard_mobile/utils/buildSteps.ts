@@ -241,7 +241,12 @@ function buildCoopSteps(
   coopSteps.push("6a_coop_intro");
 
   if (
-    shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
+    shouldConfirmMemberNow(
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      waitingListEntryDetails !== undefined,
+    )
   ) {
     coopSteps.push("6c_coop_member_now");
   }
@@ -273,7 +278,12 @@ function buildAssociationSteps(
   associationSteps.push("6a_coop_intro");
 
   if (
-    shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
+    shouldConfirmMemberNow(
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      waitingListEntryDetails !== undefined,
+    )
   ) {
     associationSteps.push("6c_coop_member_now");
   }
