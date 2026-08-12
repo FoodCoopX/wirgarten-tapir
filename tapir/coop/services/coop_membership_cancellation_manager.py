@@ -72,6 +72,6 @@ class CoopMembershipCancellationManager:
     ):
         entry_date = cls.get_coop_entry_date(member, cache)
         if entry_date is None:
-            return True
+            return False
 
         return entry_date >= reference_date

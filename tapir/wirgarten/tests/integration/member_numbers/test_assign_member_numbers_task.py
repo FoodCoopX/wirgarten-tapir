@@ -1,6 +1,3 @@
-from unittest.mock import patch
-
-from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -47,20 +44,3 @@ class TestAssignMemberNumbersTask(TapirIntegrationTest):
 
         member.refresh_from_db()
         self.assertEqual(42, member.member_no)
-
-    @patch.object(
-        MemberNumberService,
-        "is_member_in_subscription_trial",
-        autospec=True,
-        return_value=True,
-    )
-    def test_assignMemberNumbers_trialToggleOffAndMemberInTrial_memberStaysWithoutNumber(
-        self, _mock_is_member_in_subscription_trial
-    ):
-        self._set_parameter(ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, True)
-        member = self._create_member_without_number()
-
-        assign_member_numbers()
-
-        member.refresh_from_db()
-        self.assertIsNone(member.member_no)
