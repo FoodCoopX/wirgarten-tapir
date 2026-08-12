@@ -93,7 +93,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [
     pickupLocationsCapacityCheckLoading,
-    setPickupLocationCapacityCheckLoading,
+    setPickupLocationsCapacityCheckLoading,
   ] = useState(false);
   const [
     firstDeliveryDatesByPickupLocationAndProductType,
@@ -292,7 +292,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       pickupLocationApi,
       settings.pickupLocations,
       shoppingCart,
-      setPickupLocationCapacityCheckLoading,
+      setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       selectedGrowingPeriod,
