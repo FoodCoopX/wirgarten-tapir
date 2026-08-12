@@ -52,7 +52,7 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
         if not create:
             return
 
-        if create and member_no is not None:
+        if member_no is not None:
             self.save()
             return
 
@@ -65,8 +65,7 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
 
         self.member_no = member_no
 
-        if create:
-            self.save()
+        self.save()
 
 
 class MemberWithCoopSharesFactory(MemberFactory):

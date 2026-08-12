@@ -78,11 +78,11 @@ class MemberNumberService:
             )
 
         if legal_status_is_association(cache=cache):
-            return (
-                TapirCache.get_member_association_membership_at_date(
-                    member=member, reference_date=reference_date, cache=cache
+            return any(
+                membership.start_date < reference_date
+                for membership in TapirCache.get_member_association_memberships(
+                    member=member, cache=cache
                 )
-                is not None
             )
         return not cls.is_member_in_subscription_trial(member, cache=cache)
 

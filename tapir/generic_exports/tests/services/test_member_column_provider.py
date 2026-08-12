@@ -4,12 +4,13 @@ from unittest.mock import Mock, call, patch
 
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
+from tapir.pickup_locations.tests.factories import PickupLocationDeliveryChargeFactory
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
 from tapir.wirgarten.models import Member, CoopShareTransaction
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.pickup_locations.tests.factories import PickupLocationDeliveryChargeFactory
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
@@ -19,6 +20,7 @@ from tapir.wirgarten.tests.factories import (
     CoopShareTransactionFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.utils import get_now
 
 
 class TestMemberColumnProvider(TapirIntegrationTest):
@@ -42,8 +44,11 @@ class TestMemberColumnProvider(TapirIntegrationTest):
 
     def test_getValueMemberNumber_default_returnsMemberNumber(self):
         member = MemberFactory.build(member_no=1234)
+        self._set_parameter(
+            key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, value=False
+        )
 
-        result = MemberColumnProvider.get_value_member_number(member, None, {})
+        result = MemberColumnProvider.get_value_member_number(member, get_now(), {})
 
         self.assertEqual("1234", result)
 
