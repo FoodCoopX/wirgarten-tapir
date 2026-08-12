@@ -10,7 +10,7 @@ from tapir.pickup_locations.services.pickup_location_segment_provider import (
 class TemplateLocationRoutesBiotop:
     ID = "location_routes_biotop"
     NAME = "Abhakzettel"
-    DESCRIPTION = "Erzeugt ein einziges PDF mit alle Ausfahrrunden drin (Biotop Oberland-Variante)"
+    DESCRIPTION = "Erzeugt eine einzige PDF-Datei mit alle Ausfahrrunden drin (Biotop Oberland-Variante)"
 
     @classmethod
     def create_exports(cls):
