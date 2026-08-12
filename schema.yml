@@ -10976,24 +10976,22 @@ components:
           type: object
           additionalProperties:
             type: integer
-        pickup_location_id:
-          type: string
-          minLength: 1
         growing_period_id:
           type: string
           nullable: true
           minLength: 1
       required:
       - growing_period_id
-      - pickup_location_id
       - shopping_cart
     PickupLocationCapacityCheckResponse:
       type: object
       properties:
-        enough_capacity_for_order:
-          type: boolean
+        pickup_location_ids_with_enough_capacity_for_order:
+          type: array
+          items:
+            type: string
       required:
-      - enough_capacity_for_order
+      - pickup_location_ids_with_enough_capacity_for_order
     PickupLocationCapacityEvolution:
       type: object
       properties:

@@ -20,10 +20,10 @@
 export interface PickupLocationCapacityCheckResponse {
   /**
    *
-   * @type {boolean}
+   * @type {Array<string>}
    * @memberof PickupLocationCapacityCheckResponse
    */
-  enoughCapacityForOrder: boolean;
+  pickupLocationIdsWithEnoughCapacityForOrder: Array<string>;
 }
 
 /**
@@ -33,8 +33,8 @@ export function instanceOfPickupLocationCapacityCheckResponse(
   value: object,
 ): value is PickupLocationCapacityCheckResponse {
   if (
-    !("enoughCapacityForOrder" in value) ||
-    value["enoughCapacityForOrder"] === undefined
+    !("pickupLocationIdsWithEnoughCapacityForOrder" in value) ||
+    value["pickupLocationIdsWithEnoughCapacityForOrder"] === undefined
   )
     return false;
   return true;
@@ -54,7 +54,8 @@ export function PickupLocationCapacityCheckResponseFromJSONTyped(
     return json;
   }
   return {
-    enoughCapacityForOrder: json["enough_capacity_for_order"],
+    pickupLocationIdsWithEnoughCapacityForOrder:
+      json["pickup_location_ids_with_enough_capacity_for_order"],
   };
 }
 
@@ -73,6 +74,7 @@ export function PickupLocationCapacityCheckResponseToJSONTyped(
   }
 
   return {
-    enough_capacity_for_order: value["enoughCapacityForOrder"],
+    pickup_location_ids_with_enough_capacity_for_order:
+      value["pickupLocationIdsWithEnoughCapacityForOrder"],
   };
 }

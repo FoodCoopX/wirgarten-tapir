@@ -103,9 +103,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     PublicPickupLocation[]
   >([]);
   const [
-    pickupLocationsWithCapacityCheckLoading,
-    setPickupLocationsWithCapacityCheckLoading,
-  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+    pickupLocationsCapacityCheckLoading,
+    setPickupLocationsCapacityCheckLoading,
+  ] = useState(false);
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
@@ -337,7 +337,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       pickupLocationsApi,
       settings.pickupLocations,
       shoppingCart,
-      setPickupLocationsWithCapacityCheckLoading,
+      setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       selectedGrowingPeriod,
@@ -649,8 +649,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsWithCapacityCheckLoading={
-              pickupLocationsWithCapacityCheckLoading
+            pickupLocationsCapacityCheckLoading={
+              pickupLocationsCapacityCheckLoading
             }
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}

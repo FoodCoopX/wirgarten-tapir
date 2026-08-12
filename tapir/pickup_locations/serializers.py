@@ -107,12 +107,13 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
 
 
 class PickupLocationCapacityCheckResponseSerializer(serializers.Serializer):
-    enough_capacity_for_order = serializers.BooleanField()
+    pickup_location_ids_with_enough_capacity_for_order = serializers.ListField(
+        child=serializers.CharField()
+    )
 
 
 class PickupLocationCapacityCheckRequestSerializer(serializers.Serializer):
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
-    pickup_location_id = serializers.CharField()
     growing_period_id = serializers.CharField(allow_null=True)
 
 
