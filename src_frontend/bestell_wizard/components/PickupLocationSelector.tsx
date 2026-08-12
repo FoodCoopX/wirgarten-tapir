@@ -13,7 +13,7 @@ interface PickupLocationSelectorProps {
   pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
-  pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
+  pickupLocationsCapacityCheckLoading: boolean;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   waitingListLinkConfirmationModeEnabled: boolean;
   disabledLocationIds?: string[];
@@ -23,7 +23,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
   pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
-  pickupLocationsWithCapacityCheckLoading,
+  pickupLocationsCapacityCheckLoading,
   pickupLocationsWithCapacityFull,
   waitingListLinkConfirmationModeEnabled,
   disabledLocationIds,
@@ -65,7 +65,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
       return;
     }
 
-    if (pickupLocationsWithCapacityCheckLoading.has(pickupLocation)) {
+    if (pickupLocationsCapacityCheckLoading) {
       return <Spinner size={"sm"} />;
     }
 

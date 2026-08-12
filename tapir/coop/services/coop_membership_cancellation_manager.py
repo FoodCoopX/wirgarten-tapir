@@ -67,6 +67,11 @@ class CoopMembershipCancellationManager:
         future_coop_share_purchases.delete()
 
     @classmethod
-    def is_in_coop_trial(cls, member: Member, cache: dict):
+    def is_in_coop_trial(
+        cls, member: Member, reference_date: datetime.date, cache: dict
+    ):
         entry_date = cls.get_coop_entry_date(member, cache)
-        return entry_date is not None and entry_date > get_today()
+        if entry_date is None:
+            return False
+
+        return entry_date >= reference_date

@@ -1,26 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ButtonGroup, Carousel, ToggleButton } from "react-bootstrap";
-import Step5BPickupLocationList from "../components/Step5BPickupLocationList.tsx";
-import { PublicPickupLocation, type PublicProductType } from "../../api-client";
-import Step5BPickupLocationMap from "../components/Step5BPickupLocationMap.tsx";
-import NextStepButton from "../components/NextStepButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { CarouselRef } from "react-bootstrap/Carousel";
 import { MapRef } from "react-leaflet/MapContainer";
+import { PublicPickupLocation, type PublicProductType } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import NextStepButton from "../components/NextStepButton.tsx";
+import Step5BPickupLocationList from "../components/Step5BPickupLocationList.tsx";
+import Step5BPickupLocationMap from "../components/Step5BPickupLocationMap.tsx";
+import Step5BPickupLocationWishes from "../components/Step5BPickupLocationWishes.tsx";
 import {
   ALL_PICKUP_LOCATION_TABS,
   PickupLocationTab,
 } from "../types/PickupLocationTab.ts";
-import Step5BPickupLocationWishes from "../components/Step5BPickupLocationWishes.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
 
 interface Step5BPickupLocationChoiceProps {
   settings: BestellWizardSettings;
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
-  pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
+  pickupLocationsCapacityCheckLoading: boolean;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   goToNextStep: () => void;
   stepIsActive: boolean;
@@ -55,7 +55,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   settings,
   selectedPickupLocations,
   setSelectedPickupLocations,
-  pickupLocationsWithCapacityCheckLoading,
+  pickupLocationsCapacityCheckLoading,
   pickupLocationsWithCapacityFull,
   goToNextStep,
   stepIsActive,
@@ -209,8 +209,8 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
-            pickupLocationsWithCapacityCheckLoading={
-              pickupLocationsWithCapacityCheckLoading
+            pickupLocationsCapacityCheckLoading={
+              pickupLocationsCapacityCheckLoading
             }
             waitingListLinkConfirmationModeEnabled={false}
             tabIsActive={currentTab === "list" && stepIsActive}

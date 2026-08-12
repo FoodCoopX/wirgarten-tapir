@@ -142,6 +142,7 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
               shoppingCart[product.id!] = checked ? 1 : 0;
               setShoppingCart({ ...shoppingCart });
             }}
+            disabled={waitingListLinkConfirmationModeEnabled}
           />
         ) : (
           <>

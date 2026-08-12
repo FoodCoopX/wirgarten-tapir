@@ -55,14 +55,15 @@ class WaitingListEntryConfirmationApplier:
         is_new_member = waiting_list_entry.member is None
 
         member = waiting_list_entry.member
+        actor = request.user if request.user.is_authenticated else member
         if is_new_member:
             member = cls.create_member(
                 waiting_list_entry=waiting_list_entry,
                 validated_data=validated_data,
                 cache=cache,
+                actor=actor,
             )
 
-        actor = request.user if request.user.is_authenticated else member
         WaitingListChangeConfirmedLogEntry().populate(actor=actor, user=member).save()
 
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
@@ -139,11 +140,6 @@ class WaitingListEntryConfirmationApplier:
                 actor=actor,
             )
 
-        if MemberNumberService.assign_member_number_if_eligible(
-            member=member, cache=cache, actor=actor
-        ):
-            member.save()
-
         if len(new_subscriptions) > 0:
             ApplyTapirOrderManager.send_order_confirmation_mail(
                 member=member,
@@ -177,14 +173,18 @@ class WaitingListEntryConfirmationApplier:
 
     @classmethod
     def create_member(
-        cls, waiting_list_entry: WaitingListEntry, validated_data: dict, cache: dict
+        cls,
+        waiting_list_entry: WaitingListEntry,
+        validated_data: dict,
+        actor: TapirUser,
+        cache: dict,
     ):
         now = get_now(cache=cache)
         contracts_signed = dict.fromkeys(
             ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
         )
 
-        return Member.objects.create(
+        member = Member.objects.create(
             first_name=waiting_list_entry.first_name,
             last_name=waiting_list_entry.last_name,
             email=waiting_list_entry.email,
@@ -198,6 +198,12 @@ class WaitingListEntryConfirmationApplier:
             iban=validated_data["iban"],
             **contracts_signed,
         )
+
+        MemberNumberService.assign_member_number_if_eligible(
+            member=member, actor=actor, cache=cache
+        )
+
+        return member
 
     @classmethod
     def apply_subscription_changes(

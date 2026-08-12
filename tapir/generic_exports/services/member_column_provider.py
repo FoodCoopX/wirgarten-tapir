@@ -146,11 +146,17 @@ class MemberColumnProvider:
         return member.last_name
 
     @classmethod
-    def get_value_member_number(cls, member: Member, _, cache):
-        return (
-            MemberNumberService.format_member_number(member.member_no, cache=cache)
-            or ""
-        )
+    def get_value_member_number(
+        cls, member: Member, reference_datetime: datetime.datetime, cache
+    ):
+        if MemberNumberService.should_display_member_number(
+            member=member, reference_date=reference_datetime.date(), cache=cache
+        ):
+            return (
+                MemberNumberService.format_member_number(member.member_no, cache=cache)
+                or ""
+            )
+        return ""
 
     @classmethod
     def get_value_member_email_address(cls, member: Member, _, __):

@@ -249,7 +249,9 @@ class ExistingMemberPurchasesSharesApiView(APIView):
             )
 
         if (
-            CoopMembershipCancellationManager.is_in_coop_trial(member, cache=self.cache)
+            CoopMembershipCancellationManager.is_in_coop_trial(
+                member, reference_date=get_today(cache=self.cache), cache=self.cache
+            )
             and not as_admin
         ):
             raise DjangoValidationError(
