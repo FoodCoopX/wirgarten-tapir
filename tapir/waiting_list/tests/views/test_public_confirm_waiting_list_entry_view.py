@@ -378,3 +378,49 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
 
         member = Member.objects.get()
         self.assertIsNotNone(member.member_no)
+
+    def test_post_mandateReferenceRequiresAMemberNumber_mandateReferenceCreated(
+        self,
+    ):
+        # This is a regression test for a bug reported in issue #884 in this comment: https://github.com/FoodCoopX/wirgarten-tapir/issues/884#issuecomment-5176735897
+        # where the pattern for the mandate reference uses the member number, but at the time of the creation of the mandate reference,
+        # the member didn't have a number yet.
+
+        entry = WaitingListEntryFactory.create(
+            confirmation_link_key=uuid.uuid4(),
+            member=None,
+        )
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, quantity=1, product=ProductFactory.create()
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
+        GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
+        self._set_parameter(
+            key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, value=False
+        )
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_MANDATE_REFERENCE_PATTERN,
+            value="{mitgliedsnummer_ohne_prefix}",
+        )
+
+        confirm_data = {
+            "entry_id": str(entry.id),
+            "link_key": str(entry.confirmation_link_key),
+            "account_owner": "John Doe",
+            "iban": "NL35ABNA7806242643",
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "number_of_coop_shares": 2,
+            "payment_rhythm": "semiannually",
+            "solidarity_contribution": 0,
+            "association_membership_type_id": None,
+        }
+
+        response = self.client.post(
+            reverse("waiting_list:public_confirm_waiting_list_entry"),
+            data=json.dumps(confirm_data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assert_order_confirmed(response.json())
