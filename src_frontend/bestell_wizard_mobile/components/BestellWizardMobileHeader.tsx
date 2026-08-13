@@ -30,7 +30,6 @@ interface BestellWizardMobileHeaderProps {
   productTypesInWaitingList: Set<PublicProductType>;
   steps: Step[];
   currentStep: Step;
-  setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
@@ -48,7 +47,6 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   atLeastOneProductTypeInWaitingList,
   productTypesInWaitingList,
   steps,
-  setCurrentStep,
   currentStep,
   selectedNumberOfCoopShares,
   goToProductTypeStep,
