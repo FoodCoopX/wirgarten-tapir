@@ -63,6 +63,11 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   }, [stepActive]);
 
   function validate() {
+    if (waitingListLinkConfirmationModeEnabled) {
+      goToNextStep();
+      return;
+    }
+
     setShowValidation(true);
     if (
       productType.mustBeSubscribedTo &&
