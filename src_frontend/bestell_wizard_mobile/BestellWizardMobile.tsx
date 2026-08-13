@@ -178,6 +178,14 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               setSelectedProductTypes,
             ),
           );
+
+          const productTypesFromWishes = (
+            waitingListEntryDetails.productWishes ?? []
+          ).map(
+            (productWish) =>
+              getProductTypeByProductId(productWish.product.id!, newSettings)!,
+          );
+          setSelectedProductTypes([...new Set(productTypesFromWishes)]);
         } else {
           setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
         }
@@ -244,9 +252,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
     setContractStartDate(selectedGrowingPeriod.contractStartDate);
 
-    setSelectedProductTypes(
-      settings.introEnabled ? [] : selectedGrowingPeriod.productTypes,
-    );
+    if (waitingListEntryDetails === undefined) {
+      setSelectedProductTypes(
+        settings.introEnabled ? [] : selectedGrowingPeriod.productTypes,
+      );
+    }
   }, [selectedGrowingPeriod]);
 
   useEffect(() => {
