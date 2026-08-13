@@ -384,6 +384,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
+    if (waitingListEntryDetails !== undefined) {
+      return;
+    }
+
     updateWaitingList(
       selectedPickupLocations,
       pickupLocationsWithCapacityFull,
@@ -399,6 +403,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     pickupLocationsWithCapacityFull,
     selectedPickupLocations,
     shoppingCart,
+    waitingListEntryDetails,
   ]);
 
   useEffect(() => {
