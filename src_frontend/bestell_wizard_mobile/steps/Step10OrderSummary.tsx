@@ -104,7 +104,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       return selectedPickupLocations[0];
     }
 
-    return undefined;
+    return waitingListEntryDetails.currentPickupLocation;
   }
 
   function getProductTypeTitle(productType: PublicProductType) {
@@ -279,7 +279,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                           <>
                             <li>
                               Erste Abholung:{" "}
-                              {selectedPickupLocations.length > 0 &&
+                              {(selectedPickupLocations.length > 0 ||
+                                waitingListEntryDetails?.currentPickupLocation) &&
                                 formatDateNumeric(
                                   getDateOfFirstDelivery(productType.id!),
                                 )}

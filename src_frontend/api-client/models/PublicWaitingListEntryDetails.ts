@@ -143,6 +143,12 @@ export interface PublicWaitingListEntryDetails {
    * @memberof PublicWaitingListEntryDetails
    */
   paymentRhythm?: string;
+  /**
+   *
+   * @type {PublicPickupLocation}
+   * @memberof PublicWaitingListEntryDetails
+   */
+  currentPickupLocation?: PublicPickupLocation;
 }
 
 /**
@@ -222,6 +228,10 @@ export function PublicWaitingListEntryDetailsFromJSONTyped(
     numberOfCoopShares: json["number_of_coop_shares"],
     paymentRhythm:
       json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
+    currentPickupLocation:
+      json["current_pickup_location"] == null
+        ? undefined
+        : PublicPickupLocationFromJSON(json["current_pickup_location"]),
   };
 }
 
@@ -272,5 +282,8 @@ export function PublicWaitingListEntryDetailsToJSONTyped(
           ),
     number_of_coop_shares: value["numberOfCoopShares"],
     payment_rhythm: value["paymentRhythm"],
+    current_pickup_location: PublicPickupLocationToJSON(
+      value["currentPickupLocation"],
+    ),
   };
 }

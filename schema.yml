@@ -11668,6 +11668,8 @@ components:
           type: integer
         payment_rhythm:
           type: string
+        current_pickup_location:
+          $ref: '#/components/schemas/PublicPickupLocation'
       required:
       - city
       - country

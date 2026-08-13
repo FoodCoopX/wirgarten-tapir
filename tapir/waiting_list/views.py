@@ -823,6 +823,7 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
         account_owner = None
         iban = None
         payment_rhythm = None
+        current_pickup_location = None
         if entry.member is not None:
             WaitingListApiView.fill_entry_with_personal_data(entry)
 
@@ -831,6 +832,13 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             iban = entry.member.iban
             payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
                 member=entry.member, reference_date=get_today(cache=cache), cache=cache
+            )
+            current_pickup_location = (
+                MemberPickupLocationGetter.get_member_pickup_location(
+                    member=entry.member,
+                    reference_date=get_today(cache=cache),
+                    cache=cache,
+                )
             )
 
         return {
@@ -860,6 +868,7 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             "account_owner": account_owner,
             "iban": iban,
             "payment_rhythm": payment_rhythm,
+            "current_pickup_location": current_pickup_location,
         }
 
 
