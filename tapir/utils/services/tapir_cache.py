@@ -6,6 +6,7 @@ from tapir.associations.models import (
     AssociationMembershipTypePrice,
     AssociationMembership,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import (
     Joker,
     DeliveryDayAdjustment,
@@ -34,6 +35,7 @@ from tapir.wirgarten.models import (
     MandateReference,
     Payment,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
 
@@ -350,14 +352,26 @@ class TapirCache:
         opening_times_by_pickup_location_id_cache = get_from_cache_or_compute(
             cache, "opening_times_by_pickup_location_id", lambda: {}
         )
+
+        def compute():
+            delivery_day = get_parameter_value(
+                key=ParameterKeys.DELIVERY_DAY, cache=cache
+            )
+            opening_times = PickupLocationOpeningTime.objects.filter(
+                pickup_location_id=pickup_location_id
+            )
+            return sorted(
+                opening_times,
+                key=lambda opening_time: (
+                    0 if opening_time.day_of_week >= delivery_day else 1,
+                    opening_time.day_of_week,
+                ),
+            )
+
         return get_from_cache_or_compute(
-            opening_times_by_pickup_location_id_cache,
-            pickup_location_id,
-            lambda: list(
-                PickupLocationOpeningTime.objects.filter(
-                    pickup_location_id=pickup_location_id
-                ).order_by("day_of_week")
-            ),
+            cache=opening_times_by_pickup_location_id_cache,
+            key=pickup_location_id,
+            compute_function=compute,
         )
 
     @classmethod
