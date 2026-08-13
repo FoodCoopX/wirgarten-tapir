@@ -1,6 +1,7 @@
 import datetime
 
 from django.db.models import F
+from icecream import ic
 
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.pickup_locations.services.member_pickup_location_getter import (
@@ -80,6 +81,10 @@ class SubscriptionImporter:
             raise TapirDataImportException("Missing end date")
         consent_ts = DataImportUtils.to_datetime(row.get("consent_vertragsgrundsätze"))
         withdrawal_consent_ts = DataImportUtils.to_datetime(row.get("consent_widerruf"))
+        price_override = DataImportUtils.safe_float(
+            row.get("Personalisierter Betrag", None), default=None
+        )
+        ic(price_override)
 
         subscription = Subscription.objects.filter(
             member=member, product=product, start_date=start_date
@@ -98,6 +103,7 @@ class SubscriptionImporter:
                 trial_end_date_override=trial_end_date_override,
                 trial_period_is_enabled=trial_period_is_enabled,
                 withdrawal_consent_ts=withdrawal_consent_ts,
+                price_override=price_override,
             )
         else:
             subscription = Subscription.objects.create(
@@ -127,6 +133,7 @@ class SubscriptionImporter:
                     growing_period=growing_period,
                     cache={},
                 ),
+                price_override=price_override,
             )
             Subscription.objects.filter(id=subscription.id).update(
                 created_at=F("start_date")
@@ -147,6 +154,7 @@ class SubscriptionImporter:
         trial_end_date_override: datetime.date | None,
         trial_period_is_enabled: bool | None,
         withdrawal_consent_ts: datetime.datetime | None,
+        price_override: float | None,
     ) -> str:
         is_updated = False
 
@@ -157,6 +165,7 @@ class SubscriptionImporter:
             "consent_ts": consent_ts,
             "withdrawal_consent_ts": withdrawal_consent_ts,
             "trial_end_date_override": trial_end_date_override,
+            "price_override": price_override,
         }
 
         for attribute, value in map_from_attribute_to_value.items():
