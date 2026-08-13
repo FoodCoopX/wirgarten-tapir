@@ -61,6 +61,9 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
         context["intended_use_coop_shares_keys"] = (
             ParameterKeys.PAYMENT_INTENDED_USE_COOP_SHARES
         )
+        context["intended_use_joker_keys"] = (
+            ParameterKeys.PAYMENT_INTENDED_USE_JOKER_CREDIT
+        )
         return context
 
     def get_success_url(self, **kwargs):

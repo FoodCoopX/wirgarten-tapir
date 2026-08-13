@@ -16,6 +16,7 @@ import type {
   CabLoggedInUserChangeTargetsPaymentRhythmResponse,
   ExtendedMemberCredit,
   FuturePaymentsResponse,
+  JokerCreditIntendedUsePreviewResponse,
   MandateReferencePreviewResponse,
   MemberCreditCreateRequest,
   MemberCreditSettleRequest,
@@ -31,6 +32,7 @@ import {
   CabLoggedInUserChangeTargetsPaymentRhythmResponseFromJSON,
   ExtendedMemberCreditFromJSON,
   FuturePaymentsResponseFromJSON,
+  JokerCreditIntendedUsePreviewResponseFromJSON,
   MandateReferencePreviewResponseFromJSON,
   MemberCreditCreateRequestToJSON,
   MemberCreditSettleRequestToJSON,
@@ -60,6 +62,11 @@ export interface PaymentsApiIntendedUsePreviewContractsRetrieveRequest {
 }
 
 export interface PaymentsApiIntendedUsePreviewCoopSharesRetrieveRequest {
+  patternNew: string;
+  patternOld: string;
+}
+
+export interface PaymentsApiIntendedUsePreviewJokerRetrieveRequest {
   patternNew: string;
   patternOld: string;
 }
@@ -383,6 +390,80 @@ export class PaymentsApi extends runtime.BaseAPI {
         requestParameters,
         initOverrides,
       );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiIntendedUsePreviewJokerRetrieveRaw(
+    requestParameters: PaymentsApiIntendedUsePreviewJokerRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<JokerCreditIntendedUsePreviewResponse>> {
+    if (requestParameters["patternNew"] == null) {
+      throw new runtime.RequiredError(
+        "patternNew",
+        'Required parameter "patternNew" was null or undefined when calling paymentsApiIntendedUsePreviewJokerRetrieve().',
+      );
+    }
+
+    if (requestParameters["patternOld"] == null) {
+      throw new runtime.RequiredError(
+        "patternOld",
+        'Required parameter "patternOld" was null or undefined when calling paymentsApiIntendedUsePreviewJokerRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["patternNew"] != null) {
+      queryParameters["pattern_new"] = requestParameters["patternNew"];
+    }
+
+    if (requestParameters["patternOld"] != null) {
+      queryParameters["pattern_old"] = requestParameters["patternOld"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/intended_use_preview_joker`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      JokerCreditIntendedUsePreviewResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiIntendedUsePreviewJokerRetrieve(
+    requestParameters: PaymentsApiIntendedUsePreviewJokerRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<JokerCreditIntendedUsePreviewResponse> {
+    const response = await this.paymentsApiIntendedUsePreviewJokerRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 

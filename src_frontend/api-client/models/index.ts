@@ -75,6 +75,7 @@ export * from "./GrowingPeriod";
 export * from "./GrowingPeriodRequest";
 export * from "./GrowingPeriodWithDeliveryDayAdjustments";
 export * from "./Joker";
+export * from "./JokerCreditIntendedUsePreviewResponse";
 export * from "./JokerRestriction";
 export * from "./JokerWithCancellationLimit";
 export * from "./LegalStatusEnum";

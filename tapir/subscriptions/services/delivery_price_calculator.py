@@ -35,7 +35,8 @@ class DeliveryPriceCalculator:
                 )
                 * subscription.quantity
                 for subscription in subscriptions
-            ]
+            ],
+            start=Decimal(0),
         )
 
     @classmethod

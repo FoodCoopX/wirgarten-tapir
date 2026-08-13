@@ -12,20 +12,17 @@ from django.db.models import (
     Sum,
 )
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.deliveries.services.joker_value_service import JokerValueService
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
-from tapir.pickup_locations.services.member_pickup_location_getter import (
-    MemberPickupLocationGetter,
-)
-from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
-    PickupLocationDeliveryChargeService,
-)
-from tapir.subscriptions.services.delivery_price_calculator import (
-    DeliveryPriceCalculator,
+from tapir.payments.services.intended_use_pattern_expander import (
+    IntendedUsePatternExpander,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.models import CoopShareTransaction
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 if TYPE_CHECKING:
     from tapir.wirgarten.models import (
@@ -199,7 +196,7 @@ class MemberColumnProvider:
         )
         credit_value = sum(
             (
-                cls.get_joker_credit_value_for_single_joker(
+                JokerValueService.get_joker_credit_value_for_single_joker(
                     member=member, joker_date=joker.date, cache=cache
                 )
                 for joker in jokers
@@ -209,42 +206,17 @@ class MemberColumnProvider:
         return locale.format_string("%.2f", credit_value)
 
     @classmethod
-    def get_joker_credit_value_for_single_joker(
-        cls, member: Member, joker_date: datetime.date, cache: dict
-    ) -> Decimal:
-        subscription_price = (
-            DeliveryPriceCalculator.get_price_of_subscriptions_delivered_in_week(
-                member=member,
-                reference_date=joker_date,
-                only_subscriptions_affected_by_jokers=True,
-                cache=cache,
-            )
+    def get_value_member_joker_credit_intended_use(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        return IntendedUsePatternExpander.expand_pattern_joker(
+            pattern=get_parameter_value(
+                key=ParameterKeys.PAYMENT_INTENDED_USE_JOKER_CREDIT, cache=cache
+            ),
+            member=member,
+            reference_date=reference_datetime.date(),
+            cache=cache,
         )
-        if subscription_price <= 0:
-            return Decimal(0)
-
-        # The joker week is still billed the pickup-location delivery charge, so
-        # it is part of what gets credited back to the member.
-        pickup_location_id = (
-            MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
-                member_id=member.id, reference_date=joker_date, cache=cache
-            )
-        )
-        if pickup_location_id is None:
-            return subscription_price
-
-        return (
-            subscription_price
-            + PickupLocationDeliveryChargeService.get_delivery_charge_at_date(
-                pickup_location_id=pickup_location_id,
-                reference_date=joker_date,
-                cache=cache,
-            )
-        )
-
-    @classmethod
-    def get_value_member_joker_credit_intended_use(cls, _, __, ___):
-        return "Noch nicht implementiert, hängt von US 2.6. ab"
 
     @classmethod
     def get_value_member_joker_credit_details(

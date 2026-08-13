@@ -2096,6 +2096,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaymentIntendedUsePreviewResponse'
           description: ''
+  /payments/api/intended_use_preview_joker:
+    get:
+      operationId: payments_api_intended_use_preview_joker_retrieve
+      parameters:
+      - in: query
+        name: pattern_new
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: pattern_old
+        schema:
+          type: string
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JokerCreditIntendedUsePreviewResponse'
+          description: ''
   /payments/api/mandate_reference_preview:
     get:
       operationId: payments_api_mandate_reference_preview_retrieve
@@ -9045,6 +9072,39 @@ components:
       - date
       - member
       - updated_at
+    JokerCreditIntendedUsePreviewResponse:
+      type: object
+      properties:
+        previews_new:
+          type: array
+          items:
+            type: string
+        previews_old:
+          type: array
+          items:
+            type: string
+        error:
+          type: string
+        tokens:
+          type: array
+          items:
+            type: string
+        credits:
+          type: array
+          items:
+            type: number
+            format: double
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+      required:
+      - credits
+      - error
+      - members
+      - previews_new
+      - previews_old
+      - tokens
     JokerRestriction:
       type: object
       properties:
