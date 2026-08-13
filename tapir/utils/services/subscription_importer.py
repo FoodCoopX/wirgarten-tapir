@@ -1,7 +1,6 @@
 import datetime
 
 from django.db.models import F
-from icecream import ic
 
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.pickup_locations.services.member_pickup_location_getter import (
@@ -84,7 +83,6 @@ class SubscriptionImporter:
         price_override = DataImportUtils.safe_float(
             row.get("Personalisierter Betrag", None), default=None
         )
-        ic(price_override)
 
         subscription = Subscription.objects.filter(
             member=member, product=product, start_date=start_date
