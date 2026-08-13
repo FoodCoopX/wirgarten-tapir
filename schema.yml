@@ -11670,6 +11670,8 @@ components:
           type: string
         current_pickup_location:
           $ref: '#/components/schemas/PublicPickupLocation'
+        should_show_solidarity_step:
+          type: boolean
       required:
       - city
       - country
@@ -11682,6 +11684,7 @@ components:
       - number_of_coop_shares
       - phone_number
       - postcode
+      - should_show_solidarity_step
       - street
       - street_2
     PublicWaitingListEntryExistingMemberCreateRequest:

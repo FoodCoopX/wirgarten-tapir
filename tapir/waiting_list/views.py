@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -32,6 +33,9 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
+)
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
@@ -824,21 +828,29 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
         iban = None
         payment_rhythm = None
         current_pickup_location = None
+        should_show_solidarity_step = True
         if entry.member is not None:
             WaitingListApiView.fill_entry_with_personal_data(entry)
 
             birthdate = entry.member.birthdate
             account_owner = entry.member.account_owner
             iban = entry.member.iban
+            today = get_today(cache=cache)
             payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=entry.member, reference_date=get_today(cache=cache), cache=cache
+                member=entry.member, reference_date=today, cache=cache
             )
             current_pickup_location = (
                 MemberPickupLocationGetter.get_member_pickup_location(
                     member=entry.member,
-                    reference_date=get_today(cache=cache),
+                    reference_date=today,
                     cache=cache,
                 )
+            )
+            should_show_solidarity_step = (
+                MemberSolidarityContributionService.get_member_contribution(
+                    member_id=str(entry.member_id), reference_date=today, cache=cache
+                )
+                == Decimal(0)
             )
 
         return {
@@ -869,6 +881,7 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             "iban": iban,
             "payment_rhythm": payment_rhythm,
             "current_pickup_location": current_pickup_location,
+            "should_show_solidarity_step": should_show_solidarity_step,
         }
 
 

@@ -5,7 +5,7 @@
 {% load tapir_static %}
 {% block head %}
     <title xmlns="http://www.w3.org/1999/html">
-        {% block title %}Admin Dashboard{% endblock %}
+        {% block title %}Admin Dashboard - {{ block.super }}{% endblock %}
     </title>
     <link rel="stylesheet"
           href="{% static 'wirgarten/css/admin_dashboard.css' %}">

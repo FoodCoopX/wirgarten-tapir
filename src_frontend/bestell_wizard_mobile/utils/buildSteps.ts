@@ -182,7 +182,7 @@ function shouldShowStepSolidarityContribution(
     return true;
   }
 
-  return !waitingListEntryDetails.memberAlreadyExists;
+  return waitingListEntryDetails.shouldShowSolidarityStep;
 }
 
 function shouldShowStepSolidarityContributionBeforeStepPickupLocation(

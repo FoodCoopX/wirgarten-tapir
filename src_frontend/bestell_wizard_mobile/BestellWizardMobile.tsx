@@ -185,7 +185,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             (productWish) =>
               getProductTypeByProductId(productWish.product.id!, newSettings)!,
           );
-          setSelectedProductTypes([...new Set(productTypesFromWishes)]);
+          setSelectedProductTypes(
+            sortProductTypes([...new Set(productTypesFromWishes)]),
+          );
         } else {
           setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
         }

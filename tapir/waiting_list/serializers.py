@@ -97,6 +97,7 @@ class PublicWaitingListEntryDetailsSerializer(serializers.Serializer):
     number_of_coop_shares = serializers.IntegerField()
     payment_rhythm = serializers.CharField(required=False)
     current_pickup_location = PublicPickupLocationSerializer(required=False)
+    should_show_solidarity_step = serializers.BooleanField()
 
 
 class OptionalWaitingListEntryDetailsSerializer(serializers.Serializer):

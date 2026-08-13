@@ -149,6 +149,12 @@ export interface PublicWaitingListEntryDetails {
    * @memberof PublicWaitingListEntryDetails
    */
   currentPickupLocation?: PublicPickupLocation;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PublicWaitingListEntryDetails
+   */
+  shouldShowSolidarityStep: boolean;
 }
 
 /**
@@ -177,6 +183,11 @@ export function instanceOfPublicWaitingListEntryDetails(
   if (
     !("numberOfCoopShares" in value) ||
     value["numberOfCoopShares"] === undefined
+  )
+    return false;
+  if (
+    !("shouldShowSolidarityStep" in value) ||
+    value["shouldShowSolidarityStep"] === undefined
   )
     return false;
   return true;
@@ -232,6 +243,7 @@ export function PublicWaitingListEntryDetailsFromJSONTyped(
       json["current_pickup_location"] == null
         ? undefined
         : PublicPickupLocationFromJSON(json["current_pickup_location"]),
+    shouldShowSolidarityStep: json["should_show_solidarity_step"],
   };
 }
 
@@ -285,5 +297,6 @@ export function PublicWaitingListEntryDetailsToJSONTyped(
     current_pickup_location: PublicPickupLocationToJSON(
       value["currentPickupLocation"],
     ),
+    should_show_solidarity_step: value["shouldShowSolidarityStep"],
   };
 }
