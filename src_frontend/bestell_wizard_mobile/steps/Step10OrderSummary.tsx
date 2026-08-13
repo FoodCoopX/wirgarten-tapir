@@ -89,13 +89,23 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     useState<PublicPickupLocation>();
 
   useEffect(() => {
-    setActivePickupLocation(
-      getFirstPickupLocationWithCapacity(
+    setActivePickupLocation(getRelevantPickupLocation());
+  }, [selectedPickupLocations]);
+
+  function getRelevantPickupLocation(): PublicPickupLocation | undefined {
+    if (waitingListEntryDetails === undefined) {
+      return getFirstPickupLocationWithCapacity(
         selectedPickupLocations,
         pickupLocationsWithCapacityFull,
-      ),
-    );
-  }, [selectedPickupLocations]);
+      );
+    }
+
+    if (selectedPickupLocations.length > 0) {
+      return selectedPickupLocations[0];
+    }
+
+    return undefined;
+  }
 
   function getProductTypeTitle(productType: PublicProductType) {
     if (isProductTypeOrdered(productType, shoppingCart)) {
@@ -157,10 +167,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   }
 
   function getDateOfFirstDelivery(productTypeId: string) {
-    const pickupLocation = getFirstPickupLocationWithCapacity(
-      selectedPickupLocations,
-      pickupLocationsWithCapacityFull,
-    );
+    const pickupLocation = getRelevantPickupLocation();
     if (!pickupLocation) {
       return undefined;
     }
