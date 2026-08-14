@@ -344,7 +344,7 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             pickup_location=location_b,
             valid_from=period.start_date,
         )
-        subscription_b = SubscriptionFactory.create(
+        SubscriptionFactory.create(
             quantity=1,
             product=subscription_a.product,
             member=member_b,
