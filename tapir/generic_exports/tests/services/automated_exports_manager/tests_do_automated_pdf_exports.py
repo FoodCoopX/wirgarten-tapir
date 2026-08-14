@@ -43,7 +43,7 @@ class TestDoAutomatedPdfExports(TapirIntegrationTest):
 
         AutomatedExportsManager.do_automated_pdf_exports(cache={})
 
-        mock_get_datetime_of_latest_export.assert_called_once_with(export)
+        mock_get_datetime_of_latest_export.assert_called_once_with(export, cache={})
         mock_do_single_pdf_export.assert_not_called()
 
     @patch.object(AutomatedExportsManager, "do_single_pdf_export")
@@ -65,7 +65,7 @@ class TestDoAutomatedPdfExports(TapirIntegrationTest):
 
         AutomatedExportsManager.do_automated_pdf_exports(cache=cache)
 
-        mock_get_datetime_of_latest_export.assert_called_once_with(export)
+        mock_get_datetime_of_latest_export.assert_called_once_with(export, cache=cache)
         mock_do_single_pdf_export.assert_called_once_with(
             export, target_date, cache=cache
         )

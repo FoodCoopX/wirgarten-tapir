@@ -302,3 +302,90 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             ],
             data["members"],
         )
+
+    def test_getValueRouteBasketTotals_pickingModeBasket_sumsStationsAndExcludesJoker(
+        self,
+    ):
+        self._set_parameter(key=ParameterKeys.PICKING_MODE, value=PICKING_MODE_BASKET)
+        self._set_parameter(
+            key=ParameterKeys.PICKING_BASKET_SIZES, value="small;normal"
+        )
+        self._set_parameter(key=ParameterKeys.JOKERS_ENABLED, value=True)
+
+        route = LocationRouteFactory.create()
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
+        location_a = PickupLocationFactory.create(name="pl_a", location_route=route)
+        location_b = PickupLocationFactory.create(name="pl_b", location_route=route)
+
+        member_a = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member_a,
+            pickup_location=location_a,
+            valid_from=period.start_date,
+        )
+        subscription_a = SubscriptionFactory.create(
+            quantity=2,
+            product__type__delivery_cycle=WEEKLY[0],
+            member=member_a,
+            period=period,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            basket_size_name="small", product=subscription_a.product, quantity=1
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            basket_size_name="normal", product=subscription_a.product, quantity=1
+        )
+
+        member_b = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member_b,
+            pickup_location=location_b,
+            valid_from=period.start_date,
+        )
+        subscription_b = SubscriptionFactory.create(
+            quantity=1,
+            product=subscription_a.product,
+            member=member_b,
+            period=period,
+        )
+
+        member_joker = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member_joker,
+            pickup_location=location_a,
+            valid_from=period.start_date,
+        )
+        SubscriptionFactory.create(
+            quantity=10,
+            product=subscription_a.product,
+            member=member_joker,
+            period=period,
+        )
+        from tapir.deliveries.tests.factories import JokerFactory
+
+        JokerFactory.create(
+            member=member_joker, date=datetime.date(year=2026, month=7, day=29)
+        )
+
+        result = LocationRouteColumnProvider.get_value_route_basket_totals(
+            route=route,
+            reference_datetime=datetime.datetime(
+                year=2026, month=7, day=29, hour=12, tzinfo=datetime.timezone.utc
+            ),
+            cache={},
+        )
+
+        self.assertEqual(31, result["calendar_week"])
+        self.assertEqual(["small", "normal"], result["headers"])
+        self.assertFalse(result["convert_headers"])
+        # member_a: 2*(1 small + 1 normal), member_b: 1*(1 small + 1 normal), joker excluded
+        self.assertEqual({"small": 3, "normal": 3}, result["totals"])
+        self.assertEqual(
+            [
+                {"name": "pl_a", "totals": {"small": 2, "normal": 2}},
+                {"name": "pl_b", "totals": {"small": 1, "normal": 1}},
+            ],
+            result["stations"],
+        )

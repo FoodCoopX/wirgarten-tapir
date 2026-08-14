@@ -2775,7 +2775,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -6437,6 +6436,7 @@ components:
       - monthly
       - weekly
       - daily
+      - after_pickup_location_change_deadline
       - never
       type: string
       description: |-
@@ -6444,6 +6444,7 @@ components:
         * `monthly` - Monatlich
         * `weekly` - Wöchentlich
         * `daily` - Täglich
+        * `after_pickup_location_change_deadline` - Nach letztmöglicher Änderung der Verteilstation
         * `never` - Nie
     AvailableSegmentsResponse:
       type: object
