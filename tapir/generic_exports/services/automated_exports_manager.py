@@ -73,9 +73,7 @@ class AutomatedExportsManager:
         ExportMailSender.send_mails_for_export(results, cache=cache)
 
     @classmethod
-    def get_datetime_of_latest_export(
-        cls, export: CsvExport | PdfExport, cache: dict
-    ):
+    def get_datetime_of_latest_export(cls, export: CsvExport | PdfExport, cache: dict):
         if export.automated_export_cycle == AutomatedExportCycle.YEARLY:
             return cls.get_datetime_of_latest_yearly_export(export)
         if export.automated_export_cycle == AutomatedExportCycle.MONTHLY:
