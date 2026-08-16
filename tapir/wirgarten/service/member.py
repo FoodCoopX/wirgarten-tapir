@@ -25,16 +25,14 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.models import CoopSharesCancelledLogEntry
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.coop.services.token_builder_coop_entry import TokenBuilderCoopEntry
-from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
-from tapir.pickup_locations.services.member_pickup_location_getter import (
-    MemberPickupLocationGetter,
-)
 from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.services.order_confirmation_mail_token_builder import (
+    OrderConfirmationMailTokenBuilder,
+)
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
-from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -331,6 +329,7 @@ def send_investing_membership_confirmation(
     solidarity_contribution: SolidarityContribution | None,
     cache: dict,
 ):
+    member = Member.objects.get(id=member_id)
     TransactionalTrigger.fire_action(
         trigger_data=TransactionalTriggerData(
             key=Events.REGISTER_MEMBERSHIP_ONLY,
@@ -338,6 +337,11 @@ def send_investing_membership_confirmation(
             token_data=TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
                 coop_share_transaction=coop_share_transaction,
                 association_membership=association_membership,
+                solidarity_contribution=solidarity_contribution,
+                cache=cache,
+            )
+            | OrderConfirmationMailTokenBuilder.build_membership_only_tokens(
+                member=member,
                 solidarity_contribution=solidarity_contribution,
                 cache=cache,
             ),
@@ -357,24 +361,6 @@ def send_product_order_confirmation(
     min_contract_start_date = min([subscription.start_date for subscription in subs])
     min_contract_end_date = min([subscription.end_date for subscription in subs])
 
-    first_pickup_date = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
-    at_least_one_product_with_delivery = False
-    for subscription in subs:
-        if subscription.product.type.delivery_cycle == NO_DELIVERY[0]:
-            continue
-        at_least_one_product_with_delivery = True
-        next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
-            reference_date=subscription.start_date,
-            pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id(
-                member, subscription.start_date
-            ),
-            product_type=subscription.product.type,
-            check_for_weeks_without_delivery=True,
-            cache=cache,
-        )
-        if next_delivery_date is not None:
-            first_pickup_date = min(first_pickup_date, next_delivery_date)
-
     TransactionalTrigger.fire_action(
         trigger_data=TransactionalTriggerData(
             key=(
@@ -386,13 +372,13 @@ def send_product_order_confirmation(
             token_data={
                 "contract_start_date": format_date(min_contract_start_date),
                 "contract_end_date": format_date(min_contract_end_date),
-                "first_pickup_date": (
-                    format_date(first_pickup_date)
-                    if at_least_one_product_with_delivery
-                    else "Keine Lieferung"
-                ),
-                "contract_list": format_subscription_list_html(list(subs)),
             }
+            | OrderConfirmationMailTokenBuilder.build_product_order_tokens(
+                member=member,
+                subscriptions=list(subs),
+                solidarity_contribution=solidarity_contribution,
+                cache=cache,
+            )
             | TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
                 coop_share_transaction=coop_share_transaction,
                 association_membership=association_membership,

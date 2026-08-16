@@ -20,6 +20,9 @@ from tapir.core.services.organisation_entry_date_annotator import (
 from tapir.pickup_locations.services.pickup_location_mail_token_service import (
     PickupLocationMailTokenService,
 )
+from tapir.subscriptions.services.order_confirmation_mail_token_builder import (
+    OrderConfirmationMailTokenBuilder,
+)
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import WaitingListEntry, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -34,6 +37,11 @@ TOKENS_COOP_ENTRY = {
     "Solidarbeitrag - Betrag": "solidarity_contribution_amount",
     "Solidarbeitrag - Startdatum": "solidarity_contribution_start_date",
     "Vereinsmitgliedschaft - Monatspreis": "membership_monthly_price",
+}
+
+TOKENS_ORDER_PAYMENT = {
+    "Gesamtbetrag monatlich": "monthly_total",
+    "Abbuchungsrhythmus": "payment_rhythm",
 }
 
 
@@ -116,6 +124,7 @@ def _register_tokens():
             "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
             "Verteilstation - Abholzeiten": PickupLocationMailTokenService.pickup_location_opening_times,
             "Newsletter - Verwaltungslink": NewsletterManagementLinkProvider.get_newsletter_management_link,
+            "Erste Abholung am": OrderConfirmationMailTokenBuilder.get_first_pickup_date_for_recipient,
         },
     )
 
@@ -130,13 +139,14 @@ def _register_triggers():
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         }
+        | TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY,
         required=True,
     )
     register_transactional_trigger(
         name="BestellWizard: Nur Geno-Mitgliedschaft",
         key=Events.REGISTER_MEMBERSHIP_ONLY,
-        tokens=TOKENS_COOP_ENTRY,
+        tokens=TOKENS_ORDER_PAYMENT | TOKENS_COOP_ENTRY,
         required=lambda: legal_status_is_cooperative(cache={}),
     )
     register_transactional_trigger(
@@ -217,6 +227,7 @@ def _register_triggers():
             "Anzahl gezeichnete Geschäftsanteile": "number_of_coop_shares",
             "Wert Geno-Anteil": "price_of_a_share",
             "Gesamtwert der gezeichneten Geschäftsanteile": "price_of_all_shares",
+            "Beitrittsdatum Genossenschaft": "membership_start_date",
         },
         required=lambda: legal_status_is_cooperative(cache={}),
     )
@@ -259,6 +270,7 @@ def _register_triggers():
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         }
+        | TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY,
         required=True,
     )

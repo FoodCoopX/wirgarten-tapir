@@ -62,6 +62,8 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
             mock_fire_action=mock_fire_action,
             key=Events.MEMBERSHIP_ENTRY,
         )
+        trigger_data = mock_fire_action.call_args.kwargs["trigger_data"]
+        self.assertEqual("01.01.2010", trigger_data.token_data["membership_start_date"])
         member.refresh_from_db()
         self.assertTrue(member.has_received_membership_started_mail)
 

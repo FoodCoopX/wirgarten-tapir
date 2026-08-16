@@ -36,6 +36,8 @@ dein {{Allgemein.Admin Name}} <br />
                 {{BestellWizard: Nur Geno-Mitgliedschaft.Wert Genossenschaftsanteil}} <br />
                 {{BestellWizard: Nur Geno-Mitgliedschaft.Gesamtwert der gezeichneten Genossenschaftsanteile}} <br />
                 {{BestellWizard: Nur Geno-Mitgliedschaft.Beitrittsdatum in der Genossenschaft}} <br />
+                {{BestellWizard: Nur Geno-Mitgliedschaft.Gesamtbetrag monatlich}} <br />
+                {{BestellWizard: Nur Geno-Mitgliedschaft.Abbuchungsrhythmus}} <br />
             </mj-text>
         </mj-column>
     </mj-section>
