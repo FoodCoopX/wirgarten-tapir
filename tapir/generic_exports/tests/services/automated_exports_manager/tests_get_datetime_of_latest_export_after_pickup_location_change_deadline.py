@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest, mock_timezone
 
 class TestGetDatetimeOfLatestExportAfterPickupLocationChangeDeadline(TapirUnitTest):
     def setUp(self):
-        # Friday 2025-01-03 08:30
+        # This is a Friday
         mock_timezone(
             self, datetime.datetime(year=2025, month=1, day=3, hour=8, minute=30)
         )
