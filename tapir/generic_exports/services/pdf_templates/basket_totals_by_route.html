@@ -79,7 +79,7 @@
     <div style="margin-bottom: 1.1rem;">
         <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 12pt; margin: 0.4rem 0 0.5rem 0;">
             <span>Gesamtkistenanzahl</span>
-            <span>{% grand_total_route_baskets entries %}</span>
+            <span>{{ first.grand_total }}</span>
         </div>
         <table class="route-table">
             <thead>
@@ -100,7 +100,7 @@
                 <tr class="route-sum-row">
                     <td class="station-label">Gesamt</td>
                     {% for header in first.headers %}
-                        <td class="num">{% sum_across_route_basket_totals entries header %}</td>
+                        <td class="num">{{ first.totals_across_routes|get_value:header }}</td>
                     {% endfor %}
                 </tr>
             </tbody>
@@ -178,13 +178,13 @@
             <tr class="route-sum-row">
                 <td class="station-label">Summe alle Runden</td>
                 {% for header in entry.route_basket_totals.headers %}
-                    <td class="num">{% sum_across_route_basket_totals entries header %}</td>
+                    <td class="num">{{ entry.route_basket_totals.totals_across_routes|get_value:header }}</td>
                 {% endfor %}
             </tr>
         </tbody>
     </table>
     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 12pt; margin: 0.7rem 0 0 0;">
         <span>Gesamtkistenanzahl</span>
-        <span>{% grand_total_route_baskets entries %}</span>
+        <span>{{ entry.route_basket_totals.grand_total }}</span>
     </div>
 </div>

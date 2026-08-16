@@ -96,21 +96,3 @@ def organisation_logo_data_uri():
 @register.simple_tag
 def site_name_for_pdf():
     return get_parameter_value(ParameterKeys.SITE_NAME, cache={})
-
-
-@register.simple_tag
-def grand_total_route_baskets(entries):
-    total = 0
-    for entry in entries or []:
-        totals = (entry.get("route_basket_totals") or {}).get("totals") or {}
-        total += sum(value or 0 for value in totals.values())
-    return total
-
-
-@register.simple_tag
-def sum_across_route_basket_totals(entries, header):
-    total = 0
-    for entry in entries or []:
-        totals = (entry.get("route_basket_totals") or {}).get("totals") or {}
-        total += totals.get(header, 0) or 0
-    return total

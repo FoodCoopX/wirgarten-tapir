@@ -100,3 +100,32 @@ class LocationRouteColumnProvider:
                 for product in TapirCache.get_all_products(cache=cache)
             },
         }
+
+    @classmethod
+    def add_across_route_aggregates(cls, entries: list[dict]) -> None:
+        if not entries or not isinstance(entries[0], dict):
+            return
+
+        route_basket_totals_list = [
+            entry["route_basket_totals"]
+            for entry in entries
+            if isinstance(entry.get("route_basket_totals"), dict)
+        ]
+        if not route_basket_totals_list:
+            return
+
+        headers = route_basket_totals_list[0].get("headers")
+        if not headers:
+            headers = list((route_basket_totals_list[0].get("totals") or {}).keys())
+        totals_across_routes = dict.fromkeys(headers, 0)
+        grand_total = 0
+        for route_basket_totals in route_basket_totals_list:
+            totals = route_basket_totals.get("totals") or {}
+            for header in headers:
+                value = totals.get(header) or 0
+                totals_across_routes[header] += value
+                grand_total += value
+
+        for route_basket_totals in route_basket_totals_list:
+            route_basket_totals["totals_across_routes"] = totals_across_routes
+            route_basket_totals["grand_total"] = grand_total

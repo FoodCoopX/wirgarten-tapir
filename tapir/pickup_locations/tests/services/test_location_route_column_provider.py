@@ -388,3 +388,71 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             ],
             result["pickup_location_data"],
         )
+
+    def test_addAcrossRouteAggregates_twoRoutes_sumsTotalsAndGrandTotal(self):
+        entries = [
+            {
+                "route_basket_totals": {
+                    "headers": ["small", "normal"],
+                    "totals": {"small": 2, "normal": 3},
+                }
+            },
+            {
+                "route_basket_totals": {
+                    "headers": ["small", "normal"],
+                    "totals": {"small": 1, "normal": None},
+                }
+            },
+            {},
+        ]
+
+        LocationRouteColumnProvider.add_across_route_aggregates(entries)
+
+        expected_totals = {"small": 3, "normal": 3}
+        self.assertEqual(
+            expected_totals, entries[0]["route_basket_totals"]["totals_across_routes"]
+        )
+        self.assertEqual(6, entries[0]["route_basket_totals"]["grand_total"])
+        self.assertEqual(
+            expected_totals, entries[1]["route_basket_totals"]["totals_across_routes"]
+        )
+        self.assertEqual(6, entries[1]["route_basket_totals"]["grand_total"])
+        self.assertNotIn("route_basket_totals", entries[2])
+
+    def test_addAcrossRouteAggregates_emptyOrNone_doesNothing(self):
+        LocationRouteColumnProvider.add_across_route_aggregates(None)
+        LocationRouteColumnProvider.add_across_route_aggregates([])
+
+        entries = [{"route_name": "tour"}]
+        LocationRouteColumnProvider.add_across_route_aggregates(entries)
+
+        self.assertEqual([{"route_name": "tour"}], entries)
+
+    def test_addAcrossRouteAggregates_missingHeaderAndEmptyTotals_countsAsZero(self):
+        entries = [
+            {
+                "route_basket_totals": {
+                    "headers": ["small", "normal"],
+                    "totals": {"small": 2, "normal": 5},
+                }
+            },
+            {
+                "route_basket_totals": {
+                    "headers": ["small", "normal"],
+                    "totals": {"small": None, "normal": 1},
+                }
+            },
+            {"route_basket_totals": {}},
+        ]
+
+        LocationRouteColumnProvider.add_across_route_aggregates(entries)
+
+        self.assertEqual(
+            {"small": 2, "normal": 6},
+            entries[0]["route_basket_totals"]["totals_across_routes"],
+        )
+        self.assertEqual(8, entries[0]["route_basket_totals"]["grand_total"])
+        self.assertEqual(
+            {"small": 2, "normal": 6},
+            entries[2]["route_basket_totals"]["totals_across_routes"],
+        )
