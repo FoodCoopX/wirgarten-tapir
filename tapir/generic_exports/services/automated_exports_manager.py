@@ -164,7 +164,7 @@ class AutomatedExportsManager:
         )
         export_weekday = (weekday_limit + 1) % 7
 
-        now = get_now()
+        now = get_now(cache=cache)
         start_of_week = now - datetime.timedelta(days=now.weekday())
         result = start_of_week + datetime.timedelta(days=export_weekday)
         result = cls.set_time(result, export.automated_export_hour)
