@@ -78,7 +78,7 @@ class LocationRouteColumnProvider:
         for pickup_location in pickup_locations:
             station_totals = pickup_location["global_values"]
             for header, value in station_totals.items():
-                totals[header] = totals.get(header, 0) + value
+                totals[header] += value
             stations.append(
                 {
                     "name": pickup_location["name"],
