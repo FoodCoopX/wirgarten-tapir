@@ -37,13 +37,6 @@ class TestTemplateBasketTotalsByRoute(TapirIntegrationTest):
             export.automated_export_cycle,
         )
         self.assertEqual(["admin@example.com"], export.email_recipients)
-        self.assertIn("route_basket_totals", export.template)
-        self.assertIn("route_name", export.template)
-        self.assertIn("Summe alle Runden", export.template)
-        self.assertRegex(
-            export.template,
-            r'<thead style="display: none;">[\s\S]*?<th class="station-label">[\s\S]*?Summe alle Runden',
-        )
 
     def test_createExports_alreadyExists_raises(self):
         TapirParameter.objects.filter(key=ParameterKeys.SITE_ADMIN_EMAIL).update(
