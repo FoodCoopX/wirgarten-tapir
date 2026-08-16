@@ -30,7 +30,9 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
         expected = Mock()
         mock_yearly.return_value = expected
 
-        result = AutomatedExportsManager.get_datetime_of_latest_export(export)
+        result = AutomatedExportsManager.get_datetime_of_latest_export(
+            export, cache=Mock()
+        )
 
         self.assertEqual(expected, result)
         mock_yearly.assert_called_once_with(export)
@@ -58,7 +60,9 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
         expected = Mock()
         mock_monthly.return_value = expected
 
-        result = AutomatedExportsManager.get_datetime_of_latest_export(export)
+        result = AutomatedExportsManager.get_datetime_of_latest_export(
+            export, cache=Mock()
+        )
 
         self.assertEqual(expected, result)
         mock_monthly.assert_called_once_with(export)
@@ -86,7 +90,9 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
         expected = Mock()
         mock_weekly.return_value = expected
 
-        result = AutomatedExportsManager.get_datetime_of_latest_export(export)
+        result = AutomatedExportsManager.get_datetime_of_latest_export(
+            export, cache=Mock()
+        )
 
         self.assertEqual(expected, result)
         mock_weekly.assert_called_once_with(export)
@@ -114,7 +120,9 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
         expected = Mock()
         mock_daily.return_value = expected
 
-        result = AutomatedExportsManager.get_datetime_of_latest_export(export)
+        result = AutomatedExportsManager.get_datetime_of_latest_export(
+            export, cache=Mock()
+        )
 
         self.assertEqual(expected, result)
         mock_daily.assert_called_once_with(export)
@@ -174,7 +182,7 @@ class TestGetDatetimeOfLatestExport(TapirUnitTest):
         export.automated_export_cycle = AutomatedExportCycle.NEVER
 
         with self.assertRaises(TapirImproperlyConfigured):
-            AutomatedExportsManager.get_datetime_of_latest_export(export)
+            AutomatedExportsManager.get_datetime_of_latest_export(export, cache=Mock())
 
         for mock in [
             mock_yearly,

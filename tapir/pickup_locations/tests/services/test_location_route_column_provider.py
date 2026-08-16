@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.deliveries.tests.factories import JokerFactory
 from tapir.pickup_locations.config import PICKING_MODE_SHARE, PICKING_MODE_BASKET
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.pickup_locations.services.location_route_column_provider import (
@@ -363,8 +364,6 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             member=member_joker,
             period=period,
         )
-        from tapir.deliveries.tests.factories import JokerFactory
-
         JokerFactory.create(
             member=member_joker, date=datetime.date(year=2026, month=7, day=29)
         )
@@ -387,5 +386,5 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
                 {"name": "pl_a", "totals": {"small": 2, "normal": 2}},
                 {"name": "pl_b", "totals": {"small": 1, "normal": 1}},
             ],
-            result["stations"],
+            result["pickup_location_data"],
         )

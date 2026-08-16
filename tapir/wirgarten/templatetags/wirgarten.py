@@ -95,7 +95,7 @@ def organisation_logo_data_uri():
 
 @register.simple_tag
 def site_name_for_pdf():
-    return get_parameter_value(ParameterKeys.SITE_NAME, cache={}) or ""
+    return get_parameter_value(ParameterKeys.SITE_NAME, cache={})
 
 
 @register.simple_tag

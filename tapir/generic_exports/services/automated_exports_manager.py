@@ -15,6 +15,7 @@ from tapir.generic_exports.models import (
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.generic_exports.services.export_mail_sender import ExportMailSender
 from tapir.generic_exports.services.pdf_export_builder import PdfExportBuilder
+from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
@@ -73,7 +74,7 @@ class AutomatedExportsManager:
 
     @classmethod
     def get_datetime_of_latest_export(
-        cls, export: CsvExport | PdfExport, cache: dict | None = None
+        cls, export: CsvExport | PdfExport, cache: dict
     ):
         if export.automated_export_cycle == AutomatedExportCycle.YEARLY:
             return cls.get_datetime_of_latest_yearly_export(export)
@@ -89,7 +90,7 @@ class AutomatedExportsManager:
         ):
             return (
                 cls.get_datetime_of_latest_export_after_pickup_location_change_deadline(
-                    export, cache=cache if cache is not None else {}
+                    export, cache=cache
                 )
             )
         raise TapirImproperlyConfigured(f"Unknown export cycle: {export}")
@@ -165,7 +166,7 @@ class AutomatedExportsManager:
         export_weekday = (weekday_limit + 1) % 7
 
         now = get_now(cache=cache)
-        start_of_week = now - datetime.timedelta(days=now.weekday())
+        start_of_week = get_monday(now)
         result = start_of_week + datetime.timedelta(days=export_weekday)
         result = cls.set_time(result, export.automated_export_hour)
         if result < now:

@@ -39,10 +39,11 @@ class TestDoAutomatedCsvExports(TapirIntegrationTest):
             datetime=target_date,
             file=ExportedFileFactory.create(),
         )
+        cache = Mock()
 
-        AutomatedExportsManager.do_automated_csv_exports(cache={})
+        AutomatedExportsManager.do_automated_csv_exports(cache=cache)
 
-        mock_get_datetime_of_latest_export.assert_called_once_with(export, cache={})
+        mock_get_datetime_of_latest_export.assert_called_once_with(export, cache=cache)
         mock_do_single_csv_export.assert_not_called()
 
     @patch.object(AutomatedExportsManager, "do_single_csv_export")

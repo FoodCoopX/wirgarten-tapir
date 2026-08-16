@@ -193,66 +193,25 @@
             </tbody>
         </table>
     </div>
+{% endwith %}
 
-    {% for entry in entries %}
-        <div class="route-block">
-            <h2>
-                {% if entry.route_name %}
-                    {{ entry.route_name }}
-                {% else %}
-                    Ohne Ausfahrrunde
-                {% endif %}
-            </h2>
-            <table class="route-table">
-                <thead>
-                    <tr>
-                        <th class="station-label">Verteilstation</th>
-                        {% for header in first.headers %}
-                            <th class="num">
-                                {% if first.convert_headers %}
-                                    {{ first.product_name_by_id|get_value:header }}
-                                {% else %}
-                                    {{ header }}
-                                {% endif %}
-                            </th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for station in entry.route_basket_totals.stations %}
-                        <tr>
-                            <td class="station-label">{{ station.name }}</td>
-                            {% for header in first.headers %}
-                                <td class="num">{{ station.totals|get_value:header }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td class="station-label" colspan="{{ first.headers|length|add:1 }}">
-                                Keine Verteilstationen
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    <tr class="route-sum-row">
-                        <td class="station-label">Summe Tour</td>
-                        {% for header in first.headers %}
-                            <td class="num">{{ entry.route_basket_totals.totals|get_value:header }}</td>
-                        {% endfor %}
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    {% endfor %}
-
-    <div class="footer-block">
+{% for entry in entries %}
+    <div class="route-block">
+        <h2>
+            {% if entry.route_name %}
+                {{ entry.route_name }}
+            {% else %}
+                Ohne Ausfahrrunde
+            {% endif %}
+        </h2>
         <table class="route-table">
             <thead>
                 <tr>
                     <th class="station-label">Verteilstation</th>
-                    {% for header in first.headers %}
+                    {% for header in entry.route_basket_totals.headers %}
                         <th class="num">
-                            {% if first.convert_headers %}
-                                {{ first.product_name_by_id|get_value:header }}
+                            {% if entry.route_basket_totals.convert_headers %}
+                                {{ entry.route_basket_totals.product_name_by_id|get_value:header }}
                             {% else %}
                                 {{ header }}
                             {% endif %}
@@ -261,17 +220,58 @@
                 </tr>
             </thead>
             <tbody>
+                {% for pickup_location in entry.route_basket_totals.pickup_location_data %}
+                    <tr>
+                        <td class="station-label">{{ pickup_location.name }}</td>
+                        {% for header in entry.route_basket_totals.headers %}
+                            <td class="num">{{ pickup_location.totals|get_value:header }}</td>
+                        {% endfor %}
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}">
+                            Keine Verteilstationen
+                        </td>
+                    </tr>
+                {% endfor %}
                 <tr class="route-sum-row">
-                    <td class="station-label">Summe alle Runden</td>
-                    {% for header in first.headers %}
-                        <td class="num">{% sum_across_route_basket_totals entries header %}</td>
+                    <td class="station-label">Summe Tour</td>
+                    {% for header in entry.route_basket_totals.headers %}
+                        <td class="num">{{ entry.route_basket_totals.totals|get_value:header }}</td>
                     {% endfor %}
                 </tr>
             </tbody>
         </table>
-        <div class="grand-total">
-            <span>Gesamtkistenanzahl</span>
-            <span>{% grand_total_route_baskets entries %}</span>
-        </div>
     </div>
-{% endwith %}
+{% endfor %}
+
+<div class="footer-block">
+    <table class="route-table">
+        <thead>
+            <tr>
+                <th class="station-label">Verteilstation</th>
+                {% for header in entry.route_basket_totals.headers %}
+                    <th class="num">
+                        {% if entry.route_basket_totals.convert_headers %}
+                            {{ entry.route_basket_totals.product_name_by_id|get_value:header }}
+                        {% else %}
+                            {{ header }}
+                        {% endif %}
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="route-sum-row">
+                <td class="station-label">Summe alle Runden</td>
+                {% for header in entry.route_basket_totals.headers %}
+                    <td class="num">{% sum_across_route_basket_totals entries header %}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+    <div class="grand-total">
+        <span>Gesamtkistenanzahl</span>
+        <span>{% grand_total_route_baskets entries %}</span>
+    </div>
+</div>

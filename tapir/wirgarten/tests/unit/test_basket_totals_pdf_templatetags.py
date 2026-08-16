@@ -51,14 +51,13 @@ class TestBasketTotalsPdfTemplatetags(TapirUnitTest):
         self.assertIn("ZmFrZS13ZWJwLWJ5dGVz", result)
 
     @patch("tapir.wirgarten.templatetags.wirgarten.get_parameter_value")
-    def test_siteNameForPdf_returnsParameterOrEmpty(
-        self, mock_get_parameter_value: Mock
-    ):
+    def test_siteNameForPdf_returnsParameterValue(self, mock_get_parameter_value: Mock):
         mock_get_parameter_value.return_value = "Gärtnerei Test"
-        self.assertEqual("Gärtnerei Test", site_name_for_pdf())
 
-        mock_get_parameter_value.return_value = None
-        self.assertEqual("", site_name_for_pdf())
+        self.assertEqual("Gärtnerei Test", site_name_for_pdf())
+        mock_get_parameter_value.assert_called_once_with(
+            ParameterKeys.SITE_NAME, cache={}
+        )
 
     def test_grandTotalRouteBaskets_sumsAllTotals(self):
         entries = [

@@ -74,15 +74,15 @@ class LocationRouteColumnProvider:
             cache=cache, reference_date=reference_datetime.date()
         )
         totals = dict.fromkeys(headers, 0)
-        stations = []
+        pickup_location_data = []
         for pickup_location in pickup_locations:
-            station_totals = pickup_location["global_values"]
-            for header, value in station_totals.items():
+            pickup_location_totals = pickup_location["global_values"]
+            for header, value in pickup_location_totals.items():
                 totals[header] += value
-            stations.append(
+            pickup_location_data.append(
                 {
                     "name": pickup_location["name"],
-                    "totals": station_totals,
+                    "totals": pickup_location_totals,
                 }
             )
 
@@ -93,7 +93,7 @@ class LocationRouteColumnProvider:
             "calendar_week": reference_datetime.isocalendar().week,
             "headers": headers,
             "totals": totals,
-            "stations": stations,
+            "pickup_location_data": pickup_location_data,
             "convert_headers": convert_headers,
             "product_name_by_id": {
                 product.id: product.name
