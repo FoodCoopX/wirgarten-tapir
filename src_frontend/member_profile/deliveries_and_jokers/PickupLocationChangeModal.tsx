@@ -47,9 +47,9 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     PublicPickupLocation[]
   >([]);
   const [
-    pickupLocationsWithCapacityCheckLoading,
-    setPickupLocationsWithCapacityCheckLoading,
-  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+    pickupLocationsCapacityCheckLoading,
+    setPickupLocationsCapacityCheckLoading,
+  ] = useState(false);
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [subscriptions, setSubscriptions] = useState<PublicSubscription[]>([]);
@@ -136,7 +136,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       pickupLocationsApi,
       pickupLocations,
       shoppingCart,
-      setPickupLocationsWithCapacityCheckLoading,
+      setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       undefined,
@@ -151,7 +151,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     if (
       selectedPickupLocations.length === 1 &&
       !pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]) &&
-      pickupLocationsWithCapacityCheckLoading.size === 0
+      !pickupLocationsCapacityCheckLoading
     ) {
       setWaitingListModeEnabled(false);
     }
@@ -160,7 +160,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       !waitingListModeEnabled &&
       selectedPickupLocations.length === 1 &&
       pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]) &&
-      !pickupLocationsWithCapacityCheckLoading.has(selectedPickupLocations[0])
+      !pickupLocationsCapacityCheckLoading
     ) {
       if (hasWaitingListEntry) {
         alert(
@@ -174,7 +174,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   }, [
     selectedPickupLocations,
     pickupLocationsWithCapacityFull,
-    pickupLocationsWithCapacityCheckLoading,
+    pickupLocationsCapacityCheckLoading,
   ]);
 
   function onConfirm() {
@@ -302,8 +302,8 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               pickupLocations={pickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
-              pickupLocationsWithCapacityCheckLoading={
-                pickupLocationsWithCapacityCheckLoading
+              pickupLocationsCapacityCheckLoading={
+                pickupLocationsCapacityCheckLoading
               }
               pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
               waitingListLinkConfirmationModeEnabled={false}

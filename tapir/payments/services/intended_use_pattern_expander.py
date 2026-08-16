@@ -3,10 +3,12 @@ import datetime
 from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.member_number_service import MemberNumberService
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.deliveries.models import Joker
+from tapir.deliveries.services.joker_value_service import JokerValueService
 from tapir.payments.config import IntendedUseTokens
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -35,7 +37,7 @@ class IntendedUsePatternExpander:
         pattern: str,
         payment: Payment,
         cache: dict,
-        token_value_overrides: dict[str, str] = None,
+        token_value_overrides: dict[str, str] | None = None,
     ):
         if token_value_overrides is None:
             token_value_overrides = {}
@@ -139,7 +141,7 @@ class IntendedUsePatternExpander:
         member: Member,
         number_of_shares: int,
         cache: dict,
-        token_value_overrides: dict = None,
+        token_value_overrides: dict | None = None,
     ):
         if token_value_overrides is None:
             token_value_overrides = {}
@@ -147,7 +149,9 @@ class IntendedUsePatternExpander:
         replacements = cls._get_common_token_replacers(member=member, cache=cache) | {
             IntendedUseTokens.NUMBER_OF_COOP_SHARES: lambda: str(number_of_shares),
             IntendedUseTokens.COOP_ENTRY_DATE: lambda: format_date(
-                MembershipCancellationManager.get_coop_entry_date(member)
+                CoopMembershipCancellationManager.get_coop_entry_date(
+                    member, cache=cache
+                )
             ),
             IntendedUseTokens.PRICE_SINGLE_SHARE: lambda: format_currency(
                 get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
@@ -253,3 +257,53 @@ class IntendedUsePatternExpander:
 
             result = result.replace(token_with_braces, value[:max_length])
         return result
+
+    @classmethod
+    def expand_pattern_joker(
+        cls,
+        pattern: str,
+        member: Member,
+        reference_date: datetime.date,
+        cache: dict,
+        token_value_overrides: dict[str, str] | None = None,
+    ):
+        if token_value_overrides is None:
+            token_value_overrides = {}
+
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_date, cache=cache
+        )
+        jokers = TapirCache.get_all_jokers_for_member(member_id=member.id, cache=cache)
+        jokers = [
+            joker
+            for joker in jokers
+            if growing_period.start_date <= joker.date <= growing_period.end_date
+        ]
+
+        replacements = cls._get_common_token_replacers(member=member, cache=cache) | {
+            IntendedUseTokens.NUMBER_OF_JOKERS: lambda: str(len(jokers)),
+            IntendedUseTokens.VALUES_OF_JOKERS: lambda: cls.get_joker_credit_values(
+                member=member, jokers=jokers, cache=cache
+            ),
+            IntendedUseTokens.DATES_OF_JOKERS: lambda: " - ".join(
+                [format_date(joker.date) for joker in jokers]
+            ),
+        }
+
+        return cls._apply_replacements(
+            pattern, replacements, token_value_overrides=token_value_overrides
+        )
+
+    @classmethod
+    def get_joker_credit_values(cls, member: Member, jokers: list[Joker], cache: dict):
+        values = [
+            JokerValueService.get_joker_credit_value_for_single_joker(
+                member=member, joker_date=joker.date, cache=cache
+            )
+            for joker in jokers
+        ]
+
+        if len(set(values)) == 1:
+            return f"{format_currency(values[0])}€ * {len(values)}"
+
+        return " - ".join(f"{format_currency(value)}€" for value in values)

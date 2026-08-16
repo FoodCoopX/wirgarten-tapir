@@ -43,7 +43,7 @@ def format_date(value: date | datetime | str):
         except ValueError:
             pass
 
-    return None
+    return "Keine"
 
 
 @register.filter(name="format_month_and_year")

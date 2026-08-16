@@ -15,11 +15,12 @@ import { useApi } from "../../hooks/useApi.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { IntendedUseType } from "../IntendedUseType.ts";
 
 interface IntendedUseEditorModalProps {
   show: boolean;
   onHide: () => void;
-  isContract: boolean;
+  intendedUseType: IntendedUseType;
   title: string;
   outerPattern: string;
   setOuterPattern: (p: string) => void;
@@ -37,7 +38,7 @@ function buildPreview(preview: string) {
 const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
   show,
   onHide,
-  isContract,
+  intendedUseType,
   title,
   outerPattern,
   setOuterPattern,
@@ -50,6 +51,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
   const [tokens, setTokens] = useState<string[]>([]);
   const [innerPattern, setInnerPattern] = useState("");
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [credits, setCredits] = useState<number[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const innerInputFieldRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController>(undefined);
@@ -87,17 +89,30 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
     };
 
     let promise;
-    if (isContract) {
-      promise = paymentsApi.paymentsApiIntendedUsePreviewContractsRetrieve(
-        requestData,
-        { signal: localController.signal },
-      );
-    } else {
-      promise = paymentsApi.paymentsApiIntendedUsePreviewCoopSharesRetrieve(
-        requestData,
-        { signal: localController.signal },
-      );
+    switch (intendedUseType) {
+      case "contract":
+        promise = paymentsApi.paymentsApiIntendedUsePreviewContractsRetrieve(
+          requestData,
+          { signal: localController.signal },
+        );
+        break;
+      case "coop_share":
+        promise = paymentsApi.paymentsApiIntendedUsePreviewCoopSharesRetrieve(
+          requestData,
+          { signal: localController.signal },
+        );
+        break;
+      case "joker":
+        promise = paymentsApi.paymentsApiIntendedUsePreviewJokerRetrieve(
+          requestData,
+          { signal: localController.signal },
+        );
+        break;
+      default:
+        alert("Unknown intended use type: " + intendedUseType);
+        return;
     }
+
     promise
       .then((response) => {
         setMembers(response.members);
@@ -105,7 +120,11 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
         setOuterPreviews(response.previewsOld);
         setError(response.error);
         setTokens(response.tokens);
-        setPayments(response.payments);
+        if ("credits" in response) {
+          setCredits(response.credits);
+        } else {
+          setPayments(response.payments);
+        }
       })
       .catch((error) => {
         if (error.cause?.name === "AbortError") return;
@@ -120,6 +139,13 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
       });
   }
 
+  function getPaymentHeader() {
+    if (intendedUseType === "joker") {
+      return "Gutschrift";
+    }
+    return "Zahlung";
+  }
+
   function buildPreviews() {
     if (error) {
       return <Alert variant={"warning"}>{error}</Alert>;
@@ -129,7 +155,7 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
       <Table responsive hover bordered>
         <thead>
           <tr>
-            <th>{loading ? <Spinner size={"sm"} /> : "Zahlung"}</th>
+            <th>{loading ? <Spinner size={"sm"} /> : getPaymentHeader()}</th>
             <th>Mitglied</th>
             <th>Vorschau Alt</th>
             <th>Vorschau Neu</th>
@@ -152,8 +178,12 @@ const IntendedUseEditorModal: React.FC<IntendedUseEditorModalProps> = ({
               )}
               <tr>
                 <td>
-                  {formatCurrency(payments[index].amount)}
-                  {isContract && (
+                  {formatCurrency(
+                    intendedUseType === "joker"
+                      ? credits[index]
+                      : payments[index].amount,
+                  )}
+                  {intendedUseType === "contract" && (
                     <>
                       {", "}
                       {formatDateNumeric(

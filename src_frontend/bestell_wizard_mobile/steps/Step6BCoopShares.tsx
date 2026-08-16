@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import TapirButton from "../../components/TapirButton.tsx";
-import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { Form } from "react-bootstrap";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import "../utils/flexColOnSmallScreen.css";
 
 interface Step6BCoopSharesProps {
@@ -19,7 +19,7 @@ interface Step6BCoopSharesProps {
   studentStatusEnabled: boolean;
   setStudentStatusEnabled: (status: boolean) => void;
   settings: BestellWizardSettings;
-  active: boolean;
+  stepActive: boolean;
   isOrderStep: boolean;
   orderLoading: boolean;
   nextButtonText?: string;
@@ -37,7 +37,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   settings,
   statuteAccepted,
   setStatuteAccepted,
-  active,
+  stepActive,
   isOrderStep,
   orderLoading,
   nextButtonText,
@@ -50,10 +50,10 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   useEffect(() => {
     if (statuteAccepted !== (statuteRead && commitmentChecked)) {
@@ -236,6 +236,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
         loading={orderLoading}
         isOrderStep={isOrderStep}
         text={nextButtonText}
+        stepActive={stepActive}
       />
     </>
   );

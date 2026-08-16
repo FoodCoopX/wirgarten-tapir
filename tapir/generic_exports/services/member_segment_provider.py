@@ -20,11 +20,13 @@ from tapir.wirgarten.utils import (
 
 
 class MemberSegmentProvider:
+    SEGMENT_ID_ALL_MEMBERS = "members.all"
+
     @classmethod
     def get_member_segments(cls):
         return [
             ExportSegment(
-                id="members.all",
+                id=cls.SEGMENT_ID_ALL_MEMBERS,
                 display_name="Alle Mitglieder",
                 description="Alle Mitglieder, "
                 "egal ob mit Abo oder nicht, solange sie Genossenschaftsanteile haben",

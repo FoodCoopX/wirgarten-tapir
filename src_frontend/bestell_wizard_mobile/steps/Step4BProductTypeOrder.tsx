@@ -22,7 +22,7 @@ interface Step4BProductTypeOrderProps {
   goToNextStep: () => void;
   shoppingCart: ShoppingCart;
   setShoppingCart: (cart: ShoppingCart) => void;
-  active: boolean;
+  stepActive: boolean;
   checkingCapacities: boolean;
   waitingListLinkConfirmationModeEnabled: boolean;
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
@@ -40,7 +40,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   goToNextStep,
   shoppingCart,
   setShoppingCart,
-  active,
+  stepActive,
   checkingCapacities,
   waitingListLinkConfirmationModeEnabled,
   waitingListEntryDetails,
@@ -57,12 +57,17 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     useState(false);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   function validate() {
+    if (waitingListLinkConfirmationModeEnabled) {
+      goToNextStep();
+      return;
+    }
+
     setShowValidation(true);
     if (
       productType.mustBeSubscribedTo &&
@@ -197,6 +202,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         text={getNextButtonText()}
         loading={checkingCapacities || orderLoading}
         isOrderStep={isOrderStep}
+        stepActive={stepActive}
       />
       <Modal
         show={waitingListInfoModalOpen}

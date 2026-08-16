@@ -4,8 +4,8 @@ from decimal import Decimal
 from tapir.coop.models import (
     CoopSharesCancelledDuringTrialLogEntry,
 )
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.wirgarten.models import CoopShareTransaction, Payment
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -49,7 +49,9 @@ class TestCancelCoopMembership(TapirIntegrationTest):
             valid_at=datetime.date(year=2024, month=9, day=28),
         )
 
-        MembershipCancellationManager.cancel_coop_membership(member=member, actor=actor)
+        CoopMembershipCancellationManager.cancel_coop_membership(
+            member=member, actor=actor
+        )
 
         self.assertEqual(2, CoopShareTransaction.objects.count())
         self.assertIn(transaction_1, CoopShareTransaction.objects.all())
@@ -93,7 +95,7 @@ class TestCancelCoopMembership(TapirIntegrationTest):
             quantity=2,
         )
 
-        MembershipCancellationManager.cancel_coop_membership(member)
+        CoopMembershipCancellationManager.cancel_coop_membership(member)
 
         self.assertFalse(CoopShareTransaction.objects.exists())
         self.assertEqual(1, Payment.objects.count(), "payment_1 should be deleted")

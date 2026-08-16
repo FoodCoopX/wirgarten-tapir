@@ -48,12 +48,6 @@ class Segments:
     )
 
 
-class Filters:
-    CONTRACT_EXTENDED_YES = "Vertrag verlängert: ja"
-    CONTRACT_EXTENDED_NO = "Vertrag verlängert: nein"
-    CONTRACT_EXTENDED_NO_REACTION = "Vertrag verlängert: keine Reaktion"
-
-
 def configure_mail_module():
     base = Member.objects.all()
     register_base_segment(base)

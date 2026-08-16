@@ -40,6 +40,16 @@ urlpatterns = [
         views.CreatePdfExportFromTemplateApiView.as_view(),
         name="create_pdf_export_from_templates",
     ),
+    path(
+        "csv_export_templates",
+        views.CsvExportTemplateListApiView.as_view(),
+        name="csv_export_templates",
+    ),
+    path(
+        "create_csv_export_from_templates",
+        views.CreateCsvExportFromTemplateApiView.as_view(),
+        name="create_csv_export_from_templates",
+    ),
 ]
 
 router = DefaultRouter()

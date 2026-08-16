@@ -252,6 +252,26 @@ class ParameterDefinitionsPayments:
         order_priority -= 1
 
         importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_JOKER_CREDIT,
+            label="Verwendungszweck für Joker-Gutschriften",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{betriebsname}\n{nachname} {mitgliedsnummer_lang}\n{anzahl_an_joker}",
+            description="Wird verwendet in der Export zu Mitglieder, als Spalte neben der Gutschristwert. "
+            + WARNING_USE_EDITOR,
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                ),
+                textarea=True,
+                vars_hint=IntendedUseTokens.COMMON_TOKENS
+                + IntendedUseTokens.JOKER_TOKENS,
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
             key=ParameterKeys.PAYMENT_SEND_CSV_FILE_PER_MAIL,
             label="CSV-Datei zu Lastschriften automatisch beim Export per Mail an dem Admin versenden",
             datatype=TapirParameterDatatype.BOOLEAN,

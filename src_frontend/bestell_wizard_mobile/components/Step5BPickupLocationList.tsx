@@ -1,19 +1,19 @@
 import React, { useEffect } from "react";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { ListGroup, ListGroupItem, Spinner } from "react-bootstrap";
-import formatAddress from "../../utils/formatAddress.ts";
-import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
-import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
-import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import formatAddress from "../../utils/formatAddress.ts";
 import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
+import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 
 interface Step5BPickupLocationListProps {
   pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
-  pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
+  pickupLocationsCapacityCheckLoading: boolean;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   waitingListLinkConfirmationModeEnabled: boolean;
   tabIsActive: boolean;
@@ -29,7 +29,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
-  pickupLocationsWithCapacityCheckLoading,
+  pickupLocationsCapacityCheckLoading,
   pickupLocationsWithCapacityFull,
   waitingListLinkConfirmationModeEnabled,
   tabIsActive,
@@ -57,7 +57,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
       return;
     }
 
-    if (pickupLocationsWithCapacityCheckLoading.has(pickupLocation)) {
+    if (pickupLocationsCapacityCheckLoading) {
       return <Spinner size={"sm"} />;
     }
 
@@ -129,43 +129,43 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
       {pickupLocations.toSorted(sortPickupLocations).map((pickupLocation) => {
         const deliveryChargeBadge = buildDeliveryChargeBadge(pickupLocation);
         return (
-        <ListGroupItem
-          key={pickupLocation.id}
-          style={{
-            cursor: changesDisabled ? "" : "pointer",
-            lineHeight: "1.1rem",
-          }}
-          onClick={
-            changesDisabled
-              ? () => {}
-              : () => setSelectedPickupLocations([pickupLocation])
-          }
-          className={getClassForPickupLocationListItem(pickupLocation)}
-          id={pickupLocation.id}
-        >
-          <small style={{ lineHeight: "0" }}>
-            <strong>{pickupLocation.name}</strong>
-            {deliveryChargeBadge && (
-              <>
-                <br />
-                {deliveryChargeBadge}
-              </>
-            )}
-            <br />
-            {buildCapacityIndicator(pickupLocation)}
-            <br />
-            <small>
-              {formatAddress(
-                pickupLocation.street,
-                pickupLocation.street2,
-                pickupLocation.postcode,
-                pickupLocation.city,
+          <ListGroupItem
+            key={pickupLocation.id}
+            style={{
+              cursor: changesDisabled ? "" : "pointer",
+              lineHeight: "1.1rem",
+            }}
+            onClick={
+              changesDisabled
+                ? () => {}
+                : () => setSelectedPickupLocations([pickupLocation])
+            }
+            className={getClassForPickupLocationListItem(pickupLocation)}
+            id={pickupLocation.id}
+          >
+            <small style={{ lineHeight: "0" }}>
+              <strong>{pickupLocation.name}</strong>
+              {deliveryChargeBadge && (
+                <>
+                  <br />
+                  {deliveryChargeBadge}
+                </>
               )}
+              <br />
+              {buildCapacityIndicator(pickupLocation)}
+              <br />
+              <small>
+                {formatAddress(
+                  pickupLocation.street,
+                  pickupLocation.street2,
+                  pickupLocation.postcode,
+                  pickupLocation.city,
+                )}
+              </small>
+              <br />
+              <small>{formatOpeningTimes(pickupLocation)}</small>
             </small>
-            <br />
-            <small>{formatOpeningTimes(pickupLocation)}</small>
-          </small>
-        </ListGroupItem>
+          </ListGroupItem>
         );
       })}
     </ListGroup>

@@ -3,7 +3,6 @@ import locale
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, viewsets, permissions, serializers
@@ -259,15 +258,6 @@ class PickupLocationCapacityCheckApiView(APIView):
         serializer = PickupLocationCapacityCheckRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        pickup_location = TapirCache.get_pickup_location_by_id(
-            cache=self.cache,
-            pickup_location_id=serializer.validated_data["pickup_location_id"],
-        )
-        if pickup_location is None:
-            raise Http404(
-                f"Unknown pickup location, id: '{serializer.validated_data["pickup_location_id"]}'"
-            )
-
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
         )
@@ -292,18 +282,24 @@ class PickupLocationCapacityCheckApiView(APIView):
                 cache=self.cache,
             )
 
-        response_data = {
-            "enough_capacity_for_order": PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+        pickup_location_ids_with_enough_capacity_for_order = [
+            pickup_location.id
+            for pickup_location in PickupLocation.objects.all()
+            if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
                 pickup_location=pickup_location,
                 order=order,
                 already_registered_member=None,
                 subscription_start=subscription_start,
                 cache=self.cache,
             )
-        }
+        ]
 
         return Response(
-            PickupLocationCapacityCheckResponseSerializer(response_data).data
+            PickupLocationCapacityCheckResponseSerializer(
+                {
+                    "pickup_location_ids_with_enough_capacity_for_order": pickup_location_ids_with_enough_capacity_for_order
+                }
+            ).data
         )
 
 

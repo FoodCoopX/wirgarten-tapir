@@ -152,9 +152,10 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 1A: Begrüßungsseite - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Starte mit dem Bestellformular, damit du bald frisches Gemüse von uns erhältst.",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
         )
         bestellwizard_parameter_order -= 1
 

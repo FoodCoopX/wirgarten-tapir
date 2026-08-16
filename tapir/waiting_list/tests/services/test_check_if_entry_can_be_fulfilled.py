@@ -90,6 +90,26 @@ class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
 
         self.assertFalse(result)
 
+    def test_checkIfEntryCanBeFulfilled_withWishesButInsufficientProductCapacity_returnsFalse(
+        self,
+    ):
+        self.product.capacity = 0
+        self.product.save()
+
+        entry = WaitingListEntryFactory.create()
+        WaitingListProductWish.objects.create(
+            waiting_list_entry=entry, product=self.product, quantity=1
+        )
+        WaitingListPickupLocationWish.objects.create(
+            waiting_list_entry=entry,
+            pickup_location=self.pickup_location,
+            priority=1,
+        )
+
+        result = WaitingListApiView.check_if_entry_can_be_fulfilled(entry, cache={})
+
+        self.assertFalse(result)
+
     def test_checkIfEntryCanBeFulfilled_withWishesAndSufficientCapacity_returnsTrue(
         self,
     ):

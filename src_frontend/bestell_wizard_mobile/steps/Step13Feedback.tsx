@@ -1,16 +1,17 @@
 import React from "react";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { Form } from "react-bootstrap";
-import NextStepButton from "../components/NextStepButton.tsx";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
+import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step13FeedbackProps {
   settings: BestellWizardSettings;
   goToNextStep: () => void;
-  confirmOrder: (() => void);
+  confirmOrder: () => void;
   confirmOrderLoading: boolean;
   feedback: string;
   setFeedback: (value: string) => void;
+  stepActive: boolean;
 }
 
 const Step13Feedback: React.FC<Step13FeedbackProps> = ({
@@ -20,6 +21,7 @@ const Step13Feedback: React.FC<Step13FeedbackProps> = ({
   confirmOrderLoading,
   feedback,
   setFeedback,
+  stepActive,
 }) => {
   return (
     <>
@@ -41,6 +43,7 @@ const Step13Feedback: React.FC<Step13FeedbackProps> = ({
         onClick={confirmOrder ?? goToNextStep}
         isOrderStep={true}
         loading={confirmOrderLoading}
+        stepActive={stepActive}
       />
     </>
   );

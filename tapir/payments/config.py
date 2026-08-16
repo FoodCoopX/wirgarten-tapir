@@ -19,6 +19,9 @@ class IntendedUseTokens:
     TOTAL_PRICE_JUST_SOLI = "gesamtbeitrag_nur_soli"
     CONTRACT_LIST = "vertragsliste"
     PAYMENT_RHYTHM = "zahlungsintervall"
+    NUMBER_OF_JOKERS = "anzahl_an_joker"
+    VALUES_OF_JOKERS = "wert_der_joker"
+    DATES_OF_JOKERS = "daten_der_joker"
 
     COMMON_TOKENS = [
         SITE_NAME,
@@ -41,3 +44,5 @@ class IntendedUseTokens:
         CONTRACT_LIST,
         PAYMENT_RHYTHM,
     ]
+
+    JOKER_TOKENS = [NUMBER_OF_JOKERS, VALUES_OF_JOKERS, DATES_OF_JOKERS]

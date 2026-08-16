@@ -18,6 +18,9 @@ from tapir.core.services.organisation_entry_date_annotator import (
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import CoopShareTransaction, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -320,6 +323,7 @@ class ExportMembersView(View):
                 "Geschäftsanteile (€)",
                 "Umsatz/Monat (€)",
                 "Abholort",
+                "Solidarbeitrag",
             ]
         )
 
@@ -350,6 +354,13 @@ class ExportMembersView(View):
                         member,
                         MemberPickupLocationGetter.ANNOTATION_CURRENT_PICKUP_LOCATION_NAME,
                     ),
+                    format_currency(
+                        getattr(
+                            member,
+                            MemberSolidarityContributionService.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION,
+                        )
+                        or 0
+                    ),
                 ]
             )
 
@@ -367,6 +378,9 @@ class ExportMembersView(View):
         )
         queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_entry_date(
             queryset=queryset, cache=self.cache
+        )
+        queryset = MemberSolidarityContributionService.annotate_member_queryset_with_current_contribution(
+            queryset=queryset, reference_date=today
         )
         return queryset
 

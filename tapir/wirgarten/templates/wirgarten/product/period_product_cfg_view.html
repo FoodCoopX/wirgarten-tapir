@@ -8,6 +8,9 @@
 {% block head %}
     {% vite_asset 'product_config/product_config_entry.tsx' %}
 {% endblock head %}
+{% block title %}
+    Vertragsperiode & Produkte - {{ block.super }}
+{% endblock %}
 {% block content %}
     {% csrf_token %}
     <div style="margin-top: 2em;

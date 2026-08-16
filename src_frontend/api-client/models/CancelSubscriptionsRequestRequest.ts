@@ -38,6 +38,12 @@ export interface CancelSubscriptionsRequestRequest {
   cancelCoopMembership: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof CancelSubscriptionsRequestRequest
+   */
+  cancelAssociationMembership: boolean;
+  /**
+   *
    * @type {Array<string>}
    * @memberof CancelSubscriptionsRequestRequest
    */
@@ -69,6 +75,11 @@ export function instanceOfCancelSubscriptionsRequestRequest(
   )
     return false;
   if (
+    !("cancelAssociationMembership" in value) ||
+    value["cancelAssociationMembership"] === undefined
+  )
+    return false;
+  if (
     !("cancelSolidarityContribution" in value) ||
     value["cancelSolidarityContribution"] === undefined
   )
@@ -93,6 +104,7 @@ export function CancelSubscriptionsRequestRequestFromJSONTyped(
     memberId: json["member_id"],
     productIds: json["product_ids"] == null ? undefined : json["product_ids"],
     cancelCoopMembership: json["cancel_coop_membership"],
+    cancelAssociationMembership: json["cancel_association_membership"],
     cancellationReasons:
       json["cancellation_reasons"] == null
         ? undefined
@@ -123,6 +135,7 @@ export function CancelSubscriptionsRequestRequestToJSONTyped(
     member_id: value["memberId"],
     product_ids: value["productIds"],
     cancel_coop_membership: value["cancelCoopMembership"],
+    cancel_association_membership: value["cancelAssociationMembership"],
     cancellation_reasons: value["cancellationReasons"],
     custom_cancellation_reason: value["customCancellationReason"],
     cancel_solidarity_contribution: value["cancelSolidarityContribution"],

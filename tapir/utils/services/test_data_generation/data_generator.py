@@ -55,6 +55,8 @@ class DataGenerator:
         print("Clearing data...")
 
         model_classes = [
+            CoopShareTransaction,
+            Payment,
             WaitingListEntry,
             MemberPickupLocation,
             LocationRoute,
@@ -66,10 +68,8 @@ class DataGenerator:
             Product,
             ProductType,
             LogEntry,
-            CoopShareTransaction,
             QuestionaireTrafficSourceResponse,
             QuestionaireCancellationReasonResponse,
-            Payment,
             MandateReference,
             EmailChangeRequest,
             OrderFeedback,

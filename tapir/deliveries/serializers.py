@@ -97,6 +97,10 @@ class PublicGrowingPeriodSerializer(serializers.ModelSerializer):
             ):
                 product_types_for_this_growing_period.append(product_type)
 
+        product_types_for_this_growing_period.sort(
+            key=lambda product_type: product_type.order_in_bestellwizard
+        )
+
         return PublicProductTypeSerializer(
             product_types_for_this_growing_period, many=True, context=self.context
         ).data

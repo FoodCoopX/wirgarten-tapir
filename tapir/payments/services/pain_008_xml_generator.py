@@ -220,7 +220,7 @@ class Pain008XmlGenerator:
         creditor_iban = cls._append_element(creditor_id, "IBAN")
         creditor_iban.text = get_parameter_value(
             key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, cache=cache
-        )
+        ).replace(" ", "")
         if len(creditor_iban.text.strip()) == 0:
             raise ValidationError(
                 "Der Parameter 'IBAN der Organisation' muss in der Konfig gesetzt werden"

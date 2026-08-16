@@ -57,6 +57,7 @@ interface Step10OrderSummaryProps {
   associationMembershipType?: AssociationMembershipType;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   hideTrialPeriod: boolean;
+  stepActive: boolean;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -82,18 +83,29 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   associationMembershipType,
   selectedGrowingPeriod,
   hideTrialPeriod,
+  stepActive,
 }) => {
   const [activePickupLocation, setActivePickupLocation] =
     useState<PublicPickupLocation>();
 
   useEffect(() => {
-    setActivePickupLocation(
-      getFirstPickupLocationWithCapacity(
+    setActivePickupLocation(getRelevantPickupLocation());
+  }, [selectedPickupLocations]);
+
+  function getRelevantPickupLocation(): PublicPickupLocation | undefined {
+    if (waitingListEntryDetails === undefined) {
+      return getFirstPickupLocationWithCapacity(
         selectedPickupLocations,
         pickupLocationsWithCapacityFull,
-      ),
-    );
-  }, [selectedPickupLocations]);
+      );
+    }
+
+    if (selectedPickupLocations.length > 0) {
+      return selectedPickupLocations[0];
+    }
+
+    return waitingListEntryDetails.currentPickupLocation;
+  }
 
   function getProductTypeTitle(productType: PublicProductType) {
     if (isProductTypeOrdered(productType, shoppingCart)) {
@@ -155,10 +167,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   }
 
   function getDateOfFirstDelivery(productTypeId: string) {
-    const pickupLocation = getFirstPickupLocationWithCapacity(
-      selectedPickupLocations,
-      pickupLocationsWithCapacityFull,
-    );
+    const pickupLocation = getRelevantPickupLocation();
     if (!pickupLocation) {
       return undefined;
     }
@@ -270,7 +279,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                           <>
                             <li>
                               Erste Abholung:{" "}
-                              {selectedPickupLocations.length > 0 &&
+                              {(selectedPickupLocations.length > 0 ||
+                                waitingListEntryDetails?.currentPickupLocation) &&
                                 formatDateNumeric(
                                   getDateOfFirstDelivery(productType.id!),
                                 )}
@@ -459,6 +469,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
         onClick={isOrderStep ? confirmOrder : goToNextStep}
         isOrderStep={isOrderStep}
         loading={confirmOrderLoading}
+        stepActive={stepActive}
       />
     </>
   );

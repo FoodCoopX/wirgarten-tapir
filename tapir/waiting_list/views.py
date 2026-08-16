@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -19,8 +20,8 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -33,11 +34,15 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
+from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
@@ -315,7 +320,9 @@ class WaitingListApiView(APIView):
             member_no = entry.member.member_no
             cls.fill_entry_with_personal_data(entry)
             date_of_entry_in_cooperative = (
-                MembershipCancellationManager.get_coop_entry_date(entry.member)
+                CoopMembershipCancellationManager.get_coop_entry_date(
+                    entry.member, cache=cache
+                )
             )
             pickup_location_id = (
                 MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
@@ -419,13 +426,25 @@ class WaitingListApiView(APIView):
 
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,
-            member_id=entry.member_id if entry.member else None,
+            member_id=str(entry.member_id) if entry.member else None,
             subscription_start_date=subscription_start,
             cache=cache,
             check_waiting_list_entries=False,
         )
 
         if product_type_ids_without_enough_capacity:
+            return False
+
+        if not all(
+            ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
+                member_id=str(entry.member_id) if entry.member else None,
+                product=product,
+                ordered_quantity=quantity,
+                subscription_start_date=subscription_start,
+                cache=cache,
+            )
+            for product, quantity in order.items()
+        ):
             return False
 
         for pickup_location_wish in pickup_location_wishes:
@@ -808,14 +827,30 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
         account_owner = None
         iban = None
         payment_rhythm = None
+        current_pickup_location = None
+        should_show_solidarity_step = True
         if entry.member is not None:
             WaitingListApiView.fill_entry_with_personal_data(entry)
 
             birthdate = entry.member.birthdate
             account_owner = entry.member.account_owner
             iban = entry.member.iban
+            today = get_today(cache=cache)
             payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=entry.member, reference_date=get_today(cache=cache), cache=cache
+                member=entry.member, reference_date=today, cache=cache
+            )
+            current_pickup_location = (
+                MemberPickupLocationGetter.get_member_pickup_location(
+                    member=entry.member,
+                    reference_date=today,
+                    cache=cache,
+                )
+            )
+            should_show_solidarity_step = (
+                MemberSolidarityContributionService.get_member_contribution(
+                    member_id=str(entry.member_id), reference_date=today, cache=cache
+                )
+                == Decimal(0)
             )
 
         return {
@@ -845,6 +880,8 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             "account_owner": account_owner,
             "iban": iban,
             "payment_rhythm": payment_rhythm,
+            "current_pickup_location": current_pickup_location,
+            "should_show_solidarity_step": should_show_solidarity_step,
         }
 
 
