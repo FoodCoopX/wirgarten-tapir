@@ -42,7 +42,7 @@ class TestTemplateBasketTotalsByRoute(TapirIntegrationTest):
         self.assertIn("Summe alle Runden", export.template)
         self.assertRegex(
             export.template,
-            r'footer-block[\s\S]*?<thead>[\s\S]*?<th class="station-label">',
+            r'<thead style="display: none;">[\s\S]*?<th class="station-label">[\s\S]*?Summe alle Runden',
         )
 
     def test_createExports_alreadyExists_raises(self):

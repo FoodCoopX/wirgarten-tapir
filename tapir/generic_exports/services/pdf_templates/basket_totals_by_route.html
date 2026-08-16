@@ -16,74 +16,6 @@
         color: #111;
     }
 
-    .doc-header {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1.2rem;
-    }
-
-    .doc-header-left h1 {
-        margin: 0 0 0.35rem 0;
-        font-size: 22pt;
-        font-weight: bold;
-        line-height: 1.15;
-    }
-
-    .delivery-line {
-        font-size: 12pt;
-        font-weight: bold;
-    }
-
-    .doc-header-right {
-        text-align: center;
-        max-width: 4.5cm;
-    }
-
-    .doc-header-right img.logo {
-        display: block;
-        margin: 0 auto;
-        max-height: 2.4cm;
-        max-width: 4.2cm;
-    }
-
-    .doc-header-right .site-name {
-        margin-top: 0.2rem;
-        font-size: 9pt;
-        color: #4a3728;
-    }
-
-    .grand-total {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: baseline;
-        font-weight: 700;
-        font-size: 12pt;
-        margin: 0.4rem 0 0.5rem 0;
-    }
-
-    .summary-top {
-        margin-bottom: 1.1rem;
-    }
-
-    /* Footer table needs <th> for a11y/Sonar; hide the duplicate header in the PDF. */
-    .footer-block table.route-table thead {
-        display: none;
-    }
-
-    .route-block {
-        margin-bottom: 1.4rem;
-        break-inside: avoid;
-    }
-
-    .route-block h2 {
-        margin: 0 0 0.35rem 0;
-        font-size: 13pt;
-        font-weight: bold;
-    }
-
     table.route-table {
         width: 100%;
         border-collapse: collapse;
@@ -92,79 +24,58 @@
 
     table.route-table th,
     table.route-table td {
-        padding: 0.35rem 0.35rem;
+        padding: 0.35rem;
         vertical-align: top;
         border-top: 1px solid #222;
-        border-bottom: none;
-        border-left: none;
-        border-right: none;
     }
 
-    table.route-table thead th,
-    table.route-table thead th.num,
-    table.route-table thead th.station-label {
+    table.route-table thead th {
         border-top: none;
-        font-weight: 700;
-        font-size: 11pt;
+        font-weight: bold;
         padding-bottom: 0.2rem;
     }
 
-    table.route-table th.num,
-    table.route-table td.num {
+    .num {
         text-align: right;
         white-space: nowrap;
         width: 2.4cm;
     }
 
-    table.route-table td.station-label,
-    table.route-table th.station-label {
-        width: auto;
+    .station-label {
         padding-right: 0.75rem;
         text-align: left;
     }
 
-    tr.route-sum-row td {
-        font-weight: 700;
-        border-top: 1px solid #222;
+    .route-sum-row td {
+        font-weight: bold;
         padding-top: 0.45rem;
     }
 
-    /* Rahmen ohne Layout-Versatz: Ziffer bleibt wie in den Zeilen darüber */
-    tr.route-sum-row td.num {
+    .route-sum-row td.num {
         box-shadow: inset 0 0 0 1px #222;
-    }
-
-    .footer-block {
-        margin-top: 0.8rem;
-        break-inside: avoid;
-    }
-
-    .footer-block .grand-total {
-        margin-top: 0.7rem;
-        margin-bottom: 0;
     }
 </style>
 
 {% with first=entries.0.route_basket_totals %}
-    <div class="doc-header">
-        <div class="doc-header-left">
-            <h1>Kistenanzahl / Ausfahrrunde</h1>
-            <div class="delivery-line">Lieferung / KW: {{ first.calendar_week }}</div>
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem;">
+        <div>
+            <h1 style="margin: 0 0 0.35rem 0; font-size: 22pt; font-weight: bold; line-height: 1.15;">Kistenanzahl / Ausfahrrunde</h1>
+            <div style="font-size: 12pt; font-weight: bold;">Lieferung / KW: {{ first.calendar_week }}</div>
         </div>
-        <div class="doc-header-right">
+        <div style="text-align: center; max-width: 4.5cm;">
             {% organisation_logo_data_uri as logo_src %}
             {% if logo_src %}
-                <img class="logo" src="{{ logo_src }}" alt="Logo">
+                <img src="{{ logo_src }}" alt="Logo" style="display: block; margin: 0 auto; max-height: 2.4cm; max-width: 4.2cm;">
             {% endif %}
             {% site_name_for_pdf as org_site_name %}
             {% if org_site_name %}
-                <div class="site-name">{{ org_site_name }}</div>
+                <div style="margin-top: 0.2rem; font-size: 9pt; color: #4a3728;">{{ org_site_name }}</div>
             {% endif %}
         </div>
     </div>
 
-    <div class="summary-top">
-        <div class="grand-total">
+    <div style="margin-bottom: 1.1rem;">
+        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 12pt; margin: 0.4rem 0 0.5rem 0;">
             <span>Gesamtkistenanzahl</span>
             <span>{% grand_total_route_baskets entries %}</span>
         </div>
@@ -196,8 +107,8 @@
 {% endwith %}
 
 {% for entry in entries %}
-    <div class="route-block">
-        <h2>
+    <div style="margin-bottom: 1.4rem; break-inside: avoid;">
+        <h2 style="margin: 0 0 0.35rem 0; font-size: 13pt; font-weight: bold;">
             {% if entry.route_name %}
                 {{ entry.route_name }}
             {% else %}
@@ -245,9 +156,9 @@
     </div>
 {% endfor %}
 
-<div class="footer-block">
+<div style="margin-top: 0.8rem; break-inside: avoid;">
     <table class="route-table">
-        <thead>
+        <thead style="display: none;">
             <tr>
                 <th class="station-label">Verteilstation</th>
                 {% for header in entry.route_basket_totals.headers %}
@@ -270,7 +181,7 @@
             </tr>
         </tbody>
     </table>
-    <div class="grand-total">
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 12pt; margin: 0.7rem 0 0 0;">
         <span>Gesamtkistenanzahl</span>
         <span>{% grand_total_route_baskets entries %}</span>
     </div>
