@@ -207,9 +207,10 @@ class MemberImporter:
         if target_mail == "":
             return f"team+missing_mail_katringer_{member_no}@foodcoopx.de"
 
+        mail_prefix = f"{target_mail.split("@")[0]}@"
         number_of_duplicate_mails = (
             Member.objects.exclude(member_no=member_no)
-            .filter(email=target_mail)
+            .filter(email__startswith=mail_prefix)
             .count()
         )
         if number_of_duplicate_mails == 0:
