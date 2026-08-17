@@ -207,17 +207,22 @@ class MemberImporter:
         if target_mail == "":
             return f"team+missing_mail_katringer_{member_no}@foodcoopx.de"
 
-        mail_prefix = f"{target_mail.split("@")[0]}@"
-        number_of_duplicate_mails = (
-            Member.objects.exclude(member_no=member_no)
-            .filter(email__startswith=mail_prefix)
-            .count()
+        return cls.build_mail_with_suffix(
+            original_mail=target_mail, member_no=member_no
         )
-        if number_of_duplicate_mails == 0:
-            return target_mail
 
-        prefix, suffix = target_mail.split("@", maxsplit=1)
-        return f"{prefix}+{number_of_duplicate_mails}@{suffix}"
+    @classmethod
+    def build_mail_with_suffix(cls, original_mail: str, member_no: int):
+        other_members = Member.objects.exclude(member_no=member_no)
+        if not other_members.filter(email=original_mail).exists():
+            return original_mail
+
+        counter = 1
+        prefix, suffix = original_mail.split("@", maxsplit=1)
+        while other_members.filter(email=f"{prefix}+{counter}@{suffix}").exists():
+            counter += 1
+
+        return f"{prefix}+{counter}@{suffix}"
 
     @classmethod
     def update_member_pickup_location(cls, member: Member, row: dict[str, str]):
