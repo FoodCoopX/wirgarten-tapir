@@ -36,6 +36,7 @@ class ParameterKeys:
     PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
     PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
+    PAYMENT_ORGANISATION_BIC = f"{PREFIX}.payment.organisation_bic"
     PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
     PAYMENT_MANDATE_REFERENCE_PATTERN = f"{PREFIX}.payment.mandate_reference.pattern"
     PAYMENT_INTENDED_USE_ENABLE_CUSTOM = f"{PREFIX}.payment.intended_use.enable_custom"
