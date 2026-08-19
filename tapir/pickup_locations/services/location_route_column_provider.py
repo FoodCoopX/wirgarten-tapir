@@ -140,4 +140,4 @@ class LocationRouteColumnProvider:
         if len(names) < 4:
             return [", ".join(names)]
         midpoint = (len(names) + 1) // 2
-        return [", ".join(names[:midpoint]), ", ".join(names[midpoint:])]
+        return [f"{', '.join(names[:midpoint])},", ", ".join(names[midpoint:])]

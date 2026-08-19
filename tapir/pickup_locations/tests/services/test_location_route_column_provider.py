@@ -477,11 +477,11 @@ class TestBuildPickupLocationNameLines(TapirUnitTest):
             ["A", "B", "C", "D"]
         )
 
-        self.assertEqual(["A, B", "C, D"], result)
+        self.assertEqual(["A, B,", "C, D"], result)
 
     def test_buildPickupLocationNameLines_fiveNames_firstLineGetsTheExtraName(self):
         result = LocationRouteColumnProvider.build_pickup_location_name_lines(
             ["A", "B", "C", "D", "E"]
         )
 
-        self.assertEqual(["A, B, C", "D, E"], result)
+        self.assertEqual(["A, B, C,", "D, E"], result)
