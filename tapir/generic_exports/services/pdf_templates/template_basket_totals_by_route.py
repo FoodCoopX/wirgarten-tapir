@@ -14,7 +14,7 @@ class TemplateBasketTotalsByRoute:
     NAME = "Kistenzahl pro Ausfahrrunde"
     DESCRIPTION = (
         "Erzeugt ein PDF mit den Kisten- bzw. Anteilssummen je Ausfahrrunde "
-        "(Tour), optional aufgeschlüsselt nach Verteilstation."
+        "(Tour); Verteilstationen der Runde als Namensliste."
     )
 
     @classmethod

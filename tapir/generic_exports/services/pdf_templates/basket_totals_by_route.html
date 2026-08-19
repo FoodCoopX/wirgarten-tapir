@@ -109,49 +109,29 @@
 {% endwith %}
 
 {% for entry in entries %}
-    <div style="margin-bottom: 1.4rem; break-inside: avoid;">
-        <h2 style="margin: 0 0 0.35rem 0; font-size: 13pt; font-weight: bold;">
-            {% if entry.route_name %}
-                {{ entry.route_name }}
-            {% else %}
-                Ohne Ausfahrrunde
-            {% endif %}
-        </h2>
+    <div style="margin-bottom: 1rem; break-inside: avoid;">
         <table class="route-table">
-            <thead>
-                <tr>
-                    <th class="station-label">Verteilstation</th>
-                    {% for header in entry.route_basket_totals.headers %}
-                        <th class="num">
-                            {% if entry.route_basket_totals.convert_headers %}
-                                {{ entry.route_basket_totals.product_name_by_id|get_value:header }}
-                            {% else %}
-                                {{ header }}
-                            {% endif %}
-                        </th>
-                    {% endfor %}
-                </tr>
-            </thead>
             <tbody>
-                {% for pickup_location in entry.route_basket_totals.pickup_location_data %}
-                    <tr>
-                        <td class="station-label">{{ pickup_location.name }}</td>
-                        {% for header in entry.route_basket_totals.headers %}
-                            <td class="num">{{ pickup_location.totals|get_value:header }}</td>
-                        {% endfor %}
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}">
-                            Keine Verteilstationen
-                        </td>
-                    </tr>
-                {% endfor %}
                 <tr class="route-sum-row">
-                    <td class="station-label">Summe Tour</td>
+                    <td class="station-label">
+                        {% if entry.route_name %}
+                            {{ entry.route_name }}
+                        {% else %}
+                            Ohne Ausfahrrunde
+                        {% endif %}
+                    </td>
                     {% for header in entry.route_basket_totals.headers %}
                         <td class="num">{{ entry.route_basket_totals.totals|get_value:header }}</td>
                     {% endfor %}
+                </tr>
+                <tr>
+                    <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}" style="border-top: none; padding-top: 0; font-size: 9pt; font-weight: normal;">
+                        {% if entry.route_basket_totals.pickup_location_data %}
+                            ({% for pickup_location in entry.route_basket_totals.pickup_location_data %}{{ pickup_location.name }}{% if not forloop.last %}, {% endif %}{% endfor %})
+                        {% else %}
+                            Keine Verteilstationen
+                        {% endif %}
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -183,8 +163,11 @@
             </tr>
         </tbody>
     </table>
-    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 12pt; margin: 0.7rem 0 0 0;">
-        <span>Gesamtkistenanzahl</span>
-        <span>{{ entry.route_basket_totals.grand_total }}</span>
+    <div style="margin-top: 0.9rem; font-size: 9pt; line-height: 1.35;">
+        <div style="font-weight: bold; font-size: 11pt; margin-bottom: 0.15rem;">Helfer rausstreichen</div>
+        <div style="margin-bottom: 0.2rem;">Wenn sich ein Helfer eine Kiste vorab mitnimmt</div>
+        <div>Step1: Diesen Zettel (Kistenanzahl/Ausfahrrunde): Kistenanzahl in jeweiliger Runde korrigieren</div>
+        <div>Step2: Durchlaufzettel: Kistenanzahl auf Seite 1 oben korrigieren</div>
+        <div>Step3: Durchlaufzettel: Haken bei Namen Helfer machen</div>
     </div>
 </div>
