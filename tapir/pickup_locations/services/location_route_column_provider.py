@@ -94,6 +94,9 @@ class LocationRouteColumnProvider:
             "headers": headers,
             "totals": totals,
             "pickup_location_data": pickup_location_data,
+            "pickup_location_name_lines": cls.build_pickup_location_name_lines(
+                [pickup_location["name"] for pickup_location in pickup_location_data]
+            ),
             "convert_headers": convert_headers,
             "product_name_by_id": {
                 product.id: product.name
@@ -129,3 +132,12 @@ class LocationRouteColumnProvider:
         for route_basket_totals in route_basket_totals_list:
             route_basket_totals["totals_across_routes"] = totals_across_routes
             route_basket_totals["grand_total"] = grand_total
+
+    @classmethod
+    def build_pickup_location_name_lines(cls, names: list[str]) -> list[str]:
+        if not names:
+            return []
+        if len(names) < 4:
+            return [", ".join(names)]
+        midpoint = (len(names) + 1) // 2
+        return [", ".join(names[:midpoint]), ", ".join(names[midpoint:])]

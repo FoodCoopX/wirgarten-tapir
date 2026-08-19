@@ -17,7 +17,7 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberPickupLocationFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, TapirUnitTest
 
 
 class TestLocationRouteColumnProvider(TapirIntegrationTest):
@@ -388,6 +388,7 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             ],
             result["pickup_location_data"],
         )
+        self.assertEqual(["pl_a, pl_b"], result["pickup_location_name_lines"])
 
     def test_addAcrossRouteAggregates_twoRoutes_sumsTotalsAndGrandTotal(self):
         entries = [
@@ -456,3 +457,31 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             {"small": 2, "normal": 6},
             entries[2]["route_basket_totals"]["totals_across_routes"],
         )
+
+
+class TestBuildPickupLocationNameLines(TapirUnitTest):
+    def test_buildPickupLocationNameLines_noNames_returnsEmptyList(self):
+        result = LocationRouteColumnProvider.build_pickup_location_name_lines([])
+
+        self.assertEqual([], result)
+
+    def test_buildPickupLocationNameLines_threeNames_returnsSingleLine(self):
+        result = LocationRouteColumnProvider.build_pickup_location_name_lines(
+            ["Hofpunkt", "Grünes Warenhaus", "Hochalmstraße"]
+        )
+
+        self.assertEqual(["Hofpunkt, Grünes Warenhaus, Hochalmstraße"], result)
+
+    def test_buildPickupLocationNameLines_fourNames_splitsIntoTwoLines(self):
+        result = LocationRouteColumnProvider.build_pickup_location_name_lines(
+            ["A", "B", "C", "D"]
+        )
+
+        self.assertEqual(["A, B", "C, D"], result)
+
+    def test_buildPickupLocationNameLines_fiveNames_firstLineGetsTheExtraName(self):
+        result = LocationRouteColumnProvider.build_pickup_location_name_lines(
+            ["A", "B", "C", "D", "E"]
+        )
+
+        self.assertEqual(["A, B, C", "D, E"], result)

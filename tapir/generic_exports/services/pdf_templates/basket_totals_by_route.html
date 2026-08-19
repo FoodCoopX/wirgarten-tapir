@@ -96,14 +96,6 @@
                     {% endfor %}
                 </tr>
             </thead>
-            <tbody>
-                <tr class="route-sum-row">
-                    <td class="station-label">Gesamt</td>
-                    {% for header in first.headers %}
-                        <td class="num">{{ first.totals_across_routes|get_value:header }}</td>
-                    {% endfor %}
-                </tr>
-            </tbody>
         </table>
     </div>
 {% endwith %}
@@ -125,9 +117,9 @@
                     {% endfor %}
                 </tr>
                 <tr>
-                    <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}" style="border-top: none; padding-top: 0; font-size: 9pt; font-weight: normal;">
-                        {% if entry.route_basket_totals.pickup_location_data %}
-                            ({% for pickup_location in entry.route_basket_totals.pickup_location_data %}{{ pickup_location.name }}{% if not forloop.last %}, {% endif %}{% endfor %})
+                    <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}" style="border-top: none; padding-top: 0; font-size: 9pt; font-weight: normal; white-space: normal;">
+                        {% if entry.route_basket_totals.pickup_location_name_lines %}
+                            ({% for line in entry.route_basket_totals.pickup_location_name_lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %})
                         {% else %}
                             Keine Verteilstationen
                         {% endif %}
@@ -138,15 +130,16 @@
     </div>
 {% endfor %}
 
+{% with first=entries.0.route_basket_totals %}
 <div style="margin-top: 0.8rem; break-inside: avoid;">
     <table class="route-table">
-        <thead style="display: none;">
+        <thead>
             <tr>
-                <th class="station-label">Verteilstation</th>
-                {% for header in entry.route_basket_totals.headers %}
+                <th class="station-label"></th>
+                {% for header in first.headers %}
                     <th class="num">
-                        {% if entry.route_basket_totals.convert_headers %}
-                            {{ entry.route_basket_totals.product_name_by_id|get_value:header }}
+                        {% if first.convert_headers %}
+                            {{ first.product_name_by_id|get_value:header }}
                         {% else %}
                             {{ header }}
                         {% endif %}
@@ -156,9 +149,9 @@
         </thead>
         <tbody>
             <tr class="route-sum-row">
-                <td class="station-label">Summe alle Runden</td>
-                {% for header in entry.route_basket_totals.headers %}
-                    <td class="num">{{ entry.route_basket_totals.totals_across_routes|get_value:header }}</td>
+                <td class="station-label">Summe aller Runden</td>
+                {% for header in first.headers %}
+                    <td class="num">{{ first.totals_across_routes|get_value:header }}</td>
                 {% endfor %}
             </tr>
         </tbody>
@@ -171,3 +164,4 @@
         <div>Step3: Durchlaufzettel: Haken bei Namen Helfer machen</div>
     </div>
 </div>
+{% endwith %}
