@@ -78,6 +78,7 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual("postcode_a", data_location_a["postcode"])
         self.assertEqual("city_a", data_location_a["city"])
         self.assertEqual("route_info_a", data_location_a["route_info"])
+        self.assertFalse(data_location_a["show_details_in_basket_totals_export"])
         self.assertEqual(31, data_location_a["calendar_week"])
 
         data_location_b = result[1]
@@ -88,6 +89,7 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual("postcode_b", data_location_b["postcode"])
         self.assertEqual("city_b", data_location_b["city"])
         self.assertEqual("route_info_b", data_location_b["route_info"])
+        self.assertFalse(data_location_b["show_details_in_basket_totals_export"])
         self.assertEqual(31, data_location_b["calendar_week"])
 
     def test_getValuePickupLocation_pickingModeShare_returnsCorrectSubscriptionData(
@@ -383,12 +385,99 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual({"small": 3, "normal": 3}, result["totals"])
         self.assertEqual(
             [
-                {"name": "pl_a", "totals": {"small": 2, "normal": 2}},
-                {"name": "pl_b", "totals": {"small": 1, "normal": 1}},
+                {
+                    "name": "pl_a",
+                    "totals": {"small": 2, "normal": 2},
+                    "show_details_in_basket_totals_export": False,
+                },
+                {
+                    "name": "pl_b",
+                    "totals": {"small": 1, "normal": 1},
+                    "show_details_in_basket_totals_export": False,
+                },
             ],
             result["pickup_location_data"],
         )
         self.assertEqual(["pl_a, pl_b"], result["pickup_location_name_lines"])
+
+    def test_getValueRouteBasketTotals_oneStationShowsDetails_excludesItFromNameLines(
+        self,
+    ):
+        self._set_parameter(key=ParameterKeys.PICKING_MODE, value=PICKING_MODE_BASKET)
+        self._set_parameter(
+            key=ParameterKeys.PICKING_BASKET_SIZES, value="small;normal"
+        )
+
+        route = LocationRouteFactory.create()
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
+        location_listed = PickupLocationFactory.create(
+            name="pl_listed", location_route=route
+        )
+        location_detailed = PickupLocationFactory.create(
+            name="pl_detailed",
+            location_route=route,
+            show_details_in_basket_totals_export=True,
+        )
+
+        member_listed = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member_listed,
+            pickup_location=location_listed,
+            valid_from=period.start_date,
+        )
+        subscription = SubscriptionFactory.create(
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+            member=member_listed,
+            period=period,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            basket_size_name="small", product=subscription.product, quantity=1
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            basket_size_name="normal", product=subscription.product, quantity=1
+        )
+
+        member_detailed = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member_detailed,
+            pickup_location=location_detailed,
+            valid_from=period.start_date,
+        )
+        SubscriptionFactory.create(
+            quantity=1,
+            product=subscription.product,
+            member=member_detailed,
+            period=period,
+        )
+
+        result = LocationRouteColumnProvider.get_value_route_basket_totals(
+            route=route,
+            reference_datetime=datetime.datetime(
+                year=2026, month=7, day=29, hour=12, tzinfo=datetime.timezone.utc
+            ),
+            cache={},
+        )
+
+        self.assertEqual(
+            [
+                {
+                    "name": "pl_detailed",
+                    "totals": {"small": 1, "normal": 1},
+                    "show_details_in_basket_totals_export": True,
+                },
+                {
+                    "name": "pl_listed",
+                    "totals": {"small": 1, "normal": 1},
+                    "show_details_in_basket_totals_export": False,
+                },
+            ],
+            result["pickup_location_data"],
+        )
+        self.assertEqual(["pl_listed"], result["pickup_location_name_lines"])
+        self.assertEqual({"small": 2, "normal": 2}, result["totals"])
 
     def test_addAcrossRouteAggregates_twoRoutes_sumsTotalsAndGrandTotal(self):
         entries = [

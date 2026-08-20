@@ -110,6 +110,12 @@ export interface PickupLocation {
   photoLink?: string;
   /**
    *
+   * @type {boolean}
+   * @memberof PickupLocation
+   */
+  showDetailsInBasketTotalsExport?: boolean;
+  /**
+   *
    * @type {string}
    * @memberof PickupLocation
    */
@@ -170,6 +176,10 @@ export function PickupLocationFromJSONTyped(
     contactName:
       json["contact_name"] == null ? undefined : json["contact_name"],
     photoLink: json["photo_link"] == null ? undefined : json["photo_link"],
+    showDetailsInBasketTotalsExport:
+      json["show_details_in_basket_totals_export"] == null
+        ? undefined
+        : json["show_details_in_basket_totals_export"],
     routeInfo: json["route_info"] == null ? undefined : json["route_info"],
     locationRoute:
       json["location_route"] == null ? undefined : json["location_route"],
@@ -202,6 +212,8 @@ export function PickupLocationToJSONTyped(
     messenger_group_link: value["messengerGroupLink"],
     contact_name: value["contactName"],
     photo_link: value["photoLink"],
+    show_details_in_basket_totals_export:
+      value["showDetailsInBasketTotalsExport"],
     route_info: value["routeInfo"],
     location_route: value["locationRoute"],
   };

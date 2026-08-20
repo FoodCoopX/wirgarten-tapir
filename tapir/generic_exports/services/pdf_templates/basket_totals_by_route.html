@@ -118,15 +118,29 @@
                         <td class="num">{{ entry.route_basket_totals.totals|get_value:header }}</td>
                     {% endfor %}
                 </tr>
-                <tr>
-                    <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}" style="border-top: none; padding-top: 0; font-size: 9pt; font-weight: normal; white-space: normal;">
-                        {% if entry.route_basket_totals.pickup_location_name_lines %}
+                {% if entry.route_basket_totals.pickup_location_name_lines %}
+                    <tr>
+                        <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}" style="border-top: none; padding-top: 0; font-size: 9pt; font-weight: normal; white-space: normal;">
                             ({% for line in entry.route_basket_totals.pickup_location_name_lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %})
-                        {% else %}
+                        </td>
+                    </tr>
+                {% elif not entry.route_basket_totals.pickup_location_data %}
+                    <tr>
+                        <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}" style="border-top: none; padding-top: 0; font-size: 9pt; font-weight: normal;">
                             Keine Verteilstationen
-                        {% endif %}
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                {% endif %}
+                {% for pickup_location in entry.route_basket_totals.pickup_location_data %}
+                    {% if pickup_location.show_details_in_basket_totals_export %}
+                        <tr>
+                            <td class="station-label" style="font-style: italic; font-weight: normal;">{{ pickup_location.name }}</td>
+                            {% for header in entry.route_basket_totals.headers %}
+                                <td class="num" style="font-weight: normal;">{{ pickup_location.totals|get_value:header }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endif %}
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -135,7 +149,7 @@
 {% with first=entries.0.route_basket_totals %}
 <div style="margin-top: 0.8rem; break-inside: avoid;">
     <table class="route-table">
-        <thead>
+        <thead style="display: none;">
             <tr>
                 <th class="station-label"></th>
                 {% for header in first.headers %}

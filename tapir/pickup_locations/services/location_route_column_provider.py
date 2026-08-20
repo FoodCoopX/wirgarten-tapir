@@ -83,6 +83,9 @@ class LocationRouteColumnProvider:
                 {
                     "name": pickup_location["name"],
                     "totals": pickup_location_totals,
+                    "show_details_in_basket_totals_export": pickup_location[
+                        "show_details_in_basket_totals_export"
+                    ],
                 }
             )
 
@@ -95,7 +98,11 @@ class LocationRouteColumnProvider:
             "totals": totals,
             "pickup_location_data": pickup_location_data,
             "pickup_location_name_lines": cls.build_pickup_location_name_lines(
-                [pickup_location["name"] for pickup_location in pickup_location_data]
+                [
+                    pickup_location["name"]
+                    for pickup_location in pickup_location_data
+                    if not pickup_location["show_details_in_basket_totals_export"]
+                ]
             ),
             "convert_headers": convert_headers,
             "product_name_by_id": {

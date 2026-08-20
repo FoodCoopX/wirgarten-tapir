@@ -11000,6 +11000,9 @@ components:
         photo_link:
           type: string
           maxLength: 512
+        show_details_in_basket_totals_export:
+          type: boolean
+          title: Im Gesamtkistenanzahls-Zettel Details anzeigen
         route_info:
           type: string
           title: Driver/Route info

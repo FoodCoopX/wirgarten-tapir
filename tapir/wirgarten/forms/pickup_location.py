@@ -308,6 +308,10 @@ class PickupLocationEditForm(forms.Form):
             queryset=LocationRoute.objects.all(),
             required=False,
         )
+        self.fields["show_details_in_basket_totals_export"] = forms.BooleanField(
+            label=_("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
+            required=False,
+        )
         self.fields["name"] = forms.CharField(label=_("Name"), required=True)
         self.fields["street"] = forms.CharField(
             label=_("Straße & Hausnummer"), required=True
@@ -397,6 +401,9 @@ class PickupLocationEditForm(forms.Form):
                 f"{self.pickup_location.coords_lon},{self.pickup_location.coords_lat}"
             )
             self.fields["location_route"].initial = self.pickup_location.location_route
+            self.fields["show_details_in_basket_totals_export"].initial = (
+                self.pickup_location.show_details_in_basket_totals_export
+            )
             self.fields["name"].initial = self.pickup_location.name
             self.fields["street"].initial = self.pickup_location.street
             self.fields["postcode"].initial = self.pickup_location.postcode
@@ -520,6 +527,9 @@ class PickupLocationEditForm(forms.Form):
         pl.coords_lon = coords[0].strip()
         pl.coords_lat = coords[1].strip()
         pl.location_route = self.cleaned_data["location_route"]
+        pl.show_details_in_basket_totals_export = self.cleaned_data[
+            "show_details_in_basket_totals_export"
+        ]
 
         pl.name = self.cleaned_data["name"]
         pl.street = self.cleaned_data["street"]
