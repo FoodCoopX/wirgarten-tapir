@@ -517,6 +517,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={memberAlreadyHasASubscriptionForThisProductType}
             stepActive={step === currentStep}
+            setCurrentStep={setCurrentStep}
           />
         );
       case "11_legal":

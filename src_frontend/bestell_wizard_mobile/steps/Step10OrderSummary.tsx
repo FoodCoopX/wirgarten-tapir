@@ -20,6 +20,7 @@ import formatAddress from "../../utils/formatAddress.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { Step } from "../types/Step.ts";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
@@ -59,6 +60,7 @@ interface Step10OrderSummaryProps {
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   hideTrialPeriod: boolean;
   stepActive: boolean;
+  setCurrentStep: (step: Step) => void;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -85,6 +87,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   selectedGrowingPeriod,
   hideTrialPeriod,
   stepActive,
+  setCurrentStep,
 }) => {
   const [activePickupLocation, setActivePickupLocation] =
     useState<PublicPickupLocation>();
@@ -366,6 +369,15 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         formatCurrency(
                           numberOfCoopShares * settings.priceOfAShare,
                         )}
+                    <TapirButton
+                      variant={BUTTON_VARIANT}
+                      size={"sm"}
+                      text={"Anteile anpassen"}
+                      icon={"edit"}
+                      onClick={() => {
+                        setCurrentStep("6b_coop_shares");
+                      }}
+                    />
                   </AccordionBody>
                 </Accordion.Item>
               </Accordion>
@@ -390,6 +402,19 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         associationMembershipType,
                         contractStartDate,
                       )}
+                    </li>
+                  )}
+                  {settings.associationMembershipTypes.length > 1 && (
+                    <li>
+                      <TapirButton
+                        variant={BUTTON_VARIANT}
+                        size={"sm"}
+                        text={"Mitgliedschaft anpassen"}
+                        icon={"edit"}
+                        onClick={() => {
+                          setCurrentStep("6b_association_membership");
+                        }}
+                      />
                     </li>
                   )}
                 </AccordionBody>

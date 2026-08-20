@@ -840,6 +840,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={false}
             stepActive={step === currentStep}
+            setCurrentStep={setCurrentStep}
           />
         );
       case "11_legal":
