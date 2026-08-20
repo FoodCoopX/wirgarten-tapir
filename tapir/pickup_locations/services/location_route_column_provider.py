@@ -92,7 +92,7 @@ class LocationRouteColumnProvider:
         convert_headers = (
             PickingModeProvider.get_picking_mode(cache=cache) == PICKING_MODE_SHARE
         )
-        return {
+        result = {
             "calendar_week": reference_datetime.isocalendar().week,
             "headers": headers,
             "totals": totals,
@@ -110,35 +110,42 @@ class LocationRouteColumnProvider:
                 for product in TapirCache.get_all_products(cache=cache)
             },
         }
+        cls.add_across_route_aggregates(cache=cache, route_basket_totals=result)
+        return result
 
     @classmethod
-    def add_across_route_aggregates(cls, entries: list[dict]) -> None:
-        if not entries or not isinstance(entries[0], dict):
-            return
+    def add_across_route_aggregates(
+        cls, cache: dict, route_basket_totals: dict
+    ) -> None:
+        accumulator = cache.setdefault(
+            "across_route_basket_totals",
+            {
+                "first": None,
+                "totals_across_routes": None,
+                "grand_total": 0,
+            },
+        )
 
-        route_basket_totals_list = [
-            entry["route_basket_totals"]
-            for entry in entries
-            if isinstance(entry.get("route_basket_totals"), dict)
-        ]
-        if not route_basket_totals_list:
-            return
-
-        headers = route_basket_totals_list[0].get("headers")
+        headers = route_basket_totals.get("headers")
         if not headers:
-            headers = list((route_basket_totals_list[0].get("totals") or {}).keys())
-        totals_across_routes = dict.fromkeys(headers, 0)
-        grand_total = 0
-        for route_basket_totals in route_basket_totals_list:
-            totals = route_basket_totals.get("totals") or {}
-            for header in headers:
-                value = totals.get(header) or 0
-                totals_across_routes[header] += value
-                grand_total += value
+            headers = list((route_basket_totals.get("totals") or {}).keys())
 
-        for route_basket_totals in route_basket_totals_list:
-            route_basket_totals["totals_across_routes"] = totals_across_routes
-            route_basket_totals["grand_total"] = grand_total
+        if accumulator["totals_across_routes"] is None:
+            accumulator["totals_across_routes"] = dict.fromkeys(headers, 0)
+
+        totals = route_basket_totals.get("totals") or {}
+        for header in accumulator["totals_across_routes"]:
+            value = totals.get(header) or 0
+            accumulator["totals_across_routes"][header] += value
+            accumulator["grand_total"] += value
+
+        if accumulator["first"] is None:
+            accumulator["first"] = route_basket_totals
+            route_basket_totals["totals_across_routes"] = accumulator[
+                "totals_across_routes"
+            ]
+
+        accumulator["first"]["grand_total"] = accumulator["grand_total"]
 
     @classmethod
     def build_pickup_location_name_lines(cls, names: list[str]) -> list[str]:

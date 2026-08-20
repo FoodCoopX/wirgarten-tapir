@@ -11,9 +11,6 @@ from tapir.generic_exports.services.export_segment_manager import (
     ExportSegmentManager,
 )
 from tapir.generic_exports.services.tapir_url_fetcher import TapirUrlFetcher
-from tapir.pickup_locations.services.location_route_column_provider import (
-    LocationRouteColumnProvider,
-)
 from tapir.wirgarten.models import ExportedFile
 from tapir.wirgarten.utils import get_today
 
@@ -64,7 +61,6 @@ class PdfExportBuilder:
             )
             for entry in segment.get_queryset(reference_datetime)
         ]
-        LocationRouteColumnProvider.add_across_route_aggregates(contexts)
         return contexts
 
     @classmethod

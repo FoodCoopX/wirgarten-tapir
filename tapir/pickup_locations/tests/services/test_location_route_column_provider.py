@@ -399,6 +399,8 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
             result["pickup_location_data"],
         )
         self.assertEqual(["pl_a, pl_b"], result["pickup_location_name_lines"])
+        self.assertEqual({"small": 3, "normal": 3}, result["totals_across_routes"])
+        self.assertEqual(6, result["grand_total"])
 
     def test_getValueRouteBasketTotals_oneStationShowsDetails_excludesItFromNameLines(
         self,
@@ -479,73 +481,119 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual(["pl_listed"], result["pickup_location_name_lines"])
         self.assertEqual({"small": 2, "normal": 2}, result["totals"])
 
-    def test_addAcrossRouteAggregates_twoRoutes_sumsTotalsAndGrandTotal(self):
-        entries = [
-            {
-                "route_basket_totals": {
-                    "headers": ["small", "normal"],
-                    "totals": {"small": 2, "normal": 3},
-                }
-            },
-            {
-                "route_basket_totals": {
-                    "headers": ["small", "normal"],
-                    "totals": {"small": 1, "normal": None},
-                }
-            },
-            {},
-        ]
+    def test_getValueRouteBasketTotals_twoRoutesShareCache_putsAcrossTotalsOnlyOnFirst(
+        self,
+    ):
+        self._set_parameter(key=ParameterKeys.PICKING_MODE, value=PICKING_MODE_BASKET)
+        self._set_parameter(
+            key=ParameterKeys.PICKING_BASKET_SIZES, value="small;normal"
+        )
 
-        LocationRouteColumnProvider.add_across_route_aggregates(entries)
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2026, month=1, day=1)
+        )
+        route_a = LocationRouteFactory.create()
+        route_b = LocationRouteFactory.create()
+        location_a = PickupLocationFactory.create(location_route=route_a)
+        location_b = PickupLocationFactory.create(location_route=route_b)
+
+        member_a = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member_a,
+            pickup_location=location_a,
+            valid_from=period.start_date,
+        )
+        subscription = SubscriptionFactory.create(
+            quantity=2,
+            product__type__delivery_cycle=WEEKLY[0],
+            member=member_a,
+            period=period,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            basket_size_name="small", product=subscription.product, quantity=1
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            basket_size_name="normal", product=subscription.product, quantity=1
+        )
+
+        member_b = MemberFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member_b,
+            pickup_location=location_b,
+            valid_from=period.start_date,
+        )
+        SubscriptionFactory.create(
+            quantity=1,
+            product=subscription.product,
+            member=member_b,
+            period=period,
+        )
+
+        cache = {}
+        reference_datetime = datetime.datetime(
+            year=2026, month=7, day=29, hour=12, tzinfo=datetime.timezone.utc
+        )
+        first = LocationRouteColumnProvider.get_value_route_basket_totals(
+            route=route_a,
+            reference_datetime=reference_datetime,
+            cache=cache,
+        )
+        second = LocationRouteColumnProvider.get_value_route_basket_totals(
+            route=route_b,
+            reference_datetime=reference_datetime,
+            cache=cache,
+        )
+
+        self.assertEqual({"small": 2, "normal": 2}, first["totals"])
+        self.assertEqual({"small": 1, "normal": 1}, second["totals"])
+        self.assertEqual({"small": 3, "normal": 3}, first["totals_across_routes"])
+        self.assertEqual(6, first["grand_total"])
+        self.assertNotIn("totals_across_routes", second)
+        self.assertNotIn("grand_total", second)
+
+    def test_addAcrossRouteAggregates_twoRoutes_putsSumsOnlyOnFirst(self):
+        cache = {}
+        first = {
+            "headers": ["small", "normal"],
+            "totals": {"small": 2, "normal": 3},
+        }
+        second = {
+            "headers": ["small", "normal"],
+            "totals": {"small": 1, "normal": None},
+        }
+
+        LocationRouteColumnProvider.add_across_route_aggregates(cache, first)
+        LocationRouteColumnProvider.add_across_route_aggregates(cache, second)
 
         expected_totals = {"small": 3, "normal": 3}
-        self.assertEqual(
-            expected_totals, entries[0]["route_basket_totals"]["totals_across_routes"]
-        )
-        self.assertEqual(6, entries[0]["route_basket_totals"]["grand_total"])
-        self.assertEqual(
-            expected_totals, entries[1]["route_basket_totals"]["totals_across_routes"]
-        )
-        self.assertEqual(6, entries[1]["route_basket_totals"]["grand_total"])
-        self.assertNotIn("route_basket_totals", entries[2])
-
-    def test_addAcrossRouteAggregates_emptyOrNone_doesNothing(self):
-        LocationRouteColumnProvider.add_across_route_aggregates(None)
-        LocationRouteColumnProvider.add_across_route_aggregates([])
-
-        entries = [{"route_name": "tour"}]
-        LocationRouteColumnProvider.add_across_route_aggregates(entries)
-
-        self.assertEqual([{"route_name": "tour"}], entries)
+        self.assertEqual(expected_totals, first["totals_across_routes"])
+        self.assertEqual(6, first["grand_total"])
+        self.assertNotIn("totals_across_routes", second)
+        self.assertNotIn("grand_total", second)
 
     def test_addAcrossRouteAggregates_missingHeaderAndEmptyTotals_countsAsZero(self):
-        entries = [
-            {
-                "route_basket_totals": {
-                    "headers": ["small", "normal"],
-                    "totals": {"small": 2, "normal": 5},
-                }
-            },
-            {
-                "route_basket_totals": {
-                    "headers": ["small", "normal"],
-                    "totals": {"small": None, "normal": 1},
-                }
-            },
-            {"route_basket_totals": {}},
-        ]
+        cache = {}
+        first = {
+            "headers": ["small", "normal"],
+            "totals": {"small": 2, "normal": 5},
+        }
+        second = {
+            "headers": ["small", "normal"],
+            "totals": {"small": None, "normal": 1},
+        }
+        empty = {}
 
-        LocationRouteColumnProvider.add_across_route_aggregates(entries)
+        LocationRouteColumnProvider.add_across_route_aggregates(cache, first)
+        LocationRouteColumnProvider.add_across_route_aggregates(cache, second)
+        LocationRouteColumnProvider.add_across_route_aggregates(cache, empty)
 
         self.assertEqual(
             {"small": 2, "normal": 6},
-            entries[0]["route_basket_totals"]["totals_across_routes"],
+            first["totals_across_routes"],
         )
-        self.assertEqual(8, entries[0]["route_basket_totals"]["grand_total"])
-        self.assertEqual(
-            {"small": 2, "normal": 6},
-            entries[2]["route_basket_totals"]["totals_across_routes"],
-        )
+        self.assertEqual(8, first["grand_total"])
+        self.assertNotIn("totals_across_routes", empty)
+        self.assertNotIn("grand_total", empty)
 
 
 class TestBuildPickupLocationNameLines(TapirUnitTest):
