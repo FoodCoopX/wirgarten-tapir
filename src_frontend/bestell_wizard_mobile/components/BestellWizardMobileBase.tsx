@@ -108,6 +108,7 @@ const BestellWizardMobileBase: React.FC<BestellWizardMobileBaseProps> = ({
           associationMembershipType={associationMembershipType}
           contractStartDate={contractStartDate}
           selectedGrowingPeriod={selectedGrowingPeriod}
+          setCurrentStep={setCurrentStep}
         />
       </div>
       <div
