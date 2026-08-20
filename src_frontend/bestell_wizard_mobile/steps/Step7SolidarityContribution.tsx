@@ -96,7 +96,7 @@ const Step7SolidarityContribution: React.FC<
     if (value === "custom") {
       return "Ich möchte einen anderen Betrag zahlen";
     }
-    return formatCurrency(value);
+    return formatCurrency(value) + " pro Monat";
   }
 
   function onSelect(selected: string) {
@@ -191,17 +191,20 @@ const Step7SolidarityContribution: React.FC<
               Bitte eine Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
               beizutragen, oder '-10' um 10€ weniger zu zahlen.
             </Form.Text>
-            <Form.Control
-              id={"custom_solidarity_contribution"}
-              placeholder={"Personalisierter Beitrag"}
-              value={customValue}
-              onChange={(event) => updateCustomValue(event.target.value)}
-              style={{ maxWidth: "300px" }}
-              isValid={showValidation && isValueValid(solidarityContribution)}
-              isInvalid={
-                showValidation && !isValueValid(solidarityContribution)
-              }
-            />
+            <span className={"d-flex gap-2"}>
+              <Form.Control
+                id={"custom_solidarity_contribution"}
+                placeholder={"Personalisierter Beitrag"}
+                value={customValue}
+                onChange={(event) => updateCustomValue(event.target.value)}
+                style={{ maxWidth: "300px" }}
+                isValid={showValidation && isValueValid(solidarityContribution)}
+                isInvalid={
+                  showValidation && !isValueValid(solidarityContribution)
+                }
+              />
+              <span>pro Monat</span>
+            </span>
             {!isValueValid(solidarityContribution) &&
               (settings.solidarityContributionMinimum ?? 0) < 0 && (
                 <Alert variant={"danger"}>
