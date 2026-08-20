@@ -308,10 +308,6 @@ class PickupLocationEditForm(forms.Form):
             queryset=LocationRoute.objects.all(),
             required=False,
         )
-        self.fields["show_details_in_basket_totals_export"] = forms.BooleanField(
-            label=_("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
-            required=False,
-        )
         self.fields["name"] = forms.CharField(label=_("Name"), required=True)
         self.fields["street"] = forms.CharField(
             label=_("Straße & Hausnummer"), required=True
@@ -333,6 +329,10 @@ class PickupLocationEditForm(forms.Form):
         self.fields["photo_link"] = forms.CharField(
             label=_("Link zum Foto des Abholorts"), required=False
         )
+        self.fields["show_details_in_basket_totals_export"] = forms.BooleanField(
+            label=_("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
+            required=False,
+        )
         self.fields["info"] = forms.CharField(
             label=_("Zusätzliche Informationen zur Abholung"),
             required=False,
@@ -348,6 +348,7 @@ class PickupLocationEditForm(forms.Form):
 
         self.colspans = {
             "coords": 1,
+            "show_details_in_basket_totals_export": 2,
             "info": 2,
             "route_info": 2,
             "monday_times": 2,
@@ -401,9 +402,6 @@ class PickupLocationEditForm(forms.Form):
                 f"{self.pickup_location.coords_lon},{self.pickup_location.coords_lat}"
             )
             self.fields["location_route"].initial = self.pickup_location.location_route
-            self.fields["show_details_in_basket_totals_export"].initial = (
-                self.pickup_location.show_details_in_basket_totals_export
-            )
             self.fields["name"].initial = self.pickup_location.name
             self.fields["street"].initial = self.pickup_location.street
             self.fields["postcode"].initial = self.pickup_location.postcode
@@ -416,6 +414,9 @@ class PickupLocationEditForm(forms.Form):
             )
             self.fields["contact_name"].initial = self.pickup_location.contact_name
             self.fields["photo_link"].initial = self.pickup_location.photo_link
+            self.fields["show_details_in_basket_totals_export"].initial = (
+                self.pickup_location.show_details_in_basket_totals_export
+            )
 
             opening_times = PickupLocationOpeningTime.objects.filter(
                 pickup_location=self.pickup_location
