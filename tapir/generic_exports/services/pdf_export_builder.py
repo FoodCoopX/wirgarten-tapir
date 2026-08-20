@@ -55,12 +55,13 @@ class PdfExportBuilder:
             if column.id in pdf_export.template
         ]
 
-        return [
+        contexts = [
             cls.build_context_for_entry(
                 entry, segment, reference_datetime, used_column_ids, cache=cache
             )
             for entry in segment.get_queryset(reference_datetime)
         ]
+        return contexts
 
     @classmethod
     def create_single_file(cls, pdf_export, reference_datetime, context):

@@ -4,6 +4,9 @@ from tapir.core.config import THEME_TEST
 from tapir.generic_exports.services.pdf_export_template_manager import (
     PdfExportTemplateManager,
 )
+from tapir.generic_exports.services.pdf_templates.template_basket_totals_by_route import (
+    TemplateBasketTotalsByRoute,
+)
 from tapir.generic_exports.services.pdf_templates.template_pick_list_by_pickup_location import (
     TemplatePickListByPickupLocation,
 )
@@ -28,6 +31,7 @@ class TestPdfExportTemplateManager(TapirUnitTest):
         self.assertEqual(
             TemplatePickListByPickupLocation.create_exports, data.create_method
         )
+        self.assertIn(TemplateBasketTotalsByRoute.ID, result)
 
     def test_createExportsFromTemplate_templateIdNotFound_raises404(self):
         cache = {}
@@ -39,6 +43,6 @@ class TestPdfExportTemplateManager(TapirUnitTest):
             PdfExportTemplateManager.create_exports_from_template("unknown", cache)
 
         self.assertEqual(
-            "Unknown template id \"unknown\", available IDs: ['pick_list_by_pickup_location', 'location_routes']",
+            "Unknown template id \"unknown\", available IDs: ['pick_list_by_pickup_location', 'location_routes', 'basket_totals_by_route']",
             str(error.exception),
         )

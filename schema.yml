@@ -6503,6 +6503,7 @@ components:
       - monthly
       - weekly
       - daily
+      - after_pickup_location_change_deadline
       - never
       type: string
       description: |-
@@ -6510,6 +6511,7 @@ components:
         * `monthly` - Monatlich
         * `weekly` - Wöchentlich
         * `daily` - Täglich
+        * `after_pickup_location_change_deadline` - Nach letztmöglicher Änderung der Verteilstation
         * `never` - Nie
     AvailableSegmentsResponse:
       type: object
@@ -10998,6 +11000,9 @@ components:
         photo_link:
           type: string
           maxLength: 512
+        show_details_in_basket_totals_export:
+          type: boolean
+          title: Im Gesamtkistenanzahls-Zettel Details anzeigen
         route_info:
           type: string
           title: Driver/Route info
