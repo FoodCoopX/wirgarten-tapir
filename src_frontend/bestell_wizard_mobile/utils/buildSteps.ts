@@ -144,6 +144,9 @@ export function buildSteps(
 function shouldIncludeStepsCoopShares(
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
   showCoopContent: boolean,
+  allowInvestingMembership: boolean,
+  productTypesInWaitingList: Set<PublicProductType>,
+  shoppingCart: ShoppingCart,
 ) {
   if (!showCoopContent) {
     return false;
@@ -153,7 +156,14 @@ function shouldIncludeStepsCoopShares(
     return waitingListEntryDetails.numberOfCoopShares > 0;
   }
 
-  return true;
+  if (allowInvestingMembership) {
+    return true;
+  }
+
+  return !areAllOrderedProductsInWaitingList(
+    shoppingCart,
+    productTypesInWaitingList,
+  );
 }
 
 function shouldIncludeStepsPickupLocations(
@@ -231,6 +241,9 @@ function buildCoopSteps(
     !shouldIncludeStepsCoopShares(
       waitingListEntryDetails,
       settings.showCoopContent,
+      settings.allowInvestingMembership,
+      productTypesInWaitingList,
+      shoppingCart,
     )
   ) {
     return [];
@@ -270,6 +283,13 @@ function buildAssociationSteps(
   }
 
   if (waitingListEntryDetails?.memberAlreadyExists) {
+    return [];
+  }
+
+  if (
+    !settings.associationsAllowInvestingMembership &&
+    areAllOrderedProductsInWaitingList(shoppingCart, productTypesInWaitingList)
+  ) {
     return [];
   }
 

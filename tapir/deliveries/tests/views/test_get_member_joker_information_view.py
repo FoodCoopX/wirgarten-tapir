@@ -11,13 +11,15 @@ from tapir.deliveries.config import (
     DELIVERY_DONATION_MODE_ALWAYS_POSSIBLE,
 )
 from tapir.deliveries.models import Joker
-from tapir.deliveries.tests.factories import DeliveryDonationFactory
+from tapir.deliveries.tests.factories import DeliveryDonationFactory, JokerFactory
+from tapir.wirgarten.models import PickupLocationOpeningTime
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     GrowingPeriodFactory,
+    MemberPickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -215,3 +217,44 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
         )
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+
+    def test_getMemberJokerInformationView_adjustedDeliveryDayIsNotTheSameAsGeneralDeliveryDay_returnsCorrectDeliveryDay(
+        self,
+    ):
+        # regression test for infra#230 https://github.com/FoodCoopX/infra/issues/230
+
+        user = MemberFactory.create(is_superuser=False)
+        self.client.force_login(user)
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+        )
+        JokerFactory.create(member=user, date=datetime.date(year=2023, month=7, day=15))
+        DeliveryDonationFactory.create(
+            member=user, date=datetime.date(year=2023, month=7, day=17)
+        )
+        member_pickup_location = MemberPickupLocationFactory.create(
+            valid_from=datetime.date(year=2023, month=1, day=1), member=user
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=member_pickup_location.pickup_location,
+            day_of_week=3,
+            open_time=datetime.time(hour=8),
+            close_time=datetime.time(hour=9),
+        )
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=2)
+
+        response = self.client.get(
+            reverse("deliveries:member_joker_information") + "?member_id=" + user.id
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        response_content = json.loads(response.content)
+        self.assertEqual(1, len(response_content["used_jokers"]))
+        self.assertEqual(
+            "2023-07-13", response_content["used_jokers"][0]["delivery_date"]
+        )
+        self.assertEqual(1, len(response_content["used_donations"]))
+        self.assertEqual(
+            "2023-07-20", response_content["used_donations"][0]["delivery_date"]
+        )

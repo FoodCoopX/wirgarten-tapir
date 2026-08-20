@@ -22,6 +22,7 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
 import {
@@ -269,37 +270,54 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         .map(([productId, quantity]) =>
                           buildProductDetails(productId, quantity, productType),
                         )}
-                      {!productTypesInWaitingList.has(productType) && (
-                        <li>
-                          Vertragsstart: {formatDateNumeric(contractStartDate)}
-                        </li>
-                      )}
-                      {!productType.noDelivery &&
-                        !productTypesInWaitingList.has(productType) && (
-                          <>
-                            <li>
-                              Erste Abholung:{" "}
-                              {(selectedPickupLocations.length > 0 ||
-                                waitingListEntryDetails?.currentPickupLocation) &&
-                                formatDateNumeric(
-                                  getDateOfFirstDelivery(productType.id!),
+                      {doesWaitingListHaveProductType(
+                        productTypesInWaitingList,
+                        productType,
+                      ) ? (
+                        <li>Warteliste</li>
+                      ) : (
+                        <>
+                          <li>
+                            Vertragsstart:{" "}
+                            {formatDateNumeric(contractStartDate)}
+                          </li>
+                          {!productType.noDelivery && (
+                            <>
+                              <li>
+                                Erste Abholung:{" "}
+                                {(selectedPickupLocations.length > 0 ||
+                                  waitingListEntryDetails?.currentPickupLocation) &&
+                                  formatDateNumeric(
+                                    getDateOfFirstDelivery(productType.id!),
+                                  )}
+                              </li>
+                              <li>
+                                Aktive Verteilstation:{" "}
+                                {activePickupLocation &&
+                                  activePickupLocation.name +
+                                    " (" +
+                                    formatAddress(
+                                      activePickupLocation.street,
+                                      activePickupLocation.street2,
+                                      activePickupLocation.postcode,
+                                      activePickupLocation.city,
+                                    ) +
+                                    ")"}
+                              </li>
+                              {!hideTrialPeriod &&
+                                settings.trialPeriodLengthInWeeks > 0 && (
+                                  <li>
+                                    Probezeit bis{" "}
+                                    {formatDateNumeric(
+                                      getEndOfTrialPeriod(productType.id!),
+                                    )}
+                                  </li>
                                 )}
-                            </li>
-                            <li>
-                              Aktive Verteilstation:{" "}
-                              {activePickupLocation &&
-                                activePickupLocation.name +
-                                  " (" +
-                                  formatAddress(
-                                    activePickupLocation.street,
-                                    activePickupLocation.street2,
-                                    activePickupLocation.postcode,
-                                    activePickupLocation.city,
-                                  ) +
-                                  ")"}
-                            </li>
-                          </>
-                        )}
+                            </>
+                          )}
+                        </>
+                      )}
+
                       {!productType.noDelivery &&
                         getLocationsNotActive().length > 0 && (
                           <li>
@@ -313,19 +331,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                                 </li>
                               ))}
                             </ul>
-                          </li>
-                        )}
-                      {productTypesInWaitingList.has(productType) && (
-                        <li>Warteliste</li>
-                      )}
-                      {!hideTrialPeriod &&
-                        !productTypesInWaitingList.has(productType) &&
-                        settings.trialPeriodLengthInWeeks > 0 && (
-                          <li>
-                            Probezeit bis{" "}
-                            {formatDateNumeric(
-                              getEndOfTrialPeriod(productType.id!),
-                            )}
                           </li>
                         )}
                     </ul>
@@ -417,7 +422,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                             )?.price ?? 0) * quantity,
                           )}{" "}
                           / Monat
-                          {productTypesInWaitingList.has(
+                          {doesWaitingListHaveProductType(
+                            productTypesInWaitingList,
                             getProductTypeByProductId(productId, settings)!,
                           )
                             ? " (Start wenn Platz frei)"
