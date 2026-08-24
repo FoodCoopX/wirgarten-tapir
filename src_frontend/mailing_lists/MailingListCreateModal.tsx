@@ -88,7 +88,19 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
               onChange={(event) => setListName(event.target.value)}
               placeholder={"Name"}
               required={true}
+              pattern={"[\\w.%+\\-]+"}
             />
+            <Form.Text>
+              <p>
+                Die Name der Liste ist das Prefix der Mail-Adresse: eine Liste
+                mit Name "beispiel.list" bekommt als Mail-Adresse
+                "beispiel.list@..."
+              </p>
+              <p>
+                Erlaubte Zeichen sind Buchstaben, Zahlen und: - (Strich), _
+                (Unterstrich) und . (Punkt)
+              </p>
+            </Form.Text>
           </Form.Group>
           <Form.Group>
             <Form.Label>Beschreibung</Form.Label>
