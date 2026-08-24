@@ -138,7 +138,7 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         response = self.client.post(url, data)
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-
+        self.assert_order_confirmed(response.json())
         self.assertEqual(1, CoopShareTransaction.objects.count())
         self.assertEqual(1, CoopShareTransaction.objects.get().quantity)
 

@@ -4,10 +4,12 @@ from unittest.mock import patch
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.configuration.models import TapirParameter
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.subscriptions.services.product_cancellation_data_builder import (
     ProductCancellationDataBuilder,
 )
@@ -128,7 +130,9 @@ class TestGet(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
     @patch.object(ProductCancellationDataBuilder, "build_data_for_all_products")
-    @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
+    @patch.object(
+        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+    )
     def test_get_adminAsksForDataOfOtherMember_returnsStatus200(self, *_):
         user = MemberFactory.create(is_superuser=True)
         other_member = MemberFactory.create()
@@ -138,3 +142,38 @@ class TestGet(TapirIntegrationTest):
         response = self.client.get(f"{url}?member_id={other_member.id}")
 
         self.assertStatusCode(response, status.HTTP_200_OK)
+
+    def test_get_memberHasCancellableAssociationMembership_returnsCorrectData(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        AssociationMembershipFactory.create(
+            member=member, start_date=datetime.date(year=2023, month=1, day=1)
+        )
+
+        url = reverse("subscriptions:cancellation_data")
+        response = self.client.get(f"{url}?member_id={member.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertTrue(response_content["can_cancel_association_membership"])
+
+    def test_get_memberHasNotCancellableAssociationMembership_returnsCorrectData(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=False)
+        self.client.force_login(member)
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+
+        url = reverse("subscriptions:cancellation_data")
+        response = self.client.get(f"{url}?member_id={member.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertFalse(response_content["can_cancel_association_membership"])

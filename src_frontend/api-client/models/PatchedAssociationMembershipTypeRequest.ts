@@ -48,6 +48,12 @@ export interface PatchedAssociationMembershipTypeRequest {
    * @memberof PatchedAssociationMembershipTypeRequest
    */
   orderInBestellWizard?: number;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PatchedAssociationMembershipTypeRequest
+   */
+  hiddenInBestellWizard?: boolean;
 }
 
 /**
@@ -84,6 +90,10 @@ export function PatchedAssociationMembershipTypeRequestFromJSONTyped(
       json["order_in_bestell_wizard"] == null
         ? undefined
         : json["order_in_bestell_wizard"],
+    hiddenInBestellWizard:
+      json["hidden_in_bestell_wizard"] == null
+        ? undefined
+        : json["hidden_in_bestell_wizard"],
   };
 }
 
@@ -107,5 +117,6 @@ export function PatchedAssociationMembershipTypeRequestToJSONTyped(
     deleted: value["deleted"],
     description_in_bestell_wizard: value["descriptionInBestellWizard"],
     order_in_bestell_wizard: value["orderInBestellWizard"],
+    hidden_in_bestell_wizard: value["hiddenInBestellWizard"],
   };
 }

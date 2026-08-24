@@ -2,6 +2,9 @@ import datetime
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
 from tapir.payments.monthly_sales_data import MonthlySalesData
+from tapir.payments.services.month_payment_builder_association_membership import (
+    MonthPaymentBuilderAssociationMembership,
+)
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
@@ -13,9 +16,12 @@ from tapir.payments.services.monthly_sales_column_provider import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_last_day_of_month
+from tapir.wirgarten.utils import legal_status_is_association
 
 
 class MonthlySalesSegmentProvider:
+    CONTRACT_TYPE_ASSOCIATION_MEMBERSHIPS = "Vereinsmitgliedschaften"
+
     @classmethod
     def get_sales_segments(cls):
         return [
@@ -70,4 +76,20 @@ class MonthlySalesSegmentProvider:
                 ),
             )
         )
+
+        if legal_status_is_association(cache=cache):
+            all_sales_data.append(
+                MonthlySalesData(
+                    contract_type_name=cls.CONTRACT_TYPE_ASSOCIATION_MEMBERSHIPS,
+                    sales=MonthPaymentBuilderAssociationMembership.get_total_to_pay(
+                        range_start=first_of_previous_month,
+                        range_end=end_of_previous_month,
+                        cache=cache,
+                        contracts=list(
+                            TapirCache.get_all_association_memberships(cache=cache)
+                        ),
+                    ),
+                )
+            )
+
         return all_sales_data

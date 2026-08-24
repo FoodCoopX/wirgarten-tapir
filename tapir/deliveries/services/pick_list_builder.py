@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.config import DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION
@@ -156,8 +157,21 @@ class PickListBuilder:
         ).distinct()
 
         products = list(products)
-        products.sort(key=lambda product: get_product_price(product, cache=cache).price)
+        products.sort(
+            key=lambda product: cls.get_price_or_zero(
+                product=product, reference_date=delivery_date, cache=cache
+            )
+        )
         return products
+
+    @classmethod
+    def get_price_or_zero(
+        cls, product: Product, reference_date: datetime.date, cache: dict
+    ):
+        price_object = get_product_price(
+            product=product, reference_date=reference_date, cache=cache
+        )
+        return Decimal(0) if price_object is None else price_object.price
 
     @classmethod
     def get_subscriptions_grouped_by_pickup_location_name(

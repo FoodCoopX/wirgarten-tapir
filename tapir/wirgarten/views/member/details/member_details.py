@@ -6,8 +6,8 @@ from tapir_mail.models import MailCategory
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
@@ -117,7 +117,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 if next_trial_end_date is None or trial_end_date < next_trial_end_date:
                     next_trial_end_date = trial_end_date
             context["next_trial_end_date"] = next_trial_end_date
-        coop_entry_date = MembershipCancellationManager.get_coop_entry_date(self.object)
+        coop_entry_date = CoopMembershipCancellationManager.get_coop_entry_date(
+            self.object, cache=cache
+        )
         if (
             coop_entry_date is not None
             and coop_entry_date > today

@@ -144,6 +144,9 @@ export function buildSteps(
 function shouldIncludeStepsCoopShares(
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
   showCoopContent: boolean,
+  allowInvestingMembership: boolean,
+  productTypesInWaitingList: Set<PublicProductType>,
+  shoppingCart: ShoppingCart,
 ) {
   if (!showCoopContent) {
     return false;
@@ -153,7 +156,14 @@ function shouldIncludeStepsCoopShares(
     return waitingListEntryDetails.numberOfCoopShares > 0;
   }
 
-  return true;
+  if (allowInvestingMembership) {
+    return true;
+  }
+
+  return !areAllOrderedProductsInWaitingList(
+    shoppingCart,
+    productTypesInWaitingList,
+  );
 }
 
 function shouldIncludeStepsPickupLocations(
@@ -182,7 +192,7 @@ function shouldShowStepSolidarityContribution(
     return true;
   }
 
-  return !waitingListEntryDetails.memberAlreadyExists;
+  return waitingListEntryDetails.shouldShowSolidarityStep;
 }
 
 function shouldShowStepSolidarityContributionBeforeStepPickupLocation(
@@ -231,6 +241,9 @@ function buildCoopSteps(
     !shouldIncludeStepsCoopShares(
       waitingListEntryDetails,
       settings.showCoopContent,
+      settings.allowInvestingMembership,
+      productTypesInWaitingList,
+      shoppingCart,
     )
   ) {
     return [];
@@ -241,7 +254,12 @@ function buildCoopSteps(
   coopSteps.push("6a_coop_intro");
 
   if (
-    shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
+    shouldConfirmMemberNow(
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      waitingListEntryDetails !== undefined,
+    )
   ) {
     coopSteps.push("6c_coop_member_now");
   }
@@ -268,12 +286,24 @@ function buildAssociationSteps(
     return [];
   }
 
+  if (
+    !settings.associationsAllowInvestingMembership &&
+    areAllOrderedProductsInWaitingList(shoppingCart, productTypesInWaitingList)
+  ) {
+    return [];
+  }
+
   const associationSteps: Step[] = [];
 
   associationSteps.push("6a_coop_intro");
 
   if (
-    shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
+    shouldConfirmMemberNow(
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      waitingListEntryDetails !== undefined,
+    )
   ) {
     associationSteps.push("6c_coop_member_now");
   }

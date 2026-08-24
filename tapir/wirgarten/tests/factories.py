@@ -26,6 +26,7 @@ from tapir.wirgarten.models import (
     PickupLocationCapability,
     MemberExtraEmail,
     LocationRoute,
+    PickupLocationOpeningTime,
 )
 
 NOW = datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc)
@@ -52,7 +53,7 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
         if not create:
             return
 
-        if create and member_no is not None:
+        if member_no is not None:
             self.save()
             return
 
@@ -65,8 +66,7 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
 
         self.member_no = member_no
 
-        if create:
-            self.save()
+        self.save()
 
 
 class MemberWithCoopSharesFactory(MemberFactory):
@@ -283,3 +283,15 @@ class MemberExtraEmailFactory(factory.django.DjangoModelFactory[MemberExtraEmail
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     email = factory.Faker("email")
+
+
+class PickupLocationOpeningTimesFactory(
+    factory.django.DjangoModelFactory[PickupLocationOpeningTime]
+):
+    class Meta:
+        model = PickupLocationOpeningTime
+
+    pickup_location = factory.SubFactory(PickupLocation)
+    open_time = factory.Faker("time")
+    close_time = factory.Faker("time")
+    day_of_week = factory.Faker("pytint", min_value=0, max_value=6)

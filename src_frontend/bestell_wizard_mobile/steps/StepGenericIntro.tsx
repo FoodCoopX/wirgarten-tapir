@@ -1,18 +1,21 @@
 import React from "react";
-import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
+
 import { Accordion, AccordionBody } from "react-bootstrap";
-import { GenericIntroContent } from "../types/GenericIntroContent.ts";
+import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { GenericIntroContent } from "../types/GenericIntroContent.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface StepGenericIntroProps {
   content: GenericIntroContent;
   goToNextStep: () => void;
+  stepActive: boolean;
 }
 
 const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
   content,
   goToNextStep,
+  stepActive,
 }) => {
   return (
     <>
@@ -46,7 +49,7 @@ const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
             ))}
         </div>
       </div>
-      <NextStepButton onClick={goToNextStep} />
+      <NextStepButton onClick={goToNextStep} stepActive={stepActive} />
     </>
   );
 };

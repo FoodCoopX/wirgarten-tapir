@@ -36,15 +36,22 @@ const SubscriptionCancellationModal: React.FC<
     useState<SolidarityContributionCancellationData>();
   const [cancelSolidarityContribution, setCancelSolidarityContribution] =
     useState(false);
-  const [canCancelCoopMembership, setCanCancelCoopMembership] = useState(false);
+
   const [legalStatus, setLegalStatus] = useState<LegalStatusEnum>();
   const [loading, setLoading] = useState(true);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<
     ProductForCancellation[]
   >([]);
+  const [canCancelCoopMembership, setCanCancelCoopMembership] = useState(false);
   const [cancelCoopMembershipSelected, setCancelCoopMembershipSelected] =
     useState(false);
+  const [canCancelAssociationMembership, setCanCancelAssociationMembership] =
+    useState(false);
+  const [
+    cancelAssociationMembershipSelected,
+    setCancelAssociationMembershipSelected,
+  ] = useState(false);
   const [confirmationLoading, setConfirmationLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [defaultCancellationReasons, setDefaultCancellationReasons] = useState<
@@ -75,6 +82,7 @@ const SubscriptionCancellationModal: React.FC<
       .then((data) => {
         setSubscribedProducts(data.subscribedProducts);
         setCanCancelCoopMembership(data.canCancelCoopMembership);
+        setCanCancelAssociationMembership(data.canCancelAssociationMembership);
         setLegalStatus(data.legalStatus);
         setDefaultCancellationReasons(data.defaultCancellationReasons);
         setSolidarityContributionData(data.solidarityContributionData);
@@ -113,6 +121,7 @@ const SubscriptionCancellationModal: React.FC<
           memberId: memberId,
           productIds: productIds,
           cancelCoopMembership: cancelCoopMembershipSelected,
+          cancelAssociationMembership: cancelAssociationMembershipSelected,
           cancellationReasons: selectedCancellationReasons,
           customCancellationReason: customCancellationReason,
           cancelSolidarityContribution: cancelSolidarityContribution,
@@ -176,9 +185,15 @@ const SubscriptionCancellationModal: React.FC<
               selectedProducts={selectedProducts}
               setSelectedProducts={setSelectedProducts}
               canCancelCoopMembership={canCancelCoopMembership}
-              membershipText={getMembershipText()}
               cancelCoopMembershipSelected={cancelCoopMembershipSelected}
               setCancelCoopMembershipSelected={setCancelCoopMembershipSelected}
+              canCancelAssociationMembership={canCancelAssociationMembership}
+              cancelAssociationMembershipSelected={
+                cancelAssociationMembershipSelected
+              }
+              setCancelAssociationMembershipSelected={
+                setCancelAssociationMembershipSelected
+              }
               goToNextStep={() => setCurrentStep("reasons")}
               solidarityContributionData={solidarityContributionData}
               cancelSolidarityContribution={cancelSolidarityContribution}
@@ -203,7 +218,9 @@ const SubscriptionCancellationModal: React.FC<
               selectedProducts={selectedProducts}
               onConfirm={onConfirm}
               cancelCoopMembershipSelected={cancelCoopMembershipSelected}
-              membershipText={getMembershipText()}
+              cancelAssociationMembershipSelected={
+                cancelAssociationMembershipSelected
+              }
               customCancellationReasons={customCancellationReason}
               goToPreviousStep={() => setCurrentStep("reasons")}
               confirmationLoading={confirmationLoading}

@@ -169,8 +169,8 @@ PHONENUMBER_DEFAULT_REGION = env.str("PHONENUMBER_DEFAULT_REGION", default="DE")
 LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
 
 if ENABLE_SILK_PROFILING:
-    SILKY_PYTHON_PROFILER = False
-    SILKY_PYTHON_PROFILER_BINARY = False
+    SILKY_PYTHON_PROFILER = True
+    SILKY_PYTHON_PROFILER_BINARY = True
     SILKY_META = True
 
 # these are keycloak internal roles and will be filtered out automatically when fetching roles

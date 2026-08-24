@@ -1925,6 +1925,27 @@ paths:
               schema:
                 type: string
           description: ''
+  /generic_exports/create_csv_export_from_templates:
+    post:
+      operationId: generic_exports_create_csv_export_from_templates_create
+      parameters:
+      - in: query
+        name: template_id
+        schema:
+          type: string
+      tags:
+      - generic_exports
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /generic_exports/create_pdf_export_from_templates:
     post:
       operationId: generic_exports_create_pdf_export_from_templates_create
@@ -1945,6 +1966,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /generic_exports/csv_export_templates:
+    get:
+      operationId: generic_exports_csv_export_templates_list
+      tags:
+      - generic_exports
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PdfExportTemplate'
           description: ''
   /generic_exports/csv_exports/:
     get:
@@ -2394,6 +2433,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaymentIntendedUsePreviewResponse'
+          description: ''
+  /payments/api/intended_use_preview_joker:
+    get:
+      operationId: payments_api_intended_use_preview_joker_retrieve
+      parameters:
+      - in: query
+        name: pattern_new
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: pattern_old
+        schema:
+          type: string
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JokerCreditIntendedUsePreviewResponse'
           description: ''
   /payments/api/mandate_reference_preview:
     get:
@@ -6682,6 +6748,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - can_be_hard_deleted
       - created_at
@@ -6765,6 +6833,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - description_in_bestell_wizard
       - name
@@ -7390,6 +7460,8 @@ components:
             minLength: 1
         cancel_coop_membership:
           type: boolean
+        cancel_association_membership:
+          type: boolean
         cancellation_reasons:
           type: array
           items:
@@ -7401,6 +7473,7 @@ components:
         cancel_solidarity_contribution:
           type: boolean
       required:
+      - cancel_association_membership
       - cancel_coop_membership
       - cancel_solidarity_contribution
       - member_id
@@ -7421,6 +7494,8 @@ components:
       properties:
         can_cancel_coop_membership:
           type: boolean
+        can_cancel_association_membership:
+          type: boolean
         subscribed_products:
           type: array
           items:
@@ -7440,6 +7515,7 @@ components:
         trial_period_is_flexible:
           type: boolean
       required:
+      - can_cancel_association_membership
       - can_cancel_coop_membership
       - default_cancellation_reasons
       - legal_status
@@ -9338,6 +9414,39 @@ components:
       - date
       - member
       - updated_at
+    JokerCreditIntendedUsePreviewResponse:
+      type: object
+      properties:
+        previews_new:
+          type: array
+          items:
+            type: string
+        previews_old:
+          type: array
+          items:
+            type: string
+        error:
+          type: string
+        tokens:
+          type: array
+          items:
+            type: string
+        credits:
+          type: array
+          items:
+            type: number
+            format: double
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+      required:
+      - credits
+      - error
+      - members
+      - previews_new
+      - previews_old
+      - tokens
     JokerRestriction:
       type: object
       properties:
@@ -10398,6 +10507,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:
@@ -11398,24 +11509,22 @@ components:
           type: object
           additionalProperties:
             type: integer
-        pickup_location_id:
-          type: string
-          minLength: 1
         growing_period_id:
           type: string
           nullable: true
           minLength: 1
       required:
       - growing_period_id
-      - pickup_location_id
       - shopping_cart
     PickupLocationCapacityCheckResponse:
       type: object
       properties:
-        enough_capacity_for_order:
-          type: boolean
+        pickup_location_ids_with_enough_capacity_for_order:
+          type: array
+          items:
+            type: string
       required:
-      - enough_capacity_for_order
+      - pickup_location_ids_with_enough_capacity_for_order
     PickupLocationCapacityEvolution:
       type: object
       properties:
@@ -12053,6 +12162,10 @@ components:
           type: integer
         payment_rhythm:
           type: string
+        current_pickup_location:
+          $ref: '#/components/schemas/PublicPickupLocation'
+        should_show_solidarity_step:
+          type: boolean
       required:
       - city
       - country
@@ -12065,6 +12178,7 @@ components:
       - number_of_coop_shares
       - phone_number
       - postcode
+      - should_show_solidarity_step
       - street
       - street_2
     PublicWaitingListEntryExistingMemberCreateRequest:

@@ -42,6 +42,12 @@ export interface CancellationData {
   canCancelCoopMembership: boolean;
   /**
    *
+   * @type {boolean}
+   * @memberof CancellationData
+   */
+  canCancelAssociationMembership: boolean;
+  /**
+   *
    * @type {Array<ProductForCancellation>}
    * @memberof CancellationData
    */
@@ -96,6 +102,11 @@ export function instanceOfCancellationData(
   )
     return false;
   if (
+    !("canCancelAssociationMembership" in value) ||
+    value["canCancelAssociationMembership"] === undefined
+  )
+    return false;
+  if (
     !("subscribedProducts" in value) ||
     value["subscribedProducts"] === undefined
   )
@@ -143,6 +154,7 @@ export function CancellationDataFromJSONTyped(
   }
   return {
     canCancelCoopMembership: json["can_cancel_coop_membership"],
+    canCancelAssociationMembership: json["can_cancel_association_membership"],
     subscribedProducts: (json["subscribed_products"] as Array<any>).map(
       ProductForCancellationFromJSON,
     ),
@@ -171,6 +183,7 @@ export function CancellationDataToJSONTyped(
 
   return {
     can_cancel_coop_membership: value["canCancelCoopMembership"],
+    can_cancel_association_membership: value["canCancelAssociationMembership"],
     subscribed_products: (value["subscribedProducts"] as Array<any>).map(
       ProductForCancellationToJSON,
     ),

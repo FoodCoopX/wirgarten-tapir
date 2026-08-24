@@ -22,7 +22,7 @@ interface Step4BProductTypeOrderProps {
   goToNextStep: () => void;
   shoppingCart: ShoppingCart;
   setShoppingCart: (cart: ShoppingCart) => void;
-  active: boolean;
+  stepActive: boolean;
   checkingCapacities: boolean;
   waitingListLinkConfirmationModeEnabled: boolean;
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
@@ -40,7 +40,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   goToNextStep,
   shoppingCart,
   setShoppingCart,
-  active,
+  stepActive,
   checkingCapacities,
   waitingListLinkConfirmationModeEnabled,
   waitingListEntryDetails,
@@ -57,12 +57,26 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     useState(false);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+
+    if (
+      stepActive &&
+      productType.products.length === 1 &&
+      productType.singleSubscriptionOnly
+    ) {
+      shoppingCart[productType.products[0].id!] = 1;
+      setShoppingCart({ ...shoppingCart });
+    }
+  }, [stepActive]);
 
   function validate() {
+    if (waitingListLinkConfirmationModeEnabled) {
+      goToNextStep();
+      return;
+    }
+
     setShowValidation(true);
     if (
       productType.mustBeSubscribedTo &&
@@ -132,23 +146,13 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       );
     }
 
-    const allProducts = [...productType.products];
-    const wishedProductIds = (waitingListEntryDetails.productWishes ?? []).map(
-      (productWish) => productWish.product.id,
-    );
-    const mustInclude = productType.products.filter(
+    return productType.products.filter(
       (product) =>
         !product.hiddenInBestellWizard ||
         (waitingListEntryDetails.productWishes ?? [])
           .map((productWish) => productWish.product.id)
           .includes(product.id),
     );
-    const mustInclude2 = productType.products.filter((product) =>
-      (waitingListEntryDetails.productWishes ?? [])
-        .map((productWish) => productWish.product.id)
-        .includes(product.id),
-    );
-    return mustInclude;
   }
 
   return (
@@ -197,6 +201,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         text={getNextButtonText()}
         loading={checkingCapacities || orderLoading}
         isOrderStep={isOrderStep}
+        stepActive={stepActive}
       />
       <Modal
         show={waitingListInfoModalOpen}

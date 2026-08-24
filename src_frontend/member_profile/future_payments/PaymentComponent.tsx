@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge } from "react-bootstrap";
 import { ExtendedPayment, Payment } from "../../api-client";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import formatSubscription from "../../utils/formatSubscription.ts";
@@ -34,9 +35,6 @@ function getStartDate(extendedPayment: ExtendedPayment) {
     ...membershipStartDates,
   ];
 
-  // Delivery-charge payments carry no subscriptions/contributions/memberships,
-  // so there are no candidate dates to derive the range from - fall back to the
-  // payment's own range, which is the actual delivery span for that location.
   if (candidates.length === 0) {
     return paymentRangeStart!;
   }
@@ -128,6 +126,26 @@ function getBadgeText(payment: Payment) {
   return payment.status;
 }
 
+function buildDeliveries(deliveryDates: Date[]) {
+  if (deliveryDates.length < 6) {
+    return deliveryDates
+      .toSorted()
+      .map((deliveryDate) => formatDateNumeric(new Date(deliveryDate)))
+      .join(", ");
+  }
+
+  return (
+    <TapirHelpButton
+      buttonSize={"sm"}
+      title={"Liefertage"}
+      text={deliveryDates
+        .toSorted()
+        .map((deliveryDate) => formatDateNumeric(new Date(deliveryDate)))
+        .join(", ")}
+    />
+  );
+}
+
 const PaymentComponent: React.FC<PaymentProps> = ({
   extendedPayment,
   trialPeriodEnabled,
@@ -180,10 +198,12 @@ const PaymentComponent: React.FC<PaymentProps> = ({
             )}{" "}
             pro Lieferung
             <br />
-            {extendedPayment.deliveryDates
-              .toSorted()
-              .map((deliveryDate) => formatDateNumeric(new Date(deliveryDate)))
-              .join(", ")}
+            <span
+              style={{ width: "100%" }}
+              className={"d-flex justify-content-center"}
+            >
+              {buildDeliveries(extendedPayment.deliveryDates)}
+            </span>
           </span>
         )}
         {(extendedPayment.subscriptions.length > 0 ||

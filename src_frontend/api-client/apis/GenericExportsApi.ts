@@ -48,6 +48,10 @@ export interface GenericExportsBuildPdfExportRetrieveRequest {
   referenceDatetime?: Date;
 }
 
+export interface GenericExportsCreateCsvExportFromTemplatesCreateRequest {
+  templateId?: string;
+}
+
 export interface GenericExportsCreatePdfExportFromTemplatesCreateRequest {
   templateId?: string;
 }
@@ -228,6 +232,63 @@ export class GenericExportsApi extends runtime.BaseAPI {
 
   /**
    */
+  async genericExportsCreateCsvExportFromTemplatesCreateRaw(
+    requestParameters: GenericExportsCreateCsvExportFromTemplatesCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["templateId"] != null) {
+      queryParameters["template_id"] = requestParameters["templateId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/generic_exports/create_csv_export_from_templates`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async genericExportsCreateCsvExportFromTemplatesCreate(
+    requestParameters: GenericExportsCreateCsvExportFromTemplatesCreateRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.genericExportsCreateCsvExportFromTemplatesCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
   async genericExportsCreatePdfExportFromTemplatesCreateRaw(
     requestParameters: GenericExportsCreatePdfExportFromTemplatesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -280,6 +341,54 @@ export class GenericExportsApi extends runtime.BaseAPI {
         requestParameters,
         initOverrides,
       );
+    return await response.value();
+  }
+
+  /**
+   */
+  async genericExportsCsvExportTemplatesListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<PdfExportTemplate>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/generic_exports/csv_export_templates`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(PdfExportTemplateFromJSON),
+    );
+  }
+
+  /**
+   */
+  async genericExportsCsvExportTemplatesList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<PdfExportTemplate>> {
+    const response =
+      await this.genericExportsCsvExportTemplatesListRaw(initOverrides);
     return await response.value();
   }
 

@@ -28,3 +28,10 @@ class GenericExportsConfig(AppConfig):
 
         for segment in PickupLocationSegmentProvider.get_pickup_location_segments():
             ExportSegmentManager.register_segment(segment)
+
+        from tapir.deliveries.services.joker_segment_provider import (
+            JokerSegmentProvider,
+        )
+
+        for segment in JokerSegmentProvider.get_joker_segments():
+            ExportSegmentManager.register_segment(segment)

@@ -103,6 +103,15 @@ class PaymentIntendedUsePreviewResponseSerializer(serializers.Serializer):
     members = MemberSerializer(many=True)
 
 
+class JokerCreditIntendedUsePreviewResponseSerializer(serializers.Serializer):
+    previews_new = serializers.ListField(child=serializers.CharField())
+    previews_old = serializers.ListField(child=serializers.CharField())
+    error = serializers.CharField()
+    tokens = serializers.ListField(child=serializers.CharField())
+    credits = serializers.ListSerializer(child=serializers.FloatField())
+    members = MemberSerializer(many=True)
+
+
 class PaymentTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentTransaction

@@ -57,6 +57,11 @@ urlpatterns = [
         name="intended_use_preview_contracts",
     ),
     path(
+        "api/intended_use_preview_joker",
+        views.CreditIntendedUsePreviewJokerApiView.as_view(),
+        name="intended_use_preview_joker",
+    ),
+    path(
         "api/intended_use_preview_coop_shares",
         views.PaymentIntendedUsePreviewCoopSharesApiView.as_view(),
         name="intended_use_preview_coop_shares",

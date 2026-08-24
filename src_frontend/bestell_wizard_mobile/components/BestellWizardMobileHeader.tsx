@@ -30,12 +30,12 @@ interface BestellWizardMobileHeaderProps {
   productTypesInWaitingList: Set<PublicProductType>;
   steps: Step[];
   currentStep: Step;
-  setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
   goToProductTypeStep: (productType: PublicProductType) => void;
   associationMembershipType?: AssociationMembershipType;
   contractStartDate: Date;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  setCurrentStep: (step: Step) => void;
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
@@ -48,13 +48,13 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   atLeastOneProductTypeInWaitingList,
   productTypesInWaitingList,
   steps,
-  setCurrentStep,
   currentStep,
   selectedNumberOfCoopShares,
   goToProductTypeStep,
   associationMembershipType,
   contractStartDate,
   selectedGrowingPeriod,
+  setCurrentStep,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -126,6 +126,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         associationMembershipType={associationMembershipType}
         contractStartDate={contractStartDate}
         selectedGrowingPeriod={selectedGrowingPeriod}
+        setCurrentStep={setCurrentStep}
       />
     </>
   );

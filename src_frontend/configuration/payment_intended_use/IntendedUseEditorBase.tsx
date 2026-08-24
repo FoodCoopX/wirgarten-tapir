@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
+import { IntendedUseType } from "../IntendedUseType.ts";
 import IntendedUseEditorModal from "./IntendedUseEditorModal.tsx";
 
 interface IntendedUseEditorBaseProps {
-  isContract: boolean;
+  intendedUseType: IntendedUseType;
   inputField: HTMLTextAreaElement;
   title: string;
 }
 
 const IntendedUseEditorBase: React.FC<IntendedUseEditorBaseProps> = ({
-  isContract,
+  intendedUseType,
   inputField,
   title,
 }) => {
@@ -54,7 +55,7 @@ const IntendedUseEditorBase: React.FC<IntendedUseEditorBaseProps> = ({
         title={title}
         outerPattern={currentPattern}
         setOuterPattern={setCurrentPattern}
-        isContract={isContract}
+        intendedUseType={intendedUseType}
       />
     </>
   );

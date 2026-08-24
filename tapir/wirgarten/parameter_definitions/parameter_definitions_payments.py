@@ -19,6 +19,7 @@ if typing.TYPE_CHECKING:
     )
 
 WARNING_USE_EDITOR = "Es ist empfohlen dieses Parameter nicht direkt zu ändern sondern den Editor zu nutzen, nutz dafür den Knopf am Textfeld Rechts"
+DESCRIPTION_REQUIRED_FOR_PAYMENT_XML = "Wird im Export der Lastschriften oben eingefügt, da für Umwandlung in XML-Datei notwendig."
 
 
 class ParameterDefinitionsPayments:
@@ -101,7 +102,18 @@ class ParameterDefinitionsPayments:
             label="IBAN der Organisation",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
-            description="Wird im Export der Lastschriften oben eingefügt, da für Umwandlung in XML-Datei notwendig.",
+            description=DESCRIPTION_REQUIRED_FOR_PAYMENT_XML,
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_ORGANISATION_BIC,
+            label="BIC der Organisation",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description=DESCRIPTION_REQUIRED_FOR_PAYMENT_XML,
             category=ParameterCategory.PAYMENT,
             order_priority=order_priority,
         )
@@ -112,7 +124,7 @@ class ParameterDefinitionsPayments:
             label="Gläubiger-Identifikationsnummer",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
-            description="Wird im Export der Lastschriften oben eingefügt, da für Umwandlung in XML-Datei notwendig.",
+            description=DESCRIPTION_REQUIRED_FOR_PAYMENT_XML,
             category=ParameterCategory.PAYMENT,
             order_priority=order_priority,
         )
@@ -247,6 +259,26 @@ class ParameterDefinitionsPayments:
                 textarea=True,
                 vars_hint=IntendedUseTokens.COMMON_TOKENS
                 + IntendedUseTokens.CONTRACT_TOKENS,
+            ),
+        )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PAYMENT_INTENDED_USE_JOKER_CREDIT,
+            label="Verwendungszweck für Joker-Gutschriften",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{betriebsname}\n{nachname} {mitgliedsnummer_lang}\n{anzahl_an_joker}",
+            description="Wird verwendet in der Export zu Mitglieder, als Spalte neben der Gutschristwert. "
+            + WARNING_USE_EDITOR,
+            category=ParameterCategory.PAYMENT,
+            order_priority=order_priority,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM, cache=cache
+                ),
+                textarea=True,
+                vars_hint=IntendedUseTokens.COMMON_TOKENS
+                + IntendedUseTokens.JOKER_TOKENS,
             ),
         )
         order_priority -= 1

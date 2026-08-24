@@ -36,6 +36,7 @@ class ParameterKeys:
     PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
     PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
+    PAYMENT_ORGANISATION_BIC = f"{PREFIX}.payment.organisation_bic"
     PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
     PAYMENT_MANDATE_REFERENCE_PATTERN = f"{PREFIX}.payment.mandate_reference.pattern"
     PAYMENT_INTENDED_USE_ENABLE_CUSTOM = f"{PREFIX}.payment.intended_use.enable_custom"
@@ -52,6 +53,7 @@ class ParameterKeys:
     PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE = (
         f"{PREFIX}.payment.intended_use.multiple_month_invoice"
     )
+    PAYMENT_INTENDED_USE_JOKER_CREDIT = f"{PREFIX}.payment.intended_use.joker_credit"
     PAYMENT_SEND_CSV_FILE_PER_MAIL = f"{PREFIX}.payment.send_csv_file_per_mail"
     PAYMENT_SEND_XML_FILE_PER_MAIL = f"{PREFIX}.payment.send_xml_file_per_mail"
     MEMBERS_CAN_SEE_OWN_PAYMENTS = (

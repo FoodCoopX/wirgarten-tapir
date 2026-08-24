@@ -13,7 +13,7 @@ interface Step7SolidarityContributionProps {
   settings: BestellWizardSettings;
   solidarityContribution: number;
   setSolidarityContribution: (c: number) => void;
-  active: boolean;
+  stepActive: boolean;
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;
   associationMembershipType?: AssociationMembershipType;
@@ -28,7 +28,7 @@ const Step7SolidarityContribution: React.FC<
   goToNextStep,
   settings,
   setSolidarityContribution,
-  active,
+  stepActive,
   solidarityContribution,
   shoppingCart,
   productTypesInWaitingList,
@@ -69,10 +69,10 @@ const Step7SolidarityContribution: React.FC<
   }, [selectedValue, customValue]);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   function validate() {
     setShowValidation(true);
@@ -96,7 +96,7 @@ const Step7SolidarityContribution: React.FC<
     if (value === "custom") {
       return "Ich möchte einen anderen Betrag zahlen";
     }
-    return formatCurrency(value);
+    return formatCurrency(value) + " pro Monat";
   }
 
   function onSelect(selected: string) {
@@ -191,17 +191,20 @@ const Step7SolidarityContribution: React.FC<
               Bitte eine Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
               beizutragen, oder '-10' um 10€ weniger zu zahlen.
             </Form.Text>
-            <Form.Control
-              id={"custom_solidarity_contribution"}
-              placeholder={"Personalisierter Beitrag"}
-              value={customValue}
-              onChange={(event) => updateCustomValue(event.target.value)}
-              style={{ maxWidth: "300px" }}
-              isValid={showValidation && isValueValid(solidarityContribution)}
-              isInvalid={
-                showValidation && !isValueValid(solidarityContribution)
-              }
-            />
+            <span className={"d-flex gap-2"}>
+              <Form.Control
+                id={"custom_solidarity_contribution"}
+                placeholder={"Personalisierter Beitrag"}
+                value={customValue}
+                onChange={(event) => updateCustomValue(event.target.value)}
+                style={{ maxWidth: "300px" }}
+                isValid={showValidation && isValueValid(solidarityContribution)}
+                isInvalid={
+                  showValidation && !isValueValid(solidarityContribution)
+                }
+              />
+              <span>pro Monat</span>
+            </span>
             {!isValueValid(solidarityContribution) &&
               (settings.solidarityContributionMinimum ?? 0) < 0 && (
                 <Alert variant={"danger"}>
@@ -212,7 +215,7 @@ const Step7SolidarityContribution: React.FC<
           </Form.Group>
         )}
       </div>
-      <NextStepButton onClick={validate} />
+      <NextStepButton onClick={validate} stepActive={stepActive} />
     </div>
   );
 };

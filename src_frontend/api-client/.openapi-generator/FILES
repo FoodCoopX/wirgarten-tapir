@@ -89,6 +89,7 @@ models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
 models/GrowingPeriodWithDeliveryDayAdjustments.ts
 models/Joker.ts
+models/JokerCreditIntendedUsePreviewResponse.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
 models/LegalStatusEnum.ts

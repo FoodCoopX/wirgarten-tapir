@@ -18,10 +18,13 @@ from tapir.pickup_locations.services.pickup_location_opening_times_manager impor
     PickupLocationOpeningTimesManager,
 )
 from tapir.wirgarten.constants import WEEKLY
-from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
+from tapir.wirgarten.models import (
+    ProductType,
+    PickupLocationOpeningTime,
+    MemberPickupLocation,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     MemberWithSubscriptionFactory,
@@ -29,6 +32,7 @@ from tapir.wirgarten.tests.factories import (
     ProductTypeFactory,
     GrowingPeriodFactory,
     ProductCapacityFactory,
+    PickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -36,7 +40,10 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
     def setUp(self):
         super().setUp()
-        mock_timezone(self, factories.NOW)
+        mock_timezone(
+            test=self,
+            now=datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc),
+        )
 
     @classmethod
     def setUpTestData(cls):
@@ -131,8 +138,8 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         mock_pickup_location = Mock()
         mock_get_member_pickup_location_id_from_cache.return_value = "test_pl_id"
         cache = {"pickup_location_by_id": {"test_pl_id": mock_pickup_location}}
-        mock_opening_time = Mock()
-        mock_pickup_location_opening_times_objects.filter.return_value.order_by.return_value = [
+        mock_opening_time = PickupLocationOpeningTime(day_of_week=3)
+        mock_pickup_location_opening_times_objects.filter.return_value = [
             mock_opening_time
         ]
         mock_update_delivery_date_to_opening_times.return_value = datetime.date(
@@ -494,3 +501,49 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         )
 
         self.assertIsNotNone(delivery_object)
+
+    def test_buildDeliveryObject_openingTimesSpanOverTwoWeeks_returnsCorrectDeliveryDate(
+        self,
+    ):
+        member = MemberFactory.create()
+        SubscriptionFactory.create(member=member)
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+        pickup_location = PickupLocationFactory.create()
+        MemberPickupLocation.objects.create(
+            member=member,
+            pickup_location=pickup_location,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+        )
+        for day in [0, 1, 5, 6]:
+            PickupLocationOpeningTime.objects.create(
+                pickup_location=pickup_location,
+                day_of_week=day,
+                open_time=datetime.time(hour=8),
+                close_time=datetime.time(hour=18),
+            )
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)  # Monday
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNotNone(delivery_object)
+        self.assertEqual(
+            datetime.date(year=2023, month=6, day=10),
+            delivery_object["delivery_date"],
+            "This location is open Monday, Tuesday, Saturday and Sunday, but the delivery day is Friday: the Monday and Tuesday are for the following week and should be ignored.",
+        )
+
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNotNone(delivery_object)
+        self.assertEqual(
+            datetime.date(year=2023, month=6, day=6), delivery_object["delivery_date"]
+        )

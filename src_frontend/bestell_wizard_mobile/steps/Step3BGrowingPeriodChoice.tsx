@@ -1,16 +1,17 @@
 import React from "react";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { Form } from "react-bootstrap";
 import { PublicGrowingPeriod } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import NextStepButton from "../components/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step3BGrowingPeriodChoiceProps {
   settings: BestellWizardSettings;
   goToNextStep: () => void;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   setSelectedGrowingPeriod: (p: PublicGrowingPeriod) => void;
+  stepActive: boolean;
 }
 
 function getPeriodName(period: PublicGrowingPeriod) {
@@ -26,6 +27,7 @@ const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({
   goToNextStep,
   selectedGrowingPeriod,
   setSelectedGrowingPeriod,
+  stepActive,
 }) => {
   return (
     <>
@@ -67,7 +69,7 @@ const Step3BGrowingPeriodChoice: React.FC<Step3BGrowingPeriodChoiceProps> = ({
           </div>
         ))}
       </div>
-      <NextStepButton onClick={goToNextStep} />
+      <NextStepButton onClick={goToNextStep} stepActive={stepActive} />
     </>
   );
 };

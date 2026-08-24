@@ -143,6 +143,18 @@ export interface PublicWaitingListEntryDetails {
    * @memberof PublicWaitingListEntryDetails
    */
   paymentRhythm?: string;
+  /**
+   *
+   * @type {PublicPickupLocation}
+   * @memberof PublicWaitingListEntryDetails
+   */
+  currentPickupLocation?: PublicPickupLocation;
+  /**
+   *
+   * @type {boolean}
+   * @memberof PublicWaitingListEntryDetails
+   */
+  shouldShowSolidarityStep: boolean;
 }
 
 /**
@@ -171,6 +183,11 @@ export function instanceOfPublicWaitingListEntryDetails(
   if (
     !("numberOfCoopShares" in value) ||
     value["numberOfCoopShares"] === undefined
+  )
+    return false;
+  if (
+    !("shouldShowSolidarityStep" in value) ||
+    value["shouldShowSolidarityStep"] === undefined
   )
     return false;
   return true;
@@ -222,6 +239,11 @@ export function PublicWaitingListEntryDetailsFromJSONTyped(
     numberOfCoopShares: json["number_of_coop_shares"],
     paymentRhythm:
       json["payment_rhythm"] == null ? undefined : json["payment_rhythm"],
+    currentPickupLocation:
+      json["current_pickup_location"] == null
+        ? undefined
+        : PublicPickupLocationFromJSON(json["current_pickup_location"]),
+    shouldShowSolidarityStep: json["should_show_solidarity_step"],
   };
 }
 
@@ -272,5 +294,9 @@ export function PublicWaitingListEntryDetailsToJSONTyped(
           ),
     number_of_coop_shares: value["numberOfCoopShares"],
     payment_rhythm: value["paymentRhythm"],
+    current_pickup_location: PublicPickupLocationToJSON(
+      value["currentPickupLocation"],
+    ),
+    should_show_solidarity_step: value["shouldShowSolidarityStep"],
   };
 }

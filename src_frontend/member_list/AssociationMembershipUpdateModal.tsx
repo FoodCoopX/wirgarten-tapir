@@ -153,12 +153,17 @@ const AssociationMembershipUpdateModal: React.FC<
             text={
               <>
                 <p>
-                  Bestehen bereits andere Mitgliedschaften, die nach dem
-                  ausgewähltem Start-Datum beginnen, werden diese anderen
-                  Mitgliedschaften gelöscht.
+                  Einem Mitglied kann immer nur eine Mitgliedschaftsart
+                  zugewiesen werden.
                 </p>
                 <p>
-                  Bestehen bereits andere Mitgliedschaften, die am ausgewähltem
+                  Bestehen bereits andere Mitgliedschaften, die nach dem durch
+                  den Admin ausgewähltem Start-Datum beginnen würden, werden
+                  diese anderen Mitgliedschaften gelöscht und es bleibt die neu
+                  angelegte Vereinsmitgliedschaft bestehen.
+                </p>
+                <p>
+                  Bestehen andere Mitgliedschaften, die am ausgewähltem
                   Start-Datum bereits aktiv sind, wird für diese anderen
                   Mitgliedschaften das End-Datum einen Tag vor dem Start-Datum
                   der neu erzeugten Mitgliedschaft gesetzt.

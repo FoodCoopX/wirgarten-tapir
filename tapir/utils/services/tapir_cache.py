@@ -6,6 +6,7 @@ from tapir.associations.models import (
     AssociationMembershipTypePrice,
     AssociationMembership,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import (
     Joker,
     DeliveryDayAdjustment,
@@ -34,6 +35,7 @@ from tapir.wirgarten.models import (
     MandateReference,
     Payment,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
 
@@ -350,14 +352,26 @@ class TapirCache:
         opening_times_by_pickup_location_id_cache = get_from_cache_or_compute(
             cache, "opening_times_by_pickup_location_id", lambda: {}
         )
+
+        def compute():
+            delivery_day = get_parameter_value(
+                key=ParameterKeys.DELIVERY_DAY, cache=cache
+            )
+            opening_times = PickupLocationOpeningTime.objects.filter(
+                pickup_location_id=pickup_location_id
+            )
+            return sorted(
+                opening_times,
+                key=lambda opening_time: (
+                    0 if opening_time.day_of_week >= delivery_day else 1,
+                    opening_time.day_of_week,
+                ),
+            )
+
         return get_from_cache_or_compute(
-            opening_times_by_pickup_location_id_cache,
-            pickup_location_id,
-            lambda: list(
-                PickupLocationOpeningTime.objects.filter(
-                    pickup_location_id=pickup_location_id
-                ).order_by("day_of_week")
-            ),
+            cache=opening_times_by_pickup_location_id_cache,
+            key=pickup_location_id,
+            compute_function=compute,
         )
 
     @classmethod
@@ -724,7 +738,7 @@ class TapirCache:
         def compute():
             credits_by_member: dict[str, list[MemberCredit]] = {}
             for credit in MemberCredit.objects.order_by("due_date"):
-                credits_by_member.setdefault(credit.member_id, []).append(credit)
+                credits_by_member.setdefault(str(credit.member_id), []).append(credit)
             return credits_by_member
 
         credits_by_member_cache = get_from_cache_or_compute(
@@ -740,7 +754,7 @@ class TapirCache:
         def compute():
             prices_by_type: dict[str, list[AssociationMembershipTypePrice]] = {}
             for price in AssociationMembershipTypePrice.objects.order_by("valid_from"):
-                prices_by_type.setdefault(price.type_id, []).append(price)
+                prices_by_type.setdefault(str(price.type_id), []).append(price)
             return prices_by_type
 
         prices_by_type_cache = get_from_cache_or_compute(
@@ -856,3 +870,17 @@ class TapirCache:
             key="product_basket_size_equivalence_objects_by_product",
             compute_function=compute,
         )
+
+    @classmethod
+    def get_coop_share_transaction_by_member_id(cls, cache: dict, member_id: str):
+        def compute():
+            result: dict[str, list[CoopShareTransaction]] = {}
+            for transaction in CoopShareTransaction.objects.order_by("valid_at"):
+                result.setdefault(str(transaction.member_id), []).append(transaction)
+            return result
+
+        return get_from_cache_or_compute(
+            cache=cache,
+            key="coop_share_transaction_by_member_id",
+            compute_function=compute,
+        ).get(member_id, [])

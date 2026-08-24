@@ -220,7 +220,7 @@ class Pain008XmlGenerator:
         creditor_iban = cls._append_element(creditor_id, "IBAN")
         creditor_iban.text = get_parameter_value(
             key=ParameterKeys.PAYMENT_ORGANISATION_IBAN, cache=cache
-        )
+        ).replace(" ", "")
         if len(creditor_iban.text.strip()) == 0:
             raise ValidationError(
                 "Der Parameter 'IBAN der Organisation' muss in der Konfig gesetzt werden"
@@ -230,11 +230,23 @@ class Pain008XmlGenerator:
         financial_institution_id_container = cls._append_element(
             creditor_agent, "FinInstnId"
         )
-        financial_instituion_other = cls._append_element(
-            financial_institution_id_container, "Othr"
+        bic = get_parameter_value(
+            key=ParameterKeys.PAYMENT_ORGANISATION_BIC, cache=cache
         )
-        financial_institution_id = cls._append_element(financial_instituion_other, "Id")
-        financial_institution_id.text = cls.NOT_PROVIDED
+        bic = bic.strip()
+        if bic == "":
+            financial_institution_other = cls._append_element(
+                financial_institution_id_container, "Othr"
+            )
+            financial_institution_id = cls._append_element(
+                financial_institution_other, "Id"
+            )
+            financial_institution_id.text = cls.NOT_PROVIDED
+        else:
+            financial_institution_bic = cls._append_element(
+                financial_institution_id_container, "BICFI"
+            )
+            financial_institution_bic.text = bic
 
         chrg_br = cls._append_element(
             payments_container, "ChrgBr"

@@ -7,6 +7,9 @@
 {% block head %}
     {% vite_asset 'configuration/configuration_entry.tsx' %}
 {% endblock head %}
+{% block title %}
+    Konfiguration - {{ block.super }}
+{% endblock title %}
 {% block content %}
     <div style="margin-top: 1em;">
         <form id="form" method="post">
@@ -110,5 +113,6 @@
     <div id="payment-intended-use-config"
          data-contract-keys="{{ intended_use_contract_keys }}"
          data-coop-shares-keys="{{ intended_use_coop_shares_keys }}"
+         data-joker-keys="{{ intended_use_joker_keys }}"
          style="display:none"></div>
 {% endblock %}

@@ -20,8 +20,10 @@ import formatAddress from "../../utils/formatAddress.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { Step } from "../types/Step.ts";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { doesWaitingListHaveProductType } from "../utils/doesWaitingListHaveProductType.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getFirstPickupLocationWithCapacity } from "../utils/getFirstPickupLocationWithCapacity.ts";
 import {
@@ -31,6 +33,7 @@ import {
 import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
+import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -57,6 +60,8 @@ interface Step10OrderSummaryProps {
   associationMembershipType?: AssociationMembershipType;
   selectedGrowingPeriod: PublicGrowingPeriod | undefined;
   hideTrialPeriod: boolean;
+  stepActive: boolean;
+  setCurrentStep: (step: Step) => void;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -82,18 +87,30 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   associationMembershipType,
   selectedGrowingPeriod,
   hideTrialPeriod,
+  stepActive,
+  setCurrentStep,
 }) => {
   const [activePickupLocation, setActivePickupLocation] =
     useState<PublicPickupLocation>();
 
   useEffect(() => {
-    setActivePickupLocation(
-      getFirstPickupLocationWithCapacity(
+    setActivePickupLocation(getRelevantPickupLocation());
+  }, [selectedPickupLocations]);
+
+  function getRelevantPickupLocation(): PublicPickupLocation | undefined {
+    if (waitingListEntryDetails === undefined) {
+      return getFirstPickupLocationWithCapacity(
         selectedPickupLocations,
         pickupLocationsWithCapacityFull,
-      ),
-    );
-  }, [selectedPickupLocations]);
+      );
+    }
+
+    if (selectedPickupLocations.length > 0) {
+      return selectedPickupLocations[0];
+    }
+
+    return waitingListEntryDetails.currentPickupLocation;
+  }
 
   function getProductTypeTitle(productType: PublicProductType) {
     if (isProductTypeOrdered(productType, shoppingCart)) {
@@ -155,10 +172,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   }
 
   function getDateOfFirstDelivery(productTypeId: string) {
-    const pickupLocation = getFirstPickupLocationWithCapacity(
-      selectedPickupLocations,
-      pickupLocationsWithCapacityFull,
-    );
+    const pickupLocation = getRelevantPickupLocation();
     if (!pickupLocation) {
       return undefined;
     }
@@ -260,36 +274,54 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         .map(([productId, quantity]) =>
                           buildProductDetails(productId, quantity, productType),
                         )}
-                      {!productTypesInWaitingList.has(productType) && (
-                        <li>
-                          Vertragsstart: {formatDateNumeric(contractStartDate)}
-                        </li>
-                      )}
-                      {!productType.noDelivery &&
-                        !productTypesInWaitingList.has(productType) && (
-                          <>
-                            <li>
-                              Erste Abholung:{" "}
-                              {selectedPickupLocations.length > 0 &&
-                                formatDateNumeric(
-                                  getDateOfFirstDelivery(productType.id!),
+                      {doesWaitingListHaveProductType(
+                        productTypesInWaitingList,
+                        productType,
+                      ) ? (
+                        <li>Warteliste</li>
+                      ) : (
+                        <>
+                          <li>
+                            Vertragsstart:{" "}
+                            {formatDateNumeric(contractStartDate)}
+                          </li>
+                          {!productType.noDelivery && (
+                            <>
+                              <li>
+                                Erste Abholung:{" "}
+                                {(selectedPickupLocations.length > 0 ||
+                                  waitingListEntryDetails?.currentPickupLocation) &&
+                                  formatDateNumeric(
+                                    getDateOfFirstDelivery(productType.id!),
+                                  )}
+                              </li>
+                              <li>
+                                Aktive Verteilstation:{" "}
+                                {activePickupLocation &&
+                                  activePickupLocation.name +
+                                    " (" +
+                                    formatAddress(
+                                      activePickupLocation.street,
+                                      activePickupLocation.street2,
+                                      activePickupLocation.postcode,
+                                      activePickupLocation.city,
+                                    ) +
+                                    ")"}
+                              </li>
+                              {!hideTrialPeriod &&
+                                settings.trialPeriodLengthInWeeks > 0 && (
+                                  <li>
+                                    Probezeit bis{" "}
+                                    {formatDateNumeric(
+                                      getEndOfTrialPeriod(productType.id!),
+                                    )}
+                                  </li>
                                 )}
-                            </li>
-                            <li>
-                              Aktive Verteilstation:{" "}
-                              {activePickupLocation &&
-                                activePickupLocation.name +
-                                  " (" +
-                                  formatAddress(
-                                    activePickupLocation.street,
-                                    activePickupLocation.street2,
-                                    activePickupLocation.postcode,
-                                    activePickupLocation.city,
-                                  ) +
-                                  ")"}
-                            </li>
-                          </>
-                        )}
+                            </>
+                          )}
+                        </>
+                      )}
+
                       {!productType.noDelivery &&
                         getLocationsNotActive().length > 0 && (
                           <li>
@@ -303,19 +335,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                                 </li>
                               ))}
                             </ul>
-                          </li>
-                        )}
-                      {productTypesInWaitingList.has(productType) && (
-                        <li>Warteliste</li>
-                      )}
-                      {!hideTrialPeriod &&
-                        !productTypesInWaitingList.has(productType) &&
-                        settings.trialPeriodLengthInWeeks > 0 && (
-                          <li>
-                            Probezeit bis{" "}
-                            {formatDateNumeric(
-                              getEndOfTrialPeriod(productType.id!),
-                            )}
                           </li>
                         )}
                     </ul>
@@ -351,6 +370,15 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         formatCurrency(
                           numberOfCoopShares * settings.priceOfAShare,
                         )}
+                    <TapirButton
+                      variant={BUTTON_VARIANT}
+                      size={"sm"}
+                      text={"Anteile anpassen"}
+                      icon={"edit"}
+                      onClick={() => {
+                        setCurrentStep("6b_coop_shares");
+                      }}
+                    />
                   </AccordionBody>
                 </Accordion.Item>
               </Accordion>
@@ -375,6 +403,21 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         associationMembershipType,
                         contractStartDate,
                       )}
+                    </li>
+                  )}
+                  {getVisibleAssociationMembershipTypes(
+                    settings.associationMembershipTypes,
+                  ).length > 1 && (
+                    <li>
+                      <TapirButton
+                        variant={BUTTON_VARIANT}
+                        size={"sm"}
+                        text={"Mitgliedschaft anpassen"}
+                        icon={"edit"}
+                        onClick={() => {
+                          setCurrentStep("6b_association_membership");
+                        }}
+                      />
                     </li>
                   )}
                 </AccordionBody>
@@ -407,7 +450,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                             )?.price ?? 0) * quantity,
                           )}{" "}
                           / Monat
-                          {productTypesInWaitingList.has(
+                          {doesWaitingListHaveProductType(
+                            productTypesInWaitingList,
                             getProductTypeByProductId(productId, settings)!,
                           )
                             ? " (Start wenn Platz frei)"
@@ -459,6 +503,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
         onClick={isOrderStep ? confirmOrder : goToNextStep}
         isOrderStep={isOrderStep}
         loading={confirmOrderLoading}
+        stepActive={stepActive}
       />
     </>
   );

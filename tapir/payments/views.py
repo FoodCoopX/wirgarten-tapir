@@ -21,8 +21,10 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import Joker
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.payments import config as payments_config
+from tapir.payments.config import IntendedUseTokens
 from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
@@ -39,6 +41,7 @@ from tapir.payments.serializers import (
     PaymentIntendedUsePreviewResponseSerializer,
     PaymentTransactionSerializer,
     PaymentTransactionDetailsSerializer,
+    JokerCreditIntendedUsePreviewResponseSerializer,
 )
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
@@ -307,8 +310,7 @@ class GetFutureMemberPaymentsApiView(APIView):
         subscriptions = [
             subscription
             for subscription in existing_subscriptions + planned_renewed_subscriptions
-            if subscription.mandate_ref == payment.mandate_ref
-            and (
+            if (
                 subscription.product.type.name == payment.type
                 or not filter_by_payment_type
             )
@@ -731,8 +733,8 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             "previews_old": ["" for _ in payments],
             "previews_new": ["" for _ in payments],
             "error": "",
-            "tokens": sorted(payments_config.IntendedUseTokens.COMMON_TOKENS)
-            + sorted(payments_config.IntendedUseTokens.CONTRACT_TOKENS),
+            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.CONTRACT_TOKENS),
             "payments": payments,
             "members": [payment.mandate_ref.member for payment in payments],
         }
@@ -778,9 +780,11 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         random_date = min_date + datetime.timedelta(
             days=random.randint(0, (max_date - min_date).days)
         )
-        payments = Payment.objects.exclude(
-            type=payments_config.PAYMENT_TYPE_COOP_SHARES
-        ).filter(due_date__year=random_date.year, due_date__month=random_date.month)
+        payments = (
+            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            .filter(due_date__year=random_date.year, due_date__month=random_date.month)
+            .select_related("mandate_ref")
+        )
 
         combined_payments = list(
             PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
@@ -791,7 +795,7 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         return sorted(
             payments,
             key=lambda payment: (
-                payment.mandate_ref.member.member_no,
+                payment.mandate_ref.member.member_no or 0,
                 payment.mandate_ref.member.last_name,
             ),
         )
@@ -816,28 +820,28 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
             is_short_member = fake_member.first_name == "John"
 
             token_value_overrides = {
-                payments_config.IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
+                IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
                     10 if is_short_member else 100
                 ),
-                payments_config.IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITH_SOLI: format_currency(
+                IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITH_SOLI: format_currency(
                     5 if is_short_member else 150
                 ),
-                payments_config.IntendedUseTokens.MONTHLY_PRICE_JUST_SOLI: format_currency(
+                IntendedUseTokens.MONTHLY_PRICE_JUST_SOLI: format_currency(
                     -5 if is_short_member else 50
                 ),
-                payments_config.IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
+                IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
                     10 if is_short_member else 1200
                 ),
-                payments_config.IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: format_currency(
+                IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: format_currency(
                     5 if is_short_member else 900
                 ),
-                payments_config.IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: format_currency(
+                IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: format_currency(
                     -5 if is_short_member else 300
                 ),
-                payments_config.IntendedUseTokens.CONTRACT_LIST: cls._build_fake_contract_list(
+                IntendedUseTokens.CONTRACT_LIST: cls._build_fake_contract_list(
                     short_version=is_short_member, cache=cache
                 ),
-                payments_config.IntendedUseTokens.PAYMENT_RHYTHM: (
+                IntendedUseTokens.PAYMENT_RHYTHM: (
                     MemberPaymentRhythm.Rhythm.MONTHLY.label
                     if is_short_member
                     else MemberPaymentRhythm.Rhythm.QUARTERLY.label
@@ -920,6 +924,135 @@ class PaymentIntendedUsePreviewContractsApiView(APIView):
         return products[0]
 
 
+class CreditIntendedUsePreviewJokerApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: JokerCreditIntendedUsePreviewResponseSerializer},
+        parameters=[
+            OpenApiParameter(name="pattern_old", type=str, required=True),
+            OpenApiParameter(name="pattern_new", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        pattern_old = request.query_params.get("pattern_old", "")
+        pattern_new = request.query_params.get("pattern_new", "")
+        cache = {}
+
+        members_with_joker = self._get_random_members_with_joker(cache=cache)
+        member_credits = [0 for _ in members_with_joker]
+
+        response_data = {
+            "previews_old": ["" for _ in members_with_joker],
+            "previews_new": ["" for _ in members_with_joker],
+            "error": "",
+            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.JOKER_TOKENS),
+            "credits": member_credits,
+            "members": list(members_with_joker),
+        }
+
+        today = get_today(cache=cache)
+        try:
+            response_data["previews_old"] = [
+                IntendedUsePatternExpander.expand_pattern_joker(
+                    pattern=pattern_old,
+                    member=member,
+                    cache=cache,
+                    reference_date=today,
+                )
+                for member in members_with_joker
+            ]
+            response_data["previews_new"] = [
+                IntendedUsePatternExpander.expand_pattern_joker(
+                    pattern=pattern_new,
+                    member=member,
+                    cache=cache,
+                    reference_date=today,
+                )
+                for member in members_with_joker
+            ]
+            self._add_fake_data(
+                response_data=response_data,
+                pattern_old=pattern_old,
+                pattern_new=pattern_new,
+                cache=cache,
+            )
+        except Exception as error:
+            response_data["error"] = getattr(error, "message", repr(error))
+
+        return Response(
+            JokerCreditIntendedUsePreviewResponseSerializer(response_data).data
+        )
+
+    @classmethod
+    def _get_random_members_with_joker(cls, cache: dict):
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=get_today(cache=cache), cache=cache
+        )
+        if growing_period is None:
+            return []
+
+        members_ids_with_joker = (
+            Joker.objects.filter(
+                date__gte=growing_period.start_date, date__lte=growing_period.end_date
+            )
+            .values_list("member", flat=True)
+            .distinct()
+            .order_by("?")[:5]
+        )
+
+        return Member.objects.filter(id__in=members_ids_with_joker).order_by(
+            "member_no"
+        )
+
+    @classmethod
+    def _add_fake_data(
+        cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
+    ):
+        fake_members = [
+            Member(first_name="John", last_name="Doe", member_no=14, id="14"),
+            Member(
+                first_name="Maximilian",
+                last_name="Mustermann",
+                member_no=123456,
+                id="123456",
+            ),
+        ]
+
+        today = get_today(cache=cache)
+
+        for fake_member in fake_members:
+            token_value_overrides = {
+                IntendedUseTokens.NUMBER_OF_JOKERS: "3",
+                IntendedUseTokens.DATES_OF_JOKERS: f"{format_date(today)} - {format_date(today + datetime.timedelta(days=13))}",
+                IntendedUseTokens.VALUES_OF_JOKERS: f"{format_currency(50.42)}€ * 2",
+            }
+
+            response_data["members"].insert(0, fake_member)
+            response_data["credits"].insert(0, 10)
+            response_data["previews_old"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_joker(
+                    pattern=pattern_old,
+                    member=fake_member,
+                    reference_date=today,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+            response_data["previews_new"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_joker(
+                    pattern=pattern_new,
+                    member=fake_member,
+                    reference_date=today,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+
+
 class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
@@ -941,8 +1074,8 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
             "previews_old": ["" for _ in payments],
             "previews_new": ["" for _ in payments],
             "error": "",
-            "tokens": sorted(payments_config.IntendedUseTokens.COMMON_TOKENS)
-            + sorted(payments_config.IntendedUseTokens.COOP_SHARE_TOKENS),
+            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.COOP_SHARE_TOKENS),
             "payments": payments,
             "members": [payment.mandate_ref.member for payment in payments],
         }
@@ -996,9 +1129,7 @@ class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
         ]
 
         token_value_overrides = {
-            payments_config.IntendedUseTokens.COOP_ENTRY_DATE: format_date(
-                get_today(cache=cache)
-            ),
+            IntendedUseTokens.COOP_ENTRY_DATE: format_date(get_today(cache=cache)),
         }
 
         for fake_member in fake_members:

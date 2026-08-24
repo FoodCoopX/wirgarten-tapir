@@ -41,6 +41,9 @@ from tapir.deliveries.services.get_deliveries_service import GetDeliveriesServic
 from tapir.deliveries.services.joker_management_service import (
     JokerManagementService,
 )
+from tapir.deliveries.services.member_specific_delivery_day_calculator import (
+    MemberSpecificDeliveryDayCalculator,
+)
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
@@ -113,8 +116,12 @@ class GetMemberJokerInformationView(APIView):
                 "cancellation_limit": JokerManagementService.get_date_limit_for_joker_changes(
                     joker.date, cache=cache
                 ),
-                "delivery_date": get_next_delivery_date(
-                    get_monday(joker.date), cache=cache
+                "delivery_date": MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
+                    member_id=joker.member_id,
+                    delivery_date=get_next_delivery_date(
+                        get_monday(joker.date), cache=cache
+                    ),
+                    cache=cache,
                 ),
             }
             for joker in jokers
@@ -126,8 +133,12 @@ class GetMemberJokerInformationView(APIView):
                 "cancellation_limit": JokerManagementService.get_date_limit_for_joker_changes(
                     donation.date, cache=cache
                 ),
-                "delivery_date": get_next_delivery_date(
-                    get_monday(donation.date), cache=cache
+                "delivery_date": MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
+                    member_id=donation.member_id,
+                    delivery_date=get_next_delivery_date(
+                        get_monday(donation.date), cache=cache
+                    ),
+                    cache=cache,
                 ),
             }
             for donation in donations

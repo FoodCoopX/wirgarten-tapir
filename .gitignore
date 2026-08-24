@@ -121,3 +121,4 @@ tapir/filepond_temp_uploads/*
 !tapir/filepond_temp_uploads/.gitkeep
 
 .pnpm-store
+.prof

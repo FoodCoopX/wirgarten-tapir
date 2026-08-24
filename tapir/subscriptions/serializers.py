@@ -44,6 +44,7 @@ class SolidarityContributionCancellationDataSerializer(serializers.Serializer):
 
 class CancellationDataSerializer(serializers.Serializer):
     can_cancel_coop_membership = serializers.BooleanField()
+    can_cancel_association_membership = serializers.BooleanField()
     subscribed_products = ProductForCancellationSerializer(many=True)
     solidarity_contribution_data = SolidarityContributionCancellationDataSerializer()
     legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
@@ -175,6 +176,7 @@ class CancelSubscriptionsRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     product_ids = serializers.ListField(child=serializers.CharField(), required=False)
     cancel_coop_membership = serializers.BooleanField()
+    cancel_association_membership = serializers.BooleanField()
     cancellation_reasons = serializers.ListField(
         child=serializers.CharField(), required=False
     )
