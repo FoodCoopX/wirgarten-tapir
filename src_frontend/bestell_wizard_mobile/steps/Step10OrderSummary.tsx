@@ -33,6 +33,7 @@ import {
 import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
+import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -404,7 +405,9 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       )}
                     </li>
                   )}
-                  {settings.associationMembershipTypes.length > 1 && (
+                  {getVisibleAssociationMembershipTypes(
+                    settings.associationMembershipTypes,
+                  ).length > 1 && (
                     <li>
                       <TapirButton
                         variant={BUTTON_VARIANT}

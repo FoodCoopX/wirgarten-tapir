@@ -8,6 +8,7 @@ import NextStepButton from "../components/NextStepButton.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import "../utils/flexColOnSmallScreen.css";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
+import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 
 interface Step6BAssociationMembershipsProps {
   goToNextStep: () => void;
@@ -55,13 +56,14 @@ const Step6BAssociationMemberships: React.FC<
   useEffect(() => {
     if (!stepActive) return;
 
+    const visibleMembershipTypes = getVisibleAssociationMembershipTypes(
+      settings.associationMembershipTypes,
+    );
     if (
       selectedAssociationMembershipType === undefined &&
-      settings.associationMembershipTypes.length > 0
+      visibleMembershipTypes.length > 0
     ) {
-      setSelectedAssociationMembershipType(
-        settings.associationMembershipTypes[0],
-      );
+      setSelectedAssociationMembershipType(visibleMembershipTypes[0]);
     }
   }, [stepActive]);
 
@@ -77,7 +79,9 @@ const Step6BAssociationMemberships: React.FC<
   return (
     <>
       <div style={{ width: "100%" }} className={"d-flex flex-column gap-2"}>
-        {settings.associationMembershipTypes.map((type) => (
+        {getVisibleAssociationMembershipTypes(
+          settings.associationMembershipTypes,
+        ).map((type) => (
           <Accordion style={{ width: "100%" }} key={type.id}>
             <Accordion.Item eventKey={type.id!} onClick={scrollIntoView}>
               <Accordion.Header>

@@ -6410,6 +6410,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - can_be_hard_deleted
       - created_at
@@ -6493,6 +6495,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - description_in_bestell_wizard
       - name
@@ -10075,6 +10079,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:

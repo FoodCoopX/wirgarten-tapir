@@ -68,6 +68,7 @@ import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts"
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
 import { updateWaitingList } from "./utils/updateWaitingList.ts";
+import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
@@ -470,10 +471,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         setSelectedNumberOfCoopShares(7);
         break;
       case "association":
-        if (settings.associationMembershipTypes.length > 0) {
-          setSelectedAssociationMembershipType(
-            settings.associationMembershipTypes[0],
-          );
+        const visibleMembershipTypes = getVisibleAssociationMembershipTypes(
+          settings.associationMembershipTypes,
+        );
+        if (visibleMembershipTypes.length > 0) {
+          setSelectedAssociationMembershipType(visibleMembershipTypes[0]);
         }
     }
     setSepaAllowed(true);
