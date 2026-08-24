@@ -10,6 +10,7 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
+@override_settings(MAILING_LISTS_ENABLED=True)
 class TestMailingListCreateView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
