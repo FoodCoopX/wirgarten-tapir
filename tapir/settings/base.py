@@ -227,4 +227,4 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 MAILMAN_URL = env.str("MAILMAN_URL", default="http://localhost:8001/3.1/")
 MAILMAN_ADMIN_USER = env.str("MAILMAN_ADMIN_USER", default="restadmin")
 MAILMAN_ADMIN_PASSWORD = env.str("MAILMAN_ADMIN_USER", default="restpass")
-MAILING_LISTS_ENABLED = env.bool("MAILING_LISTS_ENABLED", default=True)
+MAILING_LISTS_ENABLED = env.bool("MAILING_LISTS_ENABLED", default=False)
