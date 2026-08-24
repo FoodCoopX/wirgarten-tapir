@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Form, Modal } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
+import Select from "react-select";
 import { CoopApi, Member, WaitingListApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
@@ -82,26 +83,31 @@ const WaitingListEntryCreateModal: React.FC<
       .finally(() => setLoading(false));
   }
 
+  function buildMemberOptions() {
+    return allMembers.map((member) => {
+      return {
+        value: member.id,
+        label:
+          member.firstName + " " + member.lastName + " #" + member.memberNo,
+      };
+    });
+  }
+
   return (
     <Modal show={show} onHide={onClose} centered={true} size={"sm"}>
       <Modal.Header closeButton>
         <h5 className={"mb-0"}>Warteliste-Eintrag erzeugen</h5>
       </Modal.Header>
       <Modal.Body>
-        <Form.Select
-          onChange={(event) =>
+        <Select
+          isSearchable={true}
+          options={buildMemberOptions()}
+          onChange={(newValue) => {
             setSelectedMember(
-              allMembers.find((member) => member.id === event.target.value),
-            )
-          }
-          value={selectedMember?.id}
-        >
-          {allMembers.map((member) => (
-            <option key={member.id} value={member.id}>
-              {member.firstName} {member.lastName} #{member.memberNo}
-            </option>
-          ))}
-        </Form.Select>
+              allMembers.find((member) => member.id === newValue?.value),
+            );
+          }}
+        />
       </Modal.Body>
       <Modal.Footer>
         <TapirButton
