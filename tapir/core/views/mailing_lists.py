@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from django.conf import settings
@@ -43,6 +44,8 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.utils import check_permission_or_self
 
+LOG = logging.getLogger(__name__)
+
 
 class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
     permission_required = Permission.Coop.MANAGE
@@ -58,7 +61,8 @@ class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
 
         try:
             TapirMailmanClient.ensure_instance_domain_exists(cache=self.cache)
-        except MailmanConnectionError:
+        except MailmanConnectionError as error:
+            LOG.error(error)
             self.connection_with_mailman_failed = True
 
         return super().get(request, *args, **kwargs)
