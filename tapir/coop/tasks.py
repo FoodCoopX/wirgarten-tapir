@@ -219,7 +219,9 @@ def send_membership_entry_mails():
 
             if (
                 legal_status_is_association(cache=cache)
-                and AssociationMembership.objects.filter(start_date__lte=today)
+                and AssociationMembership.objects.filter(
+                    member=member, start_date__lte=today
+                )
                 .filter(Q(end_date__isnull=True) | Q(end_date__lte=today))
                 .exists()
             ):

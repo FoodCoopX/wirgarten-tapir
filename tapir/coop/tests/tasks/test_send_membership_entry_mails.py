@@ -1,7 +1,10 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.associations.tests.factories import AssociationMembershipFactory
 from tapir.coop.tasks import send_membership_entry_mails
@@ -216,6 +219,47 @@ class TestSendMembershipEntryMail(TapirIntegrationTest):
         send_membership_entry_mails()
 
         mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_sendMembershipEntryMails_mailNotSentYetButAssociationMembershipExistsOnlyForSomeMembers_dontSendMail(
+        self, mock_fire_action: Mock
+    ):
+        # regression test for ticket AUG#139 https://support.foodcoopx.de/conversation/139?folder_id=75
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        mock_timezone(test=self, now=datetime.datetime(year=2010, month=8, day=1))
+
+        member_with_membership = MemberFactory.create(
+            has_received_membership_started_mail=False
+        )
+        member_without_membership = MemberFactory.create(
+            has_received_membership_started_mail=False
+        )
+
+        AssociationMembershipFactory.create(
+            member=member_with_membership,
+            start_date=datetime.date(year=2010, month=1, day=1),
+        )
+
+        send_membership_entry_mails()
+
+        mock_fire_action.assert_called_once()
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action=mock_fire_action,
+            key=Events.MEMBERSHIP_ENTRY,
+        )
+        mock_fire_action.assert_called_once()
+        trigger_data: TransactionalTriggerData = mock_fire_action.mock_calls[0].kwargs[
+            "trigger_data"
+        ]
+        self.assertEqual(
+            member_with_membership.id, trigger_data.recipient_id_in_base_queryset
+        )
+        member_with_membership.refresh_from_db()
+        self.assertTrue(member_with_membership.has_received_membership_started_mail)
+        member_without_membership.refresh_from_db()
+        self.assertFalse(member_without_membership.has_received_membership_started_mail)
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_sendMembershipEntryMails_mailNotSentYetButLegalStatusDoesntHaveMemberships_dontSendMail(
