@@ -2,6 +2,7 @@ import datetime
 
 from celery import shared_task
 
+from tapir.payments.services.joker_credit_creator import JokerCreditCreator
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.wirgarten.models import (
@@ -13,7 +14,7 @@ from tapir.wirgarten.utils import (
 
 
 @shared_task
-def create_payments_for_this_month(reference_date: datetime.date = None):
+def create_payments_for_this_month(reference_date: datetime.date | None = None):
     cache = {}
     if reference_date is None:
         reference_date = get_today(cache=cache)
@@ -25,7 +26,7 @@ def create_payments_for_this_month(reference_date: datetime.date = None):
 
 @shared_task
 def export_payments_for_this_month(
-    reference_date: datetime.date = None, send_mail: bool = True
+    reference_date: datetime.date | None = None, send_mail: bool = True
 ):
     cache = {}
     if reference_date is None:
@@ -39,5 +40,17 @@ def export_payments_for_this_month(
     PaymentExportBuilder.export_all_unexported_payments(
         reference_date=reference_date,
         send_mail=send_mail,
+        cache=cache,
+    )
+
+
+@shared_task
+def create_credits_for_jokers(reference_date: datetime.date | None = None):
+    cache = {}
+    if reference_date is None:
+        reference_date = get_today(cache=cache)
+
+    JokerCreditCreator.create_credits_for_jokers(
+        reference_date=reference_date,
         cache=cache,
     )

@@ -25,7 +25,7 @@ class TestCancelJokerView(TapirIntegrationTest):
 
     def setUp(self) -> None:
         super().setUp()
-        mock_timezone(self, factories.NOW)
+        self.now = mock_timezone(self, factories.NOW)
 
     @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "cancel_joker")
@@ -133,7 +133,9 @@ class TestCancelJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         mock_cancel_joker.assert_not_called()
-        mock_can_joker_be_cancelled.assert_called_once_with(joker, cache=ANY)
+        mock_can_joker_be_cancelled.assert_called_once_with(
+            joker, reference_date=self.now.date(), cache=ANY
+        )
         mock_fire_action.assert_not_called()
 
     @patch.object(TransactionalTrigger, "fire_action")
