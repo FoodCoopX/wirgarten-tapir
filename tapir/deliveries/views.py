@@ -210,7 +210,9 @@ class CancelJokerView(APIView):
         joker = get_object_or_404(Joker, id=joker_id)
         check_permission_or_self(joker.member_id, request)
 
-        if not JokerManagementService.can_joker_be_cancelled(joker, cache=cache):
+        if not JokerManagementService.can_joker_be_cancelled(
+            joker, reference_date=get_today(cache=cache), cache=cache
+        ):
             return Response(
                 f"Es ist zu spät um dieses Joker abzusagen. Heute: {format_date(get_today(cache=cache))}, Joker: {format_date(joker.date)}",
                 status=status.HTTP_403_FORBIDDEN,
