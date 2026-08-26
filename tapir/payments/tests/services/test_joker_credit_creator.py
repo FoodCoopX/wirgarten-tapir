@@ -34,6 +34,7 @@ class TestJokerCreditCreator(TapirIntegrationTest):
         cls._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=5)
 
     def setUp(self) -> None:
+        super().setUp()
         self.member = MemberFactory.create()
         SubscriptionFactory.create(
             member=self.member,
