@@ -25,9 +25,7 @@ class TestCreateCreditsForJoker(TapirUnitTest):
     def test_createCreditsForJoker_dateGiven_callsServiceWithGivenDate(
         self, mock_create_credits_for_jokers: Mock
     ):
-        now = mock_timezone(
-            test=self, now=datetime.datetime(year=2024, month=3, day=15)
-        )
+        mock_timezone(test=self, now=datetime.datetime(year=2024, month=3, day=15))
 
         create_credits_for_jokers(
             reference_date=datetime.date(year=2026, month=9, day=26)
