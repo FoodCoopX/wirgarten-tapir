@@ -52,6 +52,7 @@ class TestCheckIfEntryCanBeFulfilled(TapirIntegrationTest):
         )
 
     def setUp(self):
+        super().setUp()
         mock_timezone(self, datetime.datetime(year=2025, month=1, day=15))
 
     def test_checkIfEntryCanBeFulfilled_noWishes_returnsFalse(self):
