@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse_lazy
 from django.views import generic
@@ -7,6 +8,9 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.pickup_location_active_filter import (
+    PickupLocationActiveFilter,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.pickup_location import (
     get_pickup_locations_map_data,
@@ -17,6 +21,7 @@ from tapir.wirgarten.models import PickupLocation, PickupLocationCapability
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_active_pickup_location_capabilities
 from tapir.wirgarten.service.products import get_active_product_types
+from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.views.modal import get_form_modal
 
 PAGE_ROOT = reverse_lazy("wirgarten:pickup_locations")
@@ -33,9 +38,9 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         cache = {}
-        pickup_locations = list(
-            PickupLocation.objects.all().order_by("location_route__name", "name")
-        )
+
+        pickup_locations = self.get_filtered_pickup_locations()
+
         capabilities = get_active_pickup_location_capabilities(cache=cache).values(
             "pickup_location_id",
             "product_type_id",
@@ -53,6 +58,7 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
         context["all_product_types"] = get_active_product_types(cache=cache).values(
             "name"
         )
+
         context["pickup_locations"] = list(
             map(
                 lambda pickup_location: pickup_location_to_dict(
@@ -68,7 +74,31 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
             key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED, cache=cache
         )
 
+        request = self.request
+        context["search"] = request.GET.get("search", "")
+        context["show_inactive"] = request.GET.get("show_inactive") == "on"
+
         return context
+
+    def get_filtered_pickup_locations(self):
+        request = self.request
+        queryset = PickupLocation.objects.all().order_by("location_route__name", "name")
+
+        search = request.GET.get("search")
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search)
+                | Q(street__icontains=search)
+                | Q(postcode__icontains=search)
+                | Q(city__icontains=search)
+            )
+
+        if request.GET.get("show_inactive") != "on":
+            queryset = PickupLocationActiveFilter.get_active_at_date(
+                queryset, get_today(cache={})
+            )
+
+        return list(queryset)
 
 
 @require_http_methods(["GET", "POST"])

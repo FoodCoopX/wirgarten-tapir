@@ -116,6 +116,18 @@ export interface PickupLocation {
   routeInfo?: string;
   /**
    *
+   * @type {Date}
+   * @memberof PickupLocation
+   */
+  startDate?: Date | null;
+  /**
+   *
+   * @type {Date}
+   * @memberof PickupLocation
+   */
+  endDate?: Date | null;
+  /**
+   *
    * @type {string}
    * @memberof PickupLocation
    */
@@ -171,6 +183,9 @@ export function PickupLocationFromJSONTyped(
       json["contact_name"] == null ? undefined : json["contact_name"],
     photoLink: json["photo_link"] == null ? undefined : json["photo_link"],
     routeInfo: json["route_info"] == null ? undefined : json["route_info"],
+    startDate:
+      json["start_date"] == null ? undefined : new Date(json["start_date"]),
+    endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
     locationRoute:
       json["location_route"] == null ? undefined : json["location_route"],
   };
@@ -203,6 +218,8 @@ export function PickupLocationToJSONTyped(
     contact_name: value["contactName"],
     photo_link: value["photoLink"],
     route_info: value["routeInfo"],
+    start_date: value["startDate"],
+    end_date: value["endDate"],
     location_route: value["locationRoute"],
   };
 }

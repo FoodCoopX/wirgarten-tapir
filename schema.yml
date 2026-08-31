@@ -11436,6 +11436,14 @@ components:
           type: string
           title: Driver/Route info
           maxLength: 1024
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
         location_route:
           type: string
           nullable: true

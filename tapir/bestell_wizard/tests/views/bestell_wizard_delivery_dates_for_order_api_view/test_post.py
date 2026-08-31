@@ -237,3 +237,45 @@ class TestBestellWizardDeliveryDatesForOrderApiView(TapirIntegrationTest):
             },
             response.json()["delivery_date_by_pickup_location_id_and_product_type_id"],
         )
+
+    def test_post_pickupLocationWithFutureStartDate_returnsFirstDeliveryAfterItBecomesAvailable(
+        self,
+    ):
+        future_location = PickupLocationFactory.create(
+            start_date=datetime.date(2024, 7, 8)
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=future_location,
+            day_of_week=3,
+            open_time=datetime.time(8, 0),
+            close_time=datetime.time(9, 0),
+        )  # delivery on Thursday
+
+        url = reverse("bestell_wizard:bestell_wizard_delivery_dates")
+        response = self.client.post(
+            url,
+            data={
+                "shopping_cart": {
+                    self.product_weekly.id: 1,
+                },
+            },
+            content_type="application/json",
+        )
+
+        # The reference date is 2024-07-01. Without the start date the first
+        # delivery would be on 2024-07-04. Since the location only becomes
+        # available on 2024-07-08, the first delivery is on 2024-07-11.
+        self.assertEqual(
+            {
+                future_location.id: {
+                    self.product_weekly.type.id: "2024-07-11",
+                },
+            },
+            {
+                location_id: dates
+                for location_id, dates in response.json()[
+                    "delivery_date_by_pickup_location_id_and_product_type_id"
+                ].items()
+                if location_id == future_location.id
+            },
+        )

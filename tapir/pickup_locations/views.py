@@ -29,6 +29,9 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
 )
+from tapir.pickup_locations.services.pickup_location_active_filter import (
+    PickupLocationActiveFilter,
+)
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
@@ -40,6 +43,9 @@ from tapir.pickup_locations.services.pickup_location_delivery_charge_service imp
 )
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
+)
+from tapir.pickup_locations.services.pickup_location_reference_date_service import (
+    PickupLocationReferenceDateService,
 )
 from tapir.pickup_locations.services.public_pickup_locations_provider import (
     PublicPickupLocationProvider,
@@ -233,8 +239,11 @@ class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
         self.cache = {}
 
     def get_queryset(self):
-        return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+        reference_date = PickupLocationReferenceDateService.get_reference_date(
             cache=self.cache
+        )
+        return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+            cache=self.cache, reference_date=reference_date
         )
 
     def get_serializer_context(self):
@@ -282,9 +291,17 @@ class PickupLocationCapacityCheckApiView(APIView):
                 cache=self.cache,
             )
 
+        candidates = (
+            PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+                cache=self.cache,
+                reference_date=subscription_start,
+                include_future=True,
+            )
+        )
+
         pickup_location_ids_with_enough_capacity_for_order = [
             pickup_location.id
-            for pickup_location in PickupLocation.objects.all()
+            for pickup_location in candidates
             if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
                 pickup_location=pickup_location,
                 order=order,
@@ -434,6 +451,13 @@ class ChangeMemberPickupLocationApiView(APIView):
         ):
             raise ValidationError(
                 "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
+            )
+
+        if not PickupLocationActiveFilter.get_active_at_date(
+            PickupLocation.objects.filter(id=new_pickup_location.id), valid_from
+        ).exists():
+            raise ValidationError(
+                "Dieser Abholort ist für den gewählten Zeitpunkt nicht verfügbar."
             )
 
         subscriptions = (
