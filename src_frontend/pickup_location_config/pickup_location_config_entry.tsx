@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import LocationRouteBase from "./LocationRouteBase.tsx";
 import PickupLocationCapacityBase from "./PickupLocationCapacityBase.tsx";
+import PickupLocationGrowingPeriodBase from "./PickupLocationGrowingPeriodBase.tsx";
 
 const domNodeCapacityButton = document.getElementById(
   "pickup_location_capacity_edit_button",
@@ -19,6 +20,22 @@ if (domNodeCapacityButton) {
   );
 } else {
   console.error("Failed to render pickup location capacity button from React");
+}
+
+const domNodeGrowingPeriodButton = document.getElementById(
+  "pickup_location_growing_period_edit_button",
+);
+if (domNodeGrowingPeriodButton) {
+  const enableGrowingPeriod =
+    domNodeGrowingPeriodButton.dataset.enableGrowingPeriod === "True";
+  createRoot(domNodeGrowingPeriodButton).render(
+    <PickupLocationGrowingPeriodBase
+      csrfToken={getCsrfToken()}
+      enabled={enableGrowingPeriod}
+    />,
+  );
+} else {
+  console.error("Failed to render pickup location growing period button from React");
 }
 
 const domNodeLocationRoute = document.getElementById("manage_location_rouge");

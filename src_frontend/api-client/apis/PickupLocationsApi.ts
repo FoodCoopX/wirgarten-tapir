@@ -26,6 +26,8 @@ import type {
   PickupLocationCapacityEvolution,
   PickupLocationDeliveryChargeCreateRequestRequest,
   PickupLocationDeliveryChargesResponse,
+  PickupLocationGrowingPeriodResponse,
+  PickupLocationGrowingPeriodSetRequestRequest,
   PublicPickupLocation,
 } from "../models/index";
 import {
@@ -42,11 +44,14 @@ import {
   PickupLocationDeliveryChargeCreateRequestRequestToJSON,
   PickupLocationDeliveryChargesResponseFromJSON,
   PickupLocationFromJSON,
+  PickupLocationGrowingPeriodResponseFromJSON,
+  PickupLocationGrowingPeriodSetRequestRequestToJSON,
   PublicPickupLocationFromJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
 
 export interface PickupLocationsApiChangeMemberPickupLocationCreateRequest {
+  growingPeriodId?: string;
   memberId?: string;
   pickupLocationId?: string;
 }
@@ -106,6 +111,14 @@ export interface PickupLocationsLocationRoutesUpdateRequest {
   locationRouteRequest: LocationRouteRequest;
 }
 
+export interface PickupLocationsPickupLocationGrowingPeriodsCreateRequest {
+  pickupLocationGrowingPeriodSetRequestRequest: PickupLocationGrowingPeriodSetRequestRequest;
+}
+
+export interface PickupLocationsPickupLocationGrowingPeriodsListRequest {
+  pickupLocationId?: string;
+}
+
 export interface PickupLocationsPickupLocationsRetrieveRequest {
   id: string;
 }
@@ -125,6 +138,11 @@ export class PickupLocationsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
     const queryParameters: any = {};
+
+    if (requestParameters["growingPeriodId"] != null) {
+      queryParameters["growing_period_id"] =
+        requestParameters["growingPeriodId"];
+    }
 
     if (requestParameters["memberId"] != null) {
       queryParameters["member_id"] = requestParameters["memberId"];
@@ -1043,6 +1061,137 @@ export class PickupLocationsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   * Admin API for managing which GrowingPeriods a PickupLocation is assigned to. Feature flag ``wirgarten.delivery.pickup_location_growing_period.enabled`` is enforced by callers\' filter logic; this endpoint always allows editing so admins can pre-configure assignments before enabling the feature.
+   */
+  async pickupLocationsPickupLocationGrowingPeriodsCreateRaw(
+    requestParameters: PickupLocationsPickupLocationGrowingPeriodsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters["pickupLocationGrowingPeriodSetRequestRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "pickupLocationGrowingPeriodSetRequestRequest",
+        'Required parameter "pickupLocationGrowingPeriodSetRequestRequest" was null or undefined when calling pickupLocationsPickupLocationGrowingPeriodsCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/pickup_location_growing_periods/`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PickupLocationGrowingPeriodSetRequestRequestToJSON(
+          requestParameters["pickupLocationGrowingPeriodSetRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   * Admin API for managing which GrowingPeriods a PickupLocation is assigned to. Feature flag ``wirgarten.delivery.pickup_location_growing_period.enabled`` is enforced by callers\' filter logic; this endpoint always allows editing so admins can pre-configure assignments before enabling the feature.
+   */
+  async pickupLocationsPickupLocationGrowingPeriodsCreate(
+    requestParameters: PickupLocationsPickupLocationGrowingPeriodsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response =
+      await this.pickupLocationsPickupLocationGrowingPeriodsCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   * Admin API for managing which GrowingPeriods a PickupLocation is assigned to. Feature flag ``wirgarten.delivery.pickup_location_growing_period.enabled`` is enforced by callers\' filter logic; this endpoint always allows editing so admins can pre-configure assignments before enabling the feature.
+   */
+  async pickupLocationsPickupLocationGrowingPeriodsListRaw(
+    requestParameters: PickupLocationsPickupLocationGrowingPeriodsListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<PickupLocationGrowingPeriodResponse>>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["pickupLocationId"] != null) {
+      queryParameters["pickup_location_id"] =
+        requestParameters["pickupLocationId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/pickup_location_growing_periods/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(PickupLocationGrowingPeriodResponseFromJSON),
+    );
+  }
+
+  /**
+   * Admin API for managing which GrowingPeriods a PickupLocation is assigned to. Feature flag ``wirgarten.delivery.pickup_location_growing_period.enabled`` is enforced by callers\' filter logic; this endpoint always allows editing so admins can pre-configure assignments before enabling the feature.
+   */
+  async pickupLocationsPickupLocationGrowingPeriodsList(
+    requestParameters: PickupLocationsPickupLocationGrowingPeriodsListRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<PickupLocationGrowingPeriodResponse>> {
+    const response =
+      await this.pickupLocationsPickupLocationGrowingPeriodsListRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

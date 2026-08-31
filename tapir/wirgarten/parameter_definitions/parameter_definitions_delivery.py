@@ -38,3 +38,18 @@ class ParameterDefinitionsDelivery:
             order_priority=order_priority,
         )
         order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.PICKUP_LOCATION_GROWING_PERIOD_ENABLED,
+            label="Vertragsperioden pro Verteilstation aktivieren",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description=(
+                "Wenn aktiviert können auf der Abholort-Konfig-Seite Vertragsperioden "
+                "zugeordnet werden. So tauchen Abholorte jeweils immer nur für "
+                "zugeordnete Vertragsperioden auf."
+            ),
+            category=ParameterCategory.DELIVERY,
+            order_priority=order_priority,
+        )
+        order_priority -= 1

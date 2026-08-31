@@ -149,3 +149,22 @@ class LocationRouteSerializer(serializers.ModelSerializer):
             .order_by("name")
             .values_list("name", flat=True)
         )
+
+
+class GrowingPeriodEntrySerializer(serializers.Serializer):
+    id = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+
+
+class PickupLocationGrowingPeriodResponseSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField()
+    pickup_location_name = serializers.CharField()
+    growing_periods = GrowingPeriodEntrySerializer(many=True)
+
+
+class PickupLocationGrowingPeriodSetRequestSerializer(serializers.Serializer):
+    pickup_location_id = serializers.CharField()
+    growing_period_ids = serializers.ListField(
+        child=serializers.CharField(), allow_empty=True
+    )

@@ -66,6 +66,9 @@ class ParameterKeys:
     DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
         f"{PREFIX}.delivery.charge_per_pickup_location.enabled"
     )
+    PICKUP_LOCATION_GROWING_PERIOD_ENABLED = (
+        f"{PREFIX}.delivery.pickup_location_growing_period.enabled"
+    )
     MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
         f"{PREFIX}.member.dashboard.renewal_alert.unkown.header"
     )

@@ -247,6 +247,41 @@ class PickupLocationCapability(TapirModel):
         return f"Location:{self.pickup_location.name} ProductType:{self.product_type.name} Capacity:{self.max_capacity}"
 
 
+class PickupLocationGrowingPeriod(TapirModel):
+    """
+    Optional assignment of a PickupLocation (Abholort) to a GrowingPeriod
+    (Vertragsperiode). When the feature flag
+    ``wirgarten.delivery.pickup_location_growing_period.enabled`` is enabled,
+    a PickupLocation is only offered to members for the GrowingPeriods it is
+    explicitly listed here for. Locations with no rows are unavailable for any
+    period.
+    """
+
+    pickup_location = models.ForeignKey(
+        PickupLocation,
+        on_delete=models.CASCADE,
+        related_name="growing_period_links",
+    )
+    growing_period = models.ForeignKey(
+        GrowingPeriod,
+        on_delete=models.CASCADE,
+        related_name="pickup_location_links",
+    )
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["pickup_location", "growing_period"],
+                name="unique_pickup_location_growing_period",
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f"Location:{self.pickup_location.name} GrowingPeriod:{self.growing_period}"
+        )
+
+
 class DeliveryExceptionPeriod(TapirModel):
     """
     Defines a period in which no delivery of a certain product takes place.

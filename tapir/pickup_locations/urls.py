@@ -51,4 +51,9 @@ router.register(
     views.LocationRouteViewSet,
     basename="location_routes",
 )
+router.register(
+    r"pickup_location_growing_periods",
+    views.PickupLocationGrowingPeriodViewSet,
+    basename="pickup_location_growing_periods",
+)
 urlpatterns += router.urls

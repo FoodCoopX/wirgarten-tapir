@@ -19,6 +19,9 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
+from tapir.pickup_locations.services.pickup_location_growing_period_filter import (
+    filter_pickup_locations_for_growing_period,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY, HTML_ALLOWED_TEXT
 from tapir.wirgarten.models import (
@@ -171,6 +174,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         next_month = get_today(cache=self.cache) + relativedelta(months=1, day=1)
         reference_date = kwargs.pop("reference_date", next_month)
         member = kwargs.pop("member", None)
+        growing_period_id = kwargs.pop("growing_period_id", None)
 
         location_capabilities = get_active_pickup_location_capabilities(
             reference_date=reference_date, cache=self.cache
@@ -211,7 +215,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         for temp in initial["subs"].values():
             subscriptions.extend(temp)
         possible_locations = self.get_possible_locations(
-            subscriptions, reference_date, member
+            subscriptions, reference_date, member, growing_period_id=growing_period_id
         )
 
         super().__init__(
@@ -232,6 +236,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         subscriptions: List[Subscription],
         reference_date: datetime.date,
         member: Member | None,
+        growing_period_id: str | None = None,
     ):
         possible_location_ids = []
 
@@ -248,7 +253,11 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 cache=self.cache,
             ):
                 possible_location_ids.append(pickup_location.id)
-        return PickupLocation.objects.filter(id__in=possible_location_ids)
+        return filter_pickup_locations_for_growing_period(
+            PickupLocation.objects.filter(id__in=possible_location_ids),
+            growing_period_id,
+            self.cache,
+        )
 
     def label_from_instance(self, obj):
         return f"<strong>{obj.name}</strong><br/><small><span>{obj.street}, {obj.postcode} {obj.city}</span><br />{obj.opening_times_html_small}</small>"

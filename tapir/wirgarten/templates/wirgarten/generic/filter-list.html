@@ -8,7 +8,7 @@
     <div style="margin-top: 1em;">
         {% block page_top %}{% endblock %}
     </div>
-    <div {% if filter.form %}style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr"{% endif %}>
+    <div {% if secondary_panel and filter.form %}style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 2fr 1fr"{% elif filter.form %}style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr"{% endif %}>
         <div class="card">
             <div class="card-header"
                  style="display: flex;
@@ -79,6 +79,13 @@
                 </nav>
             {% endif %}
         </div>
+        {% if secondary_panel %}
+            <div class="card">
+                <div class="card-body" style="padding: 0">
+                    {% block secondary_panel %}{% endblock %}
+                </div>
+            </div>
+        {% endif %}
         {% if filter.form %}
             <div class="card">
                 <div class="card-header">

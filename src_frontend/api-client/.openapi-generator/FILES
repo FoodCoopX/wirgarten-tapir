@@ -86,6 +86,7 @@ models/GetDatesFromCustomCycleDeliveryWeeksResponse.ts
 models/GraphDataset.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
+models/GrowingPeriodEntry.ts
 models/GrowingPeriodRequest.ts
 models/GrowingPeriodWithDeliveryDayAdjustments.ts
 models/Joker.ts
@@ -188,6 +189,8 @@ models/PickupLocationCapacityEvolution.ts
 models/PickupLocationDeliveryChargeCreateRequestRequest.ts
 models/PickupLocationDeliveryChargeEntry.ts
 models/PickupLocationDeliveryChargesResponse.ts
+models/PickupLocationGrowingPeriodResponse.ts
+models/PickupLocationGrowingPeriodSetRequestRequest.ts
 models/PickupLocationOpeningTime.ts
 models/PreferredLanguageEnum.ts
 models/Product.ts

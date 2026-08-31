@@ -22,6 +22,8 @@ from tapir.pickup_locations.serializers import (
     PickupLocationCapacityCheckRequestSerializer,
     PickupLocationSerializer,
     LocationRouteSerializer,
+    PickupLocationGrowingPeriodResponseSerializer,
+    PickupLocationGrowingPeriodSetRequestSerializer,
 )
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -37,6 +39,9 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 )
 from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
     PickupLocationDeliveryChargeService,
+)
+from tapir.pickup_locations.services.pickup_location_growing_period_filter import (
+    filter_pickup_locations_for_growing_period,
 )
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
@@ -63,6 +68,7 @@ from tapir.wirgarten.models import (
     Member,
     GrowingPeriod,
     LocationRoute,
+    PickupLocationGrowingPeriod,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
@@ -154,9 +160,28 @@ class PickupLocationCapacitiesView(APIView):
 
 
 class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = PickupLocation.objects.all()
     serializer_class = PickupLocationSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    def get_queryset(self):
+        qs = PickupLocation.objects.all()
+        if not get_parameter_value(
+            key=ParameterKeys.PICKUP_LOCATION_GROWING_PERIOD_ENABLED, cache=self.cache
+        ):
+            return qs
+        growing_period_id = self.request.query_params.get("growing_period_id")
+        if growing_period_id is None:
+            gp = TapirCache.get_growing_period_at_date(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
+            growing_period_id = gp.id if gp is not None else None
+        return filter_pickup_locations_for_growing_period(
+            qs, growing_period_id, self.cache
+        )
 
 
 class PickupLocationCapacityEvolutionView(APIView):
@@ -233,8 +258,9 @@ class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
         self.cache = {}
 
     def get_queryset(self):
+        growing_period_id = self.request.query_params.get("growing_period_id", None)
         return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-            cache=self.cache
+            cache=self.cache, growing_period_id=growing_period_id
         )
 
     def get_serializer_context(self):
@@ -282,9 +308,14 @@ class PickupLocationCapacityCheckApiView(APIView):
                 cache=self.cache,
             )
 
+        candidates = PickupLocation.objects.all()
+        candidates = filter_pickup_locations_for_growing_period(
+            candidates, growing_period_id, self.cache
+        )
+
         pickup_location_ids_with_enough_capacity_for_order = [
             pickup_location.id
-            for pickup_location in PickupLocation.objects.all()
+            for pickup_location in candidates
             if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
                 pickup_location=pickup_location,
                 order=order,
@@ -350,6 +381,16 @@ class GetMemberPickupLocationApiView(APIView):
         if pickup_location_id is None:
             return Response({"has_location": False})
 
+        # If the period-assignment feature is on, the historical PL is only
+        # "current" if it is still offered for the requested period.
+        allowed = filter_pickup_locations_for_growing_period(
+            PickupLocation.objects.filter(id=pickup_location_id),
+            growing_period_id,
+            self.cache,
+        )
+        if not allowed.exists():
+            return Response({"has_location": False})
+
         pickup_location = TapirCache.get_pickup_location_by_id(
             cache=self.cache, pickup_location_id=pickup_location_id
         )
@@ -372,6 +413,7 @@ class ChangeMemberPickupLocationApiView(APIView):
         parameters=[
             OpenApiParameter(name="member_id", type=str),
             OpenApiParameter(name="pickup_location_id", type=str),
+            OpenApiParameter(name="growing_period_id", type=str, required=False),
         ],
         responses={200: OrderConfirmationResponseSerializer},
     )
@@ -383,6 +425,7 @@ class ChangeMemberPickupLocationApiView(APIView):
         new_pickup_location = get_object_or_404(
             PickupLocation, id=new_pickup_location_id
         )
+        growing_period_id = request.query_params.get("growing_period_id", None)
 
         valid_from = calculate_pickup_location_change_date(cache=self.cache)
 
@@ -391,6 +434,7 @@ class ChangeMemberPickupLocationApiView(APIView):
                 member=member,
                 new_pickup_location=new_pickup_location,
                 valid_from=valid_from,
+                growing_period_id=growing_period_id,
             )
         except ValidationError as error:
             return Response(
@@ -419,6 +463,7 @@ class ChangeMemberPickupLocationApiView(APIView):
         member: Member,
         new_pickup_location: PickupLocation,
         valid_from: datetime.date,
+        growing_period_id: str | None = None,
     ):
         old_pickup_location_id = (
             MemberPickupLocationGetter.get_member_pickup_location_id(
@@ -434,6 +479,21 @@ class ChangeMemberPickupLocationApiView(APIView):
         ):
             raise ValidationError(
                 "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
+            )
+
+        # Period-assignment feature: if a growing_period_id is supplied and the
+        # feature is on, the new PL must be linked to that period. When feature
+        # is off, the helper returns the queryset unchanged.
+        if (
+            growing_period_id is not None
+            and not filter_pickup_locations_for_growing_period(
+                PickupLocation.objects.filter(id=new_pickup_location.id),
+                growing_period_id,
+                self.cache,
+            ).exists()
+        ):
+            raise ValidationError(
+                "Dieser Abholort ist für die ausgewählte Vertragsperiode nicht verfügbar."
             )
 
         subscriptions = (
@@ -555,3 +615,79 @@ class LocationRouteViewSet(viewsets.ModelViewSet):
     queryset = LocationRoute.objects.order_by("name")
     serializer_class = LocationRouteSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+
+class PickupLocationGrowingPeriodViewSet(viewsets.ViewSet):
+    """
+    Admin API for managing which GrowingPeriods a PickupLocation is assigned to.
+    Feature flag ``wirgarten.delivery.pickup_location_growing_period.enabled``
+    is enforced by callers' filter logic; this endpoint always allows editing
+    so admins can pre-configure assignments before enabling the feature.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: PickupLocationGrowingPeriodResponseSerializer(many=True)},
+        parameters=[OpenApiParameter(name="pickup_location_id", type=str)],
+    )
+    def list(self, request):
+        pickup_location = get_object_or_404(
+            PickupLocation, id=request.query_params.get("pickup_location_id")
+        )
+        growing_periods = GrowingPeriod.objects.filter(
+            pickup_location_links__pickup_location=pickup_location
+        ).order_by("start_date")
+        return Response(
+            [
+                PickupLocationGrowingPeriodResponseSerializer(
+                    {
+                        "pickup_location_id": pickup_location.id,
+                        "pickup_location_name": pickup_location.name,
+                        "growing_periods": growing_periods,
+                    }
+                ).data
+            ]
+        )
+
+    @extend_schema(
+        request=PickupLocationGrowingPeriodSetRequestSerializer(),
+        responses={200: str},
+    )
+    def create(self, request):
+        serializer = PickupLocationGrowingPeriodSetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        pickup_location = get_object_or_404(
+            PickupLocation, id=serializer.validated_data["pickup_location_id"]
+        )
+        growing_period_ids = serializer.validated_data["growing_period_ids"]
+
+        # Validate all ids exist before mutating.
+        existing_ids = set(
+            GrowingPeriod.objects.filter(id__in=growing_period_ids).values_list(
+                "id", flat=True
+            )
+        )
+        missing = [gid for gid in growing_period_ids if gid not in existing_ids]
+        if missing:
+            return Response(
+                {"error": f"Unknown growing_period_ids: {missing}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            PickupLocationGrowingPeriod.objects.filter(
+                pickup_location=pickup_location
+            ).delete()
+            PickupLocationGrowingPeriod.objects.bulk_create(
+                [
+                    PickupLocationGrowingPeriod(
+                        pickup_location=pickup_location,
+                        growing_period_id=gid,
+                    )
+                    for gid in growing_period_ids
+                ]
+            )
+
+        return Response("OK", status=status.HTTP_200_OK)

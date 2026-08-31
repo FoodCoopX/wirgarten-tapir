@@ -2732,6 +2732,10 @@ paths:
       operationId: pickup_locations_api_change_member_pickup_location_create
       parameters:
       - in: query
+        name: growing_period_id
+        schema:
+          type: string
+      - in: query
         name: member_id
         schema:
           type: string
@@ -3112,6 +3116,66 @@ paths:
       responses:
         '204':
           description: No response body
+  /pickup_locations/pickup_location_growing_periods/:
+    get:
+      operationId: pickup_locations_pickup_location_growing_periods_list
+      description: |-
+        Admin API for managing which GrowingPeriods a PickupLocation is assigned to.
+        Feature flag ``wirgarten.delivery.pickup_location_growing_period.enabled``
+        is enforced by callers' filter logic; this endpoint always allows editing
+        so admins can pre-configure assignments before enabling the feature.
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PickupLocationGrowingPeriodResponse'
+          description: ''
+    post:
+      operationId: pickup_locations_pickup_location_growing_periods_create
+      description: |-
+        Admin API for managing which GrowingPeriods a PickupLocation is assigned to.
+        Feature flag ``wirgarten.delivery.pickup_location_growing_period.enabled``
+        is enforced by callers' filter logic; this endpoint always allows editing
+        so admins can pre-configure assignments before enabling the feature.
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationGrowingPeriodSetRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationGrowingPeriodSetRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationGrowingPeriodSetRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /pickup_locations/pickup_locations/:
     get:
       operationId: pickup_locations_pickup_locations_list
@@ -3138,7 +3202,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -3179,7 +3242,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -9320,6 +9382,21 @@ components:
       - end_date
       - start_date
       - updated_at
+    GrowingPeriodEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - id
+      - start_date
     GrowingPeriodRequest:
       type: object
       properties:
@@ -11587,6 +11664,35 @@ components:
       - entries
       - pickup_location_id
       - pickup_location_name
+    PickupLocationGrowingPeriodResponse:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+        pickup_location_name:
+          type: string
+        growing_periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrowingPeriodEntry'
+      required:
+      - growing_periods
+      - pickup_location_id
+      - pickup_location_name
+    PickupLocationGrowingPeriodSetRequestRequest:
+      type: object
+      properties:
+        pickup_location_id:
+          type: string
+          minLength: 1
+        growing_period_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+      - growing_period_ids
+      - pickup_location_id
     PickupLocationOpeningTime:
       type: object
       properties:
