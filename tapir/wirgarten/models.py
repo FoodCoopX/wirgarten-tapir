@@ -71,6 +71,12 @@ class PickupLocation(TapirModel):
         LocationRoute, blank=True, null=True, on_delete=models.SET_NULL
     )
     route_info = models.CharField(_("Driver/Route info"), max_length=1024, blank=True)
+    start_date = models.DateField(
+        _("Available from"), null=True, blank=True
+    )  # null = active from the beginning
+    end_date = models.DateField(
+        _("Available until"), null=True, blank=True
+    )  # null = active forever
 
     class Meta:
         constraints = [

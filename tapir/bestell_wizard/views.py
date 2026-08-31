@@ -492,7 +492,9 @@ class BestellWizardBaseDataApiView(APIView):
                     deleted=False, hidden_in_bestell_wizard=False
                 ),
                 "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-                    cache=self.cache
+                    cache=self.cache,
+                    reference_date=earliest_contract_start_date,
+                    include_future=True,
                 ),
                 "show_coop_content": legal_status_is_cooperative(cache=self.cache),
                 "trial_period_length_in_weeks": trial_period_length_in_weeks,
@@ -769,9 +771,16 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
 
         response_data = {}
         for pickup_location_id in PickupLocation.objects.values_list("id", flat=True):
+            pickup_location = TapirCache.get_pickup_location_by_id(
+                cache=self.cache, pickup_location_id=pickup_location_id
+            )
+            search_date = reference_date
+            if pickup_location.start_date and pickup_location.start_date > search_date:
+                search_date = pickup_location.start_date
+
             response_data[pickup_location_id] = {
                 product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_product_type(
-                    reference_date=reference_date,
+                    reference_date=search_date,
                     pickup_location_id=pickup_location_id,
                     product_type=TapirCache.get_product_type_by_id(
                         cache=self.cache, product_type_id=product_type_id

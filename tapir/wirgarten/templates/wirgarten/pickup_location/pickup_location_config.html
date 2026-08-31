@@ -14,6 +14,26 @@
     {% csrf_token %}
     <script src="{% static 'wirgarten/js/pickup-location-config.js' %} "></script>
     <div style="margin-top: 1em">
+        <form method="get"
+              class="card card-body py-2 mb-2 d-flex flex-row gap-2 align-items-center">
+            <input type="text"
+                   name="search"
+                   value="{{ search }}"
+                   placeholder="Suche..."
+                   class="form-control"
+                   style="max-width: 20em"/>
+            <div class="form-check mb-0">
+                <input type="checkbox"
+                       class="form-check-input"
+                       name="show_inactive"
+                       id="show_inactive"
+                       {% if show_inactive %}checked{% endif %}>
+                <label class="form-check-label" for="show_inactive">Auch inaktive Abholorte anzeigen</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Filtern</button>
+            <a href="{% url 'wirgarten:pickup_locations' %}"
+               class="btn btn-secondary btn-sm">Zurücksetzen</a>
+        </form>
         <div class="card">
             <div class="card-header" style="display: flex; flex-direction:row;">
                 <h4 style="margin-right: 3em">{{ pickup_locations|length }} Abholorte</h4>
@@ -50,6 +70,7 @@
                             <th>Adresse</th>
                             <th style="text-align:left">Kapazitäten</th>
                             <th>Mitglieder</th>
+                            <th>Verfügbar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -92,6 +113,17 @@
                                         -
                                     {% else %}
                                         {{ pl.members }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if pl.start_date and pl.end_date %}
+                                        {{ pl.start_date|date:"d.m.Y" }} – {{ pl.end_date|date:"d.m.Y" }}
+                                    {% elif pl.start_date %}
+                                        ab {{ pl.start_date|date:"d.m.Y" }}
+                                    {% elif pl.end_date %}
+                                        bis {{ pl.end_date|date:"d.m.Y" }}
+                                    {% else %}
+                                        immer
                                     {% endif %}
                                 </td>
                             </tr>

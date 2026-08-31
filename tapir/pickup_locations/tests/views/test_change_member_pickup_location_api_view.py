@@ -383,3 +383,61 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
             {"order_confirmed": error_message is None, "error": error_message},
             response.json(),
         )
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_newLocationNotYetAvailable_doesntApplyChangesAndReturnsFalse(
+        self, mock_fire_action: Mock
+    ):
+        old_member_pickup_location = MemberPickupLocationFactory.create(
+            valid_from=datetime.datetime(year=1998, month=1, day=1)
+        )
+        new_pickup_location = PickupLocationFactory.create(
+            start_date=datetime.date(year=1998, month=7, day=1)
+        )
+        member = old_member_pickup_location.member
+
+        self.client.force_login(member)
+        url = reverse("pickup_locations:change_member_pickup_location")
+        response = self.client.post(
+            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_response_content_is_correct(
+            response,
+            error_message="Dieser Abholort ist für den gewählten Zeitpunkt nicht verfügbar.",
+        )
+
+        self.assertEqual(1, MemberPickupLocation.objects.count())
+        self.assertFalse(PickupLocationChangedLogEntry.objects.exists())
+
+        mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_newLocationAlreadyDecommissioned_doesntApplyChangesAndReturnsFalse(
+        self, mock_fire_action: Mock
+    ):
+        old_member_pickup_location = MemberPickupLocationFactory.create(
+            valid_from=datetime.datetime(year=1998, month=1, day=1)
+        )
+        new_pickup_location = PickupLocationFactory.create(
+            end_date=datetime.date(year=1998, month=6, day=1)
+        )
+        member = old_member_pickup_location.member
+
+        self.client.force_login(member)
+        url = reverse("pickup_locations:change_member_pickup_location")
+        response = self.client.post(
+            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_response_content_is_correct(
+            response,
+            error_message="Dieser Abholort ist für den gewählten Zeitpunkt nicht verfügbar.",
+        )
+
+        self.assertEqual(1, MemberPickupLocation.objects.count())
+        self.assertFalse(PickupLocationChangedLogEntry.objects.exists())
+
+        mock_fire_action.assert_not_called()
