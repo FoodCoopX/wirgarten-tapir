@@ -113,7 +113,16 @@ class TestLinkMemberToPickupLocation(TapirIntegrationTest):
             member=member, valid_from=datetime.date(year=2019, month=6, day=1)
         )
 
-        new_pickup_location = PickupLocationFactory.create()
+        new_pickup_location = PickupLocationFactory.create(
+            street="test_street",
+            postcode="test_postcode",
+            city="test_city",
+            contact_name="test_contact",
+            info="test_info",
+            messenger_group_link="test_link",
+            photo_link="test_photo",
+            access_code="test_access",
+        )
         PickupLocationOpeningTime.objects.create(
             pickup_location=new_pickup_location,
             day_of_week=4,
@@ -168,6 +177,13 @@ class TestLinkMemberToPickupLocation(TapirIntegrationTest):
             {
                 "pickup_location": new_pickup_location.name,
                 "pickup_location_start_date": "07.02.2020",  # With a change valid from the 01.02.2020 (a Saturday), the next delivery day (set by PickupLocationOpeningTime) should be a friday
+                "address": "test_street, test_postcode test_city",
+                "contact_name": "test_contact",
+                "infos": "test_info",
+                "messenger_group_link": "test_link",
+                "opening_times": "Freitag: 10:00-18:00",
+                "photo_link": "test_photo",
+                "access_code": "test_access",
             },
             trigger_data.token_data,
         )
@@ -230,12 +246,11 @@ class TestLinkMemberToPickupLocation(TapirIntegrationTest):
         self.assertEqual(Events.MEMBERAREA_CHANGE_PICKUP_LOCATION, trigger_data.key)
         self.assertEqual(member.id, trigger_data.recipient_id_in_base_queryset)
         self.assertEqual(
-            {
-                "pickup_location": new_pickup_location.name,
-                "pickup_location_start_date": "13.03.2020",  # This is the first delivered Friday (week 11) after the location change
-            },
-            trigger_data.token_data,
+            new_pickup_location.name, trigger_data.token_data["pickup_location"]
         )
+        self.assertEqual(
+            "13.03.2020", trigger_data.token_data["pickup_location_start_date"]
+        )  # This is the first delivered Friday (week 11) after the location change
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     @patch.object(
