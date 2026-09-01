@@ -1,0 +1,210 @@
+{% load wirgarten %}
+{% load pickup_locations %}
+<style>
+    @page {
+        size: A4 portrait;
+        margin: 1.2cm;
+        @bottom-right {
+            content: "Seite " counter(page) " / " counter(pages);
+            font-size: 9pt;
+            color: #555;
+        }
+    }
+
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 11pt;
+        color: #111;
+    }
+
+    table.route-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    table.route-table th,
+    table.route-table td {
+        padding: 0.35rem;
+        vertical-align: top;
+        border-top: 1px solid #222;
+    }
+
+    table.route-table thead th {
+        border-top: none;
+        font-weight: bold;
+        padding-bottom: 0.2rem;
+    }
+
+    .num {
+        text-align: right;
+        white-space: nowrap;
+        width: 3.6cm;
+        padding-left: 0.9rem;
+        padding-right: 0.15rem;
+    }
+
+    .station-label {
+        width: auto;
+        min-width: 4cm;
+        padding-right: 0.75rem;
+        text-align: left;
+    }
+
+    .route-sum-row td {
+        font-weight: bold;
+        padding-top: 0.45rem;
+    }
+
+    .route-sum-row td.num {
+        box-shadow: inset 0 0 0 1px #222;
+    }
+</style>
+
+{% with first=entries.0.route_basket_totals %}
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem;">
+        <div>
+            <h1 style="margin: 0 0 0.35rem 0; font-size: 22pt; font-weight: bold; line-height: 1.15;">Kistenanzahl / Ausfahrrunde</h1>
+            <div style="font-size: 12pt; font-weight: bold;">Lieferung / KW: {{ first.calendar_week }}</div>
+        </div>
+        <div style="text-align: center; max-width: 4.5cm;">
+            {% organisation_logo_data_uri as logo_src %}
+            {% if logo_src %}
+                <img src="{{ logo_src }}" alt="Logo" style="display: block; margin: 0 auto; max-height: 2.4cm; max-width: 4.2cm;">
+            {% endif %}
+            {% site_name_for_pdf as org_site_name %}
+            {% if org_site_name %}
+                <div style="margin-top: 0.2rem; font-size: 9pt; color: #4a3728;">{{ org_site_name }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="margin-bottom: 1.1rem;">
+        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: baseline; font-weight: bold; font-size: 12pt; margin: 0.4rem 0 0.5rem 0;">
+            <span>Gesamtkistenanzahl</span>
+            <span>{{ first.grand_total }}</span>
+        </div>
+        <table class="route-table">
+            <thead>
+                <tr>
+                    <th class="station-label"></th>
+                    {% for header in first.headers %}
+                        <th class="num">
+                            {% if first.convert_headers %}
+                                {{ first.product_name_by_id|get_value:header }}
+                            {% else %}
+                                {{ header }}
+                            {% endif %}
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+        </table>
+    </div>
+{% endwith %}
+
+{% for entry in entries %}
+    <div style="margin-bottom: 1rem; break-inside: avoid;">
+        <table class="route-table">
+            <thead style="display: none;">
+                <tr>
+                    <th class="station-label"></th>
+                    {% for header in entry.route_basket_totals.headers %}
+                        <th class="num">
+                            {% if entry.route_basket_totals.convert_headers %}
+                                {{ entry.route_basket_totals.product_name_by_id|get_value:header }}
+                            {% else %}
+                                {{ header }}
+                            {% endif %}
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="route-sum-row">
+                    <td class="station-label">
+                        {% if entry.route_name %}
+                            {{ entry.route_name }}
+                        {% else %}
+                            Ohne Ausfahrrunde
+                        {% endif %}
+                    </td>
+                    {% for header in entry.route_basket_totals.headers %}
+                        <td class="num">{{ entry.route_basket_totals.totals|get_value:header }}</td>
+                    {% endfor %}
+                </tr>
+                {% if entry.route_basket_totals.pickup_location_name_lines %}
+                    <tr>
+                        <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}" style="border-top: none; padding-top: 0; font-size: 9pt; font-weight: normal; white-space: normal;">
+                            ({% for line in entry.route_basket_totals.pickup_location_name_lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %})
+                        </td>
+                    </tr>
+                {% elif not entry.route_basket_totals.pickup_location_data %}
+                    <tr>
+                        <td class="station-label" colspan="{{ entry.route_basket_totals.headers|length|add:1 }}" style="border-top: none; padding-top: 0; font-size: 9pt; font-weight: normal;">
+                            Keine Verteilstationen
+                        </td>
+                    </tr>
+                {% endif %}
+                {% for pickup_location in entry.route_basket_totals.pickup_location_data %}
+                    {% if pickup_location.show_details_in_basket_totals_export %}
+                        <tr>
+                            <td class="station-label" style="font-style: italic; font-weight: normal;">{{ pickup_location.name }}</td>
+                            {% for header in entry.route_basket_totals.headers %}
+                                <td class="num" style="font-weight: normal;">{{ pickup_location.totals|get_value:header }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endfor %}
+
+{% with first=entries.0.route_basket_totals %}
+<div style="margin-top: 0.8rem; break-inside: avoid;">
+    <table class="route-table">
+        <thead style="display: none;">
+            <tr>
+                <th class="station-label"></th>
+                {% for header in first.headers %}
+                    <th class="num">
+                        {% if first.convert_headers %}
+                            {{ first.product_name_by_id|get_value:header }}
+                        {% else %}
+                            {{ header }}
+                        {% endif %}
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="route-sum-row">
+                <td class="station-label">Bad Heilbrunn + Penzberg</td>
+                {% for header in first.headers %}
+                    <td class="num">{% sum_pickup_location_basket_totals header "Bad Heilbrunn" "Penzberg" %}</td>
+                {% endfor %}
+            </tr>
+            <tr class="route-sum-row">
+                <td class="station-label">Runde 3+4</td>
+                {% for header in first.headers %}
+                    <td class="num">{% sum_location_route_basket_totals header "Runde 3" "Runde 4" %}</td>
+                {% endfor %}
+            </tr>
+            <tr class="route-sum-row">
+                <td class="station-label">Summe aller Runden</td>
+                {% for header in first.headers %}
+                    <td class="num">{{ first.totals_across_routes|get_value:header }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+    <div style="margin-top: 0.9rem; font-size: 9pt; line-height: 1.35;">
+        <div style="font-weight: bold; font-size: 11pt; margin-bottom: 0.15rem;">Helfer rausstreichen</div>
+        <div style="margin-bottom: 0.2rem;">Wenn sich ein Helfer eine Kiste vorab mitnimmt</div>
+        <div>Step1: Diesen Zettel (Kistenanzahl/Ausfahrrunde): Kistenanzahl in jeweiliger Runde korrigieren</div>
+        <div>Step2: Durchlaufzettel: Kistenanzahl auf Seite 1 oben korrigieren</div>
+        <div>Step3: Durchlaufzettel: Haken bei Namen Helfer machen</div>
+    </div>
+</div>
+{% endwith %}
