@@ -105,20 +105,6 @@
 {% for entry in entries %}
     <div style="margin-bottom: 1rem; break-inside: avoid;">
         <table class="route-table">
-            <thead style="display: none;">
-                <tr>
-                    <th class="station-label"></th>
-                    {% for header in entry.route_basket_totals.headers %}
-                        <th class="num">
-                            {% if entry.route_basket_totals.convert_headers %}
-                                {{ entry.route_basket_totals.product_name_by_id|get_value:header }}
-                            {% else %}
-                                {{ header }}
-                            {% endif %}
-                        </th>
-                    {% endfor %}
-                </tr>
-            </thead>
             <tbody>
                 <tr class="route-sum-row">
                     <td class="station-label">
@@ -163,20 +149,6 @@
 {% with first=entries.0.route_basket_totals %}
 <div style="margin-top: 0.8rem; break-inside: avoid;">
     <table class="route-table">
-        <thead style="display: none;">
-            <tr>
-                <th class="station-label"></th>
-                {% for header in first.headers %}
-                    <th class="num">
-                        {% if first.convert_headers %}
-                            {{ first.product_name_by_id|get_value:header }}
-                        {% else %}
-                            {{ header }}
-                        {% endif %}
-                    </th>
-                {% endfor %}
-            </tr>
-        </thead>
         <tbody>
             <tr class="route-sum-row">
                 <td class="station-label">Summe aller Runden</td>

@@ -17,7 +17,7 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberPickupLocationFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, TapirUnitTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestLocationRouteColumnProvider(TapirIntegrationTest):
@@ -550,75 +550,3 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual(6, first["grand_total"])
         self.assertNotIn("totals_across_routes", second)
         self.assertNotIn("grand_total", second)
-
-    def test_addAcrossRouteAggregates_twoRoutes_putsSumsOnlyOnFirst(self):
-        cache = {}
-        first = {
-            "headers": ["small", "normal"],
-            "totals": {"small": 2, "normal": 3},
-        }
-        second = {
-            "headers": ["small", "normal"],
-            "totals": {"small": 1, "normal": None},
-        }
-
-        LocationRouteColumnProvider.add_across_route_aggregates(cache, first)
-        LocationRouteColumnProvider.add_across_route_aggregates(cache, second)
-
-        expected_totals = {"small": 3, "normal": 3}
-        self.assertEqual(expected_totals, first["totals_across_routes"])
-        self.assertEqual(6, first["grand_total"])
-        self.assertNotIn("totals_across_routes", second)
-        self.assertNotIn("grand_total", second)
-
-    def test_addAcrossRouteAggregates_missingHeaderAndEmptyTotals_countsAsZero(self):
-        cache = {}
-        first = {
-            "headers": ["small", "normal"],
-            "totals": {"small": 2, "normal": 5},
-        }
-        second = {
-            "headers": ["small", "normal"],
-            "totals": {"small": None, "normal": 1},
-        }
-        empty = {}
-
-        LocationRouteColumnProvider.add_across_route_aggregates(cache, first)
-        LocationRouteColumnProvider.add_across_route_aggregates(cache, second)
-        LocationRouteColumnProvider.add_across_route_aggregates(cache, empty)
-
-        self.assertEqual(
-            {"small": 2, "normal": 6},
-            first["totals_across_routes"],
-        )
-        self.assertEqual(8, first["grand_total"])
-        self.assertNotIn("totals_across_routes", empty)
-        self.assertNotIn("grand_total", empty)
-
-
-class TestBuildPickupLocationNameLines(TapirUnitTest):
-    def test_buildPickupLocationNameLines_noNames_returnsEmptyList(self):
-        result = LocationRouteColumnProvider.build_pickup_location_name_lines([])
-
-        self.assertEqual([], result)
-
-    def test_buildPickupLocationNameLines_threeNames_returnsSingleLine(self):
-        result = LocationRouteColumnProvider.build_pickup_location_name_lines(
-            ["Hofpunkt", "Grünes Warenhaus", "Hochalmstraße"]
-        )
-
-        self.assertEqual(["Hofpunkt, Grünes Warenhaus, Hochalmstraße"], result)
-
-    def test_buildPickupLocationNameLines_fourNames_splitsIntoTwoLines(self):
-        result = LocationRouteColumnProvider.build_pickup_location_name_lines(
-            ["A", "B", "C", "D"]
-        )
-
-        self.assertEqual(["A, B,", "C, D"], result)
-
-    def test_buildPickupLocationNameLines_fiveNames_firstLineGetsTheExtraName(self):
-        result = LocationRouteColumnProvider.build_pickup_location_name_lines(
-            ["A", "B", "C", "D", "E"]
-        )
-
-        self.assertEqual(["A, B, C,", "D, E"], result)

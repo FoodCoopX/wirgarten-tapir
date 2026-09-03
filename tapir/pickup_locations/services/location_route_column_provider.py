@@ -110,42 +110,42 @@ class LocationRouteColumnProvider:
                 for product in TapirCache.get_all_products(cache=cache)
             },
         }
-        cls.add_across_route_aggregates(cache=cache, route_basket_totals=result)
+        cls.add_across_route_aggregates(
+            cache=cache,
+            route_basket_totals=result,
+            reference_datetime=reference_datetime,
+        )
         return result
 
     @classmethod
     def add_across_route_aggregates(
-        cls, cache: dict, route_basket_totals: dict
+        cls,
+        cache: dict,
+        route_basket_totals: dict,
+        reference_datetime: datetime.datetime,
     ) -> None:
-        accumulator = cache.setdefault(
-            "across_route_basket_totals",
-            {
-                "first": None,
-                "totals_across_routes": None,
-                "grand_total": 0,
-            },
-        )
+        if cache.get("across_route_basket_totals") is not None:
+            return
 
-        headers = route_basket_totals.get("headers")
-        if not headers:
-            headers = list((route_basket_totals.get("totals") or {}).keys())
+        headers = route_basket_totals["headers"]
+        totals_across_routes = dict.fromkeys(headers, 0)
+        grand_total = 0
+        for pickup_location in PickupLocation.objects.all():
+            data = (
+                PickupLocationDataForLocationRouteBuilder.build_data_for_location_route(
+                    pickup_location=pickup_location,
+                    reference_datetime=reference_datetime,
+                    cache=cache,
+                )
+            )
+            for header in headers:
+                value = data["global_values"][header]
+                totals_across_routes[header] += value
+                grand_total += value
 
-        if accumulator["totals_across_routes"] is None:
-            accumulator["totals_across_routes"] = dict.fromkeys(headers, 0)
-
-        totals = route_basket_totals.get("totals") or {}
-        for header in accumulator["totals_across_routes"]:
-            value = totals.get(header) or 0
-            accumulator["totals_across_routes"][header] += value
-            accumulator["grand_total"] += value
-
-        if accumulator["first"] is None:
-            accumulator["first"] = route_basket_totals
-            route_basket_totals["totals_across_routes"] = accumulator[
-                "totals_across_routes"
-            ]
-
-        accumulator["first"]["grand_total"] = accumulator["grand_total"]
+        cache["across_route_basket_totals"] = True
+        route_basket_totals["totals_across_routes"] = totals_across_routes
+        route_basket_totals["grand_total"] = grand_total
 
     @classmethod
     def build_pickup_location_name_lines(cls, names: list[str]) -> list[str]:
