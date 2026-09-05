@@ -481,7 +481,7 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual(["pl_listed"], result["pickup_location_name_lines"])
         self.assertEqual({"small": 2, "normal": 2}, result["totals"])
 
-    def test_getValueRouteBasketTotals_twoRoutesShareCache_putsAcrossTotalsOnlyOnFirst(
+    def test_getValueRouteBasketTotals_twoRoutesShareCache_reusesAcrossTotals(
         self,
     ):
         self._set_parameter(key=ParameterKeys.PICKING_MODE, value=PICKING_MODE_BASKET)
@@ -547,6 +547,6 @@ class TestLocationRouteColumnProvider(TapirIntegrationTest):
         self.assertEqual({"small": 2, "normal": 2}, first["totals"])
         self.assertEqual({"small": 1, "normal": 1}, second["totals"])
         self.assertEqual({"small": 3, "normal": 3}, first["totals_across_routes"])
+        self.assertEqual({"small": 3, "normal": 3}, second["totals_across_routes"])
         self.assertEqual(6, first["grand_total"])
-        self.assertNotIn("totals_across_routes", second)
-        self.assertNotIn("grand_total", second)
+        self.assertEqual(6, second["grand_total"])

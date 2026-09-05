@@ -7,6 +7,7 @@ from tapir.pickup_locations.services.pickup_location_data_for_location_route_bui
     PickupLocationDataForLocationRouteBuilder,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import PickupLocation, LocationRoute
 
 
@@ -110,24 +111,39 @@ class LocationRouteColumnProvider:
                 for product in TapirCache.get_all_products(cache=cache)
             },
         }
-        cls.add_across_route_aggregates(
+        across = cls.get_across_route_aggregates(
             cache=cache,
-            route_basket_totals=result,
+            headers=headers,
             reference_datetime=reference_datetime,
         )
+        result["totals_across_routes"] = across["totals_across_routes"]
+        result["grand_total"] = across["grand_total"]
         return result
 
     @classmethod
-    def add_across_route_aggregates(
+    def get_across_route_aggregates(
         cls,
         cache: dict,
-        route_basket_totals: dict,
+        headers: list,
         reference_datetime: datetime.datetime,
-    ) -> None:
-        if cache.get("across_route_basket_totals") is not None:
-            return
+    ) -> dict:
+        return get_from_cache_or_compute(
+            cache,
+            "across_route_basket_totals",
+            lambda: cls._compute_across_route_aggregates(
+                cache=cache,
+                headers=headers,
+                reference_datetime=reference_datetime,
+            ),
+        )
 
-        headers = route_basket_totals["headers"]
+    @classmethod
+    def _compute_across_route_aggregates(
+        cls,
+        cache: dict,
+        headers: list,
+        reference_datetime: datetime.datetime,
+    ) -> dict:
         totals_across_routes = dict.fromkeys(headers, 0)
         grand_total = 0
         for pickup_location in PickupLocation.objects.all():
@@ -143,9 +159,10 @@ class LocationRouteColumnProvider:
                 totals_across_routes[header] += value
                 grand_total += value
 
-        cache["across_route_basket_totals"] = True
-        route_basket_totals["totals_across_routes"] = totals_across_routes
-        route_basket_totals["grand_total"] = grand_total
+        return {
+            "totals_across_routes": totals_across_routes,
+            "grand_total": grand_total,
+        }
 
     @classmethod
     def build_pickup_location_name_lines(cls, names: list[str]) -> list[str]:
