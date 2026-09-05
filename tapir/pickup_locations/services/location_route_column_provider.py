@@ -131,12 +131,10 @@ class LocationRouteColumnProvider:
         totals_across_routes = dict.fromkeys(headers, 0)
         grand_total = 0
         for pickup_location in PickupLocation.objects.all():
-            data = (
-                PickupLocationDataForLocationRouteBuilder.build_data_for_location_route(
-                    pickup_location=pickup_location,
-                    reference_datetime=reference_datetime,
-                    cache=cache,
-                )
+            data = PickupLocationDataForLocationRouteBuilder.build_data_for_location_route(
+                pickup_location=pickup_location,
+                reference_datetime=reference_datetime,
+                cache=cache,
             )
             for header in headers:
                 value = data["global_values"][header]
