@@ -22,7 +22,7 @@ def sum_location_route_basket_totals(context, header, *route_names):
     total = 0
     for entry in context.get("entries", []):
         if entry.get("route_name") in names:
-            total += entry.get("route_basket_totals", {}).get("totals", {}).get(
-                header, 0
+            total += (
+                entry.get("route_basket_totals", {}).get("totals", {}).get(header, 0)
             )
     return total
