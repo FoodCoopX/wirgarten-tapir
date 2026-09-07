@@ -70,6 +70,10 @@ class PickupLocation(TapirModel):
     location_route = models.ForeignKey(
         LocationRoute, blank=True, null=True, on_delete=models.SET_NULL
     )
+    show_details_in_basket_totals_export = models.BooleanField(
+        _("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
+        default=False,
+    )
     route_info = models.CharField(_("Driver/Route info"), max_length=1024, blank=True)
 
     class Meta:

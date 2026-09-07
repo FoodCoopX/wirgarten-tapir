@@ -5,6 +5,12 @@ from django.http import Http404
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import THEME_BIOTOP
+from tapir.generic_exports.services.pdf_templates.template_basket_totals_by_route import (
+    TemplateBasketTotalsByRoute,
+)
+from tapir.generic_exports.services.pdf_templates.template_basket_totals_by_route_biotop import (
+    TemplateBasketTotalsByRouteBiotop,
+)
 from tapir.generic_exports.services.pdf_templates.template_location_routes import (
     TemplateLocationRoutes,
 )
@@ -34,8 +40,10 @@ class PdfExportTemplateManager:
             == THEME_BIOTOP
         ):
             template_list.append(TemplateLocationRoutesBiotop)
+            template_list.append(TemplateBasketTotalsByRouteBiotop)
         else:
             template_list.append(TemplateLocationRoutes)
+            template_list.append(TemplateBasketTotalsByRoute)
 
         return {
             template.ID: TemplateData(

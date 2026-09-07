@@ -17,6 +17,7 @@
  * * `monthly` - Monatlich
  * * `weekly` - Wöchentlich
  * * `daily` - Täglich
+ * * `after_pickup_location_change_deadline` - Nach letztmöglicher Änderung der Verteilstation
  * * `never` - Nie
  * @export
  */
@@ -25,6 +26,7 @@ export const AutomatedExportCycleEnum = {
   Monthly: "monthly",
   Weekly: "weekly",
   Daily: "daily",
+  AfterPickupLocationChangeDeadline: "after_pickup_location_change_deadline",
   Never: "never",
 } as const;
 export type AutomatedExportCycleEnum =
