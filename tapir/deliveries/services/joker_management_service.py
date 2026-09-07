@@ -63,8 +63,10 @@ class JokerManagementService:
         return nb_used_jokers_in_growing_period < growing_period.max_jokers_per_member
 
     @classmethod
-    def can_joker_be_cancelled(cls, joker: Joker, cache: dict) -> bool:
-        return get_today(cache=cache) <= cls.get_date_limit_for_joker_changes(
+    def can_joker_be_cancelled(
+        cls, joker: Joker, reference_date: datetime.date, cache: dict
+    ) -> bool:
+        return reference_date <= cls.get_date_limit_for_joker_changes(
             joker.date, cache=cache
         )
 

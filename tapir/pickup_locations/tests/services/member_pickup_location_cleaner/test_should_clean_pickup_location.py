@@ -9,7 +9,7 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 class TestShouldCleanPickupLocation(TapirUnitTest):
     @patch.object(
         MemberPickupLocationCleaner,
-        "_does_member_have_at_least_one_delivered_subscription",
+        "does_member_have_at_least_one_delivered_subscription",
         autospec=True,
     )
     @patch.object(
@@ -44,7 +44,7 @@ class TestShouldCleanPickupLocation(TapirUnitTest):
 
     @patch.object(
         MemberPickupLocationCleaner,
-        "_does_member_have_at_least_one_delivered_subscription",
+        "does_member_have_at_least_one_delivered_subscription",
         autospec=True,
     )
     @patch.object(
@@ -79,7 +79,7 @@ class TestShouldCleanPickupLocation(TapirUnitTest):
 
     @patch.object(
         MemberPickupLocationCleaner,
-        "_does_member_have_at_least_one_delivered_subscription",
+        "does_member_have_at_least_one_delivered_subscription",
         autospec=True,
     )
     @patch.object(

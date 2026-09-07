@@ -18,6 +18,7 @@ import { Step } from "../types/Step.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
+import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 
 interface BestellWizardShoppingCartOverlayProps {
   settings: BestellWizardSettings;
@@ -69,7 +70,10 @@ const BestellWizardShoppingCartOverlay: React.FC<
   }
 
   function canEditAssociationMembership() {
-    if (settings.associationMembershipTypes.length <= 1) {
+    if (
+      getVisibleAssociationMembershipTypes(settings.associationMembershipTypes)
+        .length <= 1
+    ) {
       return false;
     }
     return (

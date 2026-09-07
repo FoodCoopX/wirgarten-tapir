@@ -16,6 +16,7 @@ class AssociationMembershipType(TapirModel):
     deleted = models.BooleanField(default=False)
     description_in_bestell_wizard = models.TextField()
     order_in_bestell_wizard = models.IntegerField()
+    hidden_in_bestell_wizard = models.BooleanField(default=False)
 
     def __str__(self):
         result = f"{self.name}"

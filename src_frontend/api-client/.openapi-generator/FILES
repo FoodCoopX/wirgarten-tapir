@@ -98,6 +98,11 @@ models/LocationRoute.ts
 models/LocationRouteRequest.ts
 models/MailCategory.ts
 models/MailCategoryRequest.ts
+models/MailingList.ts
+models/MailingListCreateRequest.ts
+models/MailingListRecipient.ts
+models/MailingListSubscribeExternalRecipientRequestRequest.ts
+models/MailingListSubscribeInternalRecipientRequestRequest.ts
 models/MandateReferencePreviewResponse.ts
 models/Member.ts
 models/MemberAssociationMembershipDetails.ts
@@ -113,6 +118,7 @@ models/MemberExtraMailData.ts
 models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts
 models/MemberMailCategoryRequestRequest.ts
+models/MemberMailingListDataResponse.ts
 models/MemberPaymentRhythm.ts
 models/MemberPaymentRhythmData.ts
 models/MemberProfileCapacityCheckRequestRequest.ts

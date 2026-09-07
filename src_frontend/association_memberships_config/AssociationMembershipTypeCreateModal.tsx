@@ -22,6 +22,7 @@ const AssociationMembershipTypeCreateModal: React.FC<
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [order, setOrder] = useState(1);
+  const [hiddenInBestellWizard, setHiddenInBestellWizard] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -47,6 +48,7 @@ const AssociationMembershipTypeCreateModal: React.FC<
           name: name,
           orderInBestellWizard: order,
           descriptionInBestellWizard: description,
+          hiddenInBestellWizard: hiddenInBestellWizard,
         },
       })
       .then(onCreated)
@@ -76,7 +78,7 @@ const AssociationMembershipTypeCreateModal: React.FC<
               required={true}
             />
           </Form.Group>
-          <Form.Group>
+          <Form.Group className={"mt-2"}>
             <Form.Label>
               Reihenfolge im BestellWizard (kleiner ist früher)
             </Form.Label>
@@ -92,7 +94,7 @@ const AssociationMembershipTypeCreateModal: React.FC<
               required={true}
             />
           </Form.Group>
-          <Form.Group>
+          <Form.Group className={"mt-2"}>
             <Form.Label>Beschreibung im BestellWizard</Form.Label>
             <Form.Control
               placeholder={"Beschreibung"}
@@ -101,6 +103,20 @@ const AssociationMembershipTypeCreateModal: React.FC<
               as={"textarea"}
               required={true}
             />
+          </Form.Group>
+          <Form.Group className={"mt-2"}>
+            <Form.Check
+              checked={hiddenInBestellWizard}
+              onChange={(e) => setHiddenInBestellWizard(e.target.checked)}
+              id={"hidden_in_bw"}
+              label={"Wird in BestellWizard versteckt"}
+            />
+            <Form.Text>
+              Mitgliedschafttypen können im BestellWizard versteckt werden, so
+              das normale Mitglieder die nicht mehr bestellen können. Diese
+              Mitgliedschafttypen können nur von Betrieb-Admins durch die
+              Mitgliederliste verteilt werden .
+            </Form.Text>
           </Form.Group>
         </Form>
       </Modal.Body>

@@ -100,6 +100,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tapir.payments.tasks.export_payments_for_this_month",
         "schedule": celery.schedules.crontab(hour="5", minute="0"),
     },
+    "create_credits_for_jokers": {
+        "task": "tapir.payments.tasks.create_credits_for_jokers",
+        "schedule": celery.schedules.crontab(hour="6", minute="0"),
+    },
     "clean_members_without_subscription_task": {
         "task": "tapir.pickup_locations.tasks.clean_members_without_subscription_task",
         "schedule": celery.schedules.crontab(hour="3", minute="0"),
@@ -125,7 +129,7 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 if EMAIL_ENV == "dev":
     EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-    EMAIL_HOST = "email_host"
+    EMAIL_HOST = "example.com"
     EMAIL_HOST_USER = "email_host_user"
     EMAIL_HOST_PASSWORD = "email_host_password"
     EMAIL_HOST_SENDER = "test_host_sender@example.com"

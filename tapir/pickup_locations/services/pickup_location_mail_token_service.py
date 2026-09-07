@@ -3,10 +3,12 @@ from tapir_mail.models import StaticSegmentRecipient
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
+from tapir.pickup_locations.services.pickup_location_opening_times_formatter import (
+    PickupLocationOpeningTimesFormatter,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
-from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
-from tapir.wirgarten.models import Member, PickupLocationOpeningTime
+from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_today
 
 
@@ -117,14 +119,6 @@ class PickupLocationMailTokenService:
         if pickup_location is None:
             return cls.NOT_APPLICABLE
 
-        formatted_times = []
-        for opening_time in PickupLocationOpeningTime.objects.filter(
-            pickup_location_id=pickup_location.id
-        ).order_by("day_of_week"):
-            open_time = opening_time.open_time.strftime("%H:%M")
-            close_time = opening_time.close_time.strftime("%H:%M")
-
-            formatted_times.append(
-                f"{OPTIONS_WEEKDAYS[opening_time.day_of_week][1]}: {open_time}-{close_time}"
-            )
-        return ", ".join(formatted_times)
+        return PickupLocationOpeningTimesFormatter.get_formatted_opening_times(
+            pickup_location_id=pickup_location.id, cache=cache
+        )

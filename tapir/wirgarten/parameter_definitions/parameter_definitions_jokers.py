@@ -20,6 +20,7 @@ if typing.TYPE_CHECKING:
 class ParameterDefinitionsJokers:
     @classmethod
     def define_all_parameters_jokers(cls, importer: ParameterDefinitions):
+        order_priority = 100
         importer.parameter_definition(
             key=ParameterKeys.JOKERS_ENABLED,
             label="Joker-Feature einschalten",
@@ -27,8 +28,21 @@ class ParameterDefinitionsJokers:
             initial_value=True,
             description="Temporäre Liefer-Pausen pro Mitglied erlauben",
             category=ParameterCategory.JOKERS,
-            order_priority=3,
+            order_priority=order_priority,
         )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.JOKERS_CREATE_MEMBER_CREDITS,
+            label="Gutschriften für Joker erzeugen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn aktiviert, Gutschriften werden automatisch für jeden Joker erzeugt. "
+            "Das passiert an dem Tag wo die jeweiligen Joker nicht mehr abgesagt werden können.",
+            category=ParameterCategory.JOKERS,
+            order_priority=order_priority,
+        )
+        order_priority -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.DELIVERY_DONATION_MODE,
@@ -37,11 +51,12 @@ class ParameterDefinitionsJokers:
             initial_value=DELIVERY_DONATION_MODE_DISABLED,
             description="Ob die Mitglieder einzelne Lieferungen spenden dürfen",
             category=ParameterCategory.JOKERS,
-            order_priority=2,
+            order_priority=order_priority,
             meta=ParameterMeta(
                 options=DELIVERY_DONATION_MODE_OPTIONS,
             ),
         )
+        order_priority -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION,
@@ -52,7 +67,7 @@ class ParameterDefinitionsJokers:
             "<br />Die ausgewählte Station steht Mitglieder nicht mehr zu Verfügung, z.B. taucht sie nicht mehr im BestellWizard oder Mitgleiderbereich auf."
             "<br />Wenn keine Station ausgewählt ist tauchen gespendete Lieferungen in der Kommissionierliste gar nicht auf.",
             category=ParameterCategory.JOKERS,
-            order_priority=1,
+            order_priority=order_priority,
             meta=ParameterMeta(
                 options_callable=lambda cache: [
                     (
@@ -66,6 +81,7 @@ class ParameterDefinitionsJokers:
                 ],
             ),
         )
+        order_priority -= 1
 
         importer.parameter_definition(
             key=ParameterKeys.EXPLANATION_TEXT_FOR_JOKERS_AND_DONATIONS,
@@ -74,6 +90,7 @@ class ParameterDefinitionsJokers:
             initial_value="Standard Erklärungstext zu Joker und Spende, in der Konfig anzupassen unter 'Erklärungstext zu Joker und/oder Spende'",
             description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.JOKERS,
-            order_priority=0,
+            order_priority=order_priority,
             meta=ParameterMeta(textarea=True),
         )
+        order_priority -= 1

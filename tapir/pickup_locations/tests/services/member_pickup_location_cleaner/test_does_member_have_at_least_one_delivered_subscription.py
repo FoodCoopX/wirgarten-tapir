@@ -22,7 +22,7 @@ class TestDoesMemberHaveAtLeastOneDeliveredSubscription(TapirUnitTest):
 
         mock_get_active_and_future_subscriptions_by_member_id.return_value = {}
 
-        result = MemberPickupLocationCleaner._does_member_have_at_least_one_delivered_subscription(
+        result = MemberPickupLocationCleaner.does_member_have_at_least_one_delivered_subscription(
             member=member, reference_date=reference_date, cache=cache
         )
 
@@ -48,7 +48,7 @@ class TestDoesMemberHaveAtLeastOneDeliveredSubscription(TapirUnitTest):
             ]
         }
 
-        result = MemberPickupLocationCleaner._does_member_have_at_least_one_delivered_subscription(
+        result = MemberPickupLocationCleaner.does_member_have_at_least_one_delivered_subscription(
             member=member, reference_date=reference_date, cache=cache
         )
 
@@ -76,7 +76,7 @@ class TestDoesMemberHaveAtLeastOneDeliveredSubscription(TapirUnitTest):
             ]
         }
 
-        result = MemberPickupLocationCleaner._does_member_have_at_least_one_delivered_subscription(
+        result = MemberPickupLocationCleaner.does_member_have_at_least_one_delivered_subscription(
             member=member, reference_date=reference_date, cache=cache
         )
 

@@ -240,6 +240,22 @@
                         </div>
                     </div>
                 {% endif %}
+                {% if show_mailing_list_content %}
+                    <div class="row mt-2">
+                        <div id="member_mailing_list" data-member-id="{{ object.pk }}">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Mailing-Listen</h5>
+                                </div>
+                                <div class="card-body">
+                                    <span class="spinner-border">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 <div class="row mt-2">
                     <div>
                         <div id="member-payment-data" class="card">

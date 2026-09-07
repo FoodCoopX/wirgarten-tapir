@@ -13,20 +13,60 @@
  */
 
 import type {
+  MailingList,
+  MailingListCreateRequest,
+  MailingListRecipient,
+  MailingListSubscribeExternalRecipientRequestRequest,
+  MailingListSubscribeInternalRecipientRequestRequest,
   MemberExtraEmailCreateRequestRequest,
   MemberExtraMailData,
   MemberMailCategoryData,
   MemberMailCategoryRequestRequest,
+  MemberMailingListDataResponse,
   PatchedMemberExtraEmailUpdateRequestRequest,
 } from "../models/index";
 import {
+  MailingListCreateRequestToJSON,
+  MailingListFromJSON,
+  MailingListRecipientFromJSON,
+  MailingListSubscribeExternalRecipientRequestRequestToJSON,
+  MailingListSubscribeInternalRecipientRequestRequestToJSON,
   MemberExtraEmailCreateRequestRequestToJSON,
   MemberExtraMailDataFromJSON,
   MemberMailCategoryDataFromJSON,
   MemberMailCategoryRequestRequestToJSON,
+  MemberMailingListDataResponseFromJSON,
   PatchedMemberExtraEmailUpdateRequestRequestToJSON,
 } from "../models/index";
 import * as runtime from "../runtime";
+
+export interface CoreApiMailingListCreateCreateRequest {
+  mailingListCreateRequest: MailingListCreateRequest;
+}
+
+export interface CoreApiMailingListDeleteDestroyRequest {
+  listName: string;
+}
+
+export interface CoreApiMailingListEditUpdateRequest {
+  mailingListCreateRequest: MailingListCreateRequest;
+}
+
+export interface CoreApiMailingListRecipientListListRequest {
+  listName: string;
+}
+
+export interface CoreApiMailingListSubscribeExternalCreateRequest {
+  mailingListSubscribeExternalRecipientRequestRequest: MailingListSubscribeExternalRecipientRequestRequest;
+}
+
+export interface CoreApiMailingListSubscribeInternalCreateRequest {
+  mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
+}
+
+export interface CoreApiMailingListUnsubscribeCreateRequest {
+  mailingListSubscribeExternalRecipientRequestRequest: MailingListSubscribeExternalRecipientRequestRequest;
+}
 
 export interface CoreApiMemberExtraEmailsCreateRequest {
   memberExtraEmailCreateRequestRequest: MemberExtraEmailCreateRequestRequest;
@@ -50,6 +90,26 @@ export interface CoreApiMemberMailCategoryDataCreateRequest {
 
 export interface CoreApiMemberMailCategoryDataRetrieveRequest {
   memberId?: string;
+}
+
+export interface CoreApiMemberMailingListDataRetrieveRequest {
+  memberId: string;
+}
+
+export interface CoreApiMemberSelfConfirmCreateRequest {
+  mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
+}
+
+export interface CoreApiMemberSelfRejectCreateRequest {
+  mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
+}
+
+export interface CoreApiMemberSelfSubscribeCreateRequest {
+  mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
+}
+
+export interface CoreApiMemberSelfUnsubscribeCreateRequest {
+  mailingListSubscribeInternalRecipientRequestRequest: MailingListSubscribeInternalRecipientRequestRequest;
 }
 
 /**
@@ -102,6 +162,525 @@ export class CoreApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<string> {
     const response = await this.coreApiGetThemeRetrieveRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListCreateCreateRaw(
+    requestParameters: CoreApiMailingListCreateCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MailingList>> {
+    if (requestParameters["mailingListCreateRequest"] == null) {
+      throw new runtime.RequiredError(
+        "mailingListCreateRequest",
+        'Required parameter "mailingListCreateRequest" was null or undefined when calling coreApiMailingListCreateCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_create`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListCreateRequestToJSON(
+          requestParameters["mailingListCreateRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MailingListFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coreApiMailingListCreateCreate(
+    requestParameters: CoreApiMailingListCreateCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MailingList> {
+    const response = await this.coreApiMailingListCreateCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListDeleteDestroyRaw(
+    requestParameters: CoreApiMailingListDeleteDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (requestParameters["listName"] == null) {
+      throw new runtime.RequiredError(
+        "listName",
+        'Required parameter "listName" was null or undefined when calling coreApiMailingListDeleteDestroy().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["listName"] != null) {
+      queryParameters["list_name"] = requestParameters["listName"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_delete`,
+        method: "DELETE",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMailingListDeleteDestroy(
+    requestParameters: CoreApiMailingListDeleteDestroyRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMailingListDeleteDestroyRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListEditUpdateRaw(
+    requestParameters: CoreApiMailingListEditUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MailingList>> {
+    if (requestParameters["mailingListCreateRequest"] == null) {
+      throw new runtime.RequiredError(
+        "mailingListCreateRequest",
+        'Required parameter "mailingListCreateRequest" was null or undefined when calling coreApiMailingListEditUpdate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_edit`,
+        method: "PUT",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListCreateRequestToJSON(
+          requestParameters["mailingListCreateRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MailingListFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coreApiMailingListEditUpdate(
+    requestParameters: CoreApiMailingListEditUpdateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MailingList> {
+    const response = await this.coreApiMailingListEditUpdateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListListListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<MailingList>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_list`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(MailingListFromJSON),
+    );
+  }
+
+  /**
+   */
+  async coreApiMailingListListList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<MailingList>> {
+    const response = await this.coreApiMailingListListListRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListRecipientListListRaw(
+    requestParameters: CoreApiMailingListRecipientListListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<MailingListRecipient>>> {
+    if (requestParameters["listName"] == null) {
+      throw new runtime.RequiredError(
+        "listName",
+        'Required parameter "listName" was null or undefined when calling coreApiMailingListRecipientListList().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["listName"] != null) {
+      queryParameters["list_name"] = requestParameters["listName"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_recipient_list`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(MailingListRecipientFromJSON),
+    );
+  }
+
+  /**
+   */
+  async coreApiMailingListRecipientListList(
+    requestParameters: CoreApiMailingListRecipientListListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<MailingListRecipient>> {
+    const response = await this.coreApiMailingListRecipientListListRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListSubscribeExternalCreateRaw(
+    requestParameters: CoreApiMailingListSubscribeExternalCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeExternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeExternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeExternalRecipientRequestRequest" was null or undefined when calling coreApiMailingListSubscribeExternalCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_subscribe_external`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeExternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeExternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMailingListSubscribeExternalCreate(
+    requestParameters: CoreApiMailingListSubscribeExternalCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMailingListSubscribeExternalCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListSubscribeInternalCreateRaw(
+    requestParameters: CoreApiMailingListSubscribeInternalCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeInternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeInternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeInternalRecipientRequestRequest" was null or undefined when calling coreApiMailingListSubscribeInternalCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_subscribe_internal`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeInternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeInternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMailingListSubscribeInternalCreate(
+    requestParameters: CoreApiMailingListSubscribeInternalCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMailingListSubscribeInternalCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMailingListUnsubscribeCreateRaw(
+    requestParameters: CoreApiMailingListUnsubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeExternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeExternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeExternalRecipientRequestRequest" was null or undefined when calling coreApiMailingListUnsubscribeCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/mailing_list_unsubscribe`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeExternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeExternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMailingListUnsubscribeCreate(
+    requestParameters: CoreApiMailingListUnsubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMailingListUnsubscribeCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
     return await response.value();
   }
 
@@ -460,6 +1039,357 @@ export class CoreApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<MemberMailCategoryData> {
     const response = await this.coreApiMemberMailCategoryDataRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberMailingListDataRetrieveRaw(
+    requestParameters: CoreApiMemberMailingListDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberMailingListDataResponse>> {
+    if (requestParameters["memberId"] == null) {
+      throw new runtime.RequiredError(
+        "memberId",
+        'Required parameter "memberId" was null or undefined when calling coreApiMemberMailingListDataRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_mailing_list_data`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberMailingListDataResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coreApiMemberMailingListDataRetrieve(
+    requestParameters: CoreApiMemberMailingListDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MemberMailingListDataResponse> {
+    const response = await this.coreApiMemberMailingListDataRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberSelfConfirmCreateRaw(
+    requestParameters: CoreApiMemberSelfConfirmCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeInternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeInternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeInternalRecipientRequestRequest" was null or undefined when calling coreApiMemberSelfConfirmCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_self_confirm`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeInternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeInternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberSelfConfirmCreate(
+    requestParameters: CoreApiMemberSelfConfirmCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMemberSelfConfirmCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberSelfRejectCreateRaw(
+    requestParameters: CoreApiMemberSelfRejectCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeInternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeInternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeInternalRecipientRequestRequest" was null or undefined when calling coreApiMemberSelfRejectCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_self_reject`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeInternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeInternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberSelfRejectCreate(
+    requestParameters: CoreApiMemberSelfRejectCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMemberSelfRejectCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberSelfSubscribeCreateRaw(
+    requestParameters: CoreApiMemberSelfSubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeInternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeInternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeInternalRecipientRequestRequest" was null or undefined when calling coreApiMemberSelfSubscribeCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_self_subscribe`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeInternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeInternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberSelfSubscribeCreate(
+    requestParameters: CoreApiMemberSelfSubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMemberSelfSubscribeCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coreApiMemberSelfUnsubscribeCreateRaw(
+    requestParameters: CoreApiMemberSelfUnsubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (
+      requestParameters[
+        "mailingListSubscribeInternalRecipientRequestRequest"
+      ] == null
+    ) {
+      throw new runtime.RequiredError(
+        "mailingListSubscribeInternalRecipientRequestRequest",
+        'Required parameter "mailingListSubscribeInternalRecipientRequestRequest" was null or undefined when calling coreApiMemberSelfUnsubscribeCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/core/api/member_self_unsubscribe`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MailingListSubscribeInternalRecipientRequestRequestToJSON(
+          requestParameters[
+            "mailingListSubscribeInternalRecipientRequestRequest"
+          ],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async coreApiMemberSelfUnsubscribeCreate(
+    requestParameters: CoreApiMemberSelfUnsubscribeCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.coreApiMemberSelfUnsubscribeCreateRaw(
       requestParameters,
       initOverrides,
     );

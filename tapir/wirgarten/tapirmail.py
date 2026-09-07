@@ -159,6 +159,13 @@ def _register_triggers():
         tokens={
             "Neuer Abholort": "pickup_location",
             "Gültig ab": "pickup_location_start_date",
+            "Neuer Abholort - Adresse": "address",
+            "Neuer Abholort - Zugangscode": "access_code",
+            "Neuer Abholort - Messenger-Gruppe": "messenger_group_link",
+            "Neuer Abholort - Kontaktname": "contact_name",
+            "Neuer Abholort - Photo-Link": "photo_link",
+            "Neuer Abholort - Zusatzinfos": "infos",
+            "Neuer Abholort - Abholzeiten": "opening_times",
         },
         required=True,
     )
