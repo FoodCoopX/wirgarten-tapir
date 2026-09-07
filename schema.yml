@@ -3179,7 +3179,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
