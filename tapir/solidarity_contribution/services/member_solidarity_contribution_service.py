@@ -8,6 +8,7 @@ from tapir.solidarity_contribution.models import (
     SolidarityContribution,
     SolidarityContributionChangedLogEntry,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
@@ -42,15 +43,25 @@ class MemberSolidarityContributionService:
         member_contributions = SolidarityContribution.objects.filter(
             member_id=member.id
         )
-        member_contributions.filter(start_date__gte=change_date).delete()
-        member_contributions.filter(end_date__gte=change_date).update(
-            end_date=change_date - datetime.timedelta(days=1),
-            cancellation_ts=get_now(cache=cache),
+        last_contribution = (
+            member_contributions.filter(
+                end_date__gte=change_date - datetime.timedelta(days=1),
+            )
+            .order_by("start_date")
+            .last()
         )
 
-        last_contribution = member_contributions.filter(
-            end_date=change_date - datetime.timedelta(days=1),
-        ).last()
+        if amount == 0:
+            end_date = change_date
+        else:
+            end_date = change_date - datetime.timedelta(days=1)
+        member_contributions.filter(end_date__gte=change_date).update(
+            end_date=end_date,
+            cancellation_ts=get_now(cache=cache),
+        )
+        if last_contribution:
+            last_contribution.refresh_from_db()
+        member_contributions.filter(start_date__gte=change_date).delete()
 
         if amount == 0:
             cls.create_log_entry_if_necessary(
@@ -59,7 +70,7 @@ class MemberSolidarityContributionService:
                 old_contribution=last_contribution,
                 new_contribution=None,
             )
-            return
+            return None
 
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=change_date, cache=cache
@@ -72,11 +83,20 @@ class MemberSolidarityContributionService:
         else:
             end_date = growing_period.end_date
 
+        trial_disabled, trial_end_date_override = cls.get_trial_parameters(
+            member_contributions.filter(start_date__lte=change_date)
+            .order_by("start_date")
+            .last(),
+            cache,
+        )
+
         new_contribution = SolidarityContribution.objects.create(
             member_id=member.id,
             amount=amount,
             start_date=change_date,
             end_date=end_date,
+            trial_disabled=trial_disabled,
+            trial_end_date_override=trial_end_date_override,
         )
 
         cls.create_log_entry_if_necessary(
@@ -85,6 +105,23 @@ class MemberSolidarityContributionService:
             old_contribution=last_contribution,
             new_contribution=new_contribution,
         )
+
+        return new_contribution
+
+    @classmethod
+    def get_trial_parameters(
+        cls, contribution: SolidarityContribution | None, cache: dict
+    ) -> tuple[bool, datetime.date | None]:
+        if contribution is None:
+            return False, None
+
+        previous_trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
+            contract=contribution, cache=cache
+        )
+        if previous_trial_end_date is None:
+            return True, None
+
+        return False, previous_trial_end_date
 
     @classmethod
     def create_log_entry_if_necessary(

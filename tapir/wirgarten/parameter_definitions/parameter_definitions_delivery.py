@@ -14,6 +14,8 @@ if typing.TYPE_CHECKING:
 class ParameterDefinitionsDelivery:
     @classmethod
     def define_all_parameters_delivery(cls, importer: ParameterDefinitions):
+        order_priority = 100
+
         importer.parameter_definition(
             key=ParameterKeys.DELIVERY_DAY,
             label="Wochentag an dem Ware geliefert wird",
@@ -22,4 +24,17 @@ class ParameterDefinitionsDelivery:
             description="Der Wochentag an dem die Ware zum Abholort geliefert wird.",
             category=ParameterCategory.DELIVERY,
             meta=ParameterMeta(options=OPTIONS_WEEKDAYS),
+            order_priority=order_priority,
         )
+        order_priority -= 1
+
+        importer.parameter_definition(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
+            label="Lieferzuschlag pro Verteilstation aktivieren",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert können auf der Abholort-Konfig-Seite Lieferzuschläge definiert werden.",
+            category=ParameterCategory.DELIVERY,
+            order_priority=order_priority,
+        )
+        order_priority -= 1

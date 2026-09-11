@@ -1,10 +1,9 @@
+import datetime
 import decimal
 from decimal import Decimal
 
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
-from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,8 +15,9 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.solidarity_contribution.serializers import (
-    SolidarityContributionSerializer,
     MemberSolidarityContributionsResponseSerializer,
+    UpdateMemberSolidarityContributionRequestSerializer,
+    UpdateMemberSolidarityContributionResponseSerializer,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -25,6 +25,7 @@ from tapir.solidarity_contribution.services.member_solidarity_contribution_servi
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -43,13 +44,24 @@ class MemberSolidarityContributionsApiView(APIView):
         check_permission_or_self(member_id, request)
         cache = {}
 
+        change_valid_from = (
+            UpdateMemberSolidarityContributionApiView.get_base_change_date(
+                cache=cache,
+            )
+        )
+
+        alternative_change_valid_from = (
+            UpdateMemberSolidarityContributionApiView.get_alternative_change_date(
+                base_change_date=change_valid_from, member_id=member_id, cache=cache
+            )
+        )
+
         data = {
             "contributions": SolidarityContribution.objects.filter(
                 member_id=member_id
             ).order_by("start_date"),
-            "change_valid_from": UpdateMemberSolidarityContributionApiView.get_change_date(
-                cache=cache
-            ),
+            "change_valid_from": change_valid_from,
+            "alternative_change_valid_from": alternative_change_valid_from,
             "user_can_set_lower_value": request.user.has_perm(Permission.Coop.MANAGE),
             "user_can_update_contribution": request.user.has_perm(
                 Permission.Coop.MANAGE
@@ -67,28 +79,36 @@ class UpdateMemberSolidarityContributionApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        responses={200: SolidarityContributionSerializer(many=True)},
-        request=inline_serializer(
-            name="soli_serializer",
-            fields={
-                "amount": serializers.FloatField(),
-                "member_id": serializers.CharField(),
-            },
-        ),
+        responses={200: UpdateMemberSolidarityContributionResponseSerializer},
+        request=UpdateMemberSolidarityContributionRequestSerializer,
     )
     def post(self, request):
-        member_id = request.data.get("member_id")
+        request_serializer = UpdateMemberSolidarityContributionRequestSerializer(
+            data=request.data
+        )
+        request_serializer.is_valid(raise_exception=True)
+
+        member_id = request_serializer.validated_data["member_id"]
         check_permission_or_self(member_id, request)
 
         member = get_object_or_404(Member, id=member_id)
 
         try:
-            amount = Decimal(request.data.get("amount"))
+            amount = Decimal(request_serializer.validated_data["amount"])
         except decimal.InvalidOperation:
-            raise ValidationError("Ungültige Zahl " + request.data.get("amount"))
+            return self.build_response(
+                member_id=member_id,
+                error="Ungültige Zahl " + request_serializer.validated_data["amount"],
+            )
 
         cache = {}
-        change_date = self.get_change_date(cache=cache)
+        change_date = self.get_change_date(
+            start_contribution_now=request_serializer.validated_data[
+                "start_contribution_now"
+            ],
+            member=member,
+            cache=cache,
+        )
 
         if not MemberSolidarityContributionService.is_user_allowed_to_change_contribution(
             logged_in_user=request.user,
@@ -97,9 +117,10 @@ class UpdateMemberSolidarityContributionApiView(APIView):
             new_amount=amount,
             cache=cache,
         ):
-            raise ValidationError(
-                "Nur Admins können den Solidarbeitrag nach Unten anpassen. Kontaktiere bitte "
-                + get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)
+            return self.build_response(
+                member_id=member_id,
+                error="Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Kontaktiere dazu deine Solawi an "
+                + get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache),
             )
 
         MemberSolidarityContributionService.assign_contribution_to_member(
@@ -119,16 +140,69 @@ class UpdateMemberSolidarityContributionApiView(APIView):
             cache=cache,
         )
 
+        return self.build_response(member_id=member_id, error=None)
+
+    @classmethod
+    def build_response(cls, member_id: str, error: str | None):
         contributions = SolidarityContribution.objects.filter(
             member_id=member_id
         ).order_by("start_date")
 
-        return Response(SolidarityContributionSerializer(contributions, many=True).data)
+        return Response(
+            UpdateMemberSolidarityContributionResponseSerializer(
+                {
+                    "contributions": contributions,
+                    "updated": error is None,
+                    "error": error,
+                }
+            ).data
+        )
 
     @classmethod
-    def get_change_date(cls, cache: dict):
+    def get_change_date(cls, start_contribution_now: bool, member: Member, cache: dict):
+        base_change_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=cache),
+            apply_buffer_time=False,
+            cache=cache,
+        )
+        if start_contribution_now:
+            return base_change_date
+
+        alternative_change_date = cls.get_alternative_change_date(
+            base_change_date=base_change_date, member_id=member.id, cache=cache
+        )
+        if alternative_change_date is None:
+            return base_change_date
+
+        return alternative_change_date
+
+    @classmethod
+    def get_base_change_date(cls, cache: dict):
         return ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=get_today(cache=cache),
             apply_buffer_time=False,
             cache=cache,
         )
+
+    @classmethod
+    def get_alternative_change_date(
+        cls, base_change_date: datetime.date, member_id: str, cache: dict
+    ):
+        contracts = TapirCache.get_all_solidarity_contributions(cache=cache).union(
+            TapirCache.get_all_subscriptions(cache=cache)
+        )
+        alternative_change_valid_from = min(
+            [
+                contract.start_date
+                for contract in contracts
+                if contract.member_id == member_id
+            ],
+            default=None,
+        )
+
+        if (
+            alternative_change_valid_from is not None
+            and alternative_change_valid_from < base_change_date
+        ):
+            alternative_change_valid_from = None
+        return alternative_change_valid_from

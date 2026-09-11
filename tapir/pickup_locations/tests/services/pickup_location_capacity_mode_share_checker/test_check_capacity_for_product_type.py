@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
@@ -10,7 +10,7 @@ from tapir.waiting_list.services.waiting_list_reserved_capacity_calculator impor
 )
 
 
-class TestCheckCapacityForProductType(SimpleTestCase):
+class TestCheckCapacityForProductType(TapirUnitTest):
     @patch.object(
         WaitingListReservedCapacityCalculator,
         "calculate_capacity_reserved_by_the_waiting_list_entries",

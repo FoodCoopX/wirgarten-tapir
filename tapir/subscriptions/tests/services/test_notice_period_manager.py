@@ -124,7 +124,6 @@ class TestNoticePeriodManager(TapirIntegrationTest):
             notice_period_duration=2,
             notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
             end_date=datetime.date(year=2025, month=5, day=31),
-            mandate_ref__ref="test_ref",
         )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
@@ -140,7 +139,6 @@ class TestNoticePeriodManager(TapirIntegrationTest):
             notice_period_duration=1,
             notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
             end_date=datetime.date(year=2025, month=1, day=31),
-            mandate_ref__ref="test_ref",
         )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
@@ -156,7 +154,6 @@ class TestNoticePeriodManager(TapirIntegrationTest):
             notice_period_duration=2,
             notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
             end_date=datetime.date(year=2025, month=4, day=29),
-            mandate_ref__ref="test_ref",
         )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
@@ -172,7 +169,6 @@ class TestNoticePeriodManager(TapirIntegrationTest):
             notice_period_duration=1,
             notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
             end_date=datetime.date(year=2025, month=11, day=30),
-            mandate_ref__ref="test_ref",
         )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(
@@ -188,7 +184,6 @@ class TestNoticePeriodManager(TapirIntegrationTest):
             notice_period_duration=1,
             notice_period_unit=NOTICE_PERIOD_UNIT_MONTHS,
             end_date=datetime.date(year=2025, month=11, day=17),
-            mandate_ref__ref="test_ref",
         )
 
         result = NoticePeriodManager.get_max_cancellation_date_subscription(

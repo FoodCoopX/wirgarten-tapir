@@ -21,8 +21,6 @@ from tapir.wirgarten.views.member.details.member_details import MemberDetailView
 from tapir.wirgarten.views.member.details.modals import (
     get_cancellation_reason_form,
     get_coop_shares_waiting_list_form,
-    get_member_payment_data_edit_form,
-    get_member_personal_data_edit_form,
     get_renew_contracts_form,
 )
 from tapir.wirgarten.views.member.list.actions import (
@@ -34,10 +32,8 @@ from tapir.wirgarten.views.member.list.member_list import MemberListView
 from tapir.wirgarten.views.member.list.modals import (
     get_coop_share_cancel_form,
     get_coop_share_transfer_form,
-    get_edit_price_form,
     get_member_personal_data_create_form,
 )
-from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
     PickupLocationCfgView,
     delete_pickup_location,
@@ -135,14 +131,6 @@ urlpatterns = [
     path("members", MemberListView.as_view(), name="member_list"),
     path("members/create", get_member_personal_data_create_form, name="member_create"),
     path(
-        "members/<str:pk>/edit", get_member_personal_data_edit_form, name="member_edit"
-    ),
-    path(
-        "members/<str:pk>/editpaymentdetails",
-        get_member_payment_data_edit_form,
-        name="member_edit_payment_details",
-    ),
-    path(
         "members/<str:pk>/cancelcontract",
         cancel_contract_at_period_end,
         name="member_cancel_contract",
@@ -189,12 +177,6 @@ urlpatterns = [
         ExportSubscriptionList.as_view(),
         name="subscription_overview_export",
     ),
-    path(
-        "contracts/<str:pk>/editprice",
-        get_edit_price_form,
-        name="subscription_edit_price",
-    ),
-    path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
     path(
         "member/<str:pk>/cancellation_reason",
         get_cancellation_reason_form,

@@ -142,7 +142,9 @@ const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
               step={0.01}
               min={0.01}
               value={amount}
-              onChange={(event) => setAmount(parseFloat(event.target.value))}
+              onChange={(event) =>
+                setAmount(Number.parseFloat(event.target.value))
+              }
             />
           </Form.Group>
           <Form.Group className={"mt-2"}>

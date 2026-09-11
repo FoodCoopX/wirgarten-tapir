@@ -1,7 +1,9 @@
 import calendar
 import datetime
+import locale
 import os
-from typing import Dict, Callable
+from contextlib import contextmanager
+from typing import Callable
 
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -31,6 +33,10 @@ def week_to_monday(year: int, week: int) -> datetime.date:
     return datetime.date.fromisocalendar(year, week, 1)
 
 
+def get_next_sunday(date: datetime.date):
+    return get_monday(date) + datetime.timedelta(days=6)
+
+
 def get_timezone_aware_datetime(
     date: datetime.date, time: datetime.time
 ) -> datetime.datetime:
@@ -39,14 +45,14 @@ def get_timezone_aware_datetime(
 
 
 def get_from_cache_or_compute[T](
-    cache: Dict | None, key, compute_function: Callable[[], T]
+    cache: dict | None, key, compute_function: Callable[[], T]
 ) -> T:
     if cache is None:
         return compute_function()
     return dict_get_or_set(cache, key, compute_function)
 
 
-def dict_get_or_set(dictionary: Dict, key, call_if_not_set: callable):
+def dict_get_or_set(dictionary: dict, key, call_if_not_set: Callable):
     if key not in dictionary:
         dictionary[key] = call_if_not_set()
     return dictionary[key]
@@ -64,7 +70,7 @@ def is_running_tests():
     return "PYTEST_CURRENT_TEST" in os.environ
 
 
-def get_serializer_cache(serializer) -> Dict:
+def get_serializer_cache(serializer) -> dict:
     """
     The request-scoped cache dict a serializer should pass to TapirCache.
 
@@ -77,3 +83,16 @@ def get_serializer_cache(serializer) -> Dict:
     if cache is None:
         cache = serializer.__dict__.setdefault("_tapir_cache", {})
     return cache
+
+
+def get_any_element_from_set(s: set):
+    return next(iter(s))
+
+
+@contextmanager
+def setlocale(locale_name):
+    saved = locale.getlocale()
+    try:
+        yield locale.setlocale(locale.LC_ALL, locale_name)
+    finally:
+        locale.setlocale(locale.LC_ALL, saved)

@@ -1,14 +1,14 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.waiting_list.services.waiting_list_entry_confirmation_validator import (
     WaitingListEntryConfirmationValidator,
 )
 
 
-class TestValidateRequestAndGetWaitingListEntry(SimpleTestCase):
+class TestValidateRequestAndGetWaitingListEntry(TapirUnitTest):
     @patch.object(
         WaitingListEntryConfirmationValidator, "validate_new_member_data", autospec=True
     )

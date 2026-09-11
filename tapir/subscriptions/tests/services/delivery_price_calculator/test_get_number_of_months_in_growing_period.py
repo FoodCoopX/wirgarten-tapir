@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
@@ -8,7 +8,7 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
-class TestGetNumberOfMonthsInGrowingPeriod(SimpleTestCase):
+class TestGetNumberOfMonthsInGrowingPeriod(TapirUnitTest):
     def test_getNumberOfMonthsInGrowingPeriod_default_returnsCorrectNumberOfMonth(self):
         self.assertEqual(
             12,

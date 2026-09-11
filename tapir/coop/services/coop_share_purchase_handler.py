@@ -7,7 +7,8 @@ from django.db import transaction
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.models import CoopSharesPurchasedLogEntry
-from tapir.utils.shortcuts import is_running_tests
+from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.wirgarten.models import (
     Member,
     MandateReference,
@@ -16,7 +17,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.email import send_email
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.utils import get_now, format_date
 
 
@@ -30,7 +30,9 @@ class CoopSharePurchaseHandler:
         cache: dict,
         actor: TapirUser | None,
     ):
-        mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache=cache
+        )
 
         payment = cls.create_or_update_payment(
             shares_valid_at=shares_valid_at,
@@ -82,12 +84,11 @@ class CoopSharePurchaseHandler:
             shares_valid_at=shares_valid_at, cache=cache
         )
 
-        payment_type = "Genossenschaftsanteile"
         existing_payment = Payment.objects.filter(
             due_date=due_date,
             mandate_ref=mandate_ref,
             status=Payment.PaymentStatus.DUE,
-            type=payment_type,
+            type=PAYMENT_TYPE_COOP_SHARES,
         ).first()
         if existing_payment is not None:
             existing_payment.amount = (
@@ -101,7 +102,7 @@ class CoopSharePurchaseHandler:
             amount=share_price * quantity,
             mandate_ref=mandate_ref,
             status=Payment.PaymentStatus.DUE,
-            type=payment_type,
+            type=PAYMENT_TYPE_COOP_SHARES,
         )
 
     @classmethod
@@ -131,8 +132,7 @@ class CoopSharePurchaseHandler:
             ],
             subject=f"Warnung: es wurden mehr als {threshold} Genossenschaftsanteile gezeichnet- bitte prüfen",
             content=f"Bestehendes Mitglied oder Neuanmeldung: {member.get_display_name()} mit Mail-Adresse {member.email} hat gerade {quantity} Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem {format_date(shares_valid_at)} gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
+            attachments=[],
+            cache=cache,
         )
-        if is_running_tests():
-            _partial()
-        else:
-            transaction.on_commit(_partial)
+        transaction.on_commit(_partial)

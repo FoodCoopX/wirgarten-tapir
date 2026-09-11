@@ -1,16 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
-import TapirButton from "../../components/TapirButton.tsx";
-import { PublicProduct, PublicProductType } from "../../api-client";
 import { Carousel, Form, Modal } from "react-bootstrap";
+import { CarouselRef } from "react-bootstrap/Carousel";
+import {
+  PublicProduct,
+  PublicProductType,
+  PublicWaitingListEntryDetails,
+} from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
-import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
+import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
+import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import NextStepButton from "../components/NextStepButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import { CarouselRef } from "react-bootstrap/Carousel";
 import Step4BProductOrder from "../components/Step4BProductOrder.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
@@ -18,9 +22,10 @@ interface Step4BProductTypeOrderProps {
   goToNextStep: () => void;
   shoppingCart: ShoppingCart;
   setShoppingCart: (cart: ShoppingCart) => void;
-  active: boolean;
+  stepActive: boolean;
   checkingCapacities: boolean;
   waitingListLinkConfirmationModeEnabled: boolean;
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined;
   productIdsOverCapacity: string[];
   productTypeIdsOverCapacity: string[];
   productTypesInWaitingList: Set<PublicProductType>;
@@ -35,9 +40,10 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   goToNextStep,
   shoppingCart,
   setShoppingCart,
-  active,
+  stepActive,
   checkingCapacities,
   waitingListLinkConfirmationModeEnabled,
+  waitingListEntryDetails,
   productIdsOverCapacity,
   productTypeIdsOverCapacity,
   productTypesInWaitingList,
@@ -51,12 +57,26 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     useState(false);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+
+    if (
+      stepActive &&
+      productType.products.length === 1 &&
+      productType.singleSubscriptionOnly
+    ) {
+      shoppingCart[productType.products[0].id!] = 1;
+      setShoppingCart({ ...shoppingCart });
+    }
+  }, [stepActive]);
 
   function validate() {
+    if (waitingListLinkConfirmationModeEnabled) {
+      goToNextStep();
+      return;
+    }
+
     setShowValidation(true);
     if (
       productType.mustBeSubscribedTo &&
@@ -119,11 +139,27 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     );
   }
 
+  function getRelevantProducts() {
+    if (!waitingListEntryDetails) {
+      return productType.products.filter(
+        (product) => !product.hiddenInBestellWizard,
+      );
+    }
+
+    return productType.products.filter(
+      (product) =>
+        !product.hiddenInBestellWizard ||
+        (waitingListEntryDetails.productWishes ?? [])
+          .map((productWish) => productWish.product.id)
+          .includes(product.id),
+    );
+  }
+
   return (
     <>
-      {productType.products.length <= 2 ? (
-        <div className={"d-flex flex-row"}>
-          {productType.products
+      {getRelevantProducts().length <= 2 ? (
+        <div className={"d-flex flex-row gap-2"}>
+          {getRelevantProducts()
             .toSorted((a, b) => a.price - b.price)
             .map((product, index) => (
               <div key={product.id}>{buildProduct(product, index, false)}</div>
@@ -139,9 +175,9 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
           variant={"dark"}
           ref={carouselRef}
           wrap={false}
-          defaultActiveIndex={productType.products.length > 1 ? 1 : 0}
+          defaultActiveIndex={getRelevantProducts().length > 1 ? 1 : 0}
         >
-          {productType.products.map((product, index) => (
+          {getRelevantProducts().map((product, index) => (
             <Carousel.Item key={product.id}>
               {buildProduct(product, index, true)}
             </Carousel.Item>
@@ -165,6 +201,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         text={getNextButtonText()}
         loading={checkingCapacities || orderLoading}
         isOrderStep={isOrderStep}
+        stepActive={stepActive}
       />
       <Modal
         show={waitingListInfoModalOpen}

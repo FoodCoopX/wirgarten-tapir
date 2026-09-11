@@ -33,8 +33,6 @@ class LogEntry(models.Model):
 
     def clean(self):
         super().clean()
-        # if bool(self.user) == bool(self.share_owner):
-        #    raise ValidationError("Exactly one of user and share_owner must be set.")
 
     def save(self, *args, **kwargs):
         if not hasattr(self, "log_class_type"):

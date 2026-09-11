@@ -1,7 +1,10 @@
 import datetime
+from zoneinfo import ZoneInfo
 
 from django.db import transaction
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.generic_exports.models import (
     CsvExport,
     AutomatedCsvExportResult,
@@ -12,48 +15,54 @@ from tapir.generic_exports.models import (
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.generic_exports.services.export_mail_sender import ExportMailSender
 from tapir.generic_exports.services.pdf_export_builder import PdfExportBuilder
+from tapir.utils.shortcuts import get_monday
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
 
 class AutomatedExportsManager:
     @classmethod
-    def do_automated_csv_exports(cls):
+    def do_automated_csv_exports(cls, cache: dict):
         for export in CsvExport.objects.exclude(
             automated_export_cycle=AutomatedExportCycle.NEVER
         ):
-            datetime_of_last_export = cls.get_datetime_of_latest_export(export)
+            datetime_of_last_export = cls.get_datetime_of_latest_export(
+                export, cache=cache
+            )
             # There is at most one export a day, so it is enough to check of the date
             # Checking for the time is tricky because if timezones.
             if AutomatedCsvExportResult.objects.filter(
                 export_definition=export, datetime__date=datetime_of_last_export.date()
             ).exists():
                 continue
-            cls.do_single_csv_export(export, datetime_of_last_export)
+            cls.do_single_csv_export(export, datetime_of_last_export, cache=cache)
 
     @classmethod
     @transaction.atomic
-    def do_single_csv_export(cls, export, reference_datetime):
+    def do_single_csv_export(cls, export, reference_datetime, cache: dict):
         file = CsvExportBuilder.create_exported_file(export, reference_datetime)
         result = AutomatedCsvExportResult.objects.create(
             export_definition=export, datetime=reference_datetime, file=file
         )
-        ExportMailSender.send_mails_for_export([result])
+        ExportMailSender.send_mails_for_export([result], cache=cache)
 
     @classmethod
-    def do_automated_pdf_exports(cls):
+    def do_automated_pdf_exports(cls, cache: dict):
         for export in PdfExport.objects.exclude(
             automated_export_cycle=AutomatedExportCycle.NEVER
         ):
-            datetime_of_last_export = cls.get_datetime_of_latest_export(export)
+            datetime_of_last_export = cls.get_datetime_of_latest_export(
+                export, cache=cache
+            )
             if AutomatedPdfExportResult.objects.filter(
                 export_definition=export, datetime__date=datetime_of_last_export.date()
             ).exists():
                 continue
-            cls.do_single_pdf_export(export, datetime_of_last_export)
+            cls.do_single_pdf_export(export, datetime_of_last_export, cache=cache)
 
     @classmethod
     @transaction.atomic
-    def do_single_pdf_export(cls, export, reference_datetime):
+    def do_single_pdf_export(cls, export, reference_datetime, cache: dict):
         files = PdfExportBuilder.create_exported_files(export, reference_datetime)
         results = [
             AutomatedPdfExportResult.objects.create(
@@ -61,10 +70,10 @@ class AutomatedExportsManager:
             )
             for file in files
         ]
-        ExportMailSender.send_mails_for_export(results)
+        ExportMailSender.send_mails_for_export(results, cache=cache)
 
     @classmethod
-    def get_datetime_of_latest_export(cls, export: CsvExport | PdfExport):
+    def get_datetime_of_latest_export(cls, export: CsvExport | PdfExport, cache: dict):
         if export.automated_export_cycle == AutomatedExportCycle.YEARLY:
             return cls.get_datetime_of_latest_yearly_export(export)
         if export.automated_export_cycle == AutomatedExportCycle.MONTHLY:
@@ -73,10 +82,19 @@ class AutomatedExportsManager:
             return cls.get_datetime_of_latest_weekly_export(export)
         if export.automated_export_cycle == AutomatedExportCycle.DAILY:
             return cls.get_datetime_of_latest_daily_export(export)
-        return None
+        if (
+            export.automated_export_cycle
+            == AutomatedExportCycle.AFTER_PICKUP_LOCATION_CHANGE_DEADLINE
+        ):
+            return (
+                cls.get_datetime_of_latest_export_after_pickup_location_change_deadline(
+                    export, cache=cache
+                )
+            )
+        raise TapirImproperlyConfigured(f"Unknown export cycle: {export}")
 
     @classmethod
-    def get_datetime_of_latest_yearly_export(cls, export: CsvExport):
+    def get_datetime_of_latest_yearly_export(cls, export: CsvExport | PdfExport):
         now = get_now()
         start_of_year = now.replace(month=1, day=1)
         result = start_of_year + datetime.timedelta(
@@ -89,7 +107,7 @@ class AutomatedExportsManager:
         return result.replace(year=result.year - 1)
 
     @classmethod
-    def get_datetime_of_latest_monthly_export(cls, export: CsvExport):
+    def get_datetime_of_latest_monthly_export(cls, export: CsvExport | PdfExport):
         now = get_now()
         start_of_month = now.replace(day=1)
         result = start_of_month + datetime.timedelta(
@@ -109,7 +127,7 @@ class AutomatedExportsManager:
         return result
 
     @classmethod
-    def get_datetime_of_latest_weekly_export(cls, export: CsvExport):
+    def get_datetime_of_latest_weekly_export(cls, export: CsvExport | PdfExport):
         now = get_now()
         start_of_week = now - datetime.timedelta(days=now.weekday())
         result = start_of_week + datetime.timedelta(
@@ -127,7 +145,7 @@ class AutomatedExportsManager:
         return result
 
     @classmethod
-    def get_datetime_of_latest_daily_export(cls, export: CsvExport):
+    def get_datetime_of_latest_daily_export(cls, export: CsvExport | PdfExport):
         now = get_now()
         result = cls.set_time(now, export.automated_export_hour)
         if result < now:
@@ -136,5 +154,28 @@ class AutomatedExportsManager:
         return result - datetime.timedelta(days=1)
 
     @classmethod
+    def get_datetime_of_latest_export_after_pickup_location_change_deadline(
+        cls, export: CsvExport | PdfExport, cache: dict
+    ):
+        # Deadline weekday is inclusive until 23:59; export runs on the following day.
+        weekday_limit = get_parameter_value(
+            ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
+        )
+        export_weekday = (weekday_limit + 1) % 7
+
+        now = get_now(cache=cache)
+        start_of_week = get_monday(now)
+        result = start_of_week + datetime.timedelta(days=export_weekday)
+        result = cls.set_time(result, export.automated_export_hour)
+        if result < now:
+            return result
+
+        return cls.set_time(
+            result - datetime.timedelta(days=7), export.automated_export_hour
+        )
+
+    @classmethod
     def set_time(cls, dt: datetime.datetime, time: datetime.time):
-        return dt.replace(hour=time.hour, minute=time.minute)
+        return dt.astimezone(ZoneInfo("Europe/Berlin")).replace(
+            hour=time.hour, minute=time.minute
+        )

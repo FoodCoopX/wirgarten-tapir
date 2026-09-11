@@ -1,8 +1,7 @@
 import datetime
-from typing import Dict
 
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
@@ -22,12 +21,15 @@ class PickupLocationCapacityGeneralChecker:
         order: TapirOrder,
         already_registered_member: Member | None,
         subscription_start: datetime.date,
-        cache: Dict,
+        cache: dict,
+        check_waiting_list_entries: bool = True,
     ) -> bool:
         if (
             already_registered_member
-            and MemberPickupLocationService.get_member_pickup_location_id(
-                already_registered_member, subscription_start
+            and MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                member_id=already_registered_member.id,
+                reference_date=subscription_start,
+                cache=cache,
             )
             != pickup_location.id
         ):
@@ -39,4 +41,5 @@ class PickupLocationCapacityGeneralChecker:
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
+            check_waiting_list_entries=check_waiting_list_entries,
         )

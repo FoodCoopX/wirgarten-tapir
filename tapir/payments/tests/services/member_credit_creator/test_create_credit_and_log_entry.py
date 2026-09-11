@@ -4,7 +4,7 @@ from decimal import Decimal
 from tapir.payments.models import MemberCredit, MemberCreditCreatedLogEntry
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory
+from tapir.wirgarten.tests.factories import MemberFactory, ProductTypeFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -17,6 +17,7 @@ class TestCreateCreditAndLogEntry(TapirIntegrationTest):
         member = MemberFactory.create()
         actor = MemberFactory.create()
         comment = "test comment"
+        product_type = ProductTypeFactory.create(name="test name")
 
         MemberCreditCreator.create_credit_and_log_entry(
             member=member,
@@ -24,6 +25,8 @@ class TestCreateCreditAndLogEntry(TapirIntegrationTest):
             comment=comment,
             actor=actor,
             reference_date=datetime.date(year=2027, month=6, day=19),
+            product_type_id_or_soli=product_type.id,
+            cache={},
         )
 
         member_credit = MemberCredit.objects.get()
@@ -33,6 +36,7 @@ class TestCreateCreditAndLogEntry(TapirIntegrationTest):
         self.assertEqual(
             datetime.date(year=2027, month=6, day=30), member_credit.due_date
         )
+        self.assertEqual("test name", member_credit.source)
 
         log_entry = MemberCreditCreatedLogEntry.objects.get()
         self.assertTrue(

@@ -1,12 +1,11 @@
-import { BestellWizardApi, PublicGrowingPeriod } from "../../api-client";
-import { ShoppingCart } from "../types/ShoppingCart.ts";
-import { useApi } from "../../hooks/useApi.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
-import { ToastData } from "../../types/ToastData.ts";
 import React from "react";
+import { BestellWizardApi, PublicGrowingPeriod } from "../../api-client";
+import { ToastData } from "../../types/ToastData.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 
 export function fetchFirstDeliveryDates(
+  bestellWizardApi: BestellWizardApi,
   shoppingCart: ShoppingCart,
   selectedGrowingPeriod: PublicGrowingPeriod | undefined,
   setFirstDeliveryDatesByPickupLocationIdAndProductTypeId: (map: {
@@ -15,8 +14,6 @@ export function fetchFirstDeliveryDates(
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
   waitingListEntryId: string | undefined,
 ) {
-  const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
-
   bestellWizardApi
     .bestellWizardApiBestellWizardDeliveryDatesCreate({
       bestellWizardDeliveryDatesForOrderRequestRequest: {

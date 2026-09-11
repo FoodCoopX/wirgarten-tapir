@@ -15,10 +15,10 @@ var initMap = (
     .map(([id, pl]) => id);
 
   const setMarkerColor = (marker) => {
-    if (!possibleLocations.includes(marker.locationId)) {
-      marker._icon.style.webkitFilter = "grayscale()";
-    } else {
+    if (possibleLocations.includes(marker.locationId)) {
       marker._icon.style.webkitFilter = "";
+    } else {
+      marker._icon.style.webkitFilter = "grayscale()";
     }
   };
 
@@ -43,8 +43,8 @@ var initMap = (
   const select = (id, callback = false) => {
     if (!data[id]) return;
 
-    target = idToCoords(id);
-    target[0] = parseFloat(target[0]) + 0.002;
+    const target = idToCoords(id);
+    target[0] = Number.parseFloat(target[0]) + 0.002;
     map.flyTo(target, 14);
 
     // reset marker colors
@@ -62,6 +62,7 @@ var initMap = (
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: "© OpenStreetMap",
+    referrerPolicy: "no-referrer-when-downgrade",
   }).addTo(map);
 
   if (selected !== undefined) {

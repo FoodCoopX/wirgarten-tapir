@@ -1,10 +1,8 @@
 import datetime
 import locale
-from typing import Dict
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import (
     OpenApiParameter,
@@ -16,19 +14,26 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.deliveries.serializers import PickupLocationSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.serializers import (
     DeliveryDaysResponseSerializer,
     PickupLocationCapacitiesSerializer,
+    LocationRouteSerializer,
     PickupLocationCapacityCheckRequestSerializer,
     PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityEvolutionSerializer,
+    PickupLocationDeliveryChargeCreateRequestSerializer,
+    PickupLocationDeliveryChargesResponseSerializer,
+    PickupLocationSerializer,
     PickupLocationsByDeliveryDayResponseSerializer,
     PublicPickupLocationSerializer,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
 )
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
@@ -38,6 +43,9 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
+)
+from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
+    PickupLocationDeliveryChargeService,
 )
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
@@ -63,6 +71,9 @@ from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationCapability,
     ProductType,
+    Member,
+    GrowingPeriod,
+    LocationRoute,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
@@ -99,7 +110,7 @@ class PickupLocationCapacitiesView(APIView):
 
     @classmethod
     def build_serializer_data_picking_mode_shares(
-        cls, pickup_location: PickupLocation, cache: Dict
+        cls, pickup_location: PickupLocation, cache: dict
     ):
         capacities = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location, cache=cache
@@ -178,12 +189,12 @@ class PickupLocationCapacityEvolutionView(APIView):
 
     @staticmethod
     def build_data_for_picking_mode_shares(
-        pickup_location: PickupLocation, cache: Dict
+        pickup_location: PickupLocation, cache: dict
     ):
         data_points = []
         product_types = ProductType.objects.order_by(*product_type_order_by())
         capacities_by_product_type = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-            pickup_location
+            pickup_location, cache=cache
         )
 
         max_date = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
@@ -228,10 +239,19 @@ class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = []
     serializer_class = PublicPickupLocationSerializer
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get_queryset(self):
         return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
-            cache={}
+            cache=self.cache
         )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["cache"] = self.cache
+        return context
 
 
 class PickupLocationCapacityCheckApiView(APIView):
@@ -248,15 +268,6 @@ class PickupLocationCapacityCheckApiView(APIView):
     def post(self, request):
         serializer = PickupLocationCapacityCheckRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        pickup_location = TapirCache.get_pickup_location_by_id(
-            cache=self.cache,
-            pickup_location_id=serializer.validated_data["pickup_location_id"],
-        )
-        if pickup_location is None:
-            raise Http404(
-                f"Unknown pickup location, id: '{serializer.validated_data['pickup_location_id']}'"
-            )
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
@@ -282,18 +293,24 @@ class PickupLocationCapacityCheckApiView(APIView):
                 cache=self.cache,
             )
 
-        response_data = {
-            "enough_capacity_for_order": PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+        pickup_location_ids_with_enough_capacity_for_order = [
+            pickup_location.id
+            for pickup_location in PickupLocation.objects.all()
+            if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
                 pickup_location=pickup_location,
                 order=order,
                 already_registered_member=None,
                 subscription_start=subscription_start,
                 cache=self.cache,
             )
-        }
+        ]
 
         return Response(
-            PickupLocationCapacityCheckResponseSerializer(response_data).data
+            PickupLocationCapacityCheckResponseSerializer(
+                {
+                    "pickup_location_ids_with_enough_capacity_for_order": pickup_location_ids_with_enough_capacity_for_order
+                }
+            ).data
         )
 
 
@@ -337,7 +354,7 @@ class GetMemberPickupLocationApiView(APIView):
                 cache=self.cache,
             )
 
-        pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
+        pickup_location_id = MemberPickupLocationGetter.get_member_pickup_location_id(
             member=member, reference_date=reference_date
         )
 
@@ -350,7 +367,9 @@ class GetMemberPickupLocationApiView(APIView):
         return Response(
             {
                 "has_location": True,
-                "location": PublicPickupLocationSerializer(pickup_location).data,
+                "location": PublicPickupLocationSerializer(
+                    pickup_location, context={"cache": self.cache}
+                ).data,
             }
         )
 
@@ -376,8 +395,14 @@ class ChangeMemberPickupLocationApiView(APIView):
             PickupLocation, id=new_pickup_location_id
         )
 
+        valid_from = calculate_pickup_location_change_date(cache=self.cache)
+
         try:
-            self.validate(member=member, new_pickup_location=new_pickup_location)
+            self.validate(
+                member=member,
+                new_pickup_location=new_pickup_location,
+                valid_from=valid_from,
+            )
         except ValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
@@ -386,10 +411,10 @@ class ChangeMemberPickupLocationApiView(APIView):
             )
 
         with transaction.atomic():
-            MemberPickupLocationService.link_member_to_pickup_location(
+            MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=new_pickup_location_id,
                 member=member,
-                valid_from=calculate_pickup_location_change_date(cache=self.cache),
+                valid_from=valid_from,
                 actor=request.user,
                 cache=self.cache,
             )
@@ -400,10 +425,15 @@ class ChangeMemberPickupLocationApiView(APIView):
             ).data
         )
 
-    def validate(self, member: Member, new_pickup_location: PickupLocation):
+    def validate(
+        self,
+        member: Member,
+        new_pickup_location: PickupLocation,
+        valid_from: datetime.date,
+    ):
         old_pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id(
-                member=member, reference_date=get_today(cache=self.cache)
+            MemberPickupLocationGetter.get_member_pickup_location_id(
+                member=member, reference_date=valid_from
             )
         )
         if old_pickup_location_id == new_pickup_location.id:
@@ -545,3 +575,92 @@ class PickupLocationsByDeliveryDayView(APIView):
                 ]
             }
         )
+
+
+class PickupLocationDeliveryChargesView(APIView):
+    @extend_schema(
+        responses={200: PickupLocationDeliveryChargesResponseSerializer()},
+        parameters=[OpenApiParameter(name="pickup_location_id", type=str)],
+    )
+    def get(self, request):
+        if not request.user.has_perm(Permission.Products.VIEW):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        pickup_location = get_object_or_404(
+            PickupLocation, id=request.query_params.get("pickup_location_id")
+        )
+        entries = PickupLocationDeliveryCharge.objects.filter(
+            pickup_location=pickup_location
+        ).order_by("-valid_from")
+
+        return Response(
+            PickupLocationDeliveryChargesResponseSerializer(
+                {
+                    "pickup_location_id": pickup_location.id,
+                    "pickup_location_name": pickup_location.name,
+                    "entries": entries,
+                }
+            ).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(
+        responses={200: str, 400: str},
+        request=PickupLocationDeliveryChargeCreateRequestSerializer(),
+    )
+    def post(self, request):
+        if not request.user.has_perm(Permission.Products.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        request_serializer = PickupLocationDeliveryChargeCreateRequestSerializer(
+            data=request.data
+        )
+        request_serializer.is_valid(raise_exception=True)
+
+        pickup_location = get_object_or_404(
+            PickupLocation,
+            id=request_serializer.validated_data["pickup_location_id"],
+        )
+
+        try:
+            PickupLocationDeliveryChargeService.save_charge(
+                pickup_location=pickup_location,
+                amount=request_serializer.validated_data["amount"],
+                valid_from=request_serializer.validated_data["valid_from"],
+                cache={},
+            )
+        except ValidationError as error:
+            return Response(
+                {"error": error.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+    @extend_schema(
+        responses={200: str, 400: str},
+        parameters=[OpenApiParameter(name="id", type=str)],
+    )
+    def delete(self, request):
+        if not request.user.has_perm(Permission.Products.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        charge_id = request.query_params.get("id")
+
+        try:
+            PickupLocationDeliveryChargeService.delete_charge(
+                charge_id=charge_id, cache={}
+            )
+        except PickupLocationDeliveryCharge.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as error:
+            return Response(
+                {"error": error.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+
+class LocationRouteViewSet(viewsets.ModelViewSet):
+    queryset = LocationRoute.objects.order_by("name")
+    serializer_class = LocationRouteSerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]

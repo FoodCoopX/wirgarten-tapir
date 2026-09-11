@@ -7,6 +7,7 @@ interface ConfirmDeleteModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
+  confirmButtonText?: string;
 }
 
 const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
@@ -15,13 +16,14 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
   onConfirm,
   onCancel,
   loading,
+  confirmButtonText,
 }) => {
   return (
     <ConfirmModal
       message={message}
       title={"Löschen bestätigen"}
       open={open}
-      confirmButtonText={"Löschen"}
+      confirmButtonText={confirmButtonText ?? "Löschen"}
       confirmButtonIcon={"delete"}
       confirmButtonVariant="danger"
       onConfirm={onConfirm}

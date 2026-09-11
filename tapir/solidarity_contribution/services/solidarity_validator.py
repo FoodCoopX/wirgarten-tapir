@@ -1,15 +1,18 @@
 import datetime
 from decimal import Decimal
 
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.subscriptions import config
 from tapir.subscriptions.config import (
     SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED,
     SOLIDARITY_MODE_ONLY_POSITIVE,
 )
-from tapir.utils.services.tapir_cache import TapirCache
+from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
+    AutomaticSolidarityContributionRenewalService,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
@@ -39,7 +42,7 @@ class SolidarityValidator:
                 amount_of_used_solidarity_in_euros = -amount
                 return amount_of_used_solidarity_in_euros < excess_solidarity
             case _:
-                raise ImproperlyConfigured(
+                raise TapirImproperlyConfigured(
                     f"Unknown solidarity mode: '{solidarity_mode}'"
                 )
 
@@ -49,8 +52,12 @@ class SolidarityValidator:
         reference_date: datetime.date,
         cache: dict,
     ) -> Decimal:
-        return TapirCache.get_solidarity_excess_at_date(
+        relevant_contributions = AutomaticSolidarityContributionRenewalService.get_current_and_renewed_solidarity_contributions_at_date(
             reference_date=reference_date, cache=cache
+        )
+        return sum(
+            [contribution.amount for contribution in relevant_contributions],
+            start=Decimal(0),
         )
 
     @classmethod
@@ -83,8 +90,13 @@ class SolidarityValidator:
                 ParameterKeys.SOLIDARITY_CHOICES, cache=cache
             )
 
-        values_as_string = parameter_value.split(",")
-        values: list[float | str] = [float(value.strip()) for value in values_as_string]
+        if parameter_value.strip() == "":
+            values = []
+        else:
+            values_as_string = parameter_value.split(",")
+            values: list[float | str] = [
+                float(value.strip()) for value in values_as_string
+            ]
 
         if 0 not in values:
             values.append(0)
@@ -108,4 +120,4 @@ class SolidarityValidator:
         try:
             cls.get_solidarity_dropdown_values(solidarity_values_as_string, cache={})
         except Exception as e:
-            raise ValidationError(f"Invalid solidarity values: {e}")
+            raise ValidationError(f"Ungültiger Solidarbeitrag-Wert: {e}")

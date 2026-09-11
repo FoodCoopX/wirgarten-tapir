@@ -1,16 +1,24 @@
 import React from "react";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import {
+  AssociationMembershipType,
+  PublicGrowingPeriod,
+  PublicPickupLocation,
+  type PublicProductType,
+} from "../../api-client";
+import { getAssociationMembershipTypeCurrentPrice } from "../../association_memberships_config/getAssociationMembershipTypeCurrentPrice.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
-import { PublicPickupLocation, type PublicProductType } from "../../api-client";
-import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
+import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Step } from "../types/Step.ts";
-import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { getAssociationMembershipTypeMonthlyPriceFormatted } from "../utils/getAssociationMembershipTypeMonthlyPriceFormatted.ts";
+import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
+import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
 
 interface BestellWizardShoppingCartOverlayProps {
   settings: BestellWizardSettings;
@@ -22,9 +30,13 @@ interface BestellWizardShoppingCartOverlayProps {
   productTypesInWaitingList: Set<PublicProductType>;
   steps: Step[];
   currentStep: Step;
-  setCurrentStep: (step: Step) => void;
   selectedNumberOfCoopShares: number;
   solidarityContribution: number;
+  goToProductTypeStep: (productType: PublicProductType) => void;
+  associationMembershipType?: AssociationMembershipType;
+  contractStartDate: Date;
+  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  setCurrentStep: (step: Step) => void;
 }
 
 const BestellWizardShoppingCartOverlay: React.FC<
@@ -39,14 +51,42 @@ const BestellWizardShoppingCartOverlay: React.FC<
   productTypesInWaitingList,
   steps,
   currentStep,
-  setCurrentStep,
   selectedNumberOfCoopShares,
   solidarityContribution,
+  goToProductTypeStep,
+  associationMembershipType,
+  contractStartDate,
+  selectedGrowingPeriod,
+  setCurrentStep,
 }) => {
   function canEditProductTypeOrder(productType: PublicProductType) {
     return (
       steps.indexOf(productType.id! + "_intro") < steps.indexOf(currentStep)
     );
+  }
+
+  function canEditCoopShares() {
+    return steps.indexOf("6b_coop_shares") < steps.indexOf(currentStep);
+  }
+
+  function canEditAssociationMembership() {
+    if (
+      getVisibleAssociationMembershipTypes(settings.associationMembershipTypes)
+        .length <= 1
+    ) {
+      return false;
+    }
+    return (
+      steps.indexOf("6b_association_membership") < steps.indexOf(currentStep)
+    );
+  }
+
+  function getProductTypeList() {
+    if (selectedGrowingPeriod) {
+      return selectedGrowingPeriod.productTypes;
+    }
+
+    return settings.productTypes;
   }
 
   return (
@@ -94,7 +134,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
           close
         </div>
         <ul style={{ marginTop: "7vh" }}>
-          {settings.productTypes.map((productType) => (
+          {getProductTypeList().map((productType) => (
             <li
               key={productType.id}
               className={
@@ -149,7 +189,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
                       text={"Bestellung anpassen"}
                       icon={"edit"}
                       onClick={() => {
-                        setCurrentStep(productType.id! + "_order");
+                        goToProductTypeStep(productType);
                         onHide();
                       }}
                     />
@@ -158,6 +198,39 @@ const BestellWizardShoppingCartOverlay: React.FC<
               </ul>
             </li>
           ))}
+          {associationMembershipType && (
+            <li>
+              Vereinsmitgliedschaft:
+              <ul>
+                <li>{associationMembershipType.name}</li>
+                {getAssociationMembershipTypeCurrentPrice(
+                  associationMembershipType,
+                  contractStartDate,
+                ) && (
+                  <li>
+                    {getAssociationMembershipTypeMonthlyPriceFormatted(
+                      associationMembershipType,
+                      contractStartDate,
+                    )}
+                  </li>
+                )}
+                {canEditAssociationMembership() && (
+                  <li>
+                    <TapirButton
+                      variant={BUTTON_VARIANT}
+                      size={"sm"}
+                      text={"Mitgliedschaft anpassen"}
+                      icon={"edit"}
+                      onClick={() => {
+                        setCurrentStep("6b_association_membership");
+                        onHide();
+                      }}
+                    />
+                  </li>
+                )}
+              </ul>
+            </li>
+          )}
           {showPickupLocations && (
             <li>
               <span>Verteilstation</span>
@@ -181,11 +254,30 @@ const BestellWizardShoppingCartOverlay: React.FC<
           )}
           {settings.showCoopContent && selectedNumberOfCoopShares > 0 && (
             <li>
-              Genossenschaftsanteile: {selectedNumberOfCoopShares} x{" "}
-              {formatCurrency(settings.priceOfAShare)} ={" "}
-              {formatCurrency(
-                selectedNumberOfCoopShares * settings.priceOfAShare,
-              )}
+              <span>Genossenschaftsanteile</span>
+              <ul>
+                <li>
+                  {selectedNumberOfCoopShares} x{" "}
+                  {formatCurrency(settings.priceOfAShare)} ={" "}
+                  {formatCurrency(
+                    selectedNumberOfCoopShares * settings.priceOfAShare,
+                  )}
+                </li>
+                {canEditCoopShares() && (
+                  <li>
+                    <TapirButton
+                      variant={BUTTON_VARIANT}
+                      size={"sm"}
+                      text={"Anteile anpassen"}
+                      icon={"edit"}
+                      onClick={() => {
+                        setCurrentStep("6b_coop_shares");
+                        onHide();
+                      }}
+                    />
+                  </li>
+                )}
+              </ul>
             </li>
           )}
         </ul>

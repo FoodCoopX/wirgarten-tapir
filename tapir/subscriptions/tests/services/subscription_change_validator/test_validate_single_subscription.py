@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
@@ -9,7 +9,7 @@ from tapir.subscriptions.services.subscription_change_validator import (
 from tapir.wirgarten.tests.factories import ProductTypeFactory
 
 
-class TestValidateSingleSubscription(SimpleTestCase):
+class TestValidateSingleSubscription(TapirUnitTest):
     def test_validateSingleSubscription_productTypeAllowsSeveralSubscriptions_doesNothing(
         self,
     ):

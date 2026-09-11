@@ -1,10 +1,13 @@
-import { PublicGrowingPeriod, PublicProductType } from "../../api-client";
+import {
+  PublicGrowingPeriod,
+  PublicWaitingListEntryDetails,
+} from "../../api-client";
 
 export function shouldIncludeStepGrowingPeriodChoice(
-  selectedProductTypes: PublicProductType[],
   choices: PublicGrowingPeriod[],
+  waitingListEntryDetails?: PublicWaitingListEntryDetails,
 ) {
-  if (selectedProductTypes.length === 0) {
+  if (waitingListEntryDetails !== undefined) {
     return false;
   }
 

@@ -1,6 +1,6 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Spinner } from "react-bootstrap";
-import "dayjs/locale/de";
 import { WaitingListApi, WaitingListEntryDetails } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
@@ -58,7 +58,7 @@ const MemberProfileWaitingListCard: React.FC<
         </Card.Header>
         <Card.Body>
           <Row>
-            <p>Du stehst gerade auf der Warteliste mit folgende Wünsche:</p>
+            <p>Du stehst mit folgenden Wünschen auf der Warteliste:</p>
           </Row>
           <Row>
             {waitingListEntry.pickupLocationWishes &&

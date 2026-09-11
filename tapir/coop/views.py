@@ -1,39 +1,60 @@
 from django.core.exceptions import BadRequest
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
-from rest_framework import status, viewsets, permissions, serializers
-from rest_framework.exceptions import ValidationError
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from localflavor.generic.validators import IBANValidator
+from rest_framework import status, viewsets, permissions
+from rest_framework.exceptions import (
+    ValidationError as DrfValidationError,
+    PermissionDenied,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.models import EmailConfigurationDispatch
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
-from tapir.accounts.models import EmailChangeRequest
+from tapir.accounts.models import EmailChangeRequest, UpdateTapirUserLogEntry
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.serializers import (
     MinimumNumberOfSharesResponseSerializer,
     GetCoopShareTransactionsResponseSerializer,
+    ExistingMemberPurchasesSharesRequestSerializer,
+    UpdateMemberBankDataRequestSerializer,
+    MemberBankDataResponseSerializer,
+    MemberProfilePersonalDataResponseSerializer,
+    MemberProfilePersonalDataRequestSerializer,
+)
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
-)
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
+from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.log.models import LogEntry
+from tapir.log.util import freeze_for_log
 from tapir.subscriptions.serializers import (
     MemberSerializer,
+    OrderConfirmationResponseSerializer,
 )
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     CoopShareTransaction,
@@ -47,7 +68,15 @@ from tapir.wirgarten.models import (
     QuestionaireCancellationReasonResponse,
     MandateReference,
 )
-from tapir.wirgarten.utils import check_permission_or_self, get_today, get_now
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    get_today,
+    get_now,
+    legal_status_is_cooperative,
+    format_currency,
+    format_date,
+)
 
 
 class MinimumNumberOfSharesApiView(APIView):
@@ -96,55 +125,60 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        responses={200: str},
-        request=inline_serializer(
-            name="existing_member_purchases_extra_shares_serializer",
-            fields={
-                "member_id": serializers.CharField(),
-                "number_of_shares_to_add": serializers.IntegerField(),
-                "iban": serializers.CharField(allow_null=True),
-                "account_owner": serializers.CharField(allow_null=True),
-            },
-        ),
+        responses={200: OrderConfirmationResponseSerializer},
+        request=ExistingMemberPurchasesSharesRequestSerializer,
     )
     def post(self, request):
-        member_id = request.data.get("member_id")
+        serializer = ExistingMemberPurchasesSharesRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member_id = serializer.validated_data["member_id"]
         member = get_object_or_404(Member, id=member_id)
         check_permission_or_self(pk=member_id, request=request)
 
-        number_of_shares_to_add = int(request.data.get("number_of_shares_to_add"))
-        if number_of_shares_to_add <= 0:
-            raise ValidationError("Number of coop shares must be positive")
+        as_admin = serializer.validated_data["as_admin"]
+        if serializer.validated_data["as_admin"] and not request.user.has_perm(
+            Permission.Coop.MANAGE
+        ):
+            raise PermissionDenied("Du hast hast die nötige Berechtigung nicht.")
 
-        if not member.is_student:
-            self.validate_number_of_shares(
-                number_of_shares_to_add=number_of_shares_to_add,
-                cache=self.cache,
-                member=member,
-            )
-
-        if MembershipCancellationManager.is_in_coop_trial(member):
-            raise ValidationError(
-                "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
-            )
-
+        iban = serializer.validated_data.get("iban", None)
+        account_owner = serializer.validated_data.get("account_owner", None)
+        number_of_shares_to_add = serializer.validated_data["number_of_shares_to_add"]
         needs_banking_data = (
             MemberNeedsBankingDataChecker.does_member_need_banking_data(member)
         )
-        iban = request.data.get("iban", None)
-        account_owner = request.data.get("account_owner", None)
-        if needs_banking_data and (iban is None or account_owner is None):
-            raise ValidationError("Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)")
+
+        try:
+            self.validate_everything(
+                as_admin=as_admin,
+                account_owner=account_owner,
+                iban=iban,
+                member=member,
+                needs_banking_data=needs_banking_data,
+                number_of_shares_to_add=number_of_shares_to_add,
+            )
+        except DjangoValidationError as error:
+            data = {
+                "order_confirmed": False,
+                "error": error.message,
+            }
+            return Response(OrderConfirmationResponseSerializer(data).data)
+
+        if as_admin:
+            shares_valid_at = serializer.validated_data["start_date"]
+        else:
+            shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=self.cache),
+                apply_buffer_time=True,
+                cache=self.cache,
+            )
 
         with transaction.atomic():
-            CoopSharePurchaseHandler.buy_cooperative_shares(
+            coop_share_transaction = CoopSharePurchaseHandler.buy_cooperative_shares(
                 quantity=number_of_shares_to_add,
                 member=member,
-                shares_valid_at=ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=get_today(cache=self.cache),
-                    apply_buffer_time=True,
-                    cache=self.cache,
-                ),
+                shares_valid_at=shares_valid_at,
                 cache=self.cache,
                 actor=request.user,
             )
@@ -154,7 +188,80 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 member.sepa_consent = get_now(cache=self.cache)
                 member.save()
 
-        return Response(member.get_absolute_url())
+            price_of_a_share = coop_share_transaction.share_price
+            total_number_of_shares = self.get_number_of_shares_after_purchase(member)
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.EXISTING_MEMBER_BUYS_COOP_SHARES,
+                    recipient_id_in_base_queryset=member.id,
+                    token_data={
+                        "number_of_purchased_shares": number_of_shares_to_add,
+                        "price_of_a_share": format_currency(price_of_a_share),
+                        "price_of_the_purchased_shares": format_currency(
+                            coop_share_transaction.share_price
+                            * coop_share_transaction.quantity
+                        ),
+                        "new_shares_valid_at": format_date(
+                            coop_share_transaction.valid_at
+                        ),
+                        "total_number_of_shares": total_number_of_shares,
+                        "total_price_of_shares": format_currency(
+                            total_number_of_shares * price_of_a_share
+                        ),
+                    },
+                ),
+            )
+
+        data = {
+            "order_confirmed": True,
+            "error": None,
+            "redirect_url": member.get_absolute_url(),
+        }
+        return Response(OrderConfirmationResponseSerializer(data).data)
+
+    @classmethod
+    def get_number_of_shares_after_purchase(cls, member: Member):
+        return (
+            member.coopsharetransaction_set.aggregate(quantity=Sum(F("quantity")))[
+                "quantity"
+            ]
+            or 0
+        )
+
+    def validate_everything(
+        self,
+        as_admin: bool,
+        account_owner: str | None,
+        iban: str | None,
+        member: Member,
+        needs_banking_data: bool,
+        number_of_shares_to_add: int,
+    ):
+
+        if number_of_shares_to_add <= 0:
+            raise DjangoValidationError("Number of coop shares must be positive")
+
+        if not member.is_student and not as_admin:
+            self.validate_number_of_shares(
+                number_of_shares_to_add=number_of_shares_to_add,
+                cache=self.cache,
+                member=member,
+            )
+
+        if (
+            CoopMembershipCancellationManager.is_in_coop_trial(
+                member, reference_date=get_today(cache=self.cache), cache=self.cache
+            )
+            and not as_admin
+        ):
+            raise DjangoValidationError(
+                "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
+            )
+
+        if needs_banking_data and (not iban or not account_owner):
+            raise DjangoValidationError(
+                "Dieses Mitglied braucht noch Bank-Daten (IBAN usw.)"
+            )
 
     @classmethod
     def validate_number_of_shares(
@@ -185,7 +292,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
         )
 
         if current_shares + number_of_shares_to_add < total_min_shares:
-            raise ValidationError(
+            raise DjangoValidationError(
                 f"The minimum final number of shares is {total_min_shares}, "
                 f"this member currently has {current_shares}, adding {number_of_shares_to_add} is not enough."
             )
@@ -221,7 +328,7 @@ class GetCoopShareTransactionsApiView(APIView):
 
 class MemberViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-    queryset = Member.objects.all()
+    queryset = Member.objects.order_by("member_no", "last_name", "first_name")
     serializer_class = MemberSerializer
 
 
@@ -263,3 +370,207 @@ class DeleteMemberApiView(APIView):
             member.delete()
 
         return Response("deleted")
+
+
+class MemberBankDataApiView(APIView):
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={200: MemberBankDataResponseSerializer},
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        return Response(
+            MemberBankDataResponseSerializer(
+                {
+                    "iban": member.iban or "",
+                    "account_owner": member.account_owner or "",
+                    "organisation_name": get_parameter_value(
+                        ParameterKeys.SITE_NAME, cache={}
+                    ),
+                }
+            ).data
+        )
+
+    @extend_schema(
+        responses={200: bool},
+        request=UpdateMemberBankDataRequestSerializer,
+    )
+    def patch(self, request):
+        serializer = UpdateMemberBankDataRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        iban = serializer.validated_data["iban"]
+        sepa_consent = serializer.validated_data["sepa_consent"]
+        self.validate(iban=iban, sepa_consent=sepa_consent)
+
+        member_before = freeze_for_log(member)
+
+        member.account_owner = serializer.validated_data["account_owner"]
+        member.iban = iban
+        member.sepa_consent = get_now(cache={})
+
+        with transaction.atomic():
+            UpdateTapirUserLogEntry().populate(
+                old_frozen=member_before,
+                new_model=member,
+                user=member,
+                actor=request.user,
+            ).save()
+
+            TransactionalTrigger.fire_action(
+                trigger_data=TransactionalTriggerData(
+                    key=Events.MEMBERAREA_CHANGE_DATA,
+                    recipient_id_in_base_queryset=member.id,
+                ),
+            )
+
+            member.save()
+
+        return Response(True)
+
+    @staticmethod
+    def validate(iban: str, sepa_consent: bool):
+        IBANValidator()(iban)
+
+        if not sepa_consent:
+            raise DrfValidationError("Zustimmung für SEPA fehlt")
+
+
+class MemberPersonalDataApiView(APIView):
+    def __init__(self, **kwargs):
+        self.cache = {}
+        super().__init__(**kwargs)
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={200: MemberProfilePersonalDataResponseSerializer},
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        is_student = None
+        if legal_status_is_cooperative(cache=self.cache) and get_parameter_value(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            cache=self.cache,
+        ):
+            is_student = member.is_student
+
+        return Response(
+            MemberProfilePersonalDataResponseSerializer(
+                {
+                    "member_id": member.id,
+                    "first_name": member.first_name,
+                    "last_name": member.last_name,
+                    "email": member.email,
+                    "phone_number": member.phone_number,
+                    "street": member.street,
+                    "street_2": member.street_2,
+                    "postcode": member.postcode,
+                    "city": member.city,
+                    "is_student": is_student,
+                    "can_edit_student": self.user_can_edit_student_status(request.user),
+                    "can_edit_name": self.user_can_edit_name(request.user),
+                }
+            ).data
+        )
+
+    @classmethod
+    def user_can_edit_name(cls, user):
+        return user.has_perm(Permission.Coop.MANAGE)
+
+    @classmethod
+    def user_can_edit_student_status(cls, user):
+        return user.has_perm(Permission.Coop.MANAGE)
+
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        request=MemberProfilePersonalDataRequestSerializer,
+    )
+    def patch(self, request):
+        serializer = MemberProfilePersonalDataRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        member_before = freeze_for_log(member)
+        student_status_enabled = legal_status_is_cooperative(
+            cache=self.cache
+        ) and get_parameter_value(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            cache=self.cache,
+        )
+
+        try:
+            PersonalDataValidator.validate_phone_number_is_valid(
+                serializer.validated_data.get("phone_number")
+            )
+            if serializer.validated_data["email"] != member.email:
+                PersonalDataValidator.validate_email_address_not_in_use(
+                    email=serializer.validated_data["email"],
+                    check_waiting_list=True,
+                    cache=self.cache,
+                )
+            if (
+                student_status_enabled
+                and serializer.validated_data["is_student"] != member.is_student
+                and not self.user_can_edit_student_status(request.user)
+            ):
+                raise DjangoValidationError(
+                    "Nur Admins dürfen den Studenten-Status ändern."
+                )
+        except DjangoValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        simple_fields = [
+            "email",
+            "phone_number",
+            "street",
+            "street_2",
+            "postcode",
+            "city",
+        ]
+        if self.user_can_edit_name(request.user):
+            simple_fields += ["first_name", "last_name"]
+        for field in simple_fields:
+            setattr(member, field, serializer.validated_data.get(field))
+
+        if student_status_enabled:
+            member.is_student = serializer.validated_data["is_student"]
+
+        with transaction.atomic():
+            UpdateTapirUserLogEntry().populate(
+                old_frozen=member_before,
+                new_model=member,
+                user=member,
+                actor=request.user,
+            ).save()
+
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.MEMBERAREA_CHANGE_DATA,
+                    recipient_id_in_base_queryset=member.id,
+                ),
+            )
+
+            member.save()
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )

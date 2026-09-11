@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django import forms
 from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
@@ -13,7 +11,7 @@ from tapir.utils.forms import DateInput
 from tapir.wirgarten.utils import is_debug_instance
 
 
-def create_field(param: TapirParameter, cache: Dict):
+def create_field(param: TapirParameter, cache: dict):
     description = f"""<span name="param-key" style="display:none">{param.key}</span>{_(param.description)}"""
 
     param_meta = get_parameter_meta(param.key)

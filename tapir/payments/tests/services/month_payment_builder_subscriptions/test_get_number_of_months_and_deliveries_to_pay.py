@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
@@ -10,7 +10,7 @@ from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
-class TestGetNumberOfMonthsAndDeliveriesToPay(SimpleTestCase):
+class TestGetNumberOfMonthsAndDeliveriesToPay(TapirUnitTest):
     @patch.object(MonthPaymentBuilderSubscriptions, "get_number_of_deliveries_in_month")
     def test_getNumberOfMonthsAndDeliveriesToPay_default_checksEveryMonthOfRangeCorrectly(
         self,
@@ -19,7 +19,6 @@ class TestGetNumberOfMonthsAndDeliveriesToPay(SimpleTestCase):
         range_start = datetime.date(2020, 1, 1)
         range_end = datetime.date(2020, 6, 30)
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(2020, 1, 7),
             end_date=datetime.date(2020, 6, 20),
             product__type__delivery_cycle=WEEKLY[0],

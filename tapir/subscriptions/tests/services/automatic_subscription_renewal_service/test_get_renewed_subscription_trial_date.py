@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -10,13 +10,13 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestGetRenewedSubscriptionTrialDate(SimpleTestCase):
+class TestGetRenewedSubscriptionTrialDate(TapirUnitTest):
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
     )
-    @patch.object(TrialPeriodManager, "get_end_of_trial_period")
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
     def test_getRenewedSubscriptionTrialData_trialEndsBeforeEndOfPreviousSubscription_returnsTrialDisabledTrue(
-        self, mock_get_end_of_trial_period: Mock, mock_get_parameter_value: Mock
+        self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
         subscription = Mock()
         end_of_subscription = datetime.date(year=2023, month=6, day=4)
@@ -24,7 +24,7 @@ class TestGetRenewedSubscriptionTrialDate(SimpleTestCase):
         mock_get_parameter_value.return_value = True
 
         end_of_trial = datetime.date(year=2023, month=6, day=3)
-        mock_get_end_of_trial_period.return_value = end_of_trial
+        mock_get_last_day_of_trial_period.return_value = end_of_trial
         cache = {}
 
         trial_disabled, trial_end_date_override = (
@@ -42,16 +42,16 @@ class TestGetRenewedSubscriptionTrialDate(SimpleTestCase):
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
     )
-    @patch.object(TrialPeriodManager, "get_end_of_trial_period")
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
     def test_getRenewedSubscriptionTrialData_trialEndsAfterEndOfPreviousSubscription_returnsTrialEndDate(
-        self, mock_get_end_of_trial_period: Mock, mock_get_parameter_value: Mock
+        self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
         subscription = Mock()
         end_of_subscription = datetime.date(year=2023, month=6, day=4)
         subscription.end_date = end_of_subscription
 
         end_of_trial = datetime.date(year=2023, month=6, day=5)
-        mock_get_end_of_trial_period.return_value = end_of_trial
+        mock_get_last_day_of_trial_period.return_value = end_of_trial
         mock_get_parameter_value.return_value = True
         cache = {}
 

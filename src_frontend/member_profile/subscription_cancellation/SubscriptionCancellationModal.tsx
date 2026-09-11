@@ -1,17 +1,19 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Modal, Spinner } from "react-bootstrap";
 import {
   LegalStatusEnum,
   ProductForCancellation,
+  SolidarityContributionCancellationData,
   SubscriptionsApi,
 } from "../../api-client";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
-import "dayjs/locale/de";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import CancellationStepSubscriptions from "./steps/CancellationStepSubscriptions.tsx";
-import CancellationStepReasons from "./steps/CancellationStepReasons.tsx";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 import CancellationStepConfirmation from "./steps/CancellationStepConfirmation.tsx";
+import CancellationStepReasons from "./steps/CancellationStepReasons.tsx";
+import CancellationStepSubscriptions from "./steps/CancellationStepSubscriptions.tsx";
 
 interface SubscriptionCancellationModalProps {
   onHide: () => void;
@@ -30,15 +32,26 @@ const SubscriptionCancellationModal: React.FC<
   const [subscribedProducts, setSubscribedProducts] = useState<
     ProductForCancellation[]
   >([]);
-  const [canCancelCoopMembership, setCanCancelCoopMembership] = useState(false);
+  const [solidarityContributionData, setSolidarityContributionData] =
+    useState<SolidarityContributionCancellationData>();
+  const [cancelSolidarityContribution, setCancelSolidarityContribution] =
+    useState(false);
+
   const [legalStatus, setLegalStatus] = useState<LegalStatusEnum>();
   const [loading, setLoading] = useState(true);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<
     ProductForCancellation[]
   >([]);
+  const [canCancelCoopMembership, setCanCancelCoopMembership] = useState(false);
   const [cancelCoopMembershipSelected, setCancelCoopMembershipSelected] =
     useState(false);
+  const [canCancelAssociationMembership, setCanCancelAssociationMembership] =
+    useState(false);
+  const [
+    cancelAssociationMembershipSelected,
+    setCancelAssociationMembershipSelected,
+  ] = useState(false);
   const [confirmationLoading, setConfirmationLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [defaultCancellationReasons, setDefaultCancellationReasons] = useState<
@@ -51,6 +64,8 @@ const SubscriptionCancellationModal: React.FC<
   const [customCancellationReason, setCustomCancellationReason] = useState<
     string | undefined
   >();
+  const [trialPeriodDuration, setTrialPeriodDuration] = useState<number>();
+  const [trialPeriodIsFlexible, setTrialPeriodIsFlexible] = useState(false);
 
   useEffect(() => {
     if (!show) {
@@ -67,8 +82,14 @@ const SubscriptionCancellationModal: React.FC<
       .then((data) => {
         setSubscribedProducts(data.subscribedProducts);
         setCanCancelCoopMembership(data.canCancelCoopMembership);
+        setCanCancelAssociationMembership(data.canCancelAssociationMembership);
         setLegalStatus(data.legalStatus);
         setDefaultCancellationReasons(data.defaultCancellationReasons);
+        setSolidarityContributionData(data.solidarityContributionData);
+        setTrialPeriodIsFlexible(data.trialPeriodIsFlexible);
+        if (data.showTrialPeriodHelpText) {
+          setTrialPeriodDuration(data.trialPeriodDuration);
+        }
       })
       .catch((error) =>
         handleRequestError(
@@ -100,8 +121,10 @@ const SubscriptionCancellationModal: React.FC<
           memberId: memberId,
           productIds: productIds,
           cancelCoopMembership: cancelCoopMembershipSelected,
+          cancelAssociationMembership: cancelAssociationMembershipSelected,
           cancellationReasons: selectedCancellationReasons,
           customCancellationReason: customCancellationReason,
+          cancelSolidarityContribution: cancelSolidarityContribution,
         },
       })
       .then((response) => {
@@ -111,6 +134,7 @@ const SubscriptionCancellationModal: React.FC<
           onHide();
         } else {
           setErrors(response.errors);
+          setCurrentStep("subscriptions");
         }
       })
       .catch((error) =>
@@ -127,9 +151,23 @@ const SubscriptionCancellationModal: React.FC<
       size={"lg"}
     >
       <Modal.Header closeButton>
-        <Modal.Title>
-          <h4>Verträge kündigen</h4>
-        </Modal.Title>
+        <span
+          className={
+            "d-flex flex-row justify-content-between align-items-center"
+          }
+          style={{ width: "100%" }}
+        >
+          <Modal.Title>Verträge kündigen</Modal.Title>
+          {trialPeriodDuration && (
+            <TapirHelpButton
+              text={
+                "Um zu bestimmen wann die Probezeit endet, werden die " +
+                trialPeriodDuration +
+                " Wochen ab der Montag vor der erste Abholung berechnet, nicht ab dem Vertragsstart-Datum."
+              }
+            />
+          )}
+        </span>
       </Modal.Header>
       {loading ? (
         <>
@@ -147,10 +185,20 @@ const SubscriptionCancellationModal: React.FC<
               selectedProducts={selectedProducts}
               setSelectedProducts={setSelectedProducts}
               canCancelCoopMembership={canCancelCoopMembership}
-              membershipText={getMembershipText()}
               cancelCoopMembershipSelected={cancelCoopMembershipSelected}
               setCancelCoopMembershipSelected={setCancelCoopMembershipSelected}
+              canCancelAssociationMembership={canCancelAssociationMembership}
+              cancelAssociationMembershipSelected={
+                cancelAssociationMembershipSelected
+              }
+              setCancelAssociationMembershipSelected={
+                setCancelAssociationMembershipSelected
+              }
               goToNextStep={() => setCurrentStep("reasons")}
+              solidarityContributionData={solidarityContributionData}
+              cancelSolidarityContribution={cancelSolidarityContribution}
+              setCancelSolidarityContribution={setCancelSolidarityContribution}
+              trialPeriodIsFlexible={trialPeriodIsFlexible}
             />
           )}
           {currentStep === "reasons" && (
@@ -170,7 +218,9 @@ const SubscriptionCancellationModal: React.FC<
               selectedProducts={selectedProducts}
               onConfirm={onConfirm}
               cancelCoopMembershipSelected={cancelCoopMembershipSelected}
-              membershipText={getMembershipText()}
+              cancelAssociationMembershipSelected={
+                cancelAssociationMembershipSelected
+              }
               customCancellationReasons={customCancellationReason}
               goToPreviousStep={() => setCurrentStep("reasons")}
               confirmationLoading={confirmationLoading}

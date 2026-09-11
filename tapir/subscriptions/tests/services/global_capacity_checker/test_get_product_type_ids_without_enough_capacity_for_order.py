@@ -1,12 +1,12 @@
 from unittest.mock import Mock, patch, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.wirgarten.tests.factories import ProductFactory
 
 
-class TestGetProductTypeIdsWithoutEnoughCapacityForOrder(SimpleTestCase):
+class TestGetProductTypeIdsWithoutEnoughCapacityForOrder(TapirUnitTest):
     @patch.object(
         GlobalCapacityChecker,
         "is_there_enough_free_global_capacity_for_single_product_type",

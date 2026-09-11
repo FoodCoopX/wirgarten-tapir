@@ -1,8 +1,15 @@
 {% extends "core/base.html" %}
+{% load django_vite %}
 {% load configuration %}
 {% load django_bootstrap5 %}
 {% load i18n %}
 {% load tapir_static %}
+{% block head %}
+    {% vite_asset 'configuration/configuration_entry.tsx' %}
+{% endblock head %}
+{% block title %}
+    Konfiguration - {{ block.super }}
+{% endblock title %}
 {% block content %}
     <div style="margin-top: 1em;">
         <form id="form" method="post">
@@ -65,33 +72,47 @@
         </div>
     </div>
     <script>
-const params = Tapir.getUrlParams()
-if (params.success) {
-    var toastEl = document.querySelector('.toast')
-    var toast = new bootstrap.Toast(toastEl)
+        const params = Tapir.getUrlParams()
+        if (params.success) {
+            var toastEl = document.querySelector('.toast')
+            var toast = new bootstrap.Toast(toastEl)
 
-    toast.show()
+            toast.show()
 
-    setTimeout(function() {
-      toast.hide();
-    }, 10000);
+            setTimeout(function() {
+                toast.hide();
+            }, 10000);
 
-    params.success=undefined;
-    Tapir.replaceUrlParams(params);
-}
+            params.success=undefined;
+            Tapir.replaceUrlParams(params);
+        }
 
-const divElement = document.getElementById("config-view");
-if(params.pos){
-    divElement.scrollTop = params.pos;
-}
+        const divElement = document.getElementById("config-view");
+        if(params.pos){
+            divElement.scrollTop = params.pos;
+        }
 
-divElement.addEventListener("scroll", function() {
-  const yScrollPosition = divElement.scrollTop;
-  const params = Tapir.getUrlParams();
-  params.pos=yScrollPosition;
-  Tapir.replaceUrlParams(params);
-});
+        divElement.addEventListener("scroll", function() {
+            const yScrollPosition = divElement.scrollTop;
+            const params = Tapir.getUrlParams();
+            params.pos=yScrollPosition;
+            Tapir.replaceUrlParams(params);
+        });
 
     </script>
+    <div id="member-number-preview-config"
+         data-prefix-key="{{ member_number_prefix_key }}"
+         data-length-key="{{ member_number_length_key }}"
+         data-preview-url="{% url 'configuration:member_number_preview' %}"
+         style="display:none"></div>
+    <script src="{% static 'configuration/js/member_number_preview.js' %}"></script>
     <script src="{% static 'configuration/js/search.js' %}"></script>
+    <div id="mandate-reference-preview-config"
+         data-parameter-key="{{ mandate_reference_pattern_key }}"
+         style="display:none"></div>
+    <div id="payment-intended-use-config"
+         data-contract-keys="{{ intended_use_contract_keys }}"
+         data-coop-shares-keys="{{ intended_use_coop_shares_keys }}"
+         data-joker-keys="{{ intended_use_joker_keys }}"
+         style="display:none"></div>
 {% endblock %}

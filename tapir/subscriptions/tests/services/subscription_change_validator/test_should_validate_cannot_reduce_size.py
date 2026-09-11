@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
@@ -10,7 +10,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestShouldValidateCannotReduceSize(SimpleTestCase):
+class TestShouldValidateCannotReduceSize(TapirUnitTest):
     def test_shouldValidateCannotReduceSize_loggedInAsAdmin_returnsFalse(self):
         self.assertFalse(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(

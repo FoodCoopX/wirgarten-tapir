@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import datetime
 import locale
-from typing import TYPE_CHECKING, Dict
+from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from django.db.models import (
     F,
@@ -11,12 +12,17 @@ from django.db.models import (
     Sum,
 )
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.deliveries.services.joker_value_service import JokerValueService
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
-from tapir.subscriptions.services.delivery_price_calculator import (
-    DeliveryPriceCalculator,
+from tapir.payments.services.intended_use_pattern_expander import (
+    IntendedUsePatternExpander,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
+from tapir.wirgarten.models import CoopShareTransaction
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 if TYPE_CHECKING:
     from tapir.wirgarten.models import (
@@ -25,23 +31,32 @@ if TYPE_CHECKING:
 
 
 class MemberColumnProvider:
+    COLUMN_ID_MEMBER_NUMBER = "member_number"
+    COLUMN_ID_LAST_NAME = "member_last_name"
+    COLUMN_ID_FIRST_NAME = "member_first_name"
+    COLUMN_ID_FULL_ADDRESS = "member_full_address"
+    COLUMN_ID_ADMISSION_DATE = "member_admission_date"
+    COLUMN_ID_SHARE_QUANTITY = "member_share_quantity"
+    COLUMN_ID_SHARE_HISTORY = "member_share_history"
+    COLUMN_ID_TERMINATION_DATE = "member_termination_date"
+
     @classmethod
-    def get_member_columns(cls):
+    def get_member_columns(cls) -> list[ExportSegmentColumn]:
         return [
             ExportSegmentColumn(
-                id="member_first_name",
+                id=cls.COLUMN_ID_FIRST_NAME,
                 display_name="Vorname",
                 description="",
                 get_value=cls.get_value_member_first_name,
             ),
             ExportSegmentColumn(
-                id="member_last_name",
+                id=cls.COLUMN_ID_LAST_NAME,
                 display_name="Nachname",
                 description="",
                 get_value=cls.get_value_member_last_name,
             ),
             ExportSegmentColumn(
-                id="member_number",
+                id=cls.COLUMN_ID_MEMBER_NUMBER,
                 display_name="Mitgliedsnummer",
                 description="",
                 get_value=cls.get_value_member_number,
@@ -73,8 +88,9 @@ class MemberColumnProvider:
             ExportSegmentColumn(
                 id="member_joker_credit_value",
                 display_name="Joker Gutschriftwert",
-                description="der Gutschriftwert ermittelt sich aus = (hinterlegter Basisbetrag für Größe des "
-                "Ernteanteils (ohne Solidarbeitrag!) / Anzahl der Lieferwochen) * Anzahl der genutzten Joker",
+                description="der Gutschriftwert ermittelt sich aus = ((hinterlegter Basisbetrag für Größe des "
+                "Ernteanteils (ohne Solidarbeitrag!) / Anzahl der Lieferwochen) + Lieferzuschlag der "
+                "Verteilstation) * Anzahl der genutzten Joker",
                 get_value=cls.get_value_member_joker_credit_value,
             ),
             ExportSegmentColumn(
@@ -90,34 +106,40 @@ class MemberColumnProvider:
                 get_value=cls.get_value_member_joker_credit_details,
             ),
             ExportSegmentColumn(
-                id="member_full_address",
+                id=cls.COLUMN_ID_FULL_ADDRESS,
                 display_name="Anschrift",
                 description="",
                 get_value=cls.get_value_member_full_address,
             ),
             ExportSegmentColumn(
-                id="member_share_quantity",
+                id=cls.COLUMN_ID_SHARE_QUANTITY,
                 display_name="Anzahl Anteile",
                 description="",
                 get_value=cls.get_value_member_share_quantity,
             ),
             ExportSegmentColumn(
-                id="member_admission_date",
+                id=cls.COLUMN_ID_ADMISSION_DATE,
                 display_name="Beitrittsdatum",
                 description="",
                 get_value=cls.get_value_member_admission_date,
             ),
             ExportSegmentColumn(
-                id="member_termination_date",
+                id=cls.COLUMN_ID_TERMINATION_DATE,
                 display_name="Austrittsdatum",
                 description="",
                 get_value=cls.get_value_member_termination_date,
             ),
             ExportSegmentColumn(
-                id="member_share_history",
+                id=cls.COLUMN_ID_SHARE_HISTORY,
                 display_name="Anteilshistorie",
                 description="",
                 get_value=cls.get_value_member_share_history,
+            ),
+            ExportSegmentColumn(
+                id="member_share_quantity_cancelled_in_previous_year",
+                display_name="Anzahl gekündigte Anteile im Vorjahr",
+                description="",
+                get_value=cls.get_value_member_share_quantity_cancelled_in_previous_year,
             ),
         ]
 
@@ -130,8 +152,17 @@ class MemberColumnProvider:
         return member.last_name
 
     @classmethod
-    def get_value_member_number(cls, member: Member, _, __):
-        return str(member.member_no)
+    def get_value_member_number(
+        cls, member: Member, reference_datetime: datetime.datetime, cache
+    ):
+        if MemberNumberService.should_display_member_number(
+            member=member, reference_date=reference_datetime.date(), cache=cache
+        ):
+            return (
+                MemberNumberService.format_member_number(member.member_no, cache=cache)
+                or ""
+            )
+        return ""
 
     @classmethod
     def get_value_member_email_address(cls, member: Member, _, __):
@@ -151,7 +182,7 @@ class MemberColumnProvider:
 
     @classmethod
     def get_value_member_joker_credit_value(
-        cls, member: Member, reference_datetime: datetime.datetime, cache: Dict
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
     ):
         from tapir.deliveries.models import Joker
 
@@ -164,25 +195,32 @@ class MemberColumnProvider:
             member=member,
         )
         credit_value = sum(
-            [
-                DeliveryPriceCalculator.get_price_of_subscriptions_delivered_in_week(
-                    member=member,
-                    reference_date=joker.date,
-                    only_subscriptions_affected_by_jokers=True,
-                    cache=cache,
+            (
+                JokerValueService.get_joker_credit_value_for_single_joker(
+                    member=member, joker_date=joker.date, cache=cache
                 )
                 for joker in jokers
-            ]
+            ),
+            start=Decimal(0),
         )
         return locale.format_string("%.2f", credit_value)
 
     @classmethod
-    def get_value_member_joker_credit_intended_use(cls, _, __, ___):
-        return "Noch nicht implementiert, hängt von US 2.6. ab"
+    def get_value_member_joker_credit_intended_use(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        return IntendedUsePatternExpander.expand_pattern_joker(
+            pattern=get_parameter_value(
+                key=ParameterKeys.PAYMENT_INTENDED_USE_JOKER_CREDIT, cache=cache
+            ),
+            member=member,
+            reference_date=reference_datetime.date(),
+            cache=cache,
+        )
 
     @classmethod
     def get_value_member_joker_credit_details(
-        cls, member: Member, reference_datetime: datetime.datetime, cache: Dict
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
     ):
         from tapir.deliveries.models import Joker
 
@@ -244,3 +282,20 @@ class MemberColumnProvider:
         if agg["quantity"] or not agg["max_valid_at"]:
             return ""
         return agg["max_valid_at"].strftime("%d.%m.%Y")
+
+    @classmethod
+    def get_value_member_share_quantity_cancelled_in_previous_year(
+        cls, member: Member, reference_datetime: datetime.datetime, _
+    ):
+        year = reference_datetime.year
+        timerange = (
+            datetime.date(year - 1, 1, 1),
+            datetime.date(year, 1, 1) - datetime.timedelta(milliseconds=1),
+        )
+        return -(
+            member.coopsharetransaction_set.filter(
+                transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
+                valid_at__range=timerange,
+            ).aggregate(quantity=Sum(F("quantity")))["quantity"]
+            or 0
+        )

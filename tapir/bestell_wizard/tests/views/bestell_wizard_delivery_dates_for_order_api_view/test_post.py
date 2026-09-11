@@ -62,6 +62,7 @@ class TestBestellWizardDeliveryDatesForOrderApiView(TapirIntegrationTest):
         )  # delivery on Friday
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, now=datetime.datetime(year=2024, month=6, day=8))
 
     def test_post_noWaitingListAndNoGrowingPeriodSpecified_returnsDatesRelativeToTheStandardContractStart(

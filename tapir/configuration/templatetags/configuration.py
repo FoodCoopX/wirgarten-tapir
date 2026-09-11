@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django import template
 from django.template.defaultfilters import stringfilter
 
@@ -28,7 +26,7 @@ def get_parameter_value_tag(key: str, cache):
 
 
 @register.simple_tag
-def tokenize_parameter(text: str, cache: Dict = None):
+def tokenize_parameter(text: str, cache: dict = None):
     legal_status = "Betrieb"
     for status in LEGAL_STATUS_OPTIONS:
         if status[0] == get_parameter_value(

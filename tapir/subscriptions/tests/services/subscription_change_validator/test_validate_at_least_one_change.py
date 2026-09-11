@@ -2,11 +2,9 @@ from unittest.mock import Mock
 
 from django.core.exceptions import ValidationError
 
-from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -22,20 +20,24 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
-        cls.member = MemberFactory.create()
         cls.product_type = ProductTypeFactory.create()
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=cls.product_type.id
-        )
-        cls.subscription_1 = SubscriptionFactory.create(
-            product__type=cls.product_type,
-            member=cls.member,
-        )
-        cls.subscription_2 = SubscriptionFactory.create(
-            product__type=cls.product_type,
-            member=cls.member,
-        )
+
         cls.product_not_subbed_to = ProductFactory.create(type=cls.product_type)
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.create_member_and_subscriptions()
+
+    def create_member_and_subscriptions(self):
+        self.member = MemberFactory.create()
+        self.subscription_1 = SubscriptionFactory.create(
+            product__type=self.product_type,
+            member=self.member,
+        )
+        self.subscription_2 = SubscriptionFactory.create(
+            product__type=self.product_type,
+            member=self.member,
+        )
 
     def test_validateAtLeastOneChange_noChanges_raisesError(self):
         form = Mock()

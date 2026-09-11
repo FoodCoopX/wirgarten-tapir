@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Col, Modal, Row, Spinner } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import {
   DeliveriesApi,
   DeliveryCycleEnum,
@@ -10,11 +11,13 @@ import {
   ProductType,
   type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
+import { useApi } from "../hooks/useApi.ts";
+import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
 import { ToastData } from "../types/ToastData.ts";
+import { addToast } from "../utils/addToast.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 import ProductTypeForm from "./ProductTypeForm.tsx";
 
 interface ProductTypeCreateModalProps {
@@ -37,8 +40,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
     useState<ProductType[]>([]);
   const [mode, setMode] = useState<"select" | "create">("select");
   const [showJokers, setShowJokers] = useState(false);
-  const [showAssociationMembership, setShowAssociationMembership] =
-    useState(false);
   const [showNoticePeriod, setShowNoticePeriod] = useState(false);
   const [canUpdateNoticePeriod, setCanUpdateNoticePeriod] = useState(false);
   const [name, setName] = useState("");
@@ -66,7 +67,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [singleSubscriptionOnly, setSingleSubscriptionOnly] = useState(false);
   const [isAffectedByJokers, setIsAffectedByJokers] = useState(false);
   const [mustBeSubscribedTo, setMustBeSubscribedTo] = useState(false);
-  const [isAssociationMembership, setIsAssociationMembership] = useState(false);
   const [forceWaitingList, setForceWaitingList] = useState(false);
   const [growingPeriod, setGrowingPeriod] = useState<GrowingPeriod>();
   const [saving, setSaving] = useState(false);
@@ -83,6 +83,12 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [titleBestellWizardIntro, setTitleBestellWizardIntro] = useState("");
   const [backgroundImageInBestellWizard, setBackgroundImageInBestellWizard] =
     useState("");
+  const [deliveryWeeks, setDeliveryWeeks] = useState<CustomCycleDeliveryWeeks>(
+    {},
+  );
+  const [allGrowingPeriods, setAllGrowingPeriods] = useState<GrowingPeriod[]>(
+    [],
+  );
 
   useEffect(() => {
     if (!getPeriodIdFromUrl() || !show) return;
@@ -94,7 +100,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
       })
       .then((result) => {
         setProductTypesWithoutCapacity(result.productTypesWithoutCapacity);
-        setShowAssociationMembership(result.showAssociationMembership);
         setShowJokers(result.showJokers);
         setShowNoticePeriod(result.showNoticePeriod);
         setCanUpdateNoticePeriod(result.canUpdateNoticePeriod);
@@ -119,6 +124,17 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
         handleRequestError(
           error,
           "Fehler beim Laden der Vertragsperiode",
+          setToastDatas,
+        ),
+      );
+
+    deliveriesApi
+      .deliveriesGrowingPeriodsList()
+      .then(setAllGrowingPeriods)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Vertragsperioden",
           setToastDatas,
         ),
       );
@@ -154,7 +170,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
     setSaving(true);
 
     const extendedProductType: ExtendedProductTypeRequest = {
-      isAssociationMembership: isAssociationMembership,
       contractLink: contractLink,
       orderInBestellwizard: orderInBestellwizard,
       descriptionBestellwizardLong: descriptionBestellwizardLong,
@@ -179,6 +194,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
       titleBestellwizardProductChoice: titleBestellWizardProductChoices,
       titleBestellwizardIntro: titleBestellWizardIntro,
       backgroundImageInBestellwizard: backgroundImageInBestellWizard,
+      customCycleDeliveryWeeks: deliveryWeeks,
     };
 
     const request = {
@@ -196,11 +212,25 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
         });
 
     promise
-      .then(() => location.reload())
+      .then((response) => {
+        if (response.orderConfirmed) {
+          location.reload();
+        } else {
+          addToast(
+            {
+              id: uuidv4(),
+              variant: "danger",
+              message: response.error!,
+              title: "Fehler beim Speichern der Produkt-Typ",
+            },
+            setToastDatas,
+          );
+        }
+      })
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Vertragsperiode",
+          "Fehler beim Speichern der Produkt-Typ",
           setToastDatas,
         ),
       )
@@ -275,7 +305,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setName={setName}
           iconLink={iconLink}
           setIconLink={setIconLink}
-          growingPeriod={growingPeriod}
+          globalSelectedGrowingPeriod={growingPeriod}
           capacity={capacity}
           setCapacity={setCapacity}
           deliveryCycle={deliveryCycle}
@@ -294,9 +324,6 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setSingleSubscriptionOnly={setSingleSubscriptionOnly}
           mustBeSubscribedTo={mustBeSubscribedTo}
           setMustBeSubscribedTo={setMustBeSubscribedTo}
-          showAssociationMembership={showAssociationMembership}
-          isAssociationMembership={isAssociationMembership}
-          setIsAssociationMembership={setIsAssociationMembership}
           descriptionBestellwizardShort={descriptionBestellwizardShort}
           setDescriptionBestellwizardShort={setDescriptionBestellwizardShort}
           descriptionBestellwizardLong={descriptionBestellwizardLong}
@@ -322,6 +349,9 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setNoticePeriodDuration={setNoticePeriodDuration}
           noticePeriodUnit={noticePeriodUnit}
           setNoticePeriodUnit={setNoticePeriodUnit}
+          deliveryWeeks={deliveryWeeks}
+          setDeliveryWeeks={setDeliveryWeeks}
+          allGrowingPeriods={allGrowingPeriods}
         />
       </Modal.Body>
     );

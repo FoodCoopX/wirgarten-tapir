@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
+import { Form, Modal, Spinner } from "react-bootstrap";
 import { MemberPaymentRhythm, PaymentsApi } from "../../api-client";
+import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { Form, Modal, Spinner } from "react-bootstrap";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
-import TapirButton from "../../components/TapirButton.tsx";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface MemberProfilePaymentRhythmModalProps {
   memberId: string;
@@ -102,7 +103,38 @@ const MemberProfilePaymentRhythmModal: React.FC<
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Zahlungsintervall bearbeiten</h5>
+        <div
+          className={
+            "d-flex flex-row gap-2 align-items-center justify-content-between"
+          }
+          style={{ width: "100%" }}
+        >
+          <h5 className={"mb-0"}>Zahlungsintervall bearbeiten</h5>
+          <TapirHelpButton
+            text={
+              <>
+                <p>
+                  Nur du als Admin kannst das Zahlungsintervall ändern. Das
+                  Datum, zu dem die Änderung gilt, wird dir angezeigt.
+                </p>
+                <ul>
+                  <li>
+                    Wenn das Mitglied noch keine regelmäßige Zahlung hat (kein
+                    Vertrag, kein Solibeitrag), dann wird das Intervall ab
+                    sofort gesetzt. Neue Mitglieder oder Fördermitglieder, die
+                    ein Vertrag abschließen, nutzen dann sofort das neue
+                    Intervall.
+                  </li>
+                  <li>
+                    Wenn das Mitglied schon regelmäßige Zahlungen hat, dann
+                    passiert der Wechsel am Ende des aktuellem Intervall (z.B.
+                    nach Ablauf des Halbjahres, welches schon bezahlt wurde).
+                  </li>
+                </ul>
+              </>
+            }
+          />
+        </div>
       </Modal.Header>
       <Modal.Body>
         {loading ? (

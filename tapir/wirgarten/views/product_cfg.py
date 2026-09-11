@@ -11,7 +11,7 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
-from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.constants import Permission, DeliveryCycleDict
 from tapir.wirgarten.forms.product_cfg.period_product_cfg_forms import (
     ProductForm,
     GrowingPeriodForm,
@@ -168,6 +168,8 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
                 },
             }
         )
+
+        context["delivery_cycle_names"] = DeliveryCycleDict
 
         return context
 

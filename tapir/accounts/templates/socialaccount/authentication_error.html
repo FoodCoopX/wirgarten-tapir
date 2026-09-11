@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% load core %}
+
+{% block content %}
+    <div class="container mt-4">
+        <p>Es gab einen Fehler beim Log-In. Bitte verwende folgenden Link zum Einloggen. Du wirst in ein paar Sekunden weitergeleitet.</p>
+        <p>Sollte dieser Fehler häufiger auftreten, dann prüfe bitte, welchen Link du ggf. gespeichert hast und verwendest. Nutze in Zukunft diesen Link:  <a href="{% base_url %}">{% base_url %}</a></p>
+    </div>
+    <script>
+        setTimeout(function () {
+            globalThis.location.href = "{% base_url %}";
+        }, 5000);
+    </script>
+{% endblock content %}

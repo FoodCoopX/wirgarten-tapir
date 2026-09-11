@@ -16,7 +16,7 @@ class GrowingPeriodChoiceProvider:
         all_growing_periods = TapirCache.get_all_growing_periods_ascending(cache=cache)
         start_date_threshold = get_today(cache=cache) + datetime.timedelta(
             days=get_parameter_value(
-                key=ParameterKeys.ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE
+                key=ParameterKeys.ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE, cache=cache
             )
         )
         growing_periods = cls.filter_periods(

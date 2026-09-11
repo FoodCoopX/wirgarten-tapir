@@ -17,7 +17,9 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
 
 
-@patch("tapir.wirgarten.tests.factories.KeycloakUserManager.get_keycloak_client")
+@patch(
+    "tapir.accounts.services.keycloak_user_manager.KeycloakUserManager.get_keycloak_client"
+)
 class TestDistributionListService(TapirIntegrationTest):
     YEAR = 2026
     WEEK = 11

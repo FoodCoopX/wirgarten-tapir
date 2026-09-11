@@ -52,7 +52,7 @@ var initHarvestShareSummary = (
     if (soliValue === "custom") {
       soliValue = customSoliElem.value;
     }
-    soliValue = parseFloat(soliValue);
+    soliValue = Number.parseFloat(soliValue);
 
     if (solidarity_unit === "percentage") {
       return totalWithoutSoli * (1 + soliValue / 100);
@@ -60,9 +60,6 @@ var initHarvestShareSummary = (
     return totalWithoutSoli + soliValue;
   };
 
-  const warningCannotReduceElem = document.getElementById(
-    "warning-cannot-reduce",
-  );
   let totalWithoutSoli = calculateTotalWithoutSoliPrice();
   const initDependentFields = () => {
     resultElem.innerText = calculateTotal().toFixed(2);
@@ -79,7 +76,7 @@ var initHarvestShareSummary = (
   };
 
   const handleChange = (event, max_shares) => {
-    if (event && event.target && max_shares) {
+    if (event?.target && max_shares) {
       if (event.target.value < 0) {
         event.target.value = 0;
       } else if (event.target.value > max_shares) {
@@ -91,7 +88,7 @@ var initHarvestShareSummary = (
   };
 
   customSoliElem.addEventListener("change", (e) => {
-    if (e.target.value === 0 || isNaN(e.target.value)) {
+    if (e.target.value === 0 || Number.isNaN(e.target.value)) {
       e.target.value = 0;
     }
 
@@ -99,7 +96,7 @@ var initHarvestShareSummary = (
       e.target.value = 0;
     }
 
-    e.target.value = parseFloat(e.target.value).toFixed(2);
+    e.target.value = Number.parseFloat(e.target.value).toFixed(2);
 
     handleChange(e);
   });
@@ -107,17 +104,17 @@ var initHarvestShareSummary = (
   const filterSoliPriceOptions = (shares_total, solidarity_total) => {
     const selected = soliElem.value;
 
-    options = [...origOptions].filter((o) => {
+    const options = [...origOptions].filter((o) => {
       if (o.value === "custom") {
         return true;
       }
 
-      const value = parseFloat(o.value);
+      const value = Number.parseFloat(o.value);
       return value >= 0 || -value * shares_total < solidarity_total;
     });
 
     while (soliElem.firstChild) {
-      soliElem.removeChild(soliElem.firstChild);
+      soliElem.firstChild.remove();
     }
 
     const newSelectEl = soliElem.cloneNode(true);
@@ -132,7 +129,7 @@ var initHarvestShareSummary = (
     const optArr = Array.from(options);
     soliElem.value = optArr.some((o) => o.value === selected)
       ? selected
-      : optArr[optArr.length - 1].value;
+      : optArr.at(-1).value;
 
     resultElem.innerText = calculateTotal().toFixed(2);
     soliElem.addEventListener("change", (e) => {
@@ -152,7 +149,7 @@ var initHarvestShareSummary = (
   };
 
   harvest_share_prices.split(",").forEach((harvest_share) => {
-    const [key, price] = harvest_share.split(":");
+    const key = harvest_share.split(":")[0];
     let input = document.getElementsByName("base_product-" + key)[0];
     if (!input) {
       input = document.getElementsByName(key)[0];

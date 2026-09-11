@@ -23,9 +23,6 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.utils.forms import TapirPhoneNumberField
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.constants import Permission
@@ -38,6 +35,7 @@ from tapir.wirgarten.models import (
     Payment,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -122,7 +120,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
     def clean_email(self):
-        if "email" not in self.cleaned_data.keys():
+        if "email" not in self.cleaned_data:
             return None
         return self.cleaned_data["email"].strip().lower()
 
@@ -367,13 +365,13 @@ class CoopShareCancelForm(Form):
             label=_("Kündigungsdatum"),
             initial=today,
             required=True,
-            widget=DatePickerInput,
+            widget=DateInput,
         )
         self.fields["valid_at"] = DateField(
             label=_("Kündigung gültig zum"),
             initial=valid_at,
             required=True,
-            widget=DatePickerInput,
+            widget=DateInput,
         )
         self.fields["quantity"] = IntegerField(
             label=_(
@@ -444,8 +442,10 @@ class SubscriptionRenewalForm(Form):
         )
         self.start_date = kwargs["start_date"]
         self.cache = {}
-        base_product_type = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
+        base_product_type = (
+            ProductType.objects.filter(must_be_subscribed_to=True)
+            .order_by("name")
+            .first()
         )
         self.product_forms = [
             BaseProductForm(*args, **kwargs, enable_validation=True, cache=self.cache),
@@ -481,7 +481,9 @@ class SubscriptionRenewalForm(Form):
         for form in self.product_forms:
             form.save(*args, **kwargs)
 
-        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=self.cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
 
         member_id = kwargs["member_id"]
         self.subs = get_active_and_future_subscriptions(
@@ -495,6 +497,8 @@ class SubscriptionRenewalForm(Form):
             cache=self.cache,
             from_waiting_list=False,
             coop_share_transaction=None,
+            association_membership=None,
+            solidarity_contribution=None,
         )
 
 

@@ -1,7 +1,6 @@
 import datetime
 import re
 from collections.abc import Callable
-from typing import Dict
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
@@ -27,7 +26,7 @@ def validate_format_string(value: str, allowed_vars: list[str]):
         ].strip()  # if object, use only the part before the first dot
         if match not in allowed_vars:
             raise ValidationError(
-                f"Unknown variable '{match}'! Known variables: {allowed_vars}"
+                f"Unbekannter Token '{match}'! Gültige Tokens: {allowed_vars}"
             )
 
 
@@ -39,7 +38,7 @@ class ParameterMeta:
         validators: list[Callable] = None,
         textarea=False,
         vars_hint: list[str] = None,
-        show_only_when: callable = None,
+        show_only_when: Callable = None,
         sort_order: int = -1,
     ):
         if validators is None:
@@ -86,7 +85,7 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
     return meta_info.parameters[key]
 
 
-def get_parameter_value(key: str, cache: Dict | None = None):
+def get_parameter_value(key: str, cache: dict | None = None):
     parameters_by_key = get_from_cache_or_compute(
         cache,
         "parameters_by_key",
@@ -96,7 +95,7 @@ def get_parameter_value(key: str, cache: Dict | None = None):
     )
 
     def compute_parameter_value():
-        if key not in parameters_by_key.keys():
+        if key not in parameters_by_key:
             raise KeyError(f"Parameter with key '{key}' does not exist.")
         return parameters_by_key[key].get_value()
 

@@ -1,12 +1,16 @@
+from django.conf import settings
 from django.urls import path
 
-from tapir.utils import views
-
 app_name = "utils"
-urlpatterns = [
-    path(
-        "reset_test_data",
-        views.ResetTestData.as_view(),
-        name="reset_test_data",
-    ),
-]
+if settings.DEBUG:
+    from tapir.utils import views
+
+    urlpatterns = [
+        path(
+            "reset_test_data",
+            views.ResetTestData.as_view(),
+            name="reset_test_data",
+        ),
+    ]
+else:
+    urlpatterns = []

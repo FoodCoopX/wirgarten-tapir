@@ -6,6 +6,7 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.pickup_location import (
     get_pickup_locations_map_data,
@@ -13,6 +14,7 @@ from tapir.wirgarten.forms.pickup_location import (
     PickupLocationEditForm,
 )
 from tapir.wirgarten.models import PickupLocation, PickupLocationCapability
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_active_pickup_location_capabilities
 from tapir.wirgarten.service.products import get_active_product_types
 from tapir.wirgarten.views.modal import get_form_modal
@@ -31,7 +33,9 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         cache = {}
-        pickup_locations = list(PickupLocation.objects.all().order_by("name"))
+        pickup_locations = list(
+            PickupLocation.objects.all().order_by("location_route__name", "name")
+        )
         capabilities = get_active_pickup_location_capabilities(cache=cache).values(
             "pickup_location_id",
             "product_type_id",
@@ -60,6 +64,10 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
             )
         )
 
+        context["enable_delivery_charge"] = get_parameter_value(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED, cache=cache
+        )
+
         return context
 
 
@@ -75,9 +83,9 @@ def get_pickup_location_add_form(request, **kwargs):
         request=request,
         form_class=PickupLocationEditForm,
         handler=lambda x: x.save(),
-        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:pickup_locations")
-        + "?selected="
-        + x.id,
+        redirect_url_resolver=lambda x: (
+            reverse_lazy("wirgarten:pickup_locations") + "?selected=" + x.id
+        ),
     )
 
 
@@ -93,7 +101,7 @@ def get_pickup_location_edit_form(request, **kwargs):
         form_class=PickupLocationEditForm,
         handler=lambda x: x.save(),
         redirect_url_resolver=lambda x: PAGE_ROOT + "?selected=" + x.id,
-        **kwargs
+        **kwargs,
     )
 
 

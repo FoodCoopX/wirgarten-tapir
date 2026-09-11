@@ -1,13 +1,13 @@
 import datetime
 
-from environ import ImproperlyConfigured
-
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.utils.config import Organization
 from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
     PickupLocationCapabilityFactory,
+    LocationRouteFactory,
 )
 
 
@@ -26,7 +26,7 @@ class PickupLocationGenerator:
             case Organization.MM:
                 cls.generate_pickup_locations_for_mm()
             case _:
-                raise ImproperlyConfigured(f"Unknown organization: {organization}")
+                raise TapirImproperlyConfigured(f"Unknown organization: {organization}")
 
     @classmethod
     def generate_pickup_locations_for_wirgarten(cls):
@@ -254,10 +254,13 @@ class PickupLocationGenerator:
 
     @classmethod
     def generate_pickup_locations_for_biotop(cls):
+        toelzer_route = LocationRouteFactory.create(name="Tölz")
         biodelikat = PickupLocationFactory.create(
             name="Biodelikat",
             coords_lon=47.7603882,
             coords_lat=11.5542721,
+            location_route=toelzer_route,
+            route_info="kleine Kisten links, große Tauschkiste",
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=biodelikat,
@@ -292,6 +295,8 @@ class PickupLocationGenerator:
             name="Reginriedstraße",
             coords_lon=47.7574811,
             coords_lat=11.569017,
+            location_route=toelzer_route,
+            route_info="kleine Kisten rechts, kleine Tauschkiste",
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -320,6 +325,7 @@ class PickupLocationGenerator:
             name="Schützenweg",
             coords_lon=47.7565423,
             coords_lat=11.5483139,
+            location_route=toelzer_route,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -354,6 +360,7 @@ class PickupLocationGenerator:
             name="Ludwig-Thoma-Straße",
             coords_lon=47.7698548,
             coords_lat=11.5626015,
+            location_route=toelzer_route,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -378,10 +385,12 @@ class PickupLocationGenerator:
             close_time=datetime.time(hour=18),
         )
 
+        lenggriesser_route = LocationRouteFactory.create(name="Lenggries")
         hofpunkt = PickupLocationFactory.create(
             name="Biotop-Hofpunkt",
             coords_lon=47.6946584,
             coords_lat=11.5700489,
+            location_route=lenggriesser_route,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -422,6 +431,7 @@ class PickupLocationGenerator:
             name="Grünes Warenhaus",
             coords_lon=47.683342,
             coords_lat=11.575253,
+            location_route=lenggriesser_route,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -456,6 +466,7 @@ class PickupLocationGenerator:
             name="Hochalmstraße Lenggries",
             coords_lon=47.675942,
             coords_lat=11.5773619,
+            location_route=lenggriesser_route,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",

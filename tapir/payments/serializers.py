@@ -1,13 +1,17 @@
+from django.db.models import Sum, F
+from django.urls import reverse
 from rest_framework import serializers
 
+from tapir.associations.serializers import AssociationMembershipSerializer
 from tapir.deliveries.serializers import SubscriptionSerializer
 from tapir.payments.models import MemberPaymentRhythm, MemberCredit
+from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
 from tapir.solidarity_contribution.serializers import SolidarityContributionSerializer
 from tapir.subscriptions.serializers import (
     CoopShareTransactionSerializer,
     MemberSerializer,
 )
-from tapir.wirgarten.models import Payment
+from tapir.wirgarten.models import Payment, PaymentTransaction
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -23,12 +27,23 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     subscriptions = SubscriptionSerializer(many=True)
     coop_share_transactions = CoopShareTransactionSerializer(many=True)
     solidarity_contributions = SolidarityContributionSerializer(many=True)
+    delivery_charge_pickup_location = PublicPickupLocationSerializer(allow_null=True)
+    delivery_dates = serializers.ListField(child=serializers.DateField())
+    association_memberships = AssociationMembershipSerializer(many=True)
 
 
 class MemberCreditSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberCredit
-        fields = "__all__"
+        fields = [
+            "id",
+            "member",
+            "amount",
+            "purpose",
+            "comment",
+            "due_date",
+            "settled_on",
+        ]
 
     amount = serializers.FloatField()
 
@@ -43,12 +58,13 @@ class ExtendedMemberCreditSerializer(serializers.Serializer):
 class FuturePaymentsResponseSerializer(serializers.Serializer):
     payments = ExtendedPaymentSerializer(many=True)
     credits = MemberCreditSerializer(many=True)
+    trial_period_enabled = serializers.BooleanField()
 
 
 class MemberPaymentRhythmSerializer(serializers.ModelSerializer):
     class Meta:
         model = MemberPaymentRhythm
-        fields = "__all__"
+        exclude = ["updated_at", "created_at"]
 
 
 class MemberPaymentRhythmDataSerializer(serializers.Serializer):
@@ -71,3 +87,75 @@ class CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(
 ):
     can_change = serializers.BooleanField()
     current_rhythm = serializers.CharField()
+
+
+class MandateReferencePreviewResponseSerializer(serializers.Serializer):
+    previews = serializers.DictField(child=serializers.CharField())
+    error = serializers.CharField()
+
+
+class PaymentIntendedUsePreviewResponseSerializer(serializers.Serializer):
+    previews_new = serializers.ListField(child=serializers.CharField())
+    previews_old = serializers.ListField(child=serializers.CharField())
+    error = serializers.CharField()
+    tokens = serializers.ListField(child=serializers.CharField())
+    payments = PaymentSerializer(many=True)
+    members = MemberSerializer(many=True)
+
+
+class JokerCreditIntendedUsePreviewResponseSerializer(serializers.Serializer):
+    previews_new = serializers.ListField(child=serializers.CharField())
+    previews_old = serializers.ListField(child=serializers.CharField())
+    error = serializers.CharField()
+    tokens = serializers.ListField(child=serializers.CharField())
+    credits = serializers.ListSerializer(child=serializers.FloatField())
+    members = MemberSerializer(many=True)
+
+
+class PaymentTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentTransaction
+        fields = "__all__"
+
+    payments_count = serializers.SerializerMethodField()
+    payments_sum = serializers.SerializerMethodField()
+    csv_download_url = serializers.SerializerMethodField()
+    xml_download_url = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_payments_count(transaction: PaymentTransaction) -> int:
+        return transaction.payment_set.count()
+
+    @staticmethod
+    def get_payments_sum(transaction: PaymentTransaction) -> float:
+        return (
+            transaction.payment_set.aggregate(amount_sum=Sum(F("amount")))["amount_sum"]
+            or 0
+        )
+
+    @staticmethod
+    def get_csv_download_url(transaction: PaymentTransaction) -> str:
+        return reverse(
+            "wirgarten:exported_files_download", args=[transaction.csv_file_id]
+        )
+
+    @staticmethod
+    def get_xml_download_url(transaction: PaymentTransaction) -> str:
+        if transaction.xml_file_id is None:
+            return ""
+        return reverse(
+            "wirgarten:exported_files_download", args=[transaction.xml_file_id]
+        )
+
+
+class PaymentListSerializer(serializers.Serializer):
+    # In PaymentTransactionDetailsSerializer, if we set directly
+    # payments_by_mandate_ref = serializers.DictField(child=PaymentSerializer(many=True))
+    # then the deserialization on the frontend size doesn't work
+    payments = PaymentSerializer(many=True)
+
+
+class PaymentTransactionDetailsSerializer(serializers.Serializer):
+    payments_by_mandate_ref = serializers.DictField(child=PaymentListSerializer())
+    members_by_mandate_ref = serializers.DictField(child=MemberSerializer())
+    intended_use_by_mandate_ref = serializers.DictField(child=serializers.CharField())

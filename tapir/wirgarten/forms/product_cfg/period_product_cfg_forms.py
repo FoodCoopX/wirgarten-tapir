@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import CustomCycleScheduledDeliveryWeek
 from tapir.utils.forms import DateInput
 from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
@@ -129,6 +130,30 @@ class GrowingPeriodForm(forms.Form):
                 label=_("Maximal Anzahl an Joker per Mitglied"),
                 initial=4,
             )
+
+        growing_period_id = kwargs.get("periodId", None)
+        if not growing_period_id:
+            return
+
+        delivery_weeks = CustomCycleScheduledDeliveryWeek.objects.filter(
+            growing_period_id=growing_period_id
+        )
+        if not delivery_weeks.exists():
+            return
+
+        relevant_product_type_names = delivery_weeks.values_list(
+            "product_type__name", flat=True
+        ).distinct()
+        self.fields["confirm_delivery_weeks_copy"] = forms.BooleanField(
+            required=True,
+            label=_(
+                f"Übernahme der Lieferwochen für folgende Produktanteile: {", ".join(relevant_product_type_names)}"
+            ),
+            initial=False,
+            help_text="Bei den genannten Produktanteilen liegen benutzerdefinierte Lieferwochen vor. "
+            "Wir übernehmen die Lieferwochen aus der alten Vertragsperiode für die neue Vertragsperiode. "
+            "Du kannst diese dann in der Produktanteils-Einstellung für die neue Vertragsperiode ggf. anpassen (Bsp.: von KW 11 auf KW 13).",
+        )
 
     def is_valid(self):
         super(GrowingPeriodForm, self).is_valid()

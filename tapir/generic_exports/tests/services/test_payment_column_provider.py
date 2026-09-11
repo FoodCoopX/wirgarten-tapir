@@ -1,7 +1,7 @@
 import datetime
 from decimal import Decimal
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports.services.payment_column_provider import PaymentColumnProvider
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
@@ -10,12 +10,10 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 from tapir.wirgarten.tests.factories import MemberFactory, PaymentFactory
 
 
-class TestPaymentColumnProvider(SimpleTestCase):
+class TestPaymentColumnProvider(TapirUnitTest):
     def test_getValueMemberFullName_default_returnsCorrectName(self):
         member = MemberFactory.build(first_name="John", last_name="Doe")
-        payment = PaymentFactory.build(
-            mandate_ref__member=member, mandate_ref__ref="test_ref"
-        )
+        payment = PaymentFactory.build(mandate_ref__member=member)
 
         result = PaymentColumnProvider.get_value_member_full_name(payment, None, None)
 
@@ -23,18 +21,14 @@ class TestPaymentColumnProvider(SimpleTestCase):
 
     def test_getValueMemberIban_default_returnsCorrectIban(self):
         member = MemberFactory.build(iban="test_iban")
-        payment = PaymentFactory.build(
-            mandate_ref__member=member, mandate_ref__ref="test_ref"
-        )
+        payment = PaymentFactory.build(mandate_ref__member=member)
 
         result = PaymentColumnProvider.get_value_member_iban(payment, None, None)
 
         self.assertEqual("test_iban", result)
 
     def test_getValueAmount_default_returnsCorrectlyFormatedValue(self):
-        payment = PaymentFactory.build(
-            amount=Decimal("-12.348"), mandate_ref__ref="test_ref"
-        )
+        payment = PaymentFactory.build(amount=Decimal("-12.348"))
 
         result = PaymentColumnProvider.get_value_amount(payment, None, None)
 
@@ -47,7 +41,6 @@ class TestPaymentColumnProvider(SimpleTestCase):
         payment = PaymentFactory.build(
             mandate_ref__member=member,
             type=MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION,
-            mandate_ref__ref="test_ref",
         )
 
         result = PaymentColumnProvider.get_value_purpose(payment, None, None)
@@ -61,7 +54,6 @@ class TestPaymentColumnProvider(SimpleTestCase):
         payment = PaymentFactory.build(
             mandate_ref__member=member,
             type="test_type",
-            mandate_ref__ref="test_ref",
         )
 
         result = PaymentColumnProvider.get_value_purpose(payment, None, None)
@@ -81,7 +73,6 @@ class TestPaymentColumnProvider(SimpleTestCase):
         self,
     ):
         payment = PaymentFactory.build(
-            mandate_ref__ref="test_ref",
             mandate_ref__member__sepa_consent=datetime.date(year=1999, month=2, day=13),
         )
 

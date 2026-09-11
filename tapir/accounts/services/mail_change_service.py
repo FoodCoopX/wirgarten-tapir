@@ -1,6 +1,5 @@
 import base64
 import json
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -63,7 +62,7 @@ class MailChangeService:
 
     @classmethod
     @transaction.atomic
-    def apply_mail_change(cls, user: TapirUser, new_email: str, cache: Dict):
+    def apply_mail_change(cls, user: TapirUser, new_email: str, cache: dict):
         # token is valid -> actually change email
         old_email = user.email
         user.change_email(new_email, cache=cache)

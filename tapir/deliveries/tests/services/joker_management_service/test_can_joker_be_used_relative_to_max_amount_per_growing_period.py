@@ -14,6 +14,7 @@ class TestCanJokerBeUsedRelativeToMaxAmountPerGrowingPeriod(TapirIntegrationTest
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(self, factories.NOW)
 
     def test_canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod_noGrowingPeriod_returnsFalse(

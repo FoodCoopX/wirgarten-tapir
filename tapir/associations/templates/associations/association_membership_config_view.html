@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}
+{% load django_vite %}
+{% block head %}
+    {% vite_asset 'association_memberships_config/association_memberships_config_entry.tsx' %}
+{% endblock head %}
+{% block title %}Vereinsmitgliedschaften{% endblock %}
+{% block content %}
+    {% csrf_token %}
+    <span id="association_memberships_config"></span>
+{% endblock content %}

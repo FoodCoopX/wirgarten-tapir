@@ -14,6 +14,10 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
     SubscriptionFactory,
+    GrowingPeriodFactory,
+    ProductCapacityFactory,
+    PickupLocationCapabilityFactory,
+    ProductPriceFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -59,6 +63,21 @@ class TestWaitingListAPIView(TapirIntegrationTest):
             member=member,
             start_date=datetime.datetime(2025, 1, 1),
             end_date=datetime.datetime(2025, 12, 31),
+        )
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2025, month=1, day=1),
+        )
+        ProductCapacityFactory.create(
+            product_type=subscription.product.type,
+            period=growing_period,
+            capacity=100,
+        )
+        ProductPriceFactory.create(product=subscription.product, size=1)
+        PickupLocationCapabilityFactory.create(
+            pickup_location=pickup_location,
+            product_type=subscription.product.type,
+            max_capacity=100,
         )
 
         entry_1 = WaitingListEntryFactory.create(member=member)
@@ -127,6 +146,7 @@ class TestWaitingListAPIView(TapirIntegrationTest):
                 "birthdate": None,
                 "account_owner": None,
                 "iban": None,
+                "can_be_fulfilled": False,
             },
             response_content["results"][0],
         )
@@ -175,3 +195,4 @@ class TestWaitingListAPIView(TapirIntegrationTest):
             url,
             response_content["results"][1]["url_to_member_profile"],
         )
+        self.assertTrue(response_content["results"][1]["can_be_fulfilled"])

@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.config import (
     DELIVERY_DONATION_MODE_DISABLED,
@@ -13,7 +13,7 @@ from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestCanDeliveryBeDonated(SimpleTestCase):
+class TestCanDeliveryBeDonated(TapirUnitTest):
     def test_canDeliveryBeDonated_donationModeDisabled_returnsFalse(self):
         cache = {}
         mock_parameter_value(

@@ -3,14 +3,16 @@ import datetime
 from django.db import transaction
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -21,11 +23,23 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.subscriptions.services.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
+)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.waiting_list.models import WaitingListChangeConfirmedLogEntry
-from tapir.wirgarten.models import WaitingListEntry, Member
+from tapir.wirgarten.models import (
+    WaitingListEntry,
+    Member,
+    OrderFeedback,
+)
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.utils import get_now, get_today
+from tapir.wirgarten.utils import (
+    get_now,
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 
 class WaitingListEntryConfirmationApplier:
@@ -41,14 +55,15 @@ class WaitingListEntryConfirmationApplier:
         is_new_member = waiting_list_entry.member is None
 
         member = waiting_list_entry.member
+        actor = request.user if request.user.is_authenticated else member
         if is_new_member:
             member = cls.create_member(
                 waiting_list_entry=waiting_list_entry,
                 validated_data=validated_data,
                 cache=cache,
+                actor=actor,
             )
 
-        actor = request.user if request.user.is_authenticated else member
         WaitingListChangeConfirmedLogEntry().populate(actor=actor, user=member).save()
 
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
@@ -63,10 +78,8 @@ class WaitingListEntryConfirmationApplier:
         if reference_date is None:
             reference_date = get_today(cache=cache)
 
-        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=reference_date,
-            apply_buffer_time=False,
-            cache=cache,
+        contract_start_date = cls.get_contract_start_date(
+            waiting_list_entry=waiting_list_entry, cache=cache
         )
 
         cls.apply_pickup_location_changes(
@@ -78,13 +91,16 @@ class WaitingListEntryConfirmationApplier:
             cache=cache,
         )
 
+        solidarity_contribution = None
         if not waiting_list_entry.member:
-            MemberSolidarityContributionService.assign_contribution_to_member(
-                member=member,
-                change_date=contract_start_date,
-                actor=actor,
-                cache=cache,
-                amount=validated_data["solidarity_contribution"],
+            solidarity_contribution = (
+                MemberSolidarityContributionService.assign_contribution_to_member(
+                    member=member,
+                    change_date=contract_start_date,
+                    actor=actor,
+                    cache=cache,
+                    amount=validated_data["solidarity_contribution"],
+                )
             )
 
         subscriptions_existed_before_changes, new_subscriptions = (
@@ -97,7 +113,32 @@ class WaitingListEntryConfirmationApplier:
             )
         )
 
+        OrderFeedback.objects.filter(waiting_list_entry=waiting_list_entry).update(
+            waiting_list_entry=None, member=member
+        )
+
+        if legal_status_is_association(cache=cache) and is_new_member:
+            BestellWizardOrderFulfiller.create_association_membership(
+                member=member,
+                association_membership_type=AssociationMembershipType.objects.get(
+                    id=validated_data["association_membership_type_id"]
+                ),
+                actor=actor,
+                cache=cache,
+                subscriptions=new_subscriptions,
+            )
+
         waiting_list_entry.delete()
+
+        coop_share_transaction = None
+        if is_new_member and legal_status_is_cooperative(cache=cache):
+            coop_share_transaction = BestellWizardOrderFulfiller.create_coop_shares(
+                member=member,
+                number_of_shares=validated_data["number_of_coop_shares"],
+                subscriptions=new_subscriptions,
+                cache=cache,
+                actor=actor,
+            )
 
         if len(new_subscriptions) > 0:
             ApplyTapirOrderManager.send_order_confirmation_mail(
@@ -106,27 +147,44 @@ class WaitingListEntryConfirmationApplier:
                 new_subscriptions=new_subscriptions,
                 cache=cache,
                 from_waiting_list=True,
-            )
-
-        if is_new_member:
-            BestellWizardOrderFulfiller.create_coop_shares(
-                member=member,
-                number_of_shares=validated_data["number_of_coop_shares"],
-                subscriptions=new_subscriptions,
-                cache=cache,
-                actor=actor,
+                coop_share_transaction=coop_share_transaction,
+                association_membership=None,
+                solidarity_contribution=solidarity_contribution,
             )
 
     @classmethod
+    def get_contract_start_date(
+        cls, waiting_list_entry: WaitingListEntry, cache: dict
+    ) -> datetime.date:
+        reference_date = waiting_list_entry.desired_start_date
+        if reference_date is None:
+            reference_date = get_today(cache=cache)
+
+        growing_periods = GrowingPeriodChoiceProvider.get_available_growing_periods(
+            reference_date=reference_date, cache=cache
+        )
+        return (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_periods[0],
+                apply_buffer_time=False,
+                cache=cache,
+            )
+        )
+
+    @classmethod
     def create_member(
-        cls, waiting_list_entry: WaitingListEntry, validated_data: dict, cache: dict
+        cls,
+        waiting_list_entry: WaitingListEntry,
+        validated_data: dict,
+        actor: TapirUser,
+        cache: dict,
     ):
         now = get_now(cache=cache)
         contracts_signed = dict.fromkeys(
             ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
         )
 
-        return Member.objects.create(
+        member = Member.objects.create(
             first_name=waiting_list_entry.first_name,
             last_name=waiting_list_entry.last_name,
             email=waiting_list_entry.email,
@@ -140,6 +198,12 @@ class WaitingListEntryConfirmationApplier:
             iban=validated_data["iban"],
             **contracts_signed,
         )
+
+        MemberNumberService.assign_member_number_if_eligible(
+            member=member, actor=actor, cache=cache
+        )
+
+        return member
 
     @classmethod
     def apply_subscription_changes(
@@ -187,7 +251,7 @@ class WaitingListEntryConfirmationApplier:
         if pickup_location_wish is None:
             return
 
-        MemberPickupLocationService.link_member_to_pickup_location(
+        MemberPickupLocationSetter.link_member_to_pickup_location(
             pickup_location_wish.pickup_location_id,
             member=member,
             valid_from=pickup_location_change_valid_from,

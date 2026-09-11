@@ -1,12 +1,12 @@
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.wirgarten.tests.factories import ProductFactory, ProductPriceFactory
 
 
-class TestCalculateGlobalCapacityUsedByTheOrderedProducts(SimpleTestCase):
+class TestCalculateGlobalCapacityUsedByTheOrderedProducts(TapirUnitTest):
     @patch(
         "tapir.subscriptions.services.global_capacity_checker.get_product_price",
         autospec=True,

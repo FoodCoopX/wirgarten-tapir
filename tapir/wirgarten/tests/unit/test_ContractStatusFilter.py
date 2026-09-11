@@ -16,9 +16,10 @@ from tapir.wirgarten.views.member.list.member_list import ContractStatusFilter
 class ContractStatusFilterTestCase(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
+        super().setUp()
         mock_timezone(self, datetime.datetime(year=2023, month=6, day=15))
 
         current_growing_period = GrowingPeriodFactory.create(

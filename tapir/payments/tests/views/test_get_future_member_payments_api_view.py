@@ -4,6 +4,10 @@ from django.urls import reverse
 from rest_framework import status
 from tapir_mail.service.shortcuts import make_timezone_aware
 
+from tapir.associations.tests.factories import (
+    AssociationMembershipFactory,
+    AssociationMembershipTypePriceFactory,
+)
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.utils.shortcuts import get_last_day_of_month
@@ -12,11 +16,13 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
+    MemberPickupLocationFactory,
     SubscriptionFactory,
     GrowingPeriodFactory,
     ProductPriceFactory,
     PaymentFactory,
     MandateReferenceFactory,
+    ProductCapacityFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -95,6 +101,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=1, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -171,6 +181,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(value=6)
         TapirParameter.objects.filter(
@@ -181,7 +195,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             start_date=datetime.date(year=2020, month=7, day=1),
             end_date=datetime.date(year=2021, month=6, day=30),
         )
-        GrowingPeriodFactory.create(
+        future_growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2021, month=7, day=1),
             end_date=datetime.date(year=2022, month=6, day=30),
         )
@@ -189,6 +203,9 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             member=member,
             period=growing_period,
             quantity=1,
+        )
+        ProductCapacityFactory.create(
+            period=future_growing_period, product_type=subscription.product.type
         )
 
         ProductPriceFactory.create(
@@ -250,6 +267,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(value=6)
         TapirParameter.objects.filter(
@@ -260,7 +281,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             start_date=datetime.date(year=2020, month=7, day=1),
             end_date=datetime.date(year=2021, month=6, day=30),
         )
-        GrowingPeriodFactory.create(
+        future_growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2021, month=7, day=1),
             end_date=datetime.date(year=2022, month=6, day=30),
         )
@@ -270,6 +291,9 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             period=growing_period,
             quantity=1,
             mandate_ref=mandate_ref,
+        )
+        ProductCapacityFactory.create(
+            product_type=subscription.product.type, period=future_growing_period
         )
 
         ProductPriceFactory.create(
@@ -331,7 +355,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             "2021-10-06",
         ]
         expected_ranges = [
-            ("2020-11-01", "2020-12-31"),
+            ("2020-10-01", "2020-12-31"),
             ("2021-01-01", "2021-03-31"),
             ("2021-04-01", "2021-06-30"),
             ("2021-07-01", "2021-09-30"),
@@ -361,6 +385,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         )
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(value=6)
         TapirParameter.objects.filter(
@@ -406,22 +434,26 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
                 extended_payment["payment"]["subscription_payment_range_start"],
             )
         )
+
         self.assertEqual(
-            2,
+            3,
             len(response_content),
         )
 
         expected_amounts = [
             10,
-            30,  # combined: second month of trial period and the non-trial part of the range
+            10,
+            20,
         ]
         expected_due_dates = [
             "2020-10-06",
             "2020-11-06",
+            "2020-11-06",
         ]
         expected_ranges = [
             ("2020-09-01", "2020-09-30"),  # first month of trial
-            ("2020-10-01", "2020-12-31"),  # range for the non-trial part
+            ("2020-10-01", "2020-10-31"),  # second month of trial
+            ("2020-11-01", "2020-12-31"),  # range for the non-trial part
         ]
 
         for index, extended_payment in enumerate(response_content):
@@ -445,6 +477,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -507,6 +543,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -583,6 +623,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -658,6 +702,10 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=1, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
+        MemberPickupLocationFactory.create(
+            member=member,
+            valid_from=datetime.date(year=2000, month=1, day=1),
+        )
 
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
@@ -734,3 +782,79 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             self.assertEqual(
                 subscription.id, extended_payment["subscriptions"][0]["id"]
             )
+
+    def test_get_memberHasAssociationMembership_returnsCorrectPayments(self):
+        self.now = mock_timezone(
+            self, now=datetime.datetime(year=2020, month=8, day=12)
+        )
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        self._set_parameter(key=ParameterKeys.PAYMENT_DUE_DAY, value=15)
+        self._set_parameter(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            value=datetime.date(year=2020, month=4, day=1),
+        )
+
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=1, day=1),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=1, day=1),
+        )
+
+        membership_1 = AssociationMembershipFactory.create(
+            member=member,
+            start_date=datetime.date(year=2020, month=1, day=1),
+            end_date=datetime.date(year=2021, month=5, day=31),
+        )
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_1.type,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+            price=10,
+        )
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_1.type,
+            valid_from=datetime.date(year=2021, month=3, day=1),
+            price=15,
+        )
+        membership_2 = AssociationMembershipFactory.create(
+            member=member,
+            start_date=datetime.date(year=2021, month=6, day=1),
+            end_date=None,
+        )
+
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+
+        response_content = response.json()["payments"]
+        self.assertEqual(2, len(response_content))
+        extended_payment_2020 = response_content[0]
+        self.assertEqual("2020-08-15", extended_payment_2020["payment"]["due_date"])
+        self.assertEqual(60, extended_payment_2020["payment"]["amount"])
+        self.assertEqual(1, len(extended_payment_2020["association_memberships"]))
+        self.assertEqual(
+            membership_1.id, extended_payment_2020["association_memberships"][0]["id"]
+        )
+
+        extended_payment_2021 = response_content[1]
+        self.assertEqual("2021-01-15", extended_payment_2021["payment"]["due_date"])
+        self.assertEqual(
+            65, extended_payment_2021["payment"]["amount"]
+        )  # Jan and Fe cost 10/month, Mar Apr May cost 15/month, Jun is free
+        self.assertEqual(2, len(extended_payment_2021["association_memberships"]))
+        self.assertEqual(
+            membership_1.id, extended_payment_2021["association_memberships"][0]["id"]
+        )
+        self.assertEqual(
+            membership_2.id, extended_payment_2021["association_memberships"][1]["id"]
+        )

@@ -4,8 +4,8 @@ from django.test import TestCase
 
 from tapir.wirgarten.service.delivery import (
     calculate_pickup_location_change_date,
-    get_next_delivery_date,
 )
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 
 
 class TestPickupLocationChangeDate(TestCase):

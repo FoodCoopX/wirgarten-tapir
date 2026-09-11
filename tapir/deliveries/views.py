@@ -30,18 +30,26 @@ from tapir.deliveries.serializers import (
     UsedJokerInGrowingPeriodSerializer,
     GrowingPeriodSerializer,
     GrowingPeriodWithDeliveryDayAdjustmentsSerializer,
+    CustomCycleDeliveryWeeksSerializer,
+    GetDatesFromCustomCycleDeliveryWeeksResponseSerializer,
+)
+from tapir.deliveries.services.custom_cycle_delivery_date_calculator import (
+    CustomCycleDeliveryDateCalculator,
 )
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import (
     JokerManagementService,
 )
+from tapir.deliveries.services.member_specific_delivery_day_calculator import (
+    MemberSpecificDeliveryDayCalculator,
+)
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.utils import check_permission_or_self, get_today, format_date
 
 
@@ -108,8 +116,12 @@ class GetMemberJokerInformationView(APIView):
                 "cancellation_limit": JokerManagementService.get_date_limit_for_joker_changes(
                     joker.date, cache=cache
                 ),
-                "delivery_date": get_next_delivery_date(
-                    get_monday(joker.date), cache=cache
+                "delivery_date": MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
+                    member_id=joker.member_id,
+                    delivery_date=get_next_delivery_date(
+                        get_monday(joker.date), cache=cache
+                    ),
+                    cache=cache,
                 ),
             }
             for joker in jokers
@@ -121,8 +133,12 @@ class GetMemberJokerInformationView(APIView):
                 "cancellation_limit": JokerManagementService.get_date_limit_for_joker_changes(
                     donation.date, cache=cache
                 ),
-                "delivery_date": get_next_delivery_date(
-                    get_monday(donation.date), cache=cache
+                "delivery_date": MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
+                    member_id=donation.member_id,
+                    delivery_date=get_next_delivery_date(
+                        get_monday(donation.date), cache=cache
+                    ),
+                    cache=cache,
                 ),
             }
             for donation in donations
@@ -194,7 +210,9 @@ class CancelJokerView(APIView):
         joker = get_object_or_404(Joker, id=joker_id)
         check_permission_or_self(joker.member_id, request)
 
-        if not JokerManagementService.can_joker_be_cancelled(joker, cache=cache):
+        if not JokerManagementService.can_joker_be_cancelled(
+            joker, reference_date=get_today(cache=cache), cache=cache
+        ):
             return Response(
                 f"Es ist zu spät um dieses Joker abzusagen. Heute: {format_date(get_today(cache=cache))}, Joker: {format_date(joker.date)}",
                 status=status.HTTP_403_FORBIDDEN,
@@ -210,7 +228,7 @@ class CancelJokerView(APIView):
             trigger_data=TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_JOKER_CANCELLED,
                 recipient_id_in_base_queryset=joker.member.id,
-                token_data={"joker_date": joker.date},
+                token_data={"joker_date": format_date(joker.date)},
             ),
         )
 
@@ -256,7 +274,7 @@ class CancelDeliveryDonationView(APIView):
             trigger_data=TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_DONATION_CANCELLED,
                 recipient_id_in_base_queryset=donation.member.id,
-                token_data={"donation_date": donation.date},
+                token_data={"donation_date": format_date(donation.date)},
             ),
         )
 
@@ -303,7 +321,7 @@ class UseJokerView(APIView):
             TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_JOKER_USED,
                 recipient_id_in_base_queryset=joker.member.id,
-                token_data={"joker_date": joker.date},
+                token_data={"joker_date": format_date(joker.date)},
             ),
         )
 
@@ -481,4 +499,50 @@ class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
         return Response(
             "OK",
             status=status.HTTP_200_OK,
+        )
+
+
+class GetDatesFromCustomCycleDeliveryWeeks(APIView):
+    @extend_schema(
+        responses={200: GetDatesFromCustomCycleDeliveryWeeksResponseSerializer},
+        request=CustomCycleDeliveryWeeksSerializer,
+    )
+    def post(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        serializer = CustomCycleDeliveryWeeksSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        input_data = serializer.validated_data["custom_cycle_delivery_weeks"]
+        growing_periods = {
+            growing_period.id: growing_period
+            for growing_period in GrowingPeriod.objects.filter(id__in=input_data.keys())
+        }
+
+        output_data = {}
+
+        try:
+            for growing_period_id, delivery_weeks in input_data.items():
+                growing_period = growing_periods[growing_period_id]
+                output_data[growing_period_id] = {
+                    week: CustomCycleDeliveryDateCalculator.get_date_from_calendar_week(
+                        week=week, growing_period=growing_period
+                    )
+                    for week in delivery_weeks
+                }
+        except Exception as error:
+            return Response(
+                GetDatesFromCustomCycleDeliveryWeeksResponseSerializer(
+                    {
+                        "custom_cycle_delivery_weeks_dates": {},
+                        "error": str(error),
+                    }
+                ).data
+            )
+
+        return Response(
+            GetDatesFromCustomCycleDeliveryWeeksResponseSerializer(
+                {"custom_cycle_delivery_weeks_dates": output_data, "error": ""}
+            ).data
         )

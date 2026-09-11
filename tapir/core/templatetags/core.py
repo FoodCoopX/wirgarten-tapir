@@ -10,12 +10,12 @@ from tapir.core.models import SidebarLinkGroup
 from tapir.subscriptions.views.confirmations import (
     MemberDataToConfirmApiView,
 )
-from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import is_debug_instance
+from tapir.wirgarten.utils import is_debug_instance, legal_status_is_association
 
 register = template.Library()
 
@@ -78,6 +78,18 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="settings",
             url=reverse_lazy("configuration:parameters"),
         )
+    if (
+        request.user.has_perm(Permission.Coop.MANAGE)
+        and legal_status_is_association(cache=cache)
+        and get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS, cache=cache
+        )
+    ):
+        admin_group.add_link(
+            display_name=_("Vereinsmitgliedschaften"),
+            material_icon="id_card",
+            url=reverse_lazy("associations:association_memberships_config"),
+        )
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
             display_name=_("Vertragsperiode & Produkte"),
@@ -97,12 +109,18 @@ def add_admin_links(groups, request, cache: dict):
             material_icon="email",
             url=reverse_lazy("tapir_mail"),
         )
+    if settings.MAILING_LISTS_ENABLED:
+        admin_group.add_link(
+            display_name=_("Mailing-Listen"),
+            material_icon="mail_asterisk",
+            url=reverse_lazy("core:mailing_lists"),
+        )
 
     if request.user.has_perm(Permission.Payments.VIEW):
         admin_group.add_link(
             display_name=_("Lastschrift"),
             material_icon="euro",
-            url=reverse_lazy("wirgarten:payment_transactions"),
+            url=reverse_lazy("payments:payment_transaction_list"),
         )
         admin_group.add_link(
             display_name=_("Gutschriften"),
@@ -113,12 +131,12 @@ def add_admin_links(groups, request, cache: dict):
     if request.user.has_perm(Permission.Coop.MANAGE):
         admin_group.add_link(
             display_name=_("CSV-Exports"),
-            material_icon="attach_file",
+            material_icon="csv",
             url=reverse_lazy("generic_exports:csv_export_editor"),
         )
         admin_group.add_link(
             display_name=_("PDF-Exports"),
-            material_icon="attach_file",
+            material_icon="picture_as_pdf",
             url=reverse_lazy("generic_exports:pdf_export_editor"),
         )
 
@@ -208,3 +226,8 @@ def javascript_environment_variables(context):
 def get_proper_elided_page_range(p, number):
     paginator = Paginator(p.object_list, p.per_page)
     return paginator.get_elided_page_range(number=number)
+
+
+@register.simple_tag
+def base_url():
+    return settings.SITE_URL

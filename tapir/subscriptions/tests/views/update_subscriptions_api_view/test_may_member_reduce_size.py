@@ -1,5 +1,7 @@
 from tapir.configuration.models import TapirParameter
-from tapir.subscriptions.views.member_profile import UpdateSubscriptionsApiView
+from tapir.subscriptions.services.subscription_update_view_validator import (
+    SubscriptionUpdateViewValidator,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import ProductTypeFactory
@@ -26,9 +28,10 @@ class TestUpdateSubscriptionsApiViewMayMemberReduceSize(TapirIntegrationTest):
 
     @staticmethod
     def _may_reduce(is_bread: bool, logged_in_user_is_admin: bool = False) -> bool:
-        return UpdateSubscriptionsApiView().may_member_reduce_size(
+        return SubscriptionUpdateViewValidator.may_member_reduce_size(
             logged_in_user_is_admin=logged_in_user_is_admin,
             product_type=ProductTypeFactory.create(is_bread=is_bread),
+            cache={},
         )
 
     def test_mayMemberReduceSize_breadProductType_isTrue(self):

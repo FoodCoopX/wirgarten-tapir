@@ -18,9 +18,16 @@ class TapirModel(models.Model):
         primary_key=True,
         default=partial(generate_id),
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
+
+
+class DatabaseWriteTest(TapirModel):
+    # This class is only used by TapirHealthStatusProvider to check that the DB can be read and written to
+    pass
 
 
 class SidebarLinkGroup:

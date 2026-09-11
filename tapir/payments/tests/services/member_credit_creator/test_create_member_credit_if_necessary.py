@@ -1,11 +1,10 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
-
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
-class TestCreateMemberCreditIfNecessary(SimpleTestCase):
+class TestCreateMemberCreditIfNecessary(TapirUnitTest):
     @patch.object(MemberCreditCreator, "create_credit_and_log_entry")
     @patch.object(MemberCreditCreator, "get_amount_to_credit")
     def test_createMemberCreditIfNecessary_amountToCreditIsZero_doesntCreateCredit(
@@ -70,4 +69,6 @@ class TestCreateMemberCreditIfNecessary(SimpleTestCase):
             amount_to_credit=0.01,
             reference_date=reference_date,
             comment=comment,
+            product_type_id_or_soli=product_type.id,
+            cache=cache,
         )

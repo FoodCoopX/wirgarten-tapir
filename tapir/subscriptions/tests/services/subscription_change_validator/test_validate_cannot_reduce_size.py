@@ -1,14 +1,14 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
 
 
-class TestValidateCannotReduceSize(SimpleTestCase):
+class TestValidateCannotReduceSize(TapirUnitTest):
     @patch.object(
         SubscriptionChangeValidator, "calculate_capacity_used_by_the_ordered_products"
     )

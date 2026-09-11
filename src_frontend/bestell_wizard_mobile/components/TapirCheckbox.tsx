@@ -1,7 +1,7 @@
 import React from "react";
 import "./tapir_checkbox.css";
 
-interface NextButtonProps {
+interface TapirCheckboxProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   controlId: string;
@@ -10,7 +10,7 @@ interface NextButtonProps {
   showError?: boolean;
 }
 
-const TapirCheckbox: React.FC<NextButtonProps> = ({
+const TapirCheckbox: React.FC<TapirCheckboxProps> = ({
   checked,
   onChange,
   controlId,

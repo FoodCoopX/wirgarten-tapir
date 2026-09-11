@@ -3,13 +3,13 @@ from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory
 
 from tapir.accounts.models import TapirUser
-from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.middleware.mailing import TapirMailPermissionMiddleware
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TapirMailPermissionMiddlewareTest(TapirIntegrationTest):
     def setUp(self):
+        super().setUp()
         self.factory = RequestFactory()
         self.user = TapirUser(
             username="testuser", email="test@example.com", password="top_secret"
@@ -32,7 +32,7 @@ class TapirMailPermissionMiddlewareTest(TapirIntegrationTest):
         self,
     ):
         request = self.factory.get(self.other_url)
-        self.user.roles = []
+        self.user.is_superuser = False
         request.user = self.user
         with self.assertRaises(PermissionDenied):
             self.middleware(request)
@@ -40,8 +40,7 @@ class TapirMailPermissionMiddlewareTest(TapirIntegrationTest):
     def test_tapirMailPermissionMiddleWare_nonPublicPathWithPermission_requestIsPassedThrough(
         self,
     ):
-        permission = Permission.Email.MANAGE
-        self.user.roles = [permission]
+        self.user.is_superuser = True
         request = self.factory.get(self.other_url)
         request.user = self.user
         response = self.middleware(request)

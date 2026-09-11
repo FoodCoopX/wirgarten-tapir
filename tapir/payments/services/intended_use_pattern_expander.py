@@ -1,0 +1,309 @@
+import datetime
+
+from django.core.exceptions import ValidationError
+
+from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
+)
+from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.deliveries.models import Joker
+from tapir.deliveries.services.joker_value_service import JokerValueService
+from tapir.payments.config import IntendedUseTokens
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
+from tapir.payments.types import TokenReplacers
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
+from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import Payment, Member
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import format_date, format_currency
+
+
+class IntendedUsePatternExpander:
+    MAX_LENGTH_PER_LINE = 27
+    MIN_TOKEN_LENGTH = 5
+
+    @classmethod
+    def expand_pattern_contracts(
+        cls,
+        pattern: str,
+        payment: Payment,
+        cache: dict,
+        token_value_overrides: dict[str, str] | None = None,
+    ):
+        if token_value_overrides is None:
+            token_value_overrides = {}
+
+        reference_date = payment.subscription_payment_range_end
+        member = payment.mandate_ref.member
+
+        subscriptions = IntendedUsePatternExpander.get_relevant_subscriptions(
+            member=member, payment=payment, cache=cache
+        )
+        # Sorting to ensure consistent order in the tests
+        subscriptions.sort(key=lambda subscription: subscription.product.name)
+
+        monthly_price_without_solidarity = sum(
+            SubscriptionPriceCalculator.get_monthly_price(
+                subscription=subscription, reference_date=reference_date, cache=cache
+            )
+            for subscription in subscriptions
+        )
+        monthly_price_just_solidarity = (
+            MemberSolidarityContributionService.get_member_contribution(
+                member_id=member.id,
+                reference_date=reference_date,
+                cache=cache,
+            )
+        )
+
+        replacements = cls._get_common_token_replacers(member=member, cache=cache) | {
+            IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: lambda: format_currency(
+                monthly_price_without_solidarity
+            ),
+            IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITH_SOLI: lambda: format_currency(
+                monthly_price_without_solidarity + monthly_price_just_solidarity
+            ),
+            IntendedUseTokens.MONTHLY_PRICE_JUST_SOLI: lambda: format_currency(
+                monthly_price_just_solidarity
+            ),
+            IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: lambda: format_currency(
+                monthly_price_without_solidarity
+                * cls._get_nb_months(
+                    member=member, reference_date=reference_date, cache=cache
+                )
+            ),
+            IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: lambda: format_currency(
+                (monthly_price_without_solidarity + monthly_price_just_solidarity)
+                * cls._get_nb_months(
+                    member=member, reference_date=reference_date, cache=cache
+                )
+            ),
+            IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: lambda: format_currency(
+                monthly_price_just_solidarity
+                * cls._get_nb_months(
+                    member=member, reference_date=reference_date, cache=cache
+                )
+            ),
+            IntendedUseTokens.CONTRACT_LIST: lambda: ", ".join(
+                subscription.short_str() for subscription in subscriptions
+            ),
+            IntendedUseTokens.PAYMENT_RHYTHM: lambda: MemberPaymentRhythmService.get_rhythm_display_name(
+                rhythm=MemberPaymentRhythmService.get_member_payment_rhythm(
+                    member=member,
+                    reference_date=reference_date,
+                    cache=cache,
+                )
+            ),
+        }
+
+        return cls._apply_replacements(
+            pattern, replacements, token_value_overrides=token_value_overrides
+        )
+
+    @classmethod
+    def get_relevant_subscriptions(cls, member: Member, payment: Payment, cache: dict):
+        return [
+            subscription
+            for subscription in TapirCache.get_all_subscriptions(cache=cache)
+            if subscription.member_id == member.id
+            and DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=payment.subscription_payment_range_start,
+                range_1_end=payment.subscription_payment_range_end,
+                range_2_start=subscription.start_date,
+                range_2_end=subscription.end_date,
+            )
+        ]
+
+    @classmethod
+    def _get_nb_months(cls, member: Member, reference_date: datetime.date, cache: dict):
+        payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+            member=member,
+            reference_date=reference_date,
+            cache=cache,
+        )
+        return MemberPaymentRhythmService.get_number_of_months_paid_in_advance(
+            rhythm=payment_rhythm
+        )
+
+    @classmethod
+    def expand_pattern_coop_shares_bought(
+        cls,
+        pattern: str,
+        member: Member,
+        number_of_shares: int,
+        cache: dict,
+        token_value_overrides: dict | None = None,
+    ):
+        if token_value_overrides is None:
+            token_value_overrides = {}
+
+        replacements = cls._get_common_token_replacers(member=member, cache=cache) | {
+            IntendedUseTokens.NUMBER_OF_COOP_SHARES: lambda: str(number_of_shares),
+            IntendedUseTokens.COOP_ENTRY_DATE: lambda: format_date(
+                CoopMembershipCancellationManager.get_coop_entry_date(
+                    member, cache=cache
+                )
+            ),
+            IntendedUseTokens.PRICE_SINGLE_SHARE: lambda: format_currency(
+                get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            ),
+        }
+
+        return cls._apply_replacements(pattern, replacements, token_value_overrides)
+
+    @classmethod
+    def _get_common_token_replacers(cls, member: Member, cache: dict):
+        member_number = member.member_no or 0
+        return {
+            IntendedUseTokens.SITE_NAME: lambda: get_parameter_value(
+                key=ParameterKeys.SITE_NAME, cache=cache
+            ),
+            IntendedUseTokens.FIRST_NAME: lambda: member.first_name,
+            IntendedUseTokens.LAST_NAME: lambda: member.last_name,
+            IntendedUseTokens.MEMBER_NUMBER_SHORT: lambda: str(member_number),
+            IntendedUseTokens.MEMBER_NUMBER_LONG: lambda: MemberNumberService.format_member_number(
+                member_number=member_number, cache=cache
+            )
+            or "",
+            IntendedUseTokens.MEMBER_NUMBER_WITHOUT_PREFIX: lambda: MemberNumberService.build_formatted_number(
+                member_number=member_number,
+                prefix="",
+                length=get_parameter_value(
+                    key=ParameterKeys.MEMBER_NUMBER_ZERO_PAD_LENGTH, cache=cache
+                ),
+            ),
+        }
+
+    @staticmethod
+    def _get_token_with_braces(token: str):
+        return f"{{{token}}}"
+
+    @classmethod
+    def _apply_replacements(
+        cls,
+        pattern,
+        replacements: TokenReplacers,
+        token_value_overrides: dict[str, str],
+    ):
+        pattern_lines = pattern.strip().split("\n")
+        expanded_lines = []
+        for pattern_line in pattern_lines:
+            expanded_lines.append(
+                cls._apply_replacements_for_line(
+                    line=pattern_line,
+                    replacements=replacements,
+                    token_value_overrides=token_value_overrides,
+                )
+            )
+
+        return "\n".join(expanded_lines)
+
+    @classmethod
+    def _apply_replacements_for_line(
+        cls,
+        line: str,
+        replacements: TokenReplacers,
+        token_value_overrides: dict[str, str],
+    ):
+        current_max_token_length = cls.MAX_LENGTH_PER_LINE
+        result = cls._apply_replacements_for_line_with_max_length(
+            line=line,
+            replacements=replacements,
+            max_length=current_max_token_length,
+            token_value_overrides=token_value_overrides,
+        )
+        while len(result) > cls.MAX_LENGTH_PER_LINE:
+            current_max_token_length -= 1
+            if current_max_token_length < cls.MIN_TOKEN_LENGTH:
+                raise ValidationError(
+                    f"Diese Zeile: '{line}' ist zu lang wenn die Tokens expandiert sind."
+                )
+
+            result = cls._apply_replacements_for_line_with_max_length(
+                line=line,
+                replacements=replacements,
+                max_length=current_max_token_length,
+                token_value_overrides=token_value_overrides,
+            )
+        return result
+
+    @classmethod
+    def _apply_replacements_for_line_with_max_length(
+        cls,
+        line: str,
+        replacements: TokenReplacers,
+        max_length: int,
+        token_value_overrides: dict[str, str],
+    ):
+        result = line
+        for token, provider in replacements.items():
+            token_with_braces = cls._get_token_with_braces(token)
+            if token_with_braces not in result:
+                continue
+
+            if token in token_value_overrides:
+                value = token_value_overrides[token]
+            else:
+                value = provider()
+
+            result = result.replace(token_with_braces, value[:max_length])
+        return result
+
+    @classmethod
+    def expand_pattern_joker(
+        cls,
+        pattern: str,
+        member: Member,
+        reference_date: datetime.date,
+        cache: dict,
+        token_value_overrides: dict[str, str] | None = None,
+    ):
+        if token_value_overrides is None:
+            token_value_overrides = {}
+
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_date, cache=cache
+        )
+        jokers = TapirCache.get_all_jokers_for_member(member_id=member.id, cache=cache)
+        jokers = [
+            joker
+            for joker in jokers
+            if growing_period.start_date <= joker.date <= growing_period.end_date
+        ]
+
+        replacements = cls._get_common_token_replacers(member=member, cache=cache) | {
+            IntendedUseTokens.NUMBER_OF_JOKERS: lambda: str(len(jokers)),
+            IntendedUseTokens.VALUES_OF_JOKERS: lambda: cls.get_joker_credit_values(
+                member=member, jokers=jokers, cache=cache
+            ),
+            IntendedUseTokens.DATES_OF_JOKERS: lambda: " - ".join(
+                [format_date(joker.date) for joker in jokers]
+            ),
+        }
+
+        return cls._apply_replacements(
+            pattern, replacements, token_value_overrides=token_value_overrides
+        )
+
+    @classmethod
+    def get_joker_credit_values(cls, member: Member, jokers: list[Joker], cache: dict):
+        values = [
+            JokerValueService.get_joker_credit_value_for_single_joker(
+                member=member, joker_date=joker.date, cache=cache
+            )
+            for joker in jokers
+        ]
+
+        if len(set(values)) == 1:
+            return f"{format_currency(values[0])}€ * {len(values)}"
+
+        return " - ".join(f"{format_currency(value)}€" for value in values)

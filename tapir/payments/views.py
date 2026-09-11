@@ -1,20 +1,35 @@
+import datetime
+import random
+
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.views.generic import TemplateView
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, permissions
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import ListField
 from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import Joker
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.payments import config as payments_config
+from tapir.payments.config import IntendedUseTokens
 from tapir.payments.models import (
     MemberPaymentRhythm,
     MemberCredit,
     MemberCreditCreatedLogEntry,
+    MemberCreditSettledLogEntry,
 )
 from tapir.payments.serializers import (
     MemberPaymentRhythmDataSerializer,
@@ -22,14 +37,38 @@ from tapir.payments.serializers import (
     ExtendedMemberCreditSerializer,
     MemberCreditCreateSerializer,
     CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer,
+    MandateReferencePreviewResponseSerializer,
+    PaymentIntendedUsePreviewResponseSerializer,
+    PaymentTransactionSerializer,
+    PaymentTransactionDetailsSerializer,
+    JokerCreditIntendedUsePreviewResponseSerializer,
 )
+from tapir.payments.services.intended_use_pattern_expander import (
+    IntendedUsePatternExpander,
+)
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
+from tapir.payments.services.month_payment_builder_association_membership import (
+    MonthPaymentBuilderAssociationMembership,
+)
+from tapir.payments.services.month_payment_builder_delivery_charges import (
+    MonthPaymentBuilderDeliveryCharges,
+)
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
 )
+from tapir.payments.services.payment_export_builder import PaymentExportBuilder
+from tapir.payments.services.payment_export_intended_use_builder import (
+    PaymentExportIntendedUseBuilder,
+)
+from tapir.payments.services.subscription_payments_rebuilder import (
+    SubscriptionPaymentsRebuilder,
+)
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
     AutomaticSolidarityContributionRenewalService,
 )
@@ -38,17 +77,30 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_first_of_next_month
+from tapir.utils.shortcuts import (
+    get_first_of_next_month,
+    get_last_day_of_month,
+    get_monday,
+    get_next_sunday,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Payment,
     CoopShareTransaction,
     MandateReference,
     Member,
+    PickupLocation,
+    Subscription,
+    ProductType,
+    PaymentTransaction,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
-from tapir.wirgarten.utils import check_permission_or_self, get_today
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    get_today,
+    format_date,
+    format_currency,
+)
 
 
 class GetFutureMemberPaymentsApiView(APIView):
@@ -72,7 +124,7 @@ class GetFutureMemberPaymentsApiView(APIView):
 
         member_payments = self.get_due_and_future_payments(member_id)
         extended_payments = self.build_extended_payments(
-            member_id=member_id, member_payments=member_payments
+            member_id=member_id, member_payments=member_payments, cache=self.cache
         )
 
         member_credits = MemberCredit.objects.filter(
@@ -89,7 +141,11 @@ class GetFutureMemberPaymentsApiView(APIView):
                         ].due_date,
                     ),
                     "credits": member_credits,
-                }
+                    "trial_period_enabled": get_parameter_value(
+                        key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                    ),
+                },
+                context={"cache": self.cache},
             ).data
         )
 
@@ -125,26 +181,36 @@ class GetFutureMemberPaymentsApiView(APIView):
             current_month = get_first_of_next_month(current_month)
         return member_payments
 
-    def build_extended_payments(self, member_id, member_payments):
+    @classmethod
+    def build_extended_payments(
+        cls, member_id: str, member_payments: set[Payment], cache: dict
+    ):
         extended_payments = []
         existing_subscriptions = [
             subscription
-            for subscription in TapirCache.get_all_subscriptions(cache=self.cache)
+            for subscription in TapirCache.get_all_subscriptions(cache=cache)
             if subscription.member_id == member_id
         ]
         existing_contributions = [
             contribution
-            for contribution in TapirCache.get_all_solidarity_contributions(
-                cache=self.cache
-            )
+            for contribution in TapirCache.get_all_solidarity_contributions(cache=cache)
             if contribution.member_id == member_id
+        ]
+        existing_memberships = [
+            membership
+            for membership in TapirCache.get_all_association_memberships(cache=cache)
+            if membership.member_id == member_id
         ]
         for payment in member_payments:
             subscriptions = []
             coop_share_transactions = []
             solidarity_contributions = []
+            delivery_charge_pickup_location = None
+            association_memberships = []
+            delivery_dates = []
+
             match payment.type:
-                case "Genossenschaftsanteile":
+                case payments_config.PAYMENT_TYPE_COOP_SHARES:
                     coop_share_transactions = CoopShareTransaction.objects.filter(
                         payment=payment
                     )
@@ -152,17 +218,49 @@ class GetFutureMemberPaymentsApiView(APIView):
                     MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
                 ):
                     solidarity_contributions = (
-                        self.get_relevant_solidarity_contributions(
+                        cls.get_relevant_solidarity_contributions(
                             existing_contributions=existing_contributions,
                             member_id=member_id,
                             payment=payment,
+                            cache=cache,
                         )
                     )
+                case MonthPaymentBuilderDeliveryCharges.PAYMENT_TYPE_DELIVERY_CHARGE:
+                    delivery_charge_pickup_location = (
+                        cls.get_delivery_charge_pickup_location(
+                            payment=payment, cache=cache
+                        )
+                    )
+                    delivery_dates = MonthPaymentBuilderDeliveryCharges.get_billable_delivery_dates_in_range(
+                        subscriptions=cls.get_relevant_subscriptions(
+                            existing_subscriptions=existing_subscriptions,
+                            member_id=member_id,
+                            payment=payment,
+                            cache=cache,
+                            filter_by_payment_type=False,
+                        ),
+                        range_start=get_monday(
+                            payment.subscription_payment_range_start
+                        ),
+                        range_end=get_next_sunday(
+                            payment.subscription_payment_range_end
+                        ),
+                        cache=cache,
+                    )
+                case (
+                    MonthPaymentBuilderAssociationMembership.PAYMENT_TYPE_ASSOCIATION_MEMBERSHIP
+                ):
+                    association_memberships = cls.get_relevant_association_memberships(
+                        existing_memberships=existing_memberships,
+                        payment=payment,
+                    )
                 case _:
-                    subscriptions = self.get_relevant_subscriptions(
+                    subscriptions = cls.get_relevant_subscriptions(
                         existing_subscriptions=existing_subscriptions,
                         member_id=member_id,
                         payment=payment,
+                        cache=cache,
+                        filter_by_payment_type=True,
                     )
 
             extended_payments.append(
@@ -171,25 +269,51 @@ class GetFutureMemberPaymentsApiView(APIView):
                     "subscriptions": subscriptions,
                     "coop_share_transactions": coop_share_transactions,
                     "solidarity_contributions": solidarity_contributions,
+                    "delivery_charge_pickup_location": delivery_charge_pickup_location,
+                    "association_memberships": sorted(
+                        association_memberships,
+                        key=lambda membership: membership.start_date,
+                    ),
+                    "delivery_dates": delivery_dates,
                 }
             )
         return extended_payments
 
-    def get_relevant_subscriptions(self, existing_subscriptions, member_id, payment):
+    @classmethod
+    def get_delivery_charge_pickup_location(
+        cls, payment: Payment, cache: dict
+    ) -> PickupLocation | None:
+        if payment.pickup_location_id is None:
+            return None
+        return TapirCache.get_pickup_location_by_id(
+            cache=cache, pickup_location_id=payment.pickup_location_id
+        )
+
+    @classmethod
+    def get_relevant_subscriptions(
+        cls,
+        existing_subscriptions: list[Subscription],
+        member_id: str,
+        payment: Payment,
+        cache: dict,
+        filter_by_payment_type: bool,
+    ):
         planned_renewed_subscriptions = [
             AutomaticSubscriptionRenewalService.build_renewed_subscription(
-                subscription=subscription, cache=self.cache
+                subscription=subscription, cache=cache
             )
             for subscription in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
-                reference_date=payment.due_date, cache=self.cache
+                reference_date=payment.due_date, cache=cache
             )
             if subscription.member_id == member_id
         ]
         subscriptions = [
             subscription
             for subscription in existing_subscriptions + planned_renewed_subscriptions
-            if subscription.mandate_ref == payment.mandate_ref
-            and subscription.product.type.name == payment.type
+            if (
+                subscription.product.type.name == payment.type
+                or not filter_by_payment_type
+            )
             and DateRangeOverlapChecker.do_ranges_overlap(
                 range_1_start=subscription.start_date,
                 range_1_end=subscription.end_date,
@@ -199,15 +323,20 @@ class GetFutureMemberPaymentsApiView(APIView):
         ]
         return subscriptions
 
+    @classmethod
     def get_relevant_solidarity_contributions(
-        self, existing_contributions, member_id, payment
+        cls,
+        existing_contributions: list[SolidarityContribution],
+        member_id: str,
+        payment: Payment,
+        cache: dict,
     ):
         planned_renewed_contributions = [
             AutomaticSolidarityContributionRenewalService.build_renewed_contribution(
-                contribution=contribution, cache=self.cache
+                contribution=contribution, cache=cache
             )
             for contribution in AutomaticSolidarityContributionRenewalService.get_contributions_that_will_be_renewed(
-                reference_date=payment.due_date, cache=self.cache
+                reference_date=payment.due_date, cache=cache
             )
             if contribution.member_id == member_id
         ]
@@ -222,6 +351,84 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
         ]
         return contributions
+
+    @classmethod
+    def get_relevant_association_memberships(
+        cls,
+        existing_memberships: list[AssociationMembership],
+        payment: Payment,
+    ):
+        return [
+            membership
+            for membership in existing_memberships
+            if DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=membership.start_date,
+                range_1_end=membership.end_date,
+                range_2_start=payment.subscription_payment_range_start,
+                range_2_end=payment.subscription_payment_range_end,
+            )
+        ]
+
+
+class GetPastMemberPaymentsApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: FuturePaymentsResponseSerializer},
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        if not request.user.has_perm(
+            Permission.Coop.MANAGE
+        ) and not get_parameter_value(
+            ParameterKeys.MEMBERS_CAN_SEE_OWN_PAYMENTS, cache=self.cache
+        ):
+            raise PermissionDenied()
+
+        member_payments = self.get_past_payments(member_id)
+        extended_payments = GetFutureMemberPaymentsApiView.build_extended_payments(
+            member_id=member_id, member_payments=member_payments, cache=self.cache
+        )
+
+        member_credits = MemberCredit.objects.filter(
+            member_id=member_id, due_date__lte=get_today(cache=self.cache)
+        ).order_by("-due_date")
+
+        return Response(
+            FuturePaymentsResponseSerializer(
+                {
+                    "payments": sorted(
+                        extended_payments,
+                        key=lambda extended_payment: extended_payment[
+                            "payment"
+                        ].due_date,
+                        reverse=True,
+                    ),
+                    "credits": member_credits,
+                    "trial_period_enabled": get_parameter_value(
+                        key=ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                    ),
+                },
+                context={"cache": self.cache},
+            ).data
+        )
+
+    def get_past_payments(self, member_id):
+        mandate_ref_ids = MandateReference.objects.filter(
+            member_id=member_id
+        ).values_list("ref", flat=True)
+
+        member_payments = set(
+            Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids).filter(
+                due_date__lte=get_today(cache=self.cache)
+            )
+        )
+
+        return member_payments
 
 
 class GetMemberPaymentRhythmDataApiView(APIView):
@@ -325,10 +532,20 @@ class MemberCreditListApiView(APIView):
         parameters=[
             OpenApiParameter(name="month_filter", type=int, required=False),
             OpenApiParameter(name="year_filter", type=int, required=False),
+            OpenApiParameter(
+                name="show_all",
+                type=bool,
+                required=False,
+                description="Show all credits",
+            ),
         ],
     )
     def get(self, request):
         member_credits = MemberCredit.objects.order_by("-due_date")
+
+        show_all = request.query_params.get("show_all", "false").lower() == "true"
+        if not show_all:
+            member_credits = member_credits.filter(settled_on__isnull=True)
 
         month_filter = request.query_params.get("month_filter", None)
         if month_filter is not None and int(month_filter) > 0:
@@ -343,7 +560,7 @@ class MemberCreditListApiView(APIView):
                 "credit": credit,
                 "member": credit.member,
                 "member_url": credit.member.get_absolute_url(),
-                "mandate_ref": get_or_create_mandate_ref(
+                "mandate_ref": MandateReferenceProvider.get_or_create_mandate_reference(
                     member=credit.member, cache=self.cache
                 ).ref,
             }
@@ -384,6 +601,33 @@ class MemberCreditCreateApiView(APIView):
         return Response("OK")
 
 
+class MemberCreditSettleApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        request=inline_serializer(
+            name="MemberCreditSettle",
+            fields={
+                "credit_ids": ListField(child=serializers.CharField()),
+            },
+        ),
+    )
+    def post(self, request):
+        credit_ids = request.data.get("credit_ids", [])
+        credits_to_account = list(
+            MemberCredit.objects.filter(id__in=credit_ids, settled_on__isnull=True)
+        )
+        now = timezone.now()
+        for credit in credits_to_account:
+            credit.settled_on = now
+            credit.save()
+            MemberCreditSettledLogEntry().populate(
+                model=credit, user=credit.member, actor=request.user
+            ).save()
+        return Response(f"OK ({len(credits_to_account)} gebucht)")
+
+
 class CabLoggedInUserChangeTargetsPaymentRhythm(APIView):
     def __init__(self):
         super().__init__()
@@ -419,4 +663,613 @@ class CabLoggedInUserChangeTargetsPaymentRhythm(APIView):
 
         return Response(
             CabLoggedInUserChangeTargetsPaymentRhythmResponseSerializer(data).data
+        )
+
+
+class MandateReferencePreviewApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: MandateReferencePreviewResponseSerializer},
+        parameters=[OpenApiParameter(name="pattern", type=str)],
+    )
+    def get(self, request):
+        member_a = Member(first_name="John", last_name="Doe", member_no=17)
+        member_b = Member(
+            first_name="Maximilian", last_name="Mustermann", member_no=123456
+        )
+        pattern = request.query_params.get("pattern")
+        cache = {}
+
+        try:
+            data = {
+                self._build_member_preview(
+                    member_a
+                ): MandateReferenceProvider.build_mandate_ref(
+                    member=member_a, pattern=pattern, cache=cache
+                ),
+                self._build_member_preview(
+                    member_b
+                ): MandateReferenceProvider.build_mandate_ref(
+                    member=member_b, pattern=pattern, cache=cache
+                ),
+            }
+        except Exception as error:
+            return Response(
+                MandateReferencePreviewResponseSerializer(
+                    {"previews": {}, "error": str(error)}
+                ).data
+            )
+
+        return Response(
+            MandateReferencePreviewResponseSerializer(
+                {"previews": data, "error": ""}
+            ).data
+        )
+
+    @staticmethod
+    def _build_member_preview(member: Member) -> str:
+        return f"{member.first_name} {member.last_name} #{member.member_no}"
+
+
+class PaymentIntendedUsePreviewContractsApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: PaymentIntendedUsePreviewResponseSerializer},
+        parameters=[
+            OpenApiParameter(name="pattern_old", type=str, required=True),
+            OpenApiParameter(name="pattern_new", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        pattern_old = request.query_params.get("pattern_old", "")
+        pattern_new = request.query_params.get("pattern_new", "")
+        cache = {}
+
+        payments = self._get_random_payments(cache=cache)
+
+        response_data = {
+            "previews_old": ["" for _ in payments],
+            "previews_new": ["" for _ in payments],
+            "error": "",
+            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.CONTRACT_TOKENS),
+            "payments": payments,
+            "members": [payment.mandate_ref.member for payment in payments],
+        }
+        try:
+            response_data["previews_old"] = [
+                IntendedUsePatternExpander.expand_pattern_contracts(
+                    pattern=pattern_old, payment=payment, cache=cache
+                )
+                for payment in payments
+            ]
+            response_data["previews_new"] = [
+                IntendedUsePatternExpander.expand_pattern_contracts(
+                    pattern=pattern_new, payment=payment, cache=cache
+                )
+                for payment in payments
+            ]
+            self._add_fake_data(
+                response_data=response_data,
+                pattern_old=pattern_old,
+                pattern_new=pattern_new,
+                cache=cache,
+            )
+        except Exception as error:
+            response_data["error"] = getattr(error, "message", repr(error))
+
+        return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
+
+    @classmethod
+    def _get_random_payments(cls, cache: dict):
+        first_subscription = Subscription.objects.order_by("start_date").first()
+        if first_subscription is None:
+            return []
+
+        min_date = first_subscription.start_date
+        max_date = min(
+            Subscription.objects.order_by("start_date").last().start_date,
+            get_today(cache=cache),
+        )
+        if max_date <= min_date:
+            temp = max_date
+            max_date = min_date
+            min_date = temp
+        random_date = min_date + datetime.timedelta(
+            days=random.randint(0, (max_date - min_date).days)
+        )
+        payments = (
+            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            .filter(due_date__year=random_date.year, due_date__month=random_date.month)
+            .select_related("mandate_ref")
+        )
+
+        combined_payments = list(
+            PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
+                payments=list(payments)
+            ).values()
+        )
+        payments = random.sample(combined_payments, k=min(len(combined_payments), 5))
+        return sorted(
+            payments,
+            key=lambda payment: (
+                payment.mandate_ref.member.member_no or 0,
+                payment.mandate_ref.member.last_name,
+            ),
+        )
+
+    @classmethod
+    def _add_fake_data(
+        cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
+    ):
+        fake_members = [
+            Member(first_name="John", last_name="Doe", member_no=14, id="14"),
+            Member(
+                first_name="Maximilian",
+                last_name="Mustermann",
+                member_no=123456,
+                id="123456",
+            ),
+        ]
+
+        today = get_today(cache=cache)
+
+        for fake_member in fake_members:
+            is_short_member = fake_member.first_name == "John"
+
+            token_value_overrides = {
+                IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
+                    10 if is_short_member else 100
+                ),
+                IntendedUseTokens.MONTHLY_PRICE_CONTRACTS_WITH_SOLI: format_currency(
+                    5 if is_short_member else 150
+                ),
+                IntendedUseTokens.MONTHLY_PRICE_JUST_SOLI: format_currency(
+                    -5 if is_short_member else 50
+                ),
+                IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITHOUT_SOLI: format_currency(
+                    10 if is_short_member else 1200
+                ),
+                IntendedUseTokens.TOTAL_PRICE_CONTRACTS_WITH_SOLI: format_currency(
+                    5 if is_short_member else 900
+                ),
+                IntendedUseTokens.TOTAL_PRICE_JUST_SOLI: format_currency(
+                    -5 if is_short_member else 300
+                ),
+                IntendedUseTokens.CONTRACT_LIST: cls._build_fake_contract_list(
+                    short_version=is_short_member, cache=cache
+                ),
+                IntendedUseTokens.PAYMENT_RHYTHM: (
+                    MemberPaymentRhythm.Rhythm.MONTHLY.label
+                    if is_short_member
+                    else MemberPaymentRhythm.Rhythm.QUARTERLY.label
+                ),
+            }
+
+            response_data["members"].insert(0, fake_member)
+            payment = Payment(
+                mandate_ref=MandateReference(member=fake_member),
+                amount=100,
+                subscription_payment_range_start=(
+                    today - datetime.timedelta(days=120)
+                ).replace(day=1),
+                subscription_payment_range_end=get_last_day_of_month(
+                    today - datetime.timedelta(days=30)
+                ),
+            )
+            response_data["payments"].insert(0, payment)
+            response_data["previews_old"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_contracts(
+                    pattern=pattern_old,
+                    payment=payment,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+            response_data["previews_new"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_contracts(
+                    pattern=pattern_new,
+                    payment=payment,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+
+    @classmethod
+    def _build_fake_contract_list(cls, short_version: bool, cache: dict):
+        product_types = TapirCache.get_all_product_types(cache=cache)
+        product_types = sorted(
+            product_types,
+            key=lambda product_type: product_type.name,
+            reverse=not short_version,
+        )
+
+        product_type = product_types[0]
+        product = cls._get_product_with_according_to_name_length(
+            product_type=product_type, cache=cache, shortest=short_version
+        )
+        quantity = 1 if short_version else 13
+        contract_list = Subscription(product=product, quantity=quantity).short_str()
+
+        if short_version or len(product_types) == 1:
+            return contract_list
+
+        product_type = product_types[1]
+        product = cls._get_product_with_according_to_name_length(
+            product_type=product_type, cache=cache, shortest=short_version
+        )
+        quantity = 17
+        contract_list += (
+            ", " + Subscription(product=product, quantity=quantity).short_str()
+        )
+
+        return contract_list
+
+    @classmethod
+    def _get_product_with_according_to_name_length(
+        cls, product_type: ProductType, cache: dict, shortest: bool
+    ):
+        products = TapirCache.get_products_with_product_type(
+            cache=cache, product_type_id=product_type.id
+        )
+        products = sorted(
+            products,
+            key=lambda product: product.name,
+            reverse=not shortest,
+        )
+        return products[0]
+
+
+class CreditIntendedUsePreviewJokerApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: JokerCreditIntendedUsePreviewResponseSerializer},
+        parameters=[
+            OpenApiParameter(name="pattern_old", type=str, required=True),
+            OpenApiParameter(name="pattern_new", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        pattern_old = request.query_params.get("pattern_old", "")
+        pattern_new = request.query_params.get("pattern_new", "")
+        cache = {}
+
+        members_with_joker = self._get_random_members_with_joker(cache=cache)
+        member_credits = [0 for _ in members_with_joker]
+
+        response_data = {
+            "previews_old": ["" for _ in members_with_joker],
+            "previews_new": ["" for _ in members_with_joker],
+            "error": "",
+            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.JOKER_TOKENS),
+            "credits": member_credits,
+            "members": list(members_with_joker),
+        }
+
+        today = get_today(cache=cache)
+        try:
+            response_data["previews_old"] = [
+                IntendedUsePatternExpander.expand_pattern_joker(
+                    pattern=pattern_old,
+                    member=member,
+                    cache=cache,
+                    reference_date=today,
+                )
+                for member in members_with_joker
+            ]
+            response_data["previews_new"] = [
+                IntendedUsePatternExpander.expand_pattern_joker(
+                    pattern=pattern_new,
+                    member=member,
+                    cache=cache,
+                    reference_date=today,
+                )
+                for member in members_with_joker
+            ]
+            self._add_fake_data(
+                response_data=response_data,
+                pattern_old=pattern_old,
+                pattern_new=pattern_new,
+                cache=cache,
+            )
+        except Exception as error:
+            response_data["error"] = getattr(error, "message", repr(error))
+
+        return Response(
+            JokerCreditIntendedUsePreviewResponseSerializer(response_data).data
+        )
+
+    @classmethod
+    def _get_random_members_with_joker(cls, cache: dict):
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=get_today(cache=cache), cache=cache
+        )
+        if growing_period is None:
+            return []
+
+        members_ids_with_joker = (
+            Joker.objects.filter(
+                date__gte=growing_period.start_date, date__lte=growing_period.end_date
+            )
+            .values_list("member", flat=True)
+            .distinct()
+            .order_by("?")[:5]
+        )
+
+        return Member.objects.filter(id__in=members_ids_with_joker).order_by(
+            "member_no"
+        )
+
+    @classmethod
+    def _add_fake_data(
+        cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
+    ):
+        fake_members = [
+            Member(first_name="John", last_name="Doe", member_no=14, id="14"),
+            Member(
+                first_name="Maximilian",
+                last_name="Mustermann",
+                member_no=123456,
+                id="123456",
+            ),
+        ]
+
+        today = get_today(cache=cache)
+
+        for fake_member in fake_members:
+            token_value_overrides = {
+                IntendedUseTokens.NUMBER_OF_JOKERS: "3",
+                IntendedUseTokens.DATES_OF_JOKERS: f"{format_date(today)} - {format_date(today + datetime.timedelta(days=13))}",
+                IntendedUseTokens.VALUES_OF_JOKERS: f"{format_currency(50.42)}€ * 2",
+            }
+
+            response_data["members"].insert(0, fake_member)
+            response_data["credits"].insert(0, 10)
+            response_data["previews_old"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_joker(
+                    pattern=pattern_old,
+                    member=fake_member,
+                    reference_date=today,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+            response_data["previews_new"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_joker(
+                    pattern=pattern_new,
+                    member=fake_member,
+                    reference_date=today,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+
+
+class PaymentIntendedUsePreviewCoopSharesApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: PaymentIntendedUsePreviewResponseSerializer},
+        parameters=[
+            OpenApiParameter(name="pattern_old", type=str, required=True),
+            OpenApiParameter(name="pattern_new", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        pattern_old = request.query_params.get("pattern_old", "")
+        pattern_new = request.query_params.get("pattern_new", "")
+        cache = {}
+
+        payments = self._get_random_payments(cache=cache)
+
+        response_data = {
+            "previews_old": ["" for _ in payments],
+            "previews_new": ["" for _ in payments],
+            "error": "",
+            "tokens": sorted(IntendedUseTokens.COMMON_TOKENS)
+            + sorted(IntendedUseTokens.COOP_SHARE_TOKENS),
+            "payments": payments,
+            "members": [payment.mandate_ref.member for payment in payments],
+        }
+        try:
+            response_data["previews_old"] = [
+                self._build_preview(payment=payment, pattern=pattern_old, cache=cache)
+                for payment in payments
+            ]
+            response_data["previews_new"] = [
+                self._build_preview(payment=payment, pattern=pattern_new, cache=cache)
+                for payment in payments
+            ]
+            self._add_fake_data(
+                response_data=response_data,
+                pattern_old=pattern_old,
+                pattern_new=pattern_new,
+                cache=cache,
+            )
+        except Exception as error:
+            response_data["error"] = getattr(error, "message", repr(error))
+
+        return Response(PaymentIntendedUsePreviewResponseSerializer(response_data).data)
+
+    @classmethod
+    def _build_preview(cls, payment: Payment, pattern: str, cache: dict):
+        return IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
+            pattern=pattern,
+            member=payment.mandate_ref.member,
+            number_of_shares=round(
+                payment.amount
+                / get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+            ),
+            cache=cache,
+        )
+
+    @classmethod
+    def _get_random_payments(cls, cache: dict):
+        return list(
+            Payment.objects.filter(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            .select_related("mandate_ref__member")
+            .order_by("?")[:5]
+        )
+
+    @classmethod
+    def _add_fake_data(
+        cls, response_data: dict, pattern_old: str, pattern_new: str, cache: dict
+    ):
+        fake_members = [
+            Member(first_name="John", last_name="Doe", member_no=14),
+            Member(first_name="Maximilian", last_name="Mustermann", member_no=123456),
+        ]
+
+        token_value_overrides = {
+            IntendedUseTokens.COOP_ENTRY_DATE: format_date(get_today(cache=cache)),
+        }
+
+        for fake_member in fake_members:
+            response_data["members"].insert(0, fake_member)
+            response_data["payments"].insert(
+                0,
+                Payment(mandate_ref=MandateReference(member=fake_member), amount=100),
+            )
+            number_of_shares = 1 if fake_member.first_name == "John" else 123
+
+            response_data["previews_old"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
+                    pattern=pattern_old,
+                    member=fake_member,
+                    number_of_shares=number_of_shares,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+            response_data["previews_new"].insert(
+                0,
+                IntendedUsePatternExpander.expand_pattern_coop_shares_bought(
+                    pattern=pattern_new,
+                    member=fake_member,
+                    number_of_shares=number_of_shares,
+                    cache=cache,
+                    token_value_overrides=token_value_overrides,
+                ),
+            )
+
+
+class PaymentTransactionsListView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Coop.MANAGE
+    template_name = "payments/payment_transactions_list_view.html"
+
+
+class PaymentTransactionViewSet(ReadOnlyModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    queryset = PaymentTransaction.objects.order_by("-month", "type")
+    serializer_class = PaymentTransactionSerializer
+    pagination_class = LimitOffsetPagination
+
+
+class PaymentTransactionDetailsView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: PaymentTransactionDetailsSerializer},
+        parameters=[OpenApiParameter(name="transaction_id", type=str, required=True)],
+    )
+    def get(self, request):
+        transaction = get_object_or_404(
+            PaymentTransaction, id=request.query_params["transaction_id"]
+        )
+        cache = {}
+
+        payments = transaction.payment_set.select_related("mandate_ref__member")
+
+        payments_by_mandate_ref = {}
+        members_by_mandate_ref = {}
+        intended_use_by_mandate_ref = {}
+
+        for payment in payments:
+            payments_by_mandate_ref.setdefault(payment.mandate_ref.ref, []).append(
+                payment
+            )
+            members_by_mandate_ref.setdefault(
+                payment.mandate_ref.ref, payment.mandate_ref.member
+            )
+
+        for mandate_ref in list(payments_by_mandate_ref.keys()):
+            payments = payments_by_mandate_ref[mandate_ref]
+            if transaction.type == payments_config.PAYMENT_TYPE_COOP_SHARES:
+                intended_use_by_mandate_ref[mandate_ref] = (
+                    PaymentExportIntendedUseBuilder.build_intended_use(
+                        payment=payments[0], is_contracts=False, cache=cache
+                    )
+                )
+            else:
+                combined = (
+                    PaymentExportBuilder.combine_contract_payments_by_mandate_ref(
+                        payments=payments
+                    )
+                )
+                if mandate_ref not in combined:
+                    # this happens if the sum of payments is negative
+                    del payments_by_mandate_ref[mandate_ref]
+                    del members_by_mandate_ref[mandate_ref]
+                    continue
+                combined_payment = combined[mandate_ref]
+                intended_use_by_mandate_ref[mandate_ref] = (
+                    PaymentExportIntendedUseBuilder.build_intended_use(
+                        payment=combined_payment, is_contracts=True, cache=cache
+                    )
+                )
+
+        return Response(
+            PaymentTransactionDetailsSerializer(
+                {
+                    "payments_by_mandate_ref": {
+                        mandate_ref: {"payments": payments}
+                        for mandate_ref, payments in payments_by_mandate_ref.items()
+                    },
+                    "members_by_mandate_ref": members_by_mandate_ref,
+                    "intended_use_by_mandate_ref": intended_use_by_mandate_ref,
+                },
+                context={"cache": cache},
+            ).data
+        )
+
+
+class RebuildSubscriptionPaymentsApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        parameters=[
+            OpenApiParameter(name="from", type=OpenApiTypes.DATE, required=True)
+        ],
+    )
+    def post(self, request: Request):
+        cache = {}
+        from_date_string = request.query_params.get("from")
+        from_date = datetime.datetime.strptime(from_date_string, "%Y-%m-%d").date()
+
+        try:
+            with transaction.atomic():
+                SubscriptionPaymentsRebuilder.rebuild_subscription_payments(
+                    from_date=from_date, cache=cache
+                )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
         )

@@ -10,6 +10,7 @@ interface Step12ChannelProps {
   setSelectedDistributionChannels: (set: Set<string>) => void;
   confirmOrder: (() => void) | undefined;
   confirmOrderLoading: boolean;
+  stepActive: boolean;
 }
 
 const Step12Channel: React.FC<Step12ChannelProps> = ({
@@ -19,6 +20,7 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
   setSelectedDistributionChannels,
   confirmOrder,
   confirmOrderLoading,
+  stepActive,
 }) => {
   function updateSelection(channel: string, selected: boolean) {
     if (selected) {
@@ -50,6 +52,7 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
         onClick={confirmOrder ?? goToNextStep}
         isOrderStep={!settings.feedbackStepEnabled}
         loading={confirmOrderLoading}
+        stepActive={stepActive}
       />
     </>
   );

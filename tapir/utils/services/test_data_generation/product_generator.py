@@ -1,9 +1,7 @@
 import datetime
 
-from django.core.exceptions import ImproperlyConfigured
-
 from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
-from tapir.configuration.models import TapirParameter
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.utils.config import Organization
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, NO_DELIVERY, EVERY_FOUR_WEEKS
@@ -15,7 +13,6 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     TaxRate,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
 
@@ -85,6 +82,7 @@ class ProductGenerator:
             description_bestellwizard_short=description_bestellwizard_short,
             description_bestellwizard_long="Der Ernteanteil besteht aus regional angebautem Bio-Gemüse und wird in Form von Kisten je Mitglied aufgeteilt. Pro Jahr werden im Regelfall 50 Kisten geliefert.",
             order_in_bestellwizard=1,
+            must_be_subscribed_to=True,
         )
         ProductTypeAccordionInBestellWizard.objects.create(
             product_type=ernteanteile,
@@ -115,9 +113,6 @@ class ProductGenerator:
             tax_rate=0,
             valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=ernteanteile.id
-        )
 
         match organization:
             case Organization.WIRGARTEN:
@@ -131,7 +126,9 @@ class ProductGenerator:
             case Organization.MM:
                 cls.generate_products_mm(product_type_ernteanteile=ernteanteile)
             case _:
-                raise ImproperlyConfigured(f"Unknown organization type: {organization}")
+                raise TapirImproperlyConfigured(
+                    f"Unknown organization type: {organization}"
+                )
 
     @classmethod
     def generate_products_verein(cls, product_type_ernteanteile: ProductType):
@@ -184,46 +181,6 @@ class ProductGenerator:
             name="Halbe",
             base_price=9.5,
             size=0.5,
-            base=False,
-            min_coop_shares=0,
-        )
-
-        association_membership = ProductType.objects.create(
-            name="Vereinsmitgliedschaft",
-            delivery_cycle=NO_DELIVERY[0],
-            is_affected_by_jokers=False,
-            single_subscription_only=True,
-            subscriptions_have_end_dates=False,
-            must_be_subscribed_to=True,
-            is_association_membership=True,
-            order_in_bestellwizard=3,
-        )
-        TaxRate.objects.create(
-            product_type=association_membership,
-            tax_rate=0,
-            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
-        )
-        cls.generate_product(
-            product_type=association_membership,
-            name="Typ A",
-            base_price=10,
-            size=1,
-            base=True,
-            min_coop_shares=0,
-        )
-        cls.generate_product(
-            product_type=association_membership,
-            name="Typ B",
-            base_price=17.5,
-            size=1,
-            base=False,
-            min_coop_shares=0,
-        )
-        cls.generate_product(
-            product_type=association_membership,
-            name="Typ C",
-            base_price=22.5,
-            size=1,
             base=False,
             min_coop_shares=0,
         )

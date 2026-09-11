@@ -1,10 +1,15 @@
 from rest_framework import serializers
 
+from tapir.associations.serializers import AssociationMembershipTypeSerializer
+from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     PublicGrowingPeriodSerializer,
 )
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
-from tapir.subscriptions.serializers import PublicProductTypeSerializer
+from tapir.products.serializers import PublicProductTypeSerializer
+from tapir.solidarity_contribution.config import (
+    OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
+)
 
 
 class PersonalDataSerializer(serializers.Serializer):
@@ -41,6 +46,10 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     growing_period_id = serializers.CharField()
     solidarity_contribution = serializers.FloatField()
     distribution_channels = serializers.ListField(child=serializers.CharField())
+    feedback = serializers.CharField(allow_blank=True, required=False)
+    association_membership_type_id = serializers.CharField(
+        required=False, allow_blank=True
+    )
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
@@ -65,12 +74,14 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step2_text = serializers.CharField()
     step3_title = serializers.CharField()
     step3_text = serializers.CharField()
+    step3_supporting_membership_name = serializers.CharField()
     step3b_title = serializers.CharField()
     step3b_text = serializers.CharField()
     step4b_waiting_list_modal_title = serializers.CharField()
     step4b_waiting_list_modal_text = serializers.CharField()
     step4d_title = serializers.CharField()
     step4d_text = serializers.CharField()
+    step4d_text_supporting_member = serializers.CharField()
     step5a_title = serializers.CharField()
     step5a_text = serializers.CharField()
     step5b_title = serializers.CharField()
@@ -80,6 +91,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step6a_text = serializers.CharField()
     step6b_title = serializers.CharField()
     step6b_text = serializers.CharField()
+    step6b_checkbox_statute_associations = serializers.CharField()
     step6c_checkbox_statute = serializers.CharField()
     step6c_text_statute = serializers.CharField()
     step6c_checkbox_commitment = serializers.CharField()
@@ -90,6 +102,9 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step9_title = serializers.CharField()
     step9_payment_rhythm_modal_text = serializers.CharField()
     step10_title = serializers.CharField()
+    step10_flag_student = serializers.CharField()
+    step10_text_student = serializers.CharField()
+    step_10_single_product_type_hint = serializers.CharField()
     step11_title = serializers.CharField()
     step11_privacy_policy_label = serializers.CharField()
     step11_privacy_policy_text = serializers.CharField()
@@ -104,6 +119,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step14b_text = serializers.CharField()
     privacy_policy_url = serializers.URLField()
     label_student_checkbox = serializers.CharField()
+    student_checkbox_explanation_text = serializers.CharField()
 
 
 class BestellWizardImagesSerializer(serializers.Serializer):
@@ -127,6 +143,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     theme = serializers.CharField()
     allow_investing_membership = serializers.BooleanField()
     product_types = PublicProductTypeSerializer(many=True)
+    association_membership_types = AssociationMembershipTypeSerializer(many=True)
     pickup_locations = PublicPickupLocationSerializer(many=True)
     force_waiting_list = serializers.BooleanField()
     intro_enabled = serializers.BooleanField()
@@ -156,6 +173,11 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     solidarity_contribution_default = serializers.FloatField()
     feedback_step_enabled = serializers.BooleanField()
     growing_period_choices = PublicGrowingPeriodSerializer(many=True)
+    solidarity_step_position = serializers.ChoiceField(
+        choices=OPTIONS_BESTELL_WIZARD_SOLIDARITY_STEP_POSITION
+    )
+    legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
+    associations_allow_investing_membership = serializers.BooleanField()
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
     debug = serializers.BooleanField()

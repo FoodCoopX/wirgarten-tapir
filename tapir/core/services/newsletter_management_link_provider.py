@@ -24,7 +24,7 @@ class NewsletterManagementLinkProvider:
             return ""
 
         return settings.SITE_URL + reverse(
-            "tapir_mail:external_recipient_manager",
+            "external_recipient_manager",
             args=[external_recipient.secret_key],
         )
 

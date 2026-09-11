@@ -2,14 +2,23 @@ default_language_version:
   python: python3.14
 repos:
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 26.1.0
+    rev: 26.5.1
     hooks:
       - id: black
-  - repo: https://github.com/djlint/djLint
-    rev: v1.36.4
+  - repo: https://github.com/rtts/djhtml
+    rev: '3.0.11'
     hooks:
-      - id: djlint-reformat-django
+      - id: djhtml
+      - id: djcss
+      - id: djjs
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.29.1"
+    rev: "1.31.1"
     hooks:
       - id: django-upgrade
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: npx prettier --write --ignore-unknown
+        language: system
+        files: \.(js|jsx|ts|tsx)$

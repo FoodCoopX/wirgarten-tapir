@@ -1,23 +1,23 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestIsSubscriptionInTrial(SimpleTestCase):
+class TestIsSubscriptionInTrial(TapirUnitTest):
     def setUp(self):
         mock_timezone(self, datetime.datetime(year=2026, month=3, day=15))
 
     @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
-    @patch.object(TrialPeriodManager, "get_end_of_trial_period")
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
     def test_isSubscriptionInTrial_endOfTrialIsInThePast_returnsFalse(
-        self, mock_get_end_of_trial_period: Mock, mock_get_parameter_value: Mock
+        self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
-        mock_get_end_of_trial_period.return_value = datetime.date(
+        mock_get_last_day_of_trial_period.return_value = datetime.date(
             year=2026, month=2, day=28
         )
         subscription = Mock()
@@ -31,14 +31,16 @@ class TestIsSubscriptionInTrial(SimpleTestCase):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
         )
-        mock_get_end_of_trial_period.assert_called_once_with(subscription, cache=cache)
+        mock_get_last_day_of_trial_period.assert_called_once_with(
+            subscription, cache=cache
+        )
 
     @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
-    @patch.object(TrialPeriodManager, "get_end_of_trial_period")
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
     def test_isSubscriptionInTrial_endOfTrialIsInTheFuture_returnsTrue(
-        self, mock_get_end_of_trial_period: Mock, mock_get_parameter_value: Mock
+        self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
-        mock_get_end_of_trial_period.return_value = datetime.date(
+        mock_get_last_day_of_trial_period.return_value = datetime.date(
             year=2026, month=3, day=31
         )
         subscription = Mock()
@@ -52,14 +54,16 @@ class TestIsSubscriptionInTrial(SimpleTestCase):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
         )
-        mock_get_end_of_trial_period.assert_called_once_with(subscription, cache=cache)
+        mock_get_last_day_of_trial_period.assert_called_once_with(
+            subscription, cache=cache
+        )
 
     @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
-    @patch.object(TrialPeriodManager, "get_end_of_trial_period")
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
     def test_isSubscriptionInTrial_endOfTrialIsOnSameDay_returnsTrue(
-        self, mock_get_end_of_trial_period: Mock, mock_get_parameter_value: Mock
+        self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
-        mock_get_end_of_trial_period.return_value = datetime.date(
+        mock_get_last_day_of_trial_period.return_value = datetime.date(
             year=2026, month=3, day=15
         )
         subscription = Mock()
@@ -73,14 +77,16 @@ class TestIsSubscriptionInTrial(SimpleTestCase):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
         )
-        mock_get_end_of_trial_period.assert_called_once_with(subscription, cache=cache)
+        mock_get_last_day_of_trial_period.assert_called_once_with(
+            subscription, cache=cache
+        )
 
     @patch("tapir.subscriptions.services.trial_period_manager.get_parameter_value")
-    @patch.object(TrialPeriodManager, "get_end_of_trial_period")
+    @patch.object(TrialPeriodManager, "get_last_day_of_trial_period")
     def test_isSubscriptionInTrial_trialPeriodsAreDisabled_returnsFalse(
-        self, mock_get_end_of_trial_period: Mock, mock_get_parameter_value: Mock
+        self, mock_get_last_day_of_trial_period: Mock, mock_get_parameter_value: Mock
     ):
-        mock_get_end_of_trial_period.return_value = datetime.date(
+        mock_get_last_day_of_trial_period.return_value = datetime.date(
             year=2026, month=3, day=31
         )
         subscription = Mock()
@@ -94,4 +100,4 @@ class TestIsSubscriptionInTrial(SimpleTestCase):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
         )
-        mock_get_end_of_trial_period.assert_not_called()
+        mock_get_last_day_of_trial_period.assert_not_called()

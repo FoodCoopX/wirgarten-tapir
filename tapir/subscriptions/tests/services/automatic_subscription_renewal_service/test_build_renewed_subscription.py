@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_WEEKS
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
@@ -16,7 +16,7 @@ from tapir.wirgarten.tests.factories import (
 )
 
 
-class TestBuildRenewedSubscription(SimpleTestCase):
+class TestBuildRenewedSubscription(TapirUnitTest):
     @patch.object(AutomaticSubscriptionRenewalService, "get_renewed_trial_data")
     @patch.object(NoticePeriodManager, "get_notice_period_unit")
     @patch.object(NoticePeriodManager, "get_notice_period_duration")
@@ -43,6 +43,7 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         original_subscription.mandate_ref = mandate_ref
         admin_confirmed = Mock()
         original_subscription.admin_confirmed = admin_confirmed
+        original_subscription.end_date = Mock()
 
         next_growing_period = GrowingPeriodFactory.build()
         start_date = Mock()
@@ -68,7 +69,9 @@ class TestBuildRenewedSubscription(SimpleTestCase):
             )
         )
 
-        mock_get_next_growing_period.assert_called_once_with(cache=cache)
+        mock_get_next_growing_period.assert_called_once_with(
+            reference_date=original_subscription.end_date, cache=cache
+        )
         mock_get_notice_period_duration.assert_called_once_with(
             product_type, next_growing_period, cache=cache
         )

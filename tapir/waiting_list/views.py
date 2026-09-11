@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -19,30 +20,36 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
+from tapir.subscriptions.services.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
+)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
     WaitingListEntrySerializer,
     WaitingListEntryUpdateSerializer,
-    PublicWaitingListEntryNewMemberCreateSerializer,
     PublicWaitingListEntryExistingMemberCreateSerializer,
     PublicConfirmWaitingListEntryRequestSerializer,
     OptionalWaitingListEntryDetailsSerializer,
     PublicWaitingListEntryDetailsSerializer,
 )
+from tapir.waiting_list.services.can_be_fulfilled_checker import CanBeFulFilledChecker
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
 )
@@ -73,7 +80,11 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
+from tapir.wirgarten.utils import (
+    get_today,
+    get_now,
+    check_permission_or_self,
+)
 
 
 class WaitingListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -118,6 +129,12 @@ class WaitingListApiView(APIView):
             OpenApiParameter(name="pickup_location_wish", type=str, required=True),
             OpenApiParameter(name="product_wish", type=str, required=True),
             OpenApiParameter(
+                name="can_be_fulfilled",
+                type=str,
+                enum=["any", "fulfillable", "not_fulfillable"],
+                required=True,
+            ),
+            OpenApiParameter(
                 name="order_by",
                 type=str,
                 required=True,
@@ -129,7 +146,7 @@ class WaitingListApiView(APIView):
         pagination = self.pagination_class()
 
         entries = WaitingListEntry.objects.prefetch_related(
-            "product_wishes__product",
+            "product_wishes__product__type",
             "pickup_location_wishes__pickup_location",
         ).select_related(
             "member",
@@ -142,6 +159,7 @@ class WaitingListApiView(APIView):
             "current_pickup_location_id",
             "pickup_location_wish",
             "product_wish",
+            "can_be_fulfilled",
         ]
         for filter_name in filters:
             parameter = request.query_params.get(filter_name)
@@ -159,7 +177,9 @@ class WaitingListApiView(APIView):
         entries = pagination.paginate_queryset(entries, request)
 
         data = [self.build_entry_data(entry, cache=self.cache) for entry in entries]
-        serializer = WaitingListEntryDetailsSerializer(data, many=True)
+        serializer = WaitingListEntryDetailsSerializer(
+            data, many=True, context={"cache": self.cache}
+        )
 
         return pagination.get_paginated_response(serializer.data)
 
@@ -209,7 +229,7 @@ class WaitingListApiView(APIView):
             return entries
 
         pickup_location = get_object_or_404(PickupLocation, id=pickup_location_id)
-        member_ids = MemberPickupLocationService.get_members_ids_at_pickup_location(
+        member_ids = MemberPickupLocationGetter.get_members_ids_at_pickup_location(
             pickup_location=pickup_location,
             reference_date=get_today(cache=self.cache),
             cache=self.cache,
@@ -235,6 +255,26 @@ class WaitingListApiView(APIView):
             return entries
         wishes = WaitingListProductWish.objects.filter(product_id=product_id)
         return entries.filter(product_wishes__in=wishes)
+
+    @classmethod
+    def filter_by_can_be_fulfilled(
+        cls, value: str, entries: QuerySet[WaitingListEntry]
+    ):
+        if not value or value == "any":
+            return entries
+
+        cache = {}
+        filtered_entries = []
+        for entry in entries:
+            can_be_fulfilled = CanBeFulFilledChecker.check_if_entry_can_be_fulfilled(
+                entry=entry, cache=cache
+            )
+            if value == "fulfillable" and can_be_fulfilled:
+                filtered_entries.append(entry.id)
+            elif value == "not_fulfillable" and not can_be_fulfilled:
+                filtered_entries.append(entry.id)
+
+        return entries.filter(id__in=filtered_entries)
 
     @classmethod
     def order_by_coop_entry_date(
@@ -275,10 +315,12 @@ class WaitingListApiView(APIView):
             member_no = entry.member.member_no
             cls.fill_entry_with_personal_data(entry)
             date_of_entry_in_cooperative = (
-                MembershipCancellationManager.get_coop_entry_date(entry.member)
+                CoopMembershipCancellationManager.get_coop_entry_date(
+                    entry.member, cache=cache
+                )
             )
             pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     entry.member.id, reference_date=get_today(cache=cache), cache=cache
                 )
             )
@@ -314,10 +356,14 @@ class WaitingListApiView(APIView):
                 member=entry.member, reference_date=get_today(cache=cache), cache=cache
             )
         link = None
-        if settings.DEBUG and entry.confirmation_link_key:
+        if entry.confirmation_link_key:
             link = SendWaitingListLinkApiView.build_waiting_list_link(
                 entry.id, entry.confirmation_link_key
             )
+
+        can_be_fulfilled = CanBeFulFilledChecker.check_if_entry_can_be_fulfilled(
+            entry=entry, cache=cache
+        )
 
         return {
             "id": entry.id,
@@ -355,6 +401,7 @@ class WaitingListApiView(APIView):
             "account_owner": account_owner,
             "iban": iban,
             "payment_rhythm": payment_rhythm,
+            "can_be_fulfilled": can_be_fulfilled,
         }
 
     @staticmethod
@@ -515,69 +562,6 @@ class WaitingListShowsCoopContentView(APIView):
         )
 
 
-class PublicWaitingListCreateEntryPotentialMemberView(APIView):
-    permission_classes = []
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.cache = {}
-
-    @extend_schema(
-        request=PublicWaitingListEntryNewMemberCreateSerializer,
-        responses={200: OrderConfirmationResponseSerializer},
-    )
-    def post(self, request):
-        serializer = PublicWaitingListEntryNewMemberCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=serializer.validated_data["shopping_cart"],
-            cache=self.cache,
-        )
-        try:
-            WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
-                order=order,
-                number_of_coop_shares=serializer.validated_data[
-                    "number_of_coop_shares"
-                ],
-                email=serializer.validated_data["email"],
-                cache=self.cache,
-            )
-        except ValidationError as error:
-            return Response(
-                OrderConfirmationResponseSerializer(
-                    {"order_confirmed": False, "error": error.message}
-                ).data
-            )
-
-        with transaction.atomic():
-            entry = WaitingListEntryCreator.create_entry_potential_member(
-                order=order,
-                pickup_location_ids_in_priority_order=serializer.validated_data[
-                    "pickup_location_ids"
-                ],
-                number_of_coop_shares=serializer.validated_data[
-                    "number_of_coop_shares"
-                ],
-                personal_data=serializer.validated_data,
-                cache=self.cache,
-            )
-            WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
-                entry=entry,
-                potential_member_info=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
-                    email=serializer.validated_data["email"],
-                    first_name=serializer.validated_data["first_name"],
-                    last_name=serializer.validated_data["last_name"],
-                ),
-            )
-
-        return Response(
-            OrderConfirmationResponseSerializer(
-                {"order_confirmed": True, "error": ""}
-            ).data
-        )
-
-
 class WaitingListCreateEntryExistingMemberView(APIView):
     permission_classes = []
 
@@ -613,30 +597,41 @@ class WaitingListCreateEntryExistingMemberView(APIView):
         except ValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
-                    {"order_confirmed": False, "error": error.message}
+                    {
+                        "order_confirmed": False,
+                        "error": error.message,
+                        "redirect_url": None,
+                    }
                 ).data
             )
 
         with transaction.atomic():
+            growing_periods = GrowingPeriodChoiceProvider.get_available_growing_periods(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
             entry = WaitingListEntryCreator.create_entry_existing_member(
                 order=order,
                 pickup_location_ids_in_priority_order=serializer.validated_data[
                     "pickup_location_ids"
                 ],
                 member=member,
-                growing_period_id=TapirCache.get_growing_period_at_date(
-                    reference_date=get_today(cache=self.cache), cache=self.cache
-                ).id,
+                growing_period_id=growing_periods[0].id,
                 cache=self.cache,
             )
             WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
                 existing_member_id=member_id,
                 entry=entry,
             )
-
+        member_profile_url = reverse(
+            "wirgarten:member_detail", kwargs={"pk": member.id}
+        )
         return Response(
             OrderConfirmationResponseSerializer(
-                {"order_confirmed": True, "error": ""}
+                {
+                    "order_confirmed": True,
+                    "error": None,
+                    "redirect_url": member_profile_url,
+                }
             ).data
         )
 
@@ -675,7 +670,7 @@ class SendWaitingListLinkApiView(APIView):
     @staticmethod
     def build_waiting_list_link(entry_id: str, link_key: uuid.UUID) -> str:
         url = reverse("waiting_list:waiting_list_confirm")
-        return f"{url}?entry_id={entry_id}&link_key={link_key}"
+        return f"{settings.SITE_URL}{url}?entry_id={entry_id}&link_key={link_key}"
 
     @classmethod
     def send_mail(cls, waiting_list_entry: WaitingListEntry):
@@ -761,8 +756,11 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             )
         )
 
-        data = self.build_public_entry_data(waiting_list_entry, cache={})
-        serializer = PublicWaitingListEntryDetailsSerializer(data)
+        cache = {}
+        data = self.build_public_entry_data(waiting_list_entry, cache=cache)
+        serializer = PublicWaitingListEntryDetailsSerializer(
+            data, context={"cache": cache}
+        )
 
         return Response(serializer.data)
 
@@ -772,14 +770,30 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
         account_owner = None
         iban = None
         payment_rhythm = None
+        current_pickup_location = None
+        should_show_solidarity_step = True
         if entry.member is not None:
             WaitingListApiView.fill_entry_with_personal_data(entry)
 
             birthdate = entry.member.birthdate
             account_owner = entry.member.account_owner
             iban = entry.member.iban
+            today = get_today(cache=cache)
             payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=entry.member, reference_date=get_today(cache=cache), cache=cache
+                member=entry.member, reference_date=today, cache=cache
+            )
+            current_pickup_location = (
+                MemberPickupLocationGetter.get_member_pickup_location(
+                    member=entry.member,
+                    reference_date=today,
+                    cache=cache,
+                )
+            )
+            should_show_solidarity_step = (
+                MemberSolidarityContributionService.get_member_contribution(
+                    member_id=str(entry.member_id), reference_date=today, cache=cache
+                )
+                == Decimal(0)
             )
 
         return {
@@ -809,6 +823,8 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
             "account_owner": account_owner,
             "iban": iban,
             "payment_rhythm": payment_rhythm,
+            "current_pickup_location": current_pickup_location,
+            "should_show_solidarity_step": should_show_solidarity_step,
         }
 
 
@@ -862,6 +878,7 @@ class GetMemberWaitingListEntryDetailsApiView(APIView):
     def get(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
+        cache = {}
 
         waiting_list_entry = WaitingListEntry.objects.filter(
             member_id=member_id
@@ -870,8 +887,10 @@ class GetMemberWaitingListEntryDetailsApiView(APIView):
         entry_data = None
         if waiting_list_entry is not None:
             entry_data = WaitingListApiView.build_entry_data(
-                waiting_list_entry, cache={}
+                waiting_list_entry, cache=cache
             )
-        serializer = OptionalWaitingListEntryDetailsSerializer({"entry": entry_data})
+        serializer = OptionalWaitingListEntryDetailsSerializer(
+            {"entry": entry_data}, context={"cache": cache}
+        )
 
         return Response(serializer.data)

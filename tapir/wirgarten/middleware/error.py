@@ -3,6 +3,7 @@ import traceback
 
 from django.conf import settings
 
+from tapir.utils.shortcuts import is_running_tests
 from tapir.wirgarten.utils import get_now
 
 
@@ -18,6 +19,9 @@ class GlobalServerErrorHandlerMiddleware:
         return self.get_response(request)
 
     def process_exception(self, request, exception):
+        if is_running_tests():
+            return
+
         timestamp = get_now().strftime("%Y-%m-%d_%H-%M-%S")
         error_log_dir = (
             settings.ERROR_LOG_DIR

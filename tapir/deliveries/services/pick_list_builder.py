@@ -1,10 +1,11 @@
 import datetime
+from decimal import Decimal
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.config import DELIVERY_DONATION_DONT_FORWARD_TO_PICKUP_LOCATION
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.subscriptions.services.subscription_delivered_in_week_checked import (
     SubscriptionDeliveredInWeekChecker,
@@ -116,7 +117,7 @@ class PickListBuilder:
         quantities_by_product_name = {}
 
         for subscription in subscriptions:
-            if subscription.product.name not in quantities_by_product_name.keys():
+            if subscription.product.name not in quantities_by_product_name:
                 quantities_by_product_name[subscription.product.name] = 0
             quantities_by_product_name[
                 subscription.product.name
@@ -156,8 +157,21 @@ class PickListBuilder:
         ).distinct()
 
         products = list(products)
-        products.sort(key=lambda product: get_product_price(product, cache=cache).price)
+        products.sort(
+            key=lambda product: cls.get_price_or_zero(
+                product=product, reference_date=delivery_date, cache=cache
+            )
+        )
         return products
+
+    @classmethod
+    def get_price_or_zero(
+        cls, product: Product, reference_date: datetime.date, cache: dict
+    ):
+        price_object = get_product_price(
+            product=product, reference_date=reference_date, cache=cache
+        )
+        return Decimal(0) if price_object is None else price_object.price
 
     @classmethod
     def get_subscriptions_grouped_by_pickup_location_name(
@@ -166,18 +180,22 @@ class PickListBuilder:
         subscriptions = (
             get_active_subscriptions(delivery_date, cache=cache)
             .filter(product__type_id=product_type.id)
+            .select_related("member", "product__type")
             .distinct()
         )
         subscriptions_by_pickup_location_name = {}
 
         for subscription in subscriptions:
             pickup_location = cls.get_member_pickup_location_for_pick_list(
-                member=subscription.member, reference_date=delivery_date, cache=cache
+                member=subscription.member,
+                reference_date=delivery_date,
+                cache=cache,
+                product_type_is_affected_by_jokers=product_type.is_affected_by_jokers,
             )
             if pickup_location is None:
                 continue
 
-            if pickup_location.name not in subscriptions_by_pickup_location_name.keys():
+            if pickup_location.name not in subscriptions_by_pickup_location_name:
                 subscriptions_by_pickup_location_name[pickup_location.name] = []
 
             subscriptions_by_pickup_location_name[pickup_location.name].append(
@@ -188,10 +206,17 @@ class PickListBuilder:
 
     @classmethod
     def get_member_pickup_location_for_pick_list(
-        cls, member: Member, reference_date: datetime.date, cache: dict
+        cls,
+        member: Member,
+        reference_date: datetime.date,
+        cache: dict,
+        product_type_is_affected_by_jokers: bool,
     ) -> PickupLocation | None:
-        if DeliveryDonationManager.does_member_have_a_donation_in_week(
-            member=member, reference_date=reference_date, cache=cache
+        if (
+            DeliveryDonationManager.does_member_have_a_donation_in_week(
+                member=member, reference_date=reference_date, cache=cache
+            )
+            and product_type_is_affected_by_jokers
         ):
             pickup_location_id = get_parameter_value(
                 key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION,
@@ -201,7 +226,7 @@ class PickListBuilder:
                 return None
         else:
             pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=member.id, reference_date=reference_date, cache=cache
                 )
             )

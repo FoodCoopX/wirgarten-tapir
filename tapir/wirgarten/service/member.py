@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import List, Dict
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -13,27 +13,31 @@ from django.db.models import (
     FloatField,
 )
 from django.db.models.functions import Coalesce
+from django.shortcuts import get_object_or_404
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.models import CoopSharesCancelledLogEntry
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.coop.services.token_builder_coop_entry import TokenBuilderCoopEntry
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.solidarity_contribution.models import SolidarityContribution
-from tapir.utils.shortcuts import get_from_cache_or_compute
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     CoopShareTransaction,
-    MandateReference,
     Member,
     ReceivedCoopSharesLogEntry,
     Subscription,
@@ -42,15 +46,9 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import (
-    get_next_delivery_date,
-)
-from tapir.wirgarten.service.payment import generate_mandate_ref
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
-)
-from tapir.wirgarten.service.subscriptions import (
-    annotate_subscriptions_queryset_with_monthly_payment_without_solidarity,
 )
 from tapir.wirgarten.service.tasks import schedule_task_unique
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
@@ -59,6 +57,7 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
+    format_currency,
 )
 
 
@@ -125,15 +124,17 @@ def transfer_coop_shares(
     Member.objects.get(id=target_member_id).save()
 
 
+@transaction.atomic
 def cancel_coop_shares(
-    member: str | Member,
+    member_id: str,
     quantity: int,
     cancellation_date: datetime.datetime | datetime.date,
     valid_at: datetime.date,
+    actor: TapirUser,
 ):
-    member_id = resolve_member_id(member)
+    member = get_object_or_404(Member, id=member_id)
 
-    CoopShareTransaction.objects.create(
+    coop_share_transaction = CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=-quantity,
         share_price=get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache={}),
@@ -142,53 +143,36 @@ def cancel_coop_shares(
         transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
     )
 
+    CoopSharesCancelledLogEntry.populate_transaction(
+        coop_share_transaction=coop_share_transaction, user=member, actor=actor
+    ).save()
 
-def create_mandate_ref(member: str | Member, cache: Dict | None = None):
-    """
-    Generates and persists a new mandate reference for a member.
-
-    :param member: the member
-    """
-
-    member_id = resolve_member_id(member)
-    ref = generate_mandate_ref(member_id)
-    return MandateReference.objects.create(
-        ref=ref, member_id=member_id, start_ts=get_now(cache)
+    TransactionalTrigger.fire_action(
+        TransactionalTriggerData(
+            key=Events.CANCELLATION_OF_COOP_SHARES,
+            recipient_id_in_base_queryset=member_id,
+            token_data={
+                "date_where_the_cancellation_was_triggered": format_date(
+                    cancellation_date
+                ),
+                "date_where_the_cancellation_is_active": format_date(
+                    coop_share_transaction.valid_at
+                ),
+                "number_of_cancelled_shares": -coop_share_transaction.quantity,
+                "value_of_a_single_share": format_currency(
+                    coop_share_transaction.share_price
+                ),
+                "value_of_all_cancelled_shares": format_currency(
+                    -coop_share_transaction.quantity
+                    * coop_share_transaction.share_price
+                ),
+            },
+        ),
     )
 
 
 def resolve_member_id(member: str | Member | TapirUser) -> str:
     return member.id if type(member) is not str and member.id else member
-
-
-le_sum = 0
-
-
-def get_or_create_mandate_ref(
-    member: str | Member,
-    cache: Dict | None = None,
-) -> MandateReference:
-    """
-    Returns the existing mandate ref for a member of creates a new one if none exists.
-    """
-
-    member_id = resolve_member_id(member)
-
-    def compute():
-        return {
-            mandate_ref.member_id: mandate_ref
-            for mandate_ref in MandateReference.objects.select_related("member")
-        }
-
-    mandate_ref_cache = get_from_cache_or_compute(cache, "mandate_ref_cache", compute)
-    mandate_ref = mandate_ref_cache.get(member_id, None)
-    if mandate_ref is not None:
-        return mandate_ref
-
-    mandate_ref = create_mandate_ref(member_id, cache)
-    if mandate_ref_cache is not None:
-        mandate_ref_cache[member_id] = mandate_ref
-    return mandate_ref
 
 
 def create_wait_list_entry(
@@ -224,7 +208,7 @@ def send_cancellation_confirmation_email(
     contract_end_date: datetime.date,
     subs_to_cancel: List[Subscription],
     revoke_coop_membership: bool = False,
-    cache: Dict = None,
+    cache: dict = None,
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
@@ -268,9 +252,9 @@ def send_cancellation_confirmation_email(
 
 
 def send_contract_change_confirmation(
-    member: Member, subs: List[Subscription], cache: Dict
+    member: Member, subs: List[Subscription], cache: dict
 ):
-    if not len(subs):
+    if len(subs) == 0:
         raise Exception(
             "No subscriptions provided for sending contract change confirmation for member: ",
             member,
@@ -313,14 +297,21 @@ def send_contract_change_confirmation(
 
 
 def send_investing_membership_confirmation(
-    member_id: str, coop_share_transaction: CoopShareTransaction
+    member_id: str,
+    coop_share_transaction: CoopShareTransaction | None,
+    association_membership: AssociationMembership | None,
+    solidarity_contribution: SolidarityContribution | None,
+    cache: dict,
 ):
     TransactionalTrigger.fire_action(
-        TransactionalTriggerData(
+        trigger_data=TransactionalTriggerData(
             key=Events.REGISTER_MEMBERSHIP_ONLY,
             recipient_id_in_base_queryset=member_id,
             token_data=TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
-                coop_share_transaction
+                coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
+                solidarity_contribution=solidarity_contribution,
+                cache=cache,
             ),
         ),
     )
@@ -332,6 +323,8 @@ def send_product_order_confirmation(
     cache: dict,
     from_waiting_list: bool,
     coop_share_transaction: CoopShareTransaction | None,
+    association_membership: AssociationMembership | None,
+    solidarity_contribution: SolidarityContribution | None,
 ):
     min_contract_start_date = min([subscription.start_date for subscription in subs])
     min_contract_end_date = min([subscription.end_date for subscription in subs])
@@ -342,19 +335,20 @@ def send_product_order_confirmation(
         if subscription.product.type.delivery_cycle == NO_DELIVERY[0]:
             continue
         at_least_one_product_with_delivery = True
-        next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+        next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_product_type(
             reference_date=subscription.start_date,
-            pickup_location_id=MemberPickupLocationService.get_member_pickup_location_id(
+            pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id(
                 member, subscription.start_date
             ),
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             check_for_weeks_without_delivery=True,
             cache=cache,
         )
-        first_pickup_date = min(first_pickup_date, next_delivery_date)
+        if next_delivery_date is not None:
+            first_pickup_date = min(first_pickup_date, next_delivery_date)
 
     TransactionalTrigger.fire_action(
-        TransactionalTriggerData(
+        trigger_data=TransactionalTriggerData(
             key=(
                 Events.WAITING_LIST_ORDER_CONFIRMATION
                 if from_waiting_list
@@ -372,7 +366,10 @@ def send_product_order_confirmation(
                 "contract_list": format_subscription_list_html(list(subs)),
             }
             | TokenBuilderCoopEntry.build_mail_tokens_for_coop_entry(
-                coop_share_transaction
+                coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
+                solidarity_contribution=solidarity_contribution,
+                cache=cache,
             ),
         ),
     )
@@ -392,7 +389,7 @@ def annotate_member_queryset_with_coop_shares_total_value(
             Subquery(
                 CoopShareTransaction.objects.filter(
                     member_id=OuterRef(outer_ref),
-                    valid_at__lte=get_today(cache=cache),
+                    valid_at__lte=reference_date,
                 )
                 .values("member_id")
                 .annotate(total_value=Sum(F("quantity") * F("share_price")))
@@ -414,8 +411,8 @@ def annotate_member_queryset_with_monthly_payment(
     )
 
     active_subscriptions_per_member = (
-        annotate_subscriptions_queryset_with_monthly_payment_without_solidarity(
-            active_subscriptions_per_member, reference_date
+        SubscriptionPriceCalculator.annotate_subscriptions_queryset_with_monthly_price(
+            queryset=active_subscriptions_per_member, reference_date=reference_date
         ).distinct()
     )
 
@@ -423,7 +420,7 @@ def annotate_member_queryset_with_monthly_payment(
         subscriptions_payment=Coalesce(
             Subquery(
                 active_subscriptions_per_member.values("member_id")
-                .annotate(total=Sum("monthly_price_without_solidarity"))
+                .annotate(total=Sum("monthly_price"))
                 .values("total"),
                 output_field=FloatField(),
             ),

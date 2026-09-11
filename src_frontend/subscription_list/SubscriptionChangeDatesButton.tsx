@@ -1,8 +1,8 @@
-import React, { useState } from "react";
 import "dayjs/locale/de";
+import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
-import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { ToastData } from "../types/ToastData.ts";
 import SubscriptionChangeDatesModal from "./SubscriptionChangeDatesModal.tsx";
 
@@ -32,6 +32,7 @@ const SubscriptionChangeDatesButton: React.FC<
           setShowModal(true);
         }}
         tooltip={"Vertragsstart-anpassen/Sonderkündigung"}
+        tootlipPosition={"bottom"}
       />
       {subscriptionId && (
         <SubscriptionChangeDatesModal

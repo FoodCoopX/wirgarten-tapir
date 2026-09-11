@@ -56,8 +56,12 @@ CELERY_BEAT_SCHEDULE = {
             hour=4,
         ),
     },
-    "generate_member_numbers": {
-        "task": "tapir.wirgarten.tasks.generate_member_numbers",
+    "assign_member_numbers": {
+        "task": "tapir.wirgarten.tasks.assign_member_numbers",
+        "schedule": celery.schedules.crontab(minute="0", hour="9"),
+    },
+    "send_membership_entry_mails": {
+        "task": "tapir.coop.tasks.send_membership_entry_mails",
         "schedule": celery.schedules.crontab(minute="0", hour="10"),
     },
     "resolve_segment_and_create_email_dispatches_task": {
@@ -86,7 +90,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "automatic_confirmation": {
         "task": "tapir.subscriptions.tasks.automatic_confirmation_subscriptions_and_share_purchases",
-        "schedule": celery.schedules.crontab(hour="0", minute="30"),
+        "schedule": celery.schedules.crontab(hour="9", minute="30"),
     },
     "create_payments_for_this_month": {
         "task": "tapir.payments.tasks.create_payments_for_this_month",
@@ -95,6 +99,18 @@ CELERY_BEAT_SCHEDULE = {
     "export_payments_for_this_month": {
         "task": "tapir.payments.tasks.export_payments_for_this_month",
         "schedule": celery.schedules.crontab(hour="5", minute="0"),
+    },
+    "create_credits_for_jokers": {
+        "task": "tapir.payments.tasks.create_credits_for_jokers",
+        "schedule": celery.schedules.crontab(hour="6", minute="0"),
+    },
+    "clean_members_without_subscription_task": {
+        "task": "tapir.pickup_locations.tasks.clean_members_without_subscription_task",
+        "schedule": celery.schedules.crontab(hour="3", minute="0"),
+    },
+    "trigger_association_membership_ends_today_mails": {
+        "task": "tapir.associations.tasks.trigger_association_membership_ends_today_mails",
+        "schedule": celery.schedules.crontab(hour="13", minute="0"),
     },
 }
 
@@ -112,18 +128,19 @@ EMAIL_PORT = env.str("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 if EMAIL_ENV == "dev":
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-    EMAIL_HOST = "email_host"
+    EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+    EMAIL_HOST = "example.com"
     EMAIL_HOST_USER = "email_host_user"
     EMAIL_HOST_PASSWORD = "email_host_password"
     EMAIL_HOST_SENDER = "test_host_sender@example.com"
     EMAIL_BOUNCE_ADDRESS = "bounce@example.com"
     EMAIL_HOST_SENDER_NAME = "Test host sender"
+    EMAIL_FILE_PATH = BASE_DIR / "../emails_from_celery"
 elif EMAIL_ENV == "test":
     # Local SMTP
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 elif EMAIL_ENV == "prod":
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_BACKEND = "tapir_mail.service.smtp_backend_with_dsn.SmtpBackendWithDsn"
     EMAIL_HOST = env.str("EMAIL_HOST")
     EMAIL_HOST_SENDER = env.str(
         "EMAIL_HOST_SENDER"
@@ -135,6 +152,9 @@ elif EMAIL_ENV == "prod":
     EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
     EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
     EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
+    EMAIL_BOUNCE_USER = env.str("EMAIL_BOUNCE_USER", default=None)
+    EMAIL_BOUNCE_PASSWORD = env.str("EMAIL_BOUNCE_PASSWORD", default=None)
+    EMAIL_REPLY_TO = env.str("EMAIL_REPLY_TO", default=None)
 
 
 # Crash emails will come from this address.
@@ -142,14 +162,18 @@ SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
-KEYCLOAK_ADMIN_CONFIG = dict(
-    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
-    PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
-    CLIENT_ID=env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
-    FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
-    REALM_NAME=env.str("KEYCLOAK_REALM_NAME", default="tapir"),
-    CLIENT_SECRET_KEY=env.str("KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"),
-)
+KEYCLOAK_ADMIN_CONFIG = {
+    "SERVER_URL": env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
+    "PUBLIC_URL": env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
+    "CLIENT_ID": env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
+    "FRONTEND_CLIENT_ID": env.str(
+        "KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"
+    ),
+    "REALM_NAME": env.str("KEYCLOAK_REALM_NAME", default="tapir"),
+    "CLIENT_SECRET_KEY": env.str(
+        "KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"
+    ),
+}
 
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
 
@@ -210,3 +234,7 @@ SOCIALACCOUNT_PROVIDERS = {
 
 if DEBUG:
     INTERNAL_IPS = ["127.0.0.1"]
+
+EMAIL_ADDRESS_ERRORS = env.str("EMAIL_ADDRESS_ERRORS", None)
+if EMAIL_ADDRESS_ERRORS:
+    ADMINS = [EMAIL_ADDRESS_ERRORS]

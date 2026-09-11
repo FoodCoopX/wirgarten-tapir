@@ -9,4 +9,9 @@ urlpatterns = [
         views.ParameterView.as_view(),
         name="parameters",
     ),
+    path(
+        "member-number-preview",
+        views.MemberNumberPreviewView.as_view(),
+        name="member_number_preview",
+    ),
 ]

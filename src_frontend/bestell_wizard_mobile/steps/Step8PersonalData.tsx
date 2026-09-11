@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from "react";
+import { BestellWizardApi } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
-import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
+import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
+import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
+import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
 import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { isPersonalDataValidShort } from "../utils/isPersonalDataValidShort.ts";
-import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
-import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { useApi } from "../../hooks/useApi.ts";
-import { BestellWizardApi } from "../../api-client";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
-import { ToastData } from "../../types/ToastData.ts";
 import "./Step8PersonalData.css";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 
 interface Step8PersonalDataProps {
   settings: BestellWizardSettings;
   goToNextStep: () => void;
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
-  active: boolean;
+  stepActive: boolean;
   emailAddressAlreadyInUse: boolean;
   setEmailAddressAlreadyInUse: (emailAddressAlreadyInUse: boolean) => void;
   emailAddressAlreadyInUseLoading: boolean;
@@ -57,7 +57,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   goToNextStep,
   personalData,
   setPersonalData,
-  active,
+  stepActive,
   emailAddressAlreadyInUse,
   setEmailAddressAlreadyInUse,
   emailAddressAlreadyInUseLoading,
@@ -71,10 +71,10 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   useEffect(() => {
     setIsOver18(changesDisabled);
@@ -214,7 +214,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         showError={showValidation && !isOver18}
         disabled={changesDisabled}
       />
-      <NextStepButton onClick={validate} />
+      <NextStepButton onClick={validate} stepActive={stepActive} />
     </div>
   );
 };

@@ -1,18 +1,23 @@
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import {
+  AssociationMembershipType,
   BestellWizardImages,
   BestellWizardStrings,
+  LegalStatusEnum,
   PublicGrowingPeriod,
   PublicPickupLocation,
   PublicProductType,
+  type SolidarityStepPositionEnum,
 } from "../../api-client";
+import { TapirTheme } from "../../types/TapirTheme.ts";
 
 export type BestellWizardSettings = {
   theme: TapirTheme;
   pickupLocations: PublicPickupLocation[];
   productTypes: PublicProductType[];
+  associationMembershipTypes: AssociationMembershipType[];
   priceOfAShare: number;
   allowInvestingMembership: boolean;
+  associationsAllowInvestingMembership: boolean;
   forceWaitingList: boolean;
   showCoopContent: boolean;
   introStepText: string;
@@ -34,6 +39,8 @@ export type BestellWizardSettings = {
   solidarityContributionDefault: number;
   feedbackStepEnabled: boolean;
   growingPeriodChoices: PublicGrowingPeriod[];
+  solidarityStepPosition: SolidarityStepPositionEnum;
+  legalStatus: LegalStatusEnum;
   strings: BestellWizardStrings;
   images: BestellWizardImages;
   debug: boolean;

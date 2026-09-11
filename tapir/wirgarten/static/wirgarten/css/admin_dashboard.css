@@ -171,3 +171,35 @@
         grid-area: span 1 / span 6;
     }
  }
+
+.feedback-tile {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.feedback-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+
+.feedback-item {
+    padding: 0.5em 0;
+    border-bottom: 1px solid #eee;
+}
+
+.feedback-item:last-child {
+    border-bottom: none;
+}
+
+.feedback-date {
+    color: #666;
+    display: block;
+    font-size: 0.8em;
+}
+
+.feedback-text {
+    margin: 0;
+    overflow-wrap: break-word;
+}

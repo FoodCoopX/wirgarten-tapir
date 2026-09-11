@@ -1,7 +1,7 @@
 from unittest.mock import patch, Mock
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
@@ -11,7 +11,7 @@ from tapir.bestell_wizard.services.questionnaire_source_service import (
 )
 
 
-class TestValidateDistributionChannels(SimpleTestCase):
+class TestValidateDistributionChannels(TapirUnitTest):
     @patch.object(
         QuestionnaireSourceService, "get_questionnaire_source_choices", autospec=True
     )

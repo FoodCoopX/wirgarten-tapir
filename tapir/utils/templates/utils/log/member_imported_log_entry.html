@@ -1,0 +1,19 @@
+{% load wirgarten %}
+<script>
+    function toggleDetails(entryId) {
+        const details = document.getElementById("log_entry_details_" + entryId);
+        if (details.style.display === "none") {
+            details.style.display = "";
+        } else {
+            details.style.display = "none";
+        }
+    }
+</script>
+<span class="d-flex flex-row gap-2 align-items-center">
+    <span>Mitglieder importiert</span>
+    <button class="btn btn-outline-secondary btn-sm"
+            onclick="toggleDetails({{ entry.id }})">Daten ansehen</button>
+</span>
+<ul style="display: none" id="log_entry_details_{{ entry.id }}">
+    {% for key, value in values %}<li>{{ key }}: {{ value }}</li>{% endfor %}
+</ul>

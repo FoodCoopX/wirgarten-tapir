@@ -1,17 +1,16 @@
 import datetime
-from typing import Dict
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 
 
 class DateLimitForDeliveryChangeCalculator:
     @classmethod
     def calculate_date_limit_for_delivery_changes_in_week(
-        cls, reference_date: datetime.date, cache: Dict
-    ):
+        cls, reference_date: datetime.date, cache: dict
+    ) -> datetime.date:
         # at the latest,changes can be done at the returned date.
         # One day after the returned date, changes are not possible
 

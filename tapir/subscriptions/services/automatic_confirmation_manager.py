@@ -6,7 +6,7 @@ from tapir.subscriptions.services.order_confirmation_mail_sender import (
 )
 from tapir.wirgarten.models import Subscription, CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.utils import get_today, get_now
 
 

@@ -1,20 +1,26 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import Mock, call, patch
 
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
+from tapir.pickup_locations.tests.factories import PickupLocationDeliveryChargeFactory
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
 from tapir.wirgarten.models import Member, CoopShareTransaction
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
+    MemberPickupLocationFactory,
+    PickupLocationFactory,
     SubscriptionFactory,
     CoopShareTransactionFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.utils import get_now
 
 
 class TestMemberColumnProvider(TapirIntegrationTest):
@@ -38,8 +44,11 @@ class TestMemberColumnProvider(TapirIntegrationTest):
 
     def test_getValueMemberNumber_default_returnsMemberNumber(self):
         member = MemberFactory.build(member_no=1234)
+        self._set_parameter(
+            key=ParameterKeys.MEMBER_NUMBER_ONLY_AFTER_TRIAL, value=False
+        )
 
-        result = MemberColumnProvider.get_value_member_number(member, None, {})
+        result = MemberColumnProvider.get_value_member_number(member, get_now(), {})
 
         self.assertEqual("1234", result)
 
@@ -80,7 +89,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
 
         self.assertEqual("Musterstraße 1, 12345 Musterstadt", result)
 
-    def createTerminatedMemberWithShareHistory(self):
+    def create_terminated_member_with_share_history(self):
         member = MemberFactory.create()
         start = datetime.datetime(2024, 1, 1)
         # admission
@@ -99,7 +108,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         return member
 
     def test_getValueMemberShareQuantity_default_returnsMemberShareQuantity(self):
-        member = self.createTerminatedMemberWithShareHistory()
+        member = self.create_terminated_member_with_share_history()
 
         result = MemberColumnProvider.get_value_member_share_quantity(
             member, datetime.datetime(2023, 12, 1), {}
@@ -122,13 +131,13 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual(0, result)
 
     def test_getValueMemberAdmissionDate_default_returnsMemberAdmissionDate(self):
-        member = self.createTerminatedMemberWithShareHistory()
+        member = self.create_terminated_member_with_share_history()
 
         result = MemberColumnProvider.get_value_member_admission_date(member, None, {})
         self.assertEqual("01.01.2024", result)
 
     def test_getValueMemberTerminationDate_default_returnsMemberTerminationDate(self):
-        member = self.createTerminatedMemberWithShareHistory()
+        member = self.create_terminated_member_with_share_history()
 
         result = MemberColumnProvider.get_value_member_termination_date(
             member, None, {}
@@ -136,7 +145,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual("10.02.2024", result)
 
     def test_getValueMemberShareHistory_default_returnsMemberShareHistory(self):
-        member = self.createTerminatedMemberWithShareHistory()
+        member = self.create_terminated_member_with_share_history()
 
         result = MemberColumnProvider.get_value_member_share_history(
             member, datetime.datetime(2023, 12, 1), {}
@@ -213,6 +222,35 @@ class TestMemberColumnProvider(TapirIntegrationTest):
             any_order=True,
         )
 
+    @patch.object(
+        DeliveryPriceCalculator, "get_price_of_subscriptions_delivered_in_week"
+    )
+    def test_getValueMemberJokerCreditValue_pickupLocationHasDeliveryCharge_addsChargePerJoker(
+        self, mock_get_price_of_subscriptions_delivered_in_week: Mock
+    ):
+        member = MemberFactory.create()
+        mock_get_price_of_subscriptions_delivered_in_week.side_effect = [12, 27]
+        self.setupJokerData(member)
+
+        pickup_location = PickupLocationFactory.create()
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=pickup_location,
+            valid_from=datetime.date(year=2025, month=1, day=1),
+        )
+        PickupLocationDeliveryChargeFactory.create(
+            pickup_location=pickup_location,
+            amount=Decimal("2.00"),
+            valid_from=datetime.date(year=2025, month=1, day=1),
+        )
+
+        result = MemberColumnProvider.get_value_member_joker_credit_value(
+            member, datetime.datetime(year=2025, month=1, day=3), {}
+        )
+
+        # 12 + 27 subscription value + 2.00 delivery charge per joker week
+        self.assertEqual("43.00", result)
+
     def test_getValueMemberJokerCreditDetails_default_returnsCorrectDetails(self):
         member = MemberFactory.create()
         self.setupJokerData(member)
@@ -224,3 +262,23 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual(
             "Gutschrift 2 genutzte Joker in Vertragsjahr 01.01.2025-03.01.2025", result
         )
+
+    def test_getValueMemberShareQuantityCancelledInPreviousYear_default_returnsMemberShareQuantityCancelledInPreviousYear(
+        self,
+    ):
+        member = self.create_terminated_member_with_share_history()
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2023, 12, 1), {}
+        )
+        self.assertEqual(0, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2024, 12, 31), {}
+        )
+        self.assertEqual(0, result)
+
+        result = MemberColumnProvider.get_value_member_share_quantity_cancelled_in_previous_year(
+            member, datetime.datetime(2025, 1, 1), {}
+        )
+        self.assertEqual(42, result)

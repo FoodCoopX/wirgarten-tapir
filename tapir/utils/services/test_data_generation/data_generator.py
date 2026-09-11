@@ -1,9 +1,10 @@
 import datetime
 
 import factory.random
-from django.core.exceptions import ImproperlyConfigured
+from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
+from tapir.associations.models import AssociationMembership, AssociationMembershipType
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
@@ -18,17 +19,25 @@ from tapir.bakery.models import (
     PreferredBread,
     StoveSession,
 )
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.log.models import LogEntry
+from tapir.payments.models import MemberCredit
 from tapir.utils.config import Organization
 from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
 from tapir.utils.services.test_data_generation.configuration_generator import (
     ConfigurationGenerator,
 )
 from tapir.utils.services.test_data_generation.joker_generator import JokerGenerator
+from tapir.utils.services.test_data_generation.member_credit_generator import (
+    MemberCreditGenerator,
+)
 from tapir.utils.services.test_data_generation.pickup_location_generator import (
     PickupLocationGenerator,
 )
 from tapir.utils.services.test_data_generation.product_generator import ProductGenerator
+from tapir.utils.services.test_data_generation.solidarity_contribution_generator import (
+    SolidarityContributionGenerator,
+)
 from tapir.utils.services.test_data_generation.user_generator import UserGenerator
 from tapir.utils.services.test_data_generation.waiting_list_generator import (
     WaitingListGenerator,
@@ -49,6 +58,8 @@ from tapir.wirgarten.models import (
     PickupLocation,
     MemberPickupLocation,
     QuestionaireCancellationReasonResponse,
+    OrderFeedback,
+    LocationRoute,
 )
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
@@ -75,8 +86,11 @@ class DataGenerator:
             Bread,
             Ingredient,
             BreadLabel,
+            CoopShareTransaction,
+            Payment,
             WaitingListEntry,
             MemberPickupLocation,
+            LocationRoute,
             PickupLocation,
             Subscription,
             ProductCapacity,
@@ -85,12 +99,14 @@ class DataGenerator:
             Product,
             ProductType,
             LogEntry,
-            CoopShareTransaction,
             QuestionaireTrafficSourceResponse,
             QuestionaireCancellationReasonResponse,
-            Payment,
             MandateReference,
             EmailChangeRequest,
+            OrderFeedback,
+            MemberCredit,
+            AssociationMembership,
+            AssociationMembershipType,
         ]
 
         for model_class in model_classes:
@@ -129,6 +145,13 @@ class DataGenerator:
         JokerGenerator.generate_jokers()
         print("Creating waiting list...")
         WaitingListGenerator.generate_waiting_list(generate_test_data_for)
+        print("Creating Solidarity contributions...")
+        SolidarityContributionGenerator.generate_solidarity_contributions()
+        print("Creating member credits...")
+        MemberCreditGenerator.generate_member_credits()
+        print("Creating payment history...")
+        call_command("rebuild_payment_history", "--no-confirm")
+        print("Test data generation done")
 
     @classmethod
     def generate_growing_periods(cls, generate_test_data_for: Organization):
@@ -187,6 +210,6 @@ class DataGenerator:
             return 5
         if generate_test_data_for == Organization.MM:
             return 5
-        raise ImproperlyConfigured(
+        raise TapirImproperlyConfigured(
             f"Unknown organization for test data generation: {generate_test_data_for}"
         )

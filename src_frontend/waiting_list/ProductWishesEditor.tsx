@@ -12,7 +12,7 @@ interface ProductWishesEditorProps {
 }
 
 const ProductWishesEditor: React.FC<ProductWishesEditorProps> = ({
-  products: products,
+  products,
   wishes,
   setWishes,
   waitingListEntryId,
@@ -118,7 +118,7 @@ const ProductWishesEditor: React.FC<ProductWishesEditorProps> = ({
                         onChange={(event) =>
                           updateWishQuantity(
                             wish.product.id!,
-                            parseInt(event.target.value),
+                            Number.parseInt(event.target.value),
                           )
                         }
                       />

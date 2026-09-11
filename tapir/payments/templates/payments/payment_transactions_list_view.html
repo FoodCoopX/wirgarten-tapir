@@ -1,0 +1,9 @@
+{% extends "core/base.html" %}
+{% load django_vite %}
+{% block head %}
+    {% vite_asset 'payment_transactions/payment_transactions_list_view_entry.tsx' %}
+{% endblock head %}
+{% block content %}
+    {% csrf_token %}
+    <span id="payment_transactions"></span>
+{% endblock content %}

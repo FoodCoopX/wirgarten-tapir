@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 import weasyprint
 from django.template import engines
@@ -11,7 +10,9 @@ from tapir.generic_exports.services.export_segment_manager import (
     ExportSegment,
     ExportSegmentManager,
 )
+from tapir.generic_exports.services.tapir_url_fetcher import TapirUrlFetcher
 from tapir.wirgarten.models import ExportedFile
+from tapir.wirgarten.utils import get_today
 
 
 class PdfExportBuilder:
@@ -23,14 +24,16 @@ class PdfExportBuilder:
     def create_exported_files(
         cls, pdf_export: PdfExport, reference_datetime: datetime.datetime
     ):
-        contexts = cls.build_contexts(pdf_export, reference_datetime)
+        cache = {}
+        contexts = cls.build_contexts(pdf_export, reference_datetime, cache=cache)
 
+        base_context = {"today": get_today(cache=cache)}
         if pdf_export.generate_one_file_for_every_segment_entry:
             return [
                 cls.create_single_file(
                     pdf_export,
                     reference_datetime,
-                    context,
+                    context | base_context,
                 )
                 for context in contexts
             ]
@@ -39,12 +42,12 @@ class PdfExportBuilder:
             cls.create_single_file(
                 pdf_export,
                 reference_datetime,
-                {"entries": contexts},
+                {"entries": contexts} | base_context,
             )
         ]
 
     @classmethod
-    def build_contexts(cls, pdf_export, reference_datetime):
+    def build_contexts(cls, pdf_export, reference_datetime, cache: dict):
         segment = ExportSegmentManager.get_segment_by_id(pdf_export.export_segment_id)
         used_column_ids = [
             column.id
@@ -52,14 +55,13 @@ class PdfExportBuilder:
             if column.id in pdf_export.template
         ]
 
-        cache = {}
-
-        return [
+        contexts = [
             cls.build_context_for_entry(
                 entry, segment, reference_datetime, used_column_ids, cache=cache
             )
             for entry in segment.get_queryset(reference_datetime)
         ]
+        return contexts
 
     @classmethod
     def create_single_file(cls, pdf_export, reference_datetime, context):
@@ -87,7 +89,7 @@ class PdfExportBuilder:
         segment: ExportSegment,
         reference_datetime: datetime.datetime,
         used_column_ids,
-        cache: Dict,
+        cache: dict,
     ):
         return {
             column.id: column.get_value(db_object, reference_datetime, cache)
@@ -100,7 +102,7 @@ class PdfExportBuilder:
         template_object = cls.build_template_object(template_as_string)
         rendered_template = template_object.render(context)
         document = weasyprint.HTML(
-            string=rendered_template,
+            string=rendered_template, url_fetcher=TapirUrlFetcher()
         )
         return document.render()
 

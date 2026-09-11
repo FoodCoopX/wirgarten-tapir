@@ -9,14 +9,10 @@ from tapir.wirgarten.tests.factories import (
     ProductFactory,
     ProductTypeFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestGetFreeProductCapacity(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls):
-        set_bypass_keycloak()
-
     def test_getSmallestProductSize_onlyOneProductPrice_ignoreStartDate(self):
         product_price: ProductPrice = ProductPriceFactory.create(
             size=10,

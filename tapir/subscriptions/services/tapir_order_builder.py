@@ -26,5 +26,5 @@ class TapirOrderBuilder:
     def build_tapir_order_from_waiting_list_entry(
         cls, waiting_list_entry: WaitingListEntry
     ) -> TapirOrder:
-        wishes = waiting_list_entry.product_wishes.all().select_related("product__type")
+        wishes = waiting_list_entry.product_wishes.all()
         return {wish.product: wish.quantity for wish in wishes}

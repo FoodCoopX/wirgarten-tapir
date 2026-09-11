@@ -32,6 +32,7 @@ class TestUseDeliveryDonationView(TapirIntegrationTest):
         )
 
     def setUp(self) -> None:
+        super().setUp()
         mock_timezone(test=self, now=datetime.datetime(year=2000, month=2, day=22))
 
     @patch.object(TransactionalTrigger, "fire_action")

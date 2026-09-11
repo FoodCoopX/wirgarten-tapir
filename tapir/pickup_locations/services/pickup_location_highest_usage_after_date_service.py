@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Callable
+from typing import Callable
 
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute, get_monday
@@ -17,7 +17,7 @@ class PickupLocationHighestUsageAfterDateService:
         pickup_location: PickupLocation,
         reference_date: datetime.date,
         lambda_get_usage_at_date: Callable,
-        cache: Dict,
+        cache: dict,
     ):
         current_date = reference_date
         max_usage = 0
@@ -38,7 +38,7 @@ class PickupLocationHighestUsageAfterDateService:
     @staticmethod
     def get_date_of_last_possible_capacity_change(
         pickup_location: PickupLocation,
-        cache: Dict,
+        cache: dict,
     ):
         def compute():
             last_pickup_location_change = (

@@ -1,7 +1,7 @@
 from unittest.mock import Mock, patch
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
@@ -9,7 +9,7 @@ from tapir.subscriptions.services.subscription_change_validator import (
 from tapir.wirgarten.tests.factories import ProductTypeFactory
 
 
-class TestValidateMustBeSubscribedTo(SimpleTestCase):
+class TestValidateMustBeSubscribedTo(TapirUnitTest):
     def test_validateMustBeSubscribedTo_productIsNotRequired_doesNothing(self):
         product_type = ProductTypeFactory.build(must_be_subscribed_to=False)
 

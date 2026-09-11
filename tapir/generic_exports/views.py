@@ -1,14 +1,18 @@
 import datetime
 
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, viewsets, permissions
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from weasyprint.urls import FatalURLFetchingError
 
+from tapir.generic_exports.exceptions import TemplateAlreadyExistsException
 from tapir.generic_exports.models import CsvExport, PdfExport
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.generic_exports.serializers import (
@@ -16,10 +20,18 @@ from tapir.generic_exports.serializers import (
     CsvExportModelSerializer,
     BuildCsvExportResponseSerializer,
     PdfExportModelSerializer,
+    PdfExportTemplateSerializer,
 )
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
+from tapir.generic_exports.services.csv_export_template_manager import (
+    CsvExportTemplateManager,
+)
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
 from tapir.generic_exports.services.pdf_export_builder import PdfExportBuilder
+from tapir.generic_exports.services.pdf_export_template_manager import (
+    PdfExportTemplateManager,
+)
+from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.wirgarten.constants import Permission
 
 
@@ -131,11 +143,104 @@ class BuildPdfExportView(APIView):
             request.query_params.get("reference_datetime")
         )
 
-        exported_files = PdfExportBuilder.create_exported_files(
-            pdf_export, reference_datetime
-        )
+        try:
+            exported_files = PdfExportBuilder.create_exported_files(
+                pdf_export, reference_datetime
+            )
+        except FatalURLFetchingError as error:
+            raise ValidationError(error)
 
         return Response(
             reverse("wirgarten:exported_files_download", args=[exported_files[0].id]),
+            status=status.HTTP_200_OK,
+        )
+
+
+class PdfExportTemplateListApiView(APIView):
+    @extend_schema(
+        responses={200: PdfExportTemplateSerializer(many=True)},
+    )
+    def get(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        cache = {}
+        return Response(
+            PdfExportTemplateSerializer(
+                PdfExportTemplateManager.get_templates(cache=cache).values(), many=True
+            ).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class CreatePdfExportFromTemplateApiView(APIView):
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        parameters=[OpenApiParameter(name="template_id", type=str)],
+    )
+    def post(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        cache = {}
+
+        try:
+            with transaction.atomic():
+                PdfExportTemplateManager.create_exports_from_template(
+                    request.query_params.get("template_id"), cache=cache
+                )
+        except TemplateAlreadyExistsException as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": str(error)}
+                ).data,
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            OrderConfirmationResponseSerializer({"order_confirmed": True}).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class CsvExportTemplateListApiView(APIView):
+    @extend_schema(
+        responses={200: PdfExportTemplateSerializer(many=True)},
+    )
+    def get(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        return Response(
+            PdfExportTemplateSerializer(
+                CsvExportTemplateManager.get_templates().values(), many=True
+            ).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class CreateCsvExportFromTemplateApiView(APIView):
+    @extend_schema(
+        responses={200: OrderConfirmationResponseSerializer},
+        parameters=[OpenApiParameter(name="template_id", type=str)],
+    )
+    def post(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            with transaction.atomic():
+                CsvExportTemplateManager.create_exports_from_template(
+                    request.query_params.get("template_id")
+                )
+        except TemplateAlreadyExistsException as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": str(error)}
+                ).data,
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            OrderConfirmationResponseSerializer({"order_confirmed": True}).data,
             status=status.HTTP_200_OK,
         )

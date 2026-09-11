@@ -1,17 +1,19 @@
 import datetime
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import factory.random
 from django.core.cache import cache
 from django.test import TestCase, Client, SimpleTestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
+from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.configuration.parameter import parameter_definition
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tapirmail import configure_mail_module
+from tapir.wirgarten.tests.factories import MemberFactory
 
 
 class TapirFactoryMixin:
@@ -27,12 +29,42 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
         self.apiClient = APIClient()
         cache.clear()
         configure_mail_module()
+        mock_keycloak(self)
+
+    @staticmethod
+    def _set_parameter(key: str, value) -> None:
+        from tapir.configuration.models import TapirParameter
+
+        TapirParameter.objects.filter(key=key).update(value=str(value))
 
     def assertStatusCode(self, response, expected_status_code):
         self.assertEqual(
             expected_status_code,
             response.status_code,
             f"Unexpected status code, response content : {response.content.decode()}",
+        )
+
+    def assert_order_confirmed(self, response_content: dict):
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should be confirmed, error: {response_content["error"]}",
+        )
+        self.assertIsNone(response_content["error"])
+
+    def _login_as_admin(self):
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
+        return admin
+
+    def assert_mail_event_has_been_triggered(self, mock_fire_action: Mock, key: str):
+        mock_fire_action.assert_called()
+        for call in mock_fire_action.mock_calls:
+            trigger_data: TransactionalTriggerData = call.kwargs["trigger_data"]
+            if trigger_data.key == key:
+                return
+
+        self.fail(
+            f"Expected trigger ({key}) not found in {mock_fire_action.mock_calls}"
         )
 
 
@@ -77,3 +109,53 @@ def set_bypass_keycloak(bypass: bool = True):
     TapirParameter.objects.filter(key=ParameterKeys.MEMBER_BYPASS_KEYCLOAK).update(
         value=str(bypass)
     )
+
+
+class TapirMockKeycloakException(Exception):
+    pass
+
+
+def mock_keycloak(test: TapirIntegrationTest):
+    patcher_keycloak = patch(
+        "tapir.accounts.services.keycloak_user_manager.KeycloakUserManager.get_keycloak_client"
+    )
+    test.mock_get_keycloak_client = patcher_keycloak.start()
+    test.addCleanup(patcher_keycloak.stop)
+
+    mock_client = Mock()
+    test.mock_get_keycloak_client.return_value = mock_client
+
+    keycloak_ids = {}
+    mock_client.get_user_id.side_effect = lambda email: keycloak_ids.get(email, None)
+
+    mock_client.create_user.side_effect = (
+        lambda data: mock_set_and_return_new_keycloak_id(
+            email=data["email"], keycloak_ids=keycloak_ids
+        )
+    )
+
+    mock_client.delete_user.side_effect = lambda keycloak_id: delete_user(
+        keycloak_id_to_delete=keycloak_id, keycloak_ids=keycloak_ids
+    )
+
+
+def mock_set_and_return_new_keycloak_id(email: str, keycloak_ids: dict) -> str:
+    if email in keycloak_ids:
+        raise TapirMockKeycloakException(
+            f"This email address is already in use: {email}"
+        )
+    keycloak_ids[email] = f"Mock Keycloak ID for {email}"
+    return keycloak_ids[email]
+
+
+def delete_user(keycloak_id_to_delete: str, keycloak_ids: dict):
+    found_email = None
+    for email, keycloak_id in keycloak_ids.items():
+        if keycloak_id == keycloak_id_to_delete:
+            found_email = email
+            break
+    if not found_email:
+        raise TapirMockKeycloakException(
+            f"No email found for keycloak ID {keycloak_id_to_delete}"
+        )
+    del keycloak_ids[found_email]

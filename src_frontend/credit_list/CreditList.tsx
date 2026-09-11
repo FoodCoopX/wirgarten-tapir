@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { Card, Col, Form, ListGroup, Row } from "react-bootstrap";
-import TapirButton from "../components/TapirButton.tsx";
-import { ToastData } from "../types/ToastData.ts";
-import TapirToastContainer from "../components/TapirToastContainer.tsx";
-import { useApi } from "../hooks/useApi.ts";
-import { ExtendedMemberCredit, PaymentsApi } from "../api-client";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import CreditListTable from "./CreditListTable.tsx";
 import dayjs from "dayjs";
 import LocaleData from "dayjs/plugin/localeData";
+import React, { useEffect, useState } from "react";
+import { Card, Col, Form, ListGroup, Row } from "react-bootstrap";
+import { ExtendedMemberCredit, PaymentsApi } from "../api-client";
+import TapirButton from "../components/TapirButton.tsx";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { formatCurrency } from "../utils/formatCurrency.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 import CreateMemberCreditModal from "./CreateMemberCreditModal.tsx";
+import CreditListTable from "./CreditListTable.tsx";
 
 interface CreditListProps {
   csrfToken: string;
@@ -24,6 +25,8 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
   >([]);
   const [monthFilter, setMonthFilter] = useState<number>(-1);
   const [yearFilter, setYearFilter] = useState<number | undefined>();
+  const [showAll, setShowAll] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   dayjs.locale("de");
@@ -31,7 +34,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
 
   useEffect(() => {
     loadCredits();
-  }, [monthFilter, yearFilter]);
+  }, [monthFilter, yearFilter, showAll]);
 
   function loadCredits() {
     setLoading(true);
@@ -40,6 +43,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
       .paymentsApiCreditListFilteredList({
         monthFilter: monthFilter,
         yearFilter: yearFilter,
+        showAll: showAll,
       })
       .then(setExtendedMemberCredits)
       .catch((error) =>
@@ -51,6 +55,41 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
       )
       .finally(() => setLoading(false));
   }
+
+  function handleSelectionChange(id: string, checked: boolean) {
+    const newSelected = new Set(selectedIds);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedIds(newSelected);
+  }
+
+  function markSelectedCreditsAsSettled() {
+    if (selectedIds.size === 0) return;
+
+    api
+      .paymentsApiMemberCreditSettleCreate({
+        memberCreditSettleRequest: { creditIds: Array.from(selectedIds) },
+      })
+      .then(() => {
+        setSelectedIds(new Set());
+        loadCredits();
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Buchen der Gutschriften",
+          setToastDatas,
+        ),
+      );
+  }
+
+  const totalAmount = extendedMemberCredits.reduce(
+    (sum, credit) => sum + credit.credit.amount,
+    0,
+  );
 
   return (
     <>
@@ -64,12 +103,25 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                 }
               >
                 <h5 className={"mb-0"}>Gutschriften</h5>
-                <TapirButton
-                  variant={"outline-primary"}
-                  text={"Gutschrift erzeugen"}
-                  icon={"add_circle"}
-                  onClick={() => setShowCreateModal(true)}
-                />
+                <div className="d-flex gap-2">
+                  {selectedIds.size > 0 && (
+                    <TapirButton
+                      variant="primary"
+                      text={`${selectedIds.size} als beglichen markieren`}
+                      icon="check_circle"
+                      onClick={markSelectedCreditsAsSettled}
+                    />
+                  )}
+                  <TapirButton
+                    variant={"outline-primary"}
+                    text={"Gutschrift erzeugen"}
+                    icon={"add_circle"}
+                    onClick={() => setShowCreateModal(true)}
+                  />
+                </div>
+              </div>
+              <div className={"mt-2 text-muted"}>
+                Offene Gutschriften gesamt: {formatCurrency(totalAmount)}
               </div>
             </Card.Header>
             <ListGroup>
@@ -81,7 +133,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                       <Form.Select
                         value={monthFilter}
                         onChange={(event) =>
-                          setMonthFilter(parseInt(event.target.value))
+                          setMonthFilter(Number.parseInt(event.target.value))
                         }
                       >
                         <option key={-1} value={-1}>
@@ -106,9 +158,22 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                         onChange={(event) =>
                           event.target.value === ""
                             ? setYearFilter(undefined)
-                            : setYearFilter(parseInt(event.target.value))
+                            : setYearFilter(Number.parseInt(event.target.value))
                         }
                       ></Form.Control>
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row className={"mt-2"}>
+                  <Col>
+                    <Form.Group>
+                      <Form.Check
+                        type="checkbox"
+                        id="showAllCredits"
+                        label="Bereits beglichene Gutschriften anzeigen"
+                        checked={showAll}
+                        onChange={(e) => setShowAll(e.target.checked)}
+                      />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -117,6 +182,8 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                 <CreditListTable
                   extendedMemberCredits={extendedMemberCredits}
                   loading={loading}
+                  selectedIds={selectedIds}
+                  onSelectionChange={handleSelectionChange}
                 />
               </ListGroup.Item>
             </ListGroup>

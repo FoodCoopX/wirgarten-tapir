@@ -1,20 +1,19 @@
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { useApi } from "../../hooks/useApi.ts";
+import React from "react";
 import {
   PickupLocationsApi,
   PublicGrowingPeriod,
   PublicPickupLocation,
 } from "../../api-client";
-import { ShoppingCart } from "../types/ShoppingCart.ts";
-import React from "react";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 
 export function checkPickupLocationCapacities(
+  pickupLocationApi: PickupLocationsApi,
   pickupLocations: PublicPickupLocation[],
   shoppingCart: ShoppingCart,
-  setPickupLocationsWithCapacityCheckLoading: React.Dispatch<
-    React.SetStateAction<Set<PublicPickupLocation>>
+  setPickupLocationsCapacityCheckLoading: React.Dispatch<
+    React.SetStateAction<boolean>
   >,
   setPickupLocationsWithCapacityFull: React.Dispatch<
     React.SetStateAction<Set<PublicPickupLocation>>
@@ -22,42 +21,36 @@ export function checkPickupLocationCapacities(
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
   growingPeriod: PublicGrowingPeriod | undefined,
 ) {
-  const pickupLocationApi = useApi(PickupLocationsApi, getCsrfToken());
+  setPickupLocationsCapacityCheckLoading(true);
 
-  setPickupLocationsWithCapacityCheckLoading(new Set(pickupLocations));
-
-  for (const pickupLocation of pickupLocations) {
-    pickupLocationApi
-      .pickupLocationsApiPickupLocationCapacityCheckCreate({
-        pickupLocationCapacityCheckRequestRequest: {
-          pickupLocationId: pickupLocation.id!,
-          shoppingCart: shoppingCart,
-          growingPeriodId: growingPeriod ? growingPeriod.id! : null,
-        },
-      })
-      .then((response) => {
-        setPickupLocationsWithCapacityFull((set) => {
-          if (response.enoughCapacityForOrder) {
-            set.delete(pickupLocation);
-          } else {
-            set.add(pickupLocation);
-          }
-          return new Set(set);
-        });
-      })
-      .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler bei der Bestätigung der Verteilstationen-Kapazitäten: " +
-            error.message,
-          setToastDatas,
+  pickupLocationApi
+    .pickupLocationsApiPickupLocationCapacityCheckCreate({
+      pickupLocationCapacityCheckRequestRequest: {
+        shoppingCart: shoppingCart,
+        growingPeriodId: growingPeriod ? growingPeriod.id! : null,
+      },
+    })
+    .then((response) => {
+      setPickupLocationsWithCapacityFull(
+        new Set(
+          pickupLocations.filter(
+            (location) =>
+              !response.pickupLocationIdsWithEnoughCapacityForOrder.includes(
+                location.id!,
+              ),
+          ),
         ),
-      )
-      .finally(() => {
-        setPickupLocationsWithCapacityCheckLoading((set) => {
-          set.delete(pickupLocation);
-          return new Set(set);
-        });
-      });
-  }
+      );
+    })
+    .catch((error) =>
+      handleRequestError(
+        error,
+        "Fehler bei der Bestätigung der Verteilstationen-Kapazitäten: " +
+          error.message,
+        setToastDatas,
+      ),
+    )
+    .finally(() => {
+      setPickupLocationsCapacityCheckLoading(false);
+    });
 }

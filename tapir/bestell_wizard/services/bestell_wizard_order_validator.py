@@ -3,6 +3,7 @@ import datetime
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
+from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
@@ -35,7 +36,11 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import legal_status_is_cooperative, get_today
+from tapir.wirgarten.utils import (
+    legal_status_is_cooperative,
+    get_today,
+    legal_status_is_association,
+)
 
 
 class BestellWizardOrderValidator:
@@ -59,15 +64,15 @@ class BestellWizardOrderValidator:
         if not validated_serializer_data["sepa_allowed"]:
             raise ValidationError("SEPA-Mandat muss erlaubt sein")
 
-        if (
-            cls.is_contract_required(cache=cache)
-            and not validated_serializer_data["contract_accepted"]
-        ):
-            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
-
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_serializer_data["shopping_cart_order"], cache=cache
         )
+
+        if (
+            cls.is_contract_required(order=order, cache=cache)
+            and not validated_serializer_data["contract_accepted"]
+        ):
+            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
         if (
             cls.is_cancellation_policy_required(
@@ -98,6 +103,14 @@ class BestellWizardOrderValidator:
             cls.validate_coop_content(
                 validated_data=validated_serializer_data, order=order, cache=cache
             )
+        elif legal_status_is_association(cache=cache):
+            cls.validate_association_content(
+                association_membership_type_id=validated_serializer_data.get(
+                    "association_membership_type_id", None
+                ),
+                order=order,
+                cache=cache,
+            )
 
         cls.validate_distribution_channels(
             validated_serializer_data["distribution_channels"], cache=cache
@@ -121,7 +134,10 @@ class BestellWizardOrderValidator:
         return sum(order.values(), start=0) > 0 or solidarity_contribution > 0
 
     @classmethod
-    def is_contract_required(cls, cache: dict):
+    def is_contract_required(cls, order: TapirOrder, cache: dict):
+        if len(order) == 0:
+            return False
+
         return (
             get_parameter_value(
                 key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
@@ -138,7 +154,7 @@ class BestellWizardOrderValidator:
         order: TapirOrder,
         cache: dict,
     ):
-        if len(order.keys()) > 0 and get_parameter_value(
+        if len(order) > 0 and get_parameter_value(
             ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=cache
         ):
             raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
@@ -202,6 +218,28 @@ class BestellWizardOrderValidator:
                 raise ValidationError(
                     f"Genossenschaftsanteile bestellt: {nb_ordered_coop_shares}, minimum: {minimum_number_of_shares}."
                 )
+
+    @classmethod
+    def validate_association_content(
+        cls, association_membership_type_id: str | None, order: TapirOrder, cache: dict
+    ):
+        if association_membership_type_id is None:
+            raise ValidationError("Keine Vereinsmitgliedschaft ausgewählt")
+
+        membership_type = AssociationMembershipType.objects.filter(
+            id=association_membership_type_id
+        ).first()
+        if not membership_type:
+            raise ValidationError(
+                f"Unbekannte Vereinsmitgliedschafttyp-ID: {association_membership_type_id}"
+            )
+
+        if len(order) == 0 and not get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP, cache=cache
+        ):
+            raise ValidationError(
+                "Fördermitgliedschaften sind nicht erlaubt, es muss mindestens 1 Product ausgewählt werden"
+            )
 
     @classmethod
     def get_first_pickup_location_with_enough_capacity(

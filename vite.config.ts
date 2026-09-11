@@ -1,6 +1,6 @@
-import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import { join, resolve } from "node:path";
-import react from "@vitejs/plugin-react-swc";
+import { defineConfig } from "vite";
 
 export default defineConfig(() => {
   const INPUT_DIR = "./src_frontend";
@@ -44,10 +44,6 @@ export default defineConfig(() => {
           dashboard: join(INPUT_DIR, "/dashboard/dashboard_entry.tsx"),
           waiting_list: join(INPUT_DIR, "/waiting_list/waiting_list_entry.tsx"),
           member_list: join(INPUT_DIR, "/member_list/member_list_entry.tsx"),
-          bestell_wizard: join(
-            INPUT_DIR,
-            "/bestell_wizard/bestell_wizard_entry.tsx",
-          ),
           bestell_wizard_mobile: join(
             INPUT_DIR,
             "/bestell_wizard_mobile/bestell_wizard_mobile_entry.tsx",
@@ -69,6 +65,26 @@ export default defineConfig(() => {
             "/subscription_list/subscription_list_entry.tsx",
           ),
           credit_list: join(INPUT_DIR, "/credit_list/credit_list_entry.tsx"),
+          configuration: join(
+            INPUT_DIR,
+            "/configuration/configuration_entry.tsx",
+          ),
+          payment_transactions: join(
+            INPUT_DIR,
+            "payment_transactions/payment_transactions_list_view_entry.tsx",
+          ),
+          association_memberships_config: join(
+            INPUT_DIR,
+            "/association_memberships_config/association_memberships_config_entry.tsx",
+          ),
+          bestell_wizard_association_membership: join(
+            INPUT_DIR,
+            "/member_profile/association_membership/bestell_wizard_association_membership.tsx",
+          ),
+          mailing_lists: join(
+            INPUT_DIR,
+            "mailing_lists/mailing_lists_entry.tsx",
+          ),
           // Bakery entries - one per template under
           // tapir/bakery/templates/bakery/, and nothing else: rollup aborts
           // the whole build on an entry it cannot resolve, so a stale name

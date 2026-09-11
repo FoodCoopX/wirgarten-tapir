@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.payments import views
 
@@ -8,6 +9,11 @@ urlpatterns = [
         "api/member_future_payments",
         views.GetFutureMemberPaymentsApiView.as_view(),
         name="member_future_payments",
+    ),
+    path(
+        "api/member_past_payments",
+        views.GetPastMemberPaymentsApiView.as_view(),
+        name="member_past_payments",
     ),
     path(
         "api/member_payment_rhythm_data",
@@ -31,8 +37,56 @@ urlpatterns = [
         name="member_credit_create",
     ),
     path(
+        "api/member_credit_settle",
+        views.MemberCreditSettleApiView.as_view(),
+        name="member_credit_settle",
+    ),
+    path(
         "api/can_logged_in_user_change_targets_payment_rhythm",
         views.CabLoggedInUserChangeTargetsPaymentRhythm.as_view(),
         name="can_logged_in_user_change_targets_payment_rhythm",
     ),
+    path(
+        "api/mandate_reference_preview",
+        views.MandateReferencePreviewApiView.as_view(),
+        name="mandate_reference_preview",
+    ),
+    path(
+        "api/intended_use_preview_contracts",
+        views.PaymentIntendedUsePreviewContractsApiView.as_view(),
+        name="intended_use_preview_contracts",
+    ),
+    path(
+        "api/intended_use_preview_joker",
+        views.CreditIntendedUsePreviewJokerApiView.as_view(),
+        name="intended_use_preview_joker",
+    ),
+    path(
+        "api/intended_use_preview_coop_shares",
+        views.PaymentIntendedUsePreviewCoopSharesApiView.as_view(),
+        name="intended_use_preview_coop_shares",
+    ),
+    path(
+        "payment_transaction_list",
+        views.PaymentTransactionsListView.as_view(),
+        name="payment_transaction_list",
+    ),
+    path(
+        "api/payment_transaction_details",
+        views.PaymentTransactionDetailsView.as_view(),
+        name="payment_transaction_details",
+    ),
+    path(
+        "api/rebuild_subscription_payments",
+        views.RebuildSubscriptionPaymentsApiView.as_view(),
+        name="rebuild_subscription_payments",
+    ),
 ]
+
+router = DefaultRouter()
+router.register(
+    r"payment_transactions",
+    views.PaymentTransactionViewSet,
+    basename="payment_transactions",
+)
+urlpatterns += router.urls

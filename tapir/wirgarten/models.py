@@ -1,8 +1,6 @@
 import datetime
 import uuid
-from decimal import Decimal
 from functools import partial
-from typing import Dict
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -27,13 +25,21 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.utils.models import CountryField
 from tapir.wirgarten.constants import NO_DELIVERY, OPTIONS_WEEKDAYS, DeliveryCycle
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
+
+
+class LocationRoute(TapirModel):
+    """
+    Groups pickup locations that are supplied together.
+    """
+
+    name = models.TextField(_("Name"), max_length=150, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class PickupLocation(TapirModel):
@@ -61,6 +67,14 @@ class PickupLocation(TapirModel):
         _("Name of the contact"), max_length=150, blank=True
     )
     photo_link = models.CharField(_("Photo Link"), max_length=512, blank=True)
+    location_route = models.ForeignKey(
+        LocationRoute, blank=True, null=True, on_delete=models.SET_NULL
+    )
+    show_details_in_basket_totals_export = models.BooleanField(
+        _("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
+        default=False,
+    )
+    route_info = models.CharField(_("Driver/Route info"), max_length=1024, blank=True)
 
     class Meta:
         constraints = [
@@ -103,23 +117,6 @@ class PickupLocation(TapirModel):
                 f"<span style='font-weight: semibold'>{OPTIONS_WEEKDAYS[opening_time.day_of_week][1][0:2]} </span><span'>{open_time}-{close_time}</span>"
             )
         return ", ".join(formatted_times)
-
-    @property
-    def delivery_date_offset(self):
-        opening_times = PickupLocationOpeningTime.objects.filter(
-            pickup_location_id=self.id
-        ).order_by("day_of_week")
-        delivery_day = get_parameter_value(ParameterKeys.DELIVERY_DAY)
-        smallest_offset = None
-        for ot in opening_times:
-            offset = ot.day_of_week - delivery_day
-            if ot.day_of_week < delivery_day:
-                offset += 7
-            smallest_offset = (
-                min(smallest_offset, offset) if smallest_offset is not None else offset
-            )
-
-        return smallest_offset if smallest_offset is not None else 0
 
 
 class PickupLocationOpeningTime(TapirModel):
@@ -207,9 +204,6 @@ class ProductType(TapirModel):
             "Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen."
         ),
     )
-    is_association_membership = models.BooleanField(
-        default=False, verbose_name=_("Repräsentiert Vereinsmitgliedschaften")
-    )
     description_bestellwizard_short = models.TextField(
         default="",
         verbose_name=_(
@@ -230,21 +224,6 @@ class ProductType(TapirModel):
     title_bestellwizard_intro = models.CharField(max_length=512, default="")
     title_bestellwizard_product_choice = models.CharField(max_length=512, default="")
     background_image_in_bestellwizard = models.CharField(max_length=512, default="")
-
-    def base_price(self, reference_date=None):
-        if reference_date is None:
-            reference_date = get_today()
-
-        product = self.product_set.get(base=True)
-        price_queryset = product.productprice_set.filter(
-            valid_from__lte=reference_date
-        ).order_by("-valid_from")
-
-        price = price_queryset.first()
-        if price is None:
-            price = product.productprice_set.order_by("-valid_from").first()
-
-        return price.price if price else None
 
     class Meta:
         constraints = [
@@ -375,6 +354,7 @@ class Member(TapirUser):
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
     is_student = models.BooleanField(_("Student*in"), default=False)
     pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
+    has_received_membership_started_mail = models.BooleanField(default=False)
 
     @property
     def pickup_location(self):
@@ -390,24 +370,16 @@ class Member(TapirUser):
         if all_locations.count() == 1:
             return all_locations.first().pickup_location
         else:
-            found = (
-                self.memberpickuplocation_set.filter(valid_from__lte=reference_date)
-                .order_by("-valid_from")
-                .values("pickup_location")
-            )
-            return (
-                PickupLocation.objects.get(id=found[0]["pickup_location"])
-                if found.exists()
-                else None
-            )
+            member_pickup_location_object = (
+                self.memberpickuplocation_set.filter(
+                    valid_from__lte=reference_date
+                ).order_by("-valid_from")
+            ).first()
 
-    @classmethod
-    def generate_member_no(cls, max_member_number: int | None = None):
-        if max_member_number is None:
-            max_member_number = cls.objects.aggregate(models.Max("member_no"))[
-                "member_no__max"
-            ]
-        return (max_member_number or 0) + 1
+            if member_pickup_location_object is None:
+                return None
+
+            return member_pickup_location_object.pickup_location
 
     @transaction.atomic
     def save(self, *args, **kwargs):
@@ -463,17 +435,9 @@ class Member(TapirUser):
         )
 
     @property
-    def coop_entry_date(self):
-        from tapir.coop.services.membership_cancellation_manager import (
-            MembershipCancellationManager,
-        )
-
-        return MembershipCancellationManager.get_coop_entry_date(self)
-
-    @property
     def base_subscriptions_text(self):
         """
-        Returns a human readable string stating which base products the member has subscribed,
+        Returns a human-readable string stating which base products the member has subscribed,
         sorted by their price in ascending order.
 
         Examples:
@@ -490,11 +454,10 @@ class Member(TapirUser):
             get_product_price,
         )
 
-        base_product_type = BaseProductTypeService.get_base_product_type(cache={})
+        cache = {}
 
-        # Get all active base subscriptions for the member
-        subscriptions = get_active_subscriptions().filter(
-            member_id=self.id, product__type=base_product_type
+        subscriptions = get_active_subscriptions(cache={}).filter(
+            member_id=self.id, product__type__must_be_subscribed_to=True
         )
 
         if not subscriptions:
@@ -507,7 +470,7 @@ class Member(TapirUser):
 
         # Create a list of tuples (product, quantity, price) and sort by price
         product_info = []
-        today = get_today()
+        today = get_today(cache=cache)
         for product, quantity in product_counts.items():
             price = get_product_price(product, today).price
             product_info.append(
@@ -532,19 +495,15 @@ class Member(TapirUser):
         return " + ".join(base_subscription_texts)
 
     def __str__(self):
-        return f"[{self.member_no if self.member_no else '---'}] {self.first_name} {self.last_name} ({self.email})"
+        return f"[{self.member_no or '---'}] {self.first_name} {self.last_name} ({self.email})"
 
-    def get_extra_recipient_addresses(self, cache: dict):
+    def get_extra_recipients(self, cache: dict):
         if not get_parameter_value(
             ParameterKeys.ENABLE_EXTRA_MAIL_ADDRESSES, cache=cache
         ):
             return []
 
-        return list(
-            self.memberextraemail_set.filter(confirmed_on__isnull=False).values_list(
-                "email"
-            )
-        )
+        return list(self.memberextraemail_set.filter(confirmed_on__isnull=False))
 
 
 class MemberPickupLocation(TapirModel):
@@ -555,7 +514,9 @@ class MemberPickupLocation(TapirModel):
         )
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
+    pickup_location = models.ForeignKey(
+        PickupLocation, on_delete=models.PROTECT, null=True
+    )
     valid_from = models.DateField()
 
     def __str__(self):
@@ -577,6 +538,7 @@ class Product(TapirModel):
     url_of_image_in_bestellwizard = models.URLField(default="", blank=True)
     capacity = models.PositiveIntegerField(null=True, blank=False)
     min_coop_shares = models.IntegerField(default=0)
+    hidden_in_bestell_wizard = models.BooleanField(default=False)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType
@@ -643,13 +605,17 @@ class MandateReference(models.Model):
     The mandate reference is generated for the SEPA payments.
     """
 
-    ref = models.CharField(primary_key=True, null=False, blank=False, max_length=35)
+    ref = models.CharField(primary_key=True, max_length=35)
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
-    start_ts = models.DateTimeField(null=False)
-    end_ts = models.DateTimeField(null=True)
+    start_ts = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         indexes = [Index(fields=["member"], name="idx_mandatereference_mamber")]
+
+    def __str__(self):
+        return f"{self.member}: {self.ref}, {format_date(self.start_ts)}"
 
 
 class Payable:
@@ -675,7 +641,7 @@ class AdminConfirmableMixin(models.Model):
         abstract = True
 
 
-class Subscription(TapirModel, Payable, AdminConfirmableMixin):
+class Subscription(TapirModel, AdminConfirmableMixin):
     """
     A subscription for a member.
     """
@@ -685,12 +651,11 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=True)
     quantity = models.PositiveSmallIntegerField(null=False)
     start_date = models.DateField(null=False)
-    end_date = models.DateField(null=True)
+    end_date = models.DateField(null=False)
     cancellation_ts = models.DateTimeField(null=True)
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
-    created_at = models.DateTimeField(default=partial(timezone.now), null=False)
     consent_ts = models.DateTimeField(null=True)
     withdrawal_consent_ts = models.DateTimeField(null=True)
     trial_disabled = models.BooleanField(default=False)
@@ -713,43 +678,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["member"]),
         ]
 
-    def total_price(self, reference_date=None, cache: Dict = None) -> Decimal:
-        if self.price_override is not None:
-            return self.price_override
-
-        if reference_date is None:
-            reference_date = max(self.start_date, get_today(cache=cache))
-
-        if not hasattr(self, "_total_price"):
-            from tapir.wirgarten.service.products import get_product_price
-
-            price = get_product_price(self.product, reference_date, cache=cache).price
-            self._total_price = self.quantity * price
-
-        return self._total_price
-
-    @property
-    def total_price_without_soli(self):
-        today = get_today()
-        if not hasattr(self, "_total_price_without_soli"):
-            product_prices = ProductPrice.objects.filter(
-                product_id=self.product_id, valid_from__lte=today
-            ).order_by("product_id", "-valid_from")
-            self._total_price_without_soli = (
-                next(
-                    (
-                        product_price.price
-                        for product_price in product_prices
-                        if product_price.product_id == self.product_id
-                    ),
-                    0.0,
-                )
-                * self.quantity
-            )
-
-        return self._total_price_without_soli
-
-    def get_used_capacity(self, cache: Dict):
+    def get_used_capacity(self, cache: dict):
         today = get_today(cache=cache)
         if not hasattr(self, "_used_capacity"):
             from tapir.wirgarten.service.products import get_product_price
@@ -772,9 +701,12 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             f"from {self.start_date} to {self.end_date}"
         )
 
+    def short_str(self):
+        return f"{self.quantity}×{self.product.name},{self.product.type.name}"
+
     def long_str(self):
         return (
-            f"{self.quantity} × {self.product.name} {self.product.type.name}; "
+            f"{self.quantity} × {self.product.name} {self.product.type.name} "
             + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
         )
 
@@ -787,11 +719,14 @@ class ExportedFile(TapirModel):
     class FileType(models.TextChoices):
         CSV = "csv", _("CSV")
         PDF = "pdf", _("PDF")
+        XML = "xml", _("XML")
 
     name = models.CharField(max_length=256, null=False)
     type = models.CharField(max_length=8, choices=FileType.choices, null=False)
     file = models.BinaryField(null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
+
+    def __str__(self):
+        return f"{self.type}, {self.created_at}"
 
 
 class PaymentTransaction(TapirModel):
@@ -800,9 +735,17 @@ class PaymentTransaction(TapirModel):
     The relevant payments must reference the transaction in the same step.
     """
 
-    created_at = models.DateTimeField()
-    file = models.ForeignKey(ExportedFile, on_delete=models.PROTECT)
+    csv_file = models.ForeignKey(
+        ExportedFile, on_delete=models.PROTECT, related_name="transaction_csv"
+    )
+    xml_file = models.ForeignKey(
+        ExportedFile,
+        on_delete=models.PROTECT,
+        related_name="transaction_xml",
+        null=True,
+    )
     type = models.CharField(max_length=100)
+    month = models.DateField()
 
 
 class Payment(TapirModel):
@@ -830,21 +773,21 @@ class Payment(TapirModel):
     type = models.CharField(max_length=64)
     subscription_payment_range_start = models.DateField(null=True)
     subscription_payment_range_end = models.DateField(null=True)
+    # Only set for delivery-charge payments: identifies which pickup location the
+    # charge belongs to, so payments stay distinguishable per location and the
+    # already_paid idempotency can be scoped per location.
+    pickup_location = models.ForeignKey(
+        PickupLocation, on_delete=models.DO_NOTHING, null=True
+    )
 
     class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=["mandate_ref", "due_date", "type"],
-                name="unique_mandate_ref_date",
-            )
-        ]
         indexes = [
             Index(fields=["mandate_ref"], name="idx_payment_mandate_ref"),
             Index(fields=["due_date"], name="idx_payment_due_date"),
         ]
 
     def __str__(self):
-        return f"[{self.due_date}] {format_currency(self.amount)} €, edited={self.edited}, transaction={self.transaction}, type={self.type}, {self.mandate_ref.ref}"
+        return f"{format_currency(self.amount)} €, due_date:{self.due_date}, type:{self.type}, range:{self.subscription_payment_range_start} to {self.subscription_payment_range_end}, member:{self.mandate_ref.member}"
 
 
 class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
@@ -959,7 +902,7 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
             suffix = f"empfangen von {self.transfer_member}"
         else:
             suffix = f"Unknown transaction type ({self.transaction_type})"
-        return f"{prefix} {suffix} - Valid at:{self.valid_at} - Member:{self.member.id}"
+        return f"{prefix} {suffix} - Valid at:{self.valid_at} - Member:{self.member}"
 
 
 class Deliveries(TapirModel):
@@ -1099,7 +1042,7 @@ class SubscriptionChangeLogEntry(LogEntry):
 
 
 class WaitingListEntry(TapirModel):
-    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
+    member = models.ForeignKey(Member, on_delete=models.PROTECT, null=True)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     phone_number = PhoneNumberField(_("Phone number"))
@@ -1109,7 +1052,6 @@ class WaitingListEntry(TapirModel):
     postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
     city = models.CharField(_("City"), max_length=50, blank=True)
     country = CountryField(_("Country"), blank=True, default="DE")
-    created_at = models.DateTimeField(auto_now_add=True)
     privacy_consent = models.DateTimeField()
     number_of_coop_shares = models.PositiveSmallIntegerField()
     # if desired_start_date is null, the wish is "as soon as possible"
@@ -1165,7 +1107,7 @@ class QuestionaireTrafficSourceResponse(TapirModel):
 
 class QuestionaireCancellationReasonResponse(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
-    reason = models.CharField(max_length=150)
+    reason = models.CharField(max_length=1000)
     custom = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True, null=True)
 
@@ -1198,8 +1140,6 @@ class ScheduledTask(TapirModel):
         max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
     )
     error_message = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def execute(self):
         from importlib import import_module
@@ -1233,6 +1173,8 @@ class MemberExtraEmail(TapirModel):
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     email = models.EmailField()
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     confirmed_on = models.DateTimeField(null=True)
     secret = models.UUIDField(default=uuid.uuid4)
 
@@ -1244,12 +1186,23 @@ class MemberExtraEmailCreatedLogEntry(LogEntry):
     template_name = "wirgarten/log/member_extra_email_created_log_entry.html"
 
     email = models.EmailField(max_length=1024)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
 
-    def populate_email(self, email: str, actor: TapirUser, user: Member):
+    def populate_email(
+        self, extra_email_object: MemberExtraEmail, actor: TapirUser, user: Member
+    ):
         self.populate(actor=actor, user=user)
-        self.email = email
+        self.email = extra_email_object.email
+        self.first_name = extra_email_object.first_name
+        self.last_name = extra_email_object.last_name
 
         return self
+
+
+class MemberExtraEmailUpdatedLogEntry(UpdateModelLogEntry):
+    template_name = "wirgarten/log/member_extra_email_updated_log_entry.html"
+    excluded_fields = ["updated_at"]
 
 
 class MemberExtraEmailDeletedLogEntry(LogEntry):
@@ -1274,3 +1227,20 @@ class MemberExtraEmailConfirmedLogEntry(LogEntry):
         self.email = email
 
         return self
+
+
+class OrderFeedback(TapirModel):
+    member = models.ForeignKey(
+        "Member", on_delete=models.CASCADE, null=True, blank=True
+    )
+    waiting_list_entry = models.ForeignKey(
+        "WaitingListEntry", on_delete=models.CASCADE, null=True, blank=True
+    )
+    feedback_text = models.TextField()
+
+    def clean(self):
+        super().clean()
+        if not self.member and not self.waiting_list_entry:
+            raise ValidationError(
+                "OrderFeedback must have either a member or a waiting_list_entry."
+            )

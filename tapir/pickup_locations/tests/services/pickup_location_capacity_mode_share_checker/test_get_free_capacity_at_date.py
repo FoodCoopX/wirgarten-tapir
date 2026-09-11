@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
@@ -11,7 +11,7 @@ from tapir.pickup_locations.services.share_capacities_service import (
 )
 
 
-class TestGetFreeCapacityAtDate(SimpleTestCase):
+class TestGetFreeCapacityAtDate(TapirUnitTest):
     @patch.object(
         PickupLocationCapacityModeShareChecker, "get_highest_usage_after_date"
     )

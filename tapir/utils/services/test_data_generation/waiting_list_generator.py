@@ -1,12 +1,11 @@
 import datetime
 import itertools
 import random
-from typing import Dict
 
 from faker import Faker
 
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
@@ -99,6 +98,11 @@ class WaitingListGenerator:
             entries, ["created_at", "privacy_consent", "desired_start_date"]
         )
 
+        waiting_list_entries_without_member = [e for e in entries if e.member is None]
+        random.shuffle(waiting_list_entries_without_member)
+        for entry in waiting_list_entries_without_member[:5]:
+            UserGenerator.generate_feedback_for_waiting_list_entry(entry)
+
         combinations_of_possible_changes = []
         for nb_changes in range(1, len(cls.POSSIBLE_CHANGES) + 1):
             combinations_of_possible_changes.extend(
@@ -114,10 +118,12 @@ class WaitingListGenerator:
 
             member_pickup_location_id = None
             if entry.member:
-                member_pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id_from_cache(
-                    member_id=entry.member.id,
-                    reference_date=get_today(cache=cache),
-                    cache=cache,
+                member_pickup_location_id = (
+                    MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
+                        member_id=entry.member.id,
+                        reference_date=get_today(cache=cache),
+                        cache=cache,
+                    )
                 )
             if (
                 cls.CHANGE_PICKUP_LOCATION in desired_changes
@@ -147,12 +153,12 @@ class WaitingListGenerator:
 
     @classmethod
     def build_pickup_location_wishes(
-        cls, all_pickup_locations, entry: WaitingListEntry, cache: Dict
+        cls, all_pickup_locations, entry: WaitingListEntry, cache: dict
     ):
         possible_pickup_locations = set(all_pickup_locations)
         if entry.member is not None:
             member_pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                     member_id=entry.member.id,
                     reference_date=get_today(cache=cache),
                     cache=cache,
@@ -184,7 +190,7 @@ class WaitingListGenerator:
 
     @classmethod
     def build_product_wishes(
-        cls, entry: WaitingListEntry, cache: Dict, all_product_types
+        cls, entry: WaitingListEntry, cache: dict, all_product_types
     ):
         possible_product_types = set(all_product_types)
         nb_product_wishes = random.randint(1, min(3, len(possible_product_types)))

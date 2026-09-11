@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -13,28 +11,37 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.services.association_membership_cancellation_manager import (
+    AssociationMembershipCancellationManager,
+)
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
+)
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
 )
 from tapir.subscriptions.serializers import (
     CancellationDataSerializer,
     CancelSubscriptionsViewResponseSerializer,
     CancelSubscriptionsRequestSerializer,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
+from tapir.subscriptions.services.product_cancellation_data_builder import (
+    ProductCancellationDataBuilder,
 )
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import WEEKLY, NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     Product,
     SubscriptionChangeLogEntry,
     QuestionaireCancellationReasonResponse,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -45,6 +52,9 @@ from tapir.wirgarten.utils import (
     format_date,
     format_subscription_list_html,
     get_now,
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
 )
 
 
@@ -61,14 +71,21 @@ class GetCancellationDataView(APIView):
 
         cache = {}
         data = {
-            "can_cancel_coop_membership": MembershipCancellationManager.can_member_cancel_coop_membership(
-                member, cache=cache
+            "can_cancel_coop_membership": legal_status_is_cooperative(cache=cache)
+            and CoopMembershipCancellationManager.can_member_cancel_coop_membership(
+                member=member, reference_date=get_today(cache), cache=cache
             ),
-            "subscribed_products": self.build_subscribed_products_data(
-                member, cache=cache
+            "can_cancel_association_membership": legal_status_is_association(
+                cache=cache
+            )
+            and AssociationMembershipCancellationManager.does_member_have_a_cancellable_membership(
+                member=member, reference_date=get_today(cache=cache), cache=cache
+            ),
+            "subscribed_products": ProductCancellationDataBuilder.build_data_for_all_products(
+                member=member, cache=cache
             ),
             "legal_status": get_parameter_value(
-                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache
+                key=ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache
             ),
             "default_cancellation_reasons": [
                 reason.strip()
@@ -76,6 +93,18 @@ class GetCancellationDataView(APIView):
                     ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES, cache=cache
                 ).split(";")
             ],
+            "solidarity_contribution_data": self.build_solidarity_contribution_data(
+                member=member, cache=cache
+            ),
+            "show_trial_period_help_text": self.show_trial_period_help_text(
+                cache=cache, member=member
+            ),
+            "trial_period_duration": get_parameter_value(
+                key=ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache
+            ),
+            "trial_period_is_flexible": get_parameter_value(
+                key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END, cache=cache
+            ),
         }
 
         return Response(
@@ -84,27 +113,45 @@ class GetCancellationDataView(APIView):
         )
 
     @classmethod
-    def build_subscribed_products_data(cls, member, cache: Dict):
-        return [
-            {
-                "product": subscribed_product,
-                "is_in_trial": TrialPeriodManager.is_product_in_trial(
-                    subscribed_product, member, cache=cache
-                ),
-                "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
-                    product=subscribed_product, member=member, cache=cache
-                ),
-            }
-            for subscribed_product in cls.get_subscribed_products(member, cache=cache)
-        ]
+    def show_trial_period_help_text(cls, cache: dict, member: Member):
+        if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+            return False
+
+        relevant_product_types = ProductType.objects.exclude(
+            delivery_cycle__in=[WEEKLY[0], NO_DELIVERY[0]]
+        )
+
+        return (
+            get_active_and_future_subscriptions(cache=cache)
+            .filter(member=member, product__type__in=relevant_product_types)
+            .exists()
+        )
 
     @classmethod
-    def get_subscribed_products(cls, member, cache: Dict):
+    def build_solidarity_contribution_data(cls, member: Member, cache: dict):
+        contributions = SubscriptionCancellationManager.get_solidarity_contributions_that_could_be_cancelled(
+            member=member, cache=cache
+        )
+        today = get_today(cache=cache)
+
+        if not contributions.exists():
+            return {
+                "exists": False,
+                "is_in_trial": False,
+                "cancellation_date": today,
+            }
+
         return {
-            subscription.product
-            for subscription in get_active_and_future_subscriptions(cache=cache).filter(
-                member=member, cancellation_ts__isnull=True
-            )
+            "exists": True,
+            "is_in_trial": any(
+                TrialPeriodManager.is_contract_in_trial(
+                    contract=contribution, reference_date=today, cache=cache
+                )
+                for contribution in contributions
+            ),
+            "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date_for_solidarity_contribution(
+                member=member, cache=cache
+            ),
         }
 
 
@@ -124,7 +171,7 @@ class CancelSubscriptionsView(APIView):
         member = get_object_or_404(Member, id=serializer.validated_data["member_id"])
         check_permission_or_self(member.id, request)
 
-        product_ids = serializer.validated_data["product_ids"]
+        product_ids = serializer.validated_data.get("product_ids", [])
         products_selected_for_cancellation = {
             get_object_or_404(Product, id=product_id)
             for product_id in product_ids
@@ -132,18 +179,26 @@ class CancelSubscriptionsView(APIView):
         }
 
         cancel_coop_membership = serializer.validated_data["cancel_coop_membership"]
+        cancel_association_membership = serializer.validated_data[
+            "cancel_association_membership"
+        ]
         cancellation_reasons = serializer.validated_data.get("cancellation_reasons", [])
         custom_cancellation_reason = serializer.validated_data.get(
             "custom_cancellation_reason", None
+        )
+        cancel_solidarity_contribution = serializer.validated_data.get(
+            "cancel_solidarity_contribution", []
         )
 
         try:
             self.validate_everything(
                 cancel_coop_membership=cancel_coop_membership,
+                cancel_association_membership=cancel_association_membership,
                 member=member,
                 products_selected_for_cancellation=products_selected_for_cancellation,
                 cancellation_reasons=cancellation_reasons,
                 custom_cancellation_reason=custom_cancellation_reason,
+                cancel_solidarity_contribution=cancel_solidarity_contribution,
             )
         except ValidationError as e:
             return self.build_response(
@@ -152,11 +207,13 @@ class CancelSubscriptionsView(APIView):
 
         self.apply_changes(
             cancel_coop_membership=cancel_coop_membership,
+            cancel_association_membership=cancel_association_membership,
             member=member,
             products_selected_for_cancellation=products_selected_for_cancellation,
             actor=request.user,
             cancellation_reasons=cancellation_reasons,
             custom_cancellation_reason=custom_cancellation_reason,
+            cancel_solidarity_contribution=cancel_solidarity_contribution,
         )
 
         return self.build_response(subscriptions_cancelled=True, errors=[])
@@ -164,12 +221,14 @@ class CancelSubscriptionsView(APIView):
     @transaction.atomic
     def apply_changes(
         self,
-        cancel_coop_membership,
-        member,
-        products_selected_for_cancellation,
+        cancel_coop_membership: bool,
+        cancel_association_membership: bool,
+        member: Member,
+        products_selected_for_cancellation: set[Product],
         actor: TapirUser,
         cancellation_reasons: list[str],
         custom_cancellation_reason: str | None,
+        cancel_solidarity_contribution: bool,
     ):
         all_cancelled_subscriptions = []
         all_deleted_subscriptions = []
@@ -198,10 +257,21 @@ class CancelSubscriptionsView(APIView):
                             all_relevant_subscriptions
                         ),
                         "contract_end_date": format_date(
-                            all_relevant_subscriptions[0].end_date
+                            all_relevant_subscriptions[-1].end_date
                         ),
                     },
                 ),
+            )
+
+        if cancel_solidarity_contribution:
+            MemberSolidarityContributionService.assign_contribution_to_member(
+                member=member,
+                change_date=SubscriptionCancellationManager.get_earliest_possible_cancellation_date_for_solidarity_contribution(
+                    member=member, cache=self.cache
+                ),
+                amount=0,
+                actor=actor,
+                cache=self.cache,
             )
 
         if len(all_cancelled_subscriptions) > 0:
@@ -223,8 +293,16 @@ class CancelSubscriptionsView(APIView):
             ).save()
 
         if cancel_coop_membership:
-            MembershipCancellationManager.cancel_coop_membership(
+            CoopMembershipCancellationManager.cancel_coop_membership(
                 member, cache=self.cache, actor=actor
+            )
+
+        if cancel_association_membership:
+            end_date = AssociationMembershipCancellationManager.get_earliest_possible_membership_cancellation_date(
+                member=member, cache=self.cache
+            )
+            AssociationMembershipCancellationManager.cancel_association_membership(
+                member=member, end_date=end_date, actor=actor, cache=self.cache
             )
 
         for reason in cancellation_reasons:
@@ -241,46 +319,43 @@ class CancelSubscriptionsView(APIView):
     def validate_everything(
         self,
         cancel_coop_membership: bool,
+        cancel_association_membership: bool,
         member: Member,
         products_selected_for_cancellation: set[Product],
         cancellation_reasons: list[str],
         custom_cancellation_reason: str | None,
+        cancel_solidarity_contribution: bool,
     ):
-        if (
-            cancel_coop_membership
-            and not MembershipCancellationManager.can_member_cancel_coop_membership(
-                member, cache=self.cache
-            )
-        ):
-            raise ValidationError(
-                "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du noch nicht Mitglied bist."
-            )
-
-        subscribed_products = GetCancellationDataView.get_subscribed_products(
-            member, cache=self.cache
+        subscribed_products = ProductCancellationDataBuilder.get_subscribed_products(
+            member=member, cache=self.cache
         )
-        if (
-            cancel_coop_membership
-            and products_selected_for_cancellation != subscribed_products
-        ):
-            raise ValidationError(
-                "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du alle Verträge auch kündigst."
+
+        if cancel_coop_membership:
+            self.validate_coop_membership_cancellation(
+                member=member,
+                products_selected_for_cancellation=products_selected_for_cancellation,
+                subscribed_products=subscribed_products,
+            )
+
+        if cancel_association_membership:
+            self.validate_association_membership_cancellation(
+                member=member,
+                products_selected_for_cancellation=products_selected_for_cancellation,
+                subscribed_products=subscribed_products,
             )
 
         if (
-            not get_parameter_value(
-                ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-                cache=self.cache,
+            any(
+                product_type.must_be_subscribed_to
+                for product_type in TapirCache.get_all_product_types(cache=self.cache)
             )
-            and self.is_at_least_one_additional_product_not_selected(
+            and self.is_at_least_one_optional_product_not_selected(
                 subscribed_products,
                 products_selected_for_cancellation,
-                cache=self.cache,
             )
-            and self.are_all_base_products_selected(
+            and self.are_all_required_products_selected(
                 subscribed_products,
                 products_selected_for_cancellation,
-                cache=self.cache,
             )
         ):
             raise ValidationError(
@@ -304,33 +379,71 @@ class CancelSubscriptionsView(APIView):
                 "Es muss mindestens 1 Kündigungsgrund angegeben werden."
             )
 
+        if cancel_solidarity_contribution:
+            contributions = SubscriptionCancellationManager.get_solidarity_contributions_that_could_be_cancelled(
+                member=member, cache=self.cache
+            )
+            if not contributions.exists():
+                raise ValidationError("Es kann kein Solidarbeitrag gekündigt werden.")
+
+    def validate_coop_membership_cancellation(
+        self,
+        member: Member,
+        products_selected_for_cancellation: set[Product],
+        subscribed_products: set[Product],
+    ):
+        if not CoopMembershipCancellationManager.can_member_cancel_coop_membership(
+            member=member, cache=self.cache
+        ):
+            raise ValidationError(
+                "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du noch nicht Mitglied bist."
+            )
+
+        if products_selected_for_cancellation != subscribed_products:
+            raise ValidationError(
+                "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du alle Verträge auch kündigst."
+            )
+
+    def validate_association_membership_cancellation(
+        self,
+        member: Member,
+        products_selected_for_cancellation: set[Product],
+        subscribed_products: set[Product],
+    ):
+        if not AssociationMembershipCancellationManager.does_member_have_a_cancellable_membership(
+            member=member, reference_date=get_today(self.cache), cache=self.cache
+        ):
+            raise ValidationError(
+                "Es gibt keine Vereinsmitgliedschaft die beendet werden kann."
+            )
+
+        if products_selected_for_cancellation != subscribed_products:
+            raise ValidationError(
+                "Es ist nur möglich die Vereinsmitgliedschaft zu beenden wenn du alle Verträge auch kündigst."
+            )
+
     @staticmethod
-    def are_all_base_products_selected(
+    def are_all_required_products_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
-        cache: Dict,
     ):
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        for subscribed_product in subscribed_products:
+        for product in subscribed_products:
             if (
-                subscribed_product.type_id == base_product_type.id
-                and subscribed_product not in products_selected_for_cancellation
+                product.type.must_be_subscribed_to
+                and product not in products_selected_for_cancellation
             ):
                 return False
-
         return True
 
     @staticmethod
-    def is_at_least_one_additional_product_not_selected(
+    def is_at_least_one_optional_product_not_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
-        cache: Dict,
     ):
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        for subscribed_product in subscribed_products:
+        for product in subscribed_products:
             if (
-                subscribed_product.type_id != base_product_type.id
-                and subscribed_product not in products_selected_for_cancellation
+                product not in products_selected_for_cancellation
+                and not product.type.must_be_subscribed_to
             ):
                 return True
 

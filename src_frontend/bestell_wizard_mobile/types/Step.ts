@@ -8,6 +8,7 @@ export type Step =
   | "5b_pickup_location_choice"
   | "5c_pickup_location_confirm_waiting_list"
   | "6a_coop_intro"
+  | "6b_association_membership"
   | "6b_coop_shares"
   | "6c_coop_member_now"
   | "7_solidarity_contribution"

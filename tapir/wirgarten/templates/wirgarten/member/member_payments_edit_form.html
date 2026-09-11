@@ -4,8 +4,8 @@
 
 <div class="form-fields">
     {% for field in form %}
-    <div class="form-field" id="{{ field.name }}">
-        {% bootstrap_field field %}
-    </div>
+        <div class="form-field" id="{{ field.name }}">
+            {% bootstrap_field field %}
+        </div>
     {% endfor %}
 </div>

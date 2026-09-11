@@ -21,6 +21,7 @@ class TestPickupLocationCapacityEvolutionView(TapirIntegrationTest):
     maxDiff = 2000
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(self, datetime.datetime(year=2023, month=2, day=1))
 
     @classmethod

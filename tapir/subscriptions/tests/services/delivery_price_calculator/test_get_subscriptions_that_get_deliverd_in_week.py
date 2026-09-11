@@ -21,8 +21,11 @@ class TestGetSubscriptionsThatGetDeliveredInWeek(TapirIntegrationTest):
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=1, day=31),
         )
+
+    def setUp(self) -> None:
+        super().setUp()
         # creating a subscription from another member to make sure it doesn't get included
-        SubscriptionFactory.create(period=cls.growing_period)
+        SubscriptionFactory.create(period=self.growing_period)
 
     def test_getSubscriptionsThatGetDeliveredInWeek_deliveryCycleWeekly_subscriptionIncluded(
         self,

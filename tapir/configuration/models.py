@@ -53,6 +53,9 @@ class TapirParameter(models.Model):
 
         raise ValueError(f"Could not convert value '{value}' to bool")
 
+    def __str__(self):
+        return f"Key:{self.key} Value:{self.get_value()}"
+
 
 class TapirParameterDefinitionImporter:
     def import_definitions(self):

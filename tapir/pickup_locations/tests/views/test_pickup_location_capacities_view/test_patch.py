@@ -92,7 +92,7 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         result = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-            self.pickup_location
+            self.pickup_location, cache={}
         )
         expected = {
             self.product_type_1: 100,

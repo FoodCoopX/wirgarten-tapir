@@ -4,40 +4,51 @@ from unittest.mock import patch, Mock
 from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.models import TapirParameter
+from tapir.deliveries.models import DeliveryDayAdjustment
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_opening_times_manager import (
     PickupLocationOpeningTimesManager,
 )
 from tapir.wirgarten.constants import WEEKLY
-from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
+from tapir.wirgarten.models import (
+    ProductType,
+    PickupLocationOpeningTime,
+    MemberPickupLocation,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     MemberWithSubscriptionFactory,
     SubscriptionFactory,
     ProductTypeFactory,
     GrowingPeriodFactory,
+    ProductCapacityFactory,
+    PickupLocationFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
     def setUp(self):
-        mock_timezone(self, factories.NOW)
+        super().setUp()
+        mock_timezone(
+            test=self,
+            now=datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc),
+        )
 
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        cls._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=4)
 
     def test_buildDeliveryObject_noSubscriptionWithDeliveryOnGivenWeek_returnsNone(
         self,
@@ -83,6 +94,27 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self.assertEqual(updated_delivery_date, delivery_object["delivery_date"])
         mock_update_delivery_date_to_opening_times.assert_called_once()
 
+    def test_buildDeliveryObject_deliveryDateAdjusted_returnsAdjustedDeliveryDate(self):
+        member = MemberFactory.create()
+        subscription = SubscriptionFactory.create(member=member)
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+
+        DeliveryDayAdjustment.objects.create(
+            adjusted_weekday=2, growing_period=subscription.period, calendar_week=23
+        )
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNotNone(delivery_object)
+        self.assertEqual(
+            datetime.date(year=2023, month=6, day=7), delivery_object["delivery_date"]
+        )
+
     @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     @patch.object(JokerManagementService, "does_member_have_a_joker_in_week")
     @patch.object(
@@ -90,7 +122,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
     )
     @patch.object(PickupLocationOpeningTime, "objects")
     @patch.object(
-        MemberPickupLocationService, "get_member_pickup_location_id_from_cache"
+        MemberPickupLocationGetter, "get_member_pickup_location_id_from_cache"
     )
     def test_buildDeliveryObject_default_returnsCorrectPickupLocationData(
         self,
@@ -106,8 +138,8 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         mock_pickup_location = Mock()
         mock_get_member_pickup_location_id_from_cache.return_value = "test_pl_id"
         cache = {"pickup_location_by_id": {"test_pl_id": mock_pickup_location}}
-        mock_opening_time = Mock()
-        mock_pickup_location_opening_times_objects.filter.return_value.order_by.return_value = [
+        mock_opening_time = PickupLocationOpeningTime(day_of_week=3)
+        mock_pickup_location_opening_times_objects.filter.return_value = [
             mock_opening_time
         ]
         mock_update_delivery_date_to_opening_times.return_value = datetime.date(
@@ -279,12 +311,15 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             start_date=datetime.date(year=2022, month=1, day=1),
             end_date=datetime.date(year=2022, month=12, day=31),
         )
-        GrowingPeriodFactory.create(
+        growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2023, month=1, day=1),
             end_date=datetime.date(year=2023, month=12, day=31),
         )
         past_subscription = SubscriptionFactory.create(
             member=member, period=past_growing_period
+        )
+        ProductCapacityFactory(
+            product_type=past_subscription.product.type, period=growing_period
         )
 
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
@@ -311,16 +346,19 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             start_date=datetime.date(year=2022, month=1, day=1),
             end_date=datetime.date(year=2022, month=12, day=31),
         )
-        GrowingPeriodFactory.create(
+        growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2023, month=1, day=1),
             end_date=datetime.date(year=2023, month=12, day=31),
         )
-        SubscriptionFactory.create(
+        subscription = SubscriptionFactory.create(
             member=member,
             period=past_growing_period,
             cancellation_ts=make_timezone_aware(
                 datetime.datetime(year=2022, month=11, day=15)
             ),
+        )
+        ProductCapacityFactory(
+            product_type=subscription.product.type, period=growing_period
         )
 
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
@@ -345,11 +383,16 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             start_date=datetime.date(year=2022, month=1, day=1),
             end_date=datetime.date(year=2022, month=12, day=31),
         )
-        GrowingPeriodFactory.create(
+        growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2023, month=1, day=1),
             end_date=datetime.date(year=2023, month=12, day=31),
         )
-        SubscriptionFactory.create(member=member, period=past_growing_period)
+        subscription = SubscriptionFactory.create(
+            member=member, period=past_growing_period
+        )
+        ProductCapacityFactory(
+            product_type=subscription.product.type, period=growing_period
+        )
 
         ProductType.objects.update(delivery_cycle=WEEKLY[0])
 
@@ -361,3 +404,146 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         )
 
         self.assertIsNone(delivery_object)
+
+    def test_buildDeliveryObject_givenDateIsWithinSubscriptionRangeButWeekOfDeliveryIsNotFullyCoveredBySubscription_returnsNone(
+        self,
+    ):
+        # For subscriptions that end in the middle of a week,
+        # the last subscription is the on in the last week fully covered by the subscription.
+        # For example, a subscription that ends on a Friday with delivery day on Thursday will not get delivered on the
+        # last week.
+
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
+
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            period__start_date=datetime.date(year=2026, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+            end_date=datetime.date(
+                year=2026, month=9, day=30
+            ),  # Subscription ends on a Wednesday: Tuesday 29.09. should not get delivered
+        )
+
+        given_delivery_date = datetime.date(year=2026, month=9, day=29)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNone(delivery_object)
+
+    def test_buildDeliveryObject_givenDateIsInWeekPartiallyCoveredBySubscription_returnsNone(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=False
+        )
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2027, month=1, day=1)
+        )
+
+        member = MemberFactory.create()
+        subscription = SubscriptionFactory.create(
+            member=member,
+            period__start_date=datetime.date(year=2026, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+            end_date=datetime.date(
+                year=2026, month=12, day=31
+            ),  # Subscription ends on a Wednesday: Tuesday 29.09. should not get delivered
+        )
+        ProductCapacityFactory(
+            product_type=subscription.product.type, period=growing_period
+        )
+
+        given_delivery_date = datetime.date(year=2026, month=12, day=29)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNone(delivery_object)
+
+    def test_buildDeliveryObject_givenDateIsInWeekPartiallyCoveredBySubscriptionButSubscriptionWillBeRenewed_returnsObject(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
+        future_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2027, month=1, day=1)
+        )
+        member = MemberFactory.create()
+        subscription = SubscriptionFactory.create(
+            member=member,
+            period__start_date=datetime.date(year=2026, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+            end_date=datetime.date(
+                year=2026, month=12, day=31
+            ),  # Subscription ends on a Wednesday: Tuesday 29.09. should not get delivered
+        )
+        ProductCapacityFactory.create(
+            period=future_growing_period, product_type=subscription.product.type
+        )
+
+        given_delivery_date = datetime.date(year=2026, month=12, day=29)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNotNone(delivery_object)
+
+    def test_buildDeliveryObject_openingTimesSpanOverTwoWeeks_returnsCorrectDeliveryDate(
+        self,
+    ):
+        member = MemberFactory.create()
+        SubscriptionFactory.create(member=member)
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+        pickup_location = PickupLocationFactory.create()
+        MemberPickupLocation.objects.create(
+            member=member,
+            pickup_location=pickup_location,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+        )
+        for day in [0, 1, 5, 6]:
+            PickupLocationOpeningTime.objects.create(
+                pickup_location=pickup_location,
+                day_of_week=day,
+                open_time=datetime.time(hour=8),
+                close_time=datetime.time(hour=18),
+            )
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)  # Monday
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNotNone(delivery_object)
+        self.assertEqual(
+            datetime.date(year=2023, month=6, day=10),
+            delivery_object["delivery_date"],
+            "This location is open Monday, Tuesday, Saturday and Sunday, but the delivery day is Friday: the Monday and Tuesday are for the following week and should be ignored.",
+        )
+
+        self._set_parameter(key=ParameterKeys.DELIVERY_DAY, value=1)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
+        )
+
+        self.assertIsNotNone(delivery_object)
+        self.assertEqual(
+            datetime.date(year=2023, month=6, day=6), delivery_object["delivery_date"]
+        )

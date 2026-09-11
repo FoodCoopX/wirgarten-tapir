@@ -1,16 +1,17 @@
+import datetime
 import json
-from datetime import datetime
-from typing import List, Dict
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
@@ -19,19 +20,19 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
     PickupLocationCapacityModeShareChecker,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.constants import NO_DELIVERY
+from tapir.wirgarten.constants import NO_DELIVERY, HTML_ALLOWED_TEXT
 from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationOpeningTime,
-    Product,
     Subscription,
     Member,
+    LocationRoute,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
-    get_next_delivery_date,
 )
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_product_price,
@@ -40,7 +41,7 @@ from tapir.wirgarten.utils import get_today
 
 
 def get_pickup_locations_map_data(
-    pickup_locations, location_capabilities, cache: Dict = None
+    pickup_locations, location_capabilities, cache: dict = None
 ):
     return json.dumps(
         {
@@ -53,14 +54,9 @@ def get_pickup_locations_map_data(
 
 
 def build_capacity_dictionary_for_picking_mode_share(
-    capa, next_delivery_date: datetime.date, next_month: datetime.date, cache: Dict
+    capa, next_month: datetime.date, cache: dict
 ):
     max_capa = capa["max_capacity"]
-    try:
-        base_product = Product.objects.get(type_id=capa["product_type_id"], base=True)
-    except Product.DoesNotExist:
-        return None
-
     current_capa = round(
         PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
             pickup_location=PickupLocation.objects.get(id=capa["pickup_location_id"]),
@@ -69,8 +65,7 @@ def build_capacity_dictionary_for_picking_mode_share(
             ),
             reference_date=next_month,
             cache=cache,
-        )
-        / float(get_product_price(base_product, next_delivery_date, cache).size),
+        ),
         2,
     )
 
@@ -82,8 +77,7 @@ def build_capacity_dictionary_for_picking_mode_share(
             ),
             reference_date=next_month,
             cache=cache,
-        )
-        / float(get_product_price(base_product, next_month, cache).size),
+        ),
         2,
     )
 
@@ -101,7 +95,7 @@ def build_capacity_dictionary_for_picking_mode_share(
 
 
 def pickup_location_to_dict(
-    location_capabilities, pickup_location: PickupLocation, cache: Dict = None
+    location_capabilities, pickup_location: PickupLocation, cache: dict = None
 ):
     next_delivery_date = get_next_delivery_date(cache=cache)
     next_month = next_delivery_date + relativedelta(day=1, months=1)
@@ -111,7 +105,6 @@ def pickup_location_to_dict(
     capabilities_for_pickup_location = [
         build_capacity_dictionary_for_picking_mode_share(
             capa=capa,
-            next_delivery_date=next_delivery_date,
             next_month=next_month,
             cache=cache,
         )
@@ -134,7 +127,7 @@ def pickup_location_to_dict(
         "capabilities": capabilities_for_pickup_location,
         "members": get_active_subscriptions(next_delivery_date, cache)
         .filter(
-            member_id__in=MemberPickupLocationService.get_members_ids_at_pickup_location(
+            member_id__in=MemberPickupLocationGetter.get_members_ids_at_pickup_location(
                 pickup_location=pickup_location,
                 reference_date=next_delivery_date,
                 cache=cache,
@@ -143,7 +136,9 @@ def pickup_location_to_dict(
         .values("member_id")
         .distinct()
         .count(),
+        "location_route": getattr(pickup_location.location_route, "name", ""),
         "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
+        "route_info": pickup_location.route_info,
     }
 
 
@@ -156,7 +151,7 @@ class PickupLocationWidget(forms.Select):
         location_capabilities,
         selected_product_types,
         initial,
-        cache: Dict,
+        cache: dict,
         *args,
         **kwargs,
     ):
@@ -190,13 +185,15 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         selected_product_types = {
             product_type_name: sum(
                 map(
-                    lambda subscription: float(
-                        get_product_price(
-                            subscription.product,
-                            cache=self.cache,
-                        ).size
-                    )
-                    * (subscription.quantity or 0),
+                    lambda subscription: (
+                        float(
+                            get_product_price(
+                                subscription.product,
+                                cache=self.cache,
+                            ).size
+                        )
+                        * (subscription.quantity or 0)
+                    ),
                     subscriptions,
                 )
             )
@@ -306,6 +303,11 @@ class PickupLocationEditForm(forms.Form):
         self.fields["coords"] = forms.CharField(
             label=_("Koordinaten"), help_text="z.B: 53.2731785,10.3741756"
         )
+        self.fields["location_route"] = forms.ModelChoiceField(
+            label=_("Ausfahrrunde"),
+            queryset=LocationRoute.objects.all(),
+            required=False,
+        )
         self.fields["name"] = forms.CharField(label=_("Name"), required=True)
         self.fields["street"] = forms.CharField(
             label=_("Straße & Hausnummer"), required=True
@@ -319,7 +321,7 @@ class PickupLocationEditForm(forms.Form):
             label=_("Zugangscode"), required=False
         )
         self.fields["messenger_group_link"] = forms.CharField(
-            label=_("Link zur Signal-Gruppe"), required=False
+            label=_("Link zur Messenger-Gruppe"), required=False
         )
         self.fields["contact_name"] = forms.CharField(
             label=_("Name der Abholort-Pat*innen"), required=False
@@ -327,15 +329,28 @@ class PickupLocationEditForm(forms.Form):
         self.fields["photo_link"] = forms.CharField(
             label=_("Link zum Foto des Abholorts"), required=False
         )
+        self.fields["show_details_in_basket_totals_export"] = forms.BooleanField(
+            label=_("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
+            required=False,
+        )
         self.fields["info"] = forms.CharField(
             label=_("Zusätzliche Informationen zur Abholung"),
             required=False,
-            help_text="z.B.: im Hinterhof",
+            help_text="z.B.: im Hinterhof. " + HTML_ALLOWED_TEXT,
+            widget=Textarea,
+        )
+        self.fields["route_info"] = forms.CharField(
+            label=_("Information Fahrer"),
+            required=False,
+            help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste.",
+            widget=Textarea,
         )
 
         self.colspans = {
-            "coords": 2,
+            "coords": 1,
+            "show_details_in_basket_totals_export": 2,
             "info": 2,
+            "route_info": 2,
             "monday_times": 2,
             "tuesday_times": 2,
             "wednesday_times": 2,
@@ -386,17 +401,22 @@ class PickupLocationEditForm(forms.Form):
             self.fields["coords"].initial = (
                 f"{self.pickup_location.coords_lon},{self.pickup_location.coords_lat}"
             )
+            self.fields["location_route"].initial = self.pickup_location.location_route
             self.fields["name"].initial = self.pickup_location.name
             self.fields["street"].initial = self.pickup_location.street
             self.fields["postcode"].initial = self.pickup_location.postcode
             self.fields["city"].initial = self.pickup_location.city
             self.fields["info"].initial = self.pickup_location.info
+            self.fields["route_info"].initial = self.pickup_location.route_info
             self.fields["access_code"].initial = self.pickup_location.access_code
             self.fields["messenger_group_link"].initial = (
                 self.pickup_location.messenger_group_link
             )
             self.fields["contact_name"].initial = self.pickup_location.contact_name
             self.fields["photo_link"].initial = self.pickup_location.photo_link
+            self.fields["show_details_in_basket_totals_export"].initial = (
+                self.pickup_location.show_details_in_basket_totals_export
+            )
 
             opening_times = PickupLocationOpeningTime.objects.filter(
                 pickup_location=self.pickup_location
@@ -442,8 +462,8 @@ class PickupLocationEditForm(forms.Form):
             for time in times:
                 try:
                     start, end = time.split("-")
-                    start_time = datetime.strptime(start, "%H:%M")
-                    end_time = datetime.strptime(end, "%H:%M")
+                    start_time = datetime.datetime.strptime(start, "%H:%M")
+                    end_time = datetime.datetime.strptime(end, "%H:%M")
                     if start_time >= end_time:
                         self.add_error(
                             field,
@@ -507,12 +527,17 @@ class PickupLocationEditForm(forms.Form):
 
         pl.coords_lon = coords[0].strip()
         pl.coords_lat = coords[1].strip()
+        pl.location_route = self.cleaned_data["location_route"]
+        pl.show_details_in_basket_totals_export = self.cleaned_data[
+            "show_details_in_basket_totals_export"
+        ]
 
         pl.name = self.cleaned_data["name"]
         pl.street = self.cleaned_data["street"]
         pl.postcode = self.cleaned_data["postcode"]
         pl.city = self.cleaned_data["city"]
         pl.info = self.cleaned_data["info"]
+        pl.route_info = self.cleaned_data["route_info"]
         pl.access_code = self.cleaned_data["access_code"]
         pl.contact_name = self.cleaned_data["contact_name"]
         pl.messenger_group_link = self.cleaned_data["messenger_group_link"]

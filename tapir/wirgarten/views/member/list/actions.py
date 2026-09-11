@@ -9,20 +9,34 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 from django.views.generic import View
 
+from tapir.associations.models import AssociationMembership
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
+from tapir.core.services.organisation_entry_date_annotator import (
+    OrganisationEntryDateAnnotator,
+)
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
+)
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import CoopShareTransaction, Member, Subscription
+from tapir.wirgarten.models import CoopShareTransaction, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string
+from tapir.wirgarten.service.member import (
+    annotate_member_queryset_with_coop_shares_total_value,
+    annotate_member_queryset_with_monthly_payment,
+)
 from tapir.wirgarten.utils import (
     format_currency,
     format_date,
     get_now,
     get_today,
     legal_status_is_association,
-    legal_status_is_cooperative,
 )
-from tapir.wirgarten.views.member.list.member_list import MemberFilter, MemberListView
+from tapir.wirgarten.views.member.list.member_list import MemberFilter
 
 
 @require_GET
@@ -129,7 +143,13 @@ def export_coop_member_list(request, **kwargs):
         columns.append(KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE)
 
     output, writer = begin_csv_string(columns)
-    for entry in Member.objects.order_by("member_no"):
+
+    members = Member.objects.order_by("member_no")
+    members = OrganisationEntryDateAnnotator.annotate_with_organisation_entry_date(
+        members, cache=cache
+    )
+
+    for entry in members:
         coop_shares = entry.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
         ).order_by("timestamp")
@@ -146,11 +166,12 @@ def export_coop_member_list(request, **kwargs):
             [format_date(t.valid_at) for t in cancelled_coop_shares]
         )
 
-        today = get_today()
-        # skip future members. TODO: check cancellation, when must old members be removed from the list?
-        if legal_status_is_cooperative(cache=cache) and (
-            entry.coop_entry_date is None or entry.coop_entry_date > today
-        ):
+        today = get_today(cache=cache)
+        # skip future members.
+        entry_date = getattr(
+            entry, OrganisationEntryDateAnnotator.ANNOTATION_ORGANISATION_ENTRY_DATE
+        )
+        if entry_date is None or entry_date > today:
             continue
 
         transfers = entry.coopsharetransaction_set.filter(
@@ -161,7 +182,9 @@ def export_coop_member_list(request, **kwargs):
         ).order_by("timestamp")
 
         data = {
-            KEY_MEMBER_NO: entry.member_no,
+            KEY_MEMBER_NO: MemberNumberService.format_member_number(
+                entry.member_no, cache=cache
+            ),
             KEY_FIRST_NAME: entry.first_name,
             KEY_LAST_NAME: entry.last_name,
             KEY_ADDRESS: entry.street,
@@ -213,7 +236,7 @@ def export_coop_member_list(request, **kwargs):
             map(
                 lambda x: f"Übertragung {format_currency(abs(x.quantity) * get_parameter_value(
                     ParameterKeys.COOP_SHARE_PRICE, cache=cache
-                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {x.transfer_member.member_no})",
+                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {MemberNumberService.format_member_number(x.transfer_member.member_no, cache=cache)})",
                 transfers,
             )
         )
@@ -226,9 +249,7 @@ def export_coop_member_list(request, **kwargs):
 
         if legal_status_is_association(cache=cache):
             first_association_membership = (
-                Subscription.objects.filter(
-                    member_id=entry.id, product__type__is_association_membership=True
-                )
+                AssociationMembership.objects.filter(member_id=entry.id)
                 .order_by("start_date")
                 .first()
             )
@@ -238,8 +259,8 @@ def export_coop_member_list(request, **kwargs):
                 else ""
             )
             last_association_membership = (
-                Subscription.objects.filter(
-                    member_id=entry.id, product__type__is_association_membership=True
+                AssociationMembership.objects.filter(
+                    member_id=entry.id, end_date__isnull=False
                 )
                 .order_by("-end_date")
                 .first()
@@ -267,10 +288,16 @@ def export_coop_member_list(request, **kwargs):
 
 
 class ExportMembersView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get(self, request, *args, **kwargs):
         # Get queryset based on filters and ordering
         filter_class = MemberFilter
-        queryset = filter_class(request.GET, queryset=self.get_queryset()).qs
+        queryset = filter_class(request.GET, queryset=self.get_queryset()).qs.order_by(
+            "member_no"
+        )
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")
@@ -296,34 +323,66 @@ class ExportMembersView(View):
                 "Geschäftsanteile (€)",
                 "Umsatz/Monat (€)",
                 "Abholort",
+                "Solidarbeitrag",
             ]
         )
 
-        # Write data rows
         for member in queryset:
             writer.writerow(
                 [
-                    member.member_no,
+                    MemberNumberService.format_member_number(
+                        member.member_no, cache=self.cache
+                    ),
                     member.first_name,
                     member.last_name,
                     member.email,
                     member.phone_number,
-                    member.street + (", " + member.street_2) if member.street_2 else "",
+                    member.street + (", " + member.street_2 if member.street_2 else ""),
                     member.postcode,
                     member.city,
                     member.country,
                     format_date(member.created_at.date()),
-                    format_date(member.coop_entry_date),
+                    format_date(
+                        getattr(
+                            member,
+                            OrganisationEntryDateAnnotator.ANNOTATION_ORGANISATION_ENTRY_DATE,
+                        )
+                    ),
                     format_currency(member.coop_shares_total_value),
                     format_currency(member.monthly_payment),
-                    member.pickup_location.name if member.pickup_location else "",
+                    getattr(
+                        member,
+                        MemberPickupLocationGetter.ANNOTATION_CURRENT_PICKUP_LOCATION_NAME,
+                    ),
+                    format_currency(
+                        getattr(
+                            member,
+                            MemberSolidarityContributionService.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION,
+                        )
+                        or 0
+                    ),
                 ]
             )
 
         return response
 
     def get_queryset(self):
-        return MemberListView.get_queryset(self)
+        today = get_today(cache=self.cache)
+        queryset = Member.objects.all()
+        queryset = annotate_member_queryset_with_coop_shares_total_value(
+            queryset, cache=self.cache
+        )
+        queryset = annotate_member_queryset_with_monthly_payment(queryset, today)
+        queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_name_at_date(
+            queryset=queryset, reference_date=today
+        )
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_entry_date(
+            queryset=queryset, cache=self.cache
+        )
+        queryset = MemberSolidarityContributionService.annotate_member_queryset_with_current_contribution(
+            queryset=queryset, reference_date=today
+        )
+        return queryset
 
     def get_filterset_class(self):
         return MemberFilter
@@ -339,7 +398,11 @@ def resend_verify_email(request, **kwargs):
     member_id = kwargs["pk"]
     member = Member.objects.get(id=member_id)
     try:
-        member.send_verify_email(cache={})
+        if member.keycloak_id is None:
+            member.save(bypass_keycloak=False)
+            member.save(bypass_keycloak=False)
+        else:
+            member.send_verify_email(cache={})
         result = "success"
     except Exception as e:
         result = str(e)

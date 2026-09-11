@@ -4,15 +4,20 @@ from tapir_mail.models import MailCategory, MailCategoryMode
 from tapir_mail.service.external_recipient_manager import ExternalRecipientManager
 
 from tapir.accounts.models import TapirUser
+from tapir.associations.models import AssociationMembershipType
+from tapir.associations.services.association_membership_change_handler import (
+    AssociationMembershipChangeHandler,
+)
 from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
     BestellWizardOrderValidator,
 )
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
@@ -41,6 +46,7 @@ from tapir.wirgarten.utils import (
     get_today,
     get_now,
     legal_status_is_cooperative,
+    legal_status_is_association,
 )
 
 
@@ -71,6 +77,7 @@ class BestellWizardOrderFulfiller:
             personal_data=validated_serializer_data["personal_data"],
             is_student=is_student,
             cache=cache,
+            request=request,
         )
         actor = request.user if request.user.is_authenticated else member
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
@@ -90,7 +97,7 @@ class BestellWizardOrderFulfiller:
         )
 
         if OrderValidator.does_order_need_a_pickup_location(order=order, cache=cache):
-            MemberPickupLocationService.link_member_to_pickup_location(
+            MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=pickup_location.id,
                 member=member,
                 valid_from=contract_start_date,
@@ -99,9 +106,20 @@ class BestellWizardOrderFulfiller:
             )
 
         coop_share_transaction = None
+        association_membership = None
         if legal_status_is_cooperative(cache=cache) and not is_student:
             coop_share_transaction = cls.create_coop_shares(
                 number_of_shares=validated_serializer_data["number_of_coop_shares"],
+                member=member,
+                subscriptions=subscriptions,
+                cache=cache,
+                actor=actor,
+            )
+        if legal_status_is_association(cache=cache):
+            association_membership = cls.create_association_membership(
+                association_membership_type=AssociationMembershipType.objects.get(
+                    id=validated_serializer_data["association_membership_type_id"]
+                ),
                 member=member,
                 subscriptions=subscriptions,
                 cache=cache,
@@ -112,7 +130,7 @@ class BestellWizardOrderFulfiller:
         if len(subscriptions) == 0 and coop_share_transaction is not None:
             solidarity_contribution_start_date = coop_share_transaction.valid_at
 
-        cls.create_solidarity_contribution(
+        solidarity_contribution = cls.create_solidarity_contribution(
             member=member,
             contribution=validated_serializer_data["solidarity_contribution"],
             contract_start_date=solidarity_contribution_start_date,
@@ -125,17 +143,23 @@ class BestellWizardOrderFulfiller:
             member_id=member.id,
         )
 
-        if coop_share_transaction is not None and len(subscriptions) == 0:
+        if len(subscriptions) == 0:
             send_investing_membership_confirmation(
-                member_id=member.id, coop_share_transaction=coop_share_transaction
+                member_id=member.id,
+                coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
+                solidarity_contribution=solidarity_contribution,
+                cache=cache,
             )
         else:
             send_product_order_confirmation(
-                member,
-                subscriptions,
+                member=member,
+                subs=subscriptions,
                 cache=cache,
                 from_waiting_list=False,
                 coop_share_transaction=coop_share_transaction,
+                association_membership=association_membership,
+                solidarity_contribution=solidarity_contribution,
             )
 
         return member
@@ -151,7 +175,7 @@ class BestellWizardOrderFulfiller:
         response.sources.set(sources)
 
     @classmethod
-    def create_member(cls, personal_data, is_student: bool, cache: dict):
+    def create_member(cls, personal_data, is_student: bool, cache: dict, request):
         now = get_now(cache=cache)
         contracts_signed = dict.fromkeys(
             ["sepa_consent", "withdrawal_consent", "privacy_consent"], now
@@ -166,9 +190,16 @@ class BestellWizardOrderFulfiller:
                 first_name=personal_data["first_name"],
             )
 
-        return Member.objects.create(
+        member = Member.objects.create(
             **personal_data, **contracts_signed, is_student=is_student
         )
+        MemberNumberService.assign_member_number_if_eligible(
+            member,
+            cache=cache,
+            actor=request.user if request.user.is_authenticated else member,
+        )
+
+        return member
 
     @classmethod
     def create_coop_shares(
@@ -179,26 +210,16 @@ class BestellWizardOrderFulfiller:
         cache: dict,
         actor: TapirUser,
     ):
-        shares_valid_at = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
-        at_least_one_trial_period_found = False
-        if len(subscriptions) > 0:
-            for subscription in subscriptions:
-                end_of_trial_period = TrialPeriodManager.get_end_of_trial_period(
-                    obj=subscription, cache=cache
-                )
-                if end_of_trial_period is not None:
-                    shares_valid_at = min(
-                        shares_valid_at,
-                        TrialPeriodManager.get_end_of_trial_period(
-                            obj=subscription, cache=cache
-                        ),
-                    )
-                    at_least_one_trial_period_found = True
+        earliest_trial_period_end = cls.get_earliest_trial_period_end(
+            subscriptions=subscriptions, cache=cache
+        )
 
-        if not at_least_one_trial_period_found:
+        if earliest_trial_period_end is None:
             shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
                 reference_date=get_today(cache), apply_buffer_time=True, cache=cache
             )
+        else:
+            shares_valid_at = earliest_trial_period_end
 
         return CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=number_of_shares,
@@ -240,12 +261,66 @@ class BestellWizardOrderFulfiller:
         actor: TapirUser,
     ):
         if contribution == 0:
-            return
+            return None
 
-        MemberSolidarityContributionService.assign_contribution_to_member(
+        return MemberSolidarityContributionService.assign_contribution_to_member(
             member=member,
             change_date=contract_start_date,
             cache=cache,
             amount=contribution,
             actor=actor,
         )
+
+    @classmethod
+    def create_association_membership(
+        cls,
+        association_membership_type: AssociationMembershipType,
+        member: Member,
+        subscriptions: list[Subscription],
+        cache: dict,
+        actor: TapirUser,
+    ):
+        earliest_trial_period_end = cls.get_earliest_trial_period_end(
+            subscriptions=subscriptions, cache=cache
+        )
+
+        if earliest_trial_period_end is None:
+            shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache), apply_buffer_time=True, cache=cache
+            )
+        else:
+            shares_valid_at = earliest_trial_period_end + datetime.timedelta(days=1)
+
+        return AssociationMembershipChangeHandler.start_membership(
+            member=member,
+            start_date=shares_valid_at,
+            association_membership_type=association_membership_type,
+            actor=actor,
+            cache=cache,
+        )
+
+    @classmethod
+    def get_earliest_trial_period_end(
+        cls,
+        subscriptions: list[Subscription],
+        cache: dict,
+    ):
+        earliest_trial_period_end = datetime.date(
+            year=datetime.MAXYEAR, month=12, day=31
+        )
+        at_least_one_trial_period_found = False
+        for subscription in subscriptions:
+            end_of_trial_period = TrialPeriodManager.get_last_day_of_trial_period(
+                contract=subscription, cache=cache
+            )
+            if end_of_trial_period is not None:
+                earliest_trial_period_end = min(
+                    earliest_trial_period_end,
+                    end_of_trial_period,
+                )
+                at_least_one_trial_period_found = True
+
+        if at_least_one_trial_period_found:
+            return earliest_trial_period_end
+
+        return None

@@ -4,6 +4,7 @@ from decimal import Decimal
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.models import MemberCredit, MemberCreditCreatedLogEntry
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -18,7 +19,6 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 
 class MemberCreditCreator:
@@ -39,14 +39,16 @@ class MemberCreditCreator:
             cache=cache,
         )
         if amount_to_credit == 0:
-            return
+            return None
 
-        cls.create_credit_and_log_entry(
+        return cls.create_credit_and_log_entry(
             member=member,
             actor=actor,
             amount_to_credit=amount_to_credit,
             reference_date=reference_date,
             comment=comment,
+            product_type_id_or_soli=product_type_id_or_soli,
+            cache=cache,
         )
 
     @classmethod
@@ -57,18 +59,42 @@ class MemberCreditCreator:
         amount_to_credit: Decimal,
         reference_date: datetime.date,
         comment: str,
+        product_type_id_or_soli: str,
+        cache: dict,
     ):
+        source = product_type_id_or_soli
+        if (
+            source
+            != MonthPaymentBuilderSolidarityContributions.PAYMENT_TYPE_SOLIDARITY_CONTRIBUTION
+        ):
+            source = TapirCache.get_product_type_by_id(
+                cache=cache, product_type_id=source
+            ).name
+
         member_credit = MemberCredit.objects.create(
             due_date=get_last_day_of_month(reference_date),
             member=member,
             amount=amount_to_credit,
-            purpose="TODO, warten auf US 2.2 und 2.6",
+            purpose=MemberCredit.PLACEHOLDER_PURPOSE,
             comment=comment,
+            source=source,
         )
 
         MemberCreditCreatedLogEntry().populate(
             user=member, actor=actor, model=member_credit
         ).save()
+
+        return member_credit
+
+    @classmethod
+    def save_credits_with_log_entries(
+        cls, member_credits: list[MemberCredit], actor: TapirUser | None
+    ) -> None:
+        for member_credit in member_credits:
+            member_credit.save()
+            MemberCreditCreatedLogEntry().populate(
+                user=member_credit.member, actor=actor, model=member_credit
+            ).save()
 
     @classmethod
     def get_amount_to_credit(
@@ -98,9 +124,11 @@ class MemberCreditCreator:
         )
         first_day_of_rhythm_period = max(payment_start_date, first_day_of_rhythm_period)
         if first_day_of_rhythm_period > last_day_of_rhythm_period:
-            return 0
+            return Decimal("0.00")
 
-        mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member=member, cache=cache
+        )
 
         if (
             product_type_id_or_soli

@@ -1,15 +1,16 @@
 import React, { RefObject } from "react";
-import TapirButton from "../../components/TapirButton.tsx";
+import { Button, Form } from "react-bootstrap";
+import { CarouselRef } from "react-bootstrap/Carousel";
 import { PublicProduct, PublicProductType } from "../../api-client";
-import { showCapacityWarning } from "../utils/showCapacityWarning.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import TapirCheckbox from "./TapirCheckbox.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
-import { Button, Form } from "react-bootstrap";
+import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
-import { CarouselRef } from "react-bootstrap/Carousel";
+import { formatPercentage } from "../../utils/formatPercentage.ts";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { showCapacityWarning } from "../utils/showCapacityWarning.ts";
+import TapirCheckbox from "./TapirCheckbox.tsx";
 
 interface NextButtonProps {
   product: PublicProduct;
@@ -141,6 +142,7 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
               shoppingCart[product.id!] = checked ? 1 : 0;
               setShoppingCart({ ...shoppingCart });
             }}
+            disabled={waitingListLinkConfirmationModeEnabled}
           />
         ) : (
           <>
@@ -190,11 +192,19 @@ const Step4BProductOrder: React.FC<NextButtonProps> = ({
       </div>
       <div>
         <Form.Text className={"text-center mb-0"} as={"p"}>
-          Basisbeitrag: {formatCurrency(product.price)} pro Monat inkl. MwSt.
+          Basisbeitrag: {formatCurrency(product.price)} pro{" "}
+          {productType.pricePerDelivery ? "Lieferung" : "Monat"}
+          {productType.taxRate > 0 &&
+            " inkl. MwSt " + formatPercentage(productType.taxRate)}
+          .
           {product.descriptionInBestellwizard && (
             <>
               <br />
-              {product.descriptionInBestellwizard}
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: product.descriptionInBestellwizard,
+                }}
+              />
             </>
           )}
           <br />

@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Callable
+from typing import Callable
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -31,7 +31,7 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def must_subscription_be_renewed(
-        cls, subscription: Subscription, cache: Dict
+        cls, subscription: Subscription, cache: dict
     ) -> bool:
         if not get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
@@ -57,14 +57,30 @@ class AutomaticSubscriptionRenewalService:
                 subscription, cache=cache
             )
         )
-        if max_cancellation_date >= get_today():
+        today = get_today(cache=cache)
+        if max_cancellation_date >= today:
+            return False
+
+        if subscription.product.deleted:
+            return False
+
+        if (
+            TapirCache.get_product_type_capacity_at_date(
+                cache=cache,
+                product_type=subscription.product.type,
+                reference_date=today,
+            )
+            is None
+        ):
             return False
 
         return True
 
     @classmethod
-    def build_renewed_subscription(cls, subscription: Subscription, cache: Dict):
-        next_growing_period = get_next_growing_period(cache=cache)
+    def build_renewed_subscription(cls, subscription: Subscription, cache: dict):
+        next_growing_period = get_next_growing_period(
+            reference_date=subscription.end_date, cache=cache
+        )
 
         trial_disabled, trial_end_date_override = cls.get_renewed_trial_data(
             subscription, cache=cache
@@ -93,14 +109,14 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def get_renewed_trial_data(
-        cls, old_obj: Subscription | SolidarityContribution, cache: Dict
+        cls, old_obj: Subscription | SolidarityContribution, cache: dict
     ):
         # returns (trial_disabled, trial_end_date_override)
 
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
             return True, None
 
-        trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+        trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
             old_obj, cache=cache
         )
         if trial_end_date is not None and trial_end_date > old_obj.end_date:
@@ -110,7 +126,7 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def get_subscriptions_that_will_be_renewed(
-        cls, reference_date: datetime.date, cache: Dict
+        cls, reference_date: datetime.date, cache: dict
     ) -> set[Subscription]:
         if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
             return set()
@@ -148,6 +164,13 @@ class AutomaticSubscriptionRenewalService:
             if subscription.cancellation_ts is None
             and subscription.member_id
             not in members_ids_currently_subbed_to_product_id[subscription.product_id]
+            and not subscription.product.deleted
+            and TapirCache.get_product_type_capacity_at_date(
+                cache=cache,
+                product_type=subscription.product.type,
+                reference_date=reference_date,
+            )
+            is not None
         }
 
     @classmethod
@@ -155,7 +178,7 @@ class AutomaticSubscriptionRenewalService:
         cls,
         reference_date: datetime.date,
         subscription_filter: Callable[[Subscription], bool],
-        cache: Dict,
+        cache: dict,
     ):
         subscriptions = TapirCache.get_subscriptions_active_at_date(
             reference_date=reference_date, cache=cache

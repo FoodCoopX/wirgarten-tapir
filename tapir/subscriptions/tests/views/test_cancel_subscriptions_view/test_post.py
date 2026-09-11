@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
@@ -7,10 +8,17 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
-from tapir.configuration.models import TapirParameter
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.associations.models import (
+    AssociationMembership,
+    AssociationMembershipUpdatedLogEntry,
 )
+from tapir.associations.tests.factories import AssociationMembershipFactory
+from tapir.configuration.models import TapirParameter
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
+)
+from tapir.solidarity_contribution.models import SolidarityContribution
+from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
@@ -18,6 +26,7 @@ from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
     QuestionaireCancellationReasonResponse,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -38,9 +47,10 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
-        mock_timezone(self, NOW)
+        super().setUp()
+        self.now = mock_timezone(self, NOW)
 
-    @patch.object(MembershipCancellationManager, "cancel_coop_membership")
+    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
     def test_post_memberCancelsSubscriptionsOfOtherMember_returns403(
         self,
@@ -52,9 +62,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.client.force_login(actor)
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=target)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": target.id,
@@ -80,9 +87,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": member.id,
@@ -108,9 +112,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=target)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": target.id,
@@ -126,9 +127,11 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(3, mock_cancel_subscriptions.call_count)
 
-    @patch.object(MembershipCancellationManager, "cancel_coop_membership")
+    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
+    @patch.object(
+        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+    )
     def test_post_memberTriesToCancelCoopMembershipButCannot_returnsError(
         self,
         mock_can_member_cancel_coop_membership: Mock,
@@ -157,9 +160,11 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.assert_not_called()
         mock_cancel_coop_membership.assert_not_called()
 
-    @patch.object(MembershipCancellationManager, "cancel_coop_membership")
+    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
+    @patch.object(
+        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+    )
     def test_post_memberTriesToCancelCoopMembershipAndIsAllowed_cancelsCoopMembership(
         self,
         mock_can_member_cancel_coop_membership: Mock,
@@ -172,9 +177,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": member.id,
@@ -197,9 +199,11 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member.email, mock_cancel_coop_membership.call_args.kwargs["actor"].email
         )
 
-    @patch.object(MembershipCancellationManager, "cancel_coop_membership")
+    @patch.object(CoopMembershipCancellationManager, "cancel_coop_membership")
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    @patch.object(MembershipCancellationManager, "can_member_cancel_coop_membership")
+    @patch.object(
+        CoopMembershipCancellationManager, "can_member_cancel_coop_membership"
+    )
     def test_post_memberDoesntCancelCoopMembership_coopMembershipNotCancelled(
         self,
         mock_can_member_cancel_coop_membership: Mock,
@@ -212,9 +216,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
 
         post_data = {
             "member_id": member.id,
@@ -233,7 +234,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_coop_membership.assert_not_called()
 
     @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    def test_post_cantHaveAdditionalProductsWithoutBaseProduct_returnsError(
+    def test_post_tryingToCancelARequiredSubscriptionWhileOptionalSubscriptionsAreActive_returnsError(
         self,
         mock_cancel_subscriptions: Mock,
     ):
@@ -242,12 +243,10 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_cancel_subscriptions.return_value = [], []
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=False)
+        ProductType.objects.update(must_be_subscribed_to=False)
+        required_product_type = subscriptions[0].product.type
+        required_product_type.must_be_subscribed_to = True
+        required_product_type.save()
 
         post_data = {
             "member_id": member.id,
@@ -261,42 +260,13 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
-        self.assertEqual(1, len(response.json()["errors"]))
+        errors = response.json()["errors"]
+        self.assertEqual(1, len(errors), errors)
+        self.assertEqual(
+            "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst.",
+            errors[0],
+        )
         mock_cancel_subscriptions.assert_not_called()
-
-    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
-    def test_post_additionalProductsWithoutBaseProductAllowed_cancelsBaseProduct(
-        self,
-        mock_cancel_subscriptions: Mock,
-    ):
-        member = MemberFactory.create()
-        self.client.force_login(member)
-        mock_cancel_subscriptions.return_value = [], []
-
-        subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
-
-        post_data = {
-            "member_id": member.id,
-            "product_ids": [subscriptions[0].product_id],
-            "cancel_coop_membership": False,
-            "cancellation_reasons": [],
-            "custom_cancellation_reason": "Test reason",
-        }
-
-        url = reverse("subscriptions:cancel_subscriptions")
-        response = self.client.post(url, data=post_data)
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(0, len(response.json()["errors"]))
-        mock_cancel_subscriptions.assert_called_once_with(
-            subscriptions[0].product, member, cache=ANY
-        )
 
     @patch.object(TransactionalTrigger, "fire_action")
     def test_post_default_sendsMailTriggerAndCreatesLogEntryAndSavesCancellationReasons(
@@ -315,12 +285,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             period=growing_period,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -392,23 +356,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         self.client.force_login(member)
 
         growing_period = GrowingPeriodFactory.create(
-            start_date=TODAY.replace(month=1, day=1),
-            end_date=TODAY.replace(month=12, day=31),
+            start_date=TODAY.replace(month=1, day=1)
         )
         subscriptions = SubscriptionFactory.create_batch(
             size=3,
             member=member,
             period=growing_period,
         )
-        subscriptions[1].start_date = TODAY + datetime.timedelta(days=3)
+        subscriptions[1].start_date = TODAY + datetime.timedelta(days=5)
         subscriptions[1].save()
 
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -426,8 +383,10 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         url = reverse("subscriptions:cancel_subscriptions")
         response = self.client.post(url, data=post_data)
 
-        self.assertStatusCode(response, 200)
-        self.assertEqual(0, len(response.json()["errors"]))
+        self.assertStatusCode(response, 200)  #
+        errors = response.json()["errors"]
+        self.assertEqual(0, len(errors), errors)
+
         mock_fire_action.assert_called_once_with(
             TransactionalTriggerData(
                 key=Events.CONTRACT_CANCELLED,
@@ -486,13 +445,8 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             size=3,
             member=member,
             period=growing_period,
+            product__type__must_be_subscribed_to=False,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -540,12 +494,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             period=growing_period,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -590,12 +538,6 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             member=member,
             period=growing_period,
         )
-        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=subscriptions[0].product.type_id
-        )
-        TapirParameter.objects.filter(
-            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
-        ).update(value=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
@@ -634,3 +576,222 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
                 member=member, reason="reason1", custom=False, timestamp=NOW
             ).exists()
         )
+
+    def test_post_memberCancelsSolidarityButItCannotBeCancelled_returnsError(self):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+            "cancel_solidarity_contribution": True,
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertEqual(1, len(response_content["errors"]))
+        self.assertEqual(
+            "Es kann kein Solidarbeitrag gekündigt werden.",
+            response_content["errors"][0],
+        )
+
+    def test_post_memberCancelsSolidarity_correctlyUpdatesContribution(self):
+        mock_timezone(
+            test=self, now=datetime.datetime(year=2013, month=1, day=20, hour=10)
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=True
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_DURATION).update(
+            value=8
+        )
+        TapirParameter.objects.filter(
+            key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END
+        ).update(value=True)
+
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2013, month=1, day=1),
+            amount=12,
+        )
+        SolidarityContributionFactory.create(
+            member=member,
+            start_date=datetime.date(year=2014, month=1, day=1),
+            amount=13.5,
+        )
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+            "cancel_solidarity_contribution": True,
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertEqual(0, len(response_content["errors"]))
+
+        self.assertEqual(1, SolidarityContribution.objects.count())
+        contribution = SolidarityContribution.objects.get()
+        self.assertEqual(Decimal(12), contribution.amount)
+
+        self.assertEqual(
+            datetime.date(year=2013, month=1, day=20), contribution.end_date
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_post_severalSubscriptionsCancelledWithDifferentEndDates_mailTokenContainsMaxEndDate(
+        self,
+        mock_fire_action: Mock,
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=TODAY.replace(month=1, day=1)
+        )
+        subscription = SubscriptionFactory.create(member=member, period=growing_period)
+        future_growing_period = GrowingPeriodFactory.create(
+            start_date=growing_period.end_date + datetime.timedelta(days=1)
+        )
+        future_subscription = SubscriptionFactory.create(
+            member=member, period=future_growing_period
+        )
+
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id, future_subscription.product_id],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(0, len(response.json()["errors"]))
+
+        mock_fire_action.assert_called_once_with(
+            TransactionalTriggerData(
+                key=Events.CONTRACT_CANCELLED,
+                recipient_id_in_base_queryset=member.id,
+                token_data={
+                    "contract_list": format_subscription_list_html(
+                        [subscription, future_subscription]
+                    ),
+                    "contract_end_date": format_date(future_subscription.end_date),
+                },
+            )
+        )
+
+    def test_post_cancelAllSubscriptionAndAssociationMembership_membershipEndDateSet(
+        self,
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1)
+        )
+        subscriptions = SubscriptionFactory.create_batch(
+            size=3, member=member, period=period
+        )
+        AssociationMembershipFactory.create(member=member, start_date=period.start_date)
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_association_membership": True,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assert_cancellation_confirmed(response_content)
+
+        membership = AssociationMembership.objects.get()
+        self.assertEqual(subscriptions[0].end_date, membership.end_date)
+        self.assertEqual(self.now, membership.cancellation_ts)
+
+        self.assertEqual(1, AssociationMembershipUpdatedLogEntry.objects.count())
+        log_entry = AssociationMembershipUpdatedLogEntry.objects.get()
+        self.assertEqual(member.email, log_entry.user.email)
+        self.assertEqual(member.email, log_entry.actor.email)
+
+    def test_post_cancelAssociationMembershipButNotAllSubscriptions_returnsError(
+        self,
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+
+        period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1)
+        )
+        subscriptions = SubscriptionFactory.create_batch(
+            size=3, member=member, period=period
+        )
+        AssociationMembershipFactory.create(member=member, start_date=period.start_date)
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [
+                subscription.product_id for subscription in subscriptions[:2]
+            ],
+            "cancel_association_membership": True,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assert_cancellation_not_confirmed(
+            response_content,
+            "Es ist nur möglich die Vereinsmitgliedschaft zu beenden wenn du alle Verträge auch kündigst.",
+        )
+
+        membership = AssociationMembership.objects.get()
+        self.assertIsNone(membership.end_date)
+        self.assertFalse(AssociationMembershipUpdatedLogEntry.objects.exists())
+
+    def assert_cancellation_confirmed(self, response_content: dict):
+        self.assertTrue(
+            response_content["subscriptions_cancelled"],
+            f"Cancellation should be confirmed, errors: {response_content["errors"]}",
+        )
+        self.assertEqual(0, len(response_content["errors"]))
+
+    def assert_cancellation_not_confirmed(self, response_content: dict, error: str):
+        self.assertFalse(response_content["subscriptions_cancelled"])
+        self.assertEqual(error, response_content["errors"][0])

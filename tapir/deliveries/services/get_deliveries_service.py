@@ -1,28 +1,28 @@
 import datetime
-from typing import Dict, Set
+from typing import Set
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.deliveries.services.member_specific_delivery_day_calculator import (
+    MemberSpecificDeliveryDayCalculator,
+)
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
-)
-from tapir.pickup_locations.services.pickup_location_opening_times_manager import (
-    PickupLocationOpeningTimesManager,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_monday
+from tapir.utils.shortcuts import get_monday, get_next_sunday
 from tapir.wirgarten.models import (
     Member,
     Subscription,
 )
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 
 
 class GetDeliveriesService:
@@ -32,7 +32,7 @@ class GetDeliveriesService:
         member: Member,
         date_from: datetime.date,
         date_to: datetime.date,
-        cache: Dict,
+        cache: dict,
     ):
         deliveries = []
 
@@ -65,7 +65,7 @@ class GetDeliveriesService:
 
         pickup_location = TapirCache.get_pickup_location_by_id(
             cache=cache,
-            pickup_location_id=MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+            pickup_location_id=MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
                 member_id=member.id, reference_date=delivery_date, cache=cache
             ),
         )
@@ -74,10 +74,8 @@ class GetDeliveriesService:
             opening_times = TapirCache.get_opening_times_by_pickup_location_id(
                 cache=cache, pickup_location_id=pickup_location.id
             )
-        delivery_date = (
-            PickupLocationOpeningTimesManager.update_delivery_date_to_opening_times(
-                opening_times, delivery_date
-            )
+        delivery_date = MemberSpecificDeliveryDayCalculator.get_specific_delivery_date(
+            member_id=member.id, delivery_date=delivery_date, cache=cache
         )
 
         joker_used = JokerManagementService.does_member_have_a_joker_in_week(
@@ -124,24 +122,24 @@ class GetDeliveriesService:
 
     @classmethod
     def get_relevant_subscriptions(
-        cls, member: Member, reference_date: datetime.date, cache: Dict
+        cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> Set[Subscription]:
-        accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
-            date=reference_date, cache=cache
-        )
+        # Only weeks fully covered by the subscription get delivered.
+        # That means that a (non-renewed) subscription that ends on a Wednesday won't get a delivery on the previous Tuesday.
+        reference_date = get_next_sunday(reference_date)
 
-        subscriptions_with_accepted_delivery_cycles = set()
-        for delivery_cycle in accepted_delivery_cycles:
-            subscriptions_with_accepted_delivery_cycles.update(
-                TapirCache.get_subscriptions_by_delivery_cycle(
-                    cache=cache, delivery_cycle=delivery_cycle
-                )
+        delivered_subscriptions = {
+            subscription
+            for subscription in TapirCache.get_all_subscriptions(cache=cache)
+            if DeliveryCycleService.is_product_type_delivered_in_week(
+                product_type=subscription.product.type, date=reference_date, cache=cache
             )
+        }
 
         def subscription_filter(subscription: Subscription):
             return (
                 subscription.member_id == member.id
-                and subscription in subscriptions_with_accepted_delivery_cycles
+                and subscription in delivered_subscriptions
             )
 
         return AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(

@@ -37,6 +37,16 @@ Folgende Tokens sind hier relevant: <br />
 {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}} <br />
 {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}} <br />
 {{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}} <br />
+<br />
+Für Genossenschaften kommen dazu: <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Anzahl der gezeichneten Genossenschaftsanteile}} <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Wert Genossenschaftsanteil}} <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Gesamtwert der gezeichneten Genossenschaftsanteile}} <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Beitrittsdatum in der Genossenschaft}} <br />
+<br />
+Für Vereine kommen dazu: <br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Beitrittsdatum in der Genossenschaft}} (das Token heißt so aber betrifft auch Vereine)<br />
+{{BestellWizard: Mitgliedschaft + Ernteanteile.Vereinsmitgliedschaft - Monatspreis}}<br />
             </mj-text>
         </mj-column>
     </mj-section>

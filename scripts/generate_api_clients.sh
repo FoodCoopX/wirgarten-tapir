@@ -1,9 +1,30 @@
 #!/bin/sh
 
 # Run this from inside the "vite" docker container, where NPM and Vite are running
+# Only regenerate if schema.yml has changed (using content hash)
 
-npx openapi-generator-cli generate -i schema.yml -g typescript-fetch -o ./src_frontend/api-client
+SCHEMA_HASH_FILE=".schema.hash"
+CURRENT_HASH=$(md5sum schema.yml | cut -d' ' -f1)
 
-# The generator emits imports for functions it does not write on union models.
-# Without this the freshly generated client does not compile.
-node scripts/patch_api_client_unions.mjs
+if [ -f "$SCHEMA_HASH_FILE" ]; then
+  PREV_HASH=$(cat "$SCHEMA_HASH_FILE")
+else
+  PREV_HASH=""
+fi
+
+if [ "$CURRENT_HASH" != "$PREV_HASH" ]; then
+  npx openapi-generator-cli generate \
+    -i schema.yml \
+    -g typescript-fetch \
+    -o ./src_frontend/api-client \
+    --additional-properties=sortParamsByRequiredFlag=false,sortModelPropertiesByRequiredFlag=false
+
+  # We'd prefer not modifying the generated files. However, the generator includes some imports to files that don't exist.
+  # This causes "npm run build" to fail with errors like "error TS2724: '"./MemberCountry"' has no exported member named 'MemberCountryToJSONTyped'."
+  # So we run prettier with an import organizer plugin to automatically clean those imports.
+  npx prettier --write --log-level error 'src_frontend/api-client/**/*.ts'
+  echo "$CURRENT_HASH" > "$SCHEMA_HASH_FILE"
+  echo "API client regenerated"
+else
+  echo "API client up to date (schema.yml unchanged)"
+fi

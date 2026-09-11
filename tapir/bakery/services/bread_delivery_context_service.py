@@ -3,8 +3,8 @@ import logging
 
 from tapir.bakery.models import BreadDelivery
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute, week_to_monday
@@ -58,7 +58,7 @@ class BreadDeliveryContextService:
         get_members_ids_at_pickup_location do not, and the Abholliste depends
         on that branch.
         """
-        return MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+        return MemberPickupLocationGetter.get_member_pickup_location_id_from_cache(
             member_id=delivery.subscription.member_id,
             reference_date=cls.get_reference_date(
                 delivery.year, delivery.delivery_week, cache=cache
@@ -171,14 +171,13 @@ class BreadDeliveryContextService:
         if not deliveries:
             return {}
 
-        # Two queries for the whole batch rather than one per delivery, scoped
-        # to the members that actually appear in it.
-        member_ids = {delivery.subscription.member_id for delivery in deliveries}
-        TapirCache.get_jokers_by_member_id_for_members(
-            member_ids=member_ids, cache=cache
+        # Warm both maps once for the whole batch: each accessor loads its
+        # table in a single query and answers every row from the cache.
+        TapirCache.get_all_jokers_for_member(
+            member_id=deliveries[0].subscription.member_id, cache=cache
         )
-        MemberPickupLocationService.get_member_pickup_locations_objects_for_members(
-            member_ids=member_ids, cache=cache
+        MemberPickupLocationGetter.get_member_pickup_locations_objects_by_member_id(
+            cache=cache
         )
 
         deliveries_by_location = {}

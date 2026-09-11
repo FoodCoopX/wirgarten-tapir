@@ -18,7 +18,7 @@ class SubscriptionDeliveredInWeekChecker:
         skip_donation_check: bool,
     ):
         if not DeliveryDateCalculator.is_week_delivered(
-            delivery_cycle=subscription.product.type.delivery_cycle,
+            product_type=subscription.product.type,
             delivery_date=delivery_date,
             check_for_weeks_without_delivery=True,
             cache=cache,

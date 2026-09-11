@@ -50,13 +50,9 @@ from tapir.bakery.services.bread_delivery_context_service import (
 )
 from tapir.bakery.utils import int_query_param, str_to_bool
 from tapir.generic_exports.permissions import HasCoopManagePermission, IsReadOnly
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
-)
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
 )
-from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import check_permission_or_self
@@ -447,20 +443,6 @@ class BreadDeliveryViewSet(RequestCacheMixin, viewsets.ModelViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
-
-    def get_serializer(self, *args, **kwargs):
-        if kwargs.get("many") and args:
-            # The serializer derives the station and the joker status per row,
-            # so preload both for the whole page at once rather than letting
-            # each row go and ask for its own member.
-            member_ids = {delivery.subscription.member_id for delivery in list(args[0])}
-            TapirCache.get_jokers_by_member_id_for_members(
-                member_ids=member_ids, cache=self.tapir_cache
-            )
-            MemberPickupLocationService.get_member_pickup_locations_objects_for_members(
-                member_ids=member_ids, cache=self.tapir_cache
-            )
-        return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
         queryset = super().get_queryset()

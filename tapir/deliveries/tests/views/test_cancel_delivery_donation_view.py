@@ -114,7 +114,7 @@ class TestCancelDeliveryDonationView(TapirIntegrationTest):
             trigger_data=TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_DONATION_CANCELLED,
                 recipient_id_in_base_queryset=member.id,
-                token_data={"donation_date": donation_date},
+                token_data={"donation_date": "13.04.2000"},
             ),
         )
 
@@ -150,7 +150,7 @@ class TestCancelDeliveryDonationView(TapirIntegrationTest):
             trigger_data=TransactionalTriggerData(
                 key=DeliveriesConfig.MAIL_TRIGGER_DONATION_CANCELLED,
                 recipient_id_in_base_queryset=normal_member.id,
-                token_data={"donation_date": donation_date},
+                token_data={"donation_date": "13.04.2000"},
             ),
         )
 

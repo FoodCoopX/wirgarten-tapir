@@ -45,7 +45,9 @@ def delivered_weeks(start, end):
     ]
 
 
-@patch("tapir.wirgarten.tests.factories.KeycloakUserManager.get_keycloak_client")
+@patch(
+    "tapir.accounts.services.keycloak_user_manager.KeycloakUserManager.get_keycloak_client"
+)
 class TestGetWeeksInRange(TapirIntegrationTest):
     """Tests for the get_weeks_in_range utility."""
 
@@ -110,7 +112,9 @@ class TestGetWeeksInRange(TapirIntegrationTest):
         self.assertEqual(weeks, [])
 
 
-@patch("tapir.wirgarten.tests.factories.KeycloakUserManager.get_keycloak_client")
+@patch(
+    "tapir.accounts.services.keycloak_user_manager.KeycloakUserManager.get_keycloak_client"
+)
 @patch("tapir.bakery.services.breaddelivery_service.datetime")
 class TestEnsureBreadDeliveries(TapirIntegrationTest):
     @classmethod

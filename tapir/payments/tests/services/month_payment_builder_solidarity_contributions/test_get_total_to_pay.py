@@ -2,7 +2,7 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
@@ -10,7 +10,7 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 
 
-class TestGetTotalToPay(SimpleTestCase):
+class TestGetTotalToPay(TapirUnitTest):
     def test_getTotalToPay_noContributions_returnsZero(self):
         result = MonthPaymentBuilderSolidarityContributions.get_total_to_pay(
             range_start=datetime.date(year=1990, month=1, day=1),

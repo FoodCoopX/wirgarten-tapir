@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { Spinner } from "react-bootstrap";
 
+import { v4 as uuidv4 } from "uuid";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { useApi } from "../../hooks/useApi.ts";
 import { BestellWizardApi, CoopApi } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { buildEmptySettings } from "../../bestell_wizard/utils/buildEmptySettings.ts";
-import { ToastData } from "../../types/ToastData.ts";
-import { Step } from "../../bestell_wizard_mobile/types/Step.ts";
-import { buildSettings } from "../../bestell_wizard/utils/buildSettings.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import StepGenericIntro from "../../bestell_wizard_mobile/steps/StepGenericIntro.tsx";
-import Step6BCoopShares from "../../bestell_wizard_mobile/steps/Step6BCoopShares.tsx";
-import Step9BankingData from "../../bestell_wizard_mobile/steps/Step9BankingData.tsx";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import { buildEmptySettings } from "../../bestell_wizard/utils/buildEmptySettings.ts";
+import { buildSettings } from "../../bestell_wizard/utils/buildSettings.ts";
 import { getEmptyPersonalData } from "../../bestell_wizard/utils/getEmptyPersonalData.ts";
 import BestellWizardMobileBase from "../../bestell_wizard_mobile/components/BestellWizardMobileBase.tsx";
+import Step6BCoopShares from "../../bestell_wizard_mobile/steps/Step6BCoopShares.tsx";
+import Step9BankingData from "../../bestell_wizard_mobile/steps/Step9BankingData.tsx";
+import StepGenericIntro from "../../bestell_wizard_mobile/steps/StepGenericIntro.tsx";
+import { Step } from "../../bestell_wizard_mobile/types/Step.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { addToast } from "../../utils/addToast.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface BestellWizardCoopSharesProps {
   csrfToken: string;
@@ -105,14 +107,31 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
 
     coopApi
       .coopApiExistingMemberPurchasesSharesCreate({
-        existingMemberPurchasesExtraSharesSerializerRequest: {
+        existingMemberPurchasesSharesRequestRequest: {
           memberId: memberId,
           numberOfSharesToAdd: selectedNumberOfCoopShares,
           iban: personalData.iban,
           accountOwner: personalData.accountOwner,
+          asAdmin: false,
         },
       })
-      .then((redirectUrl) => location.assign(redirectUrl))
+      .then((response) => {
+        if (response.orderConfirmed) {
+          if (response.redirectUrl) {
+            location.assign(response.redirectUrl);
+          }
+        } else {
+          addToast(
+            {
+              title: "Fehler beim Bestellen der Geno-Anteile",
+              message: response.error ?? undefined,
+              variant: "danger",
+              id: uuidv4(),
+            },
+            setToastDatas,
+          );
+        }
+      })
       .catch((error) =>
         handleRequestError(
           error,
@@ -140,6 +159,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             content={{
               text: settings.strings.step6aText,
             }}
+            stepActive={step === currentStep}
           />
         );
       case "6b_coop_shares":
@@ -154,13 +174,14 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             setStudentStatusEnabled={() => {}}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             isOrderStep={step === steps.at(-1)}
             orderLoading={orderLoading}
             nextButtonText={
               step === steps.at(-1) ? getConfirmButtonText() : undefined
             }
             canChangeNumberOfShares={true}
+            forceHideStudentCheckbox={true}
           />
         );
       case "9_banking_data":
@@ -176,7 +197,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             settings={settings}
             shoppingCart={{}}
             solidarityContribution={0}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             productTypesInWaitingList={new Set()}
             isOrderStep={step === steps.at(-1)}
             orderLoading={orderLoading}
@@ -184,6 +205,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
               step === steps.at(-1) ? getConfirmButtonText() : undefined
             }
             canChangePaymentRhythm={false}
+            autoFillAccountOwnerFromName={false}
           />
         );
       case "loading":
@@ -202,6 +224,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
               text: "Invalid step: " + step,
             }}
             goToNextStep={goToNextStep}
+            stepActive={step === currentStep}
           />
         );
     }
@@ -226,6 +249,9 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
       showProgress={false}
       hideFooterButtonsOnLastStep={false}
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+      goToProductTypeStep={() => {}}
+      contractStartDate={new Date()} // This parameter won't be used since it's only for relevant for contracts
+      selectedGrowingPeriod={undefined}
     />
   );
 };

@@ -1,57 +1,42 @@
-import datetime
-
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from drf_spectacular.utils import OpenApiParameter, extend_schema
-from localflavor.generic.validators import IBANValidator
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tapir.accounts.models import TapirUser
 from tapir.bestell_wizard.serializers import (
     BestellWizardCapacityCheckResponseSerializer,
 )
-from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.member_needs_banking_data_checker import (
-    MemberNeedsBankingDataChecker,
-)
-from tapir.payments.services.member_credit_creator import MemberCreditCreator
-from tapir.payments.services.member_payment_rhythm_service import (
-    MemberPaymentRhythmService,
-)
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
 from tapir.subscriptions.serializers import (
+    UpdateSubscriptionsRequestSerializer,
+    OrderConfirmationResponseSerializer,
     MemberProfileCapacityCheckRequestSerializer,
     MemberSubscriptionDataSerializer,
-    OrderConfirmationResponseSerializer,
-    UpdateSubscriptionsRequestSerializer,
-)
-from tapir.subscriptions.services.apply_tapir_order_manager import (
-    ApplyTapirOrderManager,
-)
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
 )
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
-from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
+from tapir.subscriptions.services.subscription_update_view_change_applier import (
+    SubscriptionUpdateViewChangeApplier,
+)
+from tapir.subscriptions.services.subscription_update_view_validator import (
+    SubscriptionUpdateViewValidator,
+)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
-from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import GrowingPeriod, Member, PickupLocation, ProductType
-from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
@@ -67,9 +52,10 @@ class GetMemberSubscriptionDataApiView(APIView):
         member_id = request.query_params.get("member_id")
         get_object_or_404(Member, id=member_id)
         check_permission_or_self(member_id, request)
+        cache = {}
 
         subscriptions = (
-            get_active_and_future_subscriptions()
+            get_active_and_future_subscriptions(cache=cache)
             .filter(member_id=member_id)
             .select_related("product", "product__type")
         )
@@ -80,11 +66,13 @@ class GetMemberSubscriptionDataApiView(APIView):
 
         data = {
             "subscriptions": subscriptions,
-            "product_types": ProductType.objects.all(),
+            "product_types": TapirCache.get_all_product_types(cache=cache),
             "bestell_wizard_url_template": bestell_wizard_url_template,
         }
 
-        return Response(MemberSubscriptionDataSerializer(data).data)
+        return Response(
+            MemberSubscriptionDataSerializer(data, context={"cache": cache}).data
+        )
 
 
 class UpdateSubscriptionsApiView(APIView):
@@ -115,13 +103,41 @@ class UpdateSubscriptionsApiView(APIView):
                 cache=self.cache,
             )
         )
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+        product_type_id = serializer.validated_data["product_type_id"]
+        product_type = TapirCache.get_product_type_by_id(
+            cache=self.cache, product_type_id=product_type_id
+        )
+        if product_type is None:
+            raise Http404(f"Unknown product type id: {product_type_id}")
+
+        desired_pickup_location_id = serializer.validated_data.get(
+            "pickup_location_id", None
+        )
+        account_owner = serializer.validated_data.get("account_owner", "").strip()
+        iban = serializer.validated_data.get("iban", "").strip()
+        payment_rhythm = serializer.validated_data.get("payment_rhythm", None)
+        sepa_allowed = serializer.validated_data["sepa_allowed"]
+        cancellation_policy_read = serializer.validated_data["cancellation_policy_read"]
+
         try:
             logged_in_user_is_admin = request.user.has_perm(Permission.Accounts.MANAGE)
-            self.validate_everything(
-                validated_data=serializer.validated_data,
+            SubscriptionUpdateViewValidator.validate_everything(
+                sepa_allowed=sepa_allowed,
+                cancellation_policy_read=cancellation_policy_read,
+                order=order,
+                product_type=product_type,
                 contract_start_date=contract_start_date,
                 member=member,
                 logged_in_user_is_admin=logged_in_user_is_admin,
+                desired_pickup_location_id=desired_pickup_location_id,
+                account_owner=account_owner,
+                iban=iban,
+                payment_rhythm=payment_rhythm,
+                cache=self.cache,
             )
         except ValidationError as error:
             data = {
@@ -131,15 +147,18 @@ class UpdateSubscriptionsApiView(APIView):
             return Response(OrderConfirmationResponseSerializer(data).data)
 
         with transaction.atomic():
-            self.apply_changes(
+            SubscriptionUpdateViewChangeApplier.apply_changes(
                 member=member,
-                product_type=TapirCache.get_product_type_by_id(
-                    cache=self.cache,
-                    product_type_id=serializer.validated_data["product_type_id"],
-                ),
+                product_type=product_type,
                 contract_start_date=contract_start_date,
-                validated_data=serializer.validated_data,
                 actor=request.user,
+                desired_pickup_location_id=desired_pickup_location_id,
+                order=order,
+                payment_rhythm=payment_rhythm,
+                account_owner=account_owner,
+                iban=iban,
+                sepa_allowed=sepa_allowed,
+                cache=self.cache,
             )
 
         data = {
@@ -148,309 +167,6 @@ class UpdateSubscriptionsApiView(APIView):
             "redirect_url": member.get_absolute_url(),
         }
         return Response(OrderConfirmationResponseSerializer(data).data)
-
-    def may_member_reduce_size(
-        self, logged_in_user_is_admin: bool, product_type: ProductType
-    ) -> bool:
-        """
-        Whether shrinking a running contract is allowed for this product type.
-
-        The bakery parameter is about bread shares, so it must not also unlock
-        the harvest share.
-        """
-        if logged_in_user_is_admin:
-            return True
-
-        return bool(
-            product_type.is_bread
-            and get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=self.cache)
-            and get_parameter_value(
-                ParameterKeys.BAKERY_MEMBERS_CAN_REDUCES_BREAD_SHARES, cache=self.cache
-            )
-        )
-
-    def validate_everything(
-        self,
-        validated_data: dict,
-        contract_start_date: datetime.date,
-        member: Member,
-        logged_in_user_is_admin: bool,
-    ):
-        if not validated_data["sepa_allowed"]:
-            raise ValidationError("Das SEPA-Mandat muss ermächtigt sein.")
-
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=validated_data["shopping_cart"], cache=self.cache
-        )
-        product_type_id = validated_data["product_type_id"]
-        product_type = TapirCache.get_product_type_by_id(
-            cache=self.cache, product_type_id=product_type_id
-        )
-        if product_type is None:
-            raise Http404(f"Unknown product type id: {product_type_id}")
-
-        self.validate_all_products_belong_to_product_type(
-            order=order, product_type_id=product_type_id
-        )
-
-        pickup_location = self.validate_pickup_location(
-            order=order,
-            validated_data=validated_data,
-            contract_start_date=contract_start_date,
-            member=member,
-        )
-
-        OrderValidator.validate_order_general(
-            order=order,
-            pickup_location=pickup_location,
-            contract_start_date=contract_start_date,
-            cache=self.cache,
-            member=member,
-        )
-
-        OrderValidator.validate_cannot_reduce_size(
-            member_may_reduce_size=self.may_member_reduce_size(
-                logged_in_user_is_admin=logged_in_user_is_admin,
-                product_type=product_type,
-            ),
-            contract_start_date=contract_start_date,
-            member=member,
-            order_for_a_single_product_type=order,
-            product_type=product_type,
-            cache=self.cache,
-        )
-
-        OrderValidator.validate_at_least_one_change(
-            member=member,
-            contract_start_date=contract_start_date,
-            cache=self.cache,
-            product_type=product_type,
-            order=order,
-        )
-
-        self.validate_additional_product_can_be_ordered_without_base_product_subscription(
-            product_type=product_type,
-            member=member,
-            contract_start_date=contract_start_date,
-        )
-
-        self.validate_banking_data(member=member, validated_data=validated_data)
-
-    def validate_banking_data(
-        self,
-        member: Member,
-        validated_data: dict,
-    ):
-        if MemberNeedsBankingDataChecker.does_member_need_banking_data(member):
-            IBANValidator()(validated_data.get("iban", "").strip())
-
-            if validated_data.get("account_owner", "").strip() == "":
-                raise ValidationError("Das Feld 'Kontoinhaber*in' muss ausgefüllt sein")
-
-        need_payment_rhythm = (
-            TapirCache.get_member_payment_rhythm_object(
-                member=member,
-                reference_date=get_today(cache=self.cache),
-                cache=self.cache,
-            )
-            is None
-        )
-
-        payment_rhythm = validated_data.get("payment_rhythm", None)
-        if need_payment_rhythm and payment_rhythm is None:
-            raise ValidationError("Das Zahlungsintervall fehlt")
-
-        if payment_rhythm is None:
-            return
-
-        if not MemberPaymentRhythmService.is_payment_rhythm_allowed(
-            validated_data["payment_rhythm"], cache=self.cache
-        ):
-            raise ValidationError(
-                f"Diese Zahlungsintervall {validated_data['payment_rhythm']} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
-            )
-
-    def validate_pickup_location(
-        self,
-        order: TapirOrder,
-        member: Member,
-        contract_start_date: datetime.date,
-        validated_data: dict,
-    ):
-        if not OrderValidator.does_order_need_a_pickup_location(
-            order=order, cache=self.cache
-        ):
-            return None
-
-        current_pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id(
-                member=member, reference_date=contract_start_date
-            )
-        )
-        desired_pickup_location_id = validated_data.get("pickup_location_id", None)
-        if (
-            current_pickup_location_id is not None
-            and desired_pickup_location_id is not None
-            and current_pickup_location_id != desired_pickup_location_id
-        ):
-            raise ValidationError("Du hast schon eine Verteilstation")
-
-        pickup_location_id = None
-        if current_pickup_location_id is not None:
-            pickup_location_id = current_pickup_location_id
-        if desired_pickup_location_id is not None:
-            pickup_location_id = desired_pickup_location_id
-        if pickup_location_id is None:
-            raise ValidationError("Bitte wähle einen Abholort aus!")
-
-        return PickupLocation.objects.get(id=pickup_location_id)
-
-    def validate_all_products_belong_to_product_type(
-        self, order: TapirOrder, product_type_id
-    ):
-        for product in order.keys():
-            product = TapirCache.get_product_by_id(
-                cache=self.cache, product_id=product.id
-            )
-            if product.type_id != product_type_id:
-                raise ValidationError(
-                    f"Product '{product.name}' does not belong to product type with id{product_type_id}"
-                )
-
-    def validate_additional_product_can_be_ordered_without_base_product_subscription(
-        self,
-        product_type: ProductType,
-        member: Member,
-        contract_start_date: datetime.date,
-    ):
-        if get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-            cache=self.cache,
-        ):
-            return
-
-        base_product_type = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
-        )
-        if product_type == base_product_type:
-            return
-
-        has_subscription_to_base_product_type = (
-            get_active_and_future_subscriptions(reference_date=contract_start_date)
-            .filter(
-                member__id=member.id,
-                product__type__id=base_product_type.id,
-            )
-            .exists()
-        )
-        if has_subscription_to_base_product_type:
-            return
-
-        raise ValidationError(
-            "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-            "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben."
-        )
-
-    def apply_changes(
-        self,
-        member: Member,
-        product_type: ProductType,
-        contract_start_date: datetime.date,
-        validated_data: dict,
-        actor: TapirUser,
-    ):
-        if validated_data.get(
-            "pickup_location_id", None
-        ) != MemberPickupLocationService.get_member_pickup_location_id(
-            member=member, reference_date=contract_start_date
-        ):
-            MemberPickupLocationService.link_member_to_pickup_location(
-                member=member,
-                valid_from=contract_start_date,
-                pickup_location_id=validated_data["pickup_location_id"],
-                actor=actor,
-                cache=self.cache,
-            )
-
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=validated_data["shopping_cart"], cache=self.cache
-        )
-        subscriptions_existed_before_changes, new_subscriptions = (
-            ApplyTapirOrderManager.apply_order_single_product_type(
-                member=member,
-                order=order,
-                contract_start_date=contract_start_date,
-                product_type=product_type,
-                actor=actor,
-                needs_admin_confirmation=True,
-                cache=self.cache,
-            )
-        )
-
-        ApplyTapirOrderManager.send_order_confirmation_mail(
-            subscriptions_existed_before_changes=subscriptions_existed_before_changes,
-            member=member,
-            new_subscriptions=new_subscriptions,
-            cache=self.cache,
-            from_waiting_list=False,
-        )
-
-        self.change_payment_rhythm_if_necessary(
-            validated_data=validated_data, member=member, actor=actor
-        )
-
-        MemberCreditCreator.create_member_credit_if_necessary(
-            member=member,
-            actor=actor,
-            product_type_id_or_soli=product_type.id,
-            reference_date=contract_start_date,
-            comment="Produkt-Anteil vom Admin durch dem Mitgliederbereich reduziert",
-            cache=self.cache,
-        )
-
-        iban = validated_data.get("iban", "")
-        if iban.strip() != "":
-            member.iban = iban
-
-        account_owner = validated_data.get("account_owner", "")
-        if account_owner.strip() != "":
-            member.account_owner = account_owner
-
-        member.save()
-
-    def change_payment_rhythm_if_necessary(
-        self, validated_data: dict, member: Member, actor: TapirUser
-    ):
-        payment_rhythm = validated_data.get("payment_rhythm", None)
-        if payment_rhythm is None:
-            return
-
-        rhythm_valid_from = (
-            MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(
-                member=member,
-                reference_date=get_today(cache=self.cache),
-                cache=self.cache,
-            )
-        )
-        if (
-            MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=member, reference_date=rhythm_valid_from, cache=self.cache
-            )
-            == payment_rhythm
-        ):
-            return
-
-        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
-            member=member,
-            actor=actor,
-            rhythm=validated_data["payment_rhythm"],
-            valid_from=MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(
-                member=member,
-                reference_date=get_today(cache=self.cache),
-                cache=self.cache,
-            ),
-            cache=self.cache,
-        )
 
 
 class MemberProfileCapacityCheckApiView(APIView):
@@ -490,7 +206,7 @@ class MemberProfileCapacityCheckApiView(APIView):
         )
 
         if len(ids_of_product_types_over_capacity) == 0:
-            pickup_location = MemberPickupLocationService.get_member_pickup_location(
+            pickup_location = MemberPickupLocationGetter.get_member_pickup_location(
                 member=member, reference_date=subscription_start_date, cache=self.cache
             )
             if (

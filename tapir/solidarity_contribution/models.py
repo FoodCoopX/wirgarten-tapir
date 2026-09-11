@@ -50,11 +50,15 @@ class SolidarityContributionChangedLogEntry(LogEntry):
     ):
         super().populate(actor, user)
 
-        self.old_contribution = old_contribution
         if old_contribution is None:
             self.old_contribution_amount = 0
             self.old_contribution_end_date = None
         else:
+            # We must check if that contribution object still exists in the DB, it may have been deleted in between
+            self.old_contribution = SolidarityContribution.objects.filter(
+                id=old_contribution.id
+            ).first()
+
             self.old_contribution_amount = old_contribution.amount
             self.old_contribution_end_date = old_contribution.end_date
 

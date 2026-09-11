@@ -24,7 +24,8 @@ class TestCancelJokerView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
-        mock_timezone(self, factories.NOW)
+        super().setUp()
+        self.now = mock_timezone(self, factories.NOW)
 
     @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "cancel_joker")
@@ -69,7 +70,7 @@ class TestCancelJokerView(TapirIntegrationTest):
             trigger_data=TransactionalTriggerData(
                 key="deliveries.joker_cancelled",
                 recipient_id_in_base_queryset=other_member.id,
-                token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
+                token_data={"joker_date": "01.05.2024"},
             )
         )
 
@@ -100,7 +101,7 @@ class TestCancelJokerView(TapirIntegrationTest):
             trigger_data=TransactionalTriggerData(
                 key="deliveries.joker_cancelled",
                 recipient_id_in_base_queryset=member.id,
-                token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
+                token_data={"joker_date": "01.05.2024"},
             ),
         )
 
@@ -132,7 +133,9 @@ class TestCancelJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         mock_cancel_joker.assert_not_called()
-        mock_can_joker_be_cancelled.assert_called_once_with(joker, cache=ANY)
+        mock_can_joker_be_cancelled.assert_called_once_with(
+            joker, reference_date=self.now.date(), cache=ANY
+        )
         mock_fire_action.assert_not_called()
 
     @patch.object(TransactionalTrigger, "fire_action")

@@ -1,0 +1,13 @@
+{% load wirgarten %}
+Vereinsmitgliedschaft erzeugt: <br />
+<ul>
+    <li>Art: {{ entry.type_name }}</li>
+    {% for key, value in values %}
+        {% if key == "start_date" %}
+            <li>Start-Datum: {{ value|format_date }}</li>
+        {% endif %}
+        {% if key == "end_date" %}
+            <li>End-Datum: {{ value|format_date }}</li>
+        {% endif %}
+    {% endfor %}
+</ul>

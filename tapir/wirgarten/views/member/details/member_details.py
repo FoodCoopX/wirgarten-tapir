@@ -1,27 +1,24 @@
-from typing import Dict
-
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.db.models import F, Sum
 from django.views import generic
 from tapir_mail.models import MailCategory
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.membership_cancellation_manager import (
-    MembershipCancellationManager,
+from tapir.coop.services.coop_membership_cancellation_manager import (
+    CoopMembershipCancellationManager,
 )
 from tapir.coop.services.membership_text_service import MembershipTextService
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
-from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -29,6 +26,7 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
     WaitingListEntry,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.payment import (
@@ -41,7 +39,12 @@ from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_next_growing_period,
 )
-from tapir.wirgarten.utils import format_date, get_today
+from tapir.wirgarten.utils import (
+    format_date,
+    get_today,
+    legal_status_is_association,
+    legal_status_is_cooperative,
+)
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 
 
@@ -54,7 +57,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         return self.kwargs["pk"]
 
     def get_context_data(self, **kwargs):
-        context = super(MemberDetailView, self).get_context_data()
+        context = super().get_context_data(**kwargs)
 
         cache = {}
         today = kwargs.get("start_date", get_today(cache=cache))
@@ -82,19 +85,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             for subscription in subscriptions:
                 price_at_renewal_date = 0
                 if next_growing_period:
-                    price_at_renewal_date = subscription.total_price(
-                        next_growing_period.start_date
+                    price_at_renewal_date = (
+                        SubscriptionPriceCalculator.get_monthly_price(
+                            subscription=subscription,
+                            reference_date=next_growing_period.start_date,
+                            cache=cache,
+                        )
                     )
                 subscription.price_at_renewal_date = price_at_renewal_date
-
-        context["sub_quantities"] = {
-            key: sum([subscription.quantity for subscription in subscriptions])
-            for key, subscriptions in context["subscriptions"].items()
-        }
-        context["sub_totals"] = {
-            key: sum([subscription.total_price() for subscription in subscriptions])
-            for key, subscriptions in context["subscriptions"].items()
-        }
 
         product_types = get_active_product_types(reference_date=next_month, cache=cache)
         types_to_remove = []
@@ -110,22 +108,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 "timestamp"
             )
         )
-        context["coop_shares"] = share_ownerships
-        context["coop_shares_total"] = self.object.coop_shares_quantity
-
-        context["available_product_types"] = {
-            product_type.name: True
-            for product_type in get_available_product_types(
-                reference_date=next_month, cache=cache
-            )
-        }
-
-        context["product_types_by_name"] = {
-            product_type.name: product_type
-            for product_type in TapirCache.get_product_types_in_standard_order(
-                cache=cache
-            )
-        }
 
         subscription_automatic_renewal = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
@@ -142,13 +124,15 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             context["subscriptions_in_trial"].extend(subs_in_trial)
             next_trial_end_date = None
             for subscription in subs_in_trial:
-                trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+                trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
                     subscription, cache=cache
                 )
                 if next_trial_end_date is None or trial_end_date < next_trial_end_date:
                     next_trial_end_date = trial_end_date
             context["next_trial_end_date"] = next_trial_end_date
-        coop_entry_date = MembershipCancellationManager.get_coop_entry_date(self.object)
+        coop_entry_date = CoopMembershipCancellationManager.get_coop_entry_date(
+            self.object, cache=cache
+        )
         if (
             coop_entry_date is not None
             and coop_entry_date > today
@@ -191,9 +175,11 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
 
-        context["show_coop_shares"] = (
-            get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
-            == LEGAL_STATUS_COOPERATIVE
+        context["show_coop_shares"] = legal_status_is_cooperative(cache=cache)
+        context["show_association_membership"] = legal_status_is_association(
+            cache=cache
+        ) and get_parameter_value(
+            key=ParameterKeys.ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS, cache=cache
         )
 
         context["payment_rhythm"] = MemberPaymentRhythmService.get_rhythm_display_name(
@@ -229,9 +215,15 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             key=ParameterKeys.MEMBERS_CAN_UPDATE_THEIR_CONTRACTS, cache=cache
         )
 
+        context["delivery_charge_enabled"] = get_parameter_value(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED, cache=cache
+        )
+
+        context["show_mailing_list_content"] = settings.MAILING_LISTS_ENABLED
+
         return context
 
-    def add_renewal_notice_context(self, context, next_month, today, cache: Dict):
+    def add_renewal_notice_context(self, context, next_month, today, cache: dict):
         """
         Renewal notice:
         - show_renewal_warning = less than 3 months before next period starts
@@ -260,8 +252,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             next_month >= next_growing_period.start_date
         )  # 1 month before
 
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        if not base_product_type:
+        base_product_type = (
+            ProductType.objects.filter(must_be_subscribed_to=True)
+            .order_by("name")
+            .first()
+        )
+        if base_product_type is None:
             context["show_renewal_warning"] = False
             return
 
@@ -377,7 +373,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         key: str,
         contract_end_date: str,
         next_growing_period: GrowingPeriod,
-        cache: Dict,
+        cache: dict,
         **kwargs,
     ):
         return get_parameter_value(key, cache=cache).format(

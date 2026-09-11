@@ -59,13 +59,13 @@ INSTALLED_APPS = [
     "tapir.products",
     "tapir.bestell_wizard",
     "tapir.solidarity_contribution",
+    "tapir.associations",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields
     "phonenumber_field",
     "localflavor",
     "django_extensions",
-    "formtools",
     "rest_framework",
     "rest_framework.authtoken",
     "drf_spectacular",
@@ -166,13 +166,13 @@ WEASYPRINT_BASEURL = "/"
 AUTH_USER_MODEL = "accounts.TapirUser"
 LOGIN_REDIRECT_URL = "/"
 
-PHONENUMBER_DEFAULT_REGION = "DE"
+PHONENUMBER_DEFAULT_REGION = env.str("PHONENUMBER_DEFAULT_REGION", default="DE")
 
 LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
 
 if ENABLE_SILK_PROFILING:
-    SILKY_PYTHON_PROFILER = False
-    SILKY_PYTHON_PROFILER_BINARY = False
+    SILKY_PYTHON_PROFILER = True
+    SILKY_PYTHON_PROFILER_BINARY = True
     SILKY_META = True
 
 # these are keycloak internal roles and will be filtered out automatically when fetching roles
@@ -219,7 +219,7 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
     },
 }
 
@@ -231,3 +231,11 @@ SOCIALACCOUNT_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
 SOCIALACCOUNT_ADAPTER = "tapir.accounts.adapter.MySocialAccountAdapter"
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+MAILMAN_URL = env.str("MAILMAN_URL", default="http://localhost:8001/3.1/")
+MAILMAN_ADMIN_USER = env.str("MAILMAN_ADMIN_USER", default="restadmin")
+MAILMAN_ADMIN_PASSWORD = env.str("MAILMAN_ADMIN_PASSWORD", default="restpass")
+MAILING_LISTS_ENABLED = env.bool("MAILING_LISTS_ENABLED", default=False)
+
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True

@@ -19,7 +19,7 @@ class ExportSegmentSerializer(serializers.Serializer):
 class CsvExportModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = CsvExport
-        fields = "__all__"
+        exclude = ["created_at", "updated_at"]
 
 
 class BuildCsvExportResponseSerializer(serializers.Serializer):
@@ -31,3 +31,9 @@ class PdfExportModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = PdfExport
         fields = "__all__"
+
+
+class PdfExportTemplateSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    description = serializers.CharField()

@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, Ref, useEffect, useRef } from "react";
 import { Button, Spinner } from "react-bootstrap";
 
 interface TapirButtonProps {
@@ -13,12 +13,31 @@ interface TapirButtonProps {
   type?: "submit" | "reset" | "button";
   fontSize?: number;
   tooltip?: string;
+  tootlipPosition?: "top" | "bottom" | "left" | "right";
   iconPosition?: "left" | "right";
   rotateIcon?: string;
   className?: string;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const element = buttonRef.current;
+    if (!element || !props.tooltip || !window.bootstrap?.Tooltip) {
+      return;
+    }
+
+    const existingTooltip = window.bootstrap.Tooltip.getInstance(element);
+    existingTooltip?.dispose();
+
+    const tooltip = new window.bootstrap.Tooltip(element);
+    return () => {
+      tooltip.dispose();
+    };
+  }, [props.tooltip]);
+
   function textContent() {
     return props.loading ? "Laden..." : props.text;
   }
@@ -71,7 +90,17 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       disabled={props.disabled || props.loading}
       type={props.type ?? "button"}
       title={props.tooltip}
+      data-bs-placement={props.tootlipPosition}
       className={props.className}
+      ref={(node) => {
+        buttonRef.current = node;
+        if (typeof props.ref === "function") {
+          props.ref(node);
+        } else if (props.ref) {
+          props.ref.current = node;
+        }
+      }}
+      data-bs-toggle={"tooltip"}
     >
       {(props.iconPosition === "left" || !props.iconPosition) && buildIcon()}
       {props.text &&

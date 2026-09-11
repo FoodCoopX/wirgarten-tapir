@@ -1,26 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { ExtendedPayment, MemberCredit, PaymentsApi } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import { Card, Spinner } from "react-bootstrap";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
+import React, { useEffect, useState } from "react";
+import { Card, Spinner } from "react-bootstrap";
+import { ExtendedPayment, MemberCredit, PaymentsApi } from "../../api-client";
+import TapirButton from "../../components/TapirButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
-import TapirButton from "../../components/TapirButton.tsx";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 import FuturePaymentsModal from "./FuturePaymentsModal.tsx";
-import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
+import { sortGroupedTransactions } from "./sortGroupedTransactions.ts";
 
 interface FuturePaymentsCardProps {
   memberId: string;
   csrfToken: string;
+  deliveryChargeEnabled: boolean;
 }
 
 const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   memberId,
   csrfToken,
+  deliveryChargeEnabled,
 }) => {
   const api = useApi(PaymentsApi, csrfToken);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -31,6 +34,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   const [extendedPayments, setExtendedPayments] = useState<ExtendedPayment[]>(
     [],
   );
+  const [trialPeriodEnabled, setTrialPeriodEnabled] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -38,9 +42,11 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
     api
       .paymentsApiMemberFuturePaymentsRetrieve({ memberId: memberId })
       .then((response) => {
+        setTrialPeriodEnabled(response.trialPeriodEnabled);
+
         const groupedTransactions: TransactionsByDueDate = {};
 
-        const extendedPayments = response.payments.sort(
+        const extendedPayments = response.payments.toSorted(
           (a, b) => a.payment.dueDate.getTime() - b.payment.dueDate.getTime(),
         );
         setExtendedPayments(extendedPayments);
@@ -63,6 +69,8 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
           }
           groupedTransactions[dueDateAsAstring].push(memberCredit);
         }
+
+        sortGroupedTransactions(groupedTransactions);
 
         setTransactionsByDueDate(groupedTransactions);
       })
@@ -152,6 +160,11 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         show={showModal}
         onHide={() => setShowModal(false)}
         loading={loading}
+        csrfToken={csrfToken}
+        memberId={memberId}
+        setToastDatas={setToastDatas}
+        trialPeriodEnabled={trialPeriodEnabled}
+        deliveryChargeEnabled={deliveryChargeEnabled}
       />
       <TapirToastContainer
         toastDatas={toastDatas}

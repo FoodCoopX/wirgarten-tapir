@@ -1,5 +1,4 @@
 import datetime
-from typing import Dict
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.services.tapir_cache import TapirCache
@@ -9,8 +8,8 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 class DeliveryDayAdjustmentService:
     @classmethod
     def get_adjusted_delivery_weekday(
-        cls, delivery_date: datetime.date, cache: Dict
-    ) -> int | None:
+        cls, delivery_date: datetime.date, cache: dict
+    ) -> int:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=delivery_date, cache=cache
         )

@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
 import { Form, Modal } from "react-bootstrap";
-import NextStepButton from "../components/NextStepButton.tsx";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import TapirButton from "../../components/TapirButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import TapirCheckbox from "../components/TapirCheckbox.tsx";
-import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
 import { PublicProductType } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { isIbanValid } from "../../bestell_wizard/utils/isIbanValid.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import NextStepButton from "../components/NextStepButton.tsx";
+import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
 import { atLeastOneMonthlyPayment } from "../utils/atLeastOneMonthlyPayment.ts";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step9BankingDataProps {
   goToNextStep: () => void;
@@ -23,12 +24,13 @@ interface Step9BankingDataProps {
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   solidarityContribution: number;
-  active: boolean;
+  stepActive: boolean;
   productTypesInWaitingList: Set<PublicProductType>;
   isOrderStep: boolean;
   orderLoading: boolean;
   nextButtonText?: string;
   canChangePaymentRhythm: boolean;
+  autoFillAccountOwnerFromName: boolean;
 }
 
 function getPlaceholder(key: keyof PersonalData) {
@@ -53,25 +55,26 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   settings,
   shoppingCart,
   solidarityContribution,
-  active,
+  stepActive,
   productTypesInWaitingList,
   isOrderStep,
   orderLoading,
   nextButtonText,
   canChangePaymentRhythm,
+  autoFillAccountOwnerFromName,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
   const [paymentRhythmModalOpen, setPaymentRhythmModalOpen] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   useEffect(() => {
-    if (accountOwnerSetManually) {
+    if (!autoFillAccountOwnerFromName || accountOwnerSetManually) {
       return;
     }
 
@@ -107,7 +110,10 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   }
 
   function mustShowCheckboxContractAccepted() {
-    return settings.labelCheckboxContractPolicy.trim() !== "";
+    return (
+      settings.labelCheckboxContractPolicy.trim() !== "" &&
+      isAtLeastOneProductOrdered(shoppingCart)
+    );
   }
 
   return (
@@ -198,6 +204,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
         loading={orderLoading}
         isOrderStep={isOrderStep}
         text={nextButtonText}
+        stepActive={stepActive}
       />
       <Modal
         show={paymentRhythmModalOpen}

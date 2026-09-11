@@ -1,7 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
@@ -14,7 +14,7 @@ from tapir.subscriptions.config import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestGetSolidarityContributionMinimum(SimpleTestCase):
+class TestGetSolidarityContributionMinimum(TapirUnitTest):
     @patch(
         "tapir.solidarity_contribution.services.solidarity_validator.get_parameter_value",
         autospec=True,

@@ -34,6 +34,13 @@ _______________ <br /><br />
 Folgende Tokens sind hier relevant: <br />
 {{Abholortänderung.Neuer Abholort}} <br />
 {{Abholortänderung.Gültig ab}}. <br />
+{{Abholortänderung.Neuer Abholort - Adresse}}. <br />
+{{Abholortänderung.Neuer Abholort - Zugangscode}}. <br />
+{{Abholortänderung.Neuer Abholort - Messenger-Gruppe}}. <br />
+{{Abholortänderung.Neuer Abholort - Kontaktname}}. <br />
+{{Abholortänderung.Neuer Abholort - Photo-Link}}. <br />
+{{Abholortänderung.Neuer Abholort - Zusatzinfos}}. <br />
+{{Abholortänderung.Neuer Abholort - Abholzeiten}}. <br />
             </mj-text>
         </mj-column>
     </mj-section>

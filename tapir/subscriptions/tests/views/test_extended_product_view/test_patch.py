@@ -11,7 +11,7 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestExtendedProductViewPath(TapirIntegrationTest):
+class TestExtendedProductViewPatch(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -44,6 +44,7 @@ class TestExtendedProductViewPath(TapirIntegrationTest):
             "url_of_image_in_bestellwizard": "https://test.url.com",
             "capacity": 123,
             "min_coop_shares": 2,
+            "hidden_in_bestell_wizard": True,
         }
 
         url = reverse("subscriptions:extended_product")

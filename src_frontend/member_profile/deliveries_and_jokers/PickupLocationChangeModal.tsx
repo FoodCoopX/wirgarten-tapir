@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Spinner, Nav } from "react-bootstrap";
+import { Modal, Spinner } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import {
   PickupLocationsApi,
   PublicPickupLocation,
@@ -7,18 +8,17 @@ import {
   SubscriptionsApi,
   WaitingListApi,
 } from "../../api-client";
-import { useApi } from "../../hooks/useApi.ts";
-import PickupLocationWaitingListSelector from "../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
 import PickupLocationSelector from "../../bestell_wizard/components/PickupLocationSelector.tsx";
-import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
+import PickupLocationWaitingListSelector from "../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import TapirButton from "../../components/TapirButton.tsx";
+import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
 import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
+import TapirButton from "../../components/TapirButton.tsx";
+import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface PickupLocationChangeModalProps {
   show: boolean;
@@ -61,9 +61,9 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     null,
   );
   const [
-    pickupLocationsWithCapacityCheckLoading,
-    setPickupLocationsWithCapacityCheckLoading,
-  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+    pickupLocationsCapacityCheckLoading,
+    setPickupLocationsCapacityCheckLoading,
+  ] = useState(false);
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [subscriptions, setSubscriptions] = useState<PublicSubscription[]>([]);
@@ -74,6 +74,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     setShowWaitingListConfirmationModal,
   ] = useState(false);
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
+  const [currentPickupLocationId, setCurrentPickupLocationId] = useState("");
 
   // Get unique delivery days from pickup locations
   const availableDeliveryDays = React.useMemo((): number[] => {
@@ -117,6 +118,19 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         ),
       );
 
+    pickupLocationsApi
+      .pickupLocationsApiGetMemberPickupLocationRetrieve({ memberId: memberId })
+      .then((result) => {
+        setCurrentPickupLocationId(result.location?.id ?? "");
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der aktueller Verteilstation",
+          setToastDatas,
+        ),
+      );
+
     subscriptionsApi
       .subscriptionsApiMemberSubscriptionDataRetrieve({ memberId: memberId })
       .then((response) => setSubscriptions(response.subscriptions))
@@ -155,9 +169,10 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     );
 
     checkPickupLocationCapacities(
+      pickupLocationsApi,
       filteredPickupLocations,
       shoppingCart,
-      setPickupLocationsWithCapacityCheckLoading,
+      setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       undefined,
@@ -172,7 +187,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     if (
       selectedPickupLocations.length === 1 &&
       !pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]) &&
-      pickupLocationsWithCapacityCheckLoading.size === 0
+      !pickupLocationsCapacityCheckLoading
     ) {
       setWaitingListModeEnabled(false);
     }
@@ -181,7 +196,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       !waitingListModeEnabled &&
       selectedPickupLocations.length === 1 &&
       pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]) &&
-      !pickupLocationsWithCapacityCheckLoading.has(selectedPickupLocations[0])
+      !pickupLocationsCapacityCheckLoading
     ) {
       if (hasWaitingListEntry) {
         alert(
@@ -195,7 +210,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   }, [
     selectedPickupLocations,
     pickupLocationsWithCapacityFull,
-    pickupLocationsWithCapacityCheckLoading,
+    pickupLocationsCapacityCheckLoading,
   ]);
 
   function onConfirm() {
@@ -264,7 +279,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               {
                 id: uuidv4(),
                 variant: "success",
-                title: "Verteilstation-Weschel bestätig",
+                title: "Verteilstation-Wechsel bestätigt",
               },
               setToastDatas,
             );
@@ -334,12 +349,12 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
-              waitingListModeEnabled={waitingListModeEnabled}
-              pickupLocationsWithCapacityCheckLoading={
-                pickupLocationsWithCapacityCheckLoading
+              pickupLocationsCapacityCheckLoading={
+                pickupLocationsCapacityCheckLoading
               }
               pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
               waitingListLinkConfirmationModeEnabled={false}
+              disabledLocationIds={[currentPickupLocationId]}
             />
           )}
 

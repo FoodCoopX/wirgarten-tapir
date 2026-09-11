@@ -1,7 +1,7 @@
 import datetime
 import logging
 from decimal import Decimal
-from typing import Dict
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from django.core.exceptions import PermissionDenied
@@ -19,12 +19,16 @@ from tapir.core.config import (
     TEST_DATE_OVERRIDE_DECEMBER_FIFTEENTH_THIS_YEAR,
     TEST_DATE_OVERRIDE_LAST_MINUTE_OF_THIS_YEAR,
     TEST_DATE_OVERRIDE_END_OF_FIRST_DAY_NEXT_YEAR,
+    LEGAL_STATUS_COMPANY,
 )
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 LOG = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from tapir.wirgarten.models import Subscription
 
 
 def format_date(value: datetime.date | datetime.datetime) -> str:
@@ -56,19 +60,21 @@ def check_permission_or_self(pk, request):
         raise PermissionDenied
 
 
-def get_today(cache: Dict | None = None) -> datetime.date:
+def get_today(cache: dict | None = None) -> datetime.date:
     if is_debug_instance():
         return get_debug_now(cache).date()
     return timezone.localdate()
 
 
-def get_now(cache: Dict | None = None) -> datetime.datetime:
+def get_now(cache: dict | None = None) -> datetime.datetime:
     if is_debug_instance():
-        return get_debug_now(cache)
-    return timezone.now()
+        now = get_debug_now(cache)
+    else:
+        now = timezone.now()
+    return now.astimezone(ZoneInfo("Europe/Berlin"))
 
 
-def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
+def get_debug_now(cache: dict | None = None) -> datetime.datetime:
     preset = get_parameter_value(ParameterKeys.TESTS_OVERRIDE_DATE_PRESET, cache=cache)
 
     if preset == TEST_DATE_OVERRIDE_DISABLED:
@@ -115,20 +121,30 @@ def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
     return timezone.now()
 
 
-def format_subscription_list_html(subs: list) -> str:
-    subs.sort(key=lambda sub: sub.product_id)
-    return f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}"
+def format_subscription_list_html(subscriptions: list[Subscription]) -> str:
+    sorted_subscriptions = sorted(
+        subscriptions, key=lambda subscription: subscription.product_id
+    )
+    formatted_subscriptions = [sub.long_str() for sub in sorted_subscriptions]
+    return f"<ul><li>{'</li><li>'.join(formatted_subscriptions)}</li></ul>"
 
 
-def legal_status_is_cooperative(cache):
+def legal_status_is_cooperative(cache: dict):
     return (
         get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
         == LEGAL_STATUS_COOPERATIVE
     )
 
 
-def legal_status_is_association(cache):
+def legal_status_is_association(cache: dict):
     return (
         get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
         == LEGAL_STATUS_ASSOCIATION
+    )
+
+
+def legal_status_is_company(cache: dict):
+    return (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+        == LEGAL_STATUS_COMPANY
     )

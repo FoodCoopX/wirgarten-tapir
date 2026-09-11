@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
+import { PublicGrowingPeriod, PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { PublicProductType } from "../../api-client";
-import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
-import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { selectAllRequiredProductTypes } from "../../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { replaceTokens } from "../utils/replaceTokens.ts";
+import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { replaceTokens } from "../utils/replaceTokens.ts";
 import "./Step3ProductTypesChoice.css";
 
 interface Step3ProductTypeChoiceProps {
@@ -21,6 +22,8 @@ interface Step3ProductTypeChoiceProps {
   investingMembership: boolean;
   setInvestingMembership: (investing: boolean) => void;
   setShoppingCart: (cart: ShoppingCart) => void;
+  selectedGrowingPeriod: PublicGrowingPeriod | undefined;
+  stepActive: boolean;
 }
 
 const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
@@ -32,9 +35,12 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   investingMembership,
   setInvestingMembership,
   setShoppingCart,
+  selectedGrowingPeriod,
+  stepActive,
 }) => {
   const [productTypeForModal, setProductTypeForModal] =
     useState<PublicProductType>();
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (investingMembership) {
@@ -42,7 +48,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       setShoppingCart(buildEmptyShoppingCart(settings.productTypes));
     } else {
       selectAllRequiredProductTypes(
-        settings.productTypes,
+        selectedGrowingPeriod?.productTypes ?? settings.productTypes,
         selectedProductTypes,
         setSelectedProductTypes,
       );
@@ -54,6 +60,10 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       setInvestingMembership(false);
     }
   }, [selectedProductTypes]);
+
+  useEffect(() => {
+    setShowError(false);
+  }, [selectedProductTypes, investingMembership]);
 
   function getModalText() {
     if (productTypeForModal === undefined) {
@@ -86,6 +96,25 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
     setSelectedProductTypes(sortProductTypes(selection));
   }
 
+  function validate() {
+    if (selectedProductTypes.length === 0 && !investingMembership) {
+      setShowError(true);
+    } else {
+      goToNextStep();
+    }
+  }
+
+  function showInvestingMembership() {
+    switch (settings.legalStatus) {
+      case "association":
+        return settings.associationsAllowInvestingMembership;
+      case "coop":
+        return settings.allowInvestingMembership;
+      case "company":
+        return false;
+    }
+  }
+
   return (
     <>
       {settings.strings.step3Text && (
@@ -97,9 +126,11 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       <div>
         <div
           id={"product_types_choice"}
-          className={"d-flex gap-2 justify-content-center"}
+          className={"d-flex gap-2 justify-content-center align-items-center"}
         >
-          {settings.productTypes.map((productType) => (
+          {sortProductTypes(
+            selectedGrowingPeriod?.productTypes ?? settings.productTypes,
+          ).map((productType) => (
             <div key={productType.id}>
               <input
                 type="checkbox"
@@ -110,7 +141,9 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                   updateSelection(productType, event.target.checked)
                 }
                 checked={selectedProductTypes.includes(productType)}
-                disabled={productType.mustBeSubscribedTo}
+                disabled={
+                  productType.mustBeSubscribedTo && !investingMembership
+                }
               />
               <label
                 className={"btn btn-" + BUTTON_VARIANT}
@@ -130,35 +163,62 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                     />
                   )}
                   <span>{productType.name}</span>
+                  {productType.descriptionBestellwizardShort && (
+                    <TapirButton
+                      variant={"outline-secondary"}
+                      icon={"help"}
+                      size={"sm"}
+                      onClick={() => {
+                        setProductTypeForModal(productType);
+                      }}
+                      style={{ pointerEvents: "auto" }}
+                    />
+                  )}
                 </div>
               </label>
             </div>
           ))}
         </div>
-
-        <hr />
-        <div className={"d-flex justify-content-center"}>
-          <input
-            type="checkbox"
-            className="btn-check"
-            id={"investing"}
-            autoComplete="off"
-            onChange={(event) => setInvestingMembership(event.target.checked)}
-            checked={investingMembership}
-          />
-          <label className={"btn btn-" + BUTTON_VARIANT} htmlFor={"investing"}>
-            <div className={"d-flex flex-row gap-2 align-items-center"}>
-              <Form.Check
+        {showInvestingMembership() && (
+          <>
+            <hr />
+            <div className={"d-flex justify-content-center"}>
+              <input
+                type="checkbox"
+                className="btn-check"
+                id={"investing"}
+                autoComplete="off"
+                onChange={(event) =>
+                  setInvestingMembership(event.target.checked)
+                }
                 checked={investingMembership}
-                style={{ pointerEvents: "none" }}
-                readOnly={true}
               />
-              <span>Fördermitgliedschaft</span>
+              <label
+                className={"btn btn-" + BUTTON_VARIANT}
+                htmlFor={"investing"}
+              >
+                <div className={"d-flex flex-row gap-2 align-items-center"}>
+                  <Form.Check
+                    checked={investingMembership}
+                    style={{ pointerEvents: "none" }}
+                    readOnly={true}
+                  />
+                  <span>{settings.strings.step3SupportingMembershipName}</span>
+                </div>
+              </label>
             </div>
-          </label>
-        </div>
+          </>
+        )}
+        {showError && (
+          <>
+            <hr />
+            <div className={"text-danger text-center"}>
+              Wähle mindestens eine Option.
+            </div>
+          </>
+        )}
       </div>
-      <NextStepButton onClick={goToNextStep} />
+      <NextStepButton onClick={validate} stepActive={stepActive} />
       <Modal
         show={productTypeForModal !== undefined}
         fullscreen={"md-down"}

@@ -1,17 +1,29 @@
 import React from "react";
 import { Table } from "react-bootstrap";
-import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
-import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 import { WaitingListEntryDetails } from "../api-client";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import formatAddress from "../utils/formatAddress.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import { formatDateText } from "../utils/formatDateText.ts";
+import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 
 interface WaitingListTableProps {
   loading: boolean;
   showCoopContent: boolean;
   waitingListEntries: WaitingListEntryDetails[];
   setSelectedEntryForEdition: (entry: WaitingListEntryDetails) => void;
+}
+
+function getRowClass(entry: WaitingListEntryDetails) {
+  if (entry.linkSentDate) {
+    return "table-warning";
+  }
+
+  if (entry.canBeFulfilled) {
+    return "table-success";
+  }
+
+  return "";
 }
 
 const WaitingListTable: React.FC<WaitingListTableProps> = ({
@@ -26,7 +38,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
         key={entry.id}
         style={{ cursor: "pointer" }}
         onClick={() => setSelectedEntryForEdition(entry)}
-        className={entry.linkSentDate ? "table-warning" : ""}
+        className={getRowClass(entry)}
       >
         <td>
           {entry.urlToMemberProfile && (
@@ -101,39 +113,61 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
   }
 
   return (
-    <Table striped hover responsive className={"max-column-width"}>
-      <thead>
-        <tr>
-          <th>Mitgliedsnummer</th>
-          <th>Eintragungsdatum auf Warteliste</th>
-          <th>Link Versand Datum</th>
-          <th>Name</th>
-          <th>Email-Adresse</th>
-          <th>Telefonnummer</th>
-          <th>Wohnort</th>
-          {showCoopContent && <th>Geno-Beitrittsdatum</th>}
-          <th>Aktuelle Produkte</th>
-          <th>Gewünschte Produkte</th>
-          <th>Derzeitiger Verteilort</th>
-          <th>Verteilort Prioritäten</th>
-          {showCoopContent && <th>Geno-Anteilen gewünscht</th>}
-          <th>Wunsch-Startdatum</th>
-          <th>Kategorie</th>
-          <th>Kommentar</th>
-        </tr>
-      </thead>
-      <tbody>
-        {loading ? (
-          <PlaceholderTableRows
-            nbRows={DEFAULT_PAGE_SIZE_BIG}
-            nbColumns={showCoopContent ? 16 : 14}
-            size={"xs"}
-          />
-        ) : (
-          waitingListEntries.map(buildWaitingListEntryRow)
-        )}
-      </tbody>
-    </Table>
+    <>
+      <div className="mb-2 d-flex gap-4">
+        <span>
+          <span
+            className="badge me-1"
+            style={{ backgroundColor: "#d1e7dd", color: "#0f5132" }}
+          >
+            &nbsp;
+          </span>
+          Kann erfüllt werden
+        </span>
+        <span>
+          <span
+            className="badge me-1"
+            style={{ backgroundColor: "#fff3cd", color: "#664d03" }}
+          >
+            &nbsp;
+          </span>
+          Link bereits versendet
+        </span>
+      </div>
+      <Table striped hover responsive className={"max-column-width"}>
+        <thead>
+          <tr>
+            <th>Mitgliedsnummer</th>
+            <th>Eintragungsdatum auf Warteliste</th>
+            <th>Link Versand Datum</th>
+            <th>Name</th>
+            <th>Email-Adresse</th>
+            <th>Telefonnummer</th>
+            <th>Wohnort</th>
+            {showCoopContent && <th>Geno-Beitrittsdatum</th>}
+            <th>Aktuelle Produkte</th>
+            <th>Gewünschte Produkte</th>
+            <th>Derzeitiger Verteilort</th>
+            <th>Verteilort Prioritäten</th>
+            {showCoopContent && <th>Geno-Anteilen gewünscht</th>}
+            <th>Wunsch-Startdatum</th>
+            <th>Kategorie</th>
+            <th>Kommentar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            <PlaceholderTableRows
+              nbRows={DEFAULT_PAGE_SIZE_BIG}
+              nbColumns={showCoopContent ? 16 : 14}
+              size={"xs"}
+            />
+          ) : (
+            waitingListEntries.map(buildWaitingListEntryRow)
+          )}
+        </tbody>
+      </Table>
+    </>
   );
 };
 

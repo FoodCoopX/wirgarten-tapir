@@ -1,5 +1,5 @@
-import { Step } from "../types/Step.ts";
 import { Phase } from "../types/Phase.ts";
+import { Step } from "../types/Step.ts";
 
 export function getPhase(step: Step): Phase {
   switch (step) {
@@ -17,6 +17,7 @@ export function getPhase(step: Step): Phase {
       return "pickup_location";
     case "6a_coop_intro":
     case "6b_coop_shares":
+    case "6b_association_membership":
     case "6c_coop_member_now":
       return "coop";
     case "7_solidarity_contribution":
@@ -33,12 +34,13 @@ export function getPhase(step: Step): Phase {
     case "14b_confirmation_waiting_list":
       return "confirmation";
 
-    default:
+    default: {
       const separatorIndex = step.lastIndexOf("_");
       if (separatorIndex == -1) {
         alert("Missing phase for step " + step);
         return "unknown";
       }
       return step.slice(0, separatorIndex);
+    }
   }
 }

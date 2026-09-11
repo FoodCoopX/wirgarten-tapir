@@ -1,8 +1,8 @@
+import "dayjs/locale/de";
 import React from "react";
 import { Modal } from "react-bootstrap";
-import "dayjs/locale/de";
-import TapirButton from "../../../components/TapirButton.tsx";
 import { ProductForCancellation } from "../../../api-client";
+import TapirButton from "../../../components/TapirButton.tsx";
 import { formatDateText } from "../../../utils/formatDateText.ts";
 
 interface CancellationStepConfirmationProps {
@@ -10,7 +10,7 @@ interface CancellationStepConfirmationProps {
   selectedProducts: ProductForCancellation[];
   onConfirm: () => void;
   cancelCoopMembershipSelected: boolean;
-  membershipText: string;
+  cancelAssociationMembershipSelected: boolean;
   customCancellationReasons: string | undefined;
   goToPreviousStep: () => void;
   confirmationLoading: boolean;
@@ -23,7 +23,7 @@ const CancellationStepConfirmation: React.FC<
   selectedProducts,
   onConfirm,
   cancelCoopMembershipSelected,
-  membershipText,
+  cancelAssociationMembershipSelected,
   customCancellationReasons,
   goToPreviousStep,
   confirmationLoading,
@@ -46,7 +46,12 @@ const CancellationStepConfirmation: React.FC<
               );
             },
           )}
-          {cancelCoopMembershipSelected && <li>{membershipText}</li>}
+          {cancelCoopMembershipSelected && (
+            <li>Beitrittserklärung zur Genossenschaft</li>
+          )}
+          {cancelAssociationMembershipSelected && (
+            <li>Beitrittserklärung zum Verein</li>
+          )}
         </ul>
         <p>Du hast folgende Gründe für die Kündigung genannt:</p>
         <ul>

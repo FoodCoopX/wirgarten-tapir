@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useApi } from "../hooks/useApi.ts";
+import { Modal, Tab, Tabs } from "react-bootstrap";
 import {
   PickupLocation,
   Product,
@@ -8,16 +8,16 @@ import {
   WaitingListPickupLocationWish,
   WaitingListProductWish,
 } from "../api-client";
-import "./waiting_list_card.css";
-import { Modal, Tab, Tabs } from "react-bootstrap";
-import TapirButton from "../components/TapirButton.tsx";
+import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
+import TapirButton from "../components/TapirButton.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import WaitingListTabLink from "./tabs/WaitingListTabLink.tsx";
 import WaitingListTabPersonalData from "./tabs/WaitingListTabPersonalData.tsx";
 import WaitingListTabWishes from "./tabs/WaitingListTabWishes.tsx";
-import WaitingListTabLink from "./tabs/WaitingListTabLink.tsx";
-import { ToastData } from "../types/ToastData.ts";
-import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
+import "./waiting_list_card.css";
 
 interface WaitingListEntryEditModalProps {
   csrfToken: string;

@@ -1,24 +1,25 @@
 import datetime
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from django.views.generic import TemplateView
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
+from tapir.associations.models import AssociationMembershipType
 from tapir.bestell_wizard.serializers import (
-    BestellWizardBaseDataResponseSerializer,
-    BestellWizardCapacityCheckRequestSerializer,
-    BestellWizardCapacityCheckResponseSerializer,
     BestellWizardConfirmOrderRequestSerializer,
-    BestellWizardDeliveryDatesForOrderRequestSerializer,
+    BestellWizardCapacityCheckResponseSerializer,
+    BestellWizardCapacityCheckRequestSerializer,
+    BestellWizardBaseDataResponseSerializer,
     BestellWizardDeliveryDatesForOrderResponseSerializer,
+    BestellWizardDeliveryDatesForOrderRequestSerializer,
     PublicProductPricesResponseSerializer,
 )
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
@@ -35,7 +36,6 @@ from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
-from tapir.deliveries.serializers import PublicGrowingPeriodSerializer
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -59,9 +59,6 @@ from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
-from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
-    ProductTypeLowestFreeCapacityAfterDateCalculator,
-)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
@@ -75,13 +72,14 @@ from tapir.waiting_list.services.waiting_list_entry_validator import (
     WaitingListEntryValidator,
 )
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.models import OrderFeedback
 from tapir.wirgarten.models import (
-    GrowingPeriod,
-    Member,
-    PickupLocation,
-    Product,
     ProductType,
     WaitingListEntry,
+    Member,
+    PickupLocation,
+    GrowingPeriod,
+    Product,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
@@ -90,14 +88,11 @@ from tapir.wirgarten.service.products import (
     get_product_price,
 )
 from tapir.wirgarten.utils import (
-    check_permission_or_self,
     get_today,
     legal_status_is_cooperative,
+    check_permission_or_self,
+    legal_status_is_association,
 )
-
-
-class BestellWizardView(TemplateView):
-    template_name = "bestell_wizard/bestell_wizard.html"
 
 
 class BestellWizardMobileView(TemplateView):
@@ -120,7 +115,7 @@ class BestellWizardMobileView(TemplateView):
         )
         if background_image_url:
             context_data["body_style"] = (
-                f"background-image: url({background_image_url}); background-repeat: repeat"
+                f"background-image: url({background_image_url}); background-repeat: repeat; background-position: center;"
             )
 
         context_data["cache"] = cache
@@ -128,6 +123,28 @@ class BestellWizardMobileView(TemplateView):
 
 class BestellWizardCoopSharesView(TemplateView):
     template_name = "bestell_wizard/bestell_wizard_coop_shares.html"
+
+    def get(self, request, *args, **kwargs):
+        check_permission_or_self(pk=kwargs["member_id"], request=request)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        cache = {}
+        BestellWizardMobileView.add_body_style_context(context_data, cache)
+        context_data["member_id"] = kwargs["member_id"]
+        member = get_object_or_404(Member, id=kwargs["member_id"])
+        context_data["first_name"] = member.first_name
+        context_data["last_name"] = member.last_name
+        context_data["needs_banking_data"] = (
+            MemberNeedsBankingDataChecker.does_member_need_banking_data(member)
+        )
+        context_data["member_url"] = member.get_absolute_url()
+        return context_data
+
+
+class BestellWizardAssociationMembershipView(TemplateView):
+    template_name = "bestell_wizard/bestell_wizard_association_membership.html"
 
     def get(self, request, *args, **kwargs):
         check_permission_or_self(pk=kwargs["member_id"], request=request)
@@ -200,11 +217,20 @@ class BestellWizardConfirmOrderApiView(APIView):
         try:
             member = None
             with transaction.atomic():
-                member = self.validate_everything_and_apply_all_changes(
-                    validated_serializer_data=serializer.validated_data,
-                    request=request,
-                    cache=self.cache,
+                member, waiting_list_entry = (
+                    self.validate_everything_and_apply_all_changes(
+                        validated_serializer_data=serializer.validated_data,
+                        request=request,
+                        cache=self.cache,
+                    )
                 )
+                feedback = serializer.validated_data.get("feedback")
+                if feedback:
+                    OrderFeedback.objects.create(
+                        member=member,
+                        waiting_list_entry=waiting_list_entry,
+                        feedback_text=feedback,
+                    )
             if member is not None:
                 # The member creation does calls to KeycloakUserManager that are only applied after the transaction ends.
                 # In order to persist the changes that the KeycloakUserManager applies, we need to save manually one more time.
@@ -220,7 +246,7 @@ class BestellWizardConfirmOrderApiView(APIView):
     @classmethod
     def validate_everything_and_apply_all_changes(
         cls, validated_serializer_data: dict, request, cache: dict
-    ):
+    ) -> tuple[Member | None, WaitingListEntry | None]:
         if not validated_serializer_data["privacy_policy_read"]:
             raise ValidationError("Die Datenschutzklärung muss akzeptiert werden.")
 
@@ -228,8 +254,15 @@ class BestellWizardConfirmOrderApiView(APIView):
             validated_serializer_data["shopping_cart_order"], cache=cache
         )
         member = None
+        waiting_list_entry = None
 
-        if len(order) > 0 or validated_serializer_data["become_member_now"]:
+        become_member_now = validated_serializer_data["become_member_now"]
+        if not legal_status_is_cooperative(
+            cache=cache
+        ) and not legal_status_is_association(cache=cache):
+            become_member_now = False
+
+        if len(order) > 0 or become_member_now:
             member = cls.validate_and_fulfill_order(
                 request=request,
                 validated_serializer_data=validated_serializer_data,
@@ -242,14 +275,16 @@ class BestellWizardConfirmOrderApiView(APIView):
                 cache=cache,
             )
         )
+
         if (
             len(order_waiting_list) > 0
-            or validated_serializer_data["become_member_now"] is False
             or len(validated_serializer_data["pickup_location_ids"]) > 1
         ):
             if member is None:
-                cls.validate_and_create_waiting_list_entry_potential_member(
-                    validated_serializer_data=validated_serializer_data, cache=cache
+                waiting_list_entry = (
+                    cls.validate_and_create_waiting_list_entry_potential_member(
+                        validated_serializer_data=validated_serializer_data, cache=cache
+                    )
                 )
             else:
                 cls.validate_and_create_waiting_list_entry_existing_member(
@@ -258,7 +293,7 @@ class BestellWizardConfirmOrderApiView(APIView):
                     cache=cache,
                 )
 
-        return member
+        return member, waiting_list_entry
 
     @classmethod
     def validate_and_fulfill_order(
@@ -287,7 +322,7 @@ class BestellWizardConfirmOrderApiView(APIView):
     @classmethod
     def validate_and_create_waiting_list_entry_potential_member(
         cls, validated_serializer_data: dict, cache: dict
-    ):
+    ) -> WaitingListEntry:
         waiting_list_order = (
             TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
                 shopping_cart=validated_serializer_data["shopping_cart_waiting_list"],
@@ -317,6 +352,7 @@ class BestellWizardConfirmOrderApiView(APIView):
                 last_name=validated_serializer_data["personal_data"]["last_name"],
             ),
         )
+        return entry
 
     @classmethod
     def validate_and_create_waiting_list_entry_existing_member(
@@ -426,6 +462,7 @@ class BestellWizardBaseDataApiView(APIView):
         earliest_contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
                 growing_period=available_growing_periods[0],
+                reference_date=get_today(cache=self.cache),
                 apply_buffer_time=True,
                 cache=self.cache,
             )
@@ -449,6 +486,11 @@ class BestellWizardBaseDataApiView(APIView):
         response_data.update(
             {
                 "product_types": ProductType.objects.all(),
+                "association_membership_types": AssociationMembershipType.objects.order_by(
+                    "order_in_bestell_wizard"
+                ).filter(
+                    deleted=False, hidden_in_bestell_wizard=False
+                ),
                 "pickup_locations": PublicPickupLocationProvider.get_pickup_locations_available_for_members(
                     cache=self.cache
                 ),
@@ -482,13 +524,24 @@ class BestellWizardBaseDataApiView(APIView):
                     cache=self.cache,
                 ),
                 "growing_period_choices": available_growing_periods,
+                "legal_status": get_parameter_value(
+                    key=ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
+                ),
                 "strings": self.build_strings_object(cache=self.cache),
                 "images": self.build_images_object(cache=self.cache),
                 "debug": settings.DEBUG,
             }
         )
 
-        return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
+        return Response(
+            BestellWizardBaseDataResponseSerializer(
+                response_data,
+                context={
+                    "cache": self.cache,
+                    "reference_date_for_delivery_charge": earliest_contract_start_date,
+                },
+            ).data
+        )
 
     @classmethod
     def build_simple_response_fields(cls, cache: dict):
@@ -508,6 +561,9 @@ class BestellWizardBaseDataApiView(APIView):
             "contact_mail_address": ParameterKeys.SITE_EMAIL,
             "solidarity_contribution_default": ParameterKeys.SOLIDARITY_DEFAULT,
             "feedback_step_enabled": ParameterKeys.BESTELLWIZARD_STEP13_ENABLED,
+            "solidarity_step_position": ParameterKeys.BESTELL_WIZARD_SOLIDARITY_STEP_POSITION,
+            "legal_status": ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            "associations_allow_investing_membership": ParameterKeys.ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP,
         }
         return cls.build_dictionary_from_config_parameters(
             serializer_key_to_parameter_key_map, cache
@@ -524,12 +580,14 @@ class BestellWizardBaseDataApiView(APIView):
             "step2_text": ParameterKeys.BESTELLWIZARD_STEP2_TEXT,
             "step3_title": ParameterKeys.BESTELLWIZARD_STEP3_TITLE,
             "step3_text": ParameterKeys.BESTELLWIZARD_STEP3_TEXT,
+            "step3_supporting_membership_name": ParameterKeys.BESTELLWIZARD_STEP3_NAME_SUPPORTING_MEMBERSHIP,
             "step3b_title": ParameterKeys.BESTELLWIZARD_STEP3B_TITLE,
             "step3b_text": ParameterKeys.BESTELLWIZARD_STEP3B_TEXT,
             "step4b_waiting_list_modal_title": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER,
             "step4b_waiting_list_modal_text": ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_TEXT,
             "step4d_title": ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,
             "step4d_text": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT,
+            "step4d_text_supporting_member": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT_SUPPORTING_MEMBER,
             "step5a_title": ParameterKeys.BESTELLWIZARD_STEP5A_TITLE,
             "step5a_text": ParameterKeys.BESTELLWIZARD_STEP5A_TEXT,
             "step5b_title": ParameterKeys.BESTELLWIZARD_STEP5B_TITLE,
@@ -539,6 +597,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step6a_text": ParameterKeys.BESTELLWIZARD_STEP6A_TEXT,
             "step6b_title": ParameterKeys.BESTELLWIZARD_STEP6B_TITLE,
             "step6b_text": ParameterKeys.BESTELLWIZARD_STEP6B_TEXT,
+            "step6b_checkbox_statute_associations": ParameterKeys.BESTELLWIZARD_STEP6B_CHECKBOX_STATUTE_ASSOCIATIONS,
             "step6c_title": ParameterKeys.BESTELLWIZARD_STEP6C_TITLE,
             "step6c_text": ParameterKeys.BESTELLWIZARD_STEP6C_TEXT,
             "step6c_checkbox_statute": ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,
@@ -549,6 +608,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step9_title": ParameterKeys.BESTELLWIZARD_STEP9_TITLE,
             "step9_payment_rhythm_modal_text": ParameterKeys.BESTELLWIZARD_STEP9_PAYMENT_RHYTHM_MODAL_TEXT,
             "step10_title": ParameterKeys.BESTELLWIZARD_STEP10_TITLE,
+            "step_10_single_product_type_hint": ParameterKeys.BESTELLWIZARD_STEP10_SINGLE_PRODUCT_TYPE_HINT,
             "step11_title": ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
             "step11_privacy_policy_label": ParameterKeys.BESTELLWIZARD_PRIVACY_POLICY_LABEL,
             "step11_privacy_policy_text": ParameterKeys.BESTELLWIZARD_PRIVACY_POLICY_EXPLANATION,
@@ -563,6 +623,9 @@ class BestellWizardBaseDataApiView(APIView):
             "step14b_text": ParameterKeys.BESTELLWIZARD_STEP14B_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
             "label_student_checkbox": ParameterKeys.LABEL_STUDENT_CHECKBOX,
+            "student_checkbox_explanation_text": ParameterKeys.STUDENT_CHECKBOX_EXPLANATION_TEXT,
+            "step10_flag_student": ParameterKeys.BESTELLWIZARD_STEP10_FLAG_STUDENT,
+            "step10_text_student": ParameterKeys.BESTELLWIZARD_STEP10_TEXT_STUDENT,
         }
         return cls.build_dictionary_from_config_parameters(
             string_id_to_parameter_key_map, cache
@@ -614,23 +677,20 @@ class BestellWizardBaseDataApiView(APIView):
             if len(products) == 0:
                 continue
 
-            lowest_free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+            smallest_product = GlobalCapacityChecker.get_smallest_product(
                 product_type=product_type,
-                reference_date=contract_start_date,
                 cache=cache,
+                reference_date=contract_start_date,
             )
 
-            smallest_size = min(
-                [
-                    get_product_price(
-                        product=product,
-                        reference_date=contract_start_date,
-                        cache=cache,
-                    ).size
-                    for product in products
-                ],
-            )
-            if lowest_free_capacity < smallest_size:
+            if not GlobalCapacityChecker.is_there_enough_free_global_capacity_for_single_product_type(
+                order_for_a_single_product_type={smallest_product: 1},
+                product_type_id=product_type.id,
+                cache=cache,
+                member_id=None,
+                check_waiting_list_entries=True,
+                subscription_start_date=contract_start_date,
+            ):
                 ids.append(product_type.id)
                 continue
 
@@ -710,12 +770,12 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         response_data = {}
         for pickup_location_id in PickupLocation.objects.values_list("id", flat=True):
             response_data[pickup_location_id] = {
-                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_product_type(
                     reference_date=reference_date,
                     pickup_location_id=pickup_location_id,
-                    delivery_cycle=TapirCache.get_product_type_by_id(
+                    product_type=TapirCache.get_product_type_by_id(
                         cache=self.cache, product_type_id=product_type_id
-                    ).delivery_cycle,
+                    ),
                     check_for_weeks_without_delivery=True,
                     cache=self.cache,
                 )
@@ -864,14 +924,17 @@ class PublicProductPricesApiView(APIView):
         parameters=[OpenApiParameter("growing_period_id", type=str)],
     )
     def get(self, request):
+        cache = {}
+
         growing_period = get_object_or_404(
             GrowingPeriod, id=request.query_params.get("growing_period_id")
         )
-        contract_start_date = PublicGrowingPeriodSerializer.get_contract_start_date(
-            growing_period
+        contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date_in_growing_period(
+                growing_period=growing_period, apply_buffer_time=True, cache=cache
+            )
         )
 
-        cache = {}
         prices_by_product_id = {
             product.id: get_product_price(
                 product=product, reference_date=contract_start_date, cache=cache

@@ -1,18 +1,15 @@
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import permission_required
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CoopShareCancelForm,
     CoopShareTransferForm,
     PersonalDataForm,
 )
-from tapir.wirgarten.forms.subscription import (
-    EditSubscriptionPriceForm,
-)
-from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
 from tapir.wirgarten.views.modal import get_form_modal
 
@@ -43,10 +40,11 @@ def get_coop_share_cancel_form(request, **kwargs):
         request=request,
         form_class=CoopShareCancelForm,
         handler=lambda x: cancel_coop_shares(
-            member=kwargs["pk"],
+            member_id=kwargs["pk"],
             quantity=x.cleaned_data["quantity"],
             cancellation_date=x.cleaned_data["cancellation_date"],
             valid_at=x.cleaned_data["valid_at"],
+            actor=request.user,
         ),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
@@ -60,30 +58,16 @@ def get_member_personal_data_create_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form_class=PersonalDataForm,
-        handler=save_member_twice,
+        handler=save_member_and_assign_number,
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
     )
 
 
-def save_member_twice(member: Member):
-    member.save()
-    member.save()
-
-
-@require_http_methods(["GET", "POST"])
-@login_required
-@csrf_protect
-@permission_required(Permission.Accounts.MANAGE)
-def get_edit_price_form(request, **kwargs):
-    contract_id = kwargs["pk"]
-
-    return get_form_modal(
-        request=request,
-        form_class=EditSubscriptionPriceForm,
-        handler=lambda x: x.save(),
-        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:subscription_list")
-        + "?contract="
-        + str(contract_id),
-        **kwargs,
-    )
+def save_member_and_assign_number(form: PersonalDataForm):
+    form.save()
+    cache = {}
+    if not MemberNumberService.assign_member_number_if_eligible(
+        form.instance, cache=cache, actor=form.request.user
+    ):
+        form.instance.save()  # second save persists keycloak ID (#947)

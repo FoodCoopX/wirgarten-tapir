@@ -5,7 +5,7 @@ from datetime import timedelta
 import factory
 from dateutil.relativedelta import relativedelta
 
-from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
@@ -24,8 +24,10 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     ProductPrice,
     PickupLocationCapability,
+    MemberExtraEmail,
+    LocationRoute,
+    PickupLocationOpeningTime,
 )
-from tapir.wirgarten.service.payment import generate_mandate_ref
 
 NOW = datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc)
 
@@ -51,7 +53,7 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
         if not create:
             return
 
-        if create and member_no is not None:
+        if member_no is not None:
             self.save()
             return
 
@@ -64,29 +66,7 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
 
         self.member_no = member_no
 
-        if create:
-            self.save()
-
-    @factory.post_generation
-    def is_superuser(self: Member, create, is_superuser: bool, **kwargs):
-        if not create:
-            return
-
-        if not self.keycloak_id:
-            # bypass_keycloak is on, so there is no keycloak account to add to
-            # or remove from the superuser group.
-            return
-
-        keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
-        group_id = None
-        for group in keycloak_client.get_groups():
-            if group["name"] == "superuser":
-                group_id = group["id"]
-                break
-        if is_superuser:
-            keycloak_client.group_user_add(self.keycloak_id, group_id)
-        else:
-            keycloak_client.group_user_remove(self.keycloak_id, group_id)
+        self.save()
 
 
 class MemberWithCoopSharesFactory(MemberFactory):
@@ -140,7 +120,13 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference
     class Meta:
         model = MandateReference
 
-    ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member.id))
+    ref = factory.LazyAttribute(
+        lambda o: MandateReferenceProvider.build_mandate_ref(
+            member=o.member,
+            pattern="{vorname}.{nachname}/TEST_MR/{zufall}",
+            cache={},
+        )
+    )
     member = factory.SubFactory(MemberFactory)
     start_ts = NOW - relativedelta(months=1)
 
@@ -151,8 +137,9 @@ class GrowingPeriodFactory(factory.django.DjangoModelFactory[GrowingPeriod]):
 
     start_date = TODAY + relativedelta(day=1)
     end_date = factory.LazyAttribute(
-        lambda growing_period: growing_period.start_date
-        + relativedelta(years=1, days=-1)
+        lambda growing_period: (
+            growing_period.start_date + relativedelta(years=1, days=-1)
+        )
     )
 
 
@@ -180,6 +167,19 @@ class SubscriptionFactory(factory.django.DjangoModelFactory[Subscription]):
     )
     notice_period_duration = 3
     notice_period_unit = NOTICE_PERIOD_UNIT_MONTHS
+    created_at = factory.LazyAttribute(
+        lambda subscription: datetime.datetime.combine(
+            subscription.start_date - datetime.timedelta(days=4),
+            datetime.time(hour=5, minute=0),
+        )
+    )
+
+
+class LocationRouteFactory(factory.django.DjangoModelFactory[LocationRoute]):
+    class Meta:
+        model = LocationRoute
+
+    name = factory.Faker("catch_phrase")
 
 
 class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
@@ -193,6 +193,7 @@ class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
     info = factory.Faker("sentence")
     coords_lon = 0
     coords_lat = 0
+    route_info = factory.Faker("sentence")
 
 
 class PickupLocationCapabilityFactory(
@@ -231,7 +232,11 @@ class PaymentTransactionFactory(factory.django.DjangoModelFactory[PaymentTransac
         model = PaymentTransaction
 
     created_at = NOW
-    file = factory.SubFactory(ExportedFileFactory)
+    csv_file = factory.SubFactory(ExportedFileFactory)
+    xml_file = factory.SubFactory(ExportedFileFactory)
+    month = factory.LazyAttribute(
+        lambda transaction: transaction.created_at.date().replace(day=1)
+    )
 
 
 class PaymentFactory(factory.django.DjangoModelFactory[Payment]):
@@ -262,8 +267,31 @@ class CoopShareTransactionFactory(
     payment = factory.SubFactory(
         PaymentFactory,
         amount=factory.LazyAttribute(
-            lambda payment: payment.factory_parent.quantity
-            * payment.factory_parent.share_price
+            lambda payment: (
+                payment.factory_parent.quantity * payment.factory_parent.share_price
+            )
         ),
         mandate_ref__member=factory.SelfAttribute("...member"),
     )
+
+
+class MemberExtraEmailFactory(factory.django.DjangoModelFactory[MemberExtraEmail]):
+    class Meta:
+        model = MemberExtraEmail
+
+    member = factory.SubFactory(MemberFactory)
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    email = factory.Faker("email")
+
+
+class PickupLocationOpeningTimesFactory(
+    factory.django.DjangoModelFactory[PickupLocationOpeningTime]
+):
+    class Meta:
+        model = PickupLocationOpeningTime
+
+    pickup_location = factory.SubFactory(PickupLocation)
+    open_time = factory.Faker("time")
+    close_time = factory.Faker("time")
+    day_of_week = factory.Faker("pytint", min_value=0, max_value=6)

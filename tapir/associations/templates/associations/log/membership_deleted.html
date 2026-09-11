@@ -1,0 +1,8 @@
+{% load wirgarten %}
+Vereinsmitgliedschaft gelöscht:
+<ul>
+    <li>Art: {{entry.type_name}}</li>
+    <li>Start-Datum: {{ entry.start_date|format_date }}</li>
+    <li>End-Datum: {{ entry.end_date|format_date }}</li>
+</ul>
+

@@ -1,5 +1,5 @@
-import { Step } from "../types/Step.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { Step } from "../types/Step.ts";
 
 export function getStepTitle(
   step: Step,
@@ -8,7 +8,7 @@ export function getStepTitle(
   switch (step) {
     case "1a_welcome":
       return settings.strings.step1aTitle;
-    case "1b_welcome":
+    case "1b_welcome_waiting_list":
       return settings.strings.step1bTitle;
     case "2_first_name":
       return settings.strings.step2Title;
@@ -25,6 +25,7 @@ export function getStepTitle(
     case "6a_coop_intro":
       return settings.strings.step6aTitle;
     case "6b_coop_shares":
+    case "6b_association_membership":
       return settings.strings.step6bTitle;
     case "6c_coop_member_now":
       return settings.strings.step6cTitle;

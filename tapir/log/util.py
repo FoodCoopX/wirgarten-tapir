@@ -6,7 +6,8 @@ def freeze_for_log(instance):
     opts = instance._meta
     data = {}
     for f in chain(opts.concrete_fields, opts.private_fields):
-        data[f.name] = f.value_from_object(instance)
+        value = f.value_from_object(instance)
+        data[f.name] = str(value) if value is not None else None
     for f in opts.many_to_many:
         data[f.name] = [i.id for i in f.value_from_object(instance)]
     return data

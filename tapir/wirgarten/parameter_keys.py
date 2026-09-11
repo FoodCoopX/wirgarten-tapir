@@ -20,7 +20,6 @@ class ParameterKeys:
     COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
-    COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT = (
         f"{PREFIX}.coop.threshold_warning_on_many_coop_shares_bought"
@@ -36,6 +35,27 @@ class ParameterKeys:
     PAYMENT_DEFAULT_RHYTHM = f"{PREFIX}.payment.default_rhythm"
     PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
+    PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
+    PAYMENT_ORGANISATION_BIC = f"{PREFIX}.payment.organisation_bic"
+    PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
+    PAYMENT_MANDATE_REFERENCE_PATTERN = f"{PREFIX}.payment.mandate_reference.pattern"
+    PAYMENT_INTENDED_USE_ENABLE_CUSTOM = f"{PREFIX}.payment.intended_use.enable_custom"
+    PAYMENT_INTENDED_USE_COOP_SHARES = f"{PREFIX}.payment.intended_use.coop_shares"
+    PAYMENT_INTENDED_USE_MONTHLY_INVOICE = (
+        f"{PREFIX}.payment.intended_use.monthly_invoice"
+    )
+    PAYMENT_INTENDED_USE_MONTHLY_INVOICE_SOLIDARITY_SUPPORTED = (
+        f"{PREFIX}.payment.intended_use.monthly_invoice_solidarity_supported"
+    )
+    PAYMENT_INTENDED_USE_SOLI_CONTRIBUTION_ONLY = (
+        f"{PREFIX}.payment.intended_use.soli_contribution_only"
+    )
+    PAYMENT_INTENDED_USE_MULTIPLE_MONTH_INVOICE = (
+        f"{PREFIX}.payment.intended_use.multiple_month_invoice"
+    )
+    PAYMENT_INTENDED_USE_JOKER_CREDIT = f"{PREFIX}.payment.intended_use.joker_credit"
+    PAYMENT_SEND_CSV_FILE_PER_MAIL = f"{PREFIX}.payment.send_csv_file_per_mail"
+    PAYMENT_SEND_XML_FILE_PER_MAIL = f"{PREFIX}.payment.send_xml_file_per_mail"
     MEMBERS_CAN_SEE_OWN_PAYMENTS = (
         f"{PREFIX}.member.dashboard.members_can_see_own_payments"
     )
@@ -43,6 +63,9 @@ class ParameterKeys:
         f"{PREFIX}.member.dashboard.members_can_update_their_contracts"
     )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
+    DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
+        f"{PREFIX}.delivery.charge_per_pickup_location.enabled"
+    )
     MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
         f"{PREFIX}.member.dashboard.renewal_alert.unkown.header"
     )
@@ -69,6 +92,7 @@ class ParameterKeys:
     )
     MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
+    JOKERS_CREATE_MEMBER_CREDITS = f"{PREFIX}.jokers.create_member_credits"
     DELIVERY_DONATION_MODE = f"{PREFIX}.delivery_donation.mode"
     DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION = (
         f"{PREFIX}.delivery_donation.forward_to_pickup_location"
@@ -78,9 +102,6 @@ class ParameterKeys:
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT = (
         f"{PREFIX}.subscriptions.default_notice_period_unit"
-    )
-    SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT = (
-        f"{PREFIX}.subscriptions.additional_product_allowed_without_base_product"
     )
     SUBSCRIPTION_WAITING_LIST_CATEGORIES = (
         f"{PREFIX}.subscriptions.waiting_list_categories"
@@ -118,6 +139,9 @@ class ParameterKeys:
     BESTELLWIZARD_FORCE_WAITING_LIST = f"{PREFIX}.bestellwizard.force_waiting_list"
     BESTELLWIZARD_SHOW_INTRO = f"{PREFIX}.bestellwizard.show_intro"
     BESTELLWIZARD_INTRO_TEXT = f"{PREFIX}.bestellwizard.intro_text"
+    BESTELL_WIZARD_SOLIDARITY_STEP_POSITION = (
+        f"{PREFIX}.bestellwizard.solidarity_step_position"
+    )
     BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT = (
         f"{PREFIX}.bestellwizard.sepa_mandat_checkbox_text"
     )
@@ -150,6 +174,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP3_TITLE = f"{PREFIX}.bestellwizard.step3.title"
     BESTELLWIZARD_STEP3_TEXT = f"{PREFIX}.bestellwizard.step3.text"
+    BESTELLWIZARD_STEP3_NAME_SUPPORTING_MEMBERSHIP = (
+        f"{PREFIX}.bestellwizard.step3.name_supporting_membership"
+    )
     BESTELLWIZARD_STEP3_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step3.background_image"
     )
@@ -163,6 +190,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP4D_TITLE = f"{PREFIX}.bestellwizard.step4d.title"
     BESTELLWIZARD_STEP4D_TEXT = f"{PREFIX}.bestellwizard.step4d.text"
+    BESTELLWIZARD_STEP4D_TEXT_SUPPORTING_MEMBER = (
+        f"{PREFIX}.bestellwizard.step4d.text_supporting_member"
+    )
     BESTELLWIZARD_STEP4D_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step4d.background_image"
     )
@@ -181,6 +211,9 @@ class ParameterKeys:
     )
     BESTELLWIZARD_STEP6B_TITLE = f"{PREFIX}.bestellwizard.step6b.title"
     BESTELLWIZARD_STEP6B_TEXT = f"{PREFIX}.bestellwizard.step6b.text"
+    BESTELLWIZARD_STEP6B_CHECKBOX_STATUTE_ASSOCIATIONS = (
+        f"{PREFIX}.bestellwizard.step6b.checkbox_statute_associations"
+    )
     BESTELLWIZARD_STEP6C_TITLE = f"{PREFIX}.bestellwizard.step6c.title"
     BESTELLWIZARD_STEP6C_TEXT = f"{PREFIX}.bestellwizard.step6c.text"
     BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE = (
@@ -205,6 +238,9 @@ class ParameterKeys:
     BESTELLWIZARD_STEP10_TITLE = f"{PREFIX}.bestellwizard.step10.title"
     BESTELLWIZARD_STEP10_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step10.background_image"
+    )
+    BESTELLWIZARD_STEP10_SINGLE_PRODUCT_TYPE_HINT = (
+        f"{PREFIX}.bestellwizard.step10.single_product_type_hint"
     )
     BESTELLWIZARD_STEP11_TITLE = f"{PREFIX}.bestellwizard.step11.title"
     BESTELLWIZARD_STEP11_BACKGROUND_IMAGE = (
@@ -231,6 +267,11 @@ class ParameterKeys:
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )
     LABEL_STUDENT_CHECKBOX = f"{PREFIX}.coop.label_student_checkbox"
+    STUDENT_CHECKBOX_EXPLANATION_TEXT = (
+        f"{PREFIX}.coop.student_checkbox_explanation_text"
+    )
+    BESTELLWIZARD_STEP10_FLAG_STUDENT = f"{PREFIX}.bestellwizard.step10.flag_student"
+    BESTELLWIZARD_STEP10_TEXT_STUDENT = f"{PREFIX}.bestellwizard.step10.text_student"
     ENABLE_EXTRA_MAIL_ADDRESSES = f"{PREFIX}.emails.enable_extra_mail_addresses"
     EXPLANATION_TEXT_EXTRA_MAIL_ADDRESSES = (
         f"{PREFIX}.emails.explanation_text_extra_mail_addresses"
@@ -253,3 +294,13 @@ class ParameterKeys:
         f"{PREFIX}.bakery.members_can_choose_bread_sorts"
     )
     BAKERY_STOVE_LAYERS = f"{PREFIX}.bakery.stove_layers"
+    MEMBER_NUMBER_PREFIX = f"{PREFIX}.member.number.prefix"
+    MEMBER_NUMBER_ZERO_PAD_LENGTH = f"{PREFIX}.member.number.zero_pad_length"
+    MEMBER_NUMBER_START_VALUE = f"{PREFIX}.member.number.start_value"
+    MEMBER_NUMBER_ONLY_AFTER_TRIAL = f"{PREFIX}.member.number.only_after_trial"
+    ASSOCIATIONS_ALLOW_SUPPORTING_MEMBERSHIP = (
+        f"{PREFIX}.associations.allow_supporting_membership"
+    )
+    ASSOCIATIONS_ENABLE_ASSOCIATION_MEMBERSHIPS = (
+        f"{PREFIX}.associations.enable_supporting_membership"
+    )

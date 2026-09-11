@@ -1,7 +1,7 @@
 import datetime
 from decimal import Decimal
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
     MonthPaymentBuilderSolidarityContributions,
@@ -9,7 +9,7 @@ from tapir.payments.services.month_payment_builder_solidarity_contributions impo
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
 
 
-class TestGetAmountForSingleContributionWithinRange(SimpleTestCase):
+class TestGetAmountForSingleContributionWithinRange(TapirUnitTest):
     def test_getAmountForSingleContributionWithinRange_contributionIsNotWithinRange_returnsDecimalZero(
         self,
     ):

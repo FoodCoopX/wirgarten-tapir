@@ -1,70 +1,74 @@
 import React, { useEffect, useState } from "react";
 import { Spinner } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
+import { v4 as uuidv4 } from "uuid";
+import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
+import "../../tapir/core/static/core/css/base.css";
 import {
+  AssociationMembershipType,
   BestellWizardApi,
   CoopApi,
   OrderConfirmationResponse,
+  PickupLocationsApi,
   PublicGrowingPeriod,
   PublicPickupLocation,
   type PublicProductType,
   PublicWaitingListEntryDetails,
   WaitingListApi,
 } from "../api-client";
-import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
-import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
-import { ToastData } from "../types/ToastData.ts";
-import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
-import Step1AWelcome from "./steps/Step1AWelcome.tsx";
-import Step2FirstName from "./steps/Step2FirstName.tsx";
 import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
-import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
-import Step1BWelcome from "./steps/Step1BWelcome.tsx";
-import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
-import "../../tapir/core/static/core/css/base.css";
-import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
-import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
-import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
+import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
+import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
+import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
+import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
 import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { Phase } from "./types/Phase.ts";
-import StepGenericIntro from "./steps/StepGenericIntro.tsx";
-import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
-import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
-import Step8PersonalData from "./steps/Step8PersonalData.tsx";
-import Step9BankingData from "./steps/Step9BankingData.tsx";
-import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
 import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
+import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
+import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
+import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
+import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { addToast } from "../utils/addToast.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { updateProductPrices } from "../utils/updateProductPrices.ts";
+import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
+import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
 import Step11Legal from "./steps/Step11Legal.tsx";
-import { Step } from "./types/Step.ts";
 import Step12Channel from "./steps/Step12Channel.tsx";
 import Step13Feedback from "./steps/Step13Feedback.tsx";
-import Step14Confirmation from "./steps/Step14Confirmation.tsx";
-import { getPhase } from "./utils/getPhase.ts";
-import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
-import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
-import { getTestPersonalData } from "../bestell_wizard/utils/getTestPersonalData.ts";
-import { updateProductsAndProductTypesOverCapacity } from "../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
-import { buildSteps } from "./utils/buildSteps.ts";
-import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
-import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
-import { PickupLocationTab } from "./types/PickupLocationTab.ts";
-import { isAtLeastOneProductOrdered } from "../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import Step14BConfirmationWaitingList from "./steps/Step14BConfirmationWaitingList.tsx";
+import Step14Confirmation from "./steps/Step14Confirmation.tsx";
+import Step1AWelcome from "./steps/Step1AWelcome.tsx";
+import Step1BWelcome from "./steps/Step1BWelcome.tsx";
+import Step2FirstName from "./steps/Step2FirstName.tsx";
 import Step3BGrowingPeriodChoice from "./steps/Step3BGrowingPeriodChoice.tsx";
-import { updateProductPrices } from "../utils/updateProductPrices.ts";
-import { buildFilteredShoppingCart } from "../bestell_wizard/utils/buildFilteredShoppingCart.ts";
-import { areAllOrderedProductsInWaitingList } from "../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
-import { addToast } from "../utils/addToast.ts";
-import { v4 as uuidv4 } from "uuid";
-import { updateWaitingList } from "./utils/updateWaitingList.ts";
-import BestellWizardMobileBase from "./components/BestellWizardMobileBase.tsx";
-import { sortProductTypes } from "../bestell_wizard/utils/sortProductTypes.ts";
+import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
+import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
+import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
+import Step5CPickupLocationConfirmWaitingList from "./steps/Step5CPickupLocationConfirmWaitingList.tsx";
+import Step6BAssociationMembership from "./steps/Step6BAssociationMembership.tsx";
+import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
+import Step6CCoopMemberNow from "./steps/Step6CCoopMemberNow.tsx";
+import Step7SolidarityContribution from "./steps/Step7SolidarityContribution.tsx";
+import Step8PersonalData from "./steps/Step8PersonalData.tsx";
+import Step9BankingData from "./steps/Step9BankingData.tsx";
+import StepGenericIntro from "./steps/StepGenericIntro.tsx";
+import { Phase } from "./types/Phase.ts";
+import { PickupLocationTab } from "./types/PickupLocationTab.ts";
+import { Step } from "./types/Step.ts";
+import { buildSteps } from "./utils/buildSteps.ts";
+import { getPhase } from "./utils/getPhase.ts";
 import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts";
+import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
+import { updateWaitingList } from "./utils/updateWaitingList.ts";
+import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
@@ -78,6 +82,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
   const coopApi = useApi(CoopApi, csrfToken);
   const waitingListApi = useApi(WaitingListApi, csrfToken);
+  const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
 
   const [settings, setSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
@@ -99,9 +104,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     PublicPickupLocation[]
   >([]);
   const [
-    pickupLocationsWithCapacityCheckLoading,
-    setPickupLocationsWithCapacityCheckLoading,
-  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+    pickupLocationsCapacityCheckLoading,
+    setPickupLocationsCapacityCheckLoading,
+  ] = useState(false);
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
@@ -145,6 +150,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   const [productPricesController, setProductPricesController] =
     useState<AbortController>();
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [
+    selectedAssociationMembershipType,
+    setSelectedAssociationMembershipType,
+  ] = useState<AssociationMembershipType>();
 
   useEffect(() => {
     Promise.all([
@@ -158,7 +168,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         const newSettings = buildSettings(baseData);
         setSettings(newSettings);
         setSettingsLoaded(true);
-        setSelectedProductTypes(newSettings.productTypes);
+        setSelectedProductTypes(
+          newSettings.introEnabled ? [] : newSettings.productTypes,
+        );
         if (waitingListEntryDetails) {
           setShoppingCart(
             buildShoppingCartFromWaitingListEntry(
@@ -166,6 +178,16 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               waitingListEntryDetails,
               setSelectedProductTypes,
             ),
+          );
+
+          const productTypesFromWishes = (
+            waitingListEntryDetails.productWishes ?? []
+          ).map(
+            (productWish) =>
+              getProductTypeByProductId(productWish.product.id!, newSettings)!,
+          );
+          setSelectedProductTypes(
+            sortProductTypes([...new Set(productTypesFromWishes)]),
           );
         } else {
           setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
@@ -222,6 +244,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     updateProductPrices(
+      bestellWizardApi,
       selectedGrowingPeriod,
       productPricesController,
       setProductPricesController,
@@ -231,6 +254,12 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     );
 
     setContractStartDate(selectedGrowingPeriod.contractStartDate);
+
+    if (waitingListEntryDetails === undefined) {
+      setSelectedProductTypes(
+        settings.introEnabled ? [] : selectedGrowingPeriod.productTypes,
+      );
+    }
   }, [selectedGrowingPeriod]);
 
   useEffect(() => {
@@ -246,7 +275,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     addEventListener("beforeunload", handleBeforeUnload);
 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [shoppingCart]);
+  }, [shoppingCart, currentStep]);
 
   useEffect(() => {
     const element = document.getElementById(currentStep);
@@ -318,9 +347,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     checkPickupLocationCapacities(
+      pickupLocationsApi,
       settings.pickupLocations,
       shoppingCart,
-      setPickupLocationsWithCapacityCheckLoading,
+      setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       selectedGrowingPeriod,
@@ -330,6 +360,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   useEffect(() => {
     if (waitingListEntryDetails === undefined) {
       updateProductsAndProductTypesOverCapacity(
+        bestellWizardApi,
         shoppingCart,
         setProductIdsOverCapacity,
         setProductTypeIdsOverCapacity,
@@ -342,6 +373,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     updateMinimumNumberOfShares(
+      coopApi,
       shoppingCart,
       productTypesInWaitingList,
       setMinimumNumberOfShares,
@@ -355,6 +387,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
 
     fetchFirstDeliveryDates(
+      bestellWizardApi,
       shoppingCart,
       selectedGrowingPeriod,
       setFirstDeliveryDatesByPickupLocationAndProductType,
@@ -364,6 +397,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
   }, [shoppingCart, selectedGrowingPeriod]);
 
   useEffect(() => {
+    if (waitingListEntryDetails !== undefined) {
+      return;
+    }
+
     updateWaitingList(
       selectedPickupLocations,
       pickupLocationsWithCapacityFull,
@@ -379,6 +416,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     pickupLocationsWithCapacityFull,
     selectedPickupLocations,
     shoppingCart,
+    waitingListEntryDetails,
   ]);
 
   useEffect(() => {
@@ -418,16 +456,28 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
 
   function setTestData() {
     setPersonalData(getTestPersonalData());
-    setSelectedProductTypes(settings.productTypes);
+    setSelectedProductTypes(selectedGrowingPeriod?.productTypes ?? []);
     const newShoppingCart: ShoppingCart = {};
-    for (const productType of settings.productTypes) {
+    for (const productType of selectedGrowingPeriod?.productTypes ??
+      settings.productTypes) {
       for (const product of productType.products) {
         newShoppingCart[product.id!] = 1;
       }
     }
     setShoppingCart(newShoppingCart);
     setSelectedPickupLocations([settings.pickupLocations[0]]);
-    setSelectedNumberOfCoopShares(7);
+    switch (settings.legalStatus) {
+      case "coop":
+        setSelectedNumberOfCoopShares(7);
+        break;
+      case "association":
+        const visibleMembershipTypes = getVisibleAssociationMembershipTypes(
+          settings.associationMembershipTypes,
+        );
+        if (visibleMembershipTypes.length > 0) {
+          setSelectedAssociationMembershipType(visibleMembershipTypes[0]);
+        }
+    }
     setSepaAllowed(true);
     setContractAccepted(true);
     setStatuteAccepted(true);
@@ -453,6 +503,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             numberOfCoopShares: selectedNumberOfCoopShares,
             paymentRhythm: personalData.paymentRhythm,
             solidarityContribution: solidarityContribution,
+            associationMembershipTypeId:
+              selectedAssociationMembershipType?.id ?? null,
           },
         })
         .then(handleOrderResponse)
@@ -509,6 +561,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           growingPeriodId: selectedGrowingPeriod!.id!,
           solidarityContribution: solidarityContribution,
           distributionChannels: [...selectedDistributionChannels],
+          feedback: feedback,
+          associationMembershipTypeId: selectedAssociationMembershipType?.id,
         },
       })
       .then(handleOrderResponse)
@@ -549,11 +603,22 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
     }
   }
 
+  function goToProductTypeStep(productType: PublicProductType) {
+    if (!selectedProductTypes.includes(productType)) {
+      setSelectedProductTypes([...selectedProductTypes, productType]);
+    }
+    setCurrentStep(productType.id! + "_order");
+  }
+
   function getStepComponent(step: Step) {
     switch (step) {
       case "1a_welcome":
         return (
-          <Step1AWelcome goToNextStep={goToNextStep} settings={settings} />
+          <Step1AWelcome
+            goToNextStep={goToNextStep}
+            settings={settings}
+            stepActive={step === currentStep}
+          />
         );
       case "1b_welcome_waiting_list":
         return (
@@ -566,7 +631,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             personalData={personalData}
             setPersonalData={setPersonalData}
             settings={settings}
-            active={currentStep === step}
+            stepActive={currentStep === step}
           />
         );
       case "3_product_type_choice":
@@ -580,6 +645,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             investingMembership={investingMembership}
             setInvestingMembership={setInvestingMembership}
             setShoppingCart={setShoppingCart}
+            selectedGrowingPeriod={selectedGrowingPeriod}
+            stepActive={step === currentStep}
           />
         );
       case "3b_growing_period_choice":
@@ -589,6 +656,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             selectedGrowingPeriod={selectedGrowingPeriod}
             setSelectedGrowingPeriod={setSelectedGrowingPeriod}
+            stepActive={step === currentStep}
           />
         );
       case "5a_pickup_location_intro":
@@ -598,6 +666,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
               text: settings.strings.step5aText,
             }}
             goToNextStep={goToNextStep}
+            stepActive={step === currentStep}
           />
         );
       case "5b_pickup_location_choice":
@@ -606,8 +675,8 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocationsWithCapacityCheckLoading={
-              pickupLocationsWithCapacityCheckLoading
+            pickupLocationsCapacityCheckLoading={
+              pickupLocationsCapacityCheckLoading
             }
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
@@ -615,7 +684,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             firstDeliveryDatesByPickupLocationAndProductType={
               firstDeliveryDatesByPickupLocationAndProductType
             }
-            active={currentStep === step}
+            stepActive={currentStep === step}
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
             currentTab={currentPickupLocationTab}
@@ -645,6 +714,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             content={{
               text: settings.strings.step6aText,
             }}
+            stepActive={step === currentStep}
           />
         );
       case "6b_coop_shares":
@@ -659,12 +729,29 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             setStudentStatusEnabled={setStudentStatusEnabled}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             isOrderStep={false}
             orderLoading={false}
             canChangeNumberOfShares={
               !waitingListEntryDetails?.memberAlreadyExists
             }
+            forceHideStudentCheckbox={!isAtLeastOneProductOrdered(shoppingCart)}
+          />
+        );
+      case "6b_association_membership":
+        return (
+          <Step6BAssociationMembership
+            goToNextStep={goToNextStep}
+            settings={settings}
+            selectedAssociationMembershipType={
+              selectedAssociationMembershipType
+            }
+            setSelectedAssociationMembershipType={
+              setSelectedAssociationMembershipType
+            }
+            contractStartDate={contractStartDate}
+            stepActive={currentStep === step}
+            isOrderStep={false}
           />
         );
       case "6c_coop_member_now":
@@ -682,9 +769,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             goToNextStep={goToNextStep}
             setSolidarityContribution={setSolidarityContribution}
             solidarityContribution={solidarityContribution}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             shoppingCart={shoppingCart}
             productTypesInWaitingList={productTypesInWaitingList}
+            associationMembershipType={selectedAssociationMembershipType}
+            contractStartDate={contractStartDate}
           />
         );
       case "8_personal_data":
@@ -694,7 +783,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             goToNextStep={goToNextStep}
             personalData={personalData}
             setPersonalData={setPersonalData}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             emailAddressAlreadyInUse={emailAddressAlreadyInUse}
             setEmailAddressAlreadyInUse={setEmailAddressAlreadyInUse}
             emailAddressAlreadyInUseLoading={emailAddressAlreadyInUseLoading}
@@ -718,11 +807,12 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             shoppingCart={shoppingCart}
             solidarityContribution={solidarityContribution}
-            active={currentStep === step}
+            stepActive={currentStep === step}
             productTypesInWaitingList={productTypesInWaitingList}
             isOrderStep={false}
             orderLoading={false}
             canChangePaymentRhythm={true}
+            autoFillAccountOwnerFromName={true}
           />
         );
       case "10_summary":
@@ -737,12 +827,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             firstDeliveryDatesByPickupLocationAndProductType={
               firstDeliveryDatesByPickupLocationAndProductType
             }
-            goToProductTypeStep={(productType) => {
-              if (!selectedProductTypes.includes(productType)) {
-                setSelectedProductTypes([...selectedProductTypes, productType]);
-              }
-              setCurrentStep(productType.id + "_order");
-            }}
+            goToProductTypeStep={goToProductTypeStep}
             selectedPickupLocations={selectedPickupLocations}
             solidarityContribution={solidarityContribution}
             personalData={personalData}
@@ -753,6 +838,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             isOrderStep={waitingListEntryDetails !== undefined}
             confirmOrder={onConfirmOrder}
             waitingListEntryDetails={waitingListEntryDetails}
+            associationMembershipType={selectedAssociationMembershipType}
+            selectedGrowingPeriod={selectedGrowingPeriod}
+            hideTrialPeriod={false}
+            stepActive={step === currentStep}
+            setCurrentStep={setCurrentStep}
           />
         );
       case "11_legal":
@@ -764,10 +854,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             setCancellationPolicyRead={setCancellationPolicyRead}
             privacyPolicyRead={privacyPolicyRead}
             setPrivacyPolicyRead={setPrivacyPolicyRead}
-            active={step === currentStep}
+            stepActive={step === currentStep}
             productTypesInWaitingList={productTypesInWaitingList}
             shoppingCart={shoppingCart}
             solidarityContribution={solidarityContribution}
+            isOrderStep={false}
           />
         );
       case "12_channel":
@@ -783,6 +874,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             confirmOrderLoading={
               settings.feedbackStepEnabled ? false : confirmOrderLoading
             }
+            stepActive={step === currentStep}
           />
         );
       case "13_feedback":
@@ -792,6 +884,9 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             settings={settings}
             confirmOrder={onConfirmOrder}
             confirmOrderLoading={confirmOrderLoading}
+            feedback={feedback}
+            setFeedback={setFeedback}
+            stepActive={step === currentStep}
           />
         );
       case "14_confirmation":
@@ -832,6 +927,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
                   accordions: productType.accordions,
                 }}
                 goToNextStep={goToNextStep}
+                stepActive={step === currentStep}
               />
             );
           case "order":
@@ -842,13 +938,14 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
                 goToNextStep={goToNextStep}
                 shoppingCart={shoppingCart}
                 setShoppingCart={setShoppingCart}
-                active={step === currentStep}
+                stepActive={step === currentStep}
                 checkingCapacities={checkingCapacities}
                 productTypeIdsOverCapacity={productTypeIdsOverCapacity}
                 productIdsOverCapacity={productIdsOverCapacity}
                 waitingListLinkConfirmationModeEnabled={
                   waitingListEntryDetails !== undefined
                 }
+                waitingListEntryDetails={waitingListEntryDetails}
                 productTypesInWaitingList={productTypesInWaitingList}
                 isOrderStep={false}
                 orderLoading={false}
@@ -878,6 +975,10 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
       showProgress={true}
       hideFooterButtonsOnLastStep={true}
       selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+      goToProductTypeStep={goToProductTypeStep}
+      associationMembershipType={selectedAssociationMembershipType}
+      contractStartDate={contractStartDate}
+      selectedGrowingPeriod={selectedGrowingPeriod}
     />
   );
 };

@@ -4,7 +4,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
     AutomaticSubscriptionRenewalService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_monday
+from tapir.utils.shortcuts import get_from_cache_or_compute, get_monday
 from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.service.products import get_product_price
 
@@ -17,16 +17,39 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
         reference_date: datetime.date,
         cache: dict,
     ):
+        cache_by_product_type = get_from_cache_or_compute(
+            cache,
+            "lowest_free_capacity_by_product_type",
+            lambda: {},
+        )
+
+        return get_from_cache_or_compute(
+            cache_by_product_type,
+            (product_type.id, reference_date),
+            lambda: cls._compute_lowest_free_capacity_after_date(
+                product_type, reference_date, cache
+            ),
+        )
+
+    @classmethod
+    def _compute_lowest_free_capacity_after_date(
+        cls,
+        product_type: ProductType,
+        reference_date: datetime.date,
+        cache: dict,
+    ):
         current_date = get_monday(reference_date)
 
         lowest_free_capacity = float("inf")
-        last_date = cls.get_date_of_last_possible_capacity_change(cache=cache)
+        last_date = cls.get_date_of_last_possible_capacity_change(
+            product_type=product_type, cache=cache
+        )
         while current_date < last_date:
             lowest_free_capacity = min(
                 lowest_free_capacity,
                 cls.get_free_capacity_at_date(
                     product_type=product_type,
-                    reference_date=current_date,
+                    reference_date=max(current_date, reference_date),
                     cache=cache,
                 ),
             )
@@ -82,5 +105,22 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
         return usage
 
     @classmethod
-    def get_date_of_last_possible_capacity_change(cls, cache: dict):
+    def get_date_of_last_possible_capacity_change(
+        cls,
+        product_type: ProductType,
+        cache: dict,
+    ):
+        for growing_period in reversed(
+            TapirCache.get_all_growing_periods_ascending(cache=cache)
+        ):
+            if (
+                TapirCache.get_product_type_capacity_at_date(
+                    product_type=product_type,
+                    reference_date=growing_period.start_date,
+                    cache=cache,
+                )
+                is not None
+            ):
+                return growing_period.end_date
+
         return TapirCache.get_all_growing_periods_ascending(cache=cache)[-1].end_date

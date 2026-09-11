@@ -7,5 +7,6 @@ from tapir.generic_exports.services.automated_exports_manager import (
 
 @shared_task
 def do_automated_exports():
-    AutomatedExportsManager.do_automated_csv_exports()
-    AutomatedExportsManager.do_automated_pdf_exports()
+    cache = {}
+    AutomatedExportsManager.do_automated_csv_exports(cache=cache)
+    AutomatedExportsManager.do_automated_pdf_exports(cache=cache)

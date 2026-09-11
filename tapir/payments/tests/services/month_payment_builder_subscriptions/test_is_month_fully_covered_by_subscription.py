@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.payments.services.month_payment_builder_subscriptions import (
     MonthPaymentBuilderSubscriptions,
@@ -8,12 +8,11 @@ from tapir.payments.services.month_payment_builder_subscriptions import (
 from tapir.wirgarten.tests.factories import SubscriptionFactory
 
 
-class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
+class TestIsMonthFullyCoveredBySubscription(TapirUnitTest):
     def test_isMonthFullyCoveredBySubscription_givenMonthIsBeforeSubscription_returnsFalse(
         self,
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=8, day=1),
             end_date=datetime.date(year=2027, month=12, day=31),
         )
@@ -31,7 +30,6 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
         self,
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=8, day=1),
             end_date=datetime.date(year=2027, month=12, day=31),
         )
@@ -49,7 +47,6 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
         self,
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=8, day=1),
             end_date=datetime.date(year=2027, month=12, day=31),
         )
@@ -67,7 +64,6 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
         self,
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=8, day=13),
             end_date=datetime.date(year=2027, month=12, day=31),
         )
@@ -85,7 +81,6 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
         self,
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=8, day=1),
             end_date=datetime.date(year=2027, month=12, day=31),
         )
@@ -103,7 +98,6 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
         self,
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=8, day=1),
             end_date=datetime.date(year=2027, month=12, day=15),
         )
@@ -121,7 +115,6 @@ class TestIsMonthFullyCoveredBySubscription(SimpleTestCase):
         self,
     ):
         subscription = SubscriptionFactory.build(
-            mandate_ref__ref="test_ref",
             start_date=datetime.date(year=2027, month=8, day=1),
             end_date=datetime.date(year=2027, month=12, day=31),
         )

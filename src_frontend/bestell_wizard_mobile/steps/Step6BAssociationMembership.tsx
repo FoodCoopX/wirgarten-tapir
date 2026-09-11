@@ -1,0 +1,138 @@
+import React, { useEffect, useState } from "react";
+import { Accordion } from "react-bootstrap";
+import { AssociationMembershipType } from "../../api-client";
+import { getAssociationMembershipTypeCurrentPrice } from "../../association_memberships_config/getAssociationMembershipTypeCurrentPrice.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import NextStepButton from "../components/NextStepButton.tsx";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
+import "../utils/flexColOnSmallScreen.css";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
+import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
+
+interface Step6BAssociationMembershipsProps {
+  goToNextStep: () => void;
+  settings: BestellWizardSettings;
+  selectedAssociationMembershipType: AssociationMembershipType | undefined;
+  setSelectedAssociationMembershipType: React.Dispatch<
+    React.SetStateAction<AssociationMembershipType | undefined>
+  >;
+  contractStartDate: Date;
+  stepActive: boolean;
+  isOrderStep: boolean;
+}
+
+function buildLabel(type: AssociationMembershipType, contractStartDate: Date) {
+  const currentPrice = getAssociationMembershipTypeCurrentPrice(
+    type,
+    contractStartDate,
+  );
+
+  if (!currentPrice) {
+    return type.name;
+  }
+
+  return type.name + " " + formatCurrency(currentPrice.priceAsFloat) + "/Monat";
+}
+
+const Step6BAssociationMemberships: React.FC<
+  Step6BAssociationMembershipsProps
+> = ({
+  goToNextStep,
+  settings,
+  selectedAssociationMembershipType,
+  setSelectedAssociationMembershipType,
+  contractStartDate,
+  stepActive,
+  isOrderStep,
+}) => {
+  const [showError, setShowError] = useState(false);
+  const [statuteAccepted, setStatuteAccepted] = useState(false);
+
+  useEffect(() => {
+    setShowError(false);
+  }, [selectedAssociationMembershipType]);
+
+  useEffect(() => {
+    if (!stepActive) return;
+
+    const visibleMembershipTypes = getVisibleAssociationMembershipTypes(
+      settings.associationMembershipTypes,
+    );
+    if (
+      selectedAssociationMembershipType === undefined &&
+      visibleMembershipTypes.length > 0
+    ) {
+      setSelectedAssociationMembershipType(visibleMembershipTypes[0]);
+    }
+  }, [stepActive]);
+
+  function onNextClicked() {
+    if (selectedAssociationMembershipType === undefined || !statuteAccepted) {
+      setShowError(true);
+      return;
+    }
+
+    goToNextStep();
+  }
+
+  return (
+    <>
+      <div style={{ width: "100%" }} className={"d-flex flex-column gap-2"}>
+        {getVisibleAssociationMembershipTypes(
+          settings.associationMembershipTypes,
+        ).map((type) => (
+          <Accordion style={{ width: "100%" }} key={type.id}>
+            <Accordion.Item eventKey={type.id!} onClick={scrollIntoView}>
+              <Accordion.Header>
+                <TapirCheckbox
+                  controlId={type.id!}
+                  checked={type === selectedAssociationMembershipType}
+                  onChange={(checked) => {
+                    if (checked) {
+                      setSelectedAssociationMembershipType(type);
+                    } else {
+                      setSelectedAssociationMembershipType(undefined);
+                    }
+                  }}
+                  label={buildLabel(type, contractStartDate)}
+                  showError={
+                    showError && selectedAssociationMembershipType === undefined
+                  }
+                />
+              </Accordion.Header>
+              <Accordion.Body>
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: type.descriptionInBestellWizard,
+                  }}
+                />
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+        ))}
+        <div
+          className={"d-flex justify-content-center"}
+          style={{ width: "100%" }}
+        >
+          <TapirCheckbox
+            onChange={setStatuteAccepted}
+            checked={statuteAccepted}
+            label={settings.strings.step6bCheckboxStatuteAssociations}
+            controlId={"statuteAssociations"}
+            showError={showError && !statuteAccepted}
+          />
+        </div>
+      </div>
+
+      <NextStepButton
+        onClick={onNextClicked}
+        isOrderStep={isOrderStep}
+        text={isOrderStep ? "Vereinsmitgliedschaft bestätigen" : undefined}
+        stepActive={stepActive}
+      />
+    </>
+  );
+};
+
+export default Step6BAssociationMemberships;

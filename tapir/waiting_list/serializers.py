@@ -1,12 +1,13 @@
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import (
-    ProductSerializer,
-    PickupLocationSerializer,
     SubscriptionSerializer,
 )
-from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
-from tapir.subscriptions.serializers import PublicProductSerializer
+from tapir.pickup_locations.serializers import (
+    PublicPickupLocationSerializer,
+    PickupLocationSerializer,
+)
+from tapir.products.serializers import PublicProductSerializer, ProductSerializer
 from tapir.wirgarten.models import (
     WaitingListEntry,
     WaitingListProductWish,
@@ -17,7 +18,7 @@ from tapir.wirgarten.models import (
 class WaitingListProductWishSerializer(serializers.ModelSerializer):
     class Meta:
         model = WaitingListProductWish
-        fields = "__all__"
+        exclude = ["created_at", "updated_at"]
 
     product = ProductSerializer()
 
@@ -33,7 +34,7 @@ class PublicWaitingListProductWishSerializer(serializers.ModelSerializer):
 class WaitingListPickupLocationWishSerializer(serializers.ModelSerializer):
     class Meta:
         model = WaitingListPickupLocationWish
-        fields = "__all__"
+        exclude = ["created_at", "updated_at"]
 
     pickup_location = PickupLocationSerializer()
 
@@ -72,6 +73,7 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     link_sent_date = serializers.DateTimeField(required=False)
     link = serializers.URLField(required=False)
     payment_rhythm = serializers.CharField(required=False)
+    can_be_fulfilled = serializers.BooleanField(required=False)
 
 
 class PublicWaitingListEntryDetailsSerializer(serializers.Serializer):
@@ -94,6 +96,8 @@ class PublicWaitingListEntryDetailsSerializer(serializers.Serializer):
     product_wishes = PublicWaitingListProductWishSerializer(required=False, many=True)
     number_of_coop_shares = serializers.IntegerField()
     payment_rhythm = serializers.CharField(required=False)
+    current_pickup_location = PublicPickupLocationSerializer(required=False)
+    should_show_solidarity_step = serializers.BooleanField()
 
 
 class OptionalWaitingListEntryDetailsSerializer(serializers.Serializer):
@@ -123,20 +127,6 @@ class WaitingListEntryUpdateSerializer(serializers.Serializer):
     category = serializers.CharField(required=False, allow_blank=True)
 
 
-class PublicWaitingListEntryNewMemberCreateSerializer(serializers.Serializer):
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    email = serializers.EmailField()
-    phone_number = serializers.CharField()
-    street = serializers.CharField()
-    street_2 = serializers.CharField(allow_blank=True)
-    postcode = serializers.CharField()
-    city = serializers.CharField()
-    pickup_location_ids = serializers.ListField(child=serializers.CharField())
-    shopping_cart = serializers.DictField(child=serializers.IntegerField())
-    number_of_coop_shares = serializers.IntegerField()
-
-
 class PublicWaitingListEntryExistingMemberCreateSerializer(serializers.Serializer):
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
@@ -153,3 +143,4 @@ class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
     number_of_coop_shares = serializers.IntegerField()
     payment_rhythm = serializers.CharField()
     solidarity_contribution = serializers.FloatField()
+    association_membership_type_id = serializers.CharField(allow_null=True)

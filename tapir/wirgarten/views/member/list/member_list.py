@@ -10,6 +10,7 @@ from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
     BooleanFilter,
+    CharFilter,
     ChoiceFilter,
     FilterSet,
     ModelChoiceFilter,
@@ -17,14 +18,20 @@ from django_filters import (
 )
 from django_filters.views import FilterView
 
+from tapir.associations.models import AssociationMembershipType
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_search_service import MemberSearchService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.core.services.organisation_entry_date_annotator import (
+    OrganisationEntryDateAnnotator,
+)
+from tapir.pickup_locations.services.member_pickup_location_getter import (
+    MemberPickupLocationGetter,
 )
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Member,
@@ -37,11 +44,19 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_monthly_payment,
 )
 from tapir.wirgarten.service.products import get_next_growing_period
-from tapir.wirgarten.utils import get_today
-from tapir.wirgarten.views.filters import MultiFieldFilter
+from tapir.wirgarten.utils import (
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+    legal_status_is_company,
+)
 
 
 class ContractStatusFilter(ChoiceFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = {}
+
     def filter(self, qs, value):
         if not value:
             return qs
@@ -50,7 +65,7 @@ class ContractStatusFilter(ChoiceFilter):
             raise ValueError(f"Unknown filter value: {value}")
 
         # Filter members with an active subscription which is not cancelled
-        today = get_today()
+        today = get_today(cache=self.cache)
         qs = qs.filter(
             subscription__start_date__lte=today,
             subscription__end_date__gte=today,
@@ -65,10 +80,9 @@ class ContractStatusFilter(ChoiceFilter):
 
         return qs.distinct()
 
-    @staticmethod
-    def filter_contract_renewed(qs):
+    def filter_contract_renewed(self, qs):
         # Get the upcoming growing period
-        growing_period = get_next_growing_period()
+        growing_period = get_next_growing_period(cache=self.cache)
 
         # Filter members with at least one subscription starting in the upcoming growing period
         return qs.filter(
@@ -91,12 +105,13 @@ class ContractStatusFilter(ChoiceFilter):
             subscription__cancellation_ts__isnull=False,
         )
 
-    @staticmethod
-    def filter_undecided(qs):
-        growing_period = get_next_growing_period()
+    def filter_undecided(self, qs):
+        growing_period = get_next_growing_period(cache=self.cache)
 
         # Calculate the trial period start date
-        trial_period_start = get_today() + relativedelta(months=-1, day=1)
+        trial_period_start = get_today(cache=self.cache) + relativedelta(
+            months=-1, day=1
+        )
 
         # Filter members with no active subscriptions that started within the last month
         qs = qs.filter(subscription__start_date__lte=trial_period_start).exclude(
@@ -110,9 +125,7 @@ class ContractStatusFilter(ChoiceFilter):
 
 
 class MemberFilter(FilterSet):
-    search = MultiFieldFilter(
-        fields=["first_name", "last_name", "email"], label="Suche"
-    )
+    search = CharFilter(method="filter_search", label="Suche")
     pickup_location = ModelChoiceFilter(
         label="Abholort",
         queryset=PickupLocation.objects.all().order_by("name"),
@@ -153,8 +166,10 @@ class MemberFilter(FilterSet):
             ("last_name", "⮝ Nachname"),
             ("-email", "⮟ Email"),
             ("email", "⮝ Email"),
-            ("created_at", "⮝ Registriert am"),
-            ("-created_at", "⮟ Registriert am"),
+            ("organisation_entry_date", "⮝ Registriert am"),
+            ("-organisation_entry_date", "⮟ Registriert am"),
+            ("organisation_exit_date", "⮝ Registriert am"),
+            ("-organisation_exit_date", "⮟ Registriert am"),
             ("coop_shares_total_value", "⮝ Genoanteile"),
             ("-coop_shares_total_value", "⮟ Genoanteile"),
             ("monthly_payment", "⮝ Umsatz"),
@@ -164,10 +179,51 @@ class MemberFilter(FilterSet):
         empty_label=None,
     )
 
+    def __init__(self, data=None, *args, **kwargs):
+        self.cache = kwargs.pop("cache", {})
+
+        if data is None:
+            data = {"o": "-organisation_entry_date,-member_no,last_name"}
+        else:
+            data = data.copy()
+
+            if "o" not in data:
+                data["o"] = "-organisation_entry_date,-member_no,last_name"
+
+            if "member_no" not in data["o"]:
+                data["o"] += ",-member_no"
+
+            if "last_name" not in data["o"]:
+                data["o"] += ",last_name"
+
+        super().__init__(data, *args, **kwargs)
+
+        if get_next_growing_period(cache=self.cache) is None:
+            w = self.form.fields["contract_status"].widget
+            w.attrs["disabled"] = True
+            w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
+
+        if legal_status_is_association(cache=self.cache):
+            choices = {
+                membership_type.id: membership_type.name
+                for membership_type in AssociationMembershipType.objects.order_by(
+                    "name"
+                )
+            }
+            choices["no_membership"] = "Nicht Mitglied"
+            self.form.fields["membership_type"].choices = choices
+        if legal_status_is_company(cache=self.cache):
+            del self.form.fields["membership_type"]
+
+    def filter_search(self, queryset, name, value):
+        return MemberSearchService.filter_queryset(
+            queryset, search_value=value, cache=self.cache
+        )
+
     def filter_pickup_location(self, queryset, name, value):
         if value:
             # Subquery to get the latest MemberPickupLocation id for each Member
-            today = get_today()
+            today = get_today(cache=self.cache)
             latest_pickup_location_subquery = Subquery(
                 MemberPickupLocation.objects.filter(
                     member_id=OuterRef("id"),  # references Member.id
@@ -188,35 +244,37 @@ class MemberFilter(FilterSet):
     def filter_email_verified(self, queryset, name, value):
         new_queryset = queryset.all()
         for member in queryset:
-            if member.email_verified() != value:
+            if member.email_verified(cache=self.cache) != value:
                 new_queryset = new_queryset.exclude(id=member.id)
         return new_queryset
 
     def filter_membership_type(self, queryset, name, value):
-        if value == "mitglied":
-            return queryset.filter(coop_shares_total_value__gt=0)
+        if legal_status_is_cooperative(cache=self.cache):
+            if value == "mitglied":
+                return queryset.filter(coop_shares_total_value__gt=0)
 
-        queryset = queryset.filter(coop_shares_total_value__lte=0)
-        if value == "student":
-            return queryset.filter(is_student=True)
-        if value == "nicht-mitglied":
-            return queryset.filter(is_student=False)
+            queryset = queryset.filter(coop_shares_total_value__lte=0)
+            if value == "student":
+                return queryset.filter(is_student=True)
+            if value == "nicht-mitglied":
+                return queryset.filter(is_student=False)
+        elif legal_status_is_association(cache=self.cache):
+            included_member_ids = set()
+            for member in queryset:
+                membership = TapirCache.get_member_association_membership_at_date(
+                    cache=self.cache,
+                    member=member,
+                    reference_date=get_today(cache=self.cache),
+                )
+                if (
+                    value == "no_membership"
+                    and membership is None
+                    or membership is not None
+                    and membership.type_id == value
+                ):
+                    included_member_ids.add(member.id)
 
-    def __init__(self, data=None, *args, **kwargs):
-        if data is None:
-            data = {"o": "-created_at"}
-        else:
-            data = data.copy()
-
-            if "o" not in data:
-                data["o"] = "-created_at"
-
-        super(MemberFilter, self).__init__(data, *args, **kwargs)
-
-        if get_next_growing_period() is None:
-            w = self.form.fields["contract_status"].widget
-            w.attrs["disabled"] = True
-            w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
+            return queryset.filter(id__in=included_member_ids)
 
 
 class MemberListView(PermissionRequiredMixin, FilterView):
@@ -250,19 +308,26 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             == LEGAL_STATUS_ASSOCIATION
         )
         context["cache"] = self.cache
+        context["delivery_charge_enabled"] = get_parameter_value(
+            key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,
+            cache=self.cache,
+        )
         return context
+
+    def get_filterset_kwargs(self, filterset_class):
+        kwargs = super().get_filterset_kwargs(filterset_class)
+        kwargs["cache"] = self.cache
+        return kwargs
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = annotate_member_queryset_with_coop_shares_total_value(
-            queryset, cache=self.cache
-        )
+
         today = get_today(cache=self.cache)
         queryset = annotate_member_queryset_with_monthly_payment(queryset, today)
-        queryset = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
+        queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_id_at_date(
             queryset, today
         )
-        queryset = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_name_at_date(
+        queryset = MemberPickupLocationGetter.annotate_member_queryset_with_pickup_location_name_at_date(
             queryset, today
         )
         queryset = MemberSolidarityContributionService.annotate_member_queryset_with_current_contribution(
@@ -271,5 +336,17 @@ class MemberListView(PermissionRequiredMixin, FilterView):
         queryset = MemberSolidarityContributionService.annotate_member_queryset_with_future_contribution(
             queryset, today
         )
+
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_entry_date(
+            queryset, cache=self.cache
+        )
+        queryset = OrganisationEntryDateAnnotator.annotate_with_organisation_exit_date(
+            queryset, cache=self.cache
+        )
+
+        if legal_status_is_cooperative(cache=self.cache):
+            queryset = annotate_member_queryset_with_coop_shares_total_value(
+                queryset, cache=self.cache
+            )
 
         return queryset

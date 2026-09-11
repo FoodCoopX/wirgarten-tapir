@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Card, Col, Form, ListGroup, Row, Tab, Tabs } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
+import {
+  Badge,
+  Card,
+  Col,
+  Form,
+  ListGroup,
+  Row,
+  Tab,
+  Tabs,
+} from "react-bootstrap";
 import {
   Counts,
   PickupLocation,
@@ -8,18 +16,22 @@ import {
   Product,
   SubscriptionsApi,
   WaitingListApi,
+  WaitingListApiListListCanBeFulfilledEnum,
   WaitingListApiListListEntryTypeEnum,
   WaitingListApiListListMemberTypeEnum,
   WaitingListApiListListOrderByEnum,
-  WaitingListEntryDetails
+  WaitingListEntryDetails,
 } from "../api-client";
-import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
-import "./waiting_list_card.css";
-import WaitingListEntryEditModal from "./WaitingListEntryEditModal.tsx";
-import { ToastData } from "../types/ToastData.ts";
+import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
+import "./waiting_list_card.css";
+import WaitingListEntryCreateModal from "./WaitingListEntryCreateModal.tsx";
+import WaitingListEntryEditModal from "./WaitingListEntryEditModal.tsx";
 import WaitingListTable from "./WaitingListTable.tsx";
 
 interface WaitingListCardProps {
@@ -52,9 +64,12 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     useState("");
   const [filterPickupLocationWish, setFilterPickupLocationWish] = useState("");
   const [filterProductWish, setFilterProductWish] = useState("");
+  const [filterCanBeFulfilled, setFilterCanBeFulfilled] =
+    useState<WaitingListApiListListCanBeFulfilledEnum>("any");
   const [orderBy, setOrderBy] =
     useState<WaitingListApiListListOrderByEnum>("-created_at");
   const [counts, setCounts] = useState<Counts>();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     pickupLocationApi
@@ -123,6 +138,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     filterCurrentPickupLocation,
     filterPickupLocationWish,
     filterProductWish,
+    filterCanBeFulfilled,
     orderBy,
   ]);
 
@@ -139,6 +155,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
         currentPickupLocationId: filterCurrentPickupLocation,
         pickupLocationWish: filterPickupLocationWish,
         productWish: filterProductWish,
+        canBeFulfilled: filterCanBeFulfilled,
         orderBy: orderBy,
       })
       .then((paginatedData) => {
@@ -176,6 +193,12 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                 }
               >
                 <h5 className={"mb-0"}>Warteliste</h5>
+                <TapirButton
+                  text={"Warteliste-Eintrag erzeugen"}
+                  icon={"add"}
+                  variant={"outline-primary"}
+                  onClick={() => setShowCreateModal(true)}
+                />
               </div>
               <Tabs
                 defaultActiveKey={"all"}
@@ -263,7 +286,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                             setFilterCurrentPickupLocation(event.target.value)
                           }
                         >
-                          <option value="">Filter ausgeschaltet</option>
+                          <option value="">Filter gerade nicht aktiv</option>
                           {pickupLocations.map((pickupLocation) => (
                             <option
                               key={pickupLocation.id}
@@ -286,7 +309,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                           setFilterPickupLocationWish(event.target.value)
                         }
                       >
-                        <option value="">Filter ausgeschaltet</option>
+                        <option value="">Filter gerade nicht aktiv</option>
                         {pickupLocations.map((pickupLocation) => (
                           <option
                             key={pickupLocation.id}
@@ -306,12 +329,29 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                           setFilterProductWish(event.target.value)
                         }
                       >
-                        <option value="">Filter ausgeschaltet</option>
+                        <option value="">Filter gerade nicht aktiv</option>
                         {products.map((product) => (
                           <option key={product.id} value={product.id}>
                             {product.type.name}: {product.name}
                           </option>
                         ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Erfüllbarkeit:</Form.Label>
+                      <Form.Select
+                        onChange={(event) =>
+                          setFilterCanBeFulfilled(
+                            event.target
+                              .value as WaitingListApiListListCanBeFulfilledEnum,
+                          )
+                        }
+                      >
+                        <option value="any">Alle</option>
+                        <option value="fulfillable">Erfüllbar</option>
+                        <option value="not_fulfillable">Nicht erfüllbar</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -386,6 +426,14 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           entryReloading={loading}
         />
       )}
+      <WaitingListEntryCreateModal
+        show={showCreateModal}
+        csrfToken={csrfToken}
+        onClose={() => setShowCreateModal(false)}
+        reloadEntries={loadPage}
+        setToastDatas={setToastDatas}
+        entryReloading={loading}
+      />
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}

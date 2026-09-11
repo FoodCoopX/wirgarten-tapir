@@ -1,14 +1,14 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
 )
 
 
-class TestGetHighestUsageAfterDate(SimpleTestCase):
+class TestGetHighestUsageAfterDate(TapirUnitTest):
     @patch.object(
         PickupLocationHighestUsageAfterDateService,
         "get_date_of_last_possible_capacity_change",

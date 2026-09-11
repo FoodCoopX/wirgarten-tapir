@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -14,7 +13,7 @@ from tapir_mail.service.segment import resolve_segments
 from tapir_mail.service.triggers import Trigger
 
 from tapir.wirgarten.models import Member, Subscription
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.utils import get_now
 
 LOG = logging.getLogger(__name__)
@@ -47,7 +46,6 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
             dynamic_segment_names_subtractive=email_configuration_version.dynamic_segments_subtractive,
             static_segment_ids_additive=email_configuration_version.static_segments_additive.all(),
             static_segment_ids_subtractive=email_configuration_version.static_segments_subtractive.all(),
-            filter_list=email_configuration_version.filter_list,
             mail_category_ids_additive=email_configuration_version.mail_categories_additive.all(),
         ):
             cls._delete_unsent_config_dispatch(
@@ -116,7 +114,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         version: EmailConfigurationVersion,
         recipient: Member,
         trigger_data: OnboardingTriggerData,
-        cache: Dict,
+        cache: dict,
     ):
         first_subscription = recipient.subscription_set.order_by("start_date").first()
         if not first_subscription:

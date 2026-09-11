@@ -4,19 +4,22 @@ import os
 import pathlib
 import random
 from math import floor
-from typing import Dict, List, Set
+from typing import List, Set
 
+from django.db.models import F
 from faker import Faker
 from tapir_mail.service.shortcuts import make_timezone_aware
 
+from tapir.associations.models import AssociationMembershipType, AssociationMembership
+from tapir.associations.services.association_membership_change_handler import (
+    AssociationMembershipChangeHandler,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
-)
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.config import Organization
@@ -30,16 +33,18 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
     MemberPickupLocation,
+    OrderFeedback,
     PickupLocation,
     Product,
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import (
-    get_or_create_mandate_ref,
+from tapir.wirgarten.tasks import assign_member_numbers
+from tapir.wirgarten.utils import (
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
 )
-from tapir.wirgarten.tasks import generate_member_numbers
-from tapir.wirgarten.utils import get_today
 
 
 class UserGenerator:
@@ -48,7 +53,7 @@ class UserGenerator:
     future_growing_period = None
 
     @classmethod
-    def get_past_growing_period(cls, cache: Dict):
+    def get_past_growing_period(cls, cache: dict):
         return get_from_cache_or_compute(
             cache,
             "past_growing_period",
@@ -87,27 +92,18 @@ class UserGenerator:
         print(f"Creating {user_count} users, this may take a while")
         random.seed("wirgarten")
 
-        fake = Faker()
+        fake = Faker("de_DE")
 
         parsed_users = cls.get_test_users()
 
         cache = {}
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
 
-        products_from_base_type = Product.objects.filter(
-            type=base_product_type
+        products_from_required_types = Product.objects.filter(
+            type__must_be_subscribed_to=True
         ).select_related("type")
-        products_from_base_type = [product for product in products_from_base_type]
-        additional_products = (
-            Product.objects.exclude(type=base_product_type)
-            .exclude(type__must_be_subscribed_to=True)
-            .select_related("type")
-        )
-        additional_products = [product for product in additional_products]
-        required_products = [
-            product
-            for product in Product.objects.filter(type__must_be_subscribed_to=True)
-        ]
+        products_from_optional_types = Product.objects.filter(
+            type__must_be_subscribed_to=False
+        ).select_related("type")
 
         members_that_need_a_pickup_location = set()
 
@@ -118,10 +114,10 @@ class UserGenerator:
                 parsed_user=parsed_user,
                 cache=cache,
                 fake=fake,
-                products_from_base_type=products_from_base_type,
-                additional_products=additional_products,
+                products_from_base_type=products_from_required_types,
+                additional_products=products_from_optional_types,
                 members_that_need_a_pickup_location=members_that_need_a_pickup_location,
-                required_products=required_products,
+                required_products=products_from_required_types,
             )
             CoopShareTransaction.objects.filter(
                 valid_at__lte=get_today(cache=cache) - datetime.timedelta(days=60)
@@ -130,7 +126,10 @@ class UserGenerator:
         cls.link_members_to_pickup_location(
             members_that_need_a_pickup_location, organization=organization
         )
-        generate_member_numbers(print_results=False)
+        assign_member_numbers()
+
+        # The creation date of subscriptions is used when generating payments , so we have to set a realistic date.
+        Subscription.objects.update(created_at=F("start_date"))
 
     @classmethod
     def generate_user(
@@ -157,7 +156,7 @@ class UserGenerator:
             is_staff=is_superuser,
             is_active=True,
             date_joined=json_user.date_joined,
-            iban=fake.iban(),
+            iban=fake["de_DE"].iban(),
             account_owner=json_user.get_full_name(),
             sepa_consent=json_user.date_joined,
             privacy_consent=json_user.date_joined,
@@ -181,13 +180,7 @@ class UserGenerator:
                 products_from_base_type=products_from_base_type,
                 additional_products=additional_products,
             )
-            if len(additional_products) > 0 and (
-                min_coop_shares > 0
-                or get_parameter_value(
-                    ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-                    cache=cache,
-                )
-            ):
+            if len(additional_products) > 0 and (min_coop_shares > 0):
                 _, needs_pickup_location_additional_products = (
                     cls.create_subscriptions_for_user(
                         member,
@@ -207,7 +200,17 @@ class UserGenerator:
                     member=member, products=required_products, cache=cache
                 )
 
-        cls.create_coop_shares_for_user(member, min_coop_shares, cache)
+        if not member_without_subscriptions and random.random() < 0.3:
+            cls.generate_feedback_for_member(member)
+
+        if legal_status_is_cooperative(cache=cache):
+            cls.create_coop_shares_for_user(member, min_coop_shares, cache)
+        elif (
+            legal_status_is_association(cache=cache)
+            and not member_without_subscriptions
+        ):
+            cls.create_association_membership(member, cache=cache)
+
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,
             rhythm=random.choice(MemberPaymentRhythm.Rhythm.choices)[0],
@@ -232,11 +235,13 @@ class UserGenerator:
         cls,
         member: Member,
         create_subs_for_additional_products: bool,
-        cache: Dict,
+        cache: dict,
         products_from_base_type: List[Product],
         additional_products: List[Product],
     ):
-        mandate_ref = get_or_create_mandate_ref(member, cache=cache)
+        mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+            member, cache=cache
+        )
         future_growing_period = cls.get_future_growing_period(cache=cache)
         start_date = cls.get_random_date_in_range_biased_towards_lower_end(
             member.date_joined.date(), future_growing_period.end_date
@@ -364,7 +369,7 @@ class UserGenerator:
 
     @classmethod
     def create_subscription_to_required_products(
-        cls, member: Member, products: List[Product], cache: Dict
+        cls, member: Member, products: List[Product], cache: dict
     ):
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=get_today(cache=cache), cache=cache
@@ -374,10 +379,12 @@ class UserGenerator:
             member=member,
             product=random.choice(products),
             start_date=growing_period.start_date,
-            end_date=None,
+            end_date=growing_period.end_date,
             period=None,
             quantity=1,
-            mandate_ref=get_or_create_mandate_ref(member, cache=cache),
+            mandate_ref=MandateReferenceProvider.get_or_create_mandate_reference(
+                member, cache=cache
+            ),
             admin_confirmed=cls.get_confirmation_datetime(
                 growing_period.start_date, cache=cache
             ),
@@ -390,7 +397,7 @@ class UserGenerator:
         )
 
     @classmethod
-    def create_coop_shares_for_user(cls, member: Member, min_shares: int, cache: Dict):
+    def create_coop_shares_for_user(cls, member: Member, min_shares: int, cache: dict):
         shares = min_shares
         if random.random() < 0.5:
             shares += random.randint(0, 10)
@@ -404,6 +411,32 @@ class UserGenerator:
             cache=cache,
             actor=None,
         )
+
+    @classmethod
+    def create_association_membership(cls, member: Member, cache: dict):
+        AssociationMembershipChangeHandler.start_membership(
+            member=member,
+            association_membership_type=AssociationMembershipType.objects.order_by(
+                "?"
+            ).first(),
+            start_date=Subscription.objects.filter(member=member)
+            .order_by("start_date")
+            .first()
+            .start_date,
+            actor=None,
+            cache=cache,
+        )
+
+        cancelled_subscription = (
+            Subscription.objects.filter(member=member, cancellation_ts__isnull=False)
+            .order_by("end_date")
+            .last()
+        )
+        if cancelled_subscription is not None:
+            AssociationMembership.objects.filter(member=member).update(
+                end_date=cancelled_subscription.end_date,
+                cancellation_ts=cancelled_subscription.cancellation_ts,
+            )
 
     @classmethod
     def link_members_to_pickup_location(
@@ -453,3 +486,39 @@ class UserGenerator:
         if confirmation_date <= get_today(cache=cache):
             return confirmation_datetime
         return None
+
+    @classmethod
+    def generate_feedback_for_member(cls, member: Member):
+        cls._generate_feedback(
+            member=member,
+            waiting_list_entry=None,
+        )
+
+    @classmethod
+    def generate_feedback_for_waiting_list_entry(cls, waiting_list_entry):
+        cls._generate_feedback(
+            member=None,
+            waiting_list_entry=waiting_list_entry,
+        )
+
+    @classmethod
+    def _generate_feedback(cls, member: Member | None, waiting_list_entry):
+        feedback_options = [
+            "Super Qualität, bin sehr zufrieden!",
+            "Tolles Gemüse, immer wieder gerne.",
+            "Die Lieferung war pünktlich und die Produkte frisch.",
+            "Würde ich weiterempfehlen.",
+            "Gutes Angebot, könnte aber mehr Auswahl haben.",
+            "Alles super, bin Fan!",
+            "Qualität war diesmal nicht ganz so gut wie sonst.",
+            "Bin begeistert von der Organisation.",
+            "Toller Service, danke!",
+            "Freue mich auf die nächste Lieferung.",
+            "Hoffe, bald Mitglied werden zu können!",
+            "Warteliste ist etwas lang, aber ich warte gerne.",
+        ]
+        OrderFeedback.objects.create(
+            member=member,
+            waiting_list_entry=waiting_list_entry,
+            feedback_text=random.choice(feedback_options),
+        )

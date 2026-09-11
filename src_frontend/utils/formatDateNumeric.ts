@@ -10,6 +10,7 @@ export function formatDateNumeric(
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "Europe/Berlin",
   };
   if (includeTime) {
     options.hour = "2-digit";

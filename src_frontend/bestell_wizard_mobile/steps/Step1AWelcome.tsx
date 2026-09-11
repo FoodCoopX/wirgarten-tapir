@@ -1,25 +1,30 @@
 import React from "react";
-import TapirButton from "../../components/TapirButton.tsx";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step1AIntroProps {
   goToNextStep: () => void;
   settings: BestellWizardSettings;
+  stepActive: boolean;
 }
 
 const Step1AWelcome: React.FC<Step1AIntroProps> = ({
   goToNextStep,
   settings,
+  stepActive,
 }) => {
   return (
     <>
-      {settings.strings.step1aText && <p>{settings.strings.step1aText}</p>}
-      <TapirButton
-        variant={BUTTON_VARIANT}
+      {settings.strings.step1aText && (
+        <p
+          className={"text-center"}
+          dangerouslySetInnerHTML={{ __html: settings.strings.step1aText }}
+        />
+      )}
+      <NextStepButton
         text={"Starten"}
         onClick={goToNextStep}
-        icon={"keyboard_arrow_down"}
+        stepActive={stepActive}
       />
     </>
   );

@@ -1,29 +1,27 @@
-from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField
 
-from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
-    ProductSerializer,
     SubscriptionSerializer,
-    PickupLocationSerializer,
-    ProductTypeSerializer,
 )
-from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
-from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
-from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
-from tapir.wirgarten.constants import NO_DELIVERY
+from tapir.pickup_locations.serializers import PickupLocationSerializer
+from tapir.products.serializers import (
+    PublicProductTypeSerializer,
+    ProductTypeSerializer,
+    ProductSerializer,
+)
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
+from tapir.subscriptions.services.subscription_price_calculator import (
+    SubscriptionPriceCalculator,
+)
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import (
     Member,
     CoopShareTransaction,
-    ProductType,
-    Product,
     Subscription,
     SubscriptionChangeLogEntry,
 )
-from tapir.wirgarten.service.products import get_product_price
 from tapir.wirgarten.utils import get_today
 
 
@@ -31,34 +29,34 @@ class ProductForCancellationSerializer(serializers.Serializer):
     product = ProductSerializer(read_only=True)
     is_in_trial = serializers.BooleanField()
     cancellation_date = serializers.DateField()
+    last_day_of_notice_period = serializers.DateField()
+    date_limit_for_trial_cancellation = serializers.DateField(required=False)
+    notice_period_duration = serializers.IntegerField()
+    notice_period_unit = serializers.ChoiceField(choices=NOTICE_PERIOD_UNIT_OPTIONS)
+    subscription_end_date = serializers.DateField()
+
+
+class SolidarityContributionCancellationDataSerializer(serializers.Serializer):
+    exists = serializers.BooleanField()
+    is_in_trial = serializers.BooleanField()
+    cancellation_date = serializers.DateField()
 
 
 class CancellationDataSerializer(serializers.Serializer):
     can_cancel_coop_membership = serializers.BooleanField()
+    can_cancel_association_membership = serializers.BooleanField()
     subscribed_products = ProductForCancellationSerializer(many=True)
+    solidarity_contribution_data = SolidarityContributionCancellationDataSerializer()
     legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
     default_cancellation_reasons = serializers.ListField(child=serializers.CharField())
+    show_trial_period_help_text = serializers.BooleanField()
+    trial_period_duration = serializers.IntegerField()
+    trial_period_is_flexible = serializers.BooleanField()
 
 
 class CancelSubscriptionsViewResponseSerializer(serializers.Serializer):
     subscriptions_cancelled = serializers.BooleanField()
     errors = serializers.ListField(child=serializers.CharField())
-
-
-class ExtendedProductSerializer(serializers.Serializer):
-    id = serializers.CharField()
-    name = serializers.CharField()
-    deleted = serializers.BooleanField()
-    base = serializers.BooleanField()
-    price = serializers.FloatField()
-    size = serializers.FloatField()
-    basket_size_equivalences = ProductBasketSizeEquivalenceSerializer(many=True)
-    growing_period_id = serializers.CharField(required=False)
-    picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
-    description_in_bestellwizard = serializers.CharField()
-    url_of_image_in_bestellwizard = serializers.URLField(allow_blank=True)
-    capacity = serializers.IntegerField(allow_null=True)
-    min_coop_shares = serializers.IntegerField()
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -106,74 +104,6 @@ class MemberDataToConfirmSerializer(serializers.Serializer):
     share_purchases = CoopShareTransactionSerializer(many=True)
 
 
-class PublicProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = [
-            "id",
-            "name",
-            "price",
-            "description_in_bestellwizard",
-            "url_of_image_in_bestellwizard",
-        ]
-
-    price = SerializerMethodField()
-
-    @extend_schema_field(OpenApiTypes.FLOAT)
-    def get_price(self, product: Product):
-        cache = {}
-        return get_product_price(
-            product=product, reference_date=get_today(cache=cache), cache=cache
-        ).price
-
-
-class PublicProductTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductType
-        fields = [
-            "id",
-            "name",
-            "description_bestellwizard_short",
-            "description_bestellwizard_long",
-            "products",
-            "order_in_bestellwizard",
-            "must_be_subscribed_to",
-            "no_delivery",
-            "single_subscription_only",
-            "force_waiting_list",
-            "accordions",
-            "title_bestellwizard_product_choice",
-            "title_bestellwizard_intro",
-            "icon_link",
-            "background_image_in_bestellwizard",
-        ]
-
-    products = SerializerMethodField()
-    no_delivery = SerializerMethodField()
-    accordions = SerializerMethodField()
-
-    @extend_schema_field(PublicProductSerializer(many=True))
-    def get_products(self, product_type: ProductType):
-        serialized_products = PublicProductSerializer(
-            Product.objects.filter(type=product_type, deleted=False), many=True
-        ).data
-
-        return sorted(serialized_products, key=lambda product: product["price"])
-
-    @staticmethod
-    def get_no_delivery(product_type: ProductType) -> bool:
-        return product_type.delivery_cycle == NO_DELIVERY[0]
-
-    @extend_schema_field(ProductTypeAccordionInBestellWizardSerializer(many=True))
-    def get_accordions(self, product_type: ProductType):
-        return ProductTypeAccordionInBestellWizardSerializer(
-            ProductTypeAccordionInBestellWizard.objects.filter(
-                product_type=product_type
-            ),
-            many=True,
-        ).data
-
-
 class OrderConfirmationResponseSerializer(serializers.Serializer):
     order_confirmed = serializers.BooleanField()
     error = serializers.CharField(allow_null=True)
@@ -191,6 +121,7 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
             "start_date",
             "end_date",
             "monthly_price",
+            "id",
         ]
 
     monthly_price = serializers.SerializerMethodField()
@@ -199,7 +130,14 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_monthly_price(subscription: Subscription) -> float:
-        return float(subscription.total_price(reference_date=None, cache={}))
+        cache = {}
+        return float(
+            SubscriptionPriceCalculator.get_monthly_price(
+                subscription=subscription,
+                reference_date=get_today(cache=cache),
+                cache=cache,
+            )
+        )
 
     @staticmethod
     def get_product_name(subscription: Subscription) -> str:
@@ -209,10 +147,11 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
     def get_product_type_name(subscription: Subscription) -> str:
         return subscription.product.type.name
 
-    @staticmethod
     @extend_schema_field(PublicProductTypeSerializer)
-    def get_product_type(subscription: Subscription):
-        return PublicProductTypeSerializer(subscription.product.type).data
+    def get_product_type(self, subscription: Subscription):
+        return PublicProductTypeSerializer(
+            subscription.product.type, context=self.context
+        ).data
 
 
 class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
@@ -220,6 +159,7 @@ class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
     product_type_id = serializers.CharField()
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
     sepa_allowed = serializers.BooleanField()
+    cancellation_policy_read = serializers.BooleanField()
     pickup_location_id = serializers.CharField(required=False)
     growing_period_id = serializers.CharField()
     account_owner = serializers.CharField(allow_blank=True)
@@ -234,15 +174,71 @@ class MemberProfileCapacityCheckRequestSerializer(serializers.Serializer):
 
 class CancelSubscriptionsRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
-    product_ids = serializers.ListField(child=serializers.CharField())
+    product_ids = serializers.ListField(child=serializers.CharField(), required=False)
     cancel_coop_membership = serializers.BooleanField()
+    cancel_association_membership = serializers.BooleanField()
     cancellation_reasons = serializers.ListField(
         child=serializers.CharField(), required=False
     )
     custom_cancellation_reason = serializers.CharField(required=False)
+    cancel_solidarity_contribution = serializers.BooleanField()
 
 
 class MemberSubscriptionDataSerializer(serializers.Serializer):
     product_types = PublicProductTypeSerializer(many=True)
     subscriptions = PublicSubscriptionSerializer(many=True)
     bestell_wizard_url_template = serializers.URLField()
+
+
+class SubscriptionDateChangeRequestSerializer(serializers.Serializer):
+    start_date_is_on_period_start = serializers.BooleanField()
+    end_date_is_on_period_end = serializers.BooleanField()
+    start_week = serializers.IntegerField()
+    end_week = serializers.IntegerField()
+    subscription_id = serializers.CharField()
+    update_end_date_of_other_contracts = serializers.BooleanField()
+
+
+class ConvertWeekToDateForSubscriptionChangesResponseSerializer(serializers.Serializer):
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+
+
+class ConfirmSubscriptionChangesRequestSerializer(serializers.Serializer):
+    confirm_cancellation_ids = serializers.ListField(child=serializers.CharField())
+    confirm_creation_ids = serializers.ListField(child=serializers.CharField())
+    confirm_purchase_ids = serializers.ListField(child=serializers.CharField())
+    confirm_deletion_ids = serializers.ListField(child=serializers.IntegerField())
+
+
+class SubscriptionPriceOverrideChangeRequestSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    price_override = serializers.FloatField(allow_null=True)
+
+
+class SubscriptionTrialFieldsSerializer(SubscriptionSerializer):
+    is_in_trial = serializers.SerializerMethodField()
+    default_trial_end_date = serializers.SerializerMethodField()
+    effective_trial_end_date = serializers.SerializerMethodField()
+
+    def get_is_in_trial(self, subscription) -> bool:
+        cache = self.context["cache"]
+        return TrialPeriodManager.is_contract_in_trial(subscription, cache=cache)
+
+    def get_default_trial_end_date(self, subscription):
+        cache = self.context["cache"]
+        return TrialPeriodManager.get_last_day_of_trial_period_by_weeks(
+            subscription, cache=cache
+        )
+
+    def get_effective_trial_end_date(self, subscription):
+        cache = self.context["cache"]
+        return TrialPeriodManager.get_last_day_of_trial_period(
+            subscription, cache=cache
+        )
+
+
+class SubscriptionTrialChangeRequestSerializer(serializers.Serializer):
+    subscription_id = serializers.CharField()
+    trial_disabled = serializers.BooleanField()
+    trial_end_date_override = serializers.DateField(allow_null=True, required=False)

@@ -1,10 +1,10 @@
+import "dayjs/locale/de";
 import React, { useState } from "react";
 import { Card } from "react-bootstrap";
-import "dayjs/locale/de";
 import TapirButton from "../../components/TapirButton.tsx";
-import SubscriptionCancellationModal from "./SubscriptionCancellationModal.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { ToastData } from "../../types/ToastData.ts";
+import SubscriptionCancellationModal from "./SubscriptionCancellationModal.tsx";
 
 interface SubscriptionCancellationCardProps {
   memberId: string;
@@ -27,7 +27,7 @@ const SubscriptionCancellationCard: React.FC<
         <Card.Footer>
           <div className={"d-flex justify-content-end"}>
             <TapirButton
-              text={"kündigen"}
+              text={"Kündigen"}
               icon={"contract_delete"}
               variant={"outline-primary"}
               onClick={() => {

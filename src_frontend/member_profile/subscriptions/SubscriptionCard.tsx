@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card } from "react-bootstrap";
 import "dayjs/locale/de";
 import { PublicProductType, PublicSubscription } from "../../api-client";
@@ -20,8 +20,6 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   bestellWizardUrl,
   showContractEdit,
 }) => {
-  const [loading, setLoading] = useState(false);
-
   return (
     <Card>
       <Card.Body>
@@ -90,7 +88,10 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                 ),
               )}
             </strong>
-            <small> / Monat</small>
+            <small>
+              {" "}
+              / {productType.pricePerDelivery ? "Lieferung" : "Monat"}
+            </small>
           </span>
           {showContractEdit && (
             <TapirButton
@@ -98,9 +99,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
               icon={subscriptions.length == 0 ? "add" : "contract_edit"}
               onClick={() => {
                 location.assign(bestellWizardUrl);
-                setLoading(true);
               }}
-              loading={loading}
             />
           )}
         </div>

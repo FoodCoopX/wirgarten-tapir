@@ -1,0 +1,76 @@
+import { createRoot } from "react-dom/client";
+import { IntendedUseType } from "./IntendedUseType.ts";
+import MandateReferencePreview from "./MandateReferencePreview.tsx";
+import IntendedUseEditorBase from "./payment_intended_use/IntendedUseEditorBase.tsx";
+
+const configElementIntendedUse = document.getElementById(
+  "payment-intended-use-config",
+);
+
+if (configElementIntendedUse) {
+  const contractKeys =
+    configElementIntendedUse.dataset.contractKeys?.split(",") ?? [];
+  for (const parameterKey of contractKeys) {
+    createEditorRoot(parameterKey, "contract");
+  }
+
+  const coopKeys =
+    configElementIntendedUse.dataset.coopSharesKeys?.split(",") ?? [];
+  for (const parameterKey of coopKeys) {
+    createEditorRoot(parameterKey, "coop_share");
+  }
+
+  const jokerKeys =
+    configElementIntendedUse.dataset.jokerKeys?.split(",") ?? [];
+  for (const parameterKey of jokerKeys) {
+    createEditorRoot(parameterKey, "joker");
+  }
+} else {
+  alert("Failed to render payment intended use editor");
+}
+
+function createEditorRoot(
+  parameterKey: string,
+  intendedUseType: IntendedUseType,
+) {
+  const inputElement = document.getElementById(
+    "id_" + parameterKey,
+  ) as HTMLTextAreaElement;
+
+  const previewDiv = document.createElement("div");
+
+  const container = document.createElement("div");
+  container.className = "d-flex flex-row gap-2";
+  inputElement.parentNode?.insertBefore(container, inputElement);
+  container.appendChild(inputElement);
+  container.append(previewDiv);
+
+  inputElement.after(previewDiv);
+
+  const root = createRoot(previewDiv);
+  root.render(
+    <IntendedUseEditorBase
+      inputField={inputElement}
+      intendedUseType={intendedUseType}
+      title={inputElement.labels[0].innerText}
+    />,
+  );
+}
+
+const configElementMandateReference = document.getElementById(
+  "mandate-reference-preview-config",
+);
+if (configElementMandateReference) {
+  const parameterKey = configElementMandateReference.dataset.parameterKey;
+  const inputElement = document.getElementById(
+    "id_" + parameterKey,
+  ) as HTMLInputElement;
+
+  const previewDiv = document.createElement("div");
+  inputElement.after(previewDiv);
+
+  const root = createRoot(previewDiv);
+  root.render(<MandateReferencePreview inputField={inputElement} />);
+} else {
+  alert("Failed to render mandate reference preview");
+}

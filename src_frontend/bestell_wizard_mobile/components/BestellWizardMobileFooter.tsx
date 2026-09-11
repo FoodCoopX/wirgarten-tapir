@@ -1,14 +1,14 @@
 import React from "react";
+import { Badge, Dropdown, DropdownButton, ProgressBar } from "react-bootstrap";
 import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
-import { Step } from "../types/Step.ts";
-import TapirButton from "../../components/TapirButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
-import { getPhase } from "../utils/getPhase.ts";
-import { Badge, Dropdown, DropdownButton, ProgressBar } from "react-bootstrap";
-import { Phase } from "../types/Phase.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import { Phase } from "../types/Phase.ts";
+import { Step } from "../types/Step.ts";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { FOOTER_HEIGHT } from "../utils/DIMENSIONS.ts";
+import { getPhase } from "../utils/getPhase.ts";
 import "./footer.css";
 
 interface BestellWizardMobileFooterProps {
@@ -54,7 +54,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
       case "intro":
         return "Intro";
       case "coop":
-        return "Genossenschaft";
+        if (settings.legalStatus === "coop") return "Genossenschaft";
+        else return "Verein";
       case "pickup_location":
         return "Verteilstation";
       case "solidarity":
@@ -100,6 +101,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "5C: Verteilstation (Bestätigung Warteliste)";
       case "6a_coop_intro":
         return "6A: Genossenschaft (Intro)";
+      case "6b_association_membership":
+        return "6B: Vereinsmitgliedschaft (Auswahl)";
       case "6b_coop_shares":
         return "6B: Genossenschaft (Auswahl)";
       case "6c_coop_member_now":

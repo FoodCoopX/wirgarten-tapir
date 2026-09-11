@@ -1,9 +1,9 @@
 import React from "react";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import { Step } from "../types/Step.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import "../utils/flexColOnSmallScreen.css";
-import { Step } from "../types/Step.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 
 interface Step6CCoopMemberNowProps {
   settings: BestellWizardSettings;
@@ -37,7 +37,15 @@ const Step6CCoopMemberNow: React.FC<Step6CCoopMemberNowProps> = ({
           variant={BUTTON_VARIANT}
           onClick={() => {
             setBecomeMemberNow(true);
-            setTimeout(() => setCurrentStep("6b_coop_shares"), 50);
+            setTimeout(
+              () =>
+                setCurrentStep(
+                  settings.legalStatus === "association"
+                    ? "6b_association_membership"
+                    : "6b_coop_shares",
+                ),
+              50,
+            );
           }}
           icon={"id_card"}
         />

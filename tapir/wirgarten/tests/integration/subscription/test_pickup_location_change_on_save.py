@@ -13,7 +13,7 @@ class TestPickupLocationChangeOnSave(TapirIntegrationTest):
     Renewing a contract while changing pickup location.
 
     pickup_location_change_date is a ChoiceField, so its cleaned value is the
-    string form of a date, while MemberPickupLocationService does date
+    string form of a date, while MemberPickupLocationSetter does date
     arithmetic with it - and a string has no .weekday().
     """
 

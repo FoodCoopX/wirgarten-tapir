@@ -14,14 +14,15 @@ import {
   ProductBasketSizeEquivalence,
   SubscriptionsApi,
 } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { HTML_ALLOWED_TEXT } from "../utils/HTML_ALLOWED_TEXT.ts";
 import {
   getPeriodIdFromUrl,
   getProductIdFromUrl,
 } from "./get_parameter_from_url.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import { ToastData } from "../types/ToastData.ts";
 
 interface ProductModalProps {
   show: boolean;
@@ -56,6 +57,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [minCoopShares, setMinCoopShares] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [priceIsPerDelivery, setPriceIsPerDelivery] = useState(false);
+  const [hiddenInBestellWizard, setHiddenInBestellWizard] = useState(false);
 
   useEffect(() => {
     if (!show) return;
@@ -82,6 +85,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setUrlOfImageInBestellWizard(extendedProduct.urlOfImageInBestellwizard);
         setCapacity(extendedProduct.capacity);
         setMinCoopShares(extendedProduct.minCoopShares);
+        setPriceIsPerDelivery(extendedProduct.pricePerDelivery);
+        setHiddenInBestellWizard(extendedProduct.hiddenInBestellWizard);
       })
       .catch((error) =>
         handleRequestError(
@@ -114,6 +119,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           urlOfImageInBestellwizard: urlOfImageInBestellWizard,
           capacity: capacity,
           minCoopShares: minCoopShares,
+          hiddenInBestellWizard: hiddenInBestellWizard,
         },
       })
       .then(() => location.reload())
@@ -171,10 +177,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </Form.Group>
               </Col>
             </Row>
-            <Row>
+            <Row className={"mt-2"}>
               <Col>
                 <Form.Group>
-                  <Form.Label>Preis (monatlich, €)</Form.Label>
+                  <Form.Label>
+                    Preis ({priceIsPerDelivery ? "pro Lieferung" : "monatlich"},
+                    €)
+                  </Form.Label>
                   <Form.Control
                     value={price}
                     type={"number"}
@@ -224,7 +233,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                       setDescriptionInBestellWizard(e.target.value)
                     }
                   />
-                  <Form.Text>Beispiel: "für ca. eine Person"</Form.Text>
+                  <Form.Text>
+                    Beispiel: "für ca. eine Person". <br />
+                    {HTML_ALLOWED_TEXT}
+                  </Form.Text>
                 </Form.Group>
               </Col>
               <Col>
@@ -240,6 +252,23 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   <Form.Text>
                     Bilder können z.B. im Mail-Modul unter "Medien Verwalten"
                     hochgeladen werden
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className={"mt-2"}>
+              <Col>
+                <Form.Group controlId={"hidden_in_bw"}>
+                  <Form.Check
+                    checked={hiddenInBestellWizard}
+                    onChange={(e) => setHiddenInBestellWizard(e.target.checked)}
+                    label={"Wird in BestellWizard versteckt"}
+                  />
+                  <Form.Text>
+                    Produkte können im BestellWizard versteckt werden, so das
+                    normale Mitglieder die nicht mehr bestellen können. Diese
+                    Produkte können nur von Betrieb-Admins verteilt werden in
+                    dem sie Warteliste-Einträge erzeugen und erfüllen.
                   </Form.Text>
                 </Form.Group>
               </Col>

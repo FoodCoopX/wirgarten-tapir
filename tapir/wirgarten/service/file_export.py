@@ -1,5 +1,4 @@
 import csv
-from typing import Dict
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -18,21 +17,22 @@ class CsvTextBuilder(object):
         self.csv_string.append(row)
 
 
-def __send_email(file: ExportedFile, recipient: str = None, cache: Dict = None):
+def __send_email(file: ExportedFile, recipient: str = None, cache: dict = None):
     if recipient is None:
         recipient = [get_parameter_value(ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)]
     else:
         recipient = recipient.split(",")
 
-    filename = f"{file.name}_{file.created_at.strftime('%Y%m%d_%H%M%S')}.{ExportedFile.FileType.CSV.value}"
+    filename_long = (
+        f"{file.name}_{file.created_at.strftime('%Y%m%d_%H%M%S')}.{file.type}"
+    )
+    filename_short = f"{file.name}.{file.type}"
 
     email = EmailMultiAlternatives(
-        subject=_("{filename} ist bereit").format(
-            filename=f"{file.name}.{ExportedFile.FileType.CSV.value}"
-        ),
+        subject=_("{filename} ist bereit").format(filename=filename_short),
         body=_(
             "Hallo Admin,<br/><br/>im Anhang findest du die aktuelle {filename}.<br/><br/><br/>(Automatisch von Tapir versendet)"
-        ).format(filename=filename),
+        ).format(filename=filename_long),
         to=recipient,
         from_email=settings.EMAIL_HOST_SENDER,
         bcc=(
@@ -42,7 +42,7 @@ def __send_email(file: ExportedFile, recipient: str = None, cache: Dict = None):
         ),
     )
     email.content_subtype = "html"
-    email.attach(filename, file.file)
+    email.attach(filename_long, file.file)
     email.send()
 
 
@@ -72,7 +72,7 @@ def export_file(
     content: bytes,
     send_email: bool,
     to_email_custom: str | None = None,
-    cache: Dict = None,
+    cache: dict = None,
 ) -> ExportedFile:
     """
     Exports binary data as a virtual file to the database. It can be automatically sent per email to the admin (or a custom email address) and it can be downloaded via UI later on.

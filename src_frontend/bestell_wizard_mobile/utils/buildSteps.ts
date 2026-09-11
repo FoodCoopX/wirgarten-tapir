@@ -1,14 +1,15 @@
-import { Step } from "../types/Step.ts";
-import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import {
   PublicPickupLocation,
   PublicProductType,
   PublicWaitingListEntryDetails,
 } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { areAllOrderedProductsInWaitingList } from "../../bestell_wizard/utils/areAllOrderedProductsInWaitingList.ts";
+import { isAtLeastOneOrderedProductWithDelivery } from "../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { Step } from "../types/Step.ts";
+import { shouldConfirmMemberNow } from "./shouldConfirmMemberNow.ts";
 import { shouldIncludeStepGrowingPeriodChoice } from "./shouldIncludeStepGrowingPeriodChoice.ts";
 
 export function buildSteps(
@@ -27,23 +28,33 @@ export function buildSteps(
     "2_first_name",
   );
 
-  if (settings.introEnabled && waitingListEntryDetails === undefined) {
-    newSteps.push("3_product_type_choice");
-  }
-
   if (
     shouldIncludeStepGrowingPeriodChoice(
-      selectedProductTypes,
       settings.growingPeriodChoices,
+      waitingListEntryDetails,
     )
   ) {
     newSteps.push("3b_growing_period_choice");
+  }
+
+  if (settings.introEnabled && waitingListEntryDetails === undefined) {
+    newSteps.push("3_product_type_choice");
   }
 
   for (const productType of selectedProductTypes) {
     if (!productType.noDelivery) {
       newSteps.push(productType.id! + "_intro", productType.id! + "_order");
     }
+  }
+
+  if (
+    shouldShowStepSolidarityContributionBeforeStepPickupLocation(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+    )
+  ) {
+    newSteps.push("7_solidarity_contribution");
   }
 
   if (
@@ -70,26 +81,30 @@ export function buildSteps(
     }
   }
 
-  if (
-    shouldIncludeStepsCoopShares(
+  newSteps.push(
+    ...buildCoopSteps(
       waitingListEntryDetails,
-      settings.showCoopContent,
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
+    ),
+    ...buildAssociationSteps(
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      becomeMemberNow,
+      waitingListEntryDetails,
+    ),
+  );
+
+  if (
+    shouldShowStepSolidarityContributionBeforeStepPersonalData(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
     )
   ) {
-    newSteps.push("6a_coop_intro");
-
-    if (
-      shouldConfirmMemberNow(settings, shoppingCart, productTypesInWaitingList)
-    ) {
-      newSteps.push("6c_coop_member_now");
-    }
-
-    if (becomeMemberNow !== false) {
-      newSteps.push("6b_coop_shares");
-    }
-  }
-
-  if (shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
     newSteps.push("7_solidarity_contribution");
   }
 
@@ -129,6 +144,9 @@ export function buildSteps(
 function shouldIncludeStepsCoopShares(
   waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
   showCoopContent: boolean,
+  allowInvestingMembership: boolean,
+  productTypesInWaitingList: Set<PublicProductType>,
+  shoppingCart: ShoppingCart,
 ) {
   if (!showCoopContent) {
     return false;
@@ -138,7 +156,14 @@ function shouldIncludeStepsCoopShares(
     return waitingListEntryDetails.numberOfCoopShares > 0;
   }
 
-  return true;
+  if (allowInvestingMembership) {
+    return true;
+  }
+
+  return !areAllOrderedProductsInWaitingList(
+    shoppingCart,
+    productTypesInWaitingList,
+  );
 }
 
 function shouldIncludeStepsPickupLocations(
@@ -167,5 +192,125 @@ function shouldShowStepSolidarityContribution(
     return true;
   }
 
-  return !waitingListEntryDetails.memberAlreadyExists;
+  return waitingListEntryDetails.shouldShowSolidarityStep;
+}
+
+function shouldShowStepSolidarityContributionBeforeStepPickupLocation(
+  settings: BestellWizardSettings,
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  shoppingCart: ShoppingCart,
+) {
+  if (!shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+    return false;
+  }
+
+  if (settings.solidarityStepPosition !== "before_pickup_location") {
+    return false;
+  }
+
+  return isAtLeastOneProductOrdered(shoppingCart);
+}
+
+function shouldShowStepSolidarityContributionBeforeStepPersonalData(
+  settings: BestellWizardSettings,
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  shoppingCart: ShoppingCart,
+) {
+  if (!shouldShowStepSolidarityContribution(waitingListEntryDetails)) {
+    return false;
+  }
+
+  return (
+    settings.solidarityStepPosition === "before_personal_data" ||
+    !shouldShowStepSolidarityContributionBeforeStepPickupLocation(
+      settings,
+      waitingListEntryDetails,
+      shoppingCart,
+    )
+  );
+}
+
+function buildCoopSteps(
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+  settings: BestellWizardSettings,
+  shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
+) {
+  if (
+    !shouldIncludeStepsCoopShares(
+      waitingListEntryDetails,
+      settings.showCoopContent,
+      settings.allowInvestingMembership,
+      productTypesInWaitingList,
+      shoppingCart,
+    )
+  ) {
+    return [];
+  }
+
+  const coopSteps: Step[] = [];
+
+  coopSteps.push("6a_coop_intro");
+
+  if (
+    shouldConfirmMemberNow(
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      waitingListEntryDetails !== undefined,
+    )
+  ) {
+    coopSteps.push("6c_coop_member_now");
+  }
+
+  if (becomeMemberNow !== false) {
+    coopSteps.push("6b_coop_shares");
+  }
+
+  return coopSteps;
+}
+
+function buildAssociationSteps(
+  settings: BestellWizardSettings,
+  shoppingCart: ShoppingCart,
+  productTypesInWaitingList: Set<PublicProductType>,
+  becomeMemberNow: boolean | null,
+  waitingListEntryDetails: PublicWaitingListEntryDetails | undefined,
+) {
+  if (settings.legalStatus !== "association") {
+    return [];
+  }
+
+  if (waitingListEntryDetails?.memberAlreadyExists) {
+    return [];
+  }
+
+  if (
+    !settings.associationsAllowInvestingMembership &&
+    areAllOrderedProductsInWaitingList(shoppingCart, productTypesInWaitingList)
+  ) {
+    return [];
+  }
+
+  const associationSteps: Step[] = [];
+
+  associationSteps.push("6a_coop_intro");
+
+  if (
+    shouldConfirmMemberNow(
+      settings,
+      shoppingCart,
+      productTypesInWaitingList,
+      waitingListEntryDetails !== undefined,
+    )
+  ) {
+    associationSteps.push("6c_coop_member_now");
+  }
+
+  if (becomeMemberNow !== false) {
+    associationSteps.push("6b_association_membership");
+  }
+
+  return associationSteps;
 }

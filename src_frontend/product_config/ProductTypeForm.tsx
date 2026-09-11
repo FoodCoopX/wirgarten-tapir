@@ -1,14 +1,17 @@
+import dayjs from "dayjs";
 import React, { useState } from "react";
 import { Accordion, Col, Form, Nav, Row } from "react-bootstrap";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import {
   DeliveryCycleEnum,
   GrowingPeriod,
   NoticePeriodUnitEnum,
   type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
-import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
+import { CustomCycleDeliveryWeeks } from "../types/CustomCycleDeliveryWeeks.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import { HTML_ALLOWED_TEXT } from "../utils/HTML_ALLOWED_TEXT.ts";
+import CustomCycleDeliveryWeeksInput from "./CustomCycleDeliveryWeeksInput.tsx";
 import { getNoticePeriodUnitDisplay } from "./getNoticePeriodUnitDispay.ts";
 
 interface ProductTypeFormProps {
@@ -16,7 +19,7 @@ interface ProductTypeFormProps {
   setName: (name: string) => void;
   iconLink: string;
   setIconLink: (iconLink: string) => void;
-  growingPeriod: GrowingPeriod;
+  globalSelectedGrowingPeriod: GrowingPeriod; // the period that is selected at the page level, the one that has it's ID in the URL
   capacity: number;
   setCapacity: (capacity: number) => void;
   deliveryCycle: DeliveryCycleEnum;
@@ -36,9 +39,6 @@ interface ProductTypeFormProps {
   setSingleSubscriptionOnly: (single: boolean) => void;
   mustBeSubscribedTo: boolean;
   setMustBeSubscribedTo: (mustBeSubscribedTo: boolean) => void;
-  showAssociationMembership: boolean;
-  isAssociationMembership: boolean;
-  setIsAssociationMembership: (is: boolean) => void;
   descriptionBestellwizardShort: string;
   setDescriptionBestellwizardShort: (short: string) => void;
   descriptionBestellwizardLong: string;
@@ -62,6 +62,9 @@ interface ProductTypeFormProps {
   noticePeriodUnit: NoticePeriodUnitEnum;
   setNoticePeriodUnit: (unit: NoticePeriodUnitEnum) => void;
   canUpdateNoticePeriod: boolean;
+  deliveryWeeks: CustomCycleDeliveryWeeks;
+  setDeliveryWeeks: (weeks: CustomCycleDeliveryWeeks) => void;
+  allGrowingPeriods: GrowingPeriod[];
 }
 
 type Tab = "general" | "contracts" | "bestell_wizard";
@@ -71,7 +74,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setName,
   iconLink,
   setIconLink,
-  growingPeriod,
+  globalSelectedGrowingPeriod,
   capacity,
   setCapacity,
   deliveryCycle,
@@ -91,9 +94,6 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setSingleSubscriptionOnly,
   mustBeSubscribedTo,
   setMustBeSubscribedTo,
-  showAssociationMembership,
-  isAssociationMembership,
-  setIsAssociationMembership,
   descriptionBestellwizardShort,
   setDescriptionBestellwizardShort,
   descriptionBestellwizardLong,
@@ -117,6 +117,9 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   noticePeriodUnit,
   setNoticePeriodUnit,
   canUpdateNoticePeriod,
+  deliveryWeeks,
+  setDeliveryWeeks,
+  allGrowingPeriods,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>("general");
 
@@ -190,8 +193,9 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                 <Form.Group controlId={"capacity"}>
                   <Form.Label>
                     Produkt Kapazität in Produkt-Größe für die Vertragsperiode{" "}
-                    {formatDateNumeric(growingPeriod?.startDate)} bis{" "}
-                    {formatDateNumeric(growingPeriod?.endDate)}
+                    {formatDateNumeric(globalSelectedGrowingPeriod?.startDate)}{" "}
+                    bis{" "}
+                    {formatDateNumeric(globalSelectedGrowingPeriod?.endDate)}
                   </Form.Label>
                   <Form.Control
                     type={"number"}
@@ -212,7 +216,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                       }
                       required={false}
                       checked={isAffectedByJokers}
-                      label={"Nimmt am Joker-Verfahren teil"}
+                      label={"Nimmt am Joker- und Spende-Verfahren teil"}
                     />
                   </Form.Group>
                 </Row>
@@ -254,6 +258,16 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                   </Form.Select>
                 </Form.Group>
               </Row>
+
+              {deliveryCycle === "custom" && (
+                <Row className={"mt-4"}>
+                  <CustomCycleDeliveryWeeksInput
+                    allGrowingPeriods={allGrowingPeriods}
+                    deliveryWeeks={deliveryWeeks}
+                    setDeliveryWeeks={setDeliveryWeeks}
+                  />
+                </Row>
+              )}
             </Col>
           </>
         )}
@@ -375,20 +389,6 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                   />
                 </Form.Group>
               </Row>
-              {showAssociationMembership && (
-                <Row className={"mt-2"}>
-                  <Form.Group controlId={"is_association_membership"}>
-                    <Form.Check
-                      onChange={(event) =>
-                        setIsAssociationMembership(event.target.checked)
-                      }
-                      required={false}
-                      checked={isAssociationMembership}
-                      label={"Ist die Vereinsmitgliedschaft"}
-                    />
-                  </Form.Group>
-                </Row>
-              )}
               <Row className={"mt-2"}>
                 <Form.Group controlId={"force_waiting_list"}>
                   <Form.Check
@@ -446,6 +446,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                     value={descriptionBestellwizardLong}
                     as={"textarea"}
                   />
+                  <Form.Text>{HTML_ALLOWED_TEXT}</Form.Text>
                 </Form.Group>
               </Row>
               <Row className={"mt-4"}>
@@ -526,12 +527,14 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                           <Form.Label>Akkordeon {index + 1} - Text</Form.Label>
                           <Form.Control
                             type={"text"}
+                            as={"textarea"}
                             onChange={(event) =>
                               setAccordionDescription(event.target.value, index)
                             }
                             required={true}
                             value={accordion.description}
                           />
+                          <Form.Text>{HTML_ALLOWED_TEXT}</Form.Text>
                         </Form.Group>
                         <div className={"mt-2 d-flex flew-row gap-2"}>
                           <TapirButton

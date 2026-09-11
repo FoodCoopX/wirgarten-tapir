@@ -10,6 +10,7 @@ interface NextButtonProps {
   showError?: boolean;
   loading?: boolean;
   isOrderStep?: boolean;
+  stepActive: boolean;
 }
 
 const NextStepButton: React.FC<NextButtonProps> = ({
@@ -19,13 +20,14 @@ const NextStepButton: React.FC<NextButtonProps> = ({
   showError,
   loading,
   isOrderStep,
+  stepActive,
 }) => {
   function getButtonText() {
     if (text) {
       return text;
     }
     if (isOrderStep) {
-      return "Bestellung bestätigen";
+      return "Bestellung kostenpflichtig abschließen";
     }
     return "Weiter";
   }
@@ -50,7 +52,7 @@ const NextStepButton: React.FC<NextButtonProps> = ({
       <TapirButton
         variant={getVariant()}
         text={getButtonText()}
-        onClick={onClick}
+        onClick={stepActive ? onClick : () => {}}
         icon={isOrderStep ? "done_all" : "keyboard_arrow_down"}
         disabled={disabled ?? false}
         className={"nextStepButton"}

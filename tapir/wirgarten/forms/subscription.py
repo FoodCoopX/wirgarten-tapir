@@ -12,14 +12,12 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
+from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
 )
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
-)
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
 )
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
@@ -50,10 +48,9 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
-    get_next_delivery_date,
 )
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.member import (
-    get_or_create_mandate_ref,
     send_product_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
@@ -63,7 +60,8 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_next_growing_period,
     get_product_price,
-    get_total_price_for_subs,
+    get_next_growing_period,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -73,7 +71,7 @@ BASE_PRODUCT_FIELD_PREFIX = "base_product_"
 def _as_date(value):
     """
     pickup_location_change_date is a ChoiceField, so its cleaned value is the
-    string form of the date, not a date. MemberPickupLocationService does date
+    string form of the date, not a date. MemberPickupLocationSetter does date
     arithmetic with it, and a string has no .weekday().
     """
     if isinstance(value, str):
@@ -119,8 +117,10 @@ class BaseProductForm(forms.Form):
 
         super().__init__(*args, **kwargs)
 
-        base_product_type = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
+        base_product_type = (
+            ProductType.objects.filter(must_be_subscribed_to=True)
+            .order_by("name")
+            .first()
         )
         harvest_share_products = Product.objects.filter(
             deleted=False, type=base_product_type
@@ -262,9 +262,6 @@ class BaseProductForm(forms.Form):
                         "quantity": sub.quantity,
                     }
 
-                self.current_used_capacity = get_total_price_for_subs(
-                    subs[self.product_type.name], cache=self.cache
-                )
                 if len(sub_variants) > 0:
                     for key, field in self.fields.items():
                         if (
@@ -341,13 +338,14 @@ class BaseProductForm(forms.Form):
         member_id: str = None,
     ):
         member_id = member_id or self.member_id
-
+        member = Member.objects.get(id=member_id)
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(member_id, cache=self.cache)
+            mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+                member, cache=self.cache
+            )
         now = get_now(cache=self.cache)
 
         self.subscriptions = []
-        member = Member.objects.get(id=member_id)
         existing_trial_end_date = cancel_or_delete_subscriptions(
             member=member,
             start_date=self.start_date,
@@ -405,7 +403,9 @@ class BaseProductForm(forms.Form):
 
             self.subscriptions.append(sub)
 
-        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=self.cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
 
         member.sepa_consent = now
         member.save(cache=self.cache)
@@ -418,7 +418,7 @@ class BaseProductForm(forms.Form):
     def _change_pickup_location(self, member, new_pickup_location, change_date):
         # Through the service, so the change is logged and the member is
         # notified.
-        MemberPickupLocationService.link_member_to_pickup_location(
+        MemberPickupLocationSetter.link_member_to_pickup_location(
             pickup_location_id=new_pickup_location.id,
             member=member,
             valid_from=_as_date(change_date),
@@ -487,9 +487,6 @@ class BaseProductForm(forms.Form):
                 None, f"Bitte wähle mindestens einen {self.product_type.name}!"
             )
 
-        product_type_id = BaseProductTypeService.get_base_product_type(
-            cache=self.cache
-        ).id
         if has_harvest_shares:
             self.validate_harvest_shares_consent()
             if self.member_id:
@@ -505,7 +502,7 @@ class BaseProductForm(forms.Form):
             SubscriptionChangeValidator.validate_total_capacity(
                 form=self,
                 field_prefix=BASE_PRODUCT_FIELD_PREFIX,
-                product_type_id=product_type_id,
+                product_type_id=self.product_type.id,
                 member_id=self.member_id,
                 subscription_start_date=self.start_date,
                 cache=self.cache,
@@ -517,7 +514,7 @@ class BaseProductForm(forms.Form):
             member_id=self.member_id,
             form=self,
             field_prefix=BASE_PRODUCT_FIELD_PREFIX,
-            product_type_id=product_type_id,
+            product_type_id=self.product_type.id,
             cache=self.cache,
         )
 
@@ -761,8 +758,11 @@ class AdditionalProductForm(forms.Form):
             if not self.member_id:
                 raise ValueError("member_id must be set")
             member_id = self.member_id
+        member = Member.objects.get(id=member_id)
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(member_id)
+            mandate_ref = MandateReferenceProvider.get_or_create_mandate_reference(
+                member, cache=self.cache
+            )
         now = get_now(cache=self.cache)
 
         if not hasattr(self, "growing_period"):
@@ -776,7 +776,7 @@ class AdditionalProductForm(forms.Form):
         self.start_date = max(self.start_date, self.growing_period.start_date)
 
         existing_trial_end_date = cancel_or_delete_subscriptions(
-            Member.objects.get(id=member_id),
+            member,
             self.start_date,
             self.product_type,
             actor=None,
@@ -821,14 +821,16 @@ class AdditionalProductForm(forms.Form):
 
         Subscription.objects.bulk_create(self.subscriptions)
 
-        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+        TapirCacheManager.clear_category(
+            cache=self.cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")
         if new_pickup_location:
             member = Member.objects.get(id=member_id)
-            MemberPickupLocationService.link_member_to_pickup_location(
+            MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=new_pickup_location.id,
                 member=member,
                 valid_from=_as_date(change_date),
@@ -856,6 +858,8 @@ class AdditionalProductForm(forms.Form):
                 cache=self.cache,
                 from_waiting_list=False,
                 coop_share_transaction=None,
+                association_membership=None,
+                solidarity_contribution=None,
             )
 
     def has_shares_selected(self):
@@ -906,7 +910,7 @@ class AdditionalProductForm(forms.Form):
             .pickup_location
         )
 
-    def validate_pickup_location(self, cache: Dict):
+    def validate_pickup_location(self, cache: dict):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         has_shares_selected = self.has_shares_selected()
         if new_pickup_location or not has_shares_selected or not self.member_id:
@@ -923,43 +927,8 @@ class AdditionalProductForm(forms.Form):
         if not latest_member_pickup_location:
             raise ValidationError(_("Bitte wähle einen Abholort aus!"))
 
-    def validate_has_base_product_subscription_at_same_growing_period(
-        self, cache: Dict
-    ):
-        if not self.member_id or not self.has_shares_selected():
-            return
-
-        growing_period = getattr(
-            self,
-            "growing_period",
-            self.cleaned_data.pop(
-                "growing_period",
-                TapirCache.get_growing_period_at_date(
-                    reference_date=get_today(cache), cache=cache
-                ),
-            ),
-        )
-        if not Subscription.objects.filter(
-            member__id=self.member_id,
-            period=growing_period,
-            product__type=BaseProductTypeService.get_base_product_type(cache=cache),
-        ).exists():
-            self.add_error(
-                None,
-                "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-                "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben.",
-            )
-
     def clean(self):
         self.validate_contract_signed()
-
-        if not get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-            cache=self.cache,
-        ):
-            self.validate_has_base_product_subscription_at_same_growing_period(
-                cache=self.cache
-            )
 
         if self.member_id:
             self.validate_pickup_location(cache=self.cache)
@@ -1008,7 +977,7 @@ def cancel_or_delete_subscriptions(
     start_date: date,
     product_type: ProductType,
     actor: TapirUser | None,
-    cache: Dict,
+    cache: dict,
 ) -> date | None:
     """
     Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.
@@ -1044,35 +1013,9 @@ def cancel_or_delete_subscriptions(
             continue
 
         subscription.cancellation_ts = get_now(cache=cache)
-        existing_trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+        existing_trial_end_date = TrialPeriodManager.get_last_day_of_trial_period(
             subscription, cache=cache
         )
         subscription.save()
 
     return existing_trial_end_date
-
-
-class EditSubscriptionPriceForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        self.subscription_id = kwargs.pop("pk", None)
-        self.subscription = Subscription.objects.get(id=self.subscription_id)
-        super().__init__(*args, **kwargs)
-
-        self.fields["new_price"] = forms.DecimalField(
-            required=False,
-            label=_("Neuer Preis"),
-            localize=True,
-            max_digits=6,
-            decimal_places=2,
-            min_value=0.0,
-            initial=self.subscription.total_price,
-            help_text="Leer lassen um den Preis zurückzusetzen (automatisch berechnen)",
-        )
-
-    def save(self):
-        if self.cleaned_data["new_price"]:
-            self.subscription.price_override = self.cleaned_data["new_price"]
-        else:
-            self.subscription.price_override = None
-        self.subscription.save()
-        return self.subscription

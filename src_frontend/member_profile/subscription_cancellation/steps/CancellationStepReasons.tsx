@@ -1,6 +1,6 @@
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import "dayjs/locale/de";
 import TapirButton from "../../../components/TapirButton.tsx";
 
 interface CancellationStepReasonsProps {
@@ -46,10 +46,7 @@ const CancellationStepReasons: React.FC<CancellationStepReasonsProps> = ({
   return (
     <>
       <Modal.Body>
-        <Form
-          className={"d-flex flex-column gap-2"}
-          id={"subscriptionCancellationReasonsModalForm"}
-        >
+        <Form className={"d-flex flex-column gap-2"}>
           <div>Warum möchtest du deinen Vertrag kündigen?</div>
 
           {defaultCancellationReasons.map((reason) => {
@@ -81,7 +78,11 @@ const CancellationStepReasons: React.FC<CancellationStepReasonsProps> = ({
                 onChange={(event) =>
                   setCustomCancellationReason(event.target.value)
                 }
+                maxLength={1000}
               />
+              <Form.Text>
+                {(customCancellationReason ?? "").length}/1000 Zeichen
+              </Form.Text>
             </Form.Group>
           )}
         </Form>

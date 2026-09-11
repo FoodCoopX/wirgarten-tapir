@@ -3,6 +3,8 @@ from __future__ import annotations
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from tapir.log.models import ModelLogEntry
+
 # http://xml.coverpages.org/country3166.html
 COUNTRIES = (
     ("AD", _("Andorra")),
@@ -288,3 +290,7 @@ def copy_user_info(source, target):
 def copy_payment_data(source, target):
     for attribute in ["account_owner", "iban", "bic"]:
         setattr(target, attribute, getattr(source, attribute))
+
+
+class MemberImportedLogEntry(ModelLogEntry):
+    template_name = "utils/log/member_imported_log_entry.html"

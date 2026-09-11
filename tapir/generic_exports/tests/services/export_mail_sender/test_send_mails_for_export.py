@@ -1,12 +1,12 @@
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.generic_exports.services.export_mail_sender import ExportMailSender
 from tapir.wirgarten.service.email import Attachment
 
 
-class TestSendMailForExport(SimpleTestCase):
+class TestSendMailForExport(TapirUnitTest):
     @patch("tapir.generic_exports.services.export_mail_sender.send_email")
     def test_sendMailsForExport_noRecipients_sendMailsNotCalled(
         self, mock_send_email: Mock
@@ -14,7 +14,7 @@ class TestSendMailForExport(SimpleTestCase):
         export_result = Mock()
         export_result.export_definition.email_recipients = []
 
-        ExportMailSender.send_mails_for_export([export_result])
+        ExportMailSender.send_mails_for_export([export_result], cache={})
 
         mock_send_email.assert_not_called()
 
@@ -33,8 +33,8 @@ class TestSendMailForExport(SimpleTestCase):
         file_bytes = Mock()
         export_result.file.file = file_bytes
         mock_mimetypes.guess_type.return_value = ("test mime type", "unused")
-
-        ExportMailSender.send_mails_for_export([export_result])
+        cache = Mock()
+        ExportMailSender.send_mails_for_export([export_result], cache=cache)
 
         mock_send_email.assert_called_once_with(
             to_email=[
@@ -50,6 +50,7 @@ class TestSendMailForExport(SimpleTestCase):
                     mime_type="test mime type",
                 )
             ],
+            cache=cache,
         )
 
         mock_mimetypes.guess_type.assert_called_once_with("test_file_name")

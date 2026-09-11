@@ -1,6 +1,8 @@
 import { createRoot } from "react-dom/client";
-import SubscriptionChangeDatesButton from "./SubscriptionChangeDatesButton.tsx";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
+import SubscriptionChangeDatesButton from "./SubscriptionChangeDatesButton.tsx";
+import SubscriptionChangePriceButton from "./SubscriptionChangePriceButton.tsx";
+import SubscriptionTrialPeriodButton from "./SubscriptionTrialPeriodButton.tsx";
 
 const domNodeSubscriptionChangeDatesButton = document.getElementById(
   "subscription_change_dates_button",
@@ -11,4 +13,24 @@ if (!domNodeSubscriptionChangeDatesButton) {
 } else {
   const root = createRoot(domNodeSubscriptionChangeDatesButton);
   root.render(<SubscriptionChangeDatesButton csrfToken={getCsrfToken()} />);
+}
+
+const domNodeSubscriptionChangePriceButton = document.getElementById(
+  "subscription_change_price_button",
+);
+
+if (!domNodeSubscriptionChangePriceButton) {
+  console.error("Subscription change price button not found");
+} else {
+  const root = createRoot(domNodeSubscriptionChangePriceButton);
+  root.render(<SubscriptionChangePriceButton csrfToken={getCsrfToken()} />);
+}
+
+const domNodeSubscriptionTrialPeriodButton = document.getElementById(
+  "subscription_trial_period_button",
+);
+
+if (domNodeSubscriptionTrialPeriodButton) {
+  const root = createRoot(domNodeSubscriptionTrialPeriodButton);
+  root.render(<SubscriptionTrialPeriodButton csrfToken={getCsrfToken()} />);
 }

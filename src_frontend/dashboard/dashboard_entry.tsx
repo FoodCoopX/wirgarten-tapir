@@ -1,10 +1,14 @@
 import { createRoot } from "react-dom/client";
+import { getCsrfToken } from "../utils/getCsrfToken.ts";
+import AdminDashboardAssociationDataBase from "./AdminDashboardAssociationDataBase.tsx";
 import DashboardPickupLocationCapacityBase from "./DashboardPickupLocationCapacityBase.tsx";
 import DashboardPreferredBreadStats from "./DashboardPreferredBreadStats.tsx";
 
-const domNode = document.getElementById("dashboard_pickup_location_entry");
-if (domNode) {
-  const root = createRoot(domNode);
+const domNodePickupLocations = document.getElementById(
+  "dashboard_pickup_location_entry",
+);
+if (domNodePickupLocations) {
+  const root = createRoot(domNodePickupLocations);
 
   root.render(<DashboardPickupLocationCapacityBase />);
 } else {
@@ -15,4 +19,12 @@ const bakeryStatsNode = document.getElementById("dashboard_bakery_stats_entry");
 if (bakeryStatsNode) {
   const root = createRoot(bakeryStatsNode);
   root.render(<DashboardPreferredBreadStats />);
+}
+
+const domNodeAssociations = document.getElementById(
+  "association_memberships_dashboard",
+);
+if (domNodeAssociations) {
+  const root = createRoot(domNodeAssociations);
+  root.render(<AdminDashboardAssociationDataBase csrfToken={getCsrfToken()} />);
 }

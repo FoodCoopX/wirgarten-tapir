@@ -15,6 +15,7 @@ import { buildFilteredShoppingCart } from "../../bestell_wizard/utils/buildFilte
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { wouldTheOrderFitTheProductCapacities } from "../utils/wouldTheOrderFitTheProductCapacities.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { buildDeliveryChargeBadge } from "../utils/buildDeliveryChargeBadge.tsx";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -89,7 +90,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
         Number.parseFloat(pickupLocation.coordsLat),
       ]),
     );
-    mapRef.fitBounds(bounds);
+    mapRef.fitBounds(bounds, { padding: [50, 50] });
   }
 
   function updateSelection(pickupLocation: PublicPickupLocation) {
@@ -178,6 +179,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        referrerPolicy={"no-referrer-when-downgrade"}
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {pickupLocations.map((pickupLocation) => (
@@ -201,6 +203,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
               }
             >
               <strong>{pickupLocation.name}</strong>
+              {buildDeliveryChargeBadge(pickupLocation)}
               {pickupLocationsWithCapacityFull.has(pickupLocation) ? (
                 <span className={"text-danger"}>Ausgelastet</span>
               ) : (

@@ -1,11 +1,15 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ValidationError
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.payments.models import MemberPaymentRhythm, MemberPaymentRhythmChangeLogEntry
+from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
+    MemberSolidarityContributionService,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -52,7 +56,7 @@ class MemberPaymentRhythmService:
             case MemberPaymentRhythm.Rhythm.YEARLY:
                 return [1]
             case _:
-                raise ImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
+                raise TapirImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
 
     @classmethod
     def get_month_index_relative_to_growing_period(
@@ -85,12 +89,12 @@ class MemberPaymentRhythmService:
             case MemberPaymentRhythm.Rhythm.YEARLY:
                 return 12
             case _:
-                raise ImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
+                raise TapirImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
 
     @classmethod
     def get_first_day_of_rhythm_period(
         cls, rhythm, reference_date: datetime.date, cache: dict
-    ):
+    ) -> datetime.date:
         reference_date = reference_date.replace(day=1)
         while not cls.is_start_of_rhythm_period(
             rhythm=rhythm, reference_date=reference_date, cache=cache
@@ -101,11 +105,11 @@ class MemberPaymentRhythmService:
     @classmethod
     def get_last_day_of_rhythm_period(
         cls, rhythm, reference_date: datetime.date, cache: dict
-    ):
+    ) -> datetime.date:
         start = cls.get_first_day_of_rhythm_period(
             rhythm=rhythm, reference_date=reference_date, cache=cache
         )
-        end = (
+        end: datetime.date = (
             start
             + relativedelta(
                 months=cls.get_number_of_months_paid_in_advance(rhythm=rhythm)
@@ -162,17 +166,36 @@ class MemberPaymentRhythmService:
         return rhythm
 
     @classmethod
+    def get_rhythm_from_display_name(cls, display_name: str) -> str:
+        for choice in MemberPaymentRhythm.Rhythm.choices:
+            if choice[1] == display_name:
+                return choice[0]
+        raise TapirImproperlyConfigured(
+            f"Unknown display name for payment rhythm: {display_name}"
+        )
+
+    @classmethod
     def get_date_of_next_payment_rhythm_change(
         cls, member: Member, reference_date: datetime.date, cache: dict
     ) -> datetime.date:
-        rhythm_object = TapirCache.get_member_payment_rhythm_object(
-            member=member, reference_date=reference_date, cache=cache
+        members_subscriptions = (
+            TapirCache.get_active_and_future_subscriptions_by_member_id(
+                cache=cache, reference_date=reference_date
+            ).get(member.id, [])
         )
-        if rhythm_object is None:
+        solidarity_contribution = (
+            MemberSolidarityContributionService.get_member_contribution(
+                member_id=member.id, reference_date=reference_date, cache=cache
+            )
+        )
+        if len(members_subscriptions) == 0 and solidarity_contribution == 0:
             return reference_date
 
-        last_day = MemberPaymentRhythmService.get_last_day_of_rhythm_period(
-            rhythm=rhythm_object.rhythm, reference_date=reference_date, cache=cache
+        rhythm = cls.get_member_payment_rhythm(
+            member=member, reference_date=reference_date, cache=cache
+        )
+        last_day = cls.get_last_day_of_rhythm_period(
+            rhythm=rhythm, reference_date=reference_date, cache=cache
         )
         return last_day + datetime.timedelta(days=1)
 
@@ -183,17 +206,18 @@ class MemberPaymentRhythmService:
         rhythm: str,
         valid_from: datetime.date,
         cache: dict,
-        actor: TapirUser,
+        actor: TapirUser | None,
     ):
-        MemberPaymentRhythmChangeLogEntry().populate_rhythm(
-            old_rhythm=MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=member, reference_date=get_today(cache=cache), cache=cache
-            ),
-            new_rhythm=rhythm,
-            valid_from=valid_from,
-            actor=actor,
-            user=member,
-        ).save()
+        if actor is not None:
+            MemberPaymentRhythmChangeLogEntry().populate_rhythm(
+                old_rhythm=MemberPaymentRhythmService.get_member_payment_rhythm(
+                    member=member, reference_date=get_today(cache=cache), cache=cache
+                ),
+                new_rhythm=rhythm,
+                valid_from=valid_from,
+                actor=actor,
+                user=member,
+            ).save()
 
         MemberPaymentRhythm.objects.filter(
             member=member, valid_from__gte=valid_from

@@ -1,39 +1,23 @@
 import datetime
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from tapir.deliveries.models import DeliveryDonation, Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
-    PickupLocationDeliveryDayService,
+from tapir.pickup_locations.serializers import (
+    PickupLocationSerializer,
+    PickupLocationOpeningTimeSerializer,
 )
+from tapir.products.serializers import PublicProductTypeSerializer, ProductSerializer
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
-from tapir.utils.shortcuts import get_serializer_cache
-from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
-    GrowingPeriod,
-    PickupLocation,
-    PickupLocationOpeningTime,
-    Product,
-    ProductType,
     Subscription,
+    GrowingPeriod,
 )
-
-
-class ProductTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductType
-        fields = "__all__"
-
-
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = "__all__"
-
-    type = ProductTypeSerializer()
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -42,46 +26,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     product = ProductSerializer()
-
-
-class PickupLocationSerializer(serializers.ModelSerializer):
-    delivery_day = serializers.SerializerMethodField()
-
-    class Meta:
-        model = PickupLocation
-        fields = [
-            "id",
-            "name",
-            "coords_lon",
-            "coords_lat",
-            "street",
-            "street_2",
-            "postcode",
-            "city",
-            "info",
-            "messenger_group_link",
-            "contact_name",
-            "photo_link",
-            "access_code",
-            "delivery_day",
-        ]
-
-    def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
-        return PickupLocationDeliveryDayService.get_delivery_day(
-            pickup_location_id=pickup_location.id, cache=get_serializer_cache(self)
-        )
-
-
-class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PickupLocationOpeningTime
-        fields = "__all__"
-
-    day_of_week_string = serializers.SerializerMethodField()
-
-    @staticmethod
-    def get_day_of_week_string(opening_time: PickupLocationOpeningTime):
-        return OPTIONS_WEEKDAYS[opening_time.day_of_week][1]
 
 
 class DeliverySerializer(serializers.Serializer):
@@ -118,9 +62,16 @@ class GrowingPeriodSerializer(serializers.ModelSerializer):
 class PublicGrowingPeriodSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrowingPeriod
-        fields = ["id", "start_date", "end_date", "contract_start_date"]
+        fields = [
+            "id",
+            "start_date",
+            "end_date",
+            "contract_start_date",
+            "product_types",
+        ]
 
     contract_start_date = serializers.SerializerMethodField()
+    product_types = serializers.SerializerMethodField()
 
     @staticmethod
     def get_contract_start_date(growing_period: GrowingPeriod) -> datetime.date:
@@ -129,6 +80,30 @@ class PublicGrowingPeriodSerializer(serializers.ModelSerializer):
                 growing_period=growing_period, apply_buffer_time=True, cache={}
             )
         )
+
+    @extend_schema_field(PublicProductTypeSerializer(many=True))
+    def get_product_types(self, growing_period: GrowingPeriod):
+        cache = self.context["cache"]
+        product_types_for_this_growing_period = []
+
+        for product_type in TapirCache.get_all_product_types(cache):
+            if (
+                TapirCache.get_product_type_capacity_at_date(
+                    cache=cache,
+                    reference_date=growing_period.start_date,
+                    product_type=product_type,
+                )
+                is not None
+            ):
+                product_types_for_this_growing_period.append(product_type)
+
+        product_types_for_this_growing_period.sort(
+            key=lambda product_type: product_type.order_in_bestellwizard
+        )
+
+        return PublicProductTypeSerializer(
+            product_types_for_this_growing_period, many=True, context=self.context
+        ).data
 
 
 class JokerWithCancellationLimitSerializer(serializers.Serializer):
@@ -186,3 +161,16 @@ class GrowingPeriodWithDeliveryDayAdjustmentsSerializer(serializers.Serializer):
     )
     jokers_enabled = serializers.BooleanField(read_only=True)
     is_available_in_bestell_wizard = serializers.BooleanField()
+
+
+class CustomCycleDeliveryWeeksSerializer(serializers.Serializer):
+    custom_cycle_delivery_weeks = serializers.DictField(
+        child=serializers.ListSerializer(child=serializers.IntegerField())
+    )
+
+
+class GetDatesFromCustomCycleDeliveryWeeksResponseSerializer(serializers.Serializer):
+    custom_cycle_delivery_weeks_dates = serializers.DictField(
+        child=serializers.DictField(child=serializers.DateField())
+    )
+    error = serializers.CharField()

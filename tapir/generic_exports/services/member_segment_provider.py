@@ -11,15 +11,22 @@ from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
 )
-from tapir.wirgarten.utils import get_today, get_now
+from tapir.wirgarten.utils import (
+    get_now,
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 
 class MemberSegmentProvider:
+    SEGMENT_ID_ALL_MEMBERS = "members.all"
+
     @classmethod
     def get_member_segments(cls):
         return [
             ExportSegment(
-                id="members.all",
+                id=cls.SEGMENT_ID_ALL_MEMBERS,
                 display_name="Alle Mitglieder",
                 description="Alle Mitglieder, "
                 "egal ob mit Abo oder nicht, solange sie Genossenschaftsanteile haben",
@@ -48,6 +55,13 @@ class MemberSegmentProvider:
                 get_queryset=cls.get_queryset_members_with_contract_since_more_than_one_year_but_no_coop_share,
                 get_available_columns=MemberColumnProvider.get_member_columns,
             ),
+            ExportSegment(
+                id="members.with_cancelled_shares_in_previous_year",
+                display_name="Mitglieder mit gekündigte Anteile im Vorjahr",
+                description="",
+                get_queryset=cls.get_queryset_members_with_cancelled_shares_in_previous_year,
+                get_available_columns=MemberColumnProvider.get_member_columns,
+            ),
         ]
 
     @classmethod
@@ -56,10 +70,24 @@ class MemberSegmentProvider:
     ) -> QuerySet:
         from tapir.wirgarten.models import Member
 
-        members = annotate_member_queryset_with_coop_shares_total_value(
-            Member.objects.all(), reference_date=reference_datetime.date()
-        )
-        return members.filter(coop_shares_total_value__gt=0).order_by("member_no")
+        cache = {}
+        if legal_status_is_cooperative(cache=cache):
+            members = annotate_member_queryset_with_coop_shares_total_value(
+                Member.objects.all(), reference_date=reference_datetime.date()
+            )
+            return members.filter(coop_shares_total_value__gt=0).order_by("member_no")
+        elif legal_status_is_association(cache=cache):
+            members_ids_with_a_membership = [
+                member.id
+                for member in Member.objects.all()
+                if TapirCache.get_member_association_membership_at_date(
+                    member=member, reference_date=reference_datetime.date(), cache=cache
+                )
+                is not None
+            ]
+            return Member.objects.filter(id__in=members_ids_with_a_membership)
+
+        return Member.objects.all()
 
     @classmethod
     def get_queryset_all_members_with_subscription(
@@ -135,4 +163,20 @@ class MemberSegmentProvider:
             )
         ).filter(
             id__in=set(members_with_an_active_subscription.values_list("id", flat=True))
+        )
+
+    @classmethod
+    def get_queryset_members_with_cancelled_shares_in_previous_year(
+        cls, reference_datetime: datetime.datetime
+    ):
+        from tapir.wirgarten.models import CoopShareTransaction, Member
+
+        year = reference_datetime.year
+        timerange = (
+            datetime.date(year - 1, 1, 1),
+            datetime.date(year, 1, 1) - datetime.timedelta(milliseconds=1),
+        )
+        return Member.objects.filter(
+            coopsharetransaction__transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
+            coopsharetransaction__valid_at__range=timerange,
         )

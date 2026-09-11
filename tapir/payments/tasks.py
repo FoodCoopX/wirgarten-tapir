@@ -1,5 +1,8 @@
+import datetime
+
 from celery import shared_task
 
+from tapir.payments.services.joker_credit_creator import JokerCreditCreator
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.payments.services.payment_export_builder import PaymentExportBuilder
 from tapir.wirgarten.models import (
@@ -11,19 +14,43 @@ from tapir.wirgarten.utils import (
 
 
 @shared_task
-def create_payments_for_this_month():
+def create_payments_for_this_month(reference_date: datetime.date | None = None):
     cache = {}
-    today = get_today(cache=cache)
+    if reference_date is None:
+        reference_date = get_today(cache=cache)
     payments = MonthPaymentBuilder.build_payments_for_month(
-        reference_date=today, cache=cache, generated_payments=set()
+        reference_date=reference_date, cache=cache, generated_payments=set()
     )
     Payment.objects.bulk_create(payments)
 
 
 @shared_task
-def export_payments_for_this_month():
+def export_payments_for_this_month(
+    reference_date: datetime.date | None = None, send_mail: bool = True
+):
     cache = {}
-    reference_date = get_today(cache=cache)
+    if reference_date is None:
+        reference_date = get_today(cache=cache)
+
+    # export_payments_for_this_month will usually export on the first day of the month
+    # depending on when create_payments_for_this_month is run, for example if the server was down from the 31st at 23:00 to 1st at 08:00,
+    # the payments may not be created yet. So we make sure that they are created before exporting.
+    create_payments_for_this_month(reference_date)
+
     PaymentExportBuilder.export_all_unexported_payments(
-        reference_date=reference_date, cache=cache
+        reference_date=reference_date,
+        send_mail=send_mail,
+        cache=cache,
+    )
+
+
+@shared_task
+def create_credits_for_jokers(reference_date: datetime.date | None = None):
+    cache = {}
+    if reference_date is None:
+        reference_date = get_today(cache=cache)
+
+    JokerCreditCreator.create_credits_for_jokers(
+        reference_date=reference_date,
+        cache=cache,
     )

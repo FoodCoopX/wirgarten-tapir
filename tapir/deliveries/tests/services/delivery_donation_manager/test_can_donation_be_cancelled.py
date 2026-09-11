@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.deliveries.services.delivery_donation_manager import DeliveryDonationManager
 from tapir.deliveries.services.joker_management_service import JokerManagementService
@@ -9,7 +9,7 @@ from tapir.deliveries.tests.factories import DeliveryDonationFactory
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
-class TestCanDonationBeCancelled(SimpleTestCase):
+class TestCanDonationBeCancelled(TapirUnitTest):
     def setUp(self):
         self.today = mock_timezone(
             test=self, now=datetime.datetime(year=2021, month=11, day=13)

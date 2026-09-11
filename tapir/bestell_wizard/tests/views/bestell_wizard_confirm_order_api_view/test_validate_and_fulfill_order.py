@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
     BestellWizardOrderFulfiller,
@@ -11,7 +11,7 @@ from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
 
 
-class TestValidateAndFulfillOrder(SimpleTestCase):
+class TestValidateAndFulfillOrder(TapirUnitTest):
     @patch(
         "tapir.bestell_wizard.views.get_today",
         autospec=True,

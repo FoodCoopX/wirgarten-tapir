@@ -1,7 +1,7 @@
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
@@ -14,7 +14,7 @@ from tapir.subscriptions.config import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestIsTheOrderedSolidarityAllowed(SimpleTestCase):
+class TestIsTheOrderedSolidarityAllowed(TapirUnitTest):
     def test_isTheOrderedSolidarityAllowed_positiveAmount_returnsTrue(self):
         self.assertTrue(
             SolidarityValidator.is_the_ordered_solidarity_allowed(

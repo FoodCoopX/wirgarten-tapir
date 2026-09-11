@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 from tapir.subscriptions import tasks
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
@@ -8,7 +8,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 
 
-class TestTasks(SimpleTestCase):
+class TestTasks(TapirUnitTest):
     @patch.object(
         AutomaticSubscriptionRenewalService, "renew_subscriptions_if_necessary"
     )

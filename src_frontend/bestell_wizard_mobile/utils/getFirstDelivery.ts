@@ -26,7 +26,7 @@ export function getFirstDelivery(
       }
     }
 
-    dateAsString = "Erste Lieferung: " + formatDateNumeric(minDate);
+    dateAsString = "Erste Abholung: " + formatDateNumeric(minDate);
   }
 
   return dateAsString;

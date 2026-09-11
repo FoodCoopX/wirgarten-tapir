@@ -1,3 +1,5 @@
+import logging
+
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -7,6 +9,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.pick_list_builder import PickListBuilder
 from tapir.wirgarten.mail_events import Events
@@ -16,8 +19,8 @@ from tapir.wirgarten.models import (
     ScheduledTask,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.file_export import export_file
+from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
@@ -27,8 +30,9 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
-    legal_status_is_cooperative,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -51,8 +55,8 @@ def _export_pick_list(product_type, include_equivalents=True, cache: dict = None
     include_equivalents: If true, the M-Äquivalent column is included -> Kommissionierliste, else Lieferantenliste
     """
     next_delivery_date = get_next_delivery_date(cache=cache)
-    if not DeliveryCycleService.is_cycle_delivered_in_week(
-        cycle=product_type.delivery_cycle, date=next_delivery_date, cache=cache
+    if not DeliveryCycleService.is_product_type_delivered_in_week(
+        product_type=product_type, date=next_delivery_date, cache=cache
     ):
         print(
             f"Skipping export_pick_list_csv() for product type {product_type.name} because it is not due this week."
@@ -88,18 +92,26 @@ def should_export_list_today(cache: dict):
 
 
 @shared_task
-def export_pick_list_csv():
+def export_pick_list_csv(cache: dict = None):
     """
     Exports a CSV file containing the pick list for the next delivery.
     """
-    cache = {}
+    if cache is None:
+        cache = {}
+
     if not should_export_list_today(cache=cache):
         return
 
     all_product_types = {pt.name: pt for pt in get_active_product_types(cache=cache)}
-    include_product_types = get_parameter_value(
+    product_type_names_to_include = get_parameter_value(
         ParameterKeys.PICKING_PRODUCT_TYPES, cache=cache
-    ).split(",")
+    )
+    if product_type_names_to_include == "alle":
+        include_product_types = all_product_types.keys()
+    else:
+        include_product_types = get_parameter_value(
+            ParameterKeys.PICKING_PRODUCT_TYPES, cache=cache
+        ).split(",")
 
     for type_name in include_product_types:
         type_name = type_name.strip()
@@ -163,33 +175,16 @@ def send_email_member_contract_end_reminder(member_id: str):
 
 
 @shared_task
-def generate_member_numbers(print_results=True, cache: dict = None):
+def assign_member_numbers(cache: dict = None):
     if cache is None:
         cache = {}
     members = Member.objects.filter(member_no__isnull=True)
-    today = get_today(cache=cache)
-    members_to_update = []
-    next_member_number = Member.generate_member_no()
-    for member in members:
-        if legal_status_is_cooperative(cache=cache):
-            coop_entry_date = member.coop_entry_date
-            if coop_entry_date is None or coop_entry_date > today:
-                continue
-
-        member.member_no = next_member_number
-        next_member_number = Member.generate_member_no(next_member_number)
-        members_to_update.append(member)
 
     with transaction.atomic():
-        Member.objects.bulk_update(members_to_update, ["member_no"])
-        for member in members_to_update:
-            TransactionalTrigger.fire_action(
-                TransactionalTriggerData(
-                    key=Events.MEMBERSHIP_ENTRY,
-                    recipient_id_in_base_queryset=member.id,
-                ),
-            )
-            if print_results:
-                print(
-                    f"[task] generate_member_numbers: generated member_no for {member}"
-                )
+        for member in members:
+            if not MemberNumberService.assign_member_number_if_eligible(
+                member, cache=cache, actor=None
+            ):
+                continue
+
+            logger.info(f"assign_member_numbers: generated member_no for {member}")

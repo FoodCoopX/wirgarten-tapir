@@ -12,6 +12,10 @@ __________________ <br /><br />
 
 herzlich willkommen in der {{Allgemein.WirGarten Standort}}. Wir freuen uns sehr, dich ab heute offiziell als Mitglied in der Genossenschaft begrüßen zu dürfen. <br /><br />
 
+Du hast {{Beitritt zur Genossenschaft.Anzahl gezeichnete Geschäftsanteile}} Anteile á {{Beitritt zur Genossenschaft.Wert Geno-Anteil}} Euro gezeichnet. <br /><br />
+
+Dein Geschäftsguthaben beträgt daher {{Beitritt zur Genossenschaft.Gesamtwert der gezeichneten Geschäftsanteile}} Euro. <br /><br />
+
 Mit deiner Mitgliedschaft in der Genossenschaft trägst du aktiv dazu bei, ökologische, regionale, kleinbäuerliche Landwirtschaft zu ermöglichen. Gemeinsam sorgen wir dafür, dass Lebensmittel fair produziert werden – für die Menschen, die sie anbauen, und für die, die sie genießen. <br /><br />
 
 Wenn Du noch eine Frage oder Rückmeldung hast, melde Dich gerne bei uns! <br /><br />
@@ -23,7 +27,11 @@ dein {{Allgemein.Admin Name}} <br />
 
 ___________________<br /><br />
 
-Folgende Trigger sind hier relevant: keine <br /> 
+Folgende Trigger sind hier relevant: <br />
+{{Beitritt zur Genossenschaft.Anzahl gezeichnete Geschäftsanteile}} <br />
+{{Beitritt zur Genossenschaft.Wert Geno-Anteil}} <br />
+{{Beitritt zur Genossenschaft.Gesamtwert der gezeichneten Geschäftsanteile}} <br />
+<br /> 
             </mj-text>
         </mj-column>
     </mj-section>

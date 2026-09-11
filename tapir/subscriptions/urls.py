@@ -58,6 +58,21 @@ urlpatterns = [
         other.SubscriptionDateChangeApiView.as_view(),
         name="dates_change",
     ),
+    path(
+        "api/convert_weeks_to_date_for_subscription_change",
+        other.ConvertWeeksToDateForSubscriptionChangesApiView.as_view(),
+        name="convert_weeks_to_date_for_subscription_change",
+    ),
+    path(
+        "api/subscription_price_override",
+        other.SubscriptionPriceOverrideApiView.as_view(),
+        name="subscription_price_override",
+    ),
+    path(
+        "api/subscription_trial_change",
+        other.SubscriptionTrialChangeApiView.as_view(),
+        name="subscription_trial_change",
+    ),
 ]
 
 router = DefaultRouter()

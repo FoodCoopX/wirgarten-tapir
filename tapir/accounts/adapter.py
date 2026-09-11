@@ -10,9 +10,7 @@ usermodel = get_user_model()
 
 class MySocialAccountAdapter(DefaultSocialAccountAdapter):
     def pre_social_login(self, request, sociallogin: SocialLogin):
-        tapir_user: TapirUser = TapirUser.objects.filter(
-            email=sociallogin.user.email
-        ).first()
+        tapir_user = TapirUser.objects.filter(email=sociallogin.user.email).first()
         if tapir_user is None:
             return
 

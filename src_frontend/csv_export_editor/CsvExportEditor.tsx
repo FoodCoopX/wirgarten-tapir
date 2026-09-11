@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
+import { Card, Col, Dropdown, Row } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
 import {
-  AutomatedExportCycleEnum,
   CsvExportModel,
   ExportSegment,
   GenericExportsApi,
-  LocaleEnum,
+  PdfExportTemplate,
 } from "../api-client";
-import CsvExportTable from "./CsvExportTable.tsx";
-import CsvExportModal from "./CsvExportModal.tsx";
-import TapirButton from "../components/TapirButton.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
-import CsvExportBuildModal from "./CsvExportBuildModal.tsx";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import { ToastData } from "../types/ToastData.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { useApi } from "../hooks/useApi.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { addToast } from "../utils/addToast.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import CsvExportBuildModal from "./CsvExportBuildModal.tsx";
+import CsvExportModal from "./CsvExportModal.tsx";
+import CsvExportTable from "./CsvExportTable.tsx";
 
 interface CsvExportEditorProps {
   csrfToken: string;
@@ -35,12 +35,19 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
   const [exportSelectedForBuild, setExportSelectedForBuild] =
     useState<CsvExportModel>();
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
+  const [templates, setTemplates] = useState<PdfExportTemplate[]>([]);
+  const [creatingFromTemplate, setCreatingFromTemplate] = useState(false);
 
   useEffect(() => {
     setSegmentsLoading(true);
-    api
-      .genericExportsExportSegmentsList()
-      .then(setSegments)
+    Promise.all([
+      api.genericExportsExportSegmentsList(),
+      api.genericExportsCsvExportTemplatesList(),
+    ])
+      .then(([segments, templates]) => {
+        setSegments(segments);
+        setTemplates(templates);
+      })
       .catch((error) =>
         handleRequestError(
           error,
@@ -82,51 +89,36 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
       .finally(() => setExportSelectedForDeletion(undefined));
   }
 
-  function promptNewGenGExport() {
-    setExportSelectedForEdition({
-      exportSegmentId: "members.all",
-      name: "GenG. Mitgliederliste",
-      separator: ",",
-      fileName: "GenG. Mitgliederliste.csv",
-      columnIds: [
-        "member_number",
-        // https://www.gesetze-im-internet.de/geng/__30.html
-        // (2) In die Mitgliederliste ist jedes Mitglied der Genossenschaft mit folgenden Angaben einzutragen:
+  function createExportFromTemplate(templateId: string) {
+    setCreatingFromTemplate(true);
 
-        // 1. Familienname, Vornamen und Anschrift, bei juristischen Personen und Personenhandelsgesellschaften Firma und Anschrift, bei anderen Personenvereinigungen Bezeichnung und Anschrift der Vereinigung oder Familiennamen, Vornamen und Anschriften ihrer Mitglieder,
-        "member_last_name",
-        "member_first_name",
-        "member_full_address",
-        // "member_phone_number",
-        // "member_email_address",
-
-        // 2. Zahl der von ihm übernommenen weiteren Geschäftsanteile,
-        "member_admission_date",
-        "member_share_quantity",
-        // 3. Ausscheiden aus der Genossenschaft.
-        // Der Zeitpunkt, zu dem der Beitritt, eine Veränderung der Zahl weiterer Geschäftsanteile oder das Ausscheiden wirksam wird oder geworden ist, ist anzugeben.
-        "member_share_history",
-        "member_termination_date",
-      ],
-      customColumnNames: [
-        "Mitgliedsnummer",
-        // 1.
-        "Familienname",
-        "Vorname(n)",
-        "Anschrift",
-        // 2.
-        "Beitrittsdatum",
-        "Anzahl Anteile",
-        // 3.
-        "Anteilshistorie",
-        "Austrittsdatum",
-      ],
-      automatedExportCycle: AutomatedExportCycleEnum.Never,
-      automatedExportDay: 1,
-      automatedExportHour: "12:00",
-      locale: LocaleEnum.DeDeUtf8,
-    });
-    setShowCsvExportModal(true);
+    api
+      .genericExportsCreateCsvExportFromTemplatesCreate({
+        templateId: templateId,
+      })
+      .then((result) => {
+        if (result.orderConfirmed) {
+          loadExports();
+          return;
+        }
+        addToast(
+          {
+            id: uuidv4(),
+            variant: "danger",
+            message: result.error!,
+            title: "Fehler",
+          },
+          setToastDatas,
+        );
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Erzeugen des Exports aus einem Template",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setCreatingFromTemplate(false));
   }
 
   return (
@@ -141,23 +133,40 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
                 }
               >
                 <h5 className={"mb-0"}>CSV-Export Editor</h5>
-                <TapirButton
-                  variant={"outline-primary"}
-                  text={"GenG. Mitgliederliste erzeugen"}
-                  icon={"add_circle"}
-                  onClick={promptNewGenGExport}
-                  disabled={segmentsLoading}
-                />
-                <TapirButton
-                  variant={"outline-primary"}
-                  text={"Neuen Export erzeugen"}
-                  icon={"add_circle"}
-                  onClick={() => {
-                    setExportSelectedForEdition(undefined);
-                    setShowCsvExportModal(true);
-                  }}
-                  disabled={segmentsLoading}
-                />
+                <Dropdown>
+                  <Dropdown.Toggle
+                    variant="outline-primary"
+                    id="dropdown-create"
+                    disabled={creatingFromTemplate}
+                  >
+                    {creatingFromTemplate
+                      ? "Wird erzeugt..."
+                      : "Neuen Export erzeugen"}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item
+                      onClick={() => {
+                        setExportSelectedForEdition(undefined);
+                        setShowCsvExportModal(true);
+                      }}
+                      disabled={segmentsLoading}
+                    >
+                      Leer
+                    </Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Header>Templates</Dropdown.Header>
+                    {templates.map((template) => (
+                      <Dropdown.Item
+                        key={template.id}
+                        onClick={() => createExportFromTemplate(template.id)}
+                      >
+                        {template.name}
+                        <br />
+                        <small>{template.description}</small>
+                      </Dropdown.Item>
+                    ))}
+                  </Dropdown.Menu>
+                </Dropdown>
               </div>
             </Card.Header>
             <Card.Body>

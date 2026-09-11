@@ -48,11 +48,11 @@ class TestPickupLocationCapacitiesViewGet(TapirIntegrationTest):
 
         self.assertEqual(response.status_code, 200)
         response_content = response.json()
+        self.assertEqual(pickup_location.id, response_content["pickup_location_id"])
+        self.assertEqual("test location name", response_content["pickup_location_name"])
         self.assertEqual(
-            {
-                "pickup_location_id": pickup_location.id,
-                "pickup_location_name": "test location name",
-                "capacities_by_shares": [
+            sorted(
+                [
                     {
                         "product_type_id": capability_1.product_type.id,
                         "product_type_name": "test product type 1",
@@ -64,6 +64,10 @@ class TestPickupLocationCapacitiesViewGet(TapirIntegrationTest):
                         "capacity": 50,
                     },
                 ],
-            },
-            response_content,
+                key=lambda data: data["product_type_id"],
+            ),
+            sorted(
+                response_content["capacities_by_shares"],
+                key=lambda data: data["product_type_id"],
+            ),
         )

@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import NextStepButton from "../components/NextStepButton.tsx";
 import { Alert, Form } from "react-bootstrap";
-import { formatCurrency } from "../../utils/formatCurrency.ts";
-import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
+import { AssociationMembershipType, PublicProductType } from "../../api-client";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { PublicProductType } from "../../api-client";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import NextStepButton from "../components/NextStepButton.tsx";
+import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
 
 interface Step7SolidarityContributionProps {
   goToNextStep: () => void;
   settings: BestellWizardSettings;
   solidarityContribution: number;
   setSolidarityContribution: (c: number) => void;
-  active: boolean;
+  stepActive: boolean;
   shoppingCart: ShoppingCart;
   productTypesInWaitingList: Set<PublicProductType>;
+  associationMembershipType?: AssociationMembershipType;
+  contractStartDate: Date;
 }
 
 const SUFFIX = "\u00A0€";
@@ -25,10 +28,12 @@ const Step7SolidarityContribution: React.FC<
   goToNextStep,
   settings,
   setSolidarityContribution,
-  active,
+  stepActive,
   solidarityContribution,
   shoppingCart,
   productTypesInWaitingList,
+  associationMembershipType,
+  contractStartDate,
 }) => {
   const [selectedValue, setSelectedValue] = useState<number | "custom">(0);
   const [customValue, setCustomValue] = useState("");
@@ -64,10 +69,10 @@ const Step7SolidarityContribution: React.FC<
   }, [selectedValue, customValue]);
 
   useEffect(() => {
-    if (!active) {
+    if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
-  }, [active]);
+  }, [stepActive]);
 
   function validate() {
     setShowValidation(true);
@@ -91,7 +96,7 @@ const Step7SolidarityContribution: React.FC<
     if (value === "custom") {
       return "Ich möchte einen anderen Betrag zahlen";
     }
-    return formatCurrency(value);
+    return formatCurrency(value) + " pro Monat";
   }
 
   function onSelect(selected: string) {
@@ -103,12 +108,18 @@ const Step7SolidarityContribution: React.FC<
   }
 
   function isValueValid(value: number) {
+    if (value < 0 && !isAtLeastOneProductOrdered(shoppingCart)) {
+      return false;
+    }
+
     if (
       getMonthlyPayment(
         value,
         shoppingCart,
         settings,
         productTypesInWaitingList,
+        associationMembershipType,
+        contractStartDate,
       ) < 0
     ) {
       return false;
@@ -147,7 +158,14 @@ const Step7SolidarityContribution: React.FC<
   return (
     <div className={"d-flex flex-column gap-2 align-items-center"}>
       {settings.strings.step4dText && (
-        <p className={"text-center"}>{settings.strings.step4dText}</p>
+        <p
+          className={"text-center"}
+          dangerouslySetInnerHTML={{
+            __html: isAtLeastOneProductOrdered(shoppingCart)
+              ? settings.strings.step4dText
+              : settings.strings.step4dTextSupportingMember,
+          }}
+        />
       )}
       <div
         className={"d-flex flex-column gap-2 align-items-center"}
@@ -170,20 +188,23 @@ const Step7SolidarityContribution: React.FC<
         {selectedValue === "custom" && (
           <Form.Group className={"d-flex flex-column gap-2 align-items-center"}>
             <Form.Text>
-              Bitte ein Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
+              Bitte eine Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
               beizutragen, oder '-10' um 10€ weniger zu zahlen.
             </Form.Text>
-            <Form.Control
-              id={"custom_solidarity_contribution"}
-              placeholder={"Personalisierter Beitrag"}
-              value={customValue}
-              onChange={(event) => updateCustomValue(event.target.value)}
-              style={{ maxWidth: "300px" }}
-              isValid={showValidation && isValueValid(solidarityContribution)}
-              isInvalid={
-                showValidation && !isValueValid(solidarityContribution)
-              }
-            />
+            <span className={"d-flex gap-2"}>
+              <Form.Control
+                id={"custom_solidarity_contribution"}
+                placeholder={"Personalisierter Beitrag"}
+                value={customValue}
+                onChange={(event) => updateCustomValue(event.target.value)}
+                style={{ maxWidth: "300px" }}
+                isValid={showValidation && isValueValid(solidarityContribution)}
+                isInvalid={
+                  showValidation && !isValueValid(solidarityContribution)
+                }
+              />
+              <span>pro Monat</span>
+            </span>
             {!isValueValid(solidarityContribution) &&
               (settings.solidarityContributionMinimum ?? 0) < 0 && (
                 <Alert variant={"danger"}>
@@ -194,7 +215,7 @@ const Step7SolidarityContribution: React.FC<
           </Form.Group>
         )}
       </div>
-      <NextStepButton onClick={validate} />
+      <NextStepButton onClick={validate} stepActive={stepActive} />
     </div>
   );
 };
