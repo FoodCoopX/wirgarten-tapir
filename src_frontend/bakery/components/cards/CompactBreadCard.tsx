@@ -1,9 +1,9 @@
 import React from "react";
 import { EggFried } from "react-bootstrap-icons";
 import type {
-  BreadList,
   BreadContent,
   BreadLabel,
+  BreadList,
 } from "../../../api-client/models";
 import TapirButton from "../../../components/TapirButton";
 import "../../styles/bakery_styles.css";

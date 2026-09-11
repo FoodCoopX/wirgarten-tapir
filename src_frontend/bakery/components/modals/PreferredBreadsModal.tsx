@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { InfoCircle, StarFill } from "react-bootstrap-icons";
-import { useApi } from "../../../hooks/useApi";
-import TapirButton from "../../../components/TapirButton";
 import { BakeryApi } from "../../../api-client";
-import { handleRequestError } from "../../../utils/handleRequestError";
 import type {
-  BreadList,
-  BreadLabel,
   BreadContent,
+  BreadLabel,
+  BreadList,
 } from "../../../api-client/models";
-import { SingleBreadCard } from "../cards";
+import TapirButton from "../../../components/TapirButton";
+import { useApi } from "../../../hooks/useApi";
+import { handleRequestError } from "../../../utils/handleRequestError";
 import "../../styles/bakery_styles.css";
+import { SingleBreadCard } from "../cards";
 
 interface PreferredBreadsModalProps {
   isOpen: boolean;

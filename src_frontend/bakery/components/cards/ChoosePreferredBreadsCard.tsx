@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Star, InfoCircle, StarFill } from "react-bootstrap-icons";
-import { useApi } from "../../../hooks/useApi";
-import TapirButton from "../../../components/TapirButton";
+import React, { useEffect, useState } from "react";
+import { Star, StarFill } from "react-bootstrap-icons";
 import { BakeryApi } from "../../../api-client";
 import type {
-  BreadList,
   BreadContent,
   BreadLabel,
+  BreadList,
 } from "../../../api-client/models";
-import { PreferredBreadsModal } from "../modals/PreferredBreadsModal";
-import { CompactBreadCard } from "./CompactBreadCard";
+import TapirButton from "../../../components/TapirButton";
+import { useApi } from "../../../hooks/useApi";
 import { handleRequestError } from "../../../utils/handleRequestError";
 import "../../styles/bakery_styles.css";
+import { PreferredBreadsModal } from "../modals/PreferredBreadsModal";
+import { CompactBreadCard } from "./CompactBreadCard";
 
 interface ChoosePreferredBreadsCardProps {
   memberId: string;

@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Modal } from "react-bootstrap";
 import { BakeryApi } from "../../../api-client";
-import { useApi } from "../../../hooks/useApi";
 import type {
-  BreadList,
   BreadContent,
   BreadLabel,
+  BreadList,
 } from "../../../api-client/models";
-import { SingleBreadCard } from "../cards";
-import { Modal } from "react-bootstrap";
+import { useApi } from "../../../hooks/useApi";
 import { handleRequestError } from "../../../utils/handleRequestError";
 import "../../styles/bakery_styles.css";
+import { SingleBreadCard } from "../cards";
 
 interface BreadSelectionModalProps {
   contentsMap: { [breadId: string]: BreadContent[] };

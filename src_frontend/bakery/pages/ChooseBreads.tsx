@@ -1,5 +1,5 @@
 import React from "react";
-import { Basket, Star, ArrowDown } from "react-bootstrap-icons";
+import { ArrowDown } from "react-bootstrap-icons";
 import {
   ChooseBreadsCard,
   ChoosePreferredBreadsCard,

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
-import { getProductIdFromUrl } from "./get_parameter_from_url.ts";
-import ProductModal from "./ProductModal.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
+import { getProductIdFromUrl } from "./get_parameter_from_url.ts";
+import ProductModal from "./ProductModal.tsx";
 
 interface ProductBaseProps {
   csrfToken: string;

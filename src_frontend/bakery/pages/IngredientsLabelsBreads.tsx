@@ -1,5 +1,5 @@
 import React from "react";
-import { BreadsCard, LabelsCard, IngredientsCard } from "../components/cards";
+import { BreadsCard, IngredientsCard, LabelsCard } from "../components/cards";
 
 interface IngredientsLabelsBreadsProps {
   csrfToken: string;

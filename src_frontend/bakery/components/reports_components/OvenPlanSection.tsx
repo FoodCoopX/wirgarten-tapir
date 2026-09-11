@@ -1,6 +1,6 @@
 import React from "react";
-import { SectionToggle } from "./SectionToggle";
 import "../../styles/bakery_styles.css";
+import { SectionToggle } from "./SectionToggle";
 
 interface StoveSessionGrouped {
   session: number;

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { IngredientModal } from "../modals/IngredientModal";
+import React, { useEffect, useState } from "react";
 import { Pencil, Trash } from "react-bootstrap-icons";
-import { BakeryApi, Configuration } from "../../../api-client";
+import { BakeryApi } from "../../../api-client";
+import type { Ingredient, IngredientRequest } from "../../../api-client/models";
 import TapirButton from "../../../components/TapirButton";
 import { useApi } from "../../../hooks/useApi";
 import { handleRequestError } from "../../../utils/handleRequestError";
-import type { Ingredient, IngredientRequest } from "../../../api-client/models";
 import "../../styles/bakery_styles.css";
+import { IngredientModal } from "../modals/IngredientModal";
 
 interface IngredientsCardProps {
   csrfToken: string;

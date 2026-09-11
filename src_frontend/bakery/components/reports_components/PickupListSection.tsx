@@ -1,11 +1,11 @@
 import React from "react";
-import { SectionToggle } from "./SectionToggle";
-import { ActionButtons } from "./ActionButtons";
 import type {
   PickupListForLocation,
   PickupLocation,
 } from "../../../api-client/models";
 import "../../styles/bakery_styles.css";
+import { ActionButtons } from "./ActionButtons";
+import { SectionToggle } from "./SectionToggle";
 
 interface PickupListSectionProps {
   isOpen: boolean;

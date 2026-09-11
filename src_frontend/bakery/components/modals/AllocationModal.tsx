@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "react-bootstrap";
-import { InfoCircle, ExclamationTriangle } from "react-bootstrap-icons";
+import { ExclamationTriangle, InfoCircle } from "react-bootstrap-icons";
 import { BakeryApi } from "../../../api-client";
-import { useApi } from "../../../hooks/useApi";
-import { handleRequestError } from "../../../utils/handleRequestError";
-import TapirButton from "../../../components/TapirButton";
 import type {
   BreadList,
   PickupLocationDeliveryDay,
 } from "../../../api-client/models";
-import { AllocationTable } from "./AllocationTable";
-import type { AllocationData } from "./AllocationTable";
+import TapirButton from "../../../components/TapirButton";
+import { useApi } from "../../../hooks/useApi";
+import { handleRequestError } from "../../../utils/handleRequestError";
 import "../../styles/bakery_styles.css";
+import type { AllocationData } from "./AllocationTable";
+import { AllocationTable } from "./AllocationTable";
 
 interface AllocationModalProps {
   isOpen: boolean;

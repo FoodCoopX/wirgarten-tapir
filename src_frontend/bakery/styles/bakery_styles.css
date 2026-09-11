@@ -4,26 +4,26 @@
   --bakery-primary-dark: #9c5e07ce;
   --bakery-primary-darker: #8B4513;
   --bakery-brown-medium: #8B6F47;
-  
+
   /* Bakery backgrounds */
   --bakery-bg-cream: #F5E6D3;
   --bakery-bg-light: #FBF8F3;
   --bakery-bg-lighter: #FAF8F5;
   --bakery-bg-chart: #f0e6d9;
-  
+
   /* Ingredients/Labels greens */
   --bakery-ingredients-green: #5D7A4A;
   --bakery-ingredients-bg: #F0F4E8;
   --bakery-ingredients-body: #F9FBF7;
   --bakery-labels-bg: #E8F5E9;
   --bakery-labels-body: #F1F8F4;
-  
+
   /* Success colors */
   --bakery-success: #28a745;
   --bakery-success-dark: #2E7D32;
   --bakery-bio-green: #81C784;
   --bakery-checked-row: #d4edda;
-  
+
   /* Other colors */
   --bakery-gold: #FFD700;
   --bakery-muted: #6c757d;

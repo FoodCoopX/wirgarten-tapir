@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { BakeryApi } from "../../../api-client";
-import { useApi } from "../../../hooks/useApi";
-import { handleRequestError } from "../../../utils/handleRequestError";
 import type { BreadLabel, BreadList } from "../../../api-client/models";
 import TapirButton from "../../../components/TapirButton";
+import { useApi } from "../../../hooks/useApi";
+import { handleRequestError } from "../../../utils/handleRequestError";
 
 interface BreadLabelsModalProps {
   bread: BreadList;

@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
-import { BreadModal } from "../modals/BreadModal";
-import { BreadContentsModal } from "../modals/BreadContentsModal";
-import { LabelsModal } from "../modals/LabelsModal";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  Pencil,
-  ListUl,
-  Tag,
-  Search,
-  XLg,
   Camera,
   EggFried,
+  ListUl,
+  Pencil,
+  Search,
+  Tag,
+  XLg,
 } from "react-bootstrap-icons";
 import { BakeryApi } from "../../../api-client";
+import type { BreadList, BreadListRequest } from "../../../api-client/models";
 import TapirButton from "../../../components/TapirButton";
 import { useApi } from "../../../hooks/useApi";
 import { handleRequestError } from "../../../utils/handleRequestError";
-import type { BreadList, BreadListRequest } from "../../../api-client/models";
 import "../../styles/bakery_styles.css";
+import { BreadContentsModal } from "../modals/BreadContentsModal";
+import { BreadModal } from "../modals/BreadModal";
+import { LabelsModal } from "../modals/LabelsModal";
 
 interface BreadsCardProps {
   csrfToken: string;

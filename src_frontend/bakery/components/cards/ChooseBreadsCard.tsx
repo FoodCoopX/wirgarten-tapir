@@ -1,27 +1,26 @@
-import React, { useState, useEffect, useRef } from "react";
-import { BakeryApi, ResponseError } from "../../../api-client";
+import dayjs from "dayjs";
+import isoWeek from "dayjs/plugin/isoWeek";
+import React, { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useApi } from "../../../hooks/useApi";
-import { handleRequestError } from "../../../utils/handleRequestError";
+import { BakeryApi, ResponseError } from "../../../api-client";
 import type {
-  BreadList,
   BreadContent,
   BreadDelivery,
   BreadLabel,
+  BreadList,
 } from "../../../api-client/models";
-import { YearWeekSelectorCard } from "./YearWeekSelectorCard";
-import { BreadSelectionModal } from "../modals/BreadSelectionModal";
-import PickupLocationChangeModal from "../../../member_profile/deliveries_and_jokers/PickupLocationChangeModal";
-import { CompactBreadCard } from "./CompactBreadCard";
-import { CompactPickupLocationCard } from "./CompactPickupLocationCard";
 import TapirButton from "../../../components/TapirButton";
-import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek";
-import "../../styles/bakery_styles.css";
-import { currentIsoWeek, currentIsoYear } from "../../utils/weekdays";
 import TapirToastContainer from "../../../components/TapirToastContainer";
+import { useApi } from "../../../hooks/useApi";
+import PickupLocationChangeModal from "../../../member_profile/deliveries_and_jokers/PickupLocationChangeModal";
 import { ToastData } from "../../../types/ToastData";
 import { addToast } from "../../../utils/addToast";
+import { handleRequestError } from "../../../utils/handleRequestError";
+import "../../styles/bakery_styles.css";
+import { currentIsoWeek, currentIsoYear } from "../../utils/weekdays";
+import { BreadSelectionModal } from "../modals/BreadSelectionModal";
+import { CompactBreadCard } from "./CompactBreadCard";
+import { YearWeekSelectorCard } from "./YearWeekSelectorCard";
 dayjs.extend(isoWeek);
 
 interface ChooseBreadsCardProps {

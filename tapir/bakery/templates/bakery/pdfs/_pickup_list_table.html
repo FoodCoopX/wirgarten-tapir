@@ -1,7 +1,7 @@
 {% load bakery_pdf_tags %}
 
 <div class="pickup-list-block">
-  
+
 
   {% if entries %}
     <table>
@@ -11,7 +11,7 @@
         <col style="width: 50px;">
         <col style="width: 50px;">
         {% for bread_name in bread_names %}
-        <col style="width: 110px;">
+          <col style="width: 110px;">
         {% endfor %}
       </colgroup>
       <thead>
@@ -21,25 +21,25 @@
           <th style="text-align: center;">Brote</th>
           <th style="text-align: center;">✓</th>
           {% for bread_name in bread_names %}
-          <th class="bread-col-header">{{ bread_name }}</th>
+            <th class="bread-col-header">{{ bread_name }}</th>
           {% endfor %}
         </tr>
       </thead>
       <tbody>
         {% for entry in entries %}
-        <tr>
-          <td class="text-center row-num">{{ forloop.counter }}</td>
-          <td class="member-name">{{ entry.member_name }}</td>
-          <td class="text-end brown">{{ entry.total }}</td>
-          <td class="text-center"><span class="checkbox"></span></td>
-          {% for bread_name in bread_names %}
-          {% with count=entry.bread_counts|get_item:bread_name preferred=entry.bread_preferred|get_item:bread_name %}
-          <td class="bread-col-data {% if preferred %}preferred{% elif not count %}grey{% endif %}">
-            {% if count %}{{ count }}{% elif preferred %}{% else %}—{% endif %}
-          </td>
-          {% endwith %}
-          {% endfor %}
-        </tr>
+          <tr>
+            <td class="text-center row-num">{{ forloop.counter }}</td>
+            <td class="member-name">{{ entry.member_name }}</td>
+            <td class="text-end brown">{{ entry.total }}</td>
+            <td class="text-center"><span class="checkbox"></span></td>
+            {% for bread_name in bread_names %}
+              {% with count=entry.bread_counts|get_item:bread_name preferred=entry.bread_preferred|get_item:bread_name %}
+                <td class="bread-col-data {% if preferred %}preferred{% elif not count %}grey{% endif %}">
+                  {% if count %}{{ count }}{% elif preferred %}{% else %}—{% endif %}
+                </td>
+              {% endwith %}
+            {% endfor %}
+          </tr>
         {% endfor %}
       </tbody>
       <tfoot>
@@ -49,9 +49,9 @@
           <td class="text-end">{{ grand_total }}</td>
           <td class="text-center counter"></td>
           {% for bread_name in bread_names %}
-          {% with total=bread_totals|get_item:bread_name %}
-          <td class="bread-col-data">{% if total %}{{ total }}{% endif %}</td>
-          {% endwith %}
+            {% with total=bread_totals|get_item:bread_name %}
+              <td class="bread-col-data">{% if total %}{{ total }}{% endif %}</td>
+            {% endwith %}
           {% endfor %}
         </tr>
       </tfoot>

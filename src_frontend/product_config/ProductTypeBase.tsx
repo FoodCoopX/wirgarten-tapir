@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { ToastData } from "../types/ToastData.ts";
 import {
   getPeriodIdFromUrl,
   getProductTypeIdFromUrl,
 } from "./get_parameter_from_url.ts";
-import TapirToastContainer from "../components/TapirToastContainer.tsx";
-import { ToastData } from "../types/ToastData.ts";
-import ProductTypeEditModal from "./ProductTypeEditModal.tsx";
 import ProductTypeCreateModal from "./ProductTypeCreateModal.tsx";
+import ProductTypeEditModal from "./ProductTypeEditModal.tsx";
 
 interface ProductTypeBaseProps {
   csrfToken: string;

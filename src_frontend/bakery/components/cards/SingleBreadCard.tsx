@@ -1,9 +1,9 @@
 import React from "react";
-import { EggFried, CheckCircleFill, StarFill } from "react-bootstrap-icons";
+import { CheckCircleFill, EggFried, StarFill } from "react-bootstrap-icons";
 import type {
-  BreadList,
   BreadContent,
   BreadLabel,
+  BreadList,
 } from "../../../api-client/models";
 import "../../styles/bakery_styles.css";
 

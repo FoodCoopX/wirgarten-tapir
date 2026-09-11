@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { Trash } from "react-bootstrap-icons";
 import { BakeryApi } from "../../../api-client";
-import TapirButton from "../../../components/TapirButton";
-import { useApi } from "../../../hooks/useApi";
-import { handleRequestError } from "../../../utils/handleRequestError";
 import type {
-  Ingredient,
   BreadContent,
   BreadContentRequest,
   BreadList,
+  Ingredient,
 } from "../../../api-client/models";
+import TapirButton from "../../../components/TapirButton";
+import { useApi } from "../../../hooks/useApi";
+import { handleRequestError } from "../../../utils/handleRequestError";
 import "../../styles/bakery_styles.css";
 
 interface BreadContentsModalProps {

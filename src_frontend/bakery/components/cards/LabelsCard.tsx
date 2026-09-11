@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { BakeryApi } from "../../../api-client";
+import React, { useEffect, useState } from "react";
 import {
-  Plus,
-  Pencil,
-  Trash,
   Check,
-  X,
-  ToggleOn,
+  Pencil,
+  Plus,
   ToggleOff,
+  ToggleOn,
+  Trash,
+  X,
 } from "react-bootstrap-icons";
+import { BakeryApi } from "../../../api-client";
+import type { BreadLabel, BreadLabelRequest } from "../../../api-client/models";
 import { useApi } from "../../../hooks/useApi";
 import { handleRequestError } from "../../../utils/handleRequestError";
-import type { BreadLabel, BreadLabelRequest } from "../../../api-client/models";
 import "../../styles/bakery_styles.css";
 
 interface LabelsCardProps {

@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import {
-  Lightning,
   CheckCircleFill,
   ExclamationTriangleFill,
   InfoCircleFill,
+  Lightning,
   XCircleFill,
 } from "react-bootstrap-icons";
 import { BakeryApi, ResponseError } from "../../../api-client";
-import { useApi } from "../../../hooks/useApi";
 import type {
-  SolverPreviewResponse,
   SolverPreviewDetailResponse,
+  SolverPreviewResponse,
 } from "../../../api-client/models";
+import { useApi } from "../../../hooks/useApi";
 
 interface SolverDiagnostic {
   level: "info" | "warning" | "error";

@@ -1,7 +1,7 @@
 import React from "react";
-import { SectionToggle } from "./SectionToggle";
-import { ActionButtons } from "./ActionButtons";
 import "../../styles/bakery_styles.css";
+import { ActionButtons } from "./ActionButtons";
+import { SectionToggle } from "./SectionToggle";
 
 interface LocationTotals {
   totalBaked: number;

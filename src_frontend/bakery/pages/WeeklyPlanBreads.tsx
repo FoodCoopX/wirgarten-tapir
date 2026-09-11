@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { YearWeekSelectorCard } from "../components/cards";
-import { AllocationModal, DailySettingsModal } from "../components/modals";
+import React, { useEffect, useRef, useState } from "react";
 import { InfoCircle } from "react-bootstrap-icons";
 import { BakeryApi } from "../../api-client";
+import type { BreadList } from "../../api-client/models";
 import TapirButton from "../../components/TapirButton";
 import { useApi } from "../../hooks/useApi";
 import { handleRequestError } from "../../utils/handleRequestError";
-import type { BreadList } from "../../api-client/models";
+import { YearWeekSelectorCard } from "../components/cards";
+import { AllocationModal, DailySettingsModal } from "../components/modals";
 import "../styles/bakery_styles.css";
 import {
   DAY_LABELS,

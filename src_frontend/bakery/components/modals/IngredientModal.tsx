@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Modal } from "react-bootstrap";
 import type { Ingredient, IngredientRequest } from "../../../api-client/models";
 import TapirButton from "../../../components/TapirButton";
-import { Modal } from "react-bootstrap";
 import "../../styles/bakery_styles.css";
 
 interface IngredientModalProps {

@@ -2,35 +2,35 @@
 
 {% block extra_styles %}
   @page {
-    size: A4 landscape;
+  size: A4 landscape;
   }
 
   table {
-    table-layout: fixed;
-    width: 100%;
+  table-layout: fixed;
+  width: 100%;
   }
 
   .bread-col-header {
-    white-space: nowrap;
-    font-size: 8pt;
-    text-align: center;
-    overflow: visible;
+  white-space: nowrap;
+  font-size: 8pt;
+  text-align: center;
+  overflow: visible;
   }
 
   .bread-col-data {
-    text-align: center;
+  text-align: center;
   }
 {% endblock %}
 
 {% block header %}
-<div class="report-header">
-  <h1>{{ pickup_location_name }}</h1>
-  <h1>Abhol-Liste - KW {{ week }}</h1>
-  <h2>{{ day_label }}, {{ date_string }}</h2>
-  
-</div>
+  <div class="report-header">
+    <h1>{{ pickup_location_name }}</h1>
+    <h1>Abhol-Liste - KW {{ week }}</h1>
+    <h2>{{ day_label }}, {{ date_string }}</h2>
+
+  </div>
 {% endblock %}
 
 {% block content %}
-{% include "bakery/pdfs/_pickup_list_table.html" %}
+  {% include "bakery/pdfs/_pickup_list_table.html" %}
 {% endblock %}

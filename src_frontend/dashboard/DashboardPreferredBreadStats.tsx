@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Card, Spinner } from "react-bootstrap";
-import { BakeryApi } from "../api-client";
-import { useApi } from "../hooks/useApi";
-import { PreferredBreadStatisticsCard } from "../bakery/components/cards/PreferredBreadStatisticsCard";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
+import React, { useEffect, useState } from "react";
+import { Card, Spinner } from "react-bootstrap";
+import { BakeryApi } from "../api-client";
+import { PreferredBreadStatisticsCard } from "../bakery/components/cards/PreferredBreadStatisticsCard";
+import { useApi } from "../hooks/useApi";
 
 dayjs.extend(isoWeek);
 
