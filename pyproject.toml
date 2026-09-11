@@ -37,6 +37,15 @@ djhtml = "^3.0.11"
 distinctipy = { extras = ["extras"], version = "^1.3.4" }
 requests = "^2.34.2"
 mailmanclient = "^3.3.5"
+ortools = { version = "^9.15.6755", optional = true }
+
+[tool.poetry.extras]
+# The CP-SAT solver behind the bakery baking plan, and the only reason numpy,
+# pandas, protobuf, absl-py and immutabledict are installed at all - together
+# about 210 MB of the virtualenv. Every ortools import is function-local, so an
+# install without this extra boots and serves everything except the two solver
+# endpoints, which answer 503.
+bakery = ["ortools"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.6.1"

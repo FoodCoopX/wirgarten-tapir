@@ -28,6 +28,11 @@ def get_monday(date: datetime.date):
     return date - datetime.timedelta(days=date.weekday())
 
 
+def week_to_monday(year: int, week: int) -> datetime.date:
+    """Convert ISO year + week to the Monday of that week."""
+    return datetime.date.fromisocalendar(year, week, 1)
+
+
 def get_next_sunday(date: datetime.date):
     return get_monday(date) + datetime.timedelta(days=6)
 
@@ -63,6 +68,21 @@ def get_last_day_of_month(date: datetime.date) -> datetime.date:
 
 def is_running_tests():
     return "PYTEST_CURRENT_TEST" in os.environ
+
+
+def get_serializer_cache(serializer) -> dict:
+    """
+    The request-scoped cache dict a serializer should pass to TapirCache.
+
+    Views that already build a cache put it in the serializer context. Without
+    one, fall back to a cache per serializer instance, which is still a single
+    cache for a whole many=True render because ListSerializer reuses one child
+    instance for every item.
+    """
+    cache = serializer.context.get("cache")
+    if cache is None:
+        cache = serializer.__dict__.setdefault("_tapir_cache", {})
+    return cache
 
 
 def get_any_element_from_set(s: set):

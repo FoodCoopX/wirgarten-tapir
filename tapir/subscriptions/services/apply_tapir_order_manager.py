@@ -2,6 +2,7 @@ import datetime
 
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import AssociationMembership
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -12,8 +13,8 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
-    ProductType,
     Member,
+    ProductType,
     Subscription,
     SubscriptionChangeLogEntry,
     CoopShareTransaction,
@@ -127,6 +128,12 @@ class ApplyTapirOrderManager:
         TapirCacheManager.clear_category(
             cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
+
+        # bulk_create above does not fire post_save, so the bakery receiver
+        # never sees these subscriptions. Every path that bulk-creates
+        # subscriptions has to say so itself.
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
+
         if len(new_subscriptions) > 0:
             OnboardingTrigger.on_subscription_updated(new_subscriptions[0])
 

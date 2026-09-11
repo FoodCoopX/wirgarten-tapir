@@ -33,10 +33,10 @@ from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
     get_active_product_types,
     get_active_subscriptions,
     get_available_product_types,
-    get_active_and_future_subscriptions,
     get_next_growing_period,
 )
 from tapir.wirgarten.utils import (
@@ -67,6 +67,19 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object, today, include_future_subscriptions=True, cache=cache
         )
+        # The link goes to ChooseBreadsView, which requires Accounts.MANAGE or
+        # the member themselves, while this page requires only Accounts.VIEW.
+        context["bakery_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_A_ENABLED, cache=cache
+        ) and (
+            self.object.pk == self.request.user.pk
+            or self.request.user.has_perm(Permission.Accounts.MANAGE)
+        )
+        # ANDed with the feature flag: the pseudonym is a bakery concept, so a
+        # farm without a bakery must not get the field.
+        context["bakery_pseudonym_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_A_ENABLED, cache=cache
+        ) and get_parameter_value(ParameterKeys.BAKERY_PSEUDONYM_ENABLED, cache=cache)
         next_growing_period = get_next_growing_period()
         for subscriptions in context["subscriptions"].values():
             for subscription in subscriptions:
@@ -182,7 +195,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
         if future_rhythm is not None:
             context["payment_rhythm"] = (
-                f"Aktuell: {context["payment_rhythm"]}. ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
+                f"Aktuell: {context['payment_rhythm']}. ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
             )
 
         context["show_mail_category_content"] = MailCategory.objects.exists()

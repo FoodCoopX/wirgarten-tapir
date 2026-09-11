@@ -5,10 +5,25 @@ from django.core.management import call_command
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.associations.models import AssociationMembership, AssociationMembershipType
+from tapir.bakery.models import (
+    AvailableBreadsForDeliveryDay,
+    Bread,
+    BreadCapacityPickupLocation,
+    BreadContent,
+    BreadDelivery,
+    BreadLabel,
+    BreadSpecificsPerDeliveryDay,
+    BreadsPerPickupLocationPerWeek,
+    Ingredient,
+    PreferenceSatisfactionLogging,
+    PreferredBread,
+    StoveSession,
+)
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.log.models import LogEntry
 from tapir.payments.models import MemberCredit
-from tapir.utils.config import Organization
+from tapir.utils.config import BAKERY_BASE_ORGANIZATION, Organization
+from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
 from tapir.utils.services.test_data_generation.configuration_generator import (
     ConfigurationGenerator,
 )
@@ -55,6 +70,22 @@ class DataGenerator:
         print("Clearing data...")
 
         model_classes = [
+            # Bakery first, and in this order: BreadContent holds the only
+            # PROTECT reference to Ingredient and BreadDelivery the only one to
+            # Bread, so both have to go before what they point at, or the
+            # delete raises ProtectedError.
+            BreadDelivery,
+            BreadsPerPickupLocationPerWeek,
+            BreadCapacityPickupLocation,
+            AvailableBreadsForDeliveryDay,
+            BreadSpecificsPerDeliveryDay,
+            StoveSession,
+            PreferenceSatisfactionLogging,
+            PreferredBread,
+            BreadContent,
+            Bread,
+            Ingredient,
+            BreadLabel,
             CoopShareTransaction,
             Payment,
             WaitingListEntry,
@@ -87,8 +118,14 @@ class DataGenerator:
         print("Done")
 
     @classmethod
-    def generate_all(cls, generate_test_data_for: Organization):
+    def generate_all(
+        cls, generate_test_data_for: Organization, generate_bakery_data: bool = False
+    ):
         factory.random.reseed_random("tapir")
+
+        if generate_test_data_for is Organization.BAKERY:
+            generate_bakery_data = True
+            generate_test_data_for = BAKERY_BASE_ORGANIZATION
 
         print(f"Generating test data for {generate_test_data_for}...")
         cls.generate_growing_periods(generate_test_data_for)
@@ -98,7 +135,16 @@ class DataGenerator:
         PickupLocationGenerator.generate_pickup_locations(generate_test_data_for)
         print("Updating configuration...")
         ConfigurationGenerator.update_settings_for_organization(generate_test_data_for)
+        if generate_bakery_data:
+            # Before the members: the bread share has to exist for them to
+            # subscribe to it, and the deliveries are written by the receiver
+            # on Subscription, which only fires once the bakery is switched on.
+            BakeryGenerator.generate_masterdata()
         UserGenerator.generate_users_and_subscriptions(generate_test_data_for)
+        if generate_bakery_data:
+            # After the members, because it needs their deliveries - and the
+            # capacities it writes are what lets a bread be put on one.
+            BakeryGenerator.generate_week_data()
         print("Creating jokers...")
         JokerGenerator.generate_jokers()
         print("Creating waiting list...")

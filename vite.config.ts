@@ -85,6 +85,23 @@ export default defineConfig(() => {
             INPUT_DIR,
             "mailing_lists/mailing_lists_entry.tsx",
           ),
+          // Bakery entries - one per template under
+          // tapir/bakery/templates/bakery/, and nothing else: rollup aborts
+          // the whole build on an entry it cannot resolve, so a stale name
+          // here takes down every other bundle with it.
+          choose_breads: join(
+            INPUT_DIR,
+            "/bakery/entries/choose_breads_entry.tsx",
+          ),
+          reports: join(INPUT_DIR, "/bakery/entries/reports_entry.tsx"),
+          ingredients_labels_breads: join(
+            INPUT_DIR,
+            "/bakery/entries/ingredients_labels_breads_entry.tsx",
+          ),
+          weekly_plan_breads: join(
+            INPUT_DIR,
+            "/bakery/entries/weekly_plan_breads_entry.tsx",
+          ),
         },
       },
     },

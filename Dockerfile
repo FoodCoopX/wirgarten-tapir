@@ -18,7 +18,11 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
 COPY ./pyproject.toml /app/pyproject.toml
 COPY ./poetry.lock /app/poetry.lock
-RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry install
+# --extras bakery pulls in ortools and its ~210 MB subtree (numpy, pandas,
+# protobuf, absl-py, immutabledict), which only the bakery solver needs. Drop
+# the flag to build an image without it: everything still boots and serves, and
+# only the two solver endpoints answer 503.
+RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry install --extras bakery
 
 COPY tapir /app/tapir
 COPY manage.py /app/manage.py

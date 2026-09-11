@@ -28,7 +28,7 @@ def create_field(param: TapirParameter, cache: dict):
         if param.description != "":
             help_text += "<br />"
         help_text += (
-            f"<small><strong>Variablen:</strong> {", ".join(vars_sorted)}</small>"
+            f"<small><strong>Variablen:</strong> {', '.join(vars_sorted)}</small>"
         )
 
     help_text = tokenize_parameter(help_text, cache=cache)

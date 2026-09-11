@@ -3,7 +3,7 @@ import datetime
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from tapir.deliveries.models import Joker, DeliveryDonation
+from tapir.deliveries.models import DeliveryDonation, Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.pickup_locations.serializers import (
     PickupLocationSerializer,

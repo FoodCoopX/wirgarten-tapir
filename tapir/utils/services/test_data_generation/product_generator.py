@@ -458,17 +458,21 @@ class ProductGenerator:
 
     @classmethod
     def generate_product_capacities(cls):
-        capacities = []
-        for growing_period in GrowingPeriod.objects.all():
-            for product_type in ProductType.objects.all():
-                capacities.append(
-                    ProductCapacity(
-                        product_type=product_type,
-                        period=growing_period,
-                        capacity=1000,
-                    )
+        for product_type in ProductType.objects.all():
+            cls.generate_product_capacities_for_product_type(product_type)
+
+    @classmethod
+    def generate_product_capacities_for_product_type(cls, product_type: ProductType):
+        ProductCapacity.objects.bulk_create(
+            [
+                ProductCapacity(
+                    product_type=product_type,
+                    period=growing_period,
+                    capacity=1000,
                 )
-        ProductCapacity.objects.bulk_create(capacities)
+                for growing_period in GrowingPeriod.objects.all()
+            ]
+        )
 
     @classmethod
     def generate_product_data(cls, organization: Organization):

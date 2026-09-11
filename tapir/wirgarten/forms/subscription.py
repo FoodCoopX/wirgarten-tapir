@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from datetime import date
-from math import floor, ceil
+from math import ceil, floor
+from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -12,6 +13,9 @@ from django.utils.translation import gettext_lazy as _
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
+)
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
@@ -47,13 +51,14 @@ from tapir.wirgarten.service.delivery import (
 )
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.member import (
-    change_pickup_location,
     send_product_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
+    get_next_growing_period,
     get_product_price,
     get_next_growing_period,
     get_active_and_future_subscriptions,
@@ -61,6 +66,17 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
+
+
+def _as_date(value):
+    """
+    pickup_location_change_date is a ChoiceField, so its cleaned value is the
+    string form of the date, not a date. MemberPickupLocationSetter does date
+    arithmetic with it, and a string has no .weekday().
+    """
+    if isinstance(value, str):
+        return date.fromisoformat(value)
+    return value
 
 
 class BaseProductForm(forms.Form):
@@ -71,6 +87,7 @@ class BaseProductForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.member_id = kwargs.pop("member_id", None)
         self.is_admin = kwargs.pop("is_admin", False)
+        self.actor = kwargs.pop("actor", None)
         self.require_at_least_one = kwargs.pop("enable_validation", False)
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         initial = kwargs.get("initial", {})
@@ -305,10 +322,9 @@ class BaseProductForm(forms.Form):
             harvest_share_strings.append(
                 ",".join(
                     map(
-                        lambda p: BASE_PRODUCT_FIELD_PREFIX
-                        + p.name
-                        + ":"
-                        + str(prices[p.id]),
+                        lambda p: (
+                            BASE_PRODUCT_FIELD_PREFIX + p.name + ":" + str(prices[p.id])
+                        ),
                         harvest_share_products,
                     )
                 )
@@ -397,7 +413,18 @@ class BaseProductForm(forms.Form):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         if new_pickup_location:
             change_date = self.cleaned_data.get("pickup_location_change_date")
-            change_pickup_location(member_id, new_pickup_location, change_date)
+            self._change_pickup_location(member, new_pickup_location, change_date)
+
+    def _change_pickup_location(self, member, new_pickup_location, change_date):
+        # Through the service, so the change is logged and the member is
+        # notified.
+        MemberPickupLocationSetter.link_member_to_pickup_location(
+            pickup_location_id=new_pickup_location.id,
+            member=member,
+            valid_from=_as_date(change_date),
+            actor=self.actor or member,
+            cache=self.cache,
+        )
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():
@@ -522,6 +549,7 @@ class AdditionalProductForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.is_admin = kwargs.pop("is_admin", False)
         self.member_id = kwargs.pop("member_id", None)
+        self.actor = kwargs.pop("actor", None)
         initial = kwargs.get("initial", {})
         self.cache = kwargs.pop("cache", {})
         product_type_id = kwargs.pop(
@@ -801,7 +829,26 @@ class AdditionalProductForm(forms.Form):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")
         if new_pickup_location:
-            change_pickup_location(member_id, new_pickup_location, change_date)
+            member = Member.objects.get(id=member_id)
+            MemberPickupLocationSetter.link_member_to_pickup_location(
+                pickup_location_id=new_pickup_location.id,
+                member=member,
+                valid_from=_as_date(change_date),
+                actor=self.actor or member,
+                cache=self.cache,
+            )
+
+        # bulk_create above does not fire post_save, so the bakery receiver
+        # never sees these subscriptions. Every path that bulk-creates
+        # subscriptions has to say so itself. Imported here rather than at
+        # module level: this module is loaded on essentially every
+        # member-facing request and should not depend on the bakery app at
+        # import time.
+        from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
+
+        BreadDeliveryService.ensure_bread_deliveries_for_member(
+            Member.objects.get(id=member_id), cache=self.cache
+        )
 
         if send_mail:
             member = Member.objects.get(id=member_id)

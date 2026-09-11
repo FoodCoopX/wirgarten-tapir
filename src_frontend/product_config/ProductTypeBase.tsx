@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { ToastData } from "../types/ToastData.ts";
 import {
   getPeriodIdFromUrl,
   getProductTypeIdFromUrl,
 } from "./get_parameter_from_url.ts";
-import TapirToastContainer from "../components/TapirToastContainer.tsx";
-import { ToastData } from "../types/ToastData.ts";
-import ProductTypeEditModal from "./ProductTypeEditModal.tsx";
 import ProductTypeCreateModal from "./ProductTypeCreateModal.tsx";
+import ProductTypeEditModal from "./ProductTypeEditModal.tsx";
 
 interface ProductTypeBaseProps {
   csrfToken: string;
@@ -21,7 +21,7 @@ const ProductTypeBase: React.FC<ProductTypeBaseProps> = ({ csrfToken }) => {
   function onEditClick() {
     if (!getProductTypeIdFromUrl()) {
       alert(
-        "Du musst erst das Produkt-Typ das du editieren möchtest auswählen.",
+        "Du musst erst den Produkt-Typ, den du editieren möchtest, auswählen.",
       );
       return;
     }

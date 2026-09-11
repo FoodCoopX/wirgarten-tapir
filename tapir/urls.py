@@ -37,6 +37,7 @@ urlpatterns = [
         name="account_login",
     ),
     path("accounts/", include("allauth.urls")),
+    path("bakery/", include("tapir.bakery.urls")),
     path("associations/", include("tapir.associations.urls")),
     path("bestell_wizard/", include("tapir.bestell_wizard.urls")),
     path("config/", include("tapir.configuration.urls")),
@@ -64,3 +65,6 @@ urlpatterns = [
 
 if settings.ENABLE_SILK_PROFILING:
     urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

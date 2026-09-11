@@ -79,6 +79,12 @@ export interface ProductType {
    */
   isAffectedByJokers?: boolean;
   /**
+   *
+   * @type {boolean}
+   * @memberof ProductType
+   */
+  isBread?: boolean;
+  /**
    * Bestimmte Produkte wie Vereinsmitgliedschaften laufen permanent bis sie gekündigt werden und haben nicht zwangsläufig ein End-Datum. Solche Produkte sind nicht mit Vertragsperiode verbunden.
    * @type {boolean}
    * @memberof ProductType
@@ -175,6 +181,7 @@ export function ProductTypeFromJSONTyped(
       json["is_affected_by_jokers"] == null
         ? undefined
         : json["is_affected_by_jokers"],
+    isBread: json["is_bread"] == null ? undefined : json["is_bread"],
     subscriptionsHaveEndDates:
       json["subscriptions_have_end_dates"] == null
         ? undefined
@@ -234,6 +241,7 @@ export function ProductTypeToJSONTyped(
     icon_link: value["iconLink"],
     single_subscription_only: value["singleSubscriptionOnly"],
     is_affected_by_jokers: value["isAffectedByJokers"],
+    is_bread: value["isBread"],
     subscriptions_have_end_dates: value["subscriptionsHaveEndDates"],
     must_be_subscribed_to: value["mustBeSubscribedTo"],
     description_bestellwizard_short: value["descriptionBestellwizardShort"],

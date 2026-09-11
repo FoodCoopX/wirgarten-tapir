@@ -47,6 +47,9 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
             SubscriptionUpdateViewValidator.validate_everything(**params)
 
     @patch.object(
+        SubscriptionUpdateViewValidator, "may_member_reduce_size", autospec=True
+    )
+    @patch.object(
         SubscriptionUpdateViewValidator,
         "validate_optional_product_can_be_ordered_without_required_product_subscription",
         autospec=True,
@@ -74,7 +77,9 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
         mock_validate_cannot_reduce_size: Mock,
         mock_validate_at_least_one_change: Mock,
         mock_validate_additional_product_can_be_ordered_without_base_product_subscription: Mock,
+        mock_may_member_reduce_size: Mock,
     ):
+        mock_may_member_reduce_size.return_value = False
         mock_pickup_location = Mock()
         mock_validate_pickup_location.return_value = mock_pickup_location
         params = self.build_default_params()
@@ -101,7 +106,9 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
             member=self.mock_member,
         )
         mock_validate_cannot_reduce_size.assert_called_once_with(
-            logged_in_user_is_admin=False,
+            # Being an admin is only one of the reasons a member may reduce;
+            # the bakery parameter is the other, so the flag is derived here.
+            member_may_reduce_size=False,
             contract_start_date=self.mock_contract_start_date,
             member=self.mock_member,
             order_for_a_single_product_type=self.mock_order,

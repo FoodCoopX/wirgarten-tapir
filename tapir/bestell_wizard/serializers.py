@@ -24,6 +24,8 @@ class PersonalDataSerializer(serializers.Serializer):
     country = serializers.CharField()
     account_owner = serializers.CharField(allow_blank=True)
     iban = serializers.CharField(allow_blank=True)
+    # No pseudonym: it is set from the member profile after signup, and the
+    # member can change it at any time.
 
 
 class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):

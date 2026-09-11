@@ -57,6 +57,23 @@ You're of course free to check the other issues and ask questions about them, bu
 if you're not involved in the daily Tapir-development life. We don't have an internal tool to track tasks yet, so we use
 the GitHub issues as our todo-list. Hopefully the labels will be enough to let you sort through the mess.
 
+### Bäckerei (bakery)
+
+The bakery is off by default. To get a local instance with it switched on and
+filled with realistic data:
+```sh
+docker compose exec web poetry run python manage.py populate --reset_all --org=bakery
+```
+That is the BIOTOP setup plus the bakery: the parameters switched on, a
+`Brotanteil` product type with `is_bread=True`, breads, labels, ingredients,
+capacities for the coming weeks, some chosen breads and some members with
+favourites set. No further configuration needed.
+
+The baking-plan solver needs `ortools`, which is the optional `bakery` extra in
+`pyproject.toml` — about 210 MB with its numpy/pandas subtree. The Docker image
+installs it (`poetry install --extras bakery`). Build without the flag and
+everything still works except the two solver endpoints, which answer 503.
+
 ## Tests
 
 Tests are run with `pytest`:

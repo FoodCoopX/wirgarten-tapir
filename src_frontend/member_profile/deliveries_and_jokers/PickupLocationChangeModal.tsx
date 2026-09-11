@@ -13,6 +13,7 @@ import PickupLocationWaitingListSelector from "../../bestell_wizard/components/P
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
+import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
 import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
@@ -27,6 +28,16 @@ interface PickupLocationChangeModalProps {
   reloadDeliveries: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
+
+const WEEKDAY_NAMES = [
+  "Montag",
+  "Dienstag",
+  "Mittwoch",
+  "Donnerstag",
+  "Freitag",
+  "Samstag",
+  "Sonntag",
+];
 
 const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   show,
@@ -46,6 +57,9 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   const [selectedPickupLocations, setSelectedPickupLocations] = useState<
     PublicPickupLocation[]
   >([]);
+  const [selectedDeliveryDay, setSelectedDeliveryDay] = useState<number | null>(
+    null,
+  );
   const [
     pickupLocationsCapacityCheckLoading,
     setPickupLocationsCapacityCheckLoading,
@@ -61,6 +75,28 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   ] = useState(false);
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
   const [currentPickupLocationId, setCurrentPickupLocationId] = useState("");
+
+  // Get unique delivery days from pickup locations
+  const availableDeliveryDays = React.useMemo((): number[] => {
+    // Not Number(): deliveryDay is `number | null` and Number(null) is 0,
+    // which would file a station with no opening times under Montag.
+    const days = new Set(
+      pickupLocations
+        .map((loc) => loc.deliveryDay)
+        .filter((day): day is number => day !== null && day !== undefined),
+    );
+    return Array.from(days).sort((a, b) => a - b);
+  }, [pickupLocations]);
+
+  // Filter pickup locations by selected delivery day
+  const filteredPickupLocations = React.useMemo(() => {
+    if (selectedDeliveryDay === null) {
+      return pickupLocations;
+    }
+    return pickupLocations.filter(
+      (loc) => loc.deliveryDay === selectedDeliveryDay,
+    );
+  }, [pickupLocations, selectedDeliveryDay]);
 
   useEffect(() => {
     pickupLocationsApi
@@ -121,7 +157,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   }, []);
 
   useEffect(() => {
-    if (pickupLocations.length === 0 || !show) {
+    if (filteredPickupLocations.length === 0 || !show) {
       return;
     }
 
@@ -134,14 +170,14 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
 
     checkPickupLocationCapacities(
       pickupLocationsApi,
-      pickupLocations,
+      filteredPickupLocations,
       shoppingCart,
       setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       undefined,
     );
-  }, [pickupLocations, subscriptions, show]);
+  }, [filteredPickupLocations, subscriptions, show]);
 
   useEffect(() => {
     if (selectedPickupLocations.length === 0) {
@@ -287,10 +323,21 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <DeliveryDayTabs
+            availableDays={availableDeliveryDays}
+            selectedDay={selectedDeliveryDay}
+            onSelectDay={(day) => {
+              setSelectedDeliveryDay(day);
+              // Dropping the day filter must drop anything it hides, or a
+              // member can confirm a station that is no longer on screen.
+              setSelectedPickupLocations([]);
+            }}
+          />
+
           {waitingListModeEnabled && (
             <PickupLocationWaitingListSelector
               setSelectedPickupLocations={setSelectedPickupLocations}
-              pickupLocations={pickupLocations}
+              pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             />
@@ -299,7 +346,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             <Spinner />
           ) : (
             <PickupLocationSelector
-              pickupLocations={pickupLocations}
+              pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
               pickupLocationsCapacityCheckLoading={
@@ -310,6 +357,14 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               disabledLocationIds={[currentPickupLocationId]}
             />
           )}
+
+          {filteredPickupLocations.length === 0 &&
+            selectedDeliveryDay !== null && (
+              <div className="alert alert-info">
+                Keine Verteilstationen verfügbar für{" "}
+                {WEEKDAY_NAMES[selectedDeliveryDay]}
+              </div>
+            )}
         </Modal.Body>
         <Modal.Footer>
           <TapirButton

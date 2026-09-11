@@ -14,15 +14,38 @@ from tapir.pickup_locations.services.member_pickup_location_getter import (
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.types import TapirOrder
+from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
 
 class SubscriptionUpdateViewValidator:
+    @classmethod
+    def may_member_reduce_size(
+        cls, logged_in_user_is_admin: bool, product_type: ProductType, cache: dict
+    ) -> bool:
+        """
+        Whether shrinking a running contract is allowed for this product type.
+
+        The bakery parameter is about bread shares, so it must not also unlock
+        the harvest share.
+        """
+        if logged_in_user_is_admin:
+            return True
+
+        return bool(
+            product_type.is_bread
+            and get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=cache)
+            and get_parameter_value(
+                ParameterKeys.BAKERY_MEMBERS_CAN_REDUCES_BREAD_SHARES, cache=cache
+            )
+        )
+
     @classmethod
     def validate_everything(
         cls,
@@ -66,7 +89,11 @@ class SubscriptionUpdateViewValidator:
         )
 
         OrderValidator.validate_cannot_reduce_size(
-            logged_in_user_is_admin=logged_in_user_is_admin,
+            member_may_reduce_size=cls.may_member_reduce_size(
+                logged_in_user_is_admin=logged_in_user_is_admin,
+                product_type=product_type,
+                cache=cache,
+            ),
             contract_start_date=contract_start_date,
             member=member,
             order_for_a_single_product_type=order,

@@ -1,0 +1,256 @@
+import React, { useEffect, useState } from "react";
+import {
+  Check,
+  Pencil,
+  Plus,
+  ToggleOff,
+  ToggleOn,
+  Trash,
+  X,
+} from "react-bootstrap-icons";
+import { BakeryApi } from "../../../api-client";
+import type { BreadLabel, BreadLabelRequest } from "../../../api-client/models";
+import { useApi } from "../../../hooks/useApi";
+import { handleRequestError } from "../../../utils/handleRequestError";
+import "../../styles/bakery_styles.css";
+
+interface LabelsCardProps {
+  csrfToken: string;
+}
+
+export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
+  const bakeryApi = useApi(BakeryApi, csrfToken);
+  const [labels, setLabels] = useState<BreadLabel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newLabelName, setNewLabelName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+
+  useEffect(() => {
+    loadLabels();
+  }, []);
+
+  const loadLabels = () => {
+    setLoading(true);
+    bakeryApi
+      .bakeryLabelsList()
+      .then((data) => {
+        setLabels(data);
+      })
+      .catch((error) => {
+        handleRequestError(error, "Fehler beim Laden der Labels");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLabelName.trim()) return;
+
+    const payload: BreadLabelRequest = {
+      name: newLabelName,
+      isActive: true,
+    };
+    bakeryApi
+      .bakeryLabelsCreate({ breadLabelRequest: payload })
+      .then(() => {
+        setNewLabelName("");
+        loadLabels();
+      })
+      .catch((error) => {
+        handleRequestError(error, "Fehler beim Erstellen des Labels");
+      });
+  };
+
+  const handleStartEdit = (label: BreadLabel) => {
+    setEditingId(label.id!);
+    setEditingName(label.name);
+  };
+
+  const handleSaveEdit = (id: string) => {
+    if (!editingName.trim()) return;
+
+    bakeryApi
+      .bakeryLabelsPartialUpdate({
+        id,
+        patchedBreadLabelRequest: { name: editingName },
+      })
+      .then(() => {
+        setLabels((prev) =>
+          prev.map((l) => (l.id === id ? { ...l, name: editingName } : l)),
+        );
+        setEditingId(null);
+        setEditingName("");
+      })
+      .catch((error) => {
+        handleRequestError(error, "Fehler beim Aktualisieren des Labels");
+      });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingName("");
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Label wirklich l\u00f6schen?")) return;
+
+    bakeryApi
+      .bakeryLabelsDestroy({ id })
+      .then(() => {
+        setLabels((prev) => prev.filter((l) => l.id !== id));
+      })
+      .catch((error) => {
+        handleRequestError(error, "Fehler beim Löschen des Labels");
+      });
+  };
+
+  const handleToggleActive = (label: BreadLabel) => {
+    // Optimistic update first — no flicker
+    setLabels((prev) =>
+      prev.map((l) =>
+        l.id === label.id ? { ...l, isActive: !l.isActive } : l,
+      ),
+    );
+
+    bakeryApi
+      .bakeryLabelsPartialUpdate({
+        id: label.id!,
+        patchedBreadLabelRequest: { isActive: !label.isActive },
+      })
+      .catch((error) => {
+        // Revert on failure
+        setLabels((prev) =>
+          prev.map((l) =>
+            l.id === label.id ? { ...l, isActive: label.isActive } : l,
+          ),
+        );
+        handleRequestError(error, "Fehler beim Aktualisieren des Labels");
+      });
+  };
+
+  return (
+    <div className="card h-100 shadow-sm">
+      <div className="card-header border-0 d-flex justify-content-between align-items-center header-bakery-labels">
+        <h5 className="mb-0">Labels</h5>
+      </div>
+
+      <div className="card-body card-body-labels">
+        <form onSubmit={handleCreate} className="mb-4">
+          <div className="input-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Neues Label..."
+              value={newLabelName}
+              onChange={(e) => setNewLabelName(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="btn white-on-green"
+              disabled={!newLabelName.trim()}
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+        </form>
+
+        {loading ? (
+          <div className="text-center py-4">
+            <div className="spinner-border white-on-green" role="status">
+              <span className="visually-hidden">Lädt...</span>
+            </div>
+          </div>
+        ) : labels.length === 0 ? (
+          <div className="text-center py-4 text-muted">
+            <p>Noch keine Labels vorhanden.</p>
+          </div>
+        ) : (
+          <div className="list-group list-group-flush">
+            {labels.map((label) => (
+              <div
+                key={label.id}
+                className="list-group-item px-0 d-flex justify-content-between align-items-center border-0"
+                style={{ backgroundColor: "transparent" }}
+              >
+                {editingId === label.id ? (
+                  <div className="flex-grow-1 d-flex align-items-center gap-2">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveEdit(label.id!);
+                        if (e.key === "Escape") handleCancelEdit();
+                      }}
+                    />
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => handleSaveEdit(label.id!)}
+                      disabled={!editingName.trim()}
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={handleCancelEdit}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex-grow-1">
+                      <span
+                        className={`badge ${label.isActive ? "badge-bakery-success" : "badge-bakery-muted"}`}
+                      >
+                        {label.name}
+                      </span>
+                    </div>
+                    <div className="btn-group btn-group-sm">
+                      <button
+                        className={`btn border-0 ${label.isActive ? "text-bakery-success-dark" : "text-bakery-muted-light"}`}
+                        title={label.isActive ? "Deaktivieren" : "Aktivieren"}
+                        onClick={() => handleToggleActive(label)}
+                      >
+                        {label.isActive ? (
+                          <ToggleOn size={16} />
+                        ) : (
+                          <ToggleOff size={16} />
+                        )}
+                      </button>
+                      <button
+                        className="btn btn-outline-secondary border-0 icon-bakery-muted"
+                        title="Bearbeiten"
+                        onClick={() => handleStartEdit(label)}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        className="btn btn-outline-danger border-0"
+                        title="Löschen"
+                        onClick={() => handleDelete(label.id!)}
+                      >
+                        <Trash size={16} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="card-footer border-0 text-muted card-footer-labels">
+        <small>
+          {labels.length} Label{labels.length !== 1 ? "s" : ""}
+        </small>
+      </div>
+    </div>
+  );
+};

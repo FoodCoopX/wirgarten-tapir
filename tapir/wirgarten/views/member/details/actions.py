@@ -8,6 +8,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_service import (
@@ -87,6 +88,11 @@ def renew_contract_same_conditions(request, **kwargs):
     member = Member.objects.get(id=member_id)
     member.sepa_consent = get_now(cache=cache)
     member.save()
+
+    # bulk_create above does not fire post_save, so the bakery receiver never
+    # sees these subscriptions. Every path that bulk-creates subscriptions has
+    # to say so itself.
+    BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
 
     SubscriptionChangeLogEntry().populate_subscription_changed(
         actor=request.user,

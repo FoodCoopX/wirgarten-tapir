@@ -375,6 +375,32 @@ class TapirCache:
         )
 
     @classmethod
+    def get_delivery_day_by_pickup_location_id(cls, cache: Dict) -> Dict:
+        """
+        The weekday every pickup location is delivered on, in one query.
+
+        The earliest of a location's opening days, absent from the map when it
+        has no opening times at all.
+        """
+
+        def compute():
+            delivery_days = {}
+            for (
+                pickup_location_id,
+                day_of_week,
+            ) in PickupLocationOpeningTime.objects.values_list(
+                "pickup_location_id", "day_of_week"
+            ):
+                current = delivery_days.get(pickup_location_id)
+                if current is None or day_of_week < current:
+                    delivery_days[pickup_location_id] = day_of_week
+            return delivery_days
+
+        return get_from_cache_or_compute(
+            cache, "delivery_day_by_pickup_location_id", compute
+        )
+
+    @classmethod
     def get_unconfirmed_coop_share_purchases_by_member_id(cls, cache: dict):
         def compute():
             transactions = cls.get_unconfirmed_coop_share_purchases(cache=cache)

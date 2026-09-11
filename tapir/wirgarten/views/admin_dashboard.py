@@ -28,13 +28,14 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
     OrderFeedback,
+    Payment,
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
     Subscription,
-    Payment,
     ProductType,
 )
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
@@ -43,9 +44,9 @@ from tapir.wirgarten.service.payment import (
     get_next_payment_date,
 )
 from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
     get_active_product_capacities,
     get_active_product_types,
-    get_active_and_future_subscriptions,
     get_next_growing_period,
     get_product_price,
 )
@@ -53,8 +54,8 @@ from tapir.wirgarten.utils import (
     format_currency,
     format_date,
     get_today,
-    legal_status_is_cooperative,
     legal_status_is_association,
+    legal_status_is_cooperative,
 )
 
 
@@ -241,6 +242,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["show_association_content"] = legal_status_is_association(
             cache=self.cache
         )
+
+        # The view only requires coop.view, but the tile's API requires
+        # coop.manage.
+        context["bakery_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_A_ENABLED, cache=self.cache
+        ) and self.request.user.has_perm(Permission.Coop.MANAGE)
 
         return context
 

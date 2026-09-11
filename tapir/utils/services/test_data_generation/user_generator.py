@@ -26,17 +26,17 @@ from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
+from tapir.utils.shortcuts import get_from_cache_or_compute, get_timezone_aware_datetime
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
-    Member,
-    GrowingPeriod,
-    Subscription,
-    PickupLocation,
-    MemberPickupLocation,
-    Product,
     CoopShareTransaction,
+    GrowingPeriod,
+    Member,
+    MemberPickupLocation,
     OrderFeedback,
+    PickupLocation,
+    Product,
+    Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tasks import assign_member_numbers
@@ -109,7 +109,7 @@ class UserGenerator:
 
         for index, parsed_user in enumerate(parsed_users[:user_count]):
             if (index + 1) % 20 == 0:
-                print(f"\t{index+1}/{user_count}...")
+                print(f"\t{index + 1}/{user_count}...")
             cls.generate_user(
                 parsed_user=parsed_user,
                 cache=cache,

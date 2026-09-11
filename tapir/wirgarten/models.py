@@ -4,7 +4,7 @@ from functools import partial
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from django.db.models import (
     F,
@@ -20,13 +20,13 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from tapir.accounts.models import TapirUser, KeycloakUserQuerySetManager
+from tapir.accounts.models import KeycloakUserQuerySetManager, TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_OPTIONS
 from tapir.utils.models import CountryField
-from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle, OPTIONS_WEEKDAYS
+from tapir.wirgarten.constants import NO_DELIVERY, OPTIONS_WEEKDAYS, DeliveryCycle
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
@@ -184,6 +184,9 @@ class ProductType(TapirModel):
     )
     is_affected_by_jokers = models.BooleanField(
         default=True, verbose_name=_("Nimmt am Joker-Verfahren teil")
+    )
+    is_bread = models.BooleanField(
+        default=False, verbose_name=_("Brotanteil (Bäckerei)")
     )
     subscriptions_have_end_dates = models.BooleanField(
         default=True,
@@ -350,6 +353,7 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
     is_student = models.BooleanField(_("Student*in"), default=False)
+    pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
     has_received_membership_started_mail = models.BooleanField(default=False)
 
     @property
@@ -444,9 +448,10 @@ class Member(TapirUser):
         """
 
         from collections import Counter
+
         from tapir.wirgarten.service.products import (
-            get_product_price,
             get_active_subscriptions,
+            get_product_price,
         )
 
         cache = {}

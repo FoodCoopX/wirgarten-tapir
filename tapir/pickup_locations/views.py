@@ -4,8 +4,12 @@ import locale
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
-from rest_framework import status, viewsets, permissions, serializers
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -13,21 +17,26 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
 from tapir.pickup_locations.serializers import (
+    DeliveryDaysResponseSerializer,
     PickupLocationCapacitiesSerializer,
+    LocationRouteSerializer,
+    PickupLocationCapacityCheckRequestSerializer,
+    PickupLocationCapacityCheckResponseSerializer,
     PickupLocationCapacityEvolutionSerializer,
     PickupLocationDeliveryChargeCreateRequestSerializer,
     PickupLocationDeliveryChargesResponseSerializer,
-    PublicPickupLocationSerializer,
-    PickupLocationCapacityCheckResponseSerializer,
-    PickupLocationCapacityCheckRequestSerializer,
     PickupLocationSerializer,
-    LocationRouteSerializer,
+    PickupLocationsByDeliveryDayResponseSerializer,
+    PublicPickupLocationSerializer,
 )
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
 from tapir.pickup_locations.services.member_pickup_location_setter import (
     MemberPickupLocationSetter,
+)
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
@@ -57,6 +66,8 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
+    GrowingPeriod,
+    Member,
     PickupLocation,
     PickupLocationCapability,
     ProductType,
@@ -68,7 +79,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.utils import get_today, check_permission_or_self
+from tapir.wirgarten.utils import check_permission_or_self, get_today
 
 
 class PickupLocationCapacitiesView(APIView):
@@ -466,6 +477,104 @@ class ChangeMemberPickupLocationApiView(APIView):
             raise ValidationError(
                 "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
+
+
+@extend_schema(tags=["bakery"])
+class DeliveryDaysView(APIView):
+    """
+    The weekdays any pickup location is delivered on.
+
+    "Delivered on" is the station's own delivery day - the earliest of its
+    opening days - the rule shared with the pickup lists, the baking list and
+    the solver, which lives in PickupLocationDeliveryDayService.
+
+    Readable by any member: a list of weekdays discloses nothing that the
+    public pickup-location endpoint does not already give out.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary="Get distinct list of delivery days",
+        description="Returns the earliest delivery day per pickup location, 0=Montag.",
+        responses={
+            200: DeliveryDaysResponseSerializer,
+        },
+    )
+    def get(self, request):
+        delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache={})
+        days = sorted({day for day in delivery_days.values() if day is not None})
+        return Response({"days": days})
+
+
+@extend_schema(tags=["bakery"])
+class PickupLocationsByDeliveryDayView(APIView):
+    """
+    The pickup locations delivered on one weekday.
+
+    Readable by any member rather than gated on Coop.MANAGE like the rest of
+    the bakery: it returns station names and weekdays, which
+    PublicPickupLocationProvider already publishes.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary="Get pickup locations filtered by delivery day",
+        parameters=[
+            OpenApiParameter(
+                name="day_of_week",
+                type=int,
+                description="Day of week, 0=Montag to 6=Sonntag",
+                required=True,
+            )
+        ],
+        responses={
+            200: PickupLocationsByDeliveryDayResponseSerializer,
+        },
+    )
+    def get(self, request):
+        day_of_week: str | None = request.query_params.get("day_of_week", None)
+
+        if day_of_week is None or day_of_week == "":
+            return Response(
+                {"error": "day_of_week parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            day_int: int = int(day_of_week)
+        except ValueError:
+            return Response(
+                {"error": "day_of_week must be a number (0-6)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # A day with no stations is an empty list, not an error: the caller
+        # feeds the result straight into .map(), and a 404 would surface there
+        # as a thrown ResponseError.
+        cache = {}
+        location_ids = (
+            PickupLocationDeliveryDayService.get_pickup_location_ids_for_delivery_day(
+                day=day_int, cache=cache
+            )
+        )
+        # Through the provider, not PickupLocation.objects: it excludes the
+        # delivery-donation forwarding station, which the rest of the app hides
+        # from members.
+        locations = (
+            PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+                cache=cache
+            ).filter(id__in=location_ids)
+        )
+
+        return Response(
+            {
+                "pickup_locations": [
+                    {"id": location.id, "name": location.name} for location in locations
+                ]
+            }
+        )
 
 
 class PickupLocationDeliveryChargesView(APIView):

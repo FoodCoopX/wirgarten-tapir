@@ -162,7 +162,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
       case "street2":
         return true;
       default:
-        return personalData[key].length > 0;
+        return (personalData[key] ?? "").length > 0;
     }
   }
 
