@@ -1,3 +1,4 @@
+from django.conf import settings
 from ortools.sat.python import cp_model
 
 from tapir.bakery.solver.collector import BreadSolutionCollector
@@ -44,7 +45,7 @@ def _run_solver(
                 category="no_data",
                 bread_name=None,
                 location_name=None,
-                message="No available breads provided.",
+                message="Keine backbaren Brote für diese Woche gefunden.",
             )
         )
         return [], diagnostics, "no_data"
@@ -56,7 +57,7 @@ def _run_solver(
                 category="no_data",
                 bread_name=None,
                 location_name=None,
-                message="No pickup locations provided.",
+                message="Keine Abholstationen für diesen Liefertag gefunden.",
             )
         )
         return [], diagnostics, "no_data"
@@ -70,8 +71,8 @@ def _run_solver(
                     bread_name=b.name,
                     location_name=None,
                     message=(
-                        f"Bread '{b.name}' has no pieces_per_stove_layer defined. "
-                        f"Cannot determine how many pieces fit in a stove layer."
+                        f"Brot '{b.name}': keine Angabe, wie viele Stück auf eine "
+                        f"Ofenlage passen."
                     ),
                 )
             )
@@ -84,18 +85,30 @@ def _run_solver(
     )
     diagnostics.extend(pre_diagnostics)
 
-    total_deliveries = sum(loc.total_deliveries for loc in pickup_locations)
+    # An over-subscribed capacity makes distribution_vars an int var with
+    # lb > ub, and CP-SAT answers MODEL_INVALID rather than INFEASIBLE, which
+    # the generic arm below would report as a time-limit problem. The
+    # diagnostic one step up already names the bread and the station, so stop
+    # here and hand that back. Only this category is fatal: the other
+    # error-level checks are estimates the model can still satisfy.
+    if any(
+        diagnostic.category == "fixed_demand_exceeds_capacity"
+        for diagnostic in pre_diagnostics
+    ):
+        return [], diagnostics, "infeasible"
 
     # ── Build model ───────────────────────────────────────────────────
 
-    use_symmetry = max_solutions <= 1
+    # Always on: C12 only forces used sessions to come first, which cannot
+    # rule out a distinct plan, and the collector fingerprints sessions in
+    # sorted order, so the extra permutations would only be thrown away.
     model, v = build_model(
         available_breads,
         pickup_locations,
         capacities,
         max_sessions,
         stove_layers,
-        use_symmetry,
+        symmetry_breaking=True,
         member_preferences=member_preferences,
     )
 
@@ -104,7 +117,8 @@ def _run_solver(
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_seconds
     solver.parameters.num_workers = 8
-    solver.parameters.log_search_progress = True
+    # The CP-SAT search log is hundreds of lines on stdout per request.
+    solver.parameters.log_search_progress = settings.DEBUG
     solver.parameters.enumerate_all_solutions = False
 
     def make_extractor(vd):
@@ -128,8 +142,8 @@ def _run_solver(
                 bread_name=None,
                 location_name=None,
                 message=(
-                    "Solver confirmed: the problem is INFEASIBLE. "
-                    "See diagnostics above for likely causes."
+                    "Der Solver bestätigt: Die Aufgabe ist nicht lösbar. "
+                    "Die möglichen Ursachen stehen in den Meldungen darüber."
                 ),
             )
         )
@@ -143,9 +157,13 @@ def _run_solver(
                 bread_name=None,
                 location_name=None,
                 message=(
-                    f"Solver returned unexpected status: "
-                    f"{solver.status_name(solve_status)}. "
-                    f"Try increasing the time limit."
+                    f"Der Solver hat unerwartet mit Status "
+                    f"{solver.status_name(solve_status)} abgebrochen."
+                    + (
+                        " Bei UNKNOWN hilft meist ein höheres Zeitlimit."
+                        if solve_status == cp_model.UNKNOWN
+                        else ""
+                    )
                 ),
             )
         )

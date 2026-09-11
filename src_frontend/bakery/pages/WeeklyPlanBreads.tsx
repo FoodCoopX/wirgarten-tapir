@@ -1,43 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { YearWeekSelectorCard } from '../components/cards';
-import { AllocationModal, DailySettingsModal } from '../components/modals';
-import { InfoCircle } from 'react-bootstrap-icons';
-import { BakeryApi } from '../../api-client';
-import TapirButton from '../../components/TapirButton';
-import { useApi } from '../../hooks/useApi';
-import { handleRequestError } from '../../utils/handleRequestError';
-import type { BreadList } from '../../api-client/models';
-import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek";
-import '../styles/bakery_styles.css';
-
-dayjs.extend(isoWeek);
+import React, { useState, useEffect, useRef } from "react";
+import { YearWeekSelectorCard } from "../components/cards";
+import { AllocationModal, DailySettingsModal } from "../components/modals";
+import { InfoCircle } from "react-bootstrap-icons";
+import { BakeryApi } from "../../api-client";
+import TapirButton from "../../components/TapirButton";
+import { useApi } from "../../hooks/useApi";
+import { handleRequestError } from "../../utils/handleRequestError";
+import type { BreadList } from "../../api-client/models";
+import "../styles/bakery_styles.css";
+import {
+  DAY_LABELS,
+  currentIsoWeek,
+  currentIsoYear,
+  formatDeliveryDate,
+} from "../utils/weekdays";
 
 interface DayConfig {
   day: number;
   label: string;
   dayNumber: number;
   breads: Record<string, boolean>;
+  // This day's request failed. Neither "all breads off" nor last week's values
+  // may be shown as if they were this day's configuration - a switch rendered
+  // from a guess is one toggleBread away from being written back as truth.
+  failed?: boolean;
 }
 
-const currentWeek = dayjs().isoWeek();
-const currentYear = dayjs().year();
-
-const DAY_LABELS: Record<number, string> = {
-  0: 'Montag',
-  1: 'Dienstag',
-  2: 'Mittwoch',
-  3: 'Donnerstag',
-  4: 'Freitag',
-  5: 'Samstag',
-  6: 'Sonntag',
-};
+const currentWeek = currentIsoWeek();
+const currentYear = currentIsoYear();
 
 interface WeeklyPlanBreadsProps {
   csrfToken: string;
 }
 
-export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken }) => {
+export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
+  csrfToken,
+}) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
   const [year, setYear] = useState(currentYear);
   const [week, setWeek] = useState(currentWeek);
@@ -47,21 +45,24 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
   const [days, setDays] = useState<DayConfig[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<{ day: number; label: string, activeBreads: BreadList[] } | null>(null);
+  const [selectedDay, setSelectedDay] = useState<{
+    day: number;
+    label: string;
+    activeBreads: BreadList[];
+  } | null>(null);
 
-  const getDateForDay = (dayNumber: number): string => {
-    const date = dayjs()
-      .year(year)
-      .isoWeek(week)
-      .isoWeekday(dayNumber);
-    return date.format('DD.MM.YYYY');
-  };
+  const getDateForDay = (dayNumber: number): string =>
+    formatDeliveryDate(year, week, dayNumber);
+
+  // The week currently on screen, as the other bakery pages track it.
+  const selectionRef = useRef(`${year}/${week}`);
 
   useEffect(() => {
     loadInitialData();
   }, []);
 
   useEffect(() => {
+    selectionRef.current = `${year}/${week}`;
     if (allBreads.length > 0 && days.length > 0) {
       loadDayConfigs();
     }
@@ -76,17 +77,19 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
       .then(([breadsData, deliveryDaysData]) => {
         setAllBreads(breadsData.filter((b: BreadList) => b.isActive !== false));
 
-        const dayConfigs: DayConfig[] = deliveryDaysData.days.map((dayNumber: number) => ({
-          day: dayNumber,
-          label: DAY_LABELS[dayNumber] || `Tag ${dayNumber}`,
-          dayNumber: dayNumber,
-          breads: {},
-        }));
+        const dayConfigs: DayConfig[] = deliveryDaysData.days.map(
+          (dayNumber: number) => ({
+            day: dayNumber,
+            label: DAY_LABELS[dayNumber] || `Tag ${dayNumber}`,
+            dayNumber: dayNumber,
+            breads: {},
+          }),
+        );
 
         setDays(dayConfigs);
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Laden der Daten');
+        handleRequestError(error, "Fehler beim Laden der Daten");
       })
       .finally(() => {
         setLoading(false);
@@ -94,87 +97,122 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({ csrfToken })
   };
 
   const loadDayConfigs = () => {
+    const requestedFor = `${year}/${week}`;
     setLoading(true);
     Promise.all(
       days.map((dayConfig) =>
-        bakeryApi.bakeryAvailableBreadsForDeliveryRetrieve({
-          year,
-          deliveryWeek: week,
-          deliveryDay: dayConfig.day,
-        } as any)
+        bakeryApi
+          .bakeryAvailableBreadsForDeliveryRetrieve({
+            year,
+            deliveryWeek: week,
+            deliveryDay: dayConfig.day,
+          })
           .then((response) => {
-            const availableBreadIds = new Set((response as any).breads.map((b: any) => b.id));
+            const availableBreadIds = new Set(
+              response.breads.map((bread) => bread.id),
+            );
 
             const breads: Record<string, boolean> = {};
-            allBreads.forEach(bread => {
+            allBreads.forEach((bread) => {
               breads[bread.id!] = availableBreadIds.has(bread.id!);
             });
 
             return { ...dayConfig, breads };
           })
           .catch((error) => {
-            console.error(`Failed to load config for day ${dayConfig.day}:`, error);
-            const breads: Record<string, boolean> = {};
-            allBreads.forEach(bread => {
-              breads[bread.id!] = false;
-            });
-            return { ...dayConfig, breads };
-          })
-      )
+            // Keep the failure local to its own day. Rethrowing would reject
+            // the whole Promise.all and leave the entire grid showing the
+            // previous week's switches under the new week's header.
+            console.error(`Wochenplan: Tag ${dayConfig.day}`, error);
+            return { ...dayConfig, breads: {}, failed: true };
+          }),
+      ),
     )
       .then((updatedDays) => {
+        // The grid the user is now looking at, not the one they asked for.
+        // Without this a slow earlier-week load repaints after they have moved
+        // on - and toggleBread then writes the negation of that stale value
+        // into the current week, so the race persists rather than just misleads.
+        if (selectionRef.current !== requestedFor) return;
         setDays(updatedDays);
+        if (updatedDays.some((day) => day.failed)) {
+          handleRequestError(
+            new Error(
+              updatedDays
+                .filter((day) => day.failed)
+                .map((day) => day.label)
+                .join(", "),
+            ),
+            "Wochenplan konnte für einzelne Tage nicht geladen werden",
+          );
+        }
       })
       .catch((error) => {
-        console.error('Failed to load day configs:', error);
+        if (selectionRef.current !== requestedFor) return;
+        handleRequestError(error, "Fehler beim Laden des Wochenplans");
       })
       .finally(() => {
+        if (selectionRef.current !== requestedFor) return;
         setLoading(false);
       });
   };
 
-
-const toggleBread = (dayIndex: number, breadId: string) => {
-  const newDays = [...days];
-  const currentState = newDays[dayIndex].breads[breadId] ?? false;
-  const newState = !currentState;
-
-  // Optimistic update
-  newDays[dayIndex] = {
-    ...newDays[dayIndex],
-    breads: { ...newDays[dayIndex].breads, [breadId]: newState },
+  // Every write goes through the updater form and touches exactly one
+  // (day, bread) key, so a failed request reverts only its own switch and not
+  // whatever else was toggled while it was in flight.
+  const setBreadActive = (
+    dayIndex: number,
+    breadId: string,
+    isActive: boolean,
+  ) => {
+    setDays((currentDays) =>
+      currentDays.map((day, index) =>
+        index === dayIndex
+          ? { ...day, breads: { ...day.breads, [breadId]: isActive } }
+          : day,
+      ),
+    );
   };
-  setDays(newDays);
 
-  setSaving(true);
-  bakeryApi.bakeryAvailableBreadsForDeliveryCreate({
-    toggleBreadRequestRequest: {
-      year,
-      deliveryWeek: week,
-      deliveryDay: newDays[dayIndex].day,
-      breadId,
-      isActive: newState,
-    },
-  })
-    .catch((error) => {
-      // Revert optimistic update
-      newDays[dayIndex] = {
-        ...newDays[dayIndex],
-        breads: { ...newDays[dayIndex].breads, [breadId]: currentState },
-      };
-      setDays([...newDays]);
-      handleRequestError(error, 'Fehler beim Speichern');
-    })
-    .finally(() => {
-      setSaving(false);
-    });
-};
+  const toggleBread = (dayIndex: number, breadId: string) => {
+    const requestedFor = `${year}/${week}`;
+    const currentState = days[dayIndex].breads[breadId] ?? false;
+    const newState = !currentState;
+
+    // Optimistic update
+    setBreadActive(dayIndex, breadId, newState);
+
+    setSaving(true);
+    bakeryApi
+      .bakeryAvailableBreadsForDeliveryCreate({
+        toggleBreadRequestRequest: {
+          year,
+          deliveryWeek: week,
+          deliveryDay: days[dayIndex].day,
+          breadId,
+          isActive: newState,
+        },
+      })
+      .catch((error) => {
+        // The revert is a write like any other: applying it after the user has
+        // moved to another week would stamp this week's value onto that one.
+        if (selectionRef.current !== requestedFor) return;
+        setBreadActive(dayIndex, breadId, currentState);
+        handleRequestError(error, "Fehler beim Speichern");
+      })
+      .finally(() => {
+        if (selectionRef.current !== requestedFor) return;
+        setSaving(false);
+      });
+  };
 
   const handleOpenModal = (day: number, label: string) => {
     // Get only active breads for this day
-    const dayConfig = days.find(d => d.day === day);
-    const activeBreads = allBreads.filter(bread => dayConfig?.breads[bread.id!] === true);
-    
+    const dayConfig = days.find((d) => d.day === day);
+    const activeBreads = allBreads.filter(
+      (bread) => dayConfig?.breads[bread.id!] === true,
+    );
+
     setSelectedDay({ day, label, activeBreads });
     setIsModalOpen(true);
   };
@@ -206,7 +244,9 @@ const toggleBread = (dayIndex: number, breadId: string) => {
           />
         </div>
       </div>
-      <div><h4>Liefertage</h4></div>
+      <div>
+        <h4>Liefertage</h4>
+      </div>
 
       <div className="row">
         {loading && days.length === 0 ? (
@@ -222,23 +262,32 @@ const toggleBread = (dayIndex: number, breadId: string) => {
           days.map((dayConfig, dayIndex) => (
             <div key={dayConfig.day} className="col-lg-4 mb-4">
               <div className="card h-100">
-                <div 
-                  className="card-header header-white-on-middle-brown d-flex justify-content-between align-items-center"
-                >
+                <div className="card-header header-white-on-middle-brown d-flex justify-content-between align-items-center">
                   <div>
                     <h5 className="mb-0">{dayConfig.label}</h5>
-                    <small className="opacity-75">{getDateForDay(dayConfig.dayNumber)}</small>
+                    <small className="opacity-75">
+                      {getDateForDay(dayConfig.dayNumber)}
+                    </small>
                   </div>
                   <small>KW {week}</small>
                 </div>
 
-                <div className="card-body" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                <div
+                  className="card-body"
+                  style={{ maxHeight: "600px", overflowY: "auto" }}
+                >
                   {loading ? (
                     <div className="text-center py-4">
                       <div className="spinner-border spinner-bakery-primary" />
                     </div>
+                  ) : dayConfig.failed ? (
+                    <p className="text-danger text-center">
+                      Konnte nicht geladen werden.
+                    </p>
                   ) : allBreads.length === 0 ? (
-                    <p className="text-muted text-center">Keine Brote verfügbar</p>
+                    <p className="text-muted text-center">
+                      Keine Brote verfügbar
+                    </p>
                   ) : (
                     <div className="list-group list-group-flush">
                       {allBreads.map((bread) => {
@@ -255,29 +304,33 @@ const toggleBread = (dayIndex: number, breadId: string) => {
                                   alt={bread.name}
                                   className="me-3"
                                   style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    objectFit: 'cover',
-                                    borderRadius: '8px',
+                                    width: "50px",
+                                    height: "50px",
+                                    objectFit: "cover",
+                                    borderRadius: "8px",
                                   }}
                                 />
                               )}
                               <div>
                                 <strong>{bread.name}</strong>
                                 {bread.weight && (
-                                  <div className="small text-muted">{Number(bread.weight).toFixed(0)} g</div>
+                                  <div className="small text-muted">
+                                    {Number(bread.weight).toFixed(0)} g
+                                  </div>
                                 )}
                               </div>
                             </div>
 
                             <div className="form-check form-switch">
                               <input
-                                className={`form-check-input ${isActive ? 'checkbox-bakery' : ''}`}
+                                className={`form-check-input ${isActive ? "checkbox-bakery" : ""}`}
                                 type="checkbox"
                                 checked={isActive}
-                                onChange={() => toggleBread(dayIndex, bread.id!)}
+                                onChange={() =>
+                                  toggleBread(dayIndex, bread.id!)
+                                }
                                 style={{
-                                  cursor: 'pointer',
+                                  cursor: "pointer",
                                 }}
                               />
                             </div>
@@ -298,16 +351,20 @@ const toggleBread = (dayIndex: number, breadId: string) => {
                     variant=""
                     className="btn-bakery-brown w-100"
                     text="Abholorten max. Mengen zuweisen"
-                    onClick={() => handleOpenModal(dayConfig.day, dayConfig.label)}
+                    onClick={() =>
+                      handleOpenModal(dayConfig.day, dayConfig.label)
+                    }
                     disabled={loading}
                   />
-                   
+
                   <DailySettingsModal
                     year={year}
                     week={week}
                     day={dayConfig.day}
                     dayLabel={dayConfig.label}
-                    activeBreads={allBreads.filter(bread => dayConfig.breads[bread.id!] === true)}
+                    activeBreads={allBreads.filter(
+                      (bread) => dayConfig.breads[bread.id!] === true,
+                    )}
                     csrfToken={csrfToken}
                   />
                 </div>
@@ -316,7 +373,7 @@ const toggleBread = (dayIndex: number, breadId: string) => {
           ))
         )}
       </div>
-      
+
       {selectedDay && (
         <AllocationModal
           isOpen={isModalOpen}
@@ -326,7 +383,6 @@ const toggleBread = (dayIndex: number, breadId: string) => {
           day={selectedDay.day}
           dayLabel={selectedDay.label}
           activeBreads={selectedDay.activeBreads}
-
           csrfToken={csrfToken}
         />
       )}

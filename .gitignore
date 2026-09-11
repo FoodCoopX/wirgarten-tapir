@@ -114,3 +114,9 @@ geckodriver.log
 /node_modules/
 tapir/filepond_stored_uploads
 tapir/filepond_temp_uploads
+
+# local-only compose overrides (e.g. host port remaps)
+docker-compose.override.yml
+
+# TypeScript incremental build state
+tsconfig.app.tsbuildinfo

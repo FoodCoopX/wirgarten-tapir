@@ -1,26 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { IngredientModal } from '../modals/IngredientModal';
-import { Pencil, Trash } from 'react-bootstrap-icons';
-import { BakeryApi, Configuration } from '../../../api-client';
-import TapirButton from '../../../components/TapirButton';
-import { useApi } from '../../../hooks/useApi';
-import { handleRequestError } from '../../../utils/handleRequestError';
-import type { Ingredient, IngredientRequest } from '../../../api-client/models';
-import '../../styles/bakery_styles.css';
+import React, { useState, useEffect } from "react";
+import { IngredientModal } from "../modals/IngredientModal";
+import { Pencil, Trash } from "react-bootstrap-icons";
+import { BakeryApi, Configuration } from "../../../api-client";
+import TapirButton from "../../../components/TapirButton";
+import { useApi } from "../../../hooks/useApi";
+import { handleRequestError } from "../../../utils/handleRequestError";
+import type { Ingredient, IngredientRequest } from "../../../api-client/models";
+import "../../styles/bakery_styles.css";
 
 interface IngredientsCardProps {
   csrfToken: string;
 }
 
-export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) => {
-  
+export const IngredientsCard: React.FC<IngredientsCardProps> = ({
+  csrfToken,
+}) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
+  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(
+    null,
+  );
   const [showOnlyActive, setShowOnlyActive] = useState(true);
-
 
   useEffect(() => {
     loadIngredients();
@@ -28,19 +30,20 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
 
   const loadIngredients = () => {
     setLoading(true);
-    bakeryApi.bakeryIngredientsList({})
+    bakeryApi
+      .bakeryIngredientsList({})
       .then((data) => {
         setIngredients(data);
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Laden der Zutaten');
+        handleRequestError(error, "Fehler beim Laden der Zutaten");
       })
       .finally(() => {
         setLoading(false);
       });
   };
 
-  const filteredIngredients = ingredients.filter(ingredient => {
+  const filteredIngredients = ingredients.filter((ingredient) => {
     return showOnlyActive ? ingredient.isActive !== false : true;
   });
 
@@ -58,10 +61,10 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
     const promise = editingIngredient
       ? bakeryApi.bakeryIngredientsPartialUpdate({
           id: editingIngredient.id!,
-          patchedIngredientRequest: ingredient
+          patchedIngredientRequest: ingredient,
         })
       : bakeryApi.bakeryIngredientsCreate({
-          ingredientRequest: ingredient
+          ingredientRequest: ingredient,
         });
 
     promise
@@ -71,19 +74,20 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
         setEditingIngredient(null);
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Speichern der Zutat');
+        handleRequestError(error, "Fehler beim Speichern der Zutat");
       });
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Zutat wirklich löschen?')) return;
+    if (!confirm("Zutat wirklich löschen?")) return;
 
-    bakeryApi.bakeryIngredientsDestroy({ id })
+    bakeryApi
+      .bakeryIngredientsDestroy({ id })
       .then(() => {
         loadIngredients();
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Löschen der Zutat');
+        handleRequestError(error, "Fehler beim Löschen der Zutat");
       });
   };
 
@@ -101,7 +105,11 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
                 checked={showOnlyActive}
                 onChange={(e) => setShowOnlyActive(e.target.checked)}
               />
-              <label className="form-check-label" htmlFor="showOnlyActiveIngredients" style={{ fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+              <label
+                className="form-check-label"
+                htmlFor="showOnlyActiveIngredients"
+                style={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}
+              >
                 nur aktive
               </label>
             </div>
@@ -116,7 +124,7 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
             />
           </div>
         </div>
-        
+
         <div className="card-body card-body-ingredients">
           {loading ? (
             <div className="text-center py-4">
@@ -129,19 +137,32 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
               {showOnlyActive ? (
                 <>
                   <p>Keine aktiven Zutaten vorhanden.</p>
-                  <TapirButton variant="outline-secondary" size="sm" text="Alle anzeigen" onClick={() => setShowOnlyActive(false)} />
+                  <TapirButton
+                    variant="outline-secondary"
+                    size="sm"
+                    text="Alle anzeigen"
+                    onClick={() => setShowOnlyActive(false)}
+                  />
                 </>
               ) : (
                 <>
                   <p>Noch keine Zutaten vorhanden.</p>
-                  <TapirButton variant="outline-secondary" size="sm" text="Erste Zutat hinzufügen" onClick={handleCreate} />
+                  <TapirButton
+                    variant="outline-secondary"
+                    size="sm"
+                    text="Erste Zutat hinzufügen"
+                    onClick={handleCreate}
+                  />
                 </>
               )}
             </div>
           ) : (
             <div className="list-group list-group-flush">
               {filteredIngredients.map((ingredient) => (
-                <div key={ingredient.id} className="list-group-item px-0 d-flex justify-content-between align-items-start border-0 list-item-transparent">
+                <div
+                  key={ingredient.id}
+                  className="list-group-item px-0 d-flex justify-content-between align-items-start border-0 list-item-transparent"
+                >
                   <div className="flex-grow-1">
                     <h6 className="mb-1">
                       {ingredient.name}
@@ -153,20 +174,22 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
                       )}
                     </h6>
                     {ingredient.description && (
-                      <small className="text-muted">{ingredient.description}</small>
+                      <small className="text-muted">
+                        {ingredient.description}
+                      </small>
                     )}
                   </div>
                   <div className="btn-group btn-group-sm ms-2">
-                    <button 
-                      className="btn btn-outline-secondary border-0 icon-bakery-muted" 
+                    <button
+                      className="btn btn-outline-secondary border-0 icon-bakery-muted"
                       title="Bearbeiten"
                       onClick={() => handleEdit(ingredient)}
                     >
                       <Pencil size={16} />
                     </button>
                     {ingredient.canBeDeleted !== false && (
-                      <button 
-                        className="btn btn-outline-danger border-0" 
+                      <button
+                        className="btn btn-outline-danger border-0"
                         title="Löschen"
                         onClick={() => handleDelete(ingredient.id!)}
                       >
@@ -179,11 +202,10 @@ export const IngredientsCard: React.FC<IngredientsCardProps> = ({ csrfToken }) =
             </div>
           )}
         </div>
-        
-                        
+
         <div className="card-footer border-0 text-muted card-footer-ingredients">
           <small>
-            {ingredients.length} Zutat{ingredients.length !== 1 ? 'en' : ''}
+            {ingredients.length} Zutat{ingredients.length !== 1 ? "en" : ""}
           </small>
         </div>
       </div>

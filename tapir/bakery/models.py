@@ -1,8 +1,5 @@
-from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models.signals import post_delete, post_save
-from django.dispatch import receiver
 
 from tapir.core.models import TapirModel
 from tapir.wirgarten.models import (
@@ -29,7 +26,7 @@ class Bread(TapirModel):
     Bread variant with all its properties
     """
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     picture = models.ImageField(
         upload_to="breads/",
         blank=True,
@@ -142,8 +139,10 @@ class BreadCapacityPickupLocation(TapirModel):
 
     class Meta:
         unique_together = ("pickup_location", "year", "delivery_week", "bread")
+        # The unique constraint indexes every lookup that starts with the
+        # station. This one covers the solver's "all capacities of a week".
         indexes = [
-            models.Index(fields=["pickup_location", "year", "delivery_week"]),
+            models.Index(fields=["year", "delivery_week"]),
         ]
 
     def __str__(self):
@@ -161,10 +160,9 @@ class AvailableBreadsForDeliveryDay(TapirModel):
     )
 
     class Meta:
+        # No indexes: the unique constraint indexes exactly these three columns
+        # plus the bread, so an index on the prefix would only cost writes.
         unique_together = ("year", "delivery_week", "delivery_day", "bread")
-        indexes = [
-            models.Index(fields=["year", "delivery_week", "delivery_day"]),
-        ]
 
     def __str__(self):
         return f"{self.bread.name} - Day {self.delivery_day} (Week {self.delivery_week}/{self.year})"
@@ -177,107 +175,31 @@ class BreadDelivery(TapirModel):
         Subscription,
         on_delete=models.CASCADE,
     )
+    # No db_index: a slot number is only ever read together with its
+    # subscription and week, which the unique constraint below indexes.
     slot_number = models.PositiveIntegerField(
-        default=1, db_index=True
+        default=1
     )  # 1, 2, 3, ... up to subscription.quantity
-    pickup_location = models.ForeignKey(
-        PickupLocation,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
     bread = models.ForeignKey(
         Bread,
-        on_delete=models.SET_NULL,
+        # PROTECT so that deleting a bread cannot wipe the members' choices
+        # across every week. Deactivate a bread with is_active instead.
+        on_delete=models.PROTECT,
         blank=True,
         null=True,
     )
-    joker_taken = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["year", "delivery_week", "slot_number"]
+        unique_together = ("subscription", "year", "delivery_week", "slot_number")
         indexes = [
             models.Index(
-                fields=["year", "delivery_week"]
-            ),  # Query all deliveries for a week
-            models.Index(
-                fields=["subscription", "year", "delivery_week"]
-            ),  # Query subscription deliveries for a week
-            models.Index(
-                fields=["pickup_location", "year", "delivery_week"]
-            ),  # Pickup list query
-            models.Index(
                 fields=["year", "delivery_week", "bread"]
-            ),  # Aggregate bread counts
+            ),  # All deliveries of a week, and bread counts within it
         ]
-
-    def clean(self):
-        super().clean()
-        if self.bread and self.pickup_location:
-            exists = BreadCapacityPickupLocation.objects.filter(
-                year=self.year,
-                delivery_week=self.delivery_week,
-                pickup_location=self.pickup_location,
-                bread=self.bread,
-            ).exists()
-            if not exists:
-                raise ValidationError(
-                    {
-                        "bread": (
-                            f"'{self.bread.name}' is not available at "
-                            f"this pickup location in week {self.delivery_week}/{self.year}."
-                        )
-                    }
-                )
-
-    def save(self, *args, skip_validation=False, **kwargs):
-        if not skip_validation:
-            self.full_clean()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Delivery {self.subscription} - Week {self.delivery_week}/{self.year} #{self.slot_number}"
-
-
-@receiver(post_save, sender="wirgarten.Subscription")
-def on_subscription_saved(sender, instance, created, **kwargs):
-
-    from tapir.bakery.services.breaddelivery_service import (
-        ensure_bread_deliveries_for_member,
-    )
-
-    if instance.product.type.delivery_cycle != "weekly":
-        return
-    if not instance.start_date or not instance.end_date:
-        return
-    ensure_bread_deliveries_for_member(instance.member)
-
-
-@receiver(post_save, sender="wirgarten.MemberPickupLocation")
-def on_pickup_location_saved(sender, instance, created, **kwargs):
-    from tapir.bakery.services.breaddelivery_service import (
-        ensure_bread_deliveries_for_member,
-    )
-
-    ensure_bread_deliveries_for_member(instance.member)
-
-
-@receiver(post_save, sender="deliveries.Joker")
-def on_joker_saved(sender, instance, **kwargs):
-    from tapir.bakery.services.breaddelivery_service import (
-        ensure_bread_deliveries_for_member,
-    )
-
-    ensure_bread_deliveries_for_member(instance.member)
-
-
-@receiver(post_delete, sender="deliveries.Joker")
-def on_joker_deleted(sender, instance, **kwargs):
-    from tapir.bakery.services.breaddelivery_service import (
-        ensure_bread_deliveries_for_member,
-    )
-
-    ensure_bread_deliveries_for_member(instance.member)
 
 
 class PreferredBread(TapirModel):
@@ -306,8 +228,11 @@ class BreadsPerPickupLocationPerWeek(TapirModel):
     count = models.PositiveIntegerField(default=0)
 
     class Meta:
+        # As on BreadCapacityPickupLocation: the unique constraint indexes
+        # everything that starts with the station, and the query that reads
+        # this table is "the whole week".
         indexes = [
-            models.Index(fields=["pickup_location", "year", "delivery_week"]),
+            models.Index(fields=["year", "delivery_week"]),
         ]
         unique_together = ["pickup_location", "year", "delivery_week", "bread"]
 
@@ -315,12 +240,51 @@ class BreadsPerPickupLocationPerWeek(TapirModel):
         return f"{self.bread.name} @ {self.pickup_location} (Week {self.delivery_week}/{self.year}): {self.count}"
 
 
+class BreadsToBakePerWeek(TapirModel):
+    """
+    How many of each bread the solver decided to bake, and how many of those
+    are surplus beyond what members receive.
+
+    Persisted rather than derived: a bread with fixed_pieces occupies no stove
+    layers, so the quantity cannot be recovered by summing StoveSession.
+    """
+
+    year = models.PositiveIntegerField()
+    delivery_week = models.PositiveIntegerField()
+    # Null for a whole-week plan, set for a plan made day by day.
+    delivery_day = models.PositiveIntegerField(null=True, blank=True)
+    bread = models.ForeignKey(
+        "Bread", on_delete=models.CASCADE, related_name="quantities_to_bake"
+    )
+    quantity = models.PositiveIntegerField(help_text="Total pieces to bake")
+    remaining = models.PositiveIntegerField(
+        default=0, help_text="Pieces beyond what the deliveries need"
+    )
+
+    class Meta:
+        unique_together = ("year", "delivery_week", "delivery_day", "bread")
+        indexes = [models.Index(fields=["year", "delivery_week", "delivery_day"])]
+        constraints = [
+            # unique_together does not cover the whole-week rows: NULL never
+            # equals NULL, so the constraint above admits any number of them.
+            models.UniqueConstraint(
+                fields=["year", "delivery_week", "bread"],
+                condition=models.Q(delivery_day__isnull=True),
+                name="unique_breads_to_bake_per_whole_week",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.bread.name}: {self.quantity} (Week {self.delivery_week}/{self.year})"
+
+
 class StoveSession(TapirModel):
     """Stores the baking plan for oven sessions."""
 
     year = models.PositiveIntegerField()
     delivery_week = models.PositiveIntegerField()
-    delivery_day = models.PositiveIntegerField()
+    # Null for a whole-week plan, set for a plan made day by day.
+    delivery_day = models.PositiveIntegerField(null=True, blank=True)
     session_number = models.PositiveIntegerField()  # 1, 2, 3, ...
     layer_number = models.PositiveIntegerField()  # 1, 2, 3, 4
     bread = models.ForeignKey(
@@ -339,6 +303,15 @@ class StoveSession(TapirModel):
             "delivery_day",
             "session_number",
             "layer_number",
+        ]
+        constraints = [
+            # unique_together does not cover the whole-week rows: NULL never
+            # equals NULL, so the constraint above admits any number of them.
+            models.UniqueConstraint(
+                fields=["year", "delivery_week", "session_number", "layer_number"],
+                condition=models.Q(delivery_day__isnull=True),
+                name="unique_stove_session_per_whole_week",
+            )
         ]
 
     def __str__(self):

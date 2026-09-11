@@ -1,7 +1,15 @@
+from rest_framework.exceptions import ValidationError
+
 from typing import Any, Optional, Tuple
 
 from rest_framework import status
 from rest_framework.response import Response
+
+# How many breads a member may mark as favourites. Enforced on the server as
+# well as in PreferredBreadsModal.tsx: without a limit a member counts as
+# trivially "satisfied" in the metrics and multiplies their claims in the
+# solver's preference weighting.
+MAX_PREFERRED_BREADS = 3
 
 
 def str_to_bool(value: Optional[str]) -> Optional[bool]:
@@ -45,3 +53,19 @@ def parse_week_params(query_params: Any) -> Tuple[int, int, Optional[int]] | Res
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+def int_query_param(request, name: str):
+    """
+    An optional integer query parameter, or None.
+
+    Raises DRF's ValidationError - a 400 - rather than letting a non-numeric
+    value reach the ORM, where it would surface as an unhandled ValueError.
+    """
+    raw = request.query_params.get(name)
+    if raw is None or raw == "":
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        raise ValidationError({name: "Muss eine ganze Zahl sein."})

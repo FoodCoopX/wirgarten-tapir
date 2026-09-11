@@ -24,48 +24,6 @@ export interface PatchedBreadDeliveryRequest {
      * @type {string}
      * @memberof PatchedBreadDeliveryRequest
      */
-    id?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof PatchedBreadDeliveryRequest
-     */
-    year?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PatchedBreadDeliveryRequest
-     */
-    deliveryWeek?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PatchedBreadDeliveryRequest
-     */
-    slotNumber?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PatchedBreadDeliveryRequest
-     */
-    jokerTaken?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof PatchedBreadDeliveryRequest
-     */
-    subscription?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PatchedBreadDeliveryRequest
-     */
-    pickupLocation?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof PatchedBreadDeliveryRequest
-     */
     bread?: string | null;
 }
 
@@ -86,13 +44,6 @@ export function PatchedBreadDeliveryRequestFromJSONTyped(json: any, ignoreDiscri
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
-        'year': json['year'] == null ? undefined : json['year'],
-        'deliveryWeek': json['delivery_week'] == null ? undefined : json['delivery_week'],
-        'slotNumber': json['slot_number'] == null ? undefined : json['slot_number'],
-        'jokerTaken': json['joker_taken'] == null ? undefined : json['joker_taken'],
-        'subscription': json['subscription'] == null ? undefined : json['subscription'],
-        'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
         'bread': json['bread'] == null ? undefined : json['bread'],
     };
 }
@@ -108,13 +59,6 @@ export function PatchedBreadDeliveryRequestFromJSONTyped(json: any, ignoreDiscri
 
     return {
         
-        'id': value['id'],
-        'year': value['year'],
-        'delivery_week': value['deliveryWeek'],
-        'slot_number': value['slotNumber'],
-        'joker_taken': value['jokerTaken'],
-        'subscription': value['subscription'],
-        'pickup_location': value['pickupLocation'],
         'bread': value['bread'],
     };
 }

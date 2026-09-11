@@ -20,12 +20,6 @@ import { mapValues } from '../runtime';
  */
 export interface BreadContentRequest {
     /**
-     * 
-     * @type {string}
-     * @memberof BreadContentRequest
-     */
-    id?: string;
-    /**
      * Amount in grams or percentage
      * @type {number}
      * @memberof BreadContentRequest
@@ -71,7 +65,6 @@ export function BreadContentRequestFromJSONTyped(json: any, ignoreDiscriminator:
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'amount': json['amount'],
         'sortOrder': json['sort_order'] == null ? undefined : json['sort_order'],
         'bread': json['bread'],
@@ -90,7 +83,6 @@ export function BreadContentRequestFromJSONTyped(json: any, ignoreDiscriminator:
 
     return {
         
-        'id': value['id'],
         'amount': value['amount'],
         'sort_order': value['sortOrder'],
         'bread': value['bread'],

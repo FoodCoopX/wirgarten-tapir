@@ -57,7 +57,9 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   const [selectedPickupLocations, setSelectedPickupLocations] = useState<
     PublicPickupLocation[]
   >([]);
-  const [selectedDeliveryDay, setSelectedDeliveryDay] = useState<number | null>(null);
+  const [selectedDeliveryDay, setSelectedDeliveryDay] = useState<number | null>(
+    null,
+  );
   const [
     pickupLocationsWithCapacityCheckLoading,
     setPickupLocationsWithCapacityCheckLoading,
@@ -73,23 +75,25 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   ] = useState(false);
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
 
-    // Get unique delivery days from pickup locations
+  // Get unique delivery days from pickup locations
   const availableDeliveryDays = React.useMemo((): number[] => {
+    // Not Number(): deliveryDay is `number | null` and Number(null) is 0,
+    // which would file a station with no opening times under Montag.
     const days = new Set(
       pickupLocations
-        .map((loc) => Number(loc.deliveryDay))
-        .filter((day) => !isNaN(day))
+        .map((loc) => loc.deliveryDay)
+        .filter((day): day is number => day !== null && day !== undefined),
     );
-    return Array.from(days).sort();
+    return Array.from(days).sort((a, b) => a - b);
   }, [pickupLocations]);
-  
+
   // Filter pickup locations by selected delivery day
   const filteredPickupLocations = React.useMemo(() => {
     if (selectedDeliveryDay === null) {
       return pickupLocations;
     }
     return pickupLocations.filter(
-      (loc) => Number(loc.deliveryDay) === selectedDeliveryDay
+      (loc) => loc.deliveryDay === selectedDeliveryDay,
     );
   }, [pickupLocations, selectedDeliveryDay]);
 
@@ -307,7 +311,12 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           <DeliveryDayTabs
             availableDays={availableDeliveryDays}
             selectedDay={selectedDeliveryDay}
-            onSelectDay={setSelectedDeliveryDay}
+            onSelectDay={(day) => {
+              setSelectedDeliveryDay(day);
+              // Dropping the day filter must drop anything it hides, or a
+              // member can confirm a station that is no longer on screen.
+              setSelectedPickupLocations([]);
+            }}
           />
 
           {waitingListModeEnabled && (
@@ -334,11 +343,13 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             />
           )}
 
-          {filteredPickupLocations.length === 0 && selectedDeliveryDay !== null && (
-            <div className="alert alert-info">
-              Keine Verteilstationen verfügbar für {WEEKDAY_NAMES[selectedDeliveryDay]}
-            </div>
-          )}
+          {filteredPickupLocations.length === 0 &&
+            selectedDeliveryDay !== null && (
+              <div className="alert alert-info">
+                Keine Verteilstationen verfügbar für{" "}
+                {WEEKDAY_NAMES[selectedDeliveryDay]}
+              </div>
+            )}
         </Modal.Body>
         <Modal.Footer>
           <TapirButton

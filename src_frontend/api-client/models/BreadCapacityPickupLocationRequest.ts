@@ -20,12 +20,6 @@ import { mapValues } from '../runtime';
  */
 export interface BreadCapacityPickupLocationRequest {
     /**
-     * 
-     * @type {string}
-     * @memberof BreadCapacityPickupLocationRequest
-     */
-    id?: string;
-    /**
      * Year for which this capacity applies
      * @type {number}
      * @memberof BreadCapacityPickupLocationRequest
@@ -79,7 +73,6 @@ export function BreadCapacityPickupLocationRequestFromJSONTyped(json: any, ignor
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
         'capacity': json['capacity'],
@@ -99,7 +92,6 @@ export function BreadCapacityPickupLocationRequestFromJSONTyped(json: any, ignor
 
     return {
         
-        'id': value['id'],
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'capacity': value['capacity'],

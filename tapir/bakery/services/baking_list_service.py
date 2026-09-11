@@ -1,30 +1,38 @@
 from typing import Any
 
-from django.db.models import OuterRef, Subquery
+from django.db.models import Q
 
-from tapir.bakery.models import BreadsPerPickupLocationPerWeek, StoveSession
-from tapir.pickup_locations.models import PickupLocation
-from tapir.wirgarten.models import PickupLocationOpeningTime
+from tapir.bakery.models import (
+    BreadsPerPickupLocationPerWeek,
+    BreadsToBakePerWeek,
+    StoveSession,
+)
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
+)
 
 
 class BakingListService:
     @staticmethod
-    def get_pickup_location_ids_for_day(day: int) -> list[str]:
-        """Get pickup location IDs that have their first opening time on the given day."""
-        # Subquery to get the minimum day_of_week for each pickup location
-        first_day_subquery = (
-            PickupLocationOpeningTime.objects.filter(pickup_location=OuterRef("pk"))
-            .order_by("day_of_week")
-            .values("day_of_week")[:1]
+    def get_pickup_location_ids_for_day(day: int, cache: dict | None = None) -> list:
+        return (
+            PickupLocationDeliveryDayService.get_pickup_location_ids_for_delivery_day(
+                day=day, cache={} if cache is None else cache
+            )
         )
 
-        return list(
-            PickupLocation.objects.annotate(
-                first_delivery_day=Subquery(first_day_subquery)
-            )
-            .filter(first_delivery_day=day)
-            .values_list("id", flat=True)
-        )
+    @staticmethod
+    def _rows_for_day(queryset, day: int | None) -> list:
+        """
+        A week is planned either as a whole or day by day, and both shapes can
+        sit in the table at once. Rows for this day win; the whole-week rows
+        (delivery_day IS NULL) are the fallback for days the day-by-day runs
+        have not covered. Adding the two together would count the same loaves
+        twice.
+        """
+        rows = list(queryset.filter(Q(delivery_day=day) | Q(delivery_day__isnull=True)))
+        rows_for_day = [row for row in rows if row.delivery_day is not None]
+        return rows_for_day or [row for row in rows if row.delivery_day is None]
 
     @staticmethod
     def get_baking_list(year: int, week: int, day: int) -> dict[str, Any]:
@@ -49,14 +57,11 @@ class BakingListService:
             pickup_location_id__in=location_ids,
         ).select_related("bread")
 
-        stove_sessions = (
-            StoveSession.objects.filter(
-                year=year,
-                delivery_week=week,
-                delivery_day=day,
-            )
+        stove_sessions = BakingListService._rows_for_day(
+            StoveSession.objects.filter(year=year, delivery_week=week)
             .select_related("bread")
-            .order_by("session_number", "layer_number")
+            .order_by("session_number", "layer_number"),
+            day,
         )
 
         # Build bread summary
@@ -66,11 +71,19 @@ class BakingListService:
             bread_map.setdefault(name, {"deliveries": 0, "baked": 0})
             bread_map[name]["deliveries"] += bc.count
 
-        for ss in stove_sessions:
-            name = ss.bread.name if ss.bread else None
+        # "baked" is what the solver decided to bake rather than the sum of the
+        # stove layers: a bread with fixed_pieces occupies no layers.
+        to_bake = BakingListService._rows_for_day(
+            BreadsToBakePerWeek.objects.filter(
+                year=year, delivery_week=week
+            ).select_related("bread"),
+            day,
+        )
+        for row in to_bake:
+            name = row.bread.name if row.bread else None
             if name:
                 bread_map.setdefault(name, {"deliveries": 0, "baked": 0})
-                bread_map[name]["baked"] += ss.quantity
+                bread_map[name]["baked"] += row.quantity
 
         breads = sorted(
             [

@@ -161,9 +161,6 @@
                                 <div class="col-8" id="tapir_user_pseudonym">
                                     {% if object.pseudonym %}
                                         {{ object.pseudonym }}
-                                          {% if pseudonym_valid_from_week %}
-                                            <small class="text-muted">({% translate "gültig ab" %} Lieferung: {{ pseudonym_valid_from_date|date:"d.m.Y" }})</small>
-                                        {% endif %}
                                     {% else %}
                                         <span class="text-muted">{% translate "nicht gesetzt" %}</span>
                                     {% endif %}

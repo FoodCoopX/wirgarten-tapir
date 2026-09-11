@@ -1,7 +1,9 @@
 from unittest.mock import patch
 
+from tapir.bakery.models import BreadsToBakePerWeek
 from tapir.bakery.services.baking_list_service import BakingListService
 from tapir.bakery.tests.factories import (
+    BreadsToBakePerWeekFactory,
     BreadFactory,
     BreadsPerPickupLocationPerWeekFactory,
     StoveSessionFactory,
@@ -23,6 +25,33 @@ class TestBakingListService(TapirIntegrationTest):
         self.dinkelkruste = BreadFactory.create(name="Dinkelkruste")
 
     # ── No data ──────────────────────────────────────────────────────
+
+    def _plan_to_bake(self, bread, quantity, session_number=1, layer_number=1):
+        """
+        A baking plan as the solver writes it: the oven schedule plus the
+        per-bread total the Backliste reports as "baked". Both go in one
+        transaction in save_solution_to_db, so a test that sets up one without
+        the other is describing a state that cannot occur.
+        """
+        StoveSessionFactory.create(
+            year=self.YEAR,
+            delivery_week=self.WEEK,
+            delivery_day=self.DAY,
+            session_number=session_number,
+            layer_number=layer_number,
+            bread=bread,
+            quantity=quantity,
+        )
+        row, created = BreadsToBakePerWeek.objects.get_or_create(
+            year=self.YEAR,
+            delivery_week=self.WEEK,
+            delivery_day=self.DAY,
+            bread=bread,
+            defaults={"quantity": quantity},
+        )
+        if not created:
+            row.quantity += quantity
+            row.save()
 
     def test_getBakingList_noData_returnsEmptyResult(self, mock_kc):
         with patch.object(
@@ -72,15 +101,7 @@ class TestBakingListService(TapirIntegrationTest):
     # ── Baking only (no deliveries) ─────────────────────────────────
 
     def test_getBakingList_bakingOnly_showsBakedAndZeroDeliveries(self, mock_kc):
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=1,
-            bread=self.roggenbrot,
-            quantity=8,
-        )
+        self._plan_to_bake(self.roggenbrot, 8, session_number=1, layer_number=1)
 
         with patch.object(
             BakingListService, "get_pickup_location_ids_for_day", return_value=[]
@@ -110,15 +131,7 @@ class TestBakingListService(TapirIntegrationTest):
             count=10,
         )
 
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=1,
-            bread=self.roggenbrot,
-            quantity=12,
-        )
+        self._plan_to_bake(self.roggenbrot, 12, session_number=1, layer_number=1)
 
         with patch.object(
             BakingListService,
@@ -158,24 +171,8 @@ class TestBakingListService(TapirIntegrationTest):
             count=3,
         )
 
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=1,
-            bread=self.roggenbrot,
-            quantity=6,
-        )
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=2,
-            bread=self.dinkelkruste,
-            quantity=4,
-        )
+        self._plan_to_bake(self.roggenbrot, 6, session_number=1, layer_number=1)
+        self._plan_to_bake(self.dinkelkruste, 4, session_number=1, layer_number=2)
 
         with patch.object(
             BakingListService,
@@ -331,24 +328,8 @@ class TestBakingListService(TapirIntegrationTest):
     # ── Stove session structure ─────────────────────────────────────
 
     def test_getBakingList_singleStoveSession_returnsCorrectStructure(self, mock_kc):
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=1,
-            bread=self.roggenbrot,
-            quantity=6,
-        )
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=2,
-            bread=self.dinkelkruste,
-            quantity=4,
-        )
+        self._plan_to_bake(self.roggenbrot, 6, session_number=1, layer_number=1)
+        self._plan_to_bake(self.dinkelkruste, 4, session_number=1, layer_number=2)
 
         with patch.object(
             BakingListService, "get_pickup_location_ids_for_day", return_value=[]
@@ -369,24 +350,8 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(session["layers"][1]["quantity"], 4)
 
     def test_getBakingList_multipleStoveSessions_sortedBySessionNumber(self, mock_kc):
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=2,
-            layer_number=1,
-            bread=self.dinkelkruste,
-            quantity=5,
-        )
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=1,
-            bread=self.roggenbrot,
-            quantity=6,
-        )
+        self._plan_to_bake(self.dinkelkruste, 5, session_number=2, layer_number=1)
+        self._plan_to_bake(self.roggenbrot, 6, session_number=1, layer_number=1)
 
         with patch.object(
             BakingListService, "get_pickup_location_ids_for_day", return_value=[]
@@ -400,24 +365,8 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(result["stove_sessions"][1]["session"], 2)
 
     def test_getBakingList_stoveSessionLayers_sortedByLayerNumber(self, mock_kc):
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=3,
-            bread=self.roggenbrot,
-            quantity=2,
-        )
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=1,
-            bread=self.dinkelkruste,
-            quantity=4,
-        )
+        self._plan_to_bake(self.roggenbrot, 2, session_number=1, layer_number=3)
+        self._plan_to_bake(self.dinkelkruste, 4, session_number=1, layer_number=1)
 
         with patch.object(
             BakingListService, "get_pickup_location_ids_for_day", return_value=[]
@@ -433,24 +382,8 @@ class TestBakingListService(TapirIntegrationTest):
     # ── Multiple stove sessions sum baked totals ────────────────────
 
     def test_getBakingList_multipleSessions_bakeTotalsSumCorrectly(self, mock_kc):
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=1,
-            layer_number=1,
-            bread=self.roggenbrot,
-            quantity=6,
-        )
-        StoveSessionFactory.create(
-            year=self.YEAR,
-            delivery_week=self.WEEK,
-            delivery_day=self.DAY,
-            session_number=2,
-            layer_number=1,
-            bread=self.roggenbrot,
-            quantity=4,
-        )
+        self._plan_to_bake(self.roggenbrot, 6, session_number=1, layer_number=1)
+        self._plan_to_bake(self.roggenbrot, 4, session_number=2, layer_number=1)
 
         with patch.object(
             BakingListService, "get_pickup_location_ids_for_day", return_value=[]
@@ -461,3 +394,67 @@ class TestBakingListService(TapirIntegrationTest):
 
         self.assertEqual(result["breads"][0]["baked"], 10)
         self.assertEqual(result["total_baked"], 10)
+
+    # ── Whole-week and per-day plans in the same week ───────────────
+
+    def test_getBakingList_wholeWeekPlanOnly_isUsedForTheDay(self, mock_kc):
+        # A whole-week run writes delivery_day=None, and the Backliste is still
+        # rendered per day.
+        BreadsToBakePerWeekFactory.create(
+            year=self.YEAR,
+            delivery_week=self.WEEK,
+            delivery_day=None,
+            bread=self.roggenbrot,
+            quantity=10,
+        )
+        StoveSessionFactory.create(
+            year=self.YEAR,
+            delivery_week=self.WEEK,
+            delivery_day=None,
+            session_number=1,
+            layer_number=1,
+            bread=self.roggenbrot,
+            quantity=10,
+        )
+
+        with patch.object(
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
+        ):
+            result = BakingListService.get_baking_list(
+                year=self.YEAR, week=self.WEEK, day=self.DAY
+            )
+
+        self.assertEqual(result["total_baked"], 10)
+        self.assertEqual(len(result["stove_sessions"]), 1)
+
+    def test_getBakingList_dayPlanSupersedesWholeWeekPlan_notAddedToIt(self, mock_kc):
+        # Planning a day after the week leaves both shapes in the table.
+        # Summing them would report the same loaves twice.
+        BreadsToBakePerWeekFactory.create(
+            year=self.YEAR,
+            delivery_week=self.WEEK,
+            delivery_day=None,
+            bread=self.roggenbrot,
+            quantity=10,
+        )
+        StoveSessionFactory.create(
+            year=self.YEAR,
+            delivery_week=self.WEEK,
+            delivery_day=None,
+            session_number=1,
+            layer_number=1,
+            bread=self.roggenbrot,
+            quantity=10,
+        )
+        self._plan_to_bake(self.roggenbrot, 4)
+
+        with patch.object(
+            BakingListService, "get_pickup_location_ids_for_day", return_value=[]
+        ):
+            result = BakingListService.get_baking_list(
+                year=self.YEAR, week=self.WEEK, day=self.DAY
+            )
+
+        self.assertEqual(result["breads"][0]["baked"], 4)
+        self.assertEqual(result["total_baked"], 4)
+        self.assertEqual(len(result["stove_sessions"][0]["layers"]), 1)

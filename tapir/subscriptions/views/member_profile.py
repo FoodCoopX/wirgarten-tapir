@@ -149,6 +149,26 @@ class UpdateSubscriptionsApiView(APIView):
         }
         return Response(OrderConfirmationResponseSerializer(data).data)
 
+    def may_member_reduce_size(
+        self, logged_in_user_is_admin: bool, product_type: ProductType
+    ) -> bool:
+        """
+        Whether shrinking a running contract is allowed for this product type.
+
+        The bakery parameter is about bread shares, so it must not also unlock
+        the harvest share.
+        """
+        if logged_in_user_is_admin:
+            return True
+
+        return bool(
+            product_type.is_bread
+            and get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=self.cache)
+            and get_parameter_value(
+                ParameterKeys.BAKERY_MEMBERS_CAN_REDUCES_BREAD_SHARES, cache=self.cache
+            )
+        )
+
     def validate_everything(
         self,
         validated_data: dict,
@@ -188,14 +208,11 @@ class UpdateSubscriptionsApiView(APIView):
             member=member,
         )
 
-        can_reduce_subscription_size = logged_in_user_is_admin or (
-            get_parameter_value(
-                ParameterKeys.BAKERY_MEMBERS_CAN_REDUCES_BREAD_SHARES, cache=self.cache
-            )
-            and get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=self.cache)
-        )
         OrderValidator.validate_cannot_reduce_size(
-            logged_in_user_is_admin=can_reduce_subscription_size,
+            member_may_reduce_size=self.may_member_reduce_size(
+                logged_in_user_is_admin=logged_in_user_is_admin,
+                product_type=product_type,
+            ),
             contract_start_date=contract_start_date,
             member=member,
             order_for_a_single_product_type=order,

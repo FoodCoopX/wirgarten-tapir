@@ -4,9 +4,13 @@ from rest_framework import serializers
 
 from tapir.deliveries.models import DeliveryDonation, Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
+)
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
+from tapir.utils.shortcuts import get_serializer_cache
 from tapir.wirgarten.constants import OPTIONS_WEEKDAYS
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -62,12 +66,10 @@ class PickupLocationSerializer(serializers.ModelSerializer):
             "delivery_day",
         ]
 
-    @staticmethod
-    def get_delivery_day(pickup_location: PickupLocation) -> int | None:
-        try:
-            return int(pickup_location.delivery_day)
-        except (TypeError, ValueError):
-            return None
+    def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
+        return PickupLocationDeliveryDayService.get_delivery_day(
+            pickup_location_id=pickup_location.id, cache=get_serializer_cache(self)
+        )
 
 
 class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):

@@ -1,20 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { BakeryApi } from '../../../api-client';
-import { useApi } from '../../../hooks/useApi';
-import '../../styles/bakery_styles.css';
-
-interface BreadStat {
-  breadName: string;
-  count: number;
-  percentage: number;
-}
-
-interface PreferredBreadStats {
-  totalMembers: number;
-  membersWithPreferences: number;
-  membersWithoutPreferences: number;
-  breads: BreadStat[];
-}
+import React, { useState, useEffect, useRef } from "react";
+import { BakeryApi } from "../../../api-client";
+import type { PreferredBreadStatistics } from "../../../api-client/models";
+import { useApi } from "../../../hooks/useApi";
+import "../../styles/bakery_styles.css";
 
 interface PreferredBreadStatisticsCardProps {
   year: number;
@@ -23,48 +11,46 @@ interface PreferredBreadStatisticsCardProps {
   csrfToken: string;
 }
 
-export const PreferredBreadStatisticsCard: React.FC<PreferredBreadStatisticsCardProps> = ({
-  year, week, deliveryDay, csrfToken,
-}) => {
+export const PreferredBreadStatisticsCard: React.FC<
+  PreferredBreadStatisticsCardProps
+> = ({ year, week, deliveryDay, csrfToken }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
-  const [stats, setStats] = useState<PreferredBreadStats | null>(null);
+  const [stats, setStats] = useState<PreferredBreadStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Same guard as the other week-scoped cards: a response for a week the
+  // user has already left must not repaint this one.
+  const selectionRef = useRef(`${year}/${week}/${deliveryDay}`);
+
   useEffect(() => {
+    selectionRef.current = `${year}/${week}/${deliveryDay}`;
     loadStats();
   }, [year, week, deliveryDay]);
 
+  // Through the generated client: this was the frontend's only hand-written
+  // fetch(), hand-mapping snake_case keys the schema now declares, while the
+  // `bakeryApi` it had already built sat unused.
   const loadStats = () => {
+    const requestedFor = `${year}/${week}/${deliveryDay}`;
     setLoading(true);
     setError(null);
-    fetch(
-      `/bakery/api/preferred-bread-statistics/?year=${year}&delivery_week=${week}&delivery_day=${deliveryDay}`,
-      {
-        headers: { 'X-CSRFToken': csrfToken },
-        credentials: 'same-origin',
-      }
-    )
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    bakeryApi
+      .bakeryApiPreferredBreadStatisticsRetrieve({
+        year,
+        deliveryWeek: week,
+        deliveryDay,
       })
       .then((data) => {
-        setStats({
-          totalMembers: data.total_members,
-          membersWithPreferences: data.members_with_preferences,
-          membersWithoutPreferences: data.members_without_preferences,
-          breads: (data.breads || []).map((b: any) => ({
-            breadName: b.bread_name,
-            count: b.count,
-            percentage: b.percentage,
-          })),
-        });
+        if (selectionRef.current !== requestedFor) return;
+        setStats(data);
       })
-      .catch((e: any) => {
-        setError(e.message || 'Fehler beim Laden');
+      .catch((e: unknown) => {
+        if (selectionRef.current !== requestedFor) return;
+        setError(e instanceof Error ? e.message : "Fehler beim Laden");
       })
       .finally(() => {
+        if (selectionRef.current !== requestedFor) return;
         setLoading(false);
       });
   };
@@ -80,7 +66,10 @@ export const PreferredBreadStatisticsCard: React.FC<PreferredBreadStatisticsCard
 
   if (error) {
     return (
-      <div className="alert alert-danger py-1 px-2" style={{ fontSize: '0.75rem' }}>
+      <div
+        className="alert alert-danger py-1 px-2"
+        style={{ fontSize: "0.75rem" }}
+      >
         Fehler: {error}
       </div>
     );
@@ -95,24 +84,43 @@ export const PreferredBreadStatisticsCard: React.FC<PreferredBreadStatisticsCard
   }
 
   const maxCount = stats.breads.length > 0 ? stats.breads[0].count : 1;
-  const prefPercent = stats.totalMembers > 0
-    ? Math.round(stats.membersWithPreferences / stats.totalMembers * 100)
-    : 0;
+  const prefPercent =
+    stats.totalMembers > 0
+      ? Math.round((stats.membersWithPreferences / stats.totalMembers) * 100)
+      : 0;
 
   return (
     <div>
       {/* Summary badges */}
       <div className="d-flex flex-wrap gap-2 mb-3">
-        <span className="badge badge-bakery-primary" style={{ fontSize: '0.75rem' }}>
-          <span className="material-icons me-1" style={{ fontSize: '12px', verticalAlign: 'middle' }}>people</span>
+        <span
+          className="badge badge-bakery-primary"
+          style={{ fontSize: "0.75rem" }}
+        >
+          <span
+            className="material-icons me-1"
+            style={{ fontSize: "12px", verticalAlign: "middle" }}
+          >
+            people
+          </span>
           {stats.totalMembers} Mitglieder
         </span>
-        <span className="badge bg-success" style={{ fontSize: '0.75rem' }}>
-          <span className="material-icons me-1" style={{ fontSize: '12px', verticalAlign: 'middle' }}>favorite</span>
+        <span className="badge bg-success" style={{ fontSize: "0.75rem" }}>
+          <span
+            className="material-icons me-1"
+            style={{ fontSize: "12px", verticalAlign: "middle" }}
+          >
+            favorite
+          </span>
           {stats.membersWithPreferences} mit Präferenz ({prefPercent}%)
         </span>
-        <span className="badge bg-secondary" style={{ fontSize: '0.75rem' }}>
-          <span className="material-icons me-1" style={{ fontSize: '12px', verticalAlign: 'middle' }}>help_outline</span>
+        <span className="badge bg-secondary" style={{ fontSize: "0.75rem" }}>
+          <span
+            className="material-icons me-1"
+            style={{ fontSize: "12px", verticalAlign: "middle" }}
+          >
+            help_outline
+          </span>
           {stats.membersWithoutPreferences} ohne
         </span>
       </div>
@@ -125,19 +133,31 @@ export const PreferredBreadStatisticsCard: React.FC<PreferredBreadStatisticsCard
             return (
               <div key={bread.breadName}>
                 <div className="d-flex justify-content-between align-items-center mb-1">
-                  <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{bread.breadName}</span>
-                  <span className="text-bakery-primary-darker" style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 500 }}>
+                    {bread.breadName}
+                  </span>
+                  <span
+                    className="text-bakery-primary-darker"
+                    style={{ fontSize: "0.75rem", fontWeight: "bold" }}
+                  >
                     {bread.count}× ({bread.percentage}%)
                   </span>
                 </div>
-                <div className="progress-bar-bakery-chart" style={{ borderRadius: '4px', height: '12px', overflow: 'hidden' }}>
+                <div
+                  className="progress-bar-bakery-chart"
+                  style={{
+                    borderRadius: "4px",
+                    height: "12px",
+                    overflow: "hidden",
+                  }}
+                >
                   <div
                     className="progress-bar-bakery-primary"
                     style={{
                       width: `${barWidth}%`,
-                      height: '100%',
-                      borderRadius: '4px',
-                      transition: 'width 0.5s ease',
+                      height: "100%",
+                      borderRadius: "4px",
+                      transition: "width 0.5s ease",
                     }}
                   />
                 </div>

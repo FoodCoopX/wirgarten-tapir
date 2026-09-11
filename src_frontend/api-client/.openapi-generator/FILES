@@ -18,7 +18,6 @@ models/AssignmentLogEntryStatusEnum.ts
 models/AutomatedExportCycleEnum.ts
 models/AvailableBreadsForDeliveryListResponse.ts
 models/AvailableSegmentsResponse.ts
-models/BakeryApiConfigurationParametersRetrieve200ResponseInner.ts
 models/BestellWizardBaseDataResponse.ts
 models/BestellWizardCapacityCheckRequestRequest.ts
 models/BestellWizardCapacityCheckResponse.ts
@@ -37,7 +36,6 @@ models/BreadCapacityUpdateItemRequest.ts
 models/BreadContent.ts
 models/BreadContentRequest.ts
 models/BreadDelivery.ts
-models/BreadDeliveryRequest.ts
 models/BreadDetail.ts
 models/BreadLabel.ts
 models/BreadLabelRequest.ts
@@ -158,7 +156,6 @@ models/PatchedIngredientRequest.ts
 models/PatchedMailCategoryRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedPickupLocationCapacitiesRequest.ts
-models/PatchedPreferredBreadRequest.ts
 models/PatchedSaveExtendedProductTypeRequest.ts
 models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
@@ -173,7 +170,8 @@ models/PdfExportModelRequest.ts
 models/PersonalDataRequest.ts
 models/PickingModeEnum.ts
 models/PickupListEntry.ts
-models/PickupListResponse.ts
+models/PickupListForLocation.ts
+models/PickupListsResponse.ts
 models/PickupLocation.ts
 models/PickupLocationCapacities.ts
 models/PickupLocationCapacityByShare.ts
@@ -187,7 +185,8 @@ models/PickupLocationOpeningTime.ts
 models/PickupLocationsByDeliveryDayResponse.ts
 models/PreferenceSatisfactionResponse.ts
 models/PreferredBread.ts
-models/PreferredBreadRequest.ts
+models/PreferredBreadStatistic.ts
+models/PreferredBreadStatistics.ts
 models/PreferredBreadsBulkUpdate.ts
 models/PreferredBreadsBulkUpdateRequest.ts
 models/PreferredLanguageEnum.ts

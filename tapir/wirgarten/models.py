@@ -121,20 +121,6 @@ class PickupLocation(TapirModel):
 
         return smallest_offset if smallest_offset is not None else 0
 
-    @property
-    def delivery_day(self):
-        """
-        Returns the first day of the week (as integer) from the pickup location's opening times.
-        Returns None if no opening times are configured.
-        """
-        opening_time = (
-            PickupLocationOpeningTime.objects.filter(pickup_location_id=self.id)
-            .order_by("day_of_week")
-            .first()
-        )
-
-        return opening_time.day_of_week if opening_time else None
-
 
 class PickupLocationOpeningTime(TapirModel):
     pickup_location = models.ForeignKey(
@@ -201,6 +187,9 @@ class ProductType(TapirModel):
     )
     is_affected_by_jokers = models.BooleanField(
         default=True, verbose_name=_("Nimmt am Joker-Verfahren teil")
+    )
+    is_bread = models.BooleanField(
+        default=False, verbose_name=_("Brotanteil (Bäckerei)")
     )
     subscriptions_have_end_dates = models.BooleanField(
         default=True,

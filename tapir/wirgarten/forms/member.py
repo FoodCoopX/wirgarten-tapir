@@ -59,9 +59,11 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
 
+        # ANDed with the feature flag: the pseudonym is a bakery concept, so a
+        # farm without a bakery must not get the field.
         pseudonym_enabled = get_parameter_value(
-            ParameterKeys.BAKERY_PSEUDONYM_ENABLED, cache={}
-        )
+            ParameterKeys.BAKERY_A_ENABLED, cache={}
+        ) and get_parameter_value(ParameterKeys.BAKERY_PSEUDONYM_ENABLED, cache={})
         optional_fields = ["street_2", "is_student", "birthdate"]
         if pseudonym_enabled:
             optional_fields.append("pseudonym")
@@ -434,7 +436,11 @@ class SubscriptionRenewalForm(Form):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
-            **{k: v for k, v in kwargs.items() if k not in ["start_date", "member_id"]},
+            **{
+                k: v
+                for k, v in kwargs.items()
+                if k not in ["start_date", "member_id", "actor"]
+            },
         )
         self.start_date = kwargs["start_date"]
         self.cache = {}

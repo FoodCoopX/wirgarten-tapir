@@ -1,6 +1,6 @@
-import React from 'react';
-import { SectionToggle } from './SectionToggle';
-import '../../styles/bakery_styles.css';
+import React from "react";
+import { SectionToggle } from "./SectionToggle";
+import "../../styles/bakery_styles.css";
 
 interface StoveSessionGrouped {
   session: number;
@@ -13,9 +13,18 @@ interface OvenPlanSectionProps {
   displaySessions: StoveSessionGrouped[];
 }
 
-export const OvenPlanSection: React.FC<OvenPlanSectionProps> = ({ isOpen, onToggle, displaySessions }) => (
+export const OvenPlanSection: React.FC<OvenPlanSectionProps> = ({
+  isOpen,
+  onToggle,
+  displaySessions,
+}) => (
   <div className="mb-3">
-    <SectionToggle isOpen={isOpen} onToggle={onToggle} title="Ofenplan" icon="local_fire_department" />
+    <SectionToggle
+      isOpen={isOpen}
+      onToggle={onToggle}
+      title="Ofenplan"
+      icon="local_fire_department"
+    />
     <p className="text-muted small mb-2">Belegung der Ofengänge</p>
 
     {isOpen && (
@@ -29,12 +38,17 @@ export const OvenPlanSection: React.FC<OvenPlanSectionProps> = ({ isOpen, onTogg
                 </div>
                 <ul className="list-group list-group-flush">
                   {session.layers.map((layer) => (
-                    <li key={layer.layer} className="list-group-item py-1 small">
-                      <span className="text-muted">Etage {layer.layer}:</span>{' '}
+                    <li
+                      key={layer.layer}
+                      className="list-group-item py-1 small"
+                    >
+                      <span className="text-muted">Etage {layer.layer}:</span>{" "}
                       {layer.breadName ? (
                         <span>
-                          {layer.breadName}{' '}
-                          <span className="badge bg-secondary">×{layer.quantity}</span>
+                          {layer.breadName}{" "}
+                          <span className="badge bg-secondary">
+                            ×{layer.quantity}
+                          </span>
                         </span>
                       ) : (
                         <span className="text-muted fst-italic">leer</span>
@@ -46,7 +60,9 @@ export const OvenPlanSection: React.FC<OvenPlanSectionProps> = ({ isOpen, onTogg
             ))}
           </div>
         ) : (
-          <p className="text-muted small text-center py-2">Noch kein Ofenplan berechnet.</p>
+          <p className="text-muted small text-center py-2">
+            Noch kein Ofenplan berechnet.
+          </p>
         )}
       </>
     )}

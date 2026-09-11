@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { BreadContent } from './BreadContent';
+import {
+    BreadContentFromJSON,
+    BreadContentFromJSONTyped,
+    BreadContentToJSON,
+    BreadContentToJSONTyped,
+} from './BreadContent';
+
 /**
  * 
  * @export
@@ -24,7 +32,7 @@ export interface BreadList {
      * @type {string}
      * @memberof BreadList
      */
-    id?: string;
+    readonly id: string;
     /**
      * 
      * @type {number}
@@ -43,6 +51,12 @@ export interface BreadList {
      * @memberof BreadList
      */
     readonly availableCapacity: number;
+    /**
+     * 
+     * @type {Array<BreadContent>}
+     * @memberof BreadList
+     */
+    readonly contents: Array<BreadContent>;
     /**
      * 
      * @type {string}
@@ -115,9 +129,11 @@ export interface BreadList {
  * Check if a given object implements the BreadList interface.
  */
 export function instanceOfBreadList(value: object): value is BreadList {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('capacity' in value) || value['capacity'] === undefined) return false;
     if (!('deliveryCount' in value) || value['deliveryCount'] === undefined) return false;
     if (!('availableCapacity' in value) || value['availableCapacity'] === undefined) return false;
+    if (!('contents' in value) || value['contents'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('weight' in value) || value['weight'] === undefined) return false;
     return true;
@@ -133,10 +149,11 @@ export function BreadListFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'capacity': json['capacity'],
         'deliveryCount': json['delivery_count'],
         'availableCapacity': json['available_capacity'],
+        'contents': ((json['contents'] as Array<any>).map(BreadContentFromJSON)),
         'name': json['name'],
         'picture': json['picture'] == null ? undefined : json['picture'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -155,14 +172,13 @@ export function BreadListFromJSONTyped(json: any, ignoreDiscriminator: boolean):
       return BreadListToJSONTyped(json, false);
   }
 
-  export function BreadListToJSONTyped(value?: Omit<BreadList, 'capacity'|'delivery_count'|'available_capacity'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadListToJSONTyped(value?: Omit<BreadList, 'id'|'capacity'|'delivery_count'|'available_capacity'|'contents'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
         'name': value['name'],
         'picture': value['picture'],
         'description': value['description'],

@@ -1,5 +1,27 @@
 {% extends "bakery/pdfs/base_pdf.html" %}
 
+{% block extra_styles %}
+  @page {
+    size: A4 landscape;
+  }
+
+  table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .bread-col-header {
+    white-space: nowrap;
+    font-size: 8pt;
+    text-align: center;
+    overflow: visible;
+  }
+
+  .bread-col-data {
+    text-align: center;
+  }
+{% endblock %}
+
 {% block header %}
 <div class="report-header">
   <h1>{{ pickup_location_name }}</h1>

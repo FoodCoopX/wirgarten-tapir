@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from tapir.bakery.services.pickup_list_service import PickupListService
 from tapir.bakery.tests.factories import (
+    BreadSubscriptionFactory,
     BreadDeliveryFactory,
     BreadFactory,
     BreadsPerPickupLocationPerWeekFactory,
@@ -10,8 +11,8 @@ from tapir.bakery.tests.factories import (
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
-    SubscriptionFactory,
 )
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
 
 
@@ -19,6 +20,12 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_ke
 class TestPickupListService(TapirIntegrationTest):
     YEAR = 2026
     WEEK = 11
+
+    @classmethod
+    def setUpTestData(cls):
+        # The station a slot belongs to is derived, and resolving it needs the
+        # org delivery weekday parameter.
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         super().setUp()
@@ -29,7 +36,7 @@ class TestPickupListService(TapirIntegrationTest):
 
     def _create_member_with_subscription(self, first_name="Anna", last_name="Müller"):
         member = MemberFactory.create(first_name=first_name, last_name=last_name)
-        subscription = SubscriptionFactory.create(member=member)
+        subscription = BreadSubscriptionFactory.create(member=member)
         return member, subscription
 
     def _create_delivery(self, subscription, bread=None):
@@ -514,3 +521,39 @@ class TestPickupListService(TapirIntegrationTest):
         # bread_totals should only count assigned breads
         self.assertEqual(result["bread_totals"].get("Roggenbrot", 0), 1)
         self.assertEqual(result["bread_totals"].get("Dinkelkruste", 0), 1)
+
+    def test_getPickupList_sharedCache_costDoesNotGrowWithStations(self, mock_kc):
+        """
+        The Reports page renders every station of a day. One request per
+        station re-derived the whole week each time; with a shared cache the
+        cost has to stay flat.
+        """
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        stations = [PickupLocationFactory.create() for _ in range(5)]
+        for pickup_location in stations:
+            member, subscription = self._create_member_with_subscription()
+            BreadDeliveryFactory.create(
+                year=self.YEAR,
+                delivery_week=self.WEEK,
+                subscription=subscription,
+                pickup_location=pickup_location,
+                bread=self.roggenbrot,
+            )
+
+        cache = {}
+        with CaptureQueriesContext(connection) as first:
+            PickupListService.get_pickup_list(
+                self.YEAR, self.WEEK, str(stations[0].id), cache=cache
+            )
+        with CaptureQueriesContext(connection) as rest:
+            for pickup_location in stations[1:]:
+                PickupListService.get_pickup_list(
+                    self.YEAR, self.WEEK, str(pickup_location.id), cache=cache
+                )
+
+        self.assertGreater(len(first), 0)
+        self.assertEqual(
+            len(rest), 0, "further stations must be answered from the cache"
+        )

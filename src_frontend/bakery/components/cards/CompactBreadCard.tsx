@@ -1,8 +1,12 @@
-import React from 'react';
-import { EggFried } from 'react-bootstrap-icons';
-import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
-import TapirButton from '../../../components/TapirButton';
-import '../../styles/bakery_styles.css';
+import React from "react";
+import { EggFried } from "react-bootstrap-icons";
+import type {
+  BreadList,
+  BreadContent,
+  BreadLabel,
+} from "../../../api-client/models";
+import TapirButton from "../../../components/TapirButton";
+import "../../styles/bakery_styles.css";
 
 interface CompactBreadCardProps {
   bread: BreadList;
@@ -74,7 +78,7 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
                   </div>
                 )}
               </div>
-              
+
               {bread.weight && (
                 <small className="text-muted mb-1">
                   {Number(bread.weight).toFixed(0)}g
@@ -83,11 +87,11 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
 
               {labels.length > 0 && (
                 <div className="mb-1">
-                  {labels.map(label => (
+                  {labels.map((label) => (
                     <span
                       key={label.id}
-                      className={`badge me-1 ${label.isActive ? 'badge-bakery-success' : 'badge-bakery-muted'}`}
-                      style={{ fontSize: '0.65rem' }}
+                      className={`badge me-1 ${label.isActive ? "badge-bakery-success" : "badge-bakery-muted"}`}
+                      style={{ fontSize: "0.65rem" }}
                     >
                       {label.name}
                     </span>
@@ -96,7 +100,10 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
               )}
 
               {bread.description && (
-                <p className="mb-1 small text-muted" style={{ fontSize: '0.8rem' }}>
+                <p
+                  className="mb-1 small text-muted"
+                  style={{ fontSize: "0.8rem" }}
+                >
                   {bread.description}
                 </p>
               )}
@@ -108,7 +115,7 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
                   </small>
                   <br />
                   <small className="content-ingredients-text">
-                    {contents.map(c => c.ingredientName).join(', ')}
+                    {contents.map((c) => c.ingredientName).join(", ")}
                   </small>
                 </div>
               )}

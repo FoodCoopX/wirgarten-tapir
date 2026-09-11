@@ -116,6 +116,8 @@ def get_renew_contracts_form(request, **kwargs):
     check_permission_or_self(member_id, request)
     kwargs["member_id"] = member_id
     kwargs["start_date"] = get_next_growing_period().start_date
+    # Reaches the pickup location change, which records who made it.
+    kwargs["actor"] = request.user
 
     @transaction.atomic
     def save(form: SubscriptionRenewalForm):

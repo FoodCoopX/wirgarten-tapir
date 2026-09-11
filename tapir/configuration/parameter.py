@@ -40,7 +40,7 @@ class ParameterMeta:
         textarea=False,
         vars_hint: list[str] = None,
         show_only_when: callable = None,
-        sort_order: int = 999,
+        sort_order: int = -1,
     ):
         if validators is None:
             validators = []

@@ -1,29 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { BakeryApi, PickupLocationsApi } from '../../api-client';
-import { useApi } from '../../hooks/useApi';
-import { handleRequestError } from '../../utils/handleRequestError';
-import type { PickupListResponse, PickupLocation, SolverPreviewDetailResponse } from '../../api-client/models';
-import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek";
-import { RunSolverCard, MetricsCard, YearWeekSelectorCard } from '../components/cards';
+import React, { useState, useEffect, useRef } from "react";
+import { BakeryApi, PickupLocationsApi } from "../../api-client";
+import { useApi } from "../../hooks/useApi";
+import { handleRequestError } from "../../utils/handleRequestError";
+import type {
+  PickupListForLocation,
+  PickupLocation,
+  SolverPreviewDetailResponse,
+} from "../../api-client/models";
+import {
+  RunSolverCard,
+  MetricsCard,
+  YearWeekSelectorCard,
+} from "../components/cards";
 import {
   SectionToggle,
   BakingListSection,
   OvenPlanSection,
   DistributionListSection,
   PickupListSection,
-} from '../components/reports_components';
-import '../styles/bakery_styles.css';
+} from "../components/reports_components";
+import "../styles/bakery_styles.css";
+import {
+  DAY_LABELS,
+  currentIsoWeek,
+  currentIsoYear,
+  formatDeliveryDate,
+} from "../utils/weekdays";
 
-dayjs.extend(isoWeek);
-
-const currentWeek = dayjs().isoWeek();
-const currentYear = dayjs().year();
-
-const DAY_LABELS: Record<number, string> = {
-  0: 'Montag', 1: 'Dienstag', 2: 'Mittwoch', 3: 'Donnerstag',
-  4: 'Freitag', 5: 'Samstag', 6: 'Sonntag',
-};
+const currentWeek = currentIsoWeek();
+const currentYear = currentIsoYear();
 
 interface BreadCount {
   breadId: string;
@@ -52,24 +57,44 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
   const [deliveryDays, setDeliveryDays] = useState<number[]>([]);
-  const [allPickupLocations, setAllPickupLocations] = useState<PickupLocation[]>([]);
-  const [breadCountsByDay, setBreadCountsByDay] = useState<Record<number, BreadCount[]>>({});
-  const [stoveSessionsByDay, setStoveSessionsByDay] = useState<Record<number, StoveSessionGrouped[]>>({});
-  const [previewByDay, setPreviewByDay] = useState<Record<number, SolverPreviewDetailResponse>>({});
-  const [pickupListByDayByLocation, setPickupListByDayByLocation] = useState<Record<number, Record<string, PickupListResponse>>>({});
-  const [selectedPickupLocationByDay, setSelectedPickupLocationByDay] = useState<Record<number, string>>({});
-  const [pickupListLoadingByDay, setPickupListLoadingByDay] = useState<Record<number, boolean>>({});
-  const [checkedByDay, setCheckedByDay] = useState<Record<number, Record<string, boolean>>>({});
+  const [allPickupLocations, setAllPickupLocations] = useState<
+    PickupLocation[]
+  >([]);
+  const [breadCountsByDay, setBreadCountsByDay] = useState<
+    Record<number, BreadCount[]>
+  >({});
+  const [stoveSessionsByDay, setStoveSessionsByDay] = useState<
+    Record<number, StoveSessionGrouped[]>
+  >({});
+  const [previewByDay, setPreviewByDay] = useState<
+    Record<number, SolverPreviewDetailResponse>
+  >({});
+  const [pickupListByDayByLocation, setPickupListByDayByLocation] = useState<
+    Record<number, Record<string, PickupListForLocation>>
+  >({});
+  const [selectedPickupLocationByDay, setSelectedPickupLocationByDay] =
+    useState<Record<number, string>>({});
+  const [pickupListLoadingByDay, setPickupListLoadingByDay] = useState<
+    Record<number, boolean>
+  >({});
+  const [checkedByDay, setCheckedByDay] = useState<
+    Record<number, Record<string, boolean>>
+  >({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
-  const toggleSection = (key: string) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleSection = (key: string) =>
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   const isSectionOpen = (key: string) => openSections[key] ?? false;
 
-  const getPickupLocationsForDay = (day: number) => allPickupLocations.filter(pl => pl.deliveryDay === day);
-  const getDateForDay = (day: number) => dayjs().year(year).isoWeek(week).isoWeekday(day).format('DD.MM.YYYY');
+  const getPickupLocationsForDay = (day: number) =>
+    allPickupLocations.filter((pl) => pl.deliveryDay === day);
+  const getDateForDay = (day: number) => formatDeliveryDate(year, week, day);
 
-  const handlePreviewDetail = (day: number, detail: SolverPreviewDetailResponse) => {
-    setPreviewByDay(prev => ({ ...prev, [day]: detail }));
+  const handlePreviewDetail = (
+    day: number,
+    detail: SolverPreviewDetailResponse,
+  ) => {
+    setPreviewByDay((prev) => ({ ...prev, [day]: detail }));
   };
 
   const handleApplied = () => {
@@ -79,23 +104,36 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   };
 
   const handlePickupLocationChange = (day: number, id: string) => {
-    setSelectedPickupLocationByDay(prev => ({ ...prev, [day]: id }));
-    setCheckedByDay(prev => ({ ...prev, [day]: {} }));
+    setSelectedPickupLocationByDay((prev) => ({ ...prev, [day]: id }));
+    setCheckedByDay((prev) => ({ ...prev, [day]: {} }));
   };
 
   const handleCheckToggle = (day: number, memberId: string) => {
-    setCheckedByDay(prev => ({
+    setCheckedByDay((prev) => ({
       ...prev,
       [day]: { ...(prev[day] || {}), [memberId]: !prev[day]?.[memberId] },
     }));
   };
 
-  // --- Data loading (unchanged logic) ---
+  // The week the user is currently looking at. Responses that come back after
+  // the selection has moved on are dropped: without this a slow request for an
+  // earlier week overwrote the week now on screen.
+  const selectionRef = useRef(`${year}/${week}`);
+  const isStale = (requestedFor: string) =>
+    selectionRef.current !== requestedFor;
 
-  useEffect(() => { loadInitialData(); }, []);
+  // --- Data loading ---
 
   useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  // One effect, not three. [year, week, initialDataLoaded] and
+  // [year, week, deliveryDays, allPickupLocations] both fired on the initial
+  // load and on every week change, so each loader ran twice.
+  useEffect(() => {
     if (!initialDataLoaded) return;
+    selectionRef.current = `${year}/${week}`;
     setPreviewByDay({});
     setBreadCountsByDay({});
     setStoveSessionsByDay({});
@@ -104,13 +142,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     setCheckedByDay({});
     loadSolverResults();
     loadAllPickupLists();
-  }, [year, week, initialDataLoaded]);
-
-  useEffect(() => { loadSolverResults(); }, [year, week, deliveryDays, allPickupLocations]);
-
-  useEffect(() => {
-    if (deliveryDays.length > 0 && allPickupLocations.length > 0) loadAllPickupLists();
-  }, [year, week, deliveryDays, allPickupLocations]);
+  }, [year, week, initialDataLoaded, deliveryDays, allPickupLocations]);
 
   const loadInitialData = () => {
     setLoading(true);
@@ -124,7 +156,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         setInitialDataLoaded(true);
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Laden der Daten');
+        handleRequestError(error, "Fehler beim Laden der Daten");
       })
       .finally(() => {
         setLoading(false);
@@ -133,38 +165,63 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
   const loadSolverResults = () => {
     if (deliveryDays.length === 0 || allPickupLocations.length === 0) return;
-    bakeryApi.bakeryBreadsPerPickupLocationPerWeekList({ year, deliveryWeek: week })
+    const requestedFor = `${year}/${week}`;
+    bakeryApi
+      .bakeryBreadsPerPickupLocationPerWeekList({ year, deliveryWeek: week })
       .then((allBreadCounts) => {
+        if (isStale(requestedFor)) return;
         const countsByDay: Record<number, BreadCount[]> = {};
         for (const entry of allBreadCounts) {
-          const pl = allPickupLocations.find(p => p.id === String(entry.pickupLocation));
+          const pl = allPickupLocations.find(
+            (p) => p.id === String(entry.pickupLocation),
+          );
           if (!pl || pl.deliveryDay == null) continue;
           countsByDay[pl.deliveryDay] ??= [];
           countsByDay[pl.deliveryDay].push({
-            breadId: String(entry.bread), breadName: entry.breadName || 'Unbekannt',
-            pickupLocationId: String(entry.pickupLocation), pickupLocationName: pl.name, count: entry.count!,
+            breadId: String(entry.bread),
+            breadName: entry.breadName || "Unbekannt",
+            pickupLocationId: String(entry.pickupLocation),
+            pickupLocationName: pl.name,
+            count: entry.count!,
           });
         }
         setBreadCountsByDay(countsByDay);
 
         return Promise.all(
           deliveryDays.map((day) =>
-            bakeryApi.bakeryStoveSessionsList({ year, deliveryWeek: week, deliveryDay: day })
+            bakeryApi
+              .bakeryStoveSessionsList({
+                year,
+                deliveryWeek: week,
+                deliveryDay: day,
+              })
               .then((sessions) => {
                 const grouped: Record<number, StoveSessionGrouped> = {};
                 for (const s of sessions) {
-                  grouped[s.sessionNumber] ??= { session: s.sessionNumber, layers: [] };
-                  grouped[s.sessionNumber].layers.push({ layer: s.layerNumber, breadName: s.breadName || null, quantity: s.quantity! });
+                  grouped[s.sessionNumber] ??= {
+                    session: s.sessionNumber,
+                    layers: [],
+                  };
+                  grouped[s.sessionNumber].layers.push({
+                    layer: s.layerNumber,
+                    breadName: s.breadName || null,
+                    quantity: s.quantity!,
+                  });
                 }
-                const sorted = Object.values(grouped).sort((a, b) => a.session - b.session);
-                sorted.forEach(s => s.layers.sort((a, b) => a.layer - b.layer));
+                const sorted = Object.values(grouped).sort(
+                  (a, b) => a.session - b.session,
+                );
+                sorted.forEach((s) =>
+                  s.layers.sort((a, b) => a.layer - b.layer),
+                );
                 return { day, sessions: sorted };
               })
-              .catch(() => ({ day, sessions: [] as StoveSessionGrouped[] }))
-          )
+              .catch(() => ({ day, sessions: [] as StoveSessionGrouped[] })),
+          ),
         );
       })
       .then((sessionResults) => {
+        if (isStale(requestedFor)) return;
         if (sessionResults) {
           const sessionsByDay: Record<number, StoveSessionGrouped[]> = {};
           sessionResults.forEach(({ day, sessions }) => {
@@ -174,34 +231,45 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         }
       })
       .catch((error) => {
-        console.error('Failed to load solver results:', error);
+        if (isStale(requestedFor)) return;
+        handleRequestError(error, "Fehler beim Laden der Backplanung");
       });
   };
 
   const loadAllPickupLists = () => {
-    setPickupListLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: true }), {}));
+    const requestedFor = `${year}/${week}`;
+    setPickupListLoadingByDay(
+      deliveryDays.reduce((acc, day) => ({ ...acc, [day]: true }), {}),
+    );
+    // One request per day, not one per station: the server groups the week's
+    // deliveries once and answers every station out of that grouping.
     Promise.all(
-      deliveryDays.map((day) =>
-        Promise.all(
-          getPickupLocationsForDay(day).map((pl) =>
-            bakeryApi.bakeryPickupListRetrieve({ year, deliveryWeek: week, pickupLocationId: pl.id! })
-              .then((result) => ({ day, plId: pl.id!, result }))
-              .catch(() => ({ day, plId: pl.id!, result: null as any }))
-          )
-        )
-      )
-    )
-      .then((allResults) => {
-        const data: Record<number, Record<string, PickupListResponse>> = {};
-        for (const dayResults of allResults) {
-          for (const { day, plId, result } of dayResults) {
-            data[day] ??= {};
-            data[day][plId] = result;
-          }
+      deliveryDays.map((day) => {
+        const stationIds = getPickupLocationsForDay(day).map((pl) => pl.id!);
+        if (stationIds.length === 0) return Promise.resolve({ day, lists: [] });
+        return bakeryApi
+          .bakeryPickupListRetrieve({
+            year,
+            deliveryWeek: week,
+            pickupLocationIds: stationIds,
+          })
+          .then((response) => ({ day, lists: response.lists }))
+          .catch(() => ({ day, lists: [] }));
+      }),
+    ).then((allResults) => {
+      if (isStale(requestedFor)) return;
+      const data: Record<number, Record<string, PickupListForLocation>> = {};
+      for (const { day, lists } of allResults) {
+        data[day] ??= {};
+        for (const entry of lists) {
+          data[day][entry.pickupLocationId] = entry;
         }
-        setPickupListByDayByLocation(data);
-        setPickupListLoadingByDay(deliveryDays.reduce((acc, day) => ({ ...acc, [day]: false }), {}));
-      });
+      }
+      setPickupListByDayByLocation(data);
+      setPickupListLoadingByDay(
+        deliveryDays.reduce((acc, day) => ({ ...acc, [day]: false }), {}),
+      );
+    });
   };
 
   // --- Compute derived data per day ---
@@ -215,28 +283,54 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     const breadBaked: Record<string, number> = {};
 
     if (preview) {
-      preview.quantities.forEach(q => {
+      preview.quantities.forEach((q) => {
         breadBaked[q.breadName] = (breadBaked[q.breadName] || 0) + q.total;
-        breadDeliveries[q.breadName] = (breadDeliveries[q.breadName] || 0) + q.deliveries;
+        breadDeliveries[q.breadName] =
+          (breadDeliveries[q.breadName] || 0) + q.deliveries;
       });
     } else {
-      dayCounts.forEach(c => { breadDeliveries[c.breadName] = (breadDeliveries[c.breadName] || 0) + c.count; });
-      daySessions.forEach(s => s.layers.forEach(l => {
-        if (l.breadName) breadBaked[l.breadName] = (breadBaked[l.breadName] || 0) + l.quantity;
-      }));
+      dayCounts.forEach((c) => {
+        breadDeliveries[c.breadName] =
+          (breadDeliveries[c.breadName] || 0) + c.count;
+      });
+      daySessions.forEach((s) =>
+        s.layers.forEach((l) => {
+          if (l.breadName)
+            breadBaked[l.breadName] =
+              (breadBaked[l.breadName] || 0) + l.quantity;
+        }),
+      );
     }
 
-    const allBreadNames = [...new Set([...Object.keys(breadDeliveries), ...Object.keys(breadBaked)])].sort();
-    const totalDeliveries = Object.values(breadDeliveries).reduce((s, c) => s + c, 0);
+    const allBreadNames = [
+      ...new Set([...Object.keys(breadDeliveries), ...Object.keys(breadBaked)]),
+    ].sort();
+    const totalDeliveries = Object.values(breadDeliveries).reduce(
+      (s, c) => s + c,
+      0,
+    );
     const totalBaked = Object.values(breadBaked).reduce((s, c) => s + c, 0);
 
     const displaySessions: StoveSessionGrouped[] = preview
-      ? preview.stoveSessions.map(s => ({ session: s.session, layers: s.layers.map(l => ({ layer: l.layer, breadName: l.breadName || null, quantity: l.quantity })) }))
+      ? preview.stoveSessions.map((s) => ({
+          session: s.session,
+          layers: s.layers.map((l) => ({
+            layer: l.layer,
+            breadName: l.breadName || null,
+            quantity: l.quantity,
+          })),
+        }))
       : daySessions;
 
     // Distribution list data
-    const locationBreads: Record<string, Record<string, { baked: number; ordered: number; extra: number }>> = {};
-    const locationTotals: Record<string, { totalBaked: number; totalOrdered: number; totalExtra: number }> = {};
+    const locationBreads: Record<
+      string,
+      Record<string, { baked: number; ordered: number; extra: number }>
+    > = {};
+    const locationTotals: Record<
+      string,
+      { totalBaked: number; totalOrdered: number; totalExtra: number }
+    > = {};
     const hasSolverResults = !!preview || dayCounts.length > 0;
 
     if (preview || dayCounts.length > 0) {
@@ -244,62 +338,100 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       const orderedByLoc: Record<string, Record<string, number>> = {};
 
       if (preview) {
-        preview.distribution.forEach(d => {
+        preview.distribution.forEach((d) => {
           bakedByLoc[d.pickupLocationName] ??= {};
-          bakedByLoc[d.pickupLocationName][d.breadName] = (bakedByLoc[d.pickupLocationName][d.breadName] || 0) + d.count;
+          bakedByLoc[d.pickupLocationName][d.breadName] =
+            (bakedByLoc[d.pickupLocationName][d.breadName] || 0) + d.count;
         });
       } else {
-        dayCounts.forEach(c => {
+        dayCounts.forEach((c) => {
           bakedByLoc[c.pickupLocationName] ??= {};
-          bakedByLoc[c.pickupLocationName][c.breadName] = (bakedByLoc[c.pickupLocationName][c.breadName] || 0) + c.count;
+          bakedByLoc[c.pickupLocationName][c.breadName] =
+            (bakedByLoc[c.pickupLocationName][c.breadName] || 0) + c.count;
         });
       }
 
       const dayPickupLists = pickupListByDayByLocation[day] || {};
       Object.entries(dayPickupLists).forEach(([locationId, pickupListData]) => {
         if (!pickupListData) return;
-        const location = allPickupLocations.find(pl => pl.id === locationId);
+        const location = allPickupLocations.find((pl) => pl.id === locationId);
         if (!location) return;
-        const bt = pickupListData.breadTotals as unknown as Record<string, number>;
+        const bt = pickupListData.breadTotals as unknown as Record<
+          string,
+          number
+        >;
         if (bt) orderedByLoc[location.name] = { ...bt };
       });
 
-      new Set([...Object.keys(bakedByLoc), ...Object.keys(orderedByLoc)]).forEach(locName => {
+      new Set([
+        ...Object.keys(bakedByLoc),
+        ...Object.keys(orderedByLoc),
+      ]).forEach((locName) => {
         const baked = bakedByLoc[locName] || {};
         const ordered = orderedByLoc[locName] || {};
         locationBreads[locName] = {};
-        new Set([...Object.keys(baked), ...Object.keys(ordered)]).forEach(breadName => {
-          const b = baked[breadName] || 0;
-          const o = ordered[breadName] || 0;
-          locationBreads[locName][breadName] = { baked: b, ordered: o, extra: b - o };
-        });
+        new Set([...Object.keys(baked), ...Object.keys(ordered)]).forEach(
+          (breadName) => {
+            const b = baked[breadName] || 0;
+            const o = ordered[breadName] || 0;
+            locationBreads[locName][breadName] = {
+              baked: b,
+              ordered: o,
+              extra: b - o,
+            };
+          },
+        );
       });
     } else {
       const dayPickupLists = pickupListByDayByLocation[day] || {};
       Object.entries(dayPickupLists).forEach(([locationId, pickupListData]) => {
         if (!pickupListData) return;
-        const location = allPickupLocations.find(pl => pl.id === locationId);
+        const location = allPickupLocations.find((pl) => pl.id === locationId);
         if (!location) return;
-        const bt = pickupListData.breadTotals as unknown as Record<string, number>;
+        const bt = pickupListData.breadTotals as unknown as Record<
+          string,
+          number
+        >;
         const grandTotal = pickupListData.grandTotal ?? 0;
         locationBreads[location.name] = {};
         let locTotalOrdered = 0;
         if (bt) {
           Object.entries(bt).forEach(([breadName, count]) => {
-            locationBreads[location.name][breadName] = { baked: 0, ordered: count, extra: 0 };
+            locationBreads[location.name][breadName] = {
+              baked: 0,
+              ordered: count,
+              extra: 0,
+            };
             locTotalOrdered += count;
           });
         }
-        locationTotals[location.name] = { totalBaked: grandTotal, totalOrdered: locTotalOrdered, totalExtra: grandTotal - locTotalOrdered };
+        locationTotals[location.name] = {
+          totalBaked: grandTotal,
+          totalOrdered: locTotalOrdered,
+          totalExtra: grandTotal - locTotalOrdered,
+        };
       });
     }
 
-    const distBreadNames = [...new Set(Object.values(locationBreads).flatMap(b => Object.keys(b)))].sort();
+    const distBreadNames = [
+      ...new Set(Object.values(locationBreads).flatMap((b) => Object.keys(b))),
+    ].sort();
 
     return {
-      preview, dayCounts, daySessions, breadDeliveries, breadBaked,
-      allBreadNames, totalDeliveries, totalBaked, totalExtra: totalBaked - totalDeliveries,
-      displaySessions, locationBreads, locationTotals, hasSolverResults, distBreadNames,
+      preview,
+      dayCounts,
+      daySessions,
+      breadDeliveries,
+      breadBaked,
+      allBreadNames,
+      totalDeliveries,
+      totalBaked,
+      totalExtra: totalBaked - totalDeliveries,
+      displaySessions,
+      locationBreads,
+      locationTotals,
+      hasSolverResults,
+      distBreadNames,
     };
   };
 
@@ -309,7 +441,12 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
 
       <div className="card mb-4">
         <div className="card-body">
-          <YearWeekSelectorCard selectedYear={year} selectedWeek={week} onYearChange={setYear} onWeekChange={setWeek} />
+          <YearWeekSelectorCard
+            selectedYear={year}
+            selectedWeek={week}
+            onYearChange={setYear}
+            onWeekChange={setWeek}
+          />
         </div>
       </div>
 
@@ -326,7 +463,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         ) : (
           deliveryDays.map((day) => {
             const d = computeDayData(day);
-            const selectedLocation = selectedPickupLocationByDay[day] || '';
+            const selectedLocation = selectedPickupLocationByDay[day] || "";
             const hasPreview = !!d.preview;
 
             return (
@@ -335,16 +472,27 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                   <div className="card-header header-white-on-middle-brown">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <h5 className="mb-0">{DAY_LABELS[day] || `Tag ${day}`}</h5>
-                        <small className="opacity-75">{getDateForDay(day)}</small>
+                        <h5 className="mb-0">
+                          {DAY_LABELS[day] || `Tag ${day}`}
+                        </h5>
+                        <small className="opacity-75">
+                          {getDateForDay(day)}
+                        </small>
                       </div>
                       <small>KW {week}</small>
                     </div>
                     <RunSolverCard
-                    key={`solver-${year}-${week}-${day}`}
-                      year={year} deliveryWeek={week} deliveryDay={day} csrfToken={csrfToken}
-                      hasSavedPlan={d.daySessions.length > 0 || d.dayCounts.length > 0}
-                      onPreviewDetail={(detail) => handlePreviewDetail(day, detail)}
+                      key={`solver-${year}-${week}-${day}`}
+                      year={year}
+                      deliveryWeek={week}
+                      deliveryDay={day}
+                      csrfToken={csrfToken}
+                      hasSavedPlan={
+                        d.daySessions.length > 0 || d.dayCounts.length > 0
+                      }
+                      onPreviewDetail={(detail) =>
+                        handlePreviewDetail(day, detail)
+                      }
                       onApplied={handleApplied}
                     />
                   </div>
@@ -369,14 +517,25 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       <SectionToggle
                         isOpen={isSectionOpen(`metrics-${day}`)}
                         onToggle={() => toggleSection(`metrics-${day}`)}
-                        title="Präferenz-Zufriedenheit" icon="favorite"
+                        title="Präferenz-Zufriedenheit"
+                        icon="favorite"
                       />
-                      <p className="text-muted small mb-2">Wie gut entspricht der Backplan den Mitgliederwünschen?</p>
-                      {isSectionOpen(`metrics-${day}`) && (
-                        d.displaySessions.length > 0
-                          ? <MetricsCard year={year} week={week} deliveryDay={day} csrfToken={csrfToken} />
-                          : <p className="text-muted small text-center py-2">Noch kein Backplan berechnet.</p>
-                      )}
+                      <p className="text-muted small mb-2">
+                        Wie gut entspricht der Backplan den Mitgliederwünschen?
+                      </p>
+                      {isSectionOpen(`metrics-${day}`) &&
+                        (d.displaySessions.length > 0 ? (
+                          <MetricsCard
+                            year={year}
+                            week={week}
+                            deliveryDay={day}
+                            csrfToken={csrfToken}
+                          />
+                        ) : (
+                          <p className="text-muted small text-center py-2">
+                            Noch kein Backplan berechnet.
+                          </p>
+                        ))}
                     </div>
                     <hr />
 
@@ -408,11 +567,22 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
                       hasPreview={hasPreview}
                       dayPickupLocations={getPickupLocationsForDay(day)}
                       selectedLocation={selectedLocation}
-                      onPickupLocationChange={(id) => handlePickupLocationChange(day, id)}
-                      pickupListData={pickupListByDayByLocation[day]?.[selectedLocation] || null}
+                      onPickupLocationChange={(id) =>
+                        handlePickupLocationChange(day, id)
+                      }
+                      pickupListData={
+                        pickupListByDayByLocation[day]?.[selectedLocation] ||
+                        null
+                      }
                       checkedMembers={checkedByDay[day] || {}}
-                      onCheckToggle={(memberId) => handleCheckToggle(day, memberId)}
-                      pdfUrl={selectedLocation ? `/bakery/pdf/pickup-list/${year}/${week}/${day}/${selectedLocation}/` : null}
+                      onCheckToggle={(memberId) =>
+                        handleCheckToggle(day, memberId)
+                      }
+                      pdfUrl={
+                        selectedLocation
+                          ? `/bakery/pdf/pickup-list/${year}/${week}/${day}/${selectedLocation}/`
+                          : null
+                      }
                       allPdfUrl={`/bakery/pdf/pickup-lists-all/${year}/${week}/${day}/`}
                       onEmail={() => {}}
                     />

@@ -69,12 +69,23 @@ export default defineConfig(() => {
             "/subscription_list/subscription_list_entry.tsx",
           ),
           credit_list: join(INPUT_DIR, "/credit_list/credit_list_entry.tsx"),
-          // Bakery entries
-          breads: join(INPUT_DIR, "/bakery/entries/breads_entry.tsx"),
+          // Bakery entries - one per template under
+          // tapir/bakery/templates/bakery/, and nothing else: rollup aborts
+          // the whole build on an entry it cannot resolve, so a stale name
+          // here takes down every other bundle with it.
+          choose_breads: join(
+            INPUT_DIR,
+            "/bakery/entries/choose_breads_entry.tsx",
+          ),
           reports: join(INPUT_DIR, "/bakery/entries/reports_entry.tsx"),
-          allocation_breads: join(INPUT_DIR, "/bakery/entries/allocation_breads_entry.tsx"),
-          bakery_configuration: join(INPUT_DIR, "/bakery/entries/bakery_configuration_entry.tsx"),
-          ingredients_labels_breads: join(INPUT_DIR, "/bakery/entries/ingredients_labels_breads_entry.tsx"),
+          ingredients_labels_breads: join(
+            INPUT_DIR,
+            "/bakery/entries/ingredients_labels_breads_entry.tsx",
+          ),
+          weekly_plan_breads: join(
+            INPUT_DIR,
+            "/bakery/entries/weekly_plan_breads_entry.tsx",
+          ),
         },
       },
     },

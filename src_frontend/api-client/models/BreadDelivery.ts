@@ -24,7 +24,49 @@ export interface BreadDelivery {
      * @type {string}
      * @memberof BreadDelivery
      */
-    id?: string;
+    readonly id: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof BreadDelivery
+     */
+    readonly year: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BreadDelivery
+     */
+    readonly deliveryWeek: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof BreadDelivery
+     */
+    readonly subscription: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof BreadDelivery
+     */
+    readonly slotNumber: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof BreadDelivery
+     */
+    readonly pickupLocation: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof BreadDelivery
+     */
+    bread?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BreadDelivery
+     */
+    readonly jokerTaken: boolean;
     /**
      * 
      * @type {string}
@@ -36,81 +78,57 @@ export interface BreadDelivery {
      * @type {string}
      * @memberof BreadDelivery
      */
-    readonly pickupLocationName: string;
+    readonly pickupLocationName: string | null;
     /**
      * 
      * @type {string}
      * @memberof BreadDelivery
      */
-    readonly pickupLocationStreet: string;
+    readonly pickupLocationStreet: string | null;
     /**
      * 
      * @type {string}
      * @memberof BreadDelivery
      */
-    readonly pickupLocationCity: string;
+    readonly pickupLocationCity: string | null;
     /**
      * 
      * @type {number}
      * @memberof BreadDelivery
      */
-    readonly deliveryDay: number;
+    readonly deliveryDay: number | null;
     /**
      * 
-     * @type {number}
+     * @type {Date}
      * @memberof BreadDelivery
      */
-    year: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BreadDelivery
-     */
-    deliveryWeek: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BreadDelivery
-     */
-    slotNumber?: number;
+    readonly choosingDeadline: Date | null;
     /**
      * 
      * @type {boolean}
      * @memberof BreadDelivery
      */
-    jokerTaken?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof BreadDelivery
-     */
-    subscription: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BreadDelivery
-     */
-    pickupLocation?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof BreadDelivery
-     */
-    bread?: string | null;
+    readonly canStillChoose: boolean;
 }
 
 /**
  * Check if a given object implements the BreadDelivery interface.
  */
 export function instanceOfBreadDelivery(value: object): value is BreadDelivery {
+    if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('year' in value) || value['year'] === undefined) return false;
+    if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
+    if (!('subscription' in value) || value['subscription'] === undefined) return false;
+    if (!('slotNumber' in value) || value['slotNumber'] === undefined) return false;
+    if (!('pickupLocation' in value) || value['pickupLocation'] === undefined) return false;
+    if (!('jokerTaken' in value) || value['jokerTaken'] === undefined) return false;
     if (!('breadName' in value) || value['breadName'] === undefined) return false;
     if (!('pickupLocationName' in value) || value['pickupLocationName'] === undefined) return false;
     if (!('pickupLocationStreet' in value) || value['pickupLocationStreet'] === undefined) return false;
     if (!('pickupLocationCity' in value) || value['pickupLocationCity'] === undefined) return false;
     if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
-    if (!('year' in value) || value['year'] === undefined) return false;
-    if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
-    if (!('subscription' in value) || value['subscription'] === undefined) return false;
+    if (!('choosingDeadline' in value) || value['choosingDeadline'] === undefined) return false;
+    if (!('canStillChoose' in value) || value['canStillChoose'] === undefined) return false;
     return true;
 }
 
@@ -124,19 +142,21 @@ export function BreadDeliveryFromJSONTyped(json: any, ignoreDiscriminator: boole
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
+        'year': json['year'],
+        'deliveryWeek': json['delivery_week'],
+        'subscription': json['subscription'],
+        'slotNumber': json['slot_number'],
+        'pickupLocation': json['pickup_location'],
+        'bread': json['bread'] == null ? undefined : json['bread'],
+        'jokerTaken': json['joker_taken'],
         'breadName': json['bread_name'],
         'pickupLocationName': json['pickup_location_name'],
         'pickupLocationStreet': json['pickup_location_street'],
         'pickupLocationCity': json['pickup_location_city'],
         'deliveryDay': json['delivery_day'],
-        'year': json['year'],
-        'deliveryWeek': json['delivery_week'],
-        'slotNumber': json['slot_number'] == null ? undefined : json['slot_number'],
-        'jokerTaken': json['joker_taken'] == null ? undefined : json['joker_taken'],
-        'subscription': json['subscription'],
-        'pickupLocation': json['pickup_location'] == null ? undefined : json['pickup_location'],
-        'bread': json['bread'] == null ? undefined : json['bread'],
+        'choosingDeadline': (json['choosing_deadline'] == null ? null : new Date(json['choosing_deadline'])),
+        'canStillChoose': json['can_still_choose'],
     };
 }
 
@@ -144,20 +164,13 @@ export function BreadDeliveryFromJSONTyped(json: any, ignoreDiscriminator: boole
       return BreadDeliveryToJSONTyped(json, false);
   }
 
-  export function BreadDeliveryToJSONTyped(value?: Omit<BreadDelivery, 'bread_name'|'pickup_location_name'|'pickup_location_street'|'pickup_location_city'|'delivery_day'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadDeliveryToJSONTyped(value?: Omit<BreadDelivery, 'id'|'year'|'delivery_week'|'subscription'|'slot_number'|'pickup_location'|'joker_taken'|'bread_name'|'pickup_location_name'|'pickup_location_street'|'pickup_location_city'|'delivery_day'|'choosing_deadline'|'can_still_choose'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
-        'year': value['year'],
-        'delivery_week': value['deliveryWeek'],
-        'slot_number': value['slotNumber'],
-        'joker_taken': value['jokerTaken'],
-        'subscription': value['subscription'],
-        'pickup_location': value['pickupLocation'],
         'bread': value['bread'],
     };
 }

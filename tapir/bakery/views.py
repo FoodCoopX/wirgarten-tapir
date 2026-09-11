@@ -1,6 +1,3 @@
-import logging
-from collections import defaultdict
-
 from django.core.cache import cache
 from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status
@@ -12,14 +9,13 @@ from rest_framework.views import APIView
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
-    BreadDelivery,
-    BreadsPerPickupLocationPerWeek,
-    PreferredBread,
 )
 from tapir.bakery.serializers import (
     AvailableBreadsForDeliveryListResponseSerializer,
-    PickupListResponseSerializer,
+    BreadListSerializer,
+    PickupListsResponseSerializer,
     PreferenceSatisfactionResponseSerializer,
+    PreferredBreadStatisticsSerializer,
     SolverApplyRequestSerializer,
     SolverApplyResponseSerializer,
     SolverErrorSerializer,
@@ -30,11 +26,19 @@ from tapir.bakery.serializers import (
     ToggleBreadResponseSerializer,
 )
 from tapir.bakery.services.pickup_list_service import PickupListService
+from tapir.bakery.solver_availability import (
+    SOLVER_UNAVAILABLE_MESSAGE,
+    is_solver_available,
+)
+from tapir.bakery.services.preference_satisfaction_service import (
+    PreferenceSatisfactionService,
+)
+from tapir.bakery.services.preferred_bread_statistics_service import (
+    PreferredBreadStatisticsService,
+)
 from tapir.bakery.utils import parse_week_params
-from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.wirgarten.models import PickupLocation
-from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class AvailableBreadsForDeliveryListView(APIView):
@@ -68,20 +72,22 @@ class AvailableBreadsForDeliveryListView(APIView):
                 bread__is_active=True,
             )
             .select_related("bread")
+            .prefetch_related("bread__labels", "bread__contents__ingredient")
             .order_by("bread__name")
         )
 
-        breads = [
-            {"id": str(entry.bread.id), "name": entry.bread.name}
-            for entry in available_breads
-        ]
-
+        # Through the serializer this endpoint advertises. Hand-building
+        # {"id", "name"} here produced an object the generated client cannot
+        # parse: contents is a required array on BreadList, and the client
+        # maps over it without a null check.
         return Response(
             {
                 "year": year,
                 "delivery_week": delivery_week,
                 "delivery_day": delivery_day,
-                "breads": breads,
+                "breads": BreadListSerializer(
+                    [entry.bread for entry in available_breads], many=True
+                ).data,
             }
         )
 
@@ -139,7 +145,9 @@ class AvailableBreadsForDeliveryListView(APIView):
 
 
 class PickupListView(APIView):
-    permission_classes = [IsAuthenticated]
+    # pickup_location_id comes straight from the query string, and the
+    # response is a station's member roster.
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
         summary="Get pickup list for a specific pickup location",
@@ -157,12 +165,19 @@ class PickupListView(APIView):
                 required=True,
             ),
             OpenApiParameter(
+                name="pickup_location_ids[]",
+                type=OpenApiTypes.STR,
+                many=True,
+                required=False,
+                description="One or more stations. Falls back to pickup_location_id.",
+            ),
+            OpenApiParameter(
                 name="pickup_location_id",
                 type=OpenApiTypes.STR,
-                required=True,
+                required=False,
             ),
         ],
-        responses={200: PickupListResponseSerializer},
+        responses={200: PickupListsResponseSerializer},
         tags=["bakery"],
     )
     def get(self, request):
@@ -170,15 +185,50 @@ class PickupListView(APIView):
         if isinstance(result, Response):
             return result
 
-        year, delivery_week, delivery_day = result
+        year, delivery_week, _delivery_day = result
 
-        pickup_location_id = request.query_params.get("pickup_location_id")
+        pickup_location_ids = request.query_params.getlist("pickup_location_ids[]")
+        if not pickup_location_ids:
+            single = request.query_params.get("pickup_location_id")
+            pickup_location_ids = [single] if single else []
 
-        data = PickupListService.get_pickup_list(
-            year, delivery_week, pickup_location_id
-        )
-        serializer = PickupListResponseSerializer(data)
-        return Response(serializer.data)
+        if not pickup_location_ids:
+            return Response(
+                {"error": "pickup_location_ids[] oder pickup_location_id ist nötig."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # One cache for the whole request: the week's deliveries are grouped
+        # by station once, and every further station is answered out of that
+        # grouping.
+        cache = {}
+        lists = [
+            {
+                "pickup_location_id": pickup_location_id,
+                **PickupListService.get_pickup_list(
+                    year, delivery_week, pickup_location_id, cache=cache
+                ),
+            }
+            for pickup_location_id in pickup_location_ids
+        ]
+
+        return Response(PickupListsResponseSerializer({"lists": lists}).data)
+
+
+SOLVER_CACHE_TIMEOUT_SECONDS = 3600
+
+
+def _bread_names(bread_ids) -> dict:
+    """Bread id -> name for the ids a solver result mentions, in one query."""
+    return dict(Bread.objects.filter(id__in=bread_ids).values_list("id", "name"))
+
+
+def _solver_cache_key(year, delivery_week, delivery_day) -> str:
+    """
+    One owner for the key. Preview writes it, detail and apply read it, and
+    all three have to agree down to how delivery_day=None stringifies.
+    """
+    return f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
 
 
 class SolverPreviewView(APIView):
@@ -201,6 +251,12 @@ class SolverPreviewView(APIView):
         tags=["bakery"],
     )
     def post(self, request: Request) -> Response:
+        if not is_solver_available():
+            return Response(
+                {"error": SOLVER_UNAVAILABLE_MESSAGE},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         from tapir.bakery.solver import collect_solver_input, solve_bread_planning_all
 
         serializer = SolverPreviewRequestSerializer(data=request.data)
@@ -240,17 +296,13 @@ class SolverPreviewView(APIView):
             )
 
         # Cache all solutions
-        cache_key = f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
-        cache.set(cache_key, results, timeout=3600)
+        cache_key = _solver_cache_key(year, delivery_week, delivery_day)
+        cache.set(cache_key, results, timeout=SOLVER_CACHE_TIMEOUT_SECONDS)
 
-        # Build bread name map
         all_bread_ids: set = set()
         for r in results:
             all_bread_ids.update(r["bread_quantities"].keys())
-
-        bread_names = dict(
-            Bread.objects.filter(id__in=all_bread_ids).values_list("id", "name")
-        )
+        bread_names = _bread_names(all_bread_ids)
 
         # Build summaries
         summaries = []
@@ -322,9 +374,15 @@ class SolverPreviewDetailView(APIView):
 
         year, delivery_week, delivery_day = result
 
-        solution_index = int(request.query_params.get("solution_index", 0))
+        try:
+            solution_index = int(request.query_params.get("solution_index", 0))
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "solution_index muss eine Zahl sein."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        cache_key = f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
+        cache_key = _solver_cache_key(year, delivery_week, delivery_day)
         results = cache.get(cache_key)
 
         if not results:
@@ -333,18 +391,16 @@ class SolverPreviewDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        solution_index = min(solution_index, len(results) - 1)
+        # Clamped at both ends: a negative value would otherwise reach
+        # Python's negative indexing and select a different solution.
+        solution_index = max(0, min(solution_index, len(results) - 1))
         result = results[solution_index]
 
-        # Build bread name map
         all_bread_ids: set = set(result["bread_quantities"].keys())
         for key in result["distribution"]:
             if isinstance(key, tuple):
                 all_bread_ids.add(key[0])
-
-        bread_names = dict(
-            Bread.objects.filter(id__in=all_bread_ids).values_list("id", "name")
-        )
+        bread_names = _bread_names(all_bread_ids)
         location_names = dict(PickupLocation.objects.values_list("id", "name"))
 
         # Format quantities
@@ -435,6 +491,12 @@ class SolverApplyView(APIView):
         tags=["bakery"],
     )
     def post(self, request: Request) -> Response:
+        if not is_solver_available():
+            return Response(
+                {"error": SOLVER_UNAVAILABLE_MESSAGE},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         from tapir.bakery.solver import save_solution_to_db
 
         serializer = SolverApplyRequestSerializer(data=request.data)
@@ -446,7 +508,7 @@ class SolverApplyView(APIView):
         delivery_day = data.get("delivery_day")
         solution_index = data.get("solution_index", 0)
 
-        cache_key = f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
+        cache_key = _solver_cache_key(year, delivery_week, delivery_day)
         results = cache.get(cache_key)
 
         if not results:
@@ -455,7 +517,9 @@ class SolverApplyView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        solution_index = min(solution_index, len(results) - 1)
+        # Clamped at both ends: a negative value would otherwise reach
+        # Python's negative indexing and apply a different solution.
+        solution_index = max(0, min(solution_index, len(results) - 1))
         chosen = results[solution_index]
 
         save_solution_to_db(year, delivery_week, delivery_day, chosen)
@@ -484,7 +548,8 @@ class PreferenceSatisfactionMetricsView(APIView):
     The remaining deliveries are "no match" (member has favorites but none available).
     """
 
-    permission_classes = [IsAuthenticated]
+    # Returns member names, ids and bread preferences for the whole co-op.
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
         parameters=[
@@ -497,256 +562,20 @@ class PreferenceSatisfactionMetricsView(APIView):
         "Simulates pickup: members choose their first available favorite bread.",
     )
     def get(self, request: Request) -> Response:
-
         result = parse_week_params(request.query_params)
         if isinstance(result, Response):
             return result
 
         year, delivery_week, delivery_day = result
 
-        deliveries_qs = BreadDelivery.objects.filter(
-            year=year,
-            delivery_week=delivery_week,
-        ).select_related(
-            "pickup_location",
-            "bread",
-            "subscription__member",
+        return Response(
+            PreferenceSatisfactionService.get_metrics(
+                year=year,
+                delivery_week=delivery_week,
+                delivery_day=delivery_day,
+                cache={},
+            )
         )
-
-        deliveries = list(deliveries_qs)
-
-        if delivery_day is not None:
-            deliveries = [
-                d
-                for d in deliveries
-                if d.pickup_location and d.pickup_location.delivery_day == delivery_day
-            ]
-
-        if not deliveries:
-            return Response({"locations": []})
-
-        location_ids = list(set(d.pickup_location_id for d in deliveries))
-
-        distribution_qs = BreadsPerPickupLocationPerWeek.objects.filter(
-            year=year,
-            delivery_week=delivery_week,
-            pickup_location_id__in=location_ids,
-        ).select_related("bread", "pickup_location")
-
-        distributed_breads_lookup = {
-            (d.bread_id, d.pickup_location_id): d.count for d in distribution_qs
-        }
-
-        bread_ids = set(d.bread_id for d in deliveries if d.bread_id)
-        bread_ids.update(bread_id for bread_id, _ in distributed_breads_lookup.keys())
-        bread_map = {b.id: b for b in Bread.objects.filter(id__in=bread_ids)}
-
-        member_ids = [d.subscription.member_id for d in deliveries]
-        preferred_breads_qs = PreferredBread.objects.filter(
-            member_id__in=member_ids
-        ).prefetch_related("breads")
-
-        # member_id -> list of favorite bread ids (ordered)
-        # Members NOT in this dict have no PreferredBread entry at all
-        member_favorites = {}
-        for pref in preferred_breads_qs:
-            member_favorites[pref.member_id] = list(
-                pref.breads.values_list("id", flat=True)
-            )
-
-        deliveries_by_location = defaultdict(list)
-        for delivery in deliveries:
-            deliveries_by_location[delivery.pickup_location_id].append(delivery)
-
-        location_metrics = []
-
-        for location_id, location_deliveries in deliveries_by_location.items():
-            pickup_location = location_deliveries[0].pickup_location
-
-            # Available breads at this location (from solver)
-            available_breads_count = {}
-            bread_breakdown = defaultdict(lambda: {"count": 0, "directly_chosen": 0})
-
-            for (bread_id, loc_id), count in distributed_breads_lookup.items():
-                if loc_id == location_id:
-                    available_breads_count[bread_id] = count
-                    bread_breakdown[bread_id]["count"] = count
-
-            total_deliveries = len(location_deliveries)
-            directly_chosen_count = 0
-            no_favorites_count = 0
-            got_favorite_count = 0
-            no_match_count = 0
-
-            # Assignment log for debugging
-            assignment_log = []
-
-            # 1) Process directly chosen breads first
-            for delivery in location_deliveries:
-                if delivery.bread_id:
-                    directly_chosen_count += 1
-
-                    member = delivery.subscription.member
-                    assignment_log.append(
-                        {
-                            "member_name": f"{member.first_name} {member.last_name}",
-                            "member_id": str(member.id),
-                            "status": "directly_chosen",
-                            "assigned_bread_id": str(delivery.bread_id),
-                            "assigned_bread_name": (
-                                bread_map[delivery.bread_id].name
-                                if delivery.bread_id in bread_map
-                                else "?"
-                            ),
-                            "preferred_bread_names": [],
-                        }
-                    )
-
-                    if delivery.bread_id in available_breads_count:
-                        available_breads_count[delivery.bread_id] = max(
-                            0, available_breads_count[delivery.bread_id] - 1
-                        )
-
-                    if delivery.bread_id in bread_breakdown:
-                        bread_breakdown[delivery.bread_id]["directly_chosen"] += 1
-
-            # 2) Process unassigned deliveries
-            unassigned_deliveries = [d for d in location_deliveries if not d.bread_id]
-            unassigned_deliveries.sort(
-                key=lambda d: (
-                    d.subscription.member.last_name or "",
-                    d.subscription.member.first_name or "",
-                )
-            )
-
-            for delivery in unassigned_deliveries:
-                member = delivery.subscription.member
-
-                # Member has no favorites set → everything is fine for them
-                if member.id not in member_favorites:
-                    no_favorites_count += 1
-                    assignment_log.append(
-                        {
-                            "member_name": f"{member.first_name} {member.last_name}",
-                            "member_id": str(member.id),
-                            "status": "no_favorites",
-                            "assigned_bread_id": None,
-                            "assigned_bread_name": None,
-                            "preferred_bread_names": [],
-                        }
-                    )
-                    continue
-
-                favorite_bread_ids = member_favorites[member.id]
-
-                # Member has empty favorites list → same as no favorites
-                if not favorite_bread_ids:
-                    no_favorites_count += 1
-                    assignment_log.append(
-                        {
-                            "member_name": f"{member.first_name} {member.last_name}",
-                            "member_id": str(member.id),
-                            "status": "no_favorites",
-                            "assigned_bread_id": None,
-                            "assigned_bread_name": None,
-                            "preferred_bread_names": [],
-                        }
-                    )
-                    continue
-
-                preferred_names = [
-                    bread_map[b_id].name if b_id in bread_map else "?"
-                    for b_id in favorite_bread_ids
-                ]
-
-                # Try to assign first available favorite
-                assigned = False
-                for bread_id in favorite_bread_ids:
-                    if (
-                        bread_id in available_breads_count
-                        and available_breads_count[bread_id] > 0
-                    ):
-                        got_favorite_count += 1
-                        available_breads_count[bread_id] -= 1
-                        assigned = True
-                        assignment_log.append(
-                            {
-                                "member_name": f"{member.first_name} {member.last_name}",
-                                "member_id": str(member.id),
-                                "status": "got_favorite",
-                                "assigned_bread_id": str(bread_id),
-                                "assigned_bread_name": (
-                                    bread_map[bread_id].name
-                                    if bread_id in bread_map
-                                    else "?"
-                                ),
-                                "preferred_bread_names": preferred_names,
-                            }
-                        )
-                        break
-
-                if not assigned:
-                    no_match_count += 1
-                    assignment_log.append(
-                        {
-                            "member_name": f"{member.first_name} {member.last_name}",
-                            "member_id": str(member.id),
-                            "status": "no_match",
-                            "assigned_bread_id": None,
-                            "assigned_bread_name": None,
-                            "preferred_bread_names": preferred_names,
-                        }
-                    )
-
-            # "Satisfied" = directly chosen + no favorites (happy with anything) + got a favorite
-            satisfied_count = (
-                directly_chosen_count + no_favorites_count + got_favorite_count
-            )
-            satisfied_percentage = (
-                (satisfied_count / total_deliveries * 100)
-                if total_deliveries > 0
-                else 0.0
-            )
-
-            # Bread breakdown list (just count + directly_chosen now)
-            bread_breakdown_list = []
-            for bread_id, bd_data in bread_breakdown.items():
-                if bd_data["count"] > 0:
-                    bread_breakdown_list.append(
-                        {
-                            "bread_id": bread_id,
-                            "bread_name": (
-                                bread_map[bread_id].name
-                                if bread_id in bread_map
-                                else "Unknown"
-                            ),
-                            "count": bd_data["count"],
-                            "directly_chosen": bd_data["directly_chosen"],
-                        }
-                    )
-
-            bread_breakdown_list.sort(key=lambda x: x["bread_name"])
-
-            location_metrics.append(
-                {
-                    "pickup_location_id": str(location_id),
-                    "pickup_location_name": pickup_location.name,
-                    "delivery_day": pickup_location.delivery_day,
-                    "total_deliveries": total_deliveries,
-                    "directly_chosen": directly_chosen_count,
-                    "no_favorites": no_favorites_count,
-                    "got_favorite": got_favorite_count,
-                    "satisfied": satisfied_count,
-                    "satisfied_percentage": round(satisfied_percentage, 1),
-                    "no_match": no_match_count,
-                    "bread_breakdown": bread_breakdown_list,
-                    "assignment_log": assignment_log,
-                }
-            )
-
-        location_metrics.sort(key=lambda x: x["pickup_location_name"])
-
-        return Response({"locations": location_metrics})
 
 
 @extend_schema(tags=["bakery"])
@@ -755,7 +584,9 @@ class PreferredBreadStatisticsView(APIView):
     Count how many members (with active BreadDelivery) prefer each bread type.
     """
 
-    permission_classes = [IsAuthenticated]
+    # Its only consumer is DashboardPreferredBreadStats on the admin
+    # dashboard, which already requires this permission.
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
         parameters=[
@@ -763,142 +594,21 @@ class PreferredBreadStatisticsView(APIView):
             OpenApiParameter(name="delivery_week", type=int, required=True),
             OpenApiParameter(name="delivery_day", type=int, required=False),
         ],
-        responses={200: dict},
+        responses={200: PreferredBreadStatisticsSerializer},
         description="Count preferred breads among members with active deliveries for the given week.",
     )
     def get(self, request: Request) -> Response:
-
         result = parse_week_params(request.query_params)
         if isinstance(result, Response):
             return result
 
         year, delivery_week, delivery_day = result
 
-        # Get all members with deliveries this week
-        deliveries_qs = BreadDelivery.objects.filter(
-            year=year,
-            delivery_week=delivery_week,
-        ).select_related("pickup_location", "subscription__member")
-
-        deliveries = list(deliveries_qs)
-
-        if delivery_day is not None:
-            deliveries = [
-                d
-                for d in deliveries
-                if d.pickup_location and d.pickup_location.delivery_day == delivery_day
-            ]
-
-        # Unique members with deliveries
-        member_ids = list(set(d.subscription.member_id for d in deliveries))
-        total_members = len(member_ids)
-
-        # Get preferred breads for these members
-        preferred_qs = PreferredBread.objects.filter(
-            member_id__in=member_ids
-        ).prefetch_related("breads")
-
-        members_with_preferences = 0
-        members_without_preferences = 0
-        bread_counts: dict[str, int] = {}
-        bread_ids_to_names: dict = {}
-
-        for pref in preferred_qs:
-            bread_list = list(pref.breads.all())
-            if bread_list:
-                members_with_preferences += 1
-                for bread in bread_list:
-                    bread_ids_to_names[bread.id] = bread.name
-                    bread_counts[bread.name] = bread_counts.get(bread.name, 0) + 1
-            else:
-                members_without_preferences += 1
-
-        # Members with no PreferredBread entry at all
-        members_with_pref_entry = set(p.member_id for p in preferred_qs)
-        members_without_preferences += sum(
-            1 for m_id in member_ids if m_id not in members_with_pref_entry
-        )
-
-        # Sort by count descending
-        bread_statistics = sorted(
-            [
-                {
-                    "bread_name": name,
-                    "count": count,
-                    "percentage": (
-                        round(count / total_members * 100, 1)
-                        if total_members > 0
-                        else 0
-                    ),
-                }
-                for name, count in bread_counts.items()
-            ],
-            key=lambda x: x["count"],
-            reverse=True,
-        )
-
         return Response(
-            {
-                "total_members": total_members,
-                "members_with_preferences": members_with_preferences,
-                "members_without_preferences": members_without_preferences,
-                "breads": bread_statistics,
-            }
+            PreferredBreadStatisticsService.get_statistics(
+                year=year,
+                delivery_week=delivery_week,
+                delivery_day=delivery_day,
+                cache={},
+            )
         )
-
-
-@extend_schema(tags=["bakery"])
-class ConfigurationParametersView(APIView):
-    """
-    Get configuration parameters needed by the frontend.
-    """
-
-    permission_classes = [IsAuthenticated]
-
-    @extend_schema(
-        summary="Get configuration parameters",
-        responses={
-            200: {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "key": {"type": "string"},
-                        "value": {"type": "string"},
-                    },
-                },
-            }
-        },
-    )
-    def get(self, request: Request) -> Response:
-
-        # Define which parameters to expose to the frontend
-        exposed_parameters = [
-            {
-                "key": ParameterKeys.BAKERY_LAST_CHOOSING_DAY_BEFORE_BAKING_DAY,
-                "description": "Days before baking day when members must choose breads",
-            },
-            {
-                "key": ParameterKeys.BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY,
-                "description": "Days before delivery day when baking happens",
-            },
-        ]
-
-        parameters = []
-        for param in exposed_parameters:
-            try:
-                value = get_parameter_value(param["key"])
-                parameters.append(
-                    {
-                        "key": param["key"],
-                        "value": str(value) if value is not None else "",
-                    }
-                )
-            except Exception:
-                # Log error but don't fail the entire request
-                logger = logging.getLogger(__name__)
-                logger.warning(
-                    "Failed to get parameter %s", param["key"], exc_info=True
-                )
-
-        return Response(parameters)

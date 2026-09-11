@@ -24,7 +24,7 @@ export interface StoveSession {
      * @type {string}
      * @memberof StoveSession
      */
-    id?: string;
+    readonly id: string;
     /**
      * 
      * @type {string}
@@ -48,7 +48,7 @@ export interface StoveSession {
      * @type {number}
      * @memberof StoveSession
      */
-    deliveryDay: number;
+    deliveryDay?: number | null;
     /**
      * 
      * @type {number}
@@ -79,10 +79,10 @@ export interface StoveSession {
  * Check if a given object implements the StoveSession interface.
  */
 export function instanceOfStoveSession(value: object): value is StoveSession {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('breadName' in value) || value['breadName'] === undefined) return false;
     if (!('year' in value) || value['year'] === undefined) return false;
     if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
-    if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     if (!('sessionNumber' in value) || value['sessionNumber'] === undefined) return false;
     if (!('layerNumber' in value) || value['layerNumber'] === undefined) return false;
     return true;
@@ -98,11 +98,11 @@ export function StoveSessionFromJSONTyped(json: any, ignoreDiscriminator: boolea
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'breadName': json['bread_name'],
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
-        'deliveryDay': json['delivery_day'],
+        'deliveryDay': json['delivery_day'] == null ? undefined : json['delivery_day'],
         'sessionNumber': json['session_number'],
         'layerNumber': json['layer_number'],
         'quantity': json['quantity'] == null ? undefined : json['quantity'],
@@ -114,14 +114,13 @@ export function StoveSessionFromJSONTyped(json: any, ignoreDiscriminator: boolea
       return StoveSessionToJSONTyped(json, false);
   }
 
-  export function StoveSessionToJSONTyped(value?: Omit<StoveSession, 'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
+  export function StoveSessionToJSONTyped(value?: Omit<StoveSession, 'id'|'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'delivery_day': value['deliveryDay'],

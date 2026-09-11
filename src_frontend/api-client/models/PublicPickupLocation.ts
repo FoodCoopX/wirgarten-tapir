@@ -83,10 +83,10 @@ export interface PublicPickupLocation {
     readonly openingTimes: Array<PickupLocationOpeningTime>;
     /**
      * 
-     * @type {string}
+     * @type {number}
      * @memberof PublicPickupLocation
      */
-    readonly deliveryDay: string;
+    readonly deliveryDay: number | null;
 }
 
 /**

@@ -24,7 +24,7 @@ export interface BreadSpecificsPerDeliveryDay {
      * @type {string}
      * @memberof BreadSpecificsPerDeliveryDay
      */
-    id?: string;
+    readonly id: string;
     /**
      * 
      * @type {string}
@@ -85,6 +85,7 @@ export interface BreadSpecificsPerDeliveryDay {
  * Check if a given object implements the BreadSpecificsPerDeliveryDay interface.
  */
 export function instanceOfBreadSpecificsPerDeliveryDay(value: object): value is BreadSpecificsPerDeliveryDay {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('breadName' in value) || value['breadName'] === undefined) return false;
     if (!('year' in value) || value['year'] === undefined) return false;
     if (!('deliveryWeek' in value) || value['deliveryWeek'] === undefined) return false;
@@ -103,7 +104,7 @@ export function BreadSpecificsPerDeliveryDayFromJSONTyped(json: any, ignoreDiscr
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'breadName': json['bread_name'],
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
@@ -120,14 +121,13 @@ export function BreadSpecificsPerDeliveryDayFromJSONTyped(json: any, ignoreDiscr
       return BreadSpecificsPerDeliveryDayToJSONTyped(json, false);
   }
 
-  export function BreadSpecificsPerDeliveryDayToJSONTyped(value?: Omit<BreadSpecificsPerDeliveryDay, 'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadSpecificsPerDeliveryDayToJSONTyped(value?: Omit<BreadSpecificsPerDeliveryDay, 'id'|'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'delivery_day': value['deliveryDay'],

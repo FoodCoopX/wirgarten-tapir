@@ -35,6 +35,7 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceResponse,
     Subscription,
 )
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
@@ -207,9 +208,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             cache=self.cache
         )
 
+        # The view only requires coop.view, but the tile's API requires
+        # coop.manage.
         context["bakery_enabled"] = get_parameter_value(
             ParameterKeys.BAKERY_A_ENABLED, cache=self.cache
-        )
+        ) and self.request.user.has_perm(Permission.Coop.MANAGE)
 
         return context
 

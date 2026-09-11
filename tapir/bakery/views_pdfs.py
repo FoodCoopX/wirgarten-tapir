@@ -1,7 +1,7 @@
 import datetime
 
 import weasyprint
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 
@@ -9,6 +9,8 @@ from tapir.bakery.services.baking_list_service import BakingListService
 from tapir.bakery.services.distribution_list_service import DistributionListService
 from tapir.bakery.services.pickup_list_service import PickupListService
 from tapir.pickup_locations.models import PickupLocation
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import Permission
 
 DAY_LABELS = {
     0: "Montag",
@@ -21,9 +23,18 @@ DAY_LABELS = {
 }
 
 
+class InvalidWeek(Exception):
+    """The requested ISO week does not exist in that year."""
+
+
 def _build_base_context(year: int, week: int, day: int, report_title: str) -> dict:
-    iso_day = day + 1
-    date = datetime.date.fromisocalendar(year, week, iso_day)
+    try:
+        # ISO years have 52 or 53 weeks, and both week and day come straight
+        # from the URL.
+        date = datetime.date.fromisocalendar(year, week, day + 1)
+    except ValueError:
+        raise InvalidWeek
+
     return {
         "year": year,
         "week": week,
@@ -46,8 +57,12 @@ def _render_pdf_response(
 
 
 @login_required
+@permission_required(Permission.Coop.MANAGE, raise_exception=True)
 def baking_list_pdf(request, year: int, week: int, day: int):
-    context = _build_base_context(year, week, day, "Backliste")
+    try:
+        context = _build_base_context(year, week, day, "Backliste")
+    except InvalidWeek:
+        return HttpResponse("Ungültige Kalenderwoche.", status=400)
     context.update(BakingListService.get_baking_list(year, week, day))
 
     filename = f"Backliste_KW{week}_{year}_{context['day_label']}.pdf"
@@ -55,8 +70,12 @@ def baking_list_pdf(request, year: int, week: int, day: int):
 
 
 @login_required
+@permission_required(Permission.Coop.MANAGE, raise_exception=True)
 def distribution_list_pdf(request, year: int, week: int, day: int):
-    context = _build_base_context(year, week, day, "Verteilliste")
+    try:
+        context = _build_base_context(year, week, day, "Verteilliste")
+    except InvalidWeek:
+        return HttpResponse("Ungültige Kalenderwoche.", status=400)
     context.update(DistributionListService.get_distribution_list(year, week, day))
 
     filename = f"Verteilliste_KW{week}_{year}_{context['day_label']}.pdf"
@@ -64,8 +83,12 @@ def distribution_list_pdf(request, year: int, week: int, day: int):
 
 
 @login_required
+@permission_required(Permission.Coop.MANAGE, raise_exception=True)
 def pickup_list_pdf(request, year: int, week: int, day: int, pickup_location_id: str):
-    context = _build_base_context(year, week, day, "Abholliste")
+    try:
+        context = _build_base_context(year, week, day, "Abholliste")
+    except InvalidWeek:
+        return HttpResponse("Ungültige Kalenderwoche.", status=400)
 
     try:
         pickup_location = PickupLocation.objects.get(id=pickup_location_id)
@@ -82,16 +105,26 @@ def pickup_list_pdf(request, year: int, week: int, day: int, pickup_location_id:
 
 
 @login_required
+@permission_required(Permission.Coop.MANAGE, raise_exception=True)
 def pickup_lists_all_pdf(request, year: int, week: int, day: int):
-    context = _build_base_context(year, week, day, "Abhollisten – Alle Abholstationen")
+    try:
+        context = _build_base_context(
+            year, week, day, "Abhollisten – Alle Abholstationen"
+        )
+    except InvalidWeek:
+        return HttpResponse("Ungültige Kalenderwoche.", status=400)
 
+    # Built once outside the loop: the location weekdays and the grouping of
+    # the week's deliveries by station are shared across every station here.
+    cache = {}
+    delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache=cache)
     pickup_locations = sorted(
-        [pl for pl in PickupLocation.objects.all() if pl.delivery_day == day],
+        [pl for pl in PickupLocation.objects.all() if delivery_days.get(pl.id) == day],
         key=lambda pl: pl.name,
     )
     all_pickup_lists = []
     for pl in pickup_locations:
-        data = PickupListService.get_pickup_list(year, week, str(pl.id))
+        data = PickupListService.get_pickup_list(year, week, str(pl.id), cache=cache)
         if data["entries"]:
             all_pickup_lists.append(
                 {

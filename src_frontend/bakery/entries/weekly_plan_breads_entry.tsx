@@ -1,11 +1,10 @@
-import { createRoot } from 'react-dom/client';
-import { WeeklyPlanBreads } from '../pages';
+import { createRoot } from "react-dom/client";
+import { WeeklyPlanBreads } from "../pages";
 
-const container = document.getElementById('weekly-plan-breads-root');
+const container = document.getElementById("weekly-plan-breads-root");
 
 if (container) {
-  const csrfToken = container.getAttribute('data-csrf-token') || '';
+  const csrfToken = container.getAttribute("data-csrf-token") || "";
   const root = createRoot(container);
   root.render(<WeeklyPlanBreads csrfToken={csrfToken} />);
 }
-

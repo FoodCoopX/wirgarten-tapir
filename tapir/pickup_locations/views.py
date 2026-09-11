@@ -1,10 +1,9 @@
 import datetime
 import locale
-from typing import Any, Dict, List
+from typing import Dict
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import OuterRef, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import (
@@ -30,6 +29,9 @@ from tapir.pickup_locations.serializers import (
 )
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
+)
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
@@ -60,7 +62,6 @@ from tapir.wirgarten.models import (
     Member,
     PickupLocation,
     PickupLocationCapability,
-    PickupLocationOpeningTime,
     ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -451,38 +452,42 @@ class ChangeMemberPickupLocationApiView(APIView):
 @extend_schema(tags=["bakery"])
 class DeliveryDaysView(APIView):
     """
-    Get distinct list of delivery days, considering only the first (earliest) day per pickup location
+    The weekdays any pickup location is delivered on.
+
+    "Delivered on" is the station's own delivery day - the earliest of its
+    opening days - the rule shared with the pickup lists, the baking list and
+    the solver, which lives in PickupLocationDeliveryDayService.
+
+    Readable by any member: a list of weekdays discloses nothing that the
+    public pickup-location endpoint does not already give out.
     """
+
+    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         summary="Get distinct list of delivery days",
-        description="Returns the earliest delivery day per pickup location",
+        description="Returns the earliest delivery day per pickup location, 0=Montag.",
         responses={
             200: DeliveryDaysResponseSerializer,
         },
     )
     def get(self, request):
-        """Get distinct list of delivery days"""
-        from django.db.models import Min
-
-        # Get the earliest day_of_week per pickup location
-        earliest_days = (
-            PickupLocationOpeningTime.objects.values("pickup_location")
-            .annotate(first_day=Min("day_of_week"))
-            .values_list("first_day", flat=True)
-        )
-
-        # Get distinct sorted days
-        days = sorted(set(earliest_days))
-
+        delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache={})
+        days = sorted({day for day in delivery_days.values() if day is not None})
         return Response({"days": days})
 
 
 @extend_schema(tags=["bakery"])
 class PickupLocationsByDeliveryDayView(APIView):
     """
-    Get pickup locations filtered by delivery day
+    The pickup locations delivered on one weekday.
+
+    Readable by any member rather than gated on Coop.MANAGE like the rest of
+    the bakery: it returns station names and weekdays, which
+    PublicPickupLocationProvider already publishes.
     """
+
+    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         summary="Get pickup locations filtered by delivery day",
@@ -490,7 +495,7 @@ class PickupLocationsByDeliveryDayView(APIView):
             OpenApiParameter(
                 name="day_of_week",
                 type=int,
-                description="Day of week (1-7)",
+                description="Day of week, 0=Montag to 6=Sonntag",
                 required=True,
             )
         ],
@@ -499,12 +504,9 @@ class PickupLocationsByDeliveryDayView(APIView):
         },
     )
     def get(self, request):
-        """Get pickup locations filtered by delivery day"""
-        from django.db.models import Min
-
         day_of_week: str | None = request.query_params.get("day_of_week", None)
 
-        if not day_of_week:
+        if day_of_week is None or day_of_week == "":
             return Response(
                 {"error": "day_of_week parameter is required"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -514,50 +516,32 @@ class PickupLocationsByDeliveryDayView(APIView):
             day_int: int = int(day_of_week)
         except ValueError:
             return Response(
-                {"error": "day_of_week must be a number (1-7)"},
+                {"error": "day_of_week must be a number (0-6)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Get the earliest day_of_week per pickup location
-        earliest_days_subquery = (
-            PickupLocationOpeningTime.objects.filter(
-                pickup_location=OuterRef("pickup_location")
+        # A day with no stations is an empty list, not an error: the caller
+        # feeds the result straight into .map(), and a 404 would surface there
+        # as a thrown ResponseError.
+        cache = {}
+        location_ids = (
+            PickupLocationDeliveryDayService.get_pickup_location_ids_for_delivery_day(
+                day=day_int, cache=cache
             )
-            .values("pickup_location")
-            .annotate(min_day=Min("day_of_week"))
-            .values("min_day")
+        )
+        # Through the provider, not PickupLocation.objects: it excludes the
+        # delivery-donation forwarding station, which the rest of the app hides
+        # from members.
+        locations = (
+            PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+                cache=cache
+            ).filter(id__in=location_ids)
         )
 
-        # Filter for records where the given day is the earliest day for that pickup location
-        # IMPORTANT: order_by must start with the same field as distinct()
-        filtered_records = (
-            PickupLocationOpeningTime.objects.annotate(
-                earliest_day=Subquery(earliest_days_subquery)
-            )
-            .filter(day_of_week=day_int, earliest_day=day_int)
-            .select_related("pickup_location")
-            .order_by("pickup_location__id", "pickup_location__name")
-            .distinct("pickup_location__id")
-        )
-
-        if not filtered_records.exists():
-            all_records = PickupLocationOpeningTime.objects.all()
-            return Response(
-                {
-                    "error": f"No pickup locations found for day {day_int}",
-                    "available_days": list(
-                        all_records.values_list("day_of_week", flat=True).distinct()
-                    ),
-                },
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        result: List[Dict[str, Any]] = [
+        return Response(
             {
-                "id": record.pickup_location.id,
-                "name": record.pickup_location.name,
+                "pickup_locations": [
+                    {"id": location.id, "name": location.name} for location in locations
+                ]
             }
-            for record in filtered_records
-        ]
-
-        return Response({"pickup_locations": result})
+        )

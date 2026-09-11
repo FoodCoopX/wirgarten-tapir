@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface PatchedIngredientRequest {
     /**
      * 
-     * @type {string}
-     * @memberof PatchedIngredientRequest
-     */
-    id?: string;
-    /**
-     * 
      * @type {boolean}
      * @memberof PatchedIngredientRequest
      */
@@ -68,7 +62,6 @@ export function PatchedIngredientRequestFromJSONTyped(json: any, ignoreDiscrimin
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
         'name': json['name'] == null ? undefined : json['name'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -87,7 +80,6 @@ export function PatchedIngredientRequestFromJSONTyped(json: any, ignoreDiscrimin
 
     return {
         
-        'id': value['id'],
         'is_active': value['isActive'],
         'name': value['name'],
         'description': value['description'],

@@ -1,13 +1,18 @@
 from tapir.bakery.models import (
-    BreadDelivery,
     BreadsPerPickupLocationPerWeek,
     PreferredBread,
+)
+from tapir.utils.shortcuts import get_from_cache_or_compute
+from tapir.bakery.services.bread_delivery_context_service import (
+    BreadDeliveryContextService,
 )
 
 
 class PickupListService:
     @staticmethod
-    def get_pickup_list(year: int, week: int, pickup_location_id: str) -> dict:
+    def get_pickup_list(
+        year: int, week: int, pickup_location_id: str, cache: dict | None = None
+    ) -> dict:
         """
         Returns:
         {
@@ -31,14 +36,24 @@ class PickupListService:
             "grand_total": 8,
         }
         Sorted by member_name.
+
+        Pass a cache when rendering several stations for the same week: the
+        deliveries are grouped by station once and every further station is
+        answered out of that grouping.
         """
+        if cache is None:
+            cache = {}
+
         assigned_bread_names = PickupListService._get_assigned_bread_names(
-            year, week, pickup_location_id
+            year, week, pickup_location_id, cache
         )
         members_data, member_ids = PickupListService._collect_member_data(
-            year, week, pickup_location_id
+            year, week, pickup_location_id, cache
         )
-        preferred_by_member = PickupListService._get_preferred_breads(member_ids)
+        # Every member of the week at once, so rendering station after station
+        # does not fire a query per station.
+        PickupListService._prime_preferred_breads(year, week, cache)
+        preferred_by_member = PickupListService._get_preferred_breads(member_ids, cache)
 
         delivery_bread_names = set()
         for entry in members_data.values():
@@ -63,28 +78,40 @@ class PickupListService:
 
     @staticmethod
     def _get_assigned_bread_names(
-        year: int, week: int, pickup_location_id: str
+        year: int, week: int, pickup_location_id: str, cache: dict
     ) -> list[str]:
-        assigned_breads = BreadsPerPickupLocationPerWeek.objects.filter(
-            year=year,
-            delivery_week=week,
-            pickup_location_id=pickup_location_id,
-        ).select_related("bread")
+        """The week's solver result for every station, loaded once."""
 
-        return sorted(set(bc.bread.name for bc in assigned_breads if bc.bread))
+        def compute():
+            by_location = {}
+            rows = BreadsPerPickupLocationPerWeek.objects.filter(
+                year=year, delivery_week=week
+            ).select_related("bread")
+            for row in rows:
+                if row.bread:
+                    by_location.setdefault(row.pickup_location_id, set()).add(
+                        row.bread.name
+                    )
+            return by_location
+
+        by_location = get_from_cache_or_compute(
+            get_from_cache_or_compute(cache, "assigned_bread_names", lambda: {}),
+            (year, week),
+            compute,
+        )
+        return sorted(by_location.get(pickup_location_id, set()))
 
     @staticmethod
     def _collect_member_data(
-        year: int, week: int, pickup_location_id: str
+        year: int, week: int, pickup_location_id: str, cache: dict
     ) -> tuple[dict, set]:
-        deliveries = BreadDelivery.objects.filter(
+        # Which station a slot belongs to, and whether its week was jokered
+        # away, are both derived; the service excludes jokered slots.
+        deliveries = BreadDeliveryContextService.get_deliveries_for_location_for_week(
             year=year,
             delivery_week=week,
             pickup_location_id=pickup_location_id,
-            joker_taken=False,
-        ).select_related(
-            "subscription__member",
-            "bread",
+            cache=cache,
         )
 
         member_ids = set()
@@ -125,27 +152,49 @@ class PickupListService:
 
     @staticmethod
     def _get_display_name(member) -> str:
-        pseudonym = getattr(member, "pseudonym", None)
-        if pseudonym:
-            return pseudonym
-        last_name = getattr(member, "last_name", "")
-        first_name = getattr(member, "first_name", "")
-        if last_name:
-            return f"{last_name[0]}., {first_name}"
-        return first_name or "Unbekannt"
+        if member.pseudonym:
+            return member.pseudonym
+        if member.last_name:
+            return f"{member.last_name[0]}., {member.first_name}"
+        return member.first_name or "Unbekannt"
 
     @staticmethod
-    def _get_preferred_breads(member_ids: set) -> dict[str, set[str]]:
-        preferred_by_member = {}
-        if member_ids:
-            preferred_entries = PreferredBread.objects.filter(
-                member_id__in=member_ids
-            ).prefetch_related("breads")
+    def _prime_preferred_breads(year: int, week: int, cache: dict):
+        primed = get_from_cache_or_compute(
+            cache, "preferred_breads_primed", lambda: set()
+        )
+        if (year, week) in primed:
+            return
+        primed.add((year, week))
 
-            for pref in preferred_entries:
-                preferred_by_member[str(pref.member_id)] = set(
-                    b.name for b in pref.breads.all()
-                )
+        grouped = BreadDeliveryContextService.get_deliveries_by_location_for_week(
+            year=year, delivery_week=week, cache=cache
+        )
+        member_ids = {
+            delivery.subscription.member_id
+            for deliveries in grouped.values()
+            for delivery in deliveries
+        }
+        PickupListService._get_preferred_breads(member_ids, cache)
+
+    @staticmethod
+    def _get_preferred_breads(member_ids: set, cache: dict) -> dict[str, set[str]]:
+        """Favourites for every member seen so far, loaded once per cache."""
+        preferred_by_member = get_from_cache_or_compute(
+            cache, "preferred_bread_names_by_member_id", lambda: {}
+        )
+        missing = {str(member_id) for member_id in member_ids} - set(
+            preferred_by_member
+        )
+        if missing:
+            for member_id in missing:
+                preferred_by_member[member_id] = set()
+            for pref in PreferredBread.objects.filter(
+                member_id__in=missing
+            ).prefetch_related("breads"):
+                preferred_by_member[str(pref.member_id)] = {
+                    bread.name for bread in pref.breads.all()
+                }
         return preferred_by_member
 
     @staticmethod

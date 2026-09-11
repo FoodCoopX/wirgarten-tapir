@@ -1,6 +1,10 @@
+import logging
+
 from tapir.bakery.solver.dataclasses import SolverResult
 from tapir.bakery.solver.preferences import get_member_preferences
 from tapir.bakery.solver.solve import solve_bread_planning
+
+logger = logging.getLogger(__name__)
 
 
 def collect_solver_input(
@@ -18,18 +22,25 @@ def collect_solver_input(
         AvailableBreadsForDeliveryDay,
         Bread,
         BreadCapacityPickupLocation,
-        BreadDelivery,
         BreadSpecificsPerDeliveryDay,
     )
+    from tapir.bakery.services.bread_delivery_context_service import (
+        BreadDeliveryContextService,
+    )
     from tapir.bakery.solver.dataclasses import BreadInfo, PickupLocationInfo
+    from tapir.utils.services.tapir_cache import TapirCache
     from tapir.wirgarten.parameter_keys import ParameterKeys
     from tapir.wirgarten.utils import get_parameter_value
 
-    print("\n" + "=" * 80)
-    print(
+    # Shared by the delivery grouping and the capacity filter below, which
+    # both need the station weekdays.
+    tapir_cache = {}
+
+    logger.debug("\n" + "=" * 80)
+    logger.debug(
         f"COLLECT_SOLVER_INPUT: year={year}, week={delivery_week}, day={delivery_day}"
     )
-    print("=" * 80)
+    logger.debug("=" * 80)
 
     # Get stove layers from parameter
     stove_layers = get_parameter_value(ParameterKeys.BAKERY_STOVE_LAYERS)
@@ -56,7 +67,24 @@ def collect_solver_input(
     if delivery_day is not None:
         specifics_qs = specifics_qs.filter(delivery_day=delivery_day)
 
-    specifics_by_bread = {s.bread_id: s for s in specifics_qs}
+    # Keyed by bread. A whole-week run does not narrow by day, so a bread with
+    # per-day rows on several days has no unambiguous override and gets none.
+    specifics_by_bread = {}
+    ambiguous_bread_ids = set()
+    for specifics in specifics_qs:
+        if specifics.bread_id in specifics_by_bread:
+            ambiguous_bread_ids.add(specifics.bread_id)
+            continue
+        specifics_by_bread[specifics.bread_id] = specifics
+    for bread_id in ambiguous_bread_ids:
+        logger.warning(
+            "Bread %s has per-day overrides on several days of week %s/%s; "
+            "ignoring them for this whole-week run.",
+            bread_id,
+            delivery_week,
+            year,
+        )
+        specifics_by_bread.pop(bread_id, None)
 
     # ── Build BreadInfo list with overrides ──────────────────────────
 
@@ -102,60 +130,64 @@ def collect_solver_input(
         )
 
     if not available_breads:
-        print("No available breads found!")
+        logger.debug("No available breads found!")
         return None
 
     # ── Deliveries ───────────────────────────────────────────────────
 
-    deliveries_qs = BreadDelivery.objects.filter(
-        year=year, delivery_week=delivery_week, joker_taken=False
-    ).select_related("pickup_location", "bread")
-    deliveries = list(deliveries_qs)
+    # The station a slot belongs to and whether its week was jokered away are
+    # both derived; the service excludes jokered slots.
+    deliveries_by_location = (
+        BreadDeliveryContextService.get_deliveries_by_location_for_week(
+            year=year,
+            delivery_week=delivery_week,
+            cache=tapir_cache,
+            delivery_day=delivery_day,
+        )
+    )
 
-    if delivery_day is not None:
-        deliveries = [
-            d for d in deliveries if d.pickup_location.delivery_day == delivery_day
-        ]
-
-    if not deliveries:
-        print("No deliveries found!")
+    if not deliveries_by_location:
+        logger.debug("No deliveries found!")
         return None
 
     # ── Pickup locations ─────────────────────────────────────────────
 
-    location_data = defaultdict(lambda: {"total": 0, "fixed_demand": defaultdict(int)})
-    for d in deliveries:
-        loc_id = d.pickup_location_id
-        location_data[loc_id]["total"] += 1
-        if d.bread_id:
-            location_data[loc_id]["fixed_demand"][d.bread_id] += 1
-
     pickup_locations = []
-    for d in deliveries:
-        loc_id = d.pickup_location_id
-        if not any(pl.location_id == loc_id for pl in pickup_locations):
-            pickup_locations.append(
-                PickupLocationInfo(
-                    location_id=loc_id,
-                    name=d.pickup_location.name,
-                    total_deliveries=location_data[loc_id]["total"],
-                    fixed_demand=dict(location_data[loc_id]["fixed_demand"]),
-                )
+    for location_id, location_deliveries in deliveries_by_location.items():
+        fixed_demand = defaultdict(int)
+        for d in location_deliveries:
+            if d.bread_id:
+                fixed_demand[d.bread_id] += 1
+
+        pickup_locations.append(
+            PickupLocationInfo(
+                location_id=location_id,
+                name=TapirCache.get_pickup_location_by_id(
+                    cache=tapir_cache, pickup_location_id=location_id
+                ).name,
+                total_deliveries=len(location_deliveries),
+                fixed_demand=dict(fixed_demand),
             )
+        )
 
     if not pickup_locations:
-        print("No pickup locations found!")
+        logger.debug("No pickup locations found!")
         return None
 
     # ── Capacities ───────────────────────────────────────────────────
 
     caps_qs = BreadCapacityPickupLocation.objects.filter(
         year=year, delivery_week=delivery_week
-    ).select_related("pickup_location")
+    )  # no select_related: only the local id columns and capacity are read
 
     if delivery_day is not None:
+        delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(
+            cache=tapir_cache
+        )
         caps_list = [
-            c for c in caps_qs if c.pickup_location.delivery_day == delivery_day
+            c
+            for c in caps_qs
+            if delivery_days.get(c.pickup_location_id) == delivery_day
         ]
     else:
         caps_list = list(caps_qs)
@@ -166,20 +198,24 @@ def collect_solver_input(
         for loc in pickup_locations:
             if (bread.bread_id, loc.location_id) not in capacities:
                 capacities[(bread.bread_id, loc.location_id)] = loc.total_deliveries
-                print(
+                logger.debug(
                     f"  ⚠️  Missing capacity for {bread.name} at {loc.name}, "
                     f"defaulting to {loc.total_deliveries}"
                 )
 
-    member_preferences = get_member_preferences(year, delivery_week, delivery_day)
+    member_preferences = get_member_preferences(
+        year, delivery_week, delivery_day, cache=tapir_cache
+    )
 
     if member_preferences:
         total_prefs = sum(len(mp["preferred_bread_ids"]) for mp in member_preferences)
-        print(
+        logger.debug(
             f"\nPreference data: {len(member_preferences)} members, {total_prefs} total entries"
         )
     else:
-        print("\nNo preference data found — distribution will not be preference-aware.")
+        logger.debug(
+            "\nNo preference data found — distribution will not be preference-aware."
+        )
 
     return {
         "available_breads": available_breads,
@@ -201,17 +237,21 @@ def save_solution_to_db(
 
     from tapir.bakery.models import (
         BreadsPerPickupLocationPerWeek,
+        BreadsToBakePerWeek,
         StoveSession,
+    )
+    from tapir.bakery.services.baking_list_service import BakingListService
+    from tapir.bakery.services.preference_satisfaction_service import (
+        PreferenceSatisfactionService,
     )
 
     with transaction.atomic():
-        # Get location IDs from the solution's distribution
+        # Scoped to every location delivering on this day, not just the ones
+        # the new solution mentions: a location that dropped out between runs
+        # would otherwise keep its stale counts.
         if delivery_day is not None:
-            location_ids = list(
-                set(
-                    key[1] if isinstance(key, tuple) else str(key).split(",")[1]
-                    for key in solution.get("distribution", {}).keys()
-                )
+            location_ids = BakingListService.get_pickup_location_ids_for_day(
+                delivery_day
             )
         else:
             location_ids = None
@@ -219,7 +259,7 @@ def save_solution_to_db(
         delete_dist_qs = BreadsPerPickupLocationPerWeek.objects.filter(
             year=year, delivery_week=delivery_week
         )
-        if location_ids:
+        if location_ids is not None:
             delete_dist_qs = delete_dist_qs.filter(pickup_location_id__in=location_ids)
         delete_dist_qs.delete()
 
@@ -229,6 +269,13 @@ def save_solution_to_db(
         if delivery_day is not None:
             delete_sess_qs = delete_sess_qs.filter(delivery_day=delivery_day)
         delete_sess_qs.delete()
+
+        delete_qty_qs = BreadsToBakePerWeek.objects.filter(
+            year=year, delivery_week=delivery_week
+        )
+        if delivery_day is not None:
+            delete_qty_qs = delete_qty_qs.filter(delivery_day=delivery_day)
+        delete_qty_qs.delete()
 
         # Create distribution records
         dist_objects = []
@@ -270,6 +317,34 @@ def save_solution_to_db(
                 )
         if session_objects:
             StoveSession.objects.bulk_create(session_objects)
+
+        # What to bake, straight from the solution: summing stove layers
+        # instead would lose every bread with fixed_pieces, which occupies no
+        # layers.
+        remaining = solution.get("remaining_quantities") or {}
+        BreadsToBakePerWeek.objects.bulk_create(
+            [
+                BreadsToBakePerWeek(
+                    year=year,
+                    delivery_week=delivery_week,
+                    delivery_day=delivery_day,
+                    bread_id=bread_id,
+                    quantity=quantity,
+                    remaining=remaining.get(bread_id, 0),
+                )
+                for bread_id, quantity in solution["bread_quantities"].items()
+                if quantity > 0
+            ]
+        )
+
+        # Same transaction: the satisfaction figures describe the rows written
+        # just above, and figures from a different plan would be misleading.
+        PreferenceSatisfactionService.log_satisfaction(
+            year=year,
+            delivery_week=delivery_week,
+            delivery_day=delivery_day,
+            cache={},
+        )
 
 
 def solve_and_save(
@@ -337,6 +412,6 @@ def solve_and_save(
         save_solution_to_db(year, delivery_week, delivery_day, solution_dict)
 
     # Always print the summary
-    print(result.summary())
+    logger.debug(result.summary())
 
     return result

@@ -1,8 +1,12 @@
+from functools import cached_property
+
 from django.db import transaction
-from django.db.models import Case, Count, F, IntegerField, OuterRef, Subquery, When
+from django.db.models import Exists, OuterRef, ProtectedError
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import APIException
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -34,9 +38,67 @@ from tapir.bakery.serializers import (
     PreferredBreadSerializer,
     StoveSessionSerializer,
 )
-from tapir.bakery.utils import str_to_bool
-from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.wirgarten.models import PickupLocationOpeningTime
+from tapir.bakery.services.bread_availability_service import (
+    BreadAvailabilityService,
+)
+from tapir.bakery.services.bread_choice_service import (
+    BreadChoiceNotAllowed,
+    BreadChoiceService,
+)
+from tapir.bakery.services.bread_delivery_context_service import (
+    BreadDeliveryContextService,
+)
+from tapir.bakery.utils import int_query_param, str_to_bool
+from tapir.generic_exports.permissions import HasCoopManagePermission, IsReadOnly
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
+)
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.models import Member
+from tapir.wirgarten.utils import check_permission_or_self
+
+
+class ProtectedDeleteConflict(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "protected"
+
+
+class RequestCacheMixin:
+    """One TapirCache for the whole request, shared with the serializer."""
+
+    @cached_property
+    def tapir_cache(self) -> dict:
+        return {}
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["cache"] = self.tapir_cache
+        return context
+
+
+class ProtectedDeleteMixin:
+    """
+    Turns a blocked delete into a 409 the caller can act on.
+
+    Bread and Ingredient are both referenced with on_delete=PROTECT, so
+    deleting one that is still in use would otherwise surface as a 500 with no
+    hint of what was in the way.
+    """
+
+    protected_delete_message = (
+        "Der Eintrag wird noch verwendet und kann nicht gelöscht werden. "
+        "Setze ihn stattdessen auf inaktiv."
+    )
+
+    def perform_destroy(self, instance):
+        try:
+            super().perform_destroy(instance)
+        except ProtectedError as error:
+            raise ProtectedDeleteConflict(self.protected_delete_message) from error
 
 
 @extend_schema(tags=["bakery"])
@@ -47,16 +109,26 @@ class BreadLabelViewSet(viewsets.ModelViewSet):
 
     queryset = BreadLabel.objects.all()
     serializer_class = BreadLabelSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsReadOnly | HasCoopManagePermission,
+    ]
 
 
 @extend_schema(tags=["bakery"])
-class IngredientViewSet(viewsets.ModelViewSet):
+class IngredientViewSet(ProtectedDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet for managing ingredients
     """
 
-    queryset = Ingredient.objects.all()
+    protected_delete_message = (
+        "Diese Zutat wird noch in Rezepten verwendet und kann nicht gelöscht werden."
+    )
+
+    # Annotated so can_be_deleted does not cost an EXISTS per row.
+    queryset = Ingredient.objects.annotate(
+        is_used=Exists(BreadContent.objects.filter(ingredient=OuterRef("pk")))
+    )
     serializer_class = IngredientSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
@@ -88,13 +160,21 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(tags=["bakery"])
-class BreadViewSet(viewsets.ModelViewSet):
+class BreadViewSet(RequestCacheMixin, ProtectedDeleteMixin, viewsets.ModelViewSet):
     """
     ViewSet for managing bread variants
     """
 
+    protected_delete_message = (
+        "Dieses Brot ist schon Wochen zugeordnet und kann nicht gelöscht "
+        "werden. Setze es stattdessen auf inaktiv."
+    )
+
     queryset = Bread.objects.prefetch_related("labels", "contents__ingredient").all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsReadOnly | HasCoopManagePermission,
+    ]
 
     @extend_schema(
         summary="Get all ingredients for a specific bread",
@@ -161,8 +241,8 @@ class BreadViewSet(viewsets.ModelViewSet):
         # Filter by label name
         label_id = self.request.query_params.get("label_id", None)
         pickup_location_id = self.request.query_params.get("pickup_location_id", None)
-        year = self.request.query_params.get("year", None)
-        week = self.request.query_params.get("week", None)
+        year = int_query_param(self.request, "year")
+        week = int_query_param(self.request, "week")
         if label_id:
             queryset = queryset.filter(labels__id=label_id)
 
@@ -173,43 +253,12 @@ class BreadViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_active=is_active)
 
         if pickup_location_id and year and week:
-            # Subquery to count how many BreadDelivery objects exist for each bread
-
-            delivery_count_subquery = (
-                BreadDelivery.objects.filter(
-                    bread=OuterRef("pk"),
-                    pickup_location_id=pickup_location_id,
-                    year=year,
-                    delivery_week=week,
-                )
-                .values("bread")
-                .annotate(total=Count("id"))
-                .values("total")
-            )
-
-            # Annotate queryset with capacity and delivery count
-            queryset = (
-                queryset.filter(
-                    capacity_entries__pickup_location_id=pickup_location_id,
-                    capacity_entries__year=year,
-                    capacity_entries__delivery_week=week,
-                )
-                .annotate(
-                    capacity=F("capacity_entries__capacity"),
-                    delivery_count=Subquery(
-                        delivery_count_subquery, output_field=IntegerField()
-                    ),
-                )
-                .annotate(
-                    available_capacity=F("capacity")
-                    - Case(
-                        When(delivery_count__isnull=True, then=0),
-                        default=F("delivery_count"),
-                        output_field=IntegerField(),
-                    )
-                )
-                .filter(available_capacity__gt=0)
-                .distinct()
+            queryset = BreadAvailabilityService.annotate_remaining_capacity(
+                queryset,
+                pickup_location_id=pickup_location_id,
+                year=year,
+                delivery_week=week,
+                cache=self.tapir_cache,
             )
 
         queryset = queryset.order_by("name")
@@ -234,12 +283,11 @@ class BreadViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], url_path="by-labels")
     def by_labels(self, request: Request) -> Response:
         """Get breads filtered by multiple label IDs"""
-        label_ids = request.query_params.get("label_ids", "").split(",")
-
-        try:
-            label_ids = [id.strip() for id in label_ids if id.strip()]
-        except ValueError:
-            return Response({"error": "Invalid label IDs provided"}, status=400)
+        label_ids = [
+            label_id.strip()
+            for label_id in request.query_params.get("label_ids", "").split(",")
+            if label_id.strip()
+        ]
 
         if not label_ids:
             return Response({"error": "Invalid label IDs provided"}, status=400)
@@ -262,7 +310,10 @@ class BreadContentViewSet(viewsets.ModelViewSet):
 
     queryset = BreadContent.objects.select_related("bread", "ingredient").all()
     serializer_class = BreadContentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsReadOnly | HasCoopManagePermission,
+    ]
 
     @extend_schema(
         parameters=[
@@ -294,7 +345,9 @@ class BreadContentViewSet(viewsets.ModelViewSet):
 
 @extend_schema(tags=["bakery"])
 class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
-    queryset = BreadCapacityPickupLocation.objects.all()
+    queryset = BreadCapacityPickupLocation.objects.select_related(
+        "bread", "pickup_location"
+    ).all()
     serializer_class = BreadCapacityPickupLocationSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
@@ -310,8 +363,8 @@ class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        year = self.request.query_params.get("year")
-        week = self.request.query_params.get("week")
+        year = int_query_param(self.request, "year")
+        week = int_query_param(self.request, "week")
         pickup_location_ids = self.request.query_params.getlist("pickup_location_ids[]")
 
         if year:
@@ -334,19 +387,19 @@ class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], url_path="bulk-update")
     def bulk_update(self, request: Request) -> Response:
         """Bulk create/update/delete capacities"""
-        year = request.data.get("year")
-        week = request.data.get("delivery_week")
-        updates = request.data.get("updates", [])
+        # Through the serializer the schema already advertises, like the
+        # sibling bulk_update below.
+        serializer = BreadCapacityBulkUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
 
-        if not year or not week:
-            return Response(
-                {"error": "year and week are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        year = data["year"]
+        week = data["delivery_week"]
 
-        for update in updates:
-            pickup_location_id = update.get("pickup_location")
-            bread_id = update.get("bread")
+        for update in data["updates"]:
+            # PrimaryKeyRelatedField hands back the objects, already validated.
+            pickup_location_id = update["pickup_location"].pk
+            bread_id = update["bread"].pk
             capacity = update.get("capacity")
 
             if capacity is None:
@@ -371,10 +424,19 @@ class BreadCapacityPickupLocationViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(tags=["bakery"])
-class BreadDeliveryViewSet(viewsets.ModelViewSet):
+class BreadDeliveryViewSet(RequestCacheMixin, viewsets.ModelViewSet):
+    # Needs a docstring of its own: without one the class inherits
+    # RequestCacheMixin's, and drf-spectacular publishes that as the endpoint
+    # description.
+    """A member's bread slots: one per delivered week per share."""
+
     queryset = BreadDelivery.objects.all()
     serializer_class = BreadDeliverySerializer
     permission_classes = [permissions.IsAuthenticated]
+    # Rows are created and deleted by ensure_bread_deliveries_for_member, never
+    # over the API. Members only ever PATCH a bread onto an existing slot, and
+    # create/update/destroy would bypass the capacity check entirely.
+    http_method_names = ["get", "patch", "head", "options"]
 
     @extend_schema(
         parameters=[
@@ -386,13 +448,32 @@ class BreadDeliveryViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
+    def get_serializer(self, *args, **kwargs):
+        if kwargs.get("many") and args:
+            # The serializer derives the station and the joker status per row,
+            # so preload both for the whole page at once rather than letting
+            # each row go and ask for its own member.
+            member_ids = {delivery.subscription.member_id for delivery in list(args[0])}
+            TapirCache.get_jokers_by_member_id_for_members(
+                member_ids=member_ids, cache=self.tapir_cache
+            )
+            MemberPickupLocationService.get_member_pickup_locations_objects_for_members(
+                member_ids=member_ids, cache=self.tapir_cache
+            )
+        return super().get_serializer(*args, **kwargs)
+
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # Optional: filter by member
+        # Scoped unconditionally, not just when member_id is given: get_object()
+        # runs through here too, so this is what secures the detail routes. A
+        # foreign pk 404s instead of being readable or writable.
+        if not self.request.user.has_perm(Permission.Accounts.MANAGE):
+            queryset = queryset.filter(subscription__member_id=self.request.user.pk)
+
         member_id = self.request.query_params.get("member_id", None)
-        year = self.request.query_params.get("year", None)
-        delivery_week = self.request.query_params.get("delivery_week", None)
+        year = int_query_param(self.request, "year")
+        delivery_week = int_query_param(self.request, "delivery_week")
         if member_id is not None:
             queryset = queryset.filter(subscription__member__id=member_id)
         if year is not None:
@@ -400,13 +481,18 @@ class BreadDeliveryViewSet(viewsets.ModelViewSet):
         if delivery_week is not None:
             queryset = queryset.filter(delivery_week=delivery_week)
 
-        return queryset.select_related("bread", "pickup_location")
+        # subscription__member is what the derived pickup location and joker
+        # status are resolved from.
+        return queryset.select_related("bread", "subscription__member")
 
     @extend_schema(
         responses={
             200: BreadDeliverySerializer,
             400: OpenApiResponse(
-                description="No capacity available for selected bread"
+                description=(
+                    "Choosing is closed for this week, not released for "
+                    "members, or no capacity is left for the selected bread"
+                )
             ),
         }
     )
@@ -419,74 +505,61 @@ class BreadDeliveryViewSet(viewsets.ModelViewSet):
         2. Checks if there's available capacity for the selected bread
         3. Only allows the update if capacity is available
         """
-        new_bread_id = request.data.get("bread")
-
-        # If no bread change, just do normal update
-        if new_bread_id is None:
+        # Absent and explicitly null are different requests: leaving the key
+        # out is "change something else", sending null is "clear my choice",
+        # and clearing is subject to the choosing deadline like any other
+        # change.
+        if "bread" not in request.data:
             return super().partial_update(request, *args, **kwargs)
 
-        with transaction.atomic():
-            # Get the delivery with a lock
-            delivery = BreadDelivery.objects.select_for_update().get(pk=kwargs["pk"])
+        new_bread_id = request.data.get("bread")
 
-            # If bread isn't changing, no capacity check needed
+        with transaction.atomic():
+            # Through get_queryset(), so the ownership scoping applies here
+            # too. select_related(None) drops the joins it adds for
+            # serialization: they are nullable, and Postgres refuses FOR UPDATE
+            # on the nullable side of an outer join.
+            delivery = get_object_or_404(
+                self.get_queryset().select_related(None).select_for_update(),
+                pk=kwargs["pk"],
+            )
+
             old_bread_id = str(delivery.bread_id) if delivery.bread_id else None
             if old_bread_id == new_bread_id:
                 return super().partial_update(request, *args, **kwargs)
 
-            # Check capacity for the new bread
-            if new_bread_id and delivery.pickup_location_id:
-                # Lock the capacity entry
-                capacity_entry = (
-                    BreadCapacityPickupLocation.objects.select_for_update()
-                    .filter(
-                        bread_id=new_bread_id,
-                        pickup_location_id=delivery.pickup_location_id,
-                        year=delivery.year,
-                        delivery_week=delivery.delivery_week,
+            cache = self.tapir_cache
+            pickup_location_id = BreadDeliveryContextService.get_pickup_location_id(
+                delivery, cache=cache
+            )
+
+            try:
+                # A member is bound by the choosing rules; staff answering the
+                # phone are not.
+                if not request.user.has_perm(Permission.Accounts.MANAGE):
+                    BreadChoiceService.check_member_may_change(
+                        delivery, pickup_location_id, cache=cache
                     )
-                    .first()
+                if new_bread_id and pickup_location_id:
+                    BreadChoiceService.check_capacity_available(
+                        delivery, new_bread_id, pickup_location_id, cache=cache
+                    )
+            except BreadChoiceNotAllowed as error:
+                return Response(
+                    {"error": str(error)}, status=status.HTTP_400_BAD_REQUEST
                 )
 
-                if not capacity_entry:
-                    return Response(
-                        {
-                            "error": "Dieses Brot ist für diese Station/Woche nicht verfügbar."
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-                # Count existing deliveries for this bread (excluding current one if it had this bread)
-                existing_count = (
-                    BreadDelivery.objects.filter(
-                        bread_id=new_bread_id,
-                        pickup_location_id=delivery.pickup_location_id,
-                        year=delivery.year,
-                        delivery_week=delivery.delivery_week,
-                    )
-                    .exclude(pk=delivery.pk)
-                    .count()
-                )
-
-                available = capacity_entry.capacity - existing_count
-
-                if available <= 0:
-                    return Response(
-                        {"error": "Keine Kapazität mehr für dieses Brot verfügbar."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            # Capacity is available, proceed with update
             return super().partial_update(request, *args, **kwargs)
 
 
 @extend_schema(
     tags=["bakery"],
-    description="Manage preferred breads for a member.",
-    request=PreferredBreadSerializer,
+    description="Read preferred breads for a member.",
     responses={200: PreferredBreadSerializer},
 )
-class PreferredBreadViewSet(viewsets.ModelViewSet):
+class PreferredBreadViewSet(viewsets.ReadOnlyModelViewSet):
+    """Favourites are read here and written through bulk-update only."""
+
     queryset = PreferredBread.objects.all()
     serializer_class = PreferredBreadSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -504,11 +577,18 @@ class PreferredBreadViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        # Optionally filter by member
+        # super(), not self.queryset: the class-level queryset object keeps
+        # its _result_cache, which would freeze the rows at the first request
+        # of the worker process.
+        queryset = super().get_queryset()
+        # Without this a bare list dumps the whole member -> favourites map.
+        if not self.request.user.has_perm(Permission.Accounts.MANAGE):
+            queryset = queryset.filter(member_id=self.request.user.pk)
+
         member_id = self.request.query_params.get("member_id")
         if member_id:
-            return self.queryset.filter(member__id=member_id)
-        return self.queryset
+            queryset = queryset.filter(member__id=member_id)
+        return queryset
 
     @extend_schema(
         request=PreferredBreadsBulkUpdateSerializer,
@@ -518,6 +598,15 @@ class PreferredBreadViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["post"], url_path="bulk-update")
     def bulk_update(self, request, pk=None):
+        # Unlike the inherited detail routes, <pk> here is a Member id, not a
+        # PreferredBread id, so the queryset scoping does not cover it.
+        # Permission first, so an unauthorised caller cannot tell "no such
+        # member" from "not your member". Then resolve, because the FK is
+        # DEFERRABLE INITIALLY DEFERRED and an unknown id would otherwise
+        # survive get_or_create and fail at commit, too late for a 404.
+        check_permission_or_self(pk, request)
+        get_object_or_404(Member, id=pk)
+
         serializer = PreferredBreadsBulkUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         breads = serializer.validated_data["breads"]
@@ -536,7 +625,7 @@ class StoveSessionViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = StoveSession.objects.select_related("bread").all()
     serializer_class = StoveSessionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
         parameters=[
@@ -566,9 +655,9 @@ class StoveSessionViewSet(viewsets.ReadOnlyModelViewSet):
         """Filter by year, week, and day if provided"""
         queryset = super().get_queryset()
 
-        year = self.request.query_params.get("year")
-        delivery_week = self.request.query_params.get("delivery_week")
-        delivery_day = self.request.query_params.get("delivery_day")
+        year = int_query_param(self.request, "year")
+        delivery_week = int_query_param(self.request, "delivery_week")
+        delivery_day = int_query_param(self.request, "delivery_day")
 
         if year is not None:
             queryset = queryset.filter(year=year)
@@ -591,7 +680,7 @@ class BreadsPerPickupLocationPerWeekViewSet(viewsets.ReadOnlyModelViewSet):
         "bread", "pickup_location"
     ).all()
     serializer_class = BreadsPerPickupLocationPerWeekSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
         parameters=[
@@ -621,21 +710,22 @@ class BreadsPerPickupLocationPerWeekViewSet(viewsets.ReadOnlyModelViewSet):
         """Filter by year, week, and day if provided"""
         queryset = super().get_queryset()
 
-        year = self.request.query_params.get("year")
-        delivery_week = self.request.query_params.get("delivery_week")
-        delivery_day = self.request.query_params.get("delivery_day")
+        year = int_query_param(self.request, "year")
+        delivery_week = int_query_param(self.request, "delivery_week")
+        delivery_day = int_query_param(self.request, "delivery_day")
 
         if year is not None:
             queryset = queryset.filter(year=year)
         if delivery_week is not None:
             queryset = queryset.filter(delivery_week=delivery_week)
         if delivery_day is not None:
-            delivery_day_int = int(delivery_day)
-            # Get all pickup location IDs that match this delivery day via opening times
-            pickup_location_ids = PickupLocationOpeningTime.objects.filter(
-                day_of_week=delivery_day_int
-            ).values_list("pickup_location_id", flat=True)
-            queryset = queryset.filter(pickup_location_id__in=pickup_location_ids)
+            # A station's delivery day is the earliest of its opening days,
+            # not merely any day it is open.
+            queryset = queryset.filter(
+                pickup_location_id__in=PickupLocationDeliveryDayService.get_pickup_location_ids_for_delivery_day(
+                    day=delivery_day, cache={}
+                )
+            )
 
         return queryset.order_by("bread__name")
 
@@ -666,9 +756,9 @@ class BreadSpecificsPerDeliveryDayViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        year = self.request.query_params.get("year")
-        delivery_week = self.request.query_params.get("delivery_week")
-        delivery_day = self.request.query_params.get("delivery_day")
+        year = int_query_param(self.request, "year")
+        delivery_week = int_query_param(self.request, "delivery_week")
+        delivery_day = int_query_param(self.request, "delivery_day")
         bread_id = self.request.query_params.get("bread_id")
 
         if year is not None:
@@ -701,7 +791,7 @@ class BreadSpecificsPerDeliveryDayViewSet(viewsets.ModelViewSet):
         delivery_day = data["delivery_day"]
 
         for update in data["updates"]:
-            bread_id = update["bread"]
+            bread_id = update["bread"].pk
             # if all fields are None, delete the entry
             field_values = {
                 k: update.get(k)

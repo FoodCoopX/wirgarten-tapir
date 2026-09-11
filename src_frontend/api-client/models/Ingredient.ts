@@ -24,7 +24,7 @@ export interface Ingredient {
      * @type {string}
      * @memberof Ingredient
      */
-    id?: string;
+    readonly id: string;
     /**
      * 
      * @type {boolean}
@@ -61,6 +61,7 @@ export interface Ingredient {
  * Check if a given object implements the Ingredient interface.
  */
 export function instanceOfIngredient(value: object): value is Ingredient {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('canBeDeleted' in value) || value['canBeDeleted'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     return true;
@@ -76,7 +77,7 @@ export function IngredientFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'canBeDeleted': json['can_be_deleted'],
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
         'name': json['name'],
@@ -89,14 +90,13 @@ export function IngredientFromJSONTyped(json: any, ignoreDiscriminator: boolean)
       return IngredientToJSONTyped(json, false);
   }
 
-  export function IngredientToJSONTyped(value?: Omit<Ingredient, 'can_be_deleted'> | null, ignoreDiscriminator: boolean = false): any {
+  export function IngredientToJSONTyped(value?: Omit<Ingredient, 'id'|'can_be_deleted'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
         'is_active': value['isActive'],
         'name': value['name'],
         'description': value['description'],

@@ -90,7 +90,13 @@ def build_model(
     for b_id in bread_ids:
         bread = bread_map[b_id]
         if bread.fixed_pieces is not None:
-            remaining[b_id] = model.new_int_var(0, 0, f"remaining_{b_id}")
+            # Up to the whole fixed batch may be surplus. Pinning this to zero
+            # would force total_distributed == fixed_pieces exactly, making a
+            # fixed bread infeasible unless the number ordered happened to
+            # match the number baked.
+            remaining[b_id] = model.new_int_var(
+                0, bread.fixed_pieces, f"remaining_{b_id}"
+            )
         else:
             ub = (
                 bread.max_pieces
@@ -127,15 +133,22 @@ def build_model(
             )
 
     # 8. Member preference satisfaction
-    #    For each member at a location: satisfied = 1 if at least one of their
-    #    preferred breads is delivered to that location (distribution >= 1).
-    #    A member with 3 preferred breads counts as 1 satisfied member (not 3).
+    #    A member is satisfied when one loaf of a bread they prefer is set
+    #    aside for them. Reifying this on "the bread is present at the station"
+    #    would let a single loaf satisfy every member who prefers it, so the
+    #    term would be saturated by presence and never steer the quantities.
+    #    A member with three favourites counts once, never three times.
     member_satisfied = {}
+    member_gets_bread = {}
     valid_member_prefs = []
     for i, mp in enumerate(member_preferences):
         loc_id = mp["location_id"]
         # Filter to preferred breads that actually exist in this problem
-        valid_breads = [b_id for b_id in mp["preferred_bread_ids"] if b_id in bread_map]
+        valid_breads = [
+            b_id
+            for b_id in mp["preferred_bread_ids"]
+            if b_id in bread_map and (b_id, loc_id) in distribution_vars
+        ]
         if not valid_breads:
             continue
         if not any(loc.location_id == loc_id for loc in pickup_locations):
@@ -144,6 +157,8 @@ def build_model(
         member_satisfied[i] = model.new_bool_var(
             f"member_sat_{mp['member_id']}_{loc_id}"
         )
+        for b_id in valid_breads:
+            member_gets_bread[i, b_id] = model.new_bool_var(f"member_{i}_gets_{b_id}")
         valid_member_prefs.append((i, mp, valid_breads))
 
     # -----------------------------------------------------------------------
@@ -207,10 +222,11 @@ def build_model(
             distribution_vars[b_id, loc.location_id] for loc in pickup_locations
         )
         model.add(total_baked[b_id] == total_distributed + remaining[b_id])
-        if bread.fixed_pieces is None:
-            model.add(remaining[b_id] >= bread.min_remaining_pieces).only_enforce_if(
-                bread_is_baked[b_id]
-            )
+        # For every bread, fixed ones included: their remaining is no longer
+        # pinned to 0, so min_remaining_pieces applies to them too.
+        model.add(remaining[b_id] >= bread.min_remaining_pieces).only_enforce_if(
+            bread_is_baked[b_id]
+        )
 
     # C7: Each location distributes exactly its total deliveries
     for loc in pickup_locations:
@@ -285,30 +301,28 @@ def build_model(
         )
 
     # C14: Member preference satisfaction
-    #      A member is satisfied if at least one of their preferred breads
-    #      is delivered to their location (i.e. distribution >= 1).
-    #      This uses bread_at_location which is already linked to distribution.
+    #      One loaf per satisfied member, taken from a bread they prefer, and
+    #      a bread can only be claimed by as many members as there are loaves
+    #      of it at that station. Same rule as PreferenceSatisfactionService
+    #      applies when it simulates the pickup, so the optimizer and the
+    #      metrics page agree.
     for i, mp, valid_breads in valid_member_prefs:
-        loc_id = mp["location_id"]
-        # member_satisfied[i] == 1  =>  at least one preferred bread at location
-        # member_satisfied[i] == 0  =>  none of the preferred breads at location
-        #
-        # sum(bread_at_location[b, loc] for b in preferred) >= 1
-        #   implies member can be satisfied.
-        # We use: member_satisfied <= sum(bread_at_location[b, loc] for preferred)
-        #         member_satisfied >= bread_at_location[b, loc] for each preferred b
-        #   (the second is not needed — the optimizer will set it to 1 when possible)
-        preferred_at_loc = [
-            bread_at_location[b_id, loc_id]
-            for b_id in valid_breads
-            if (b_id, loc_id) in bread_at_location
-        ]
-        if not preferred_at_loc:
-            model.add(member_satisfied[i] == 0)
-            continue
-        # Can only be satisfied if at least one preferred bread is there
-        model.add(member_satisfied[i] <= sum(preferred_at_loc))
-        # The optimizer will maximize this, so no need for a lower bound constraint
+        model.add(
+            sum(member_gets_bread[i, b_id] for b_id in valid_breads)
+            == member_satisfied[i]
+        )
+
+    # C14b: a bread cannot be claimed more often than it is distributed
+    for loc in pickup_locations:
+        for b_id in bread_ids:
+            claims = [
+                member_gets_bread[i, b_id]
+                for i, mp, valid_breads in valid_member_prefs
+                if mp["location_id"] == loc.location_id
+                and (i, b_id) in member_gets_bread
+            ]
+            if claims:
+                model.add(sum(claims) <= distribution_vars[b_id, loc.location_id])
 
     # -----------------------------------------------------------------------
     # Objective — strict priority ordering via large weight gaps
@@ -328,8 +342,15 @@ def build_model(
     VARIETY_W = 10
 
     total_sessions = sum(session_used[sess] for sess in range(max_sessions))
+    # Sessions BEYOND the first, which is what "spanning" means. Summing
+    # sessions_per_bread directly would charge SPANNING_W per distinct variety
+    # rather than per spanning bread, which outweighs the preference term and
+    # collapses the plan to a single variety. bread_is_baked is 1 exactly when
+    # total_baked >= 1 (C5) and a bread in a session must occupy layers, so the
+    # difference is 0 for an unbaked or single-session bread and 1 for one that
+    # spans two, never negative.
     total_spanning = sum(
-        sessions_per_bread[b_id]
+        sessions_per_bread[b_id] - bread_is_baked[b_id]
         for b_id in bread_ids
         if bread_map[b_id].fixed_pieces is None
     )

@@ -20,12 +20,6 @@ import { mapValues } from '../runtime';
  */
 export interface PatchedBreadContentRequest {
     /**
-     * 
-     * @type {string}
-     * @memberof PatchedBreadContentRequest
-     */
-    id?: string;
-    /**
      * Amount in grams or percentage
      * @type {number}
      * @memberof PatchedBreadContentRequest
@@ -68,7 +62,6 @@ export function PatchedBreadContentRequestFromJSONTyped(json: any, ignoreDiscrim
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'amount': json['amount'] == null ? undefined : json['amount'],
         'sortOrder': json['sort_order'] == null ? undefined : json['sort_order'],
         'bread': json['bread'] == null ? undefined : json['bread'],
@@ -87,7 +80,6 @@ export function PatchedBreadContentRequestFromJSONTyped(json: any, ignoreDiscrim
 
     return {
         
-        'id': value['id'],
         'amount': value['amount'],
         'sort_order': value['sortOrder'],
         'bread': value['bread'],

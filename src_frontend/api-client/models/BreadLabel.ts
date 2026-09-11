@@ -24,7 +24,7 @@ export interface BreadLabel {
      * @type {string}
      * @memberof BreadLabel
      */
-    id?: string;
+    readonly id: string;
     /**
      * 
      * @type {boolean}
@@ -43,6 +43,7 @@ export interface BreadLabel {
  * Check if a given object implements the BreadLabel interface.
  */
 export function instanceOfBreadLabel(value: object): value is BreadLabel {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     return true;
 }
@@ -57,7 +58,7 @@ export function BreadLabelFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
         'name': json['name'],
     };
@@ -67,14 +68,13 @@ export function BreadLabelFromJSONTyped(json: any, ignoreDiscriminator: boolean)
       return BreadLabelToJSONTyped(json, false);
   }
 
-  export function BreadLabelToJSONTyped(value?: BreadLabel | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadLabelToJSONTyped(value?: Omit<BreadLabel, 'id'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
         'is_active': value['isActive'],
         'name': value['name'],
     };

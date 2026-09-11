@@ -1,5 +1,5 @@
 """
-Tests for breaddelivery_service.py - ensure_bread_deliveries_for_member
+Tests for BreadDeliveryService.ensure_bread_deliveries_for_member
 
 These tests verify that BreadDelivery records are correctly synchronized when:
 1. A Subscription is created or updated
@@ -7,19 +7,22 @@ These tests verify that BreadDelivery records are correctly synchronized when:
 3. A Joker is added or removed
 """
 
-from datetime import date, timedelta
+from datetime import date
 from unittest.mock import patch
 
 from django.test import TestCase
 
 from tapir.bakery.models import BreadDelivery
-from tapir.bakery.services.breaddelivery_service import (
-    ensure_bread_deliveries_for_member,
+from tapir.bakery.services.bread_delivery_context_service import (
+    BreadDeliveryContextService,
 )
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
+from tapir.bakery.tests.factories import enable_bakery
 from tapir.deliveries.models import Joker
 from tapir.wirgarten.models import MemberPickupLocation
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
+    GrowingPeriodFactory,
     MemberFactory,
     MemberPickupLocationFactory,
     PickupLocationFactory,
@@ -39,10 +42,23 @@ class TestEnsureBreadDeliveriesForMember(TestCase):
     def setUp(self):
         super().setUp()
         # Create a weekly product type for bread subscriptions
+        enable_bakery()
         self.product_type = ProductTypeFactory.create(
-            name="Brot", delivery_cycle="weekly"
+            name="Brot", delivery_cycle="weekly", is_bread=True
         )
         self.product = ProductFactory.create(type=self.product_type, name="Brot Abo")
+
+    @staticmethod
+    def _derived_pickup_location_id(delivery, cache=None):
+        return BreadDeliveryContextService.get_pickup_location_id(
+            delivery, cache={} if cache is None else cache
+        )
+
+    @staticmethod
+    def _derived_joker_taken(delivery, cache=None):
+        return BreadDeliveryContextService.is_joker_taken(
+            delivery, cache={} if cache is None else cache
+        )
 
     def _create_member_with_pickup_location(self, pickup_location=None):
         """Helper to create a member with a pickup location."""
@@ -52,7 +68,9 @@ class TestEnsureBreadDeliveriesForMember(TestCase):
         MemberPickupLocationFactory.create(
             member=member,
             pickup_location=pickup_location,
-            valid_from=date.today() - timedelta(days=30),
+            # Fixed, not relative to the real today: these tests freeze the
+            # clock in 2026 and the station is now resolved per delivery week.
+            valid_from=date(2025, 1, 1),
         )
         return member, pickup_location
 
@@ -77,15 +95,20 @@ class TestSubscriptionSync(TestEnsureBreadDeliveriesForMember):
         )
 
         # Trigger sync (normally called by signal)
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        # Should have 4 weeks × 2 quantity = 8 deliveries
+        # 2026-03-01 is a Sunday, so the period overlaps ISO weeks 9-13 - but
+        # week 9 is delivered on Wednesday 2026-02-25, before the contract
+        # starts, so only weeks 10-13 count: 4 weeks × 2 quantity.
         deliveries = BreadDelivery.objects.filter(subscription=subscription)
         self.assertEqual(deliveries.count(), 8)
 
-        # All deliveries should have the correct pickup location
-        for delivery in deliveries:
-            self.assertEqual(delivery.pickup_location, pickup_location)
+        # All deliveries resolve to the member's pickup location
+        cache = {}
+        for delivery in deliveries.select_related("subscription"):
+            self.assertEqual(
+                self._derived_pickup_location_id(delivery, cache), pickup_location.id
+            )
 
     @patch("tapir.bakery.services.breaddelivery_service.datetime")
     def test_subscription_quantity_increased_creates_more_deliveries(
@@ -101,10 +124,10 @@ class TestSubscriptionSync(TestEnsureBreadDeliveriesForMember):
             product=self.product,
             quantity=1,
             start_date=date(2026, 3, 1),
-            end_date=date(2026, 3, 14),  # 2 weeks
+            end_date=date(2026, 3, 14),  # overlaps weeks 9-11, delivered in 10-11
         )
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
         self.assertEqual(
             BreadDelivery.objects.filter(subscription=subscription).count(), 2
         )
@@ -113,9 +136,9 @@ class TestSubscriptionSync(TestEnsureBreadDeliveriesForMember):
         subscription.quantity = 3
         subscription.save()
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        # Should now have 2 weeks × 3 quantity = 6 deliveries
+        # Should now have 3 weeks × 3 quantity = 9 deliveries
         deliveries = BreadDelivery.objects.filter(subscription=subscription)
         self.assertEqual(deliveries.count(), 6)
 
@@ -131,10 +154,10 @@ class TestSubscriptionSync(TestEnsureBreadDeliveriesForMember):
             product=self.product,
             quantity=3,
             start_date=date(2026, 3, 1),
-            end_date=date(2026, 3, 14),  # 2 weeks
+            end_date=date(2026, 3, 14),  # overlaps weeks 9-11, delivered in 10-11
         )
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
         self.assertEqual(
             BreadDelivery.objects.filter(subscription=subscription).count(), 6
         )
@@ -143,9 +166,9 @@ class TestSubscriptionSync(TestEnsureBreadDeliveriesForMember):
         subscription.quantity = 1
         subscription.save()
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        # Should now have 2 weeks × 1 quantity = 2 deliveries
+        # Should now have 3 weeks × 1 quantity = 3 deliveries
         deliveries = BreadDelivery.objects.filter(subscription=subscription)
         self.assertEqual(deliveries.count(), 2)
 
@@ -170,7 +193,7 @@ class TestSubscriptionSync(TestEnsureBreadDeliveriesForMember):
             end_date=date(2026, 3, 28),
         )
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
         # Should have no bread deliveries
         deliveries = BreadDelivery.objects.filter(subscription=subscription)
@@ -198,32 +221,27 @@ class TestPickupLocationSync(TestEnsureBreadDeliveriesForMember):
             end_date=date(2026, 3, 28),  # 4 weeks
         )
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        # All deliveries should have old pickup location
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
+        deliveries = BreadDelivery.objects.filter(
+            subscription=subscription
+        ).select_related("subscription")
         for delivery in deliveries:
-            self.assertEqual(delivery.pickup_location, old_pl)
+            self.assertEqual(self._derived_pickup_location_id(delivery), old_pl.id)
 
-        # Change pickup location
+        # Change pickup location. No re-sync: the station is derived, so every
+        # week resolves to the new one straight away.
         member_pl = MemberPickupLocation.objects.get(member=member)
         member_pl.pickup_location = new_pl
         member_pl.save()
 
-        # This would normally trigger signal, but we call manually
-        ensure_bread_deliveries_for_member(member)
-
-        # Future deliveries (from current week onward) should have new pickup location
-        # Week 11 (March 9-15) is current, so weeks 11, 12, 13 should be updated
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
+        cache = {}
         for delivery in deliveries:
-            # Year 2026, week 10 (March 2-8) is in the past
-            if delivery.year == 2026 and delivery.delivery_week >= 11:
-                self.assertEqual(
-                    delivery.pickup_location,
-                    new_pl,
-                    f"Week {delivery.delivery_week} should have new pickup location",
-                )
+            self.assertEqual(
+                self._derived_pickup_location_id(delivery, cache),
+                new_pl.id,
+                f"Week {delivery.delivery_week} should resolve to the new location",
+            )
 
     @patch("tapir.bakery.services.breaddelivery_service.datetime")
     def test_new_pickup_location_added_updates_deliveries(self, mock_datetime):
@@ -243,47 +261,48 @@ class TestPickupLocationSync(TestEnsureBreadDeliveriesForMember):
             end_date=date(2026, 3, 14),
         )
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        # Add new pickup location with valid_from = Monday of week 10 (March 2)
-        # Week 9 Monday is Feb 23, Week 10 Monday is March 2
+        # valid_from is the Monday of week 11, so it lands between the two
+        # weeks the subscription is delivered in: week 10 (Wed 2026-03-04)
+        # resolves to the previous station, week 11 (Wed 2026-03-11) to the new
+        # one.
         MemberPickupLocationFactory.create(
             member=member,
             pickup_location=new_pl,
-            valid_from=date(2026, 3, 2),  # Valid from week 10 (Monday of week 10)
+            valid_from=date(2026, 3, 9),
         )
 
-        ensure_bread_deliveries_for_member(member)
-
-        # Check that deliveries use the correct pickup location based on valid_from
-        deliveries = BreadDelivery.objects.filter(subscription=subscription).order_by(
-            "year", "delivery_week"
+        # Each week resolves against valid_from on its own delivery date.
+        deliveries = (
+            BreadDelivery.objects.filter(subscription=subscription)
+            .select_related("subscription")
+            .order_by("year", "delivery_week")
         )
         self.assertEqual(deliveries.count(), 2)
 
-        # Week 9 (Monday = Feb 23) should still use old location (Feb 23 < March 2)
-        week_9_delivery = deliveries.filter(delivery_week=9).first()
-        self.assertEqual(
-            week_9_delivery.pickup_location,
-            old_pl,
-            "Week 9 should use old location (valid_from not yet reached)",
-        )
-
-        # Week 10 (Monday = March 2) should use new location (March 2 >= March 2)
+        cache = {}
         week_10_delivery = deliveries.filter(delivery_week=10).first()
         self.assertEqual(
-            week_10_delivery.pickup_location,
-            new_pl,
-            "Week 10 should use new location (valid_from reached)",
+            self._derived_pickup_location_id(week_10_delivery, cache),
+            old_pl.id,
+            "Week 10 should use old location (valid_from not yet reached)",
+        )
+
+        week_11_delivery = deliveries.filter(delivery_week=11).first()
+        self.assertEqual(
+            self._derived_pickup_location_id(week_11_delivery, cache),
+            new_pl.id,
+            "Week 11 should use new location (valid_from reached)",
         )
 
 
 class TestJokerSync(TestEnsureBreadDeliveriesForMember):
-    """Tests for BreadDelivery sync when jokers change."""
+    """The joker status of a slot is derived from the member's jokers."""
 
     @patch("tapir.bakery.services.breaddelivery_service.datetime")
     def test_joker_added_sets_joker_taken_true(self, mock_datetime):
-        """When a joker is added, corresponding BreadDeliveries should have joker_taken=True."""
+        """A joker in a week makes that week's slots read as jokered."""
         mock_datetime.now.return_value.date.return_value = date(2026, 3, 1)
 
         member, pickup_location = self._create_member_with_pickup_location()
@@ -296,36 +315,28 @@ class TestJokerSync(TestEnsureBreadDeliveriesForMember):
             end_date=date(2026, 3, 14),  # 2 weeks
         )
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        # All deliveries should have joker_taken=False
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
+        deliveries = BreadDelivery.objects.filter(
+            subscription=subscription
+        ).select_related("subscription__member")
         for delivery in deliveries:
-            self.assertFalse(delivery.joker_taken)
+            self.assertFalse(self._derived_joker_taken(delivery))
 
-        # Add joker for week 10 (March 2-8, 2026)
-        joker = Joker.objects.create(member=member, date=date(2026, 3, 4))
+        # Add joker for week 10 (March 2-8, 2026). No re-sync needed.
+        Joker.objects.create(member=member, date=date(2026, 3, 4))
 
-        # Signal would trigger this, but we call manually
-        ensure_bread_deliveries_for_member(member)
-
-        # Delivery in week 10 should have joker_taken=True
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
+        cache = {}
         for delivery in deliveries:
-            if delivery.year == 2026 and delivery.delivery_week == 10:
-                self.assertTrue(
-                    delivery.joker_taken,
-                    f"Week {delivery.delivery_week} should have joker_taken=True",
-                )
-            else:
-                self.assertFalse(
-                    delivery.joker_taken,
-                    f"Week {delivery.delivery_week} should have joker_taken=False",
-                )
+            self.assertEqual(
+                self._derived_joker_taken(delivery, cache),
+                delivery.year == 2026 and delivery.delivery_week == 10,
+                f"Week {delivery.delivery_week} joker status",
+            )
 
     @patch("tapir.bakery.services.breaddelivery_service.datetime")
     def test_joker_removed_sets_joker_taken_false(self, mock_datetime):
-        """When a joker is removed, corresponding BreadDeliveries should have joker_taken=False."""
+        """Removing the joker makes the week read as delivered again."""
         mock_datetime.now.return_value.date.return_value = date(2026, 3, 1)
 
         member, pickup_location = self._create_member_with_pickup_location()
@@ -341,26 +352,23 @@ class TestJokerSync(TestEnsureBreadDeliveriesForMember):
         # Add joker first
         joker = Joker.objects.create(member=member, date=date(2026, 3, 4))
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        # Verify joker_taken is True
-        delivery_week_10 = BreadDelivery.objects.get(
-            subscription=subscription, year=2026, delivery_week=10
-        )
-        self.assertTrue(delivery_week_10.joker_taken)
+        delivery_week_10 = BreadDelivery.objects.select_related(
+            "subscription__member"
+        ).get(subscription=subscription, year=2026, delivery_week=10)
+        self.assertTrue(self._derived_joker_taken(delivery_week_10))
 
-        # Remove joker
         joker.delete()
 
-        # Signal would trigger this, but we call manually
-        ensure_bread_deliveries_for_member(member)
-
-        # All deliveries should have joker_taken=False
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
+        cache = {}
+        deliveries = BreadDelivery.objects.filter(
+            subscription=subscription
+        ).select_related("subscription__member")
         for delivery in deliveries:
             self.assertFalse(
-                delivery.joker_taken,
-                f"Week {delivery.delivery_week} should have joker_taken=False after joker deletion",
+                self._derived_joker_taken(delivery, cache),
+                f"Week {delivery.delivery_week} should not read as jokered any more",
             )
 
     @patch("tapir.bakery.services.breaddelivery_service.datetime")
@@ -382,22 +390,20 @@ class TestJokerSync(TestEnsureBreadDeliveriesForMember):
         Joker.objects.create(member=member, date=date(2026, 3, 4))  # Week 10
         Joker.objects.create(member=member, date=date(2026, 3, 18))  # Week 12
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
+        deliveries = BreadDelivery.objects.filter(
+            subscription=subscription
+        ).select_related("subscription__member")
         joker_weeks = {10, 12}
 
+        cache = {}
         for delivery in deliveries:
-            if delivery.delivery_week in joker_weeks:
-                self.assertTrue(
-                    delivery.joker_taken,
-                    f"Week {delivery.delivery_week} should have joker_taken=True",
-                )
-            else:
-                self.assertFalse(
-                    delivery.joker_taken,
-                    f"Week {delivery.delivery_week} should have joker_taken=False",
-                )
+            self.assertEqual(
+                self._derived_joker_taken(delivery, cache),
+                delivery.delivery_week in joker_weeks,
+                f"Week {delivery.delivery_week} joker status",
+            )
 
 
 class TestSignalIntegration(TestEnsureBreadDeliveriesForMember):
@@ -424,15 +430,15 @@ class TestSignalIntegration(TestEnsureBreadDeliveriesForMember):
         self.assertEqual(deliveries.count(), 2)
 
     @patch("tapir.bakery.services.breaddelivery_service.datetime")
-    def test_member_pickup_location_save_signal_triggers_sync(self, mock_datetime):
-        """Saving a MemberPickupLocation should trigger sync via signal."""
+    def test_pickupLocationAndJokerSaves_doNotTouchBreadDeliveries(self, mock_datetime):
+        """
+        The MemberPickupLocation and Joker receivers are gone: both facts are
+        derived at read time, so neither event has any rows to write. This is
+        what took a few hundred queries out of every location change.
+        """
         mock_datetime.now.return_value.date.return_value = date(2026, 3, 1)
 
-        old_pl = PickupLocationFactory.create(name="Old")
-        new_pl = PickupLocationFactory.create(name="New")
-
-        member, _ = self._create_member_with_pickup_location(old_pl)
-
+        member, _ = self._create_member_with_pickup_location()
         subscription = SubscriptionFactory.create(
             member=member,
             product=self.product,
@@ -440,70 +446,26 @@ class TestSignalIntegration(TestEnsureBreadDeliveriesForMember):
             start_date=date(2026, 3, 1),
             end_date=date(2026, 3, 14),
         )
-
-        # Update pickup location - this triggers signal
-        member_pl = MemberPickupLocation.objects.get(member=member)
-        member_pl.pickup_location = new_pl
-        member_pl.save()
-
-        # Signal should have updated deliveries
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
-        for delivery in deliveries:
-            self.assertEqual(delivery.pickup_location, new_pl)
-
-    @patch("tapir.bakery.services.breaddelivery_service.datetime")
-    def test_joker_save_signal_triggers_sync(self, mock_datetime):
-        """Creating a Joker should trigger sync via signal."""
-        mock_datetime.now.return_value.date.return_value = date(2026, 3, 1)
-
-        member, pickup_location = self._create_member_with_pickup_location()
-
-        subscription = SubscriptionFactory.create(
-            member=member,
-            product=self.product,
-            quantity=1,
-            start_date=date(2026, 3, 1),
-            end_date=date(2026, 3, 14),
+        before = list(
+            BreadDelivery.objects.filter(subscription=subscription)
+            .order_by("year", "delivery_week", "slot_number")
+            .values_list("id", "year", "delivery_week", "slot_number", "bread_id")
         )
+        self.assertEqual(len(before), 2)
 
-        # Creating joker triggers post_save signal
+        MemberPickupLocationFactory.create(
+            member=member,
+            pickup_location=PickupLocationFactory.create(),
+            valid_from=date(2026, 3, 2),
+        )
         Joker.objects.create(member=member, date=date(2026, 3, 4))
 
-        # Signal should have set joker_taken
-        delivery = BreadDelivery.objects.get(
-            subscription=subscription, year=2026, delivery_week=10
+        after = list(
+            BreadDelivery.objects.filter(subscription=subscription)
+            .order_by("year", "delivery_week", "slot_number")
+            .values_list("id", "year", "delivery_week", "slot_number", "bread_id")
         )
-        self.assertTrue(delivery.joker_taken)
-
-    @patch("tapir.bakery.services.breaddelivery_service.datetime")
-    def test_joker_delete_signal_triggers_sync(self, mock_datetime):
-        """Deleting a Joker should trigger sync via signal."""
-        mock_datetime.now.return_value.date.return_value = date(2026, 3, 1)
-
-        member, pickup_location = self._create_member_with_pickup_location()
-
-        subscription = SubscriptionFactory.create(
-            member=member,
-            product=self.product,
-            quantity=1,
-            start_date=date(2026, 3, 1),
-            end_date=date(2026, 3, 14),
-        )
-
-        joker = Joker.objects.create(member=member, date=date(2026, 3, 4))
-
-        # Verify joker_taken is True
-        delivery = BreadDelivery.objects.get(
-            subscription=subscription, year=2026, delivery_week=10
-        )
-        self.assertTrue(delivery.joker_taken)
-
-        # Delete joker - triggers post_delete signal
-        joker.delete()
-
-        # Signal should have cleared joker_taken
-        delivery.refresh_from_db()
-        self.assertFalse(delivery.joker_taken)
+        self.assertEqual(before, after)
 
 
 class TestEdgeCases(TestEnsureBreadDeliveriesForMember):
@@ -526,13 +488,16 @@ class TestEdgeCases(TestEnsureBreadDeliveriesForMember):
         )
 
         # Should not raise an error
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-        # Deliveries created with pickup_location=None
-        deliveries = BreadDelivery.objects.filter(subscription=subscription)
+        # Rows are still created; they just resolve to no station.
+        deliveries = BreadDelivery.objects.filter(
+            subscription=subscription
+        ).select_related("subscription")
         self.assertEqual(deliveries.count(), 2)
+        cache = {}
         for delivery in deliveries:
-            self.assertIsNone(delivery.pickup_location)
+            self.assertIsNone(self._derived_pickup_location_id(delivery, cache))
 
     @patch("tapir.bakery.services.breaddelivery_service.datetime")
     def test_expired_subscription_cleaned_up(self, mock_datetime):
@@ -556,10 +521,9 @@ class TestEdgeCases(TestEnsureBreadDeliveriesForMember):
             year=2026,
             delivery_week=15,  # April - should be deleted
             slot_number=1,
-            pickup_location=pickup_location,
         )
 
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
         # Future delivery should be cleaned up
         future_delivery = BreadDelivery.objects.filter(
@@ -583,15 +547,51 @@ class TestEdgeCases(TestEnsureBreadDeliveriesForMember):
         )
 
         # First sync
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
         count_after_first = BreadDelivery.objects.filter(
             subscription=subscription
         ).count()
 
         # Second sync (should not duplicate)
-        ensure_bread_deliveries_for_member(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
         count_after_second = BreadDelivery.objects.filter(
             subscription=subscription
         ).count()
 
         self.assertEqual(count_after_first, count_after_second)
+
+
+class TestWeeksWithoutDelivery(TestEnsureBreadDeliveriesForMember):
+    """Weeks the growing period marks as undelivered must not get bread slots."""
+
+    @patch("tapir.bakery.services.breaddelivery_service.datetime")
+    def test_weeksWithoutDelivery_areSkipped(self, mock_datetime):
+        mock_datetime.now.return_value.date.return_value = date(2026, 3, 2)
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=date(2026, 3, 1),
+            end_date=date(2027, 2, 28),
+            weeks_without_delivery=[30],
+        )
+        member, _ = self._create_member_with_pickup_location()
+        SubscriptionFactory.create(
+            member=member,
+            product=self.product,
+            period=growing_period,
+            quantity=2,
+            start_date=date(2026, 3, 2),
+            end_date=date(2026, 12, 27),
+        )
+
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
+
+        self.assertEqual(
+            BreadDelivery.objects.filter(year=2026, delivery_week=30).count(),
+            0,
+            "week 30 is marked as a week without delivery",
+        )
+        self.assertEqual(
+            BreadDelivery.objects.filter(year=2026, delivery_week=29).count(),
+            2,
+            "neighbouring weeks are unaffected",
+        )

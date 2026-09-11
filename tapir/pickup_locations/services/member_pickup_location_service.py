@@ -122,35 +122,87 @@ class MemberPickupLocationService:
             members_at_date, reference_date, build_if_cache_miss
         )
 
+    ALL_MEMBER_PICKUP_LOCATIONS_LOADED_KEY = "all_member_pickup_locations_loaded"
+
+    @classmethod
+    def _member_pickup_locations_map(
+        cls, cache: Dict
+    ) -> Dict[str, List[MemberPickupLocation]]:
+        return get_from_cache_or_compute(
+            cache, "member_pickup_locations_objects_by_member_id", lambda: {}
+        )
+
+    @classmethod
+    def _fill_member_pickup_locations(cls, by_member_id: Dict, queryset):
+        """
+        Append the queryset's rows to the map, newest valid_from first.
+
+        setdefault rather than assignment, because a scoped load may already
+        hold a reference to a member's list.
+        """
+        loaded = {}
+        for member_pickup_location in queryset.order_by("-valid_from"):
+            loaded.setdefault(member_pickup_location.member_id, []).append(
+                member_pickup_location
+            )
+        for member_id, member_pickup_locations in loaded.items():
+            by_member_id.setdefault(member_id, member_pickup_locations)
+
     @classmethod
     def get_member_pickup_locations_objects_by_member_id(
         cls, cache: Dict
     ) -> Dict[str, List[MemberPickupLocation]]:
-        def build_if_cache_miss():
-            member_pickup_locations = {}
-            for member_pickup_location in MemberPickupLocation.objects.order_by(
-                "-valid_from"
-            ):
-                if member_pickup_location.member_id not in member_pickup_locations:
-                    member_pickup_locations[member_pickup_location.member_id] = []
-                member_pickup_locations[member_pickup_location.member_id].append(
-                    member_pickup_location
-                )
-            return member_pickup_locations
+        by_member_id = cls._member_pickup_locations_map(cache)
 
-        return get_from_cache_or_compute(
-            cache, "member_pickup_locations_objects_by_member_id", build_if_cache_miss
-        )
+        if not cache.get(cls.ALL_MEMBER_PICKUP_LOCATIONS_LOADED_KEY, False):
+            cls._fill_member_pickup_locations(
+                by_member_id, MemberPickupLocation.objects.all()
+            )
+            cache[cls.ALL_MEMBER_PICKUP_LOCATIONS_LOADED_KEY] = True
+
+        return by_member_id
+
+    @classmethod
+    def get_member_pickup_locations_objects_for_members(
+        cls, member_ids, cache: Dict
+    ) -> Dict[str, List[MemberPickupLocation]]:
+        """
+        The pickup location history of these members, in one query.
+
+        Use this over the unscoped accessor when the set of members is known:
+        resolving a station per row otherwise reads the whole
+        MemberPickupLocation table. Members with no row at all are present with
+        an empty list, which is what get_member_pickup_location_id_from_cache
+        reads as "no station".
+        """
+        by_member_id = cls._member_pickup_locations_map(cache)
+        if cache.get(cls.ALL_MEMBER_PICKUP_LOCATIONS_LOADED_KEY, False):
+            return by_member_id
+
+        missing = {
+            member_id for member_id in member_ids if member_id not in by_member_id
+        }
+        if missing:
+            cls._fill_member_pickup_locations(
+                by_member_id, MemberPickupLocation.objects.filter(member_id__in=missing)
+            )
+            for member_id in missing:
+                by_member_id.setdefault(member_id, [])
+
+        return by_member_id
 
     @classmethod
     def get_member_pickup_location_id_from_cache(
         cls, member_id: str, reference_date: datetime.date, cache: Dict
     ):
-        temp = cls.get_member_pickup_locations_objects_by_member_id(cache)
-        if member_id not in temp:
+        by_member_id = cls._member_pickup_locations_map(cache)
+        if member_id not in by_member_id:
+            # Not covered by a scoped preload, so load the whole table.
+            by_member_id = cls.get_member_pickup_locations_objects_by_member_id(cache)
+        if member_id not in by_member_id:
             return None
 
-        member_pickup_location_objects = temp[member_id]
+        member_pickup_location_objects = by_member_id[member_id]
         if len(member_pickup_location_objects) == 1:
             return member_pickup_location_objects[0].pickup_location_id
 

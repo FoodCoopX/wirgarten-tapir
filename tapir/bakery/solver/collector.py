@@ -4,7 +4,9 @@ from ortools.sat.python import cp_model
 class BreadSolutionCollector(cp_model.CpSolverSolutionCallback):
     def __init__(self, max_solutions, extract_fn):
         super().__init__()
-        self._max_solutions = max_solutions
+        # Zero or less would make the memory bound below truncate the list to
+        # [:0] on every callback, reporting a solvable week as unsolvable.
+        self._max_solutions = max(1, max_solutions)
         self._extract_fn = extract_fn
         self._solutions = []
 

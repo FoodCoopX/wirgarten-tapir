@@ -72,6 +72,11 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
         if not create:
             return
 
+        if not self.keycloak_id:
+            # bypass_keycloak is on, so there is no keycloak account to add to
+            # or remove from the superuser group.
+            return
+
         keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
         group_id = None
         for group in keycloak_client.get_groups():

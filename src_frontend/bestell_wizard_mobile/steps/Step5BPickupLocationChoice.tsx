@@ -76,24 +76,29 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   const [showValidation, setShowValidation] = useState(false);
   const carouselRef = useRef<CarouselRef>(null);
   const [mapRef, setMapRef] = useState<MapRef>(null);
-  const [selectedDeliveryDay, setSelectedDeliveryDay] = useState<number | null>(null);
-
+  const [selectedDeliveryDay, setSelectedDeliveryDay] = useState<number | null>(
+    null,
+  );
 
   const availableDeliveryDays = useMemo((): number[] => {
+    // Not Number(): deliveryDay is `number | null` and Number(null) is 0,
+    // which would file a station with no opening times under Montag.
     const days = new Set(
       settings.pickupLocations
-        .map((loc) => Number(loc.deliveryDay))
-        .filter((day) => !isNaN(day))
+        .map((loc) => loc.deliveryDay)
+        .filter((day): day is number => day !== null && day !== undefined),
     );
-    return Array.from(days).sort();
+    return Array.from(days).sort((a, b) => a - b);
   }, [settings.pickupLocations]);
 
+  // Changing the day filter clears the selection, so a member cannot confirm
+  // a station that is no longer on screen.
   const filteredPickupLocations = useMemo(() => {
     if (selectedDeliveryDay === null) {
       return settings.pickupLocations;
     }
     return settings.pickupLocations.filter(
-      (loc) => Number(loc.deliveryDay) === selectedDeliveryDay
+      (loc) => loc.deliveryDay === selectedDeliveryDay,
     );
   }, [settings.pickupLocations, selectedDeliveryDay]);
 
@@ -170,10 +175,13 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
 
   return (
     <>
-     <DeliveryDayTabs
+      <DeliveryDayTabs
         availableDays={availableDeliveryDays}
         selectedDay={selectedDeliveryDay}
-        onSelectDay={setSelectedDeliveryDay}
+        onSelectDay={(day) => {
+          setSelectedDeliveryDay(day);
+          setSelectedPickupLocations([]);
+        }}
       />
       <ButtonGroup style={{ width: "100%" }}>
         {ALL_PICKUP_LOCATION_TABS.filter(

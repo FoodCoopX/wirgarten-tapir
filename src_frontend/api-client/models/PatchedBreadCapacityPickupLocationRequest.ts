@@ -20,12 +20,6 @@ import { mapValues } from '../runtime';
  */
 export interface PatchedBreadCapacityPickupLocationRequest {
     /**
-     * 
-     * @type {string}
-     * @memberof PatchedBreadCapacityPickupLocationRequest
-     */
-    id?: string;
-    /**
      * Year for which this capacity applies
      * @type {number}
      * @memberof PatchedBreadCapacityPickupLocationRequest
@@ -74,7 +68,6 @@ export function PatchedBreadCapacityPickupLocationRequestFromJSONTyped(json: any
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'year': json['year'] == null ? undefined : json['year'],
         'deliveryWeek': json['delivery_week'] == null ? undefined : json['delivery_week'],
         'capacity': json['capacity'] == null ? undefined : json['capacity'],
@@ -94,7 +87,6 @@ export function PatchedBreadCapacityPickupLocationRequestFromJSONTyped(json: any
 
     return {
         
-        'id': value['id'],
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'capacity': value['capacity'],

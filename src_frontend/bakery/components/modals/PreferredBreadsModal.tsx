@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Modal } from 'react-bootstrap';
-import { InfoCircle, StarFill } from 'react-bootstrap-icons';
-import { useApi } from '../../../hooks/useApi';
-import TapirButton from '../../../components/TapirButton';
-import { BakeryApi } from '../../../api-client';
-import { handleRequestError } from '../../../utils/handleRequestError';
-import type { BreadList, BreadLabel, BreadContent } from '../../../api-client/models';
-import { SingleBreadCard } from '../cards';
-import '../../styles/bakery_styles.css';
+import React, { useState, useEffect } from "react";
+import { Modal } from "react-bootstrap";
+import { InfoCircle, StarFill } from "react-bootstrap-icons";
+import { useApi } from "../../../hooks/useApi";
+import TapirButton from "../../../components/TapirButton";
+import { BakeryApi } from "../../../api-client";
+import { handleRequestError } from "../../../utils/handleRequestError";
+import type {
+  BreadList,
+  BreadLabel,
+  BreadContent,
+} from "../../../api-client/models";
+import { SingleBreadCard } from "../cards";
+import "../../styles/bakery_styles.css";
 
 interface PreferredBreadsModalProps {
   isOpen: boolean;
@@ -16,6 +20,8 @@ interface PreferredBreadsModalProps {
   csrfToken: string;
 }
 
+// Mirrors MAX_PREFERRED_BREADS in tapir/bakery/utils.py, which the API now
+// enforces. Keep the two in step: the server answers 400 above its own limit.
 const MAX_PREFERRED_BREADS = 3;
 
 export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
@@ -27,11 +33,18 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
   const bakeryApi = useApi(BakeryApi, csrfToken);
 
   const [breads, setBreads] = useState<BreadList[]>([]);
-  const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>({});
-  const [contentsMap, setContentsMap] = useState<{ [breadId: string]: BreadContent[] }>({});
-  const [selectedBreadIds, setSelectedBreadIds] = useState<Set<string>>(new Set());
+  const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>(
+    {},
+  );
+  const [contentsMap, setContentsMap] = useState<{
+    [breadId: string]: BreadContent[];
+  }>({});
+  const [selectedBreadIds, setSelectedBreadIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -41,22 +54,29 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !saving) {
+      // Not while loading, or Enter would POST a selection that has not been
+      // read back yet and wipe the member's saved favourites.
+      if (e.key === "Enter" && !saving && !loading) {
         e.preventDefault();
         handleSave();
       }
     };
 
     if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, saving, selectedBreadIds]);
+  }, [isOpen, saving, loading, selectedBreadIds]);
 
   const loadData = () => {
+    // The component stays mounted between openings, so every piece of
+    // per-opening state has to be reset here: a stale refusal message greeted
+    // the next visitor, and an unsaved selection survived "Abbrechen".
+    setLimitReached(false);
+    setSelectedBreadIds(new Set());
     setLoading(true);
     Promise.all([
       bakeryApi.bakeryBreadsListList({}),
@@ -65,76 +85,86 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
       bakeryApi.bakeryBreadcontentsList(),
     ])
       .then(([breadsData, preferredData, labels, contents]) => {
-        setBreads(breadsData.filter(b => b.isActive !== false));
+        setBreads(breadsData.filter((b) => b.isActive !== false));
 
-        const labelMapping = labels.reduce((acc, label) => {
-          if (label.id) {
-            acc[label.id] = label;
-          }
-          return acc;
-        }, {} as { [labelId: string]: BreadLabel });
+        const labelMapping = labels.reduce(
+          (acc, label) => {
+            if (label.id) {
+              acc[label.id] = label;
+            }
+            return acc;
+          },
+          {} as { [labelId: string]: BreadLabel },
+        );
         setLabelsMap(labelMapping);
 
-        const contentMapping = contents.reduce((acc, content) => {
-          const breadId = content.bread;
-          if (breadId) {
-            if (!acc[breadId]) {
-              acc[breadId] = [];
+        const contentMapping = contents.reduce(
+          (acc, content) => {
+            const breadId = content.bread;
+            if (breadId) {
+              if (!acc[breadId]) {
+                acc[breadId] = [];
+              }
+              acc[breadId].push(content);
             }
-            acc[breadId].push(content);
-          }
-          return acc;
-        }, {} as { [breadId: string]: BreadContent[] });
+            return acc;
+          },
+          {} as { [breadId: string]: BreadContent[] },
+        );
         setContentsMap(contentMapping);
 
-
-        if (preferredData.length > 0 && preferredData[0].breads) {
-          setSelectedBreadIds(new Set(preferredData[0].breads));
-        }
+        // Unconditional: a member with no saved favourites must end up with
+        // an empty set, not with whatever was left from the last opening.
+        setSelectedBreadIds(new Set(preferredData[0]?.breads ?? []));
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Laden der Brote');
+        handleRequestError(error, "Fehler beim Laden der Brote");
       })
       .finally(() => {
         setLoading(false);
       });
   };
 
-   const toggleBread = (breadId: string) => {
+  const toggleBread = (breadId: string) => {
     const newSelected = new Set(selectedBreadIds);
-    
+
     if (newSelected.has(breadId)) {
       newSelected.delete(breadId);
-    } else {
-      // If at limit, remove the first selected bread to make room
-      if (newSelected.size >= MAX_PREFERRED_BREADS) {
-        const firstBreadId = Array.from(newSelected)[0];
-        newSelected.delete(firstBreadId);
-      }
-      newSelected.add(breadId);
+      setLimitReached(false);
+      setSelectedBreadIds(newSelected);
+      return;
     }
-    
+
+    // Refuse the pick rather than evicting one of the existing favourites,
+    // which the member would have no way of noticing.
+    if (newSelected.size >= MAX_PREFERRED_BREADS) {
+      setLimitReached(true);
+      return;
+    }
+
+    newSelected.add(breadId);
+    setLimitReached(false);
     setSelectedBreadIds(newSelected);
   };
   const handleSave = () => {
     setSaving(true);
-    bakeryApi.bakeryPreferredBreadsBulkUpdateCreate({
-      id: memberId,
-      preferredBreadsBulkUpdateRequest: {
-        breads: Array.from(selectedBreadIds),
-      },
-    })
+    bakeryApi
+      .bakeryPreferredBreadsBulkUpdateCreate({
+        id: memberId,
+        preferredBreadsBulkUpdateRequest: {
+          breads: Array.from(selectedBreadIds),
+        },
+      })
       .then(() => {
         onClose();
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Speichern der Lieblingsbrote');
+        handleRequestError(error, "Fehler beim Speichern der Lieblingsbrote");
       })
       .finally(() => {
         setSaving(false);
       });
   };
-
 
   return (
     <Modal show={isOpen} onHide={onClose} size="xl" scrollable>
@@ -148,74 +178,95 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
       </Modal.Header>
 
       <Modal.Body className="p-4">
-              {loading ? (
-                <div className="text-center py-5">
-                  <div className="spinner-border spinner-bakery-primary" />
-                  <p className="mt-2 text-muted">Lade Brote...</p>
-                </div>
-              ) : breads.length === 0 ? (
-                <div className="alert alert-info d-flex align-items-center" role="alert">
-                  <InfoCircle size={20} className="me-2" />
-                  Keine Brote verfügbar.
-                </div>
-              ) : (
-                <>
-                  <div className="alert alert-light d-flex align-items-start mb-4" role="alert">
-                    <InfoCircle size={20} className="me-2 mt-1 icon-bakery-primary-darker" style={{ color: 'var(--bakery-brown-medium)' }} />
-                    <div>
-                      <strong>Wähle bis zu {MAX_PREFERRED_BREADS} Lieblingsbrote aus</strong>
-                      <p className="mb-0 small text-muted">
-                        Wir versuchen die Abhol-Orte so mit möglichst vielen Lieblingsbroten zu bestücken.
-                      </p>
-                    </div>
-                  </div>
+        {loading ? (
+          <div className="text-center py-5">
+            <div className="spinner-border spinner-bakery-primary" />
+            <p className="mt-2 text-muted">Lade Brote...</p>
+          </div>
+        ) : breads.length === 0 ? (
+          <div
+            className="alert alert-info d-flex align-items-center"
+            role="alert"
+          >
+            <InfoCircle size={20} className="me-2" />
+            Keine Brote verfügbar.
+          </div>
+        ) : (
+          <>
+            <div
+              className="alert alert-light d-flex align-items-start mb-4"
+              role="alert"
+            >
+              <InfoCircle
+                size={20}
+                className="me-2 mt-1 icon-bakery-primary-darker"
+                style={{ color: "var(--bakery-brown-medium)" }}
+              />
+              <div>
+                <strong>
+                  Wähle bis zu {MAX_PREFERRED_BREADS} Lieblingsbrote aus
+                </strong>
+                <p className="mb-0 small text-muted">
+                  Wir versuchen die Abhol-Orte so mit möglichst vielen
+                  Lieblingsbroten zu bestücken.
+                </p>
+              </div>
+            </div>
 
-                  <div className="d-flex flex-wrap gap-3">
-                    {breads.map((bread) => {
-                      const isSelected = selectedBreadIds.has(bread.id!);
-                      const breadLabels = (bread.labels || [])
-                        .map(labelId => labelsMap[labelId])
-                        .filter(Boolean);
+            <div className="d-flex flex-wrap gap-3">
+              {breads.map((bread) => {
+                const isSelected = selectedBreadIds.has(bread.id!);
+                const breadLabels = (bread.labels || [])
+                  .map((labelId) => labelsMap[labelId])
+                  .filter(Boolean);
 
-                      const breadContents = contentsMap[bread.id!] || [];
+                const breadContents = contentsMap[bread.id!] || [];
 
-
-                      return (
-                        <SingleBreadCard
-                          key={bread.id}
-                          bread={bread}
-                          contents={breadContents}
-                          labels={breadLabels}
-                          isPreferred={isSelected}
-                          onClick={() => toggleBread(bread.id!)}
-                          footerText={isSelected ? 'Lieblingsbrot' : 'Auswählen'}
-                        />
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+                return (
+                  <SingleBreadCard
+                    key={bread.id}
+                    bread={bread}
+                    contents={breadContents}
+                    labels={breadLabels}
+                    isPreferred={isSelected}
+                    onClick={() => toggleBread(bread.id!)}
+                    footerText={isSelected ? "Lieblingsbrot" : "Auswählen"}
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
       </Modal.Body>
 
-            <Modal.Footer>
-              <div className="me-auto text-muted small">
-                {selectedBreadIds.size} / {MAX_PREFERRED_BREADS} {selectedBreadIds.size === 1 ? 'Brot' : 'Brote'} ausgewählt
-              </div>
-              <TapirButton
-                variant="secondary"
-                text="Abbrechen"
-                onClick={onClose}
-                disabled={saving}
-              />
-              <TapirButton
-                variant=""
-                className="dark-brown-button"
-                text="Speichern"
-                icon="save"
-                onClick={handleSave}
-                loading={saving}
-              />
-            </Modal.Footer>
+      <Modal.Footer>
+        <div className="me-auto small">
+          <span className="text-muted">
+            {selectedBreadIds.size} / {MAX_PREFERRED_BREADS}{" "}
+            {selectedBreadIds.size === 1 ? "Brot" : "Brote"} ausgewählt
+          </span>
+          {limitReached && (
+            <div className="text-danger">
+              Entferne zuerst ein Brot, um ein anderes auszuwählen.
+            </div>
+          )}
+        </div>
+        <TapirButton
+          variant="secondary"
+          text="Abbrechen"
+          onClick={onClose}
+          disabled={saving}
+        />
+        <TapirButton
+          variant=""
+          className="dark-brown-button"
+          text="Speichern"
+          icon="save"
+          onClick={handleSave}
+          loading={saving}
+          disabled={loading}
+        />
+      </Modal.Footer>
     </Modal>
   );
 };

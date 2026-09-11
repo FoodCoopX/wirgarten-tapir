@@ -315,11 +315,39 @@ class TapirCache:
         return get_from_cache_or_compute(
             opening_times_by_pickup_location_id_cache,
             pickup_location_id,
+            # Ordered because callers take opening_times[0] meaning the
+            # earliest opening day, and the model declares no default ordering.
             lambda: list(
                 PickupLocationOpeningTime.objects.filter(
                     pickup_location_id=pickup_location_id
-                )
+                ).order_by("day_of_week")
             ),
+        )
+
+    @classmethod
+    def get_delivery_day_by_pickup_location_id(cls, cache: Dict) -> Dict:
+        """
+        The weekday every pickup location is delivered on, in one query.
+
+        The earliest of a location's opening days, absent from the map when it
+        has no opening times at all.
+        """
+
+        def compute():
+            delivery_days = {}
+            for (
+                pickup_location_id,
+                day_of_week,
+            ) in PickupLocationOpeningTime.objects.values_list(
+                "pickup_location_id", "day_of_week"
+            ):
+                current = delivery_days.get(pickup_location_id)
+                if current is None or day_of_week < current:
+                    delivery_days[pickup_location_id] = day_of_week
+            return delivery_days
+
+        return get_from_cache_or_compute(
+            cache, "delivery_day_by_pickup_location_id", compute
         )
 
     @classmethod
@@ -600,11 +628,79 @@ class TapirCache:
             compute_function=compute,
         )
 
+    ALL_JOKERS_LOADED_KEY = "all_jokers_loaded"
+
     @classmethod
-    def get_all_jokers_for_member(cls, member_id: str, cache: dict):
-        jokers_by_member_id = get_from_cache_or_compute(
+    def _jokers_by_member_id(cls, cache: dict) -> Dict:
+        return get_from_cache_or_compute(
             cache=cache, key="jokers_by_member_id", compute_function=lambda: {}
         )
+
+    @classmethod
+    def _fill_jokers(cls, jokers_by_member_id: Dict, queryset):
+        """
+        Append the queryset's jokers to the map, keeping it ordered by date.
+
+        setdefault rather than assignment, because a per-member lookup may
+        already hold a reference to a member's list.
+        """
+        loaded = {}
+        for joker in queryset.order_by("date"):
+            loaded.setdefault(joker.member_id, []).append(joker)
+        for member_id, jokers in loaded.items():
+            jokers_by_member_id.setdefault(member_id, jokers)
+
+    @classmethod
+    def get_all_jokers_by_member_id(cls, cache: dict) -> Dict:
+        """Every member's jokers, keyed by member id, in one query."""
+        jokers_by_member_id = cls._jokers_by_member_id(cache)
+
+        if not cache.get(cls.ALL_JOKERS_LOADED_KEY, False):
+            cls._fill_jokers(jokers_by_member_id, Joker.objects.all())
+            cache[cls.ALL_JOKERS_LOADED_KEY] = True
+
+        return jokers_by_member_id
+
+    @classmethod
+    def get_jokers_by_member_id_for_members(cls, member_ids, cache: dict) -> Dict:
+        """
+        The jokers of these members, keyed by member id, in one query.
+
+        Use this over get_all_jokers_by_member_id when the set of members is
+        known: answering "does this member have a joker this week" for a page
+        of rows otherwise reads the whole Joker table. Members with no joker
+        are present with an empty list, so get_all_jokers_for_member does not
+        go looking for them afterwards.
+        """
+        jokers_by_member_id = cls._jokers_by_member_id(cache)
+        if cache.get(cls.ALL_JOKERS_LOADED_KEY, False):
+            return jokers_by_member_id
+
+        missing = {
+            member_id
+            for member_id in member_ids
+            if member_id not in jokers_by_member_id
+        }
+        if missing:
+            cls._fill_jokers(
+                jokers_by_member_id, Joker.objects.filter(member_id__in=missing)
+            )
+            for member_id in missing:
+                jokers_by_member_id.setdefault(member_id, [])
+
+        return jokers_by_member_id
+
+    @classmethod
+    def get_all_jokers_for_member(cls, member_id: str, cache: dict):
+        jokers_by_member_id = cls._jokers_by_member_id(cache)
+
+        if member_id in jokers_by_member_id:
+            return jokers_by_member_id[member_id]
+
+        if cache.get(cls.ALL_JOKERS_LOADED_KEY, False):
+            # Every joker is in the map already, so a member missing from it
+            # has none.
+            return []
 
         def compute():
             return list(Joker.objects.filter(member_id=member_id).order_by("date"))

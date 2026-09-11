@@ -1,7 +1,6 @@
 import datetime
 from unittest.mock import patch
 
-from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from tapir.bakery.models import (
@@ -9,15 +8,16 @@ from tapir.bakery.models import (
     BreadDelivery,
     StoveSession,
 )
-from tapir.bakery.tests.factories import (
-    BreadCapacityPickupLocationFactory,
-    BreadFactory,
-    IngredientFactory,
-    PickupLocationFactory,
-)
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
+from tapir.bakery.tests.factories import BreadFactory, IngredientFactory
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory, SubscriptionFactory
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    ProductFactory,
+    ProductTypeFactory,
+    SubscriptionFactory,
+)
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 YEAR = 2026
 WEEK = 11
@@ -72,85 +72,54 @@ class TestSignals(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch(
-        "tapir.bakery.services.breaddelivery_service.ensure_bread_deliveries_for_member"
+        "tapir.bakery.services.breaddelivery_service.BreadDeliveryService."
+        "ensure_bread_deliveries_for_member"
     )
-    def test_subscription_save_triggers_bread_delivery_creation(self, mock_ensure):
+    def test_subscriptionSaved_breadProductType_triggersSync(self, mock_ensure):
         member = MemberFactory.create()
-        sub = SubscriptionFactory.create(member=member)
+        product = ProductFactory.create(
+            type=ProductTypeFactory.create(delivery_cycle="weekly", is_bread=True)
+        )
+        sub = SubscriptionFactory.create(member=member, product=product)
+        # Creating the subscription already fired the receiver once
+        mock_ensure.reset_mock()
+
         sub.save()
 
-        if sub.product.type.delivery_cycle == "weekly":
-            mock_ensure.assert_called_with(member)
+        mock_ensure.assert_called_once_with(member)
 
     @patch(
-        "tapir.bakery.services.breaddelivery_service.ensure_bread_deliveries_for_member"
+        "tapir.bakery.services.breaddelivery_service.BreadDeliveryService."
+        "ensure_bread_deliveries_for_member"
     )
-    def test_pickup_location_change_triggers_bread_delivery_update(self, mock_ensure):
-        from tapir.wirgarten.models import MemberPickupLocation
-
+    def test_subscriptionSaved_weeklyButNotBread_doesNotTriggerSync(self, mock_ensure):
+        # The base harvest share is weekly on every org, so the delivery cycle
+        # alone must not be enough to accrue bread deliveries.
         member = MemberFactory.create()
-        pl = PickupLocationFactory.create()
-        MemberPickupLocation.objects.create(
+        product = ProductFactory.create(
+            type=ProductTypeFactory.create(delivery_cycle="weekly", is_bread=False)
+        )
+        sub = SubscriptionFactory.create(member=member, product=product)
+        mock_ensure.reset_mock()
+
+        sub.save()
+
+        mock_ensure.assert_not_called()
+
+    def test_ensureBreadDeliveries_bakeryDisabled_createsNothing(self):
+        # BAKERY_A_ENABLED defaults to False, so an installation without the
+        # bakery must never accrue bread deliveries.
+        member = MemberFactory.create()
+        product = ProductFactory.create(
+            type=ProductTypeFactory.create(delivery_cycle="weekly", is_bread=True)
+        )
+        SubscriptionFactory.create(
             member=member,
-            pickup_location=pl,
-            valid_from=datetime.date.today(),
+            product=product,
+            start_date=datetime.date(2026, 3, 2),
+            end_date=datetime.date(2026, 3, 29),
         )
 
-        mock_ensure.assert_called_with(member)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
 
-
-class TestBreadDeliveryValidation(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls):
-        ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def setUp(self):
-        super().setUp()
-        set_bypass_keycloak()
-        self.pl = PickupLocationFactory.create()
-        self.bread = BreadFactory.create(name="Roggenbrot")
-        self.member = MemberFactory.create()
-        self.subscription = SubscriptionFactory.create(member=self.member)
-
-    def test_save_breadAvailableAtLocation_succeeds(self):
-        BreadCapacityPickupLocationFactory.create(
-            year=2026,
-            delivery_week=11,
-            pickup_location=self.pl,
-            bread=self.bread,
-            capacity=5,
-        )
-
-        delivery = BreadDelivery(
-            year=2026,
-            delivery_week=11,
-            subscription=self.subscription,
-            pickup_location=self.pl,
-            bread=self.bread,
-        )
-        delivery.save()  # Should not raise
-
-    def test_save_breadNotAvailableAtLocation_raisesValidationError(self):
-        # No BreadsPerPickupLocationPerWeek entry exists
-        delivery = BreadDelivery(
-            year=2026,
-            delivery_week=11,
-            subscription=self.subscription,
-            pickup_location=self.pl,
-            bread=self.bread,
-        )
-
-        with self.assertRaises(ValidationError) as ctx:
-            delivery.save()
-
-        self.assertIn("bread", ctx.exception.message_dict)
-
-    def test_save_noBreadAssigned_succeeds(self):
-        delivery = BreadDelivery(
-            year=2026,
-            delivery_week=11,
-            subscription=self.subscription,
-            pickup_location=self.pl,
-            bread=None,
-        )
-        delivery.save()  # Should not raise — no bread to validate
+        self.assertFalse(BreadDelivery.objects.exists())

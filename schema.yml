@@ -127,31 +127,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/SolverError'
           description: ''
-  /bakery/api/configuration-parameters/:
-    get:
-      operationId: bakery_api_configuration_parameters_retrieve
-      description: Get configuration parameters needed by the frontend.
-      summary: Get configuration parameters
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    key:
-                      type: string
-                    value:
-                      type: string
-          description: ''
   /bakery/api/preferred-bread-statistics/:
     get:
       operationId: bakery_api_preferred_bread_statistics_retrieve
@@ -183,8 +158,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: {}
+                $ref: '#/components/schemas/PreferredBreadStatistics'
           description: ''
   /bakery/available-breads-for-delivery/:
     get:
@@ -448,6 +422,7 @@ paths:
   /bakery/bread-deliveries/:
     get:
       operationId: bakery_bread_deliveries_list
+      description: 'A member''s bread slots: one per delivered week per share.'
       parameters:
       - in: query
         name: delivery_week
@@ -476,36 +451,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/BreadDelivery'
           description: ''
-    post:
-      operationId: bakery_bread_deliveries_create
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BreadDeliveryRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BreadDeliveryRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BreadDeliveryRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BreadDelivery'
-          description: ''
   /bakery/bread-deliveries/{id}/:
     get:
       operationId: bakery_bread_deliveries_retrieve
+      description: 'A member''s bread slots: one per delivered week per share.'
       parameters:
       - in: path
         name: id
@@ -515,40 +464,6 @@ paths:
         required: true
       tags:
       - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BreadDelivery'
-          description: ''
-    put:
-      operationId: bakery_bread_deliveries_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der bread delivery identifiziert.
-        required: true
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BreadDeliveryRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BreadDeliveryRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BreadDeliveryRequest'
-        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -601,25 +516,8 @@ paths:
                 $ref: '#/components/schemas/BreadDelivery'
           description: ''
         '400':
-          description: No capacity available for selected bread
-    delete:
-      operationId: bakery_bread_deliveries_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der bread delivery identifiziert.
-        required: true
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '204':
-          description: No response body
+          description: Choosing is closed for this week, not released for members,
+            or no capacity is left for the selected bread
   /bakery/bread-specifics/:
     get:
       operationId: bakery_bread_specifics_list
@@ -1725,7 +1623,13 @@ paths:
         name: pickup_location_id
         schema:
           type: string
-        required: true
+      - in: query
+        name: pickup_location_ids[]
+        schema:
+          type: array
+          items:
+            type: string
+        description: One or more stations. Falls back to pickup_location_id.
       - in: query
         name: year
         schema:
@@ -1742,12 +1646,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PickupListResponse'
+                $ref: '#/components/schemas/PickupListsResponse'
           description: ''
   /bakery/preferred-breads/:
     get:
       operationId: bakery_preferred_breads_list
-      description: Manage preferred breads for a member.
+      description: Read preferred breads for a member.
       parameters:
       - in: query
         name: member_id
@@ -1768,130 +1672,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/PreferredBread'
           description: ''
-    post:
-      operationId: bakery_preferred_breads_create
-      description: Manage preferred breads for a member.
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PreferredBreadRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PreferredBreadRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PreferredBreadRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PreferredBread'
-          description: ''
   /bakery/preferred-breads/{id}/:
     get:
       operationId: bakery_preferred_breads_retrieve
-      description: Manage preferred breads for a member.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der preferred bread identifiziert.
-        required: true
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PreferredBread'
-          description: ''
-    put:
-      operationId: bakery_preferred_breads_update
-      description: Manage preferred breads for a member.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der preferred bread identifiziert.
-        required: true
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PreferredBreadRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PreferredBreadRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PreferredBreadRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PreferredBread'
-          description: ''
-    patch:
-      operationId: bakery_preferred_breads_partial_update
-      description: Manage preferred breads for a member.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der preferred bread identifiziert.
-        required: true
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedPreferredBreadRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedPreferredBreadRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedPreferredBreadRequest'
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PreferredBread'
-          description: ''
-    delete:
-      operationId: bakery_preferred_breads_destroy
-      description: Manage preferred breads for a member.
+      description: Read preferred breads for a member.
       parameters:
       - in: path
         name: id
@@ -3375,7 +3159,7 @@ paths:
   /pickup_locations/api/delivery_days:
     get:
       operationId: pickup_locations_api_delivery_days_retrieve
-      description: Returns the earliest delivery day per pickup location
+      description: Returns the earliest delivery day per pickup location, 0=Montag.
       summary: Get distinct list of delivery days
       tags:
       - bakery
@@ -3520,14 +3304,19 @@ paths:
   /pickup_locations/api/pickup_locations_by_delivery_day:
     get:
       operationId: pickup_locations_api_pickup_locations_by_delivery_day_retrieve
-      description: Get pickup locations filtered by delivery day
+      description: |-
+        The pickup locations delivered on one weekday.
+
+        Readable by any member rather than gated on Coop.MANAGE like the rest of
+        the bakery: it returns station names and weekdays, which
+        PublicPickupLocationProvider already publishes.
       summary: Get pickup locations filtered by delivery day
       parameters:
       - in: query
         name: day_of_week
         schema:
           type: integer
-        description: Day of week (1-7)
+        description: Day of week, 0=Montag to 6=Sonntag
         required: true
       tags:
       - bakery
@@ -7628,8 +7417,11 @@ components:
       properties:
         year:
           type: integer
+          minimum: 0
         delivery_week:
           type: integer
+          maximum: 53
+          minimum: 1
         updates:
           type: array
           items:
@@ -7643,12 +7435,13 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         pickup_location_name:
           type: string
           readOnly: true
         delivery_day:
           type: integer
+          nullable: true
           readOnly: true
         bread_name:
           type: string
@@ -7679,16 +7472,13 @@ components:
       - capacity
       - delivery_day
       - delivery_week
+      - id
       - pickup_location
       - pickup_location_name
       - year
     BreadCapacityPickupLocationRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         year:
           type: integer
           maximum: 2147483647
@@ -7728,6 +7518,8 @@ components:
           minLength: 1
         capacity:
           type: integer
+          maximum: 2147483647
+          minimum: 0
           nullable: true
       required:
       - bread
@@ -7737,7 +7529,7 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         ingredient_name:
           type: string
           readOnly: true
@@ -7757,15 +7549,12 @@ components:
       required:
       - amount
       - bread
+      - id
       - ingredient
       - ingredient_name
     BreadContentRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         amount:
           type: number
           format: double
@@ -7790,87 +7579,70 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
+        year:
+          type: integer
+          readOnly: true
+        delivery_week:
+          type: integer
+          readOnly: true
+        subscription:
+          type: string
+          readOnly: true
+        slot_number:
+          type: integer
+          readOnly: true
+          default: 1
+        pickup_location:
+          type: string
+          nullable: true
+          readOnly: true
+        bread:
+          type: string
+          nullable: true
+        joker_taken:
+          type: boolean
+          readOnly: true
         bread_name:
           type: string
           readOnly: true
         pickup_location_name:
           type: string
+          nullable: true
           readOnly: true
         pickup_location_street:
           type: string
+          nullable: true
           readOnly: true
         pickup_location_city:
           type: string
+          nullable: true
           readOnly: true
         delivery_day:
           type: integer
+          nullable: true
           readOnly: true
-        year:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        delivery_week:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        slot_number:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        joker_taken:
+        choosing_deadline:
+          type: string
+          format: date
+          nullable: true
+          readOnly: true
+        can_still_choose:
           type: boolean
-        subscription:
-          type: string
-        pickup_location:
-          type: string
-          nullable: true
-        bread:
-          type: string
-          nullable: true
+          readOnly: true
       required:
       - bread_name
+      - can_still_choose
+      - choosing_deadline
       - delivery_day
       - delivery_week
+      - id
+      - joker_taken
+      - pickup_location
       - pickup_location_city
       - pickup_location_name
       - pickup_location_street
-      - subscription
-      - year
-    BreadDeliveryRequest:
-      type: object
-      properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
-        year:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        delivery_week:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        slot_number:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        joker_taken:
-          type: boolean
-        subscription:
-          type: string
-          minLength: 1
-        pickup_location:
-          type: string
-          minLength: 1
-          nullable: true
-        bread:
-          type: string
-          minLength: 1
-          nullable: true
-      required:
-      - delivery_week
+      - slot_number
       - subscription
       - year
     BreadDetail:
@@ -7937,21 +7709,18 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         is_active:
           type: boolean
         name:
           type: string
           maxLength: 100
       required:
+      - id
       - name
     BreadLabelRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         is_active:
           type: boolean
         name:
@@ -7965,7 +7734,7 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         capacity:
           type: integer
           readOnly: true
@@ -7974,6 +7743,11 @@ components:
           readOnly: true
         available_capacity:
           type: integer
+          readOnly: true
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreadContent'
           readOnly: true
         name:
           type: string
@@ -8029,16 +7803,14 @@ components:
       required:
       - available_capacity
       - capacity
+      - contents
       - delivery_count
+      - id
       - name
       - weight
     BreadListRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         name:
           type: string
           minLength: 1
@@ -8100,7 +7872,7 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         bread_name:
           type: string
           readOnly: true
@@ -8153,6 +7925,7 @@ components:
       - bread_name
       - delivery_day
       - delivery_week
+      - id
       - year
     BreadSpecificsPerDeliveryDayBulkUpdateItemRequest:
       type: object
@@ -8162,15 +7935,23 @@ components:
           minLength: 1
         min_pieces:
           type: integer
+          maximum: 2147483647
+          minimum: 0
           nullable: true
         max_pieces:
           type: integer
+          maximum: 2147483647
+          minimum: 0
           nullable: true
         min_remaining_pieces:
           type: integer
+          maximum: 2147483647
+          minimum: 0
           nullable: true
         fixed_pieces:
           type: integer
+          maximum: 2147483647
+          minimum: 0
           nullable: true
       required:
       - bread
@@ -8179,10 +7960,15 @@ components:
       properties:
         year:
           type: integer
+          minimum: 0
         delivery_week:
           type: integer
+          maximum: 53
+          minimum: 1
         delivery_day:
           type: integer
+          maximum: 6
+          minimum: 0
         updates:
           type: array
           items:
@@ -8195,10 +7981,6 @@ components:
     BreadSpecificsPerDeliveryDayRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         year:
           type: integer
           maximum: 2147483647
@@ -8254,7 +8036,7 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         bread_name:
           type: string
           readOnly: true
@@ -8263,6 +8045,7 @@ components:
           readOnly: true
         delivery_day:
           type: integer
+          nullable: true
           readOnly: true
         year:
           type: integer
@@ -8285,6 +8068,7 @@ components:
       - bread_name
       - delivery_day
       - delivery_week
+      - id
       - pickup_location
       - pickup_location_name
       - year
@@ -10139,7 +9923,7 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         can_be_deleted:
           type: boolean
           readOnly: true
@@ -10154,14 +9938,11 @@ components:
           type: boolean
       required:
       - can_be_deleted
+      - id
       - name
     IngredientRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         is_active:
           type: boolean
         name:
@@ -10985,10 +10766,6 @@ components:
     PatchedBreadCapacityPickupLocationRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         year:
           type: integer
           maximum: 2147483647
@@ -11014,10 +10791,6 @@ components:
     PatchedBreadContentRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         amount:
           type: number
           format: double
@@ -11036,31 +10809,6 @@ components:
     PatchedBreadDeliveryRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
-        year:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        delivery_week:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        slot_number:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-        joker_taken:
-          type: boolean
-        subscription:
-          type: string
-          minLength: 1
-        pickup_location:
-          type: string
-          minLength: 1
-          nullable: true
         bread:
           type: string
           minLength: 1
@@ -11068,10 +10816,6 @@ components:
     PatchedBreadLabelRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         is_active:
           type: boolean
         name:
@@ -11081,10 +10825,6 @@ components:
     PatchedBreadListRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         name:
           type: string
           minLength: 1
@@ -11141,10 +10881,6 @@ components:
     PatchedBreadSpecificsPerDeliveryDayRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         year:
           type: integer
           maximum: 2147483647
@@ -11410,10 +11146,6 @@ components:
     PatchedIngredientRequest:
       type: object
       properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
         is_active:
           type: boolean
         name:
@@ -11497,18 +11229,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationCapacityByShareRequest'
-    PatchedPreferredBreadRequest:
-      type: object
-      properties:
-        id:
-          type: string
-          minLength: 1
-          maxLength: 10
-        breads:
-          type: array
-          items:
-            type: string
-            minLength: 1
     PatchedSaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -11852,8 +11572,6 @@ components:
           type: string
         iban:
           type: string
-        pseudonym:
-          type: string
       required:
       - account_owner
       - city
@@ -11908,7 +11626,7 @@ components:
       - member_name
       - total
       - total_assigned
-    PickupListResponse:
+    PickupListForLocation:
       type: object
       properties:
         bread_names:
@@ -11925,11 +11643,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupListEntry'
+        pickup_location_id:
+          type: string
       required:
       - bread_names
       - bread_totals
       - entries
       - grand_total
+      - pickup_location_id
+    PickupListsResponse:
+      type: object
+      description: |-
+        Several stations of one week in a single response.
+
+        One request per station would re-derive the whole week each time, since
+        each request starts with an empty cache.
+      properties:
+        lists:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupListForLocation'
+      required:
+      - lists
     PickupLocation:
       type: object
       properties:
@@ -12146,7 +11881,7 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         member_id:
           type: string
           readOnly: true
@@ -12156,21 +11891,41 @@ components:
             type: string
       required:
       - breads
+      - id
       - member_id
-    PreferredBreadRequest:
+    PreferredBreadStatistic:
       type: object
       properties:
-        id:
+        bread_name:
           type: string
-          minLength: 1
-          maxLength: 10
+        count:
+          type: integer
+        percentage:
+          type: number
+          format: double
+      required:
+      - bread_name
+      - count
+      - percentage
+    PreferredBreadStatistics:
+      type: object
+      description: Declared so the endpoint appears in the schema with a real shape.
+      properties:
+        total_members:
+          type: integer
+        members_with_preferences:
+          type: integer
+        members_without_preferences:
+          type: integer
         breads:
           type: array
           items:
-            type: string
-            minLength: 1
+            $ref: '#/components/schemas/PreferredBreadStatistic'
       required:
       - breads
+      - members_with_preferences
+      - members_without_preferences
+      - total_members
     PreferredBreadsBulkUpdate:
       type: object
       properties:
@@ -12178,7 +11933,9 @@ components:
           type: array
           items:
             type: string
-          description: List of Bread IDs to set as preferred for the member.
+          description: List of Bread IDs to set as preferred for the member, at most
+            3.
+          maxItems: 3
       required:
       - breads
     PreferredBreadsBulkUpdateRequest:
@@ -12189,7 +11946,9 @@ components:
           items:
             type: string
             minLength: 1
-          description: List of Bread IDs to set as preferred for the member.
+          description: List of Bread IDs to set as preferred for the member, at most
+            3.
+          maxItems: 3
       required:
       - breads
     PreferredLanguageEnum:
@@ -12300,6 +12059,9 @@ components:
         is_affected_by_jokers:
           type: boolean
           title: Nimmt am Joker-Verfahren teil
+        is_bread:
+          type: boolean
+          title: Brotanteil (Bäckerei)
         subscriptions_have_end_dates:
           type: boolean
           title: Verträge haben ein End-Datum
@@ -12484,7 +12246,8 @@ components:
             $ref: '#/components/schemas/PickupLocationOpeningTime'
           readOnly: true
         delivery_day:
-          type: string
+          type: integer
+          nullable: true
           readOnly: true
       required:
       - city
@@ -13073,6 +12836,7 @@ components:
           nullable: true
         max_solutions:
           type: integer
+          minimum: 1
           default: 5
       required:
       - delivery_week
@@ -13089,8 +12853,7 @@ components:
         diagnostics:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/SolverDiagnostic'
       required:
       - solutions
       - total_solutions
@@ -13272,7 +13035,7 @@ components:
       properties:
         id:
           type: string
-          maxLength: 10
+          readOnly: true
         bread_name:
           type: string
           readOnly: true
@@ -13288,6 +13051,7 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+          nullable: true
         session_number:
           type: integer
           maximum: 2147483647
@@ -13305,8 +13069,8 @@ components:
           nullable: true
       required:
       - bread_name
-      - delivery_day
       - delivery_week
+      - id
       - layer_number
       - session_number
       - year

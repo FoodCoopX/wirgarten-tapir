@@ -99,16 +99,6 @@ from tapir.wirgarten.utils import (
 class BestellWizardView(TemplateView):
     template_name = "bestell_wizard/bestell_wizard.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # Add bakery pseudonym parameter
-        context["bakery_pseudonym_enabled"] = get_parameter_value(
-            ParameterKeys.BAKERY_PSEUDONYM_ENABLED
-        )
-
-        return context
-
 
 class BestellWizardMobileView(TemplateView):
     template_name = "bestell_wizard/bestell_wizard_mobile.html"

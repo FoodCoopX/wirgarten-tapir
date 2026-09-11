@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface BreadLabelRequest {
     /**
      * 
-     * @type {string}
-     * @memberof BreadLabelRequest
-     */
-    id?: string;
-    /**
-     * 
      * @type {boolean}
      * @memberof BreadLabelRequest
      */
@@ -57,7 +51,6 @@ export function BreadLabelRequestFromJSONTyped(json: any, ignoreDiscriminator: b
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
         'name': json['name'],
     };
@@ -74,7 +67,6 @@ export function BreadLabelRequestFromJSONTyped(json: any, ignoreDiscriminator: b
 
     return {
         
-        'id': value['id'],
         'is_active': value['isActive'],
         'name': value['name'],
     };

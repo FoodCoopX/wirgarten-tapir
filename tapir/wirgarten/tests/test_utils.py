@@ -8,7 +8,7 @@ from django.test import TestCase, Client, SimpleTestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from tapir.configuration.models import TapirParameterDatatype
+from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.configuration.parameter import parameter_definition
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tapirmail import configure_mail_module
@@ -63,11 +63,17 @@ def mock_timezone(test: unittest.TestCase, now: datetime.datetime) -> datetime.d
 
 
 def set_bypass_keycloak(bypass: bool = True):
+    # Ensure the row exists...
     parameter_definition(
         key=ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
         label="Bypass Keycloak",
         datatype=TapirParameterDatatype.BOOLEAN,
-        initial_value=True,
+        initial_value=bypass,
         description="Test",
         category="Test",
+    )
+    # ...then force the value: initial_value only applies on creation, and a
+    # test class that also imports the parameter definitions seeds it as False.
+    TapirParameter.objects.filter(key=ParameterKeys.MEMBER_BYPASS_KEYCLOAK).update(
+        value=str(bypass)
     )

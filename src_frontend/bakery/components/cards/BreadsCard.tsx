@@ -1,14 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { BreadModal } from '../modals/BreadModal';
-import { BreadContentsModal } from '../modals/BreadContentsModal';
-import { LabelsModal } from '../modals/LabelsModal';
-import { Pencil, ListUl, Tag, Search, XLg, Camera, EggFried } from 'react-bootstrap-icons';
-import { BakeryApi } from '../../../api-client';
-import TapirButton from '../../../components/TapirButton';
-import { useApi } from '../../../hooks/useApi';
-import { handleRequestError } from '../../../utils/handleRequestError';
-import type { BreadList, BreadListRequest } from '../../../api-client/models';
-import '../../styles/bakery_styles.css';
+import React, { useState, useEffect, useRef } from "react";
+import { BreadModal } from "../modals/BreadModal";
+import { BreadContentsModal } from "../modals/BreadContentsModal";
+import { LabelsModal } from "../modals/LabelsModal";
+import {
+  Pencil,
+  ListUl,
+  Tag,
+  Search,
+  XLg,
+  Camera,
+  EggFried,
+} from "react-bootstrap-icons";
+import { BakeryApi } from "../../../api-client";
+import TapirButton from "../../../components/TapirButton";
+import { useApi } from "../../../hooks/useApi";
+import { handleRequestError } from "../../../utils/handleRequestError";
+import type { BreadList, BreadListRequest } from "../../../api-client/models";
+import "../../styles/bakery_styles.css";
 
 interface BreadsCardProps {
   csrfToken: string;
@@ -22,30 +30,33 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({ csrfToken }) => {
   const [showContentsModal, setShowContentsModal] = useState(false);
   const [showLabelsModal, setShowLabelsModal] = useState(false);
   const [editingBread, setEditingBread] = useState<BreadList | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [showOnlyActive, setShowOnlyActive] = useState(true);
 
-useEffect(() => {
+  useEffect(() => {
     loadBreads();
   }, []);
 
   const loadBreads = () => {
     setLoading(true);
-    bakeryApi.bakeryBreadsListList({})
+    bakeryApi
+      .bakeryBreadsListList({})
       .then((data) => {
         setBreads(data);
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Laden der Brote');
+        handleRequestError(error, "Fehler beim Laden der Brote");
       })
       .finally(() => {
         setLoading(false);
       });
   };
 
-  const filteredBreads = breads.filter(bread => {
-    const matchesSearch = bread.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredBreads = breads.filter((bread) => {
+    const matchesSearch = bread.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesActive = showOnlyActive ? bread.isActive !== false : true;
     return matchesSearch && matchesActive;
   });
@@ -76,22 +87,26 @@ useEffect(() => {
 
   const handleImageUpload = (breadId: string, file: File) => {
     const formData = new FormData();
-    formData.append('picture', file);
+    formData.append("picture", file);
 
-    bakeryApi.bakeryBreadsListPartialUpdateRaw({
-      id: breadId,
-      patchedBreadListRequest: {} as any,
-    }, {
-      body: formData,
-      headers: {
-        'X-CSRFToken': csrfToken,
-      },
-    } as any)
+    bakeryApi
+      .bakeryBreadsListPartialUpdateRaw(
+        {
+          id: breadId,
+          patchedBreadListRequest: {} as any,
+        },
+        {
+          body: formData,
+          headers: {
+            "X-CSRFToken": csrfToken,
+          },
+        } as any,
+      )
       .then(() => {
         loadBreads();
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Hochladen des Bildes');
+        handleRequestError(error, "Fehler beim Hochladen des Bildes");
       });
   };
 
@@ -99,10 +114,10 @@ useEffect(() => {
     const promise = editingBread
       ? bakeryApi.bakeryBreadsListPartialUpdate({
           id: editingBread.id!,
-          patchedBreadListRequest: bread
+          patchedBreadListRequest: bread,
         })
       : bakeryApi.bakeryBreadsListCreate({
-          breadListRequest: bread
+          breadListRequest: bread,
         });
 
     promise
@@ -112,19 +127,20 @@ useEffect(() => {
         setEditingBread(null);
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Speichern des Brots');
+        handleRequestError(error, "Fehler beim Speichern des Brots");
       });
   };
-
 
   return (
     <>
       <div className="card h-100 shadow-sm">
-        <div className="card-header border-0 header-darkbrown-on-sahara" >
-            
+        <div className="card-header border-0 header-darkbrown-on-sahara">
           <div className="d-flex justify-content-between align-items-center gap-2">
             <h5 className="mb-0">Brote</h5>
-            <div className="input-group input-group-sm mx-3" style={{ maxWidth: '300px' }}>
+            <div
+              className="input-group input-group-sm mx-3"
+              style={{ maxWidth: "300px" }}
+            >
               <span className="input-group-text bg-white border-end-0">
                 <Search size={14} className="icon-bakery-primary-darker" />
               </span>
@@ -139,7 +155,7 @@ useEffect(() => {
                 <button
                   className="btn btn-sm icon-bakery-primary-darker"
                   type="button"
-                  onClick={() => setSearchTerm('')}
+                  onClick={() => setSearchTerm("")}
                 >
                   <XLg size={14} />
                 </button>
@@ -153,7 +169,11 @@ useEffect(() => {
                 checked={showOnlyActive}
                 onChange={(e) => setShowOnlyActive(e.target.checked)}
               />
-              <label className="form-check-label" htmlFor="showOnlyActive" style={{ fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+              <label
+                className="form-check-label"
+                htmlFor="showOnlyActive"
+                style={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}
+              >
                 nur aktive
               </label>
             </div>
@@ -168,7 +188,7 @@ useEffect(() => {
             />
           </div>
         </div>
-        
+
         <div className="card-body card-body-bakery">
           {loading ? (
             <div className="text-center py-4">
@@ -181,19 +201,32 @@ useEffect(() => {
               {searchTerm ? (
                 <>
                   <p>Keine Brote gefunden für "{searchTerm}".</p>
-                  <TapirButton variant="outline-secondary" size="sm" text="Filter zurücksetzen" onClick={() => setSearchTerm('')} />
+                  <TapirButton
+                    variant="outline-secondary"
+                    size="sm"
+                    text="Filter zurücksetzen"
+                    onClick={() => setSearchTerm("")}
+                  />
                 </>
               ) : (
                 <>
                   <p>Noch keine Brote vorhanden.</p>
-                  <TapirButton variant="outline-secondary" size="sm" text="Erstes Brot hinzufügen" onClick={handleCreate} />
+                  <TapirButton
+                    variant="outline-secondary"
+                    size="sm"
+                    text="Erstes Brot hinzufügen"
+                    onClick={handleCreate}
+                  />
                 </>
               )}
             </div>
           ) : (
             <div className="list-group list-group-flush">
               {filteredBreads.map((bread) => (
-                <div key={bread.id} className="list-group-item px-0 d-flex justify-content-between align-items-start border-0 list-item-transparent">
+                <div
+                  key={bread.id}
+                  className="list-group-item px-0 d-flex justify-content-between align-items-start border-0 list-item-transparent"
+                >
                   <div className="d-flex gap-3 flex-grow-1">
                     {/* Bread Image */}
                     <div
@@ -202,48 +235,54 @@ useEffect(() => {
                       title="Bild ändern"
                     >
                       {bread.picture ? (
-                        <img 
-                          src={bread.picture} 
-                          alt={bread.name}
-                        />
+                        <img src={bread.picture} alt={bread.name} />
                       ) : (
                         <div className="bread-list-placeholder">
-                          <EggFried size={28} className="icon-bakery-primary-darker" />
+                          <EggFried
+                            size={28}
+                            className="icon-bakery-primary-darker"
+                          />
                         </div>
                       )}
                       {/* Hover overlay */}
                       <div
                         className="bread-image-overlay"
                         style={{
-                          position: 'absolute',
+                          position: "absolute",
                           top: 0,
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          backgroundColor: 'rgba(0,0,0,0)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'background-color 0.2s',
+                          backgroundColor: "rgba(0,0,0,0)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "background-color 0.2s",
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.5)';
-                          const icon = e.currentTarget.querySelector('.camera-icon') as HTMLElement;
-                          if (icon) icon.style.opacity = '1';
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(0,0,0,0.5)";
+                          const icon = e.currentTarget.querySelector(
+                            ".camera-icon",
+                          ) as HTMLElement;
+                          if (icon) icon.style.opacity = "1";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0)';
-                          const icon = e.currentTarget.querySelector('.camera-icon') as HTMLElement;
-                          if (icon) icon.style.opacity = '0';
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(0,0,0,0)";
+                          const icon = e.currentTarget.querySelector(
+                            ".camera-icon",
+                          ) as HTMLElement;
+                          if (icon) icon.style.opacity = "0";
                         }}
                       >
-                        <Camera 
-                          size={22} 
+                        <Camera
+                          size={22}
                           className="camera-icon"
-                          style={{ 
-                            color: 'white',
+                          style={{
+                            color: "white",
                             opacity: 0,
-                            transition: 'opacity 0.2s',
+                            transition: "opacity 0.2s",
                           }}
                         />
                       </div>
@@ -251,7 +290,7 @@ useEffect(() => {
                     <input
                       type="file"
                       accept="image/*"
-                      style={{ display: 'none' }}
+                      style={{ display: "none" }}
                       ref={(el) => {
                         if (el) {
                           fileInputRefs.current[bread.id!] = el;
@@ -264,7 +303,7 @@ useEffect(() => {
                         }
                       }}
                     />
-                    
+
                     <div className="flex-grow-1">
                       <div className="d-flex align-items-center gap-2 mb-1">
                         <h6 className="mb-0">{bread.name}</h6>
@@ -272,31 +311,35 @@ useEffect(() => {
                           <span className="badge bg-secondary">inaktiv</span>
                         )}
                       </div>
-                      <small className="text-muted d-block mb-1">{Number(bread.weight).toFixed(0)} g</small>
-                      
+                      <small className="text-muted d-block mb-1">
+                        {Number(bread.weight).toFixed(0)} g
+                      </small>
+
                       {bread.description && (
-                        <p className="mb-0 small text-muted">{bread.description}</p>
+                        <p className="mb-0 small text-muted">
+                          {bread.description}
+                        </p>
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="btn-group btn-group-sm ms-2">
-                    <button 
-                      className="btn btn-outline-secondary border-0 icon-bakery-muted" 
+                    <button
+                      className="btn btn-outline-secondary border-0 icon-bakery-muted"
                       title="Bearbeiten"
                       onClick={() => handleEdit(bread)}
                     >
                       <Pencil size={16} />
                     </button>
-                    <button 
-                      className="btn border-0 icon-bakery-primary-darker" 
+                    <button
+                      className="btn border-0 icon-bakery-primary-darker"
                       title="Inhaltsstoffe verwalten"
                       onClick={() => handleManageContents(bread)}
                     >
                       <ListUl size={16} />
                     </button>
-                    <button 
-                      className="btn border-0 icon-bakery-ingredients" 
+                    <button
+                      className="btn border-0 icon-bakery-ingredients"
                       title="Labels verwalten"
                       onClick={() => handleManageLabels(bread)}
                     >
@@ -308,13 +351,12 @@ useEffect(() => {
             </div>
           )}
         </div>
-        
+
         <div className="card-footer border-0 text-muted card-footer-bakery">
           <small>
-            {searchTerm 
-              ? `${filteredBreads.length} von ${breads.length} Brot${breads.length !== 1 ? 'en' : ''}`
-              : `${breads.length} Brot${breads.length !== 1 ? 'e' : ''}`
-            }
+            {searchTerm
+              ? `${filteredBreads.length} von ${breads.length} Brot${breads.length !== 1 ? "en" : ""}`
+              : `${breads.length} Brot${breads.length !== 1 ? "e" : ""}`}
           </small>
         </div>
       </div>

@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { BakeryApi } from '../../../api-client';
-import { Plus, Pencil, Trash, Check, X, ToggleOn, ToggleOff } from 'react-bootstrap-icons';
-import { useApi } from '../../../hooks/useApi';
-import { handleRequestError } from '../../../utils/handleRequestError';
-import type { BreadLabel, BreadLabelRequest } from '../../../api-client/models';
-import '../../styles/bakery_styles.css';
+import React, { useState, useEffect } from "react";
+import { BakeryApi } from "../../../api-client";
+import {
+  Plus,
+  Pencil,
+  Trash,
+  Check,
+  X,
+  ToggleOn,
+  ToggleOff,
+} from "react-bootstrap-icons";
+import { useApi } from "../../../hooks/useApi";
+import { handleRequestError } from "../../../utils/handleRequestError";
+import type { BreadLabel, BreadLabelRequest } from "../../../api-client/models";
+import "../../styles/bakery_styles.css";
 
 interface LabelsCardProps {
   csrfToken: string;
@@ -14,9 +22,9 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
   const [labels, setLabels] = useState<BreadLabel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newLabelName, setNewLabelName] = useState('');
+  const [newLabelName, setNewLabelName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
+  const [editingName, setEditingName] = useState("");
 
   useEffect(() => {
     loadLabels();
@@ -24,12 +32,13 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
 
   const loadLabels = () => {
     setLoading(true);
-    bakeryApi.bakeryLabelsList()
+    bakeryApi
+      .bakeryLabelsList()
       .then((data) => {
         setLabels(data);
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Laden der Labels');
+        handleRequestError(error, "Fehler beim Laden der Labels");
       })
       .finally(() => {
         setLoading(false);
@@ -40,17 +49,18 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
     e.preventDefault();
     if (!newLabelName.trim()) return;
 
-    const payload: BreadLabelRequest = { 
-      name: newLabelName, 
-      isActive: true 
+    const payload: BreadLabelRequest = {
+      name: newLabelName,
+      isActive: true,
     };
-    bakeryApi.bakeryLabelsCreate({ breadLabelRequest: payload })
+    bakeryApi
+      .bakeryLabelsCreate({ breadLabelRequest: payload })
       .then(() => {
-        setNewLabelName('');
+        setNewLabelName("");
         loadLabels();
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Erstellen des Labels');
+        handleRequestError(error, "Fehler beim Erstellen des Labels");
       });
   };
 
@@ -62,53 +72,62 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
   const handleSaveEdit = (id: string) => {
     if (!editingName.trim()) return;
 
-    bakeryApi.bakeryLabelsPartialUpdate({
-      id,
-      patchedBreadLabelRequest: { name: editingName }
-    })
+    bakeryApi
+      .bakeryLabelsPartialUpdate({
+        id,
+        patchedBreadLabelRequest: { name: editingName },
+      })
       .then(() => {
-        setLabels(prev => prev.map(l => l.id === id ? { ...l, name: editingName } : l));
+        setLabels((prev) =>
+          prev.map((l) => (l.id === id ? { ...l, name: editingName } : l)),
+        );
         setEditingId(null);
-        setEditingName('');
+        setEditingName("");
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Aktualisieren des Labels');
+        handleRequestError(error, "Fehler beim Aktualisieren des Labels");
       });
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
-    setEditingName('');
+    setEditingName("");
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Label wirklich l\u00f6schen?')) return;
+    if (!confirm("Label wirklich l\u00f6schen?")) return;
 
-    bakeryApi.bakeryLabelsDestroy({ id })
+    bakeryApi
+      .bakeryLabelsDestroy({ id })
       .then(() => {
-        setLabels(prev => prev.filter(l => l.id !== id));
+        setLabels((prev) => prev.filter((l) => l.id !== id));
       })
       .catch((error) => {
-        handleRequestError(error, 'Fehler beim Löschen des Labels');
+        handleRequestError(error, "Fehler beim Löschen des Labels");
       });
   };
 
   const handleToggleActive = (label: BreadLabel) => {
     // Optimistic update first — no flicker
-    setLabels(prev => prev.map(l => 
-      l.id === label.id ? { ...l, isActive: !l.isActive } : l
-    ));
+    setLabels((prev) =>
+      prev.map((l) =>
+        l.id === label.id ? { ...l, isActive: !l.isActive } : l,
+      ),
+    );
 
-    bakeryApi.bakeryLabelsPartialUpdate({
-      id: label.id!,
-      patchedBreadLabelRequest: { isActive: !label.isActive }
-    })
+    bakeryApi
+      .bakeryLabelsPartialUpdate({
+        id: label.id!,
+        patchedBreadLabelRequest: { isActive: !label.isActive },
+      })
       .catch((error) => {
         // Revert on failure
-        setLabels(prev => prev.map(l => 
-          l.id === label.id ? { ...l, isActive: label.isActive } : l
-        ));
-        handleRequestError(error, 'Fehler beim Aktualisieren des Labels');
+        setLabels((prev) =>
+          prev.map((l) =>
+            l.id === label.id ? { ...l, isActive: label.isActive } : l,
+          ),
+        );
+        handleRequestError(error, "Fehler beim Aktualisieren des Labels");
       });
   };
 
@@ -117,7 +136,7 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
       <div className="card-header border-0 d-flex justify-content-between align-items-center header-bakery-labels">
         <h5 className="mb-0">Labels</h5>
       </div>
-      
+
       <div className="card-body card-body-labels">
         <form onSubmit={handleCreate} className="mb-4">
           <div className="input-group">
@@ -128,9 +147,9 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
               value={newLabelName}
               onChange={(e) => setNewLabelName(e.target.value)}
             />
-            <button 
-              type="submit" 
-              className="btn white-on-green" 
+            <button
+              type="submit"
+              className="btn white-on-green"
               disabled={!newLabelName.trim()}
             >
               <Plus size={16} />
@@ -151,10 +170,10 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
         ) : (
           <div className="list-group list-group-flush">
             {labels.map((label) => (
-              <div 
-                key={label.id} 
+              <div
+                key={label.id}
                 className="list-group-item px-0 d-flex justify-content-between align-items-center border-0"
-                style={{ backgroundColor: 'transparent' }}
+                style={{ backgroundColor: "transparent" }}
               >
                 {editingId === label.id ? (
                   <div className="flex-grow-1 d-flex align-items-center gap-2">
@@ -165,8 +184,8 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
                       onChange={(e) => setEditingName(e.target.value)}
                       autoFocus
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveEdit(label.id!);
-                        if (e.key === 'Escape') handleCancelEdit();
+                        if (e.key === "Enter") handleSaveEdit(label.id!);
+                        if (e.key === "Escape") handleCancelEdit();
                       }}
                     />
                     <button
@@ -186,17 +205,23 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
                 ) : (
                   <>
                     <div className="flex-grow-1">
-                      <span className={`badge ${label.isActive ? 'badge-bakery-success' : 'badge-bakery-muted'}`}>
+                      <span
+                        className={`badge ${label.isActive ? "badge-bakery-success" : "badge-bakery-muted"}`}
+                      >
                         {label.name}
                       </span>
                     </div>
                     <div className="btn-group btn-group-sm">
                       <button
-                        className={`btn border-0 ${label.isActive ? 'text-bakery-success-dark' : 'text-bakery-muted-light'}`}
-                        title={label.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                        className={`btn border-0 ${label.isActive ? "text-bakery-success-dark" : "text-bakery-muted-light"}`}
+                        title={label.isActive ? "Deaktivieren" : "Aktivieren"}
                         onClick={() => handleToggleActive(label)}
                       >
-                        {label.isActive ? <ToggleOn size={16} /> : <ToggleOff size={16} />}
+                        {label.isActive ? (
+                          <ToggleOn size={16} />
+                        ) : (
+                          <ToggleOff size={16} />
+                        )}
                       </button>
                       <button
                         className="btn btn-outline-secondary border-0 icon-bakery-muted"
@@ -220,9 +245,11 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
           </div>
         )}
       </div>
-      
+
       <div className="card-footer border-0 text-muted card-footer-labels">
-        <small>{labels.length} Label{labels.length !== 1 ? 's' : ''}</small>
+        <small>
+          {labels.length} Label{labels.length !== 1 ? "s" : ""}
+        </small>
       </div>
     </div>
   );

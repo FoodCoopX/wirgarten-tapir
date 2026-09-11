@@ -24,12 +24,6 @@ export interface BreadListRequest {
      * @type {string}
      * @memberof BreadListRequest
      */
-    id?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BreadListRequest
-     */
     name: string;
     /**
      * Image from media library with link
@@ -112,7 +106,6 @@ export function BreadListRequestFromJSONTyped(json: any, ignoreDiscriminator: bo
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'name': json['name'],
         'picture': json['picture'] == null ? undefined : json['picture'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -138,7 +131,6 @@ export function BreadListRequestFromJSONTyped(json: any, ignoreDiscriminator: bo
 
     return {
         
-        'id': value['id'],
         'name': value['name'],
         'picture': value['picture'],
         'description': value['description'],

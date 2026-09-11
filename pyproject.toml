@@ -40,7 +40,15 @@ whitenoise = "^6.11.0"
 pyjwt = "2.9"
 legacy-cgi = "^2.6.3"
 django-allauth = {extras = ["socialaccount"], version = "^65.10.0"}
-ortools = "^9.15.6755"
+ortools = {version = "^9.15.6755", optional = true}
+
+[tool.poetry.extras]
+# The CP-SAT solver behind the bakery baking plan, and the only reason numpy,
+# pandas, protobuf, absl-py and immutabledict are installed at all - together
+# about 210 MB of the virtualenv. Every ortools import is function-local, so an
+# install without this extra boots and serves everything except the two solver
+# endpoints, which answer 503.
+bakery = ["ortools"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.21.0"

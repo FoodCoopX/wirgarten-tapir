@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface PatchedBreadSpecificsPerDeliveryDayRequest {
     /**
      * 
-     * @type {string}
-     * @memberof PatchedBreadSpecificsPerDeliveryDayRequest
-     */
-    id?: string;
-    /**
-     * 
      * @type {number}
      * @memberof PatchedBreadSpecificsPerDeliveryDayRequest
      */
@@ -92,7 +86,6 @@ export function PatchedBreadSpecificsPerDeliveryDayRequestFromJSONTyped(json: an
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'year': json['year'] == null ? undefined : json['year'],
         'deliveryWeek': json['delivery_week'] == null ? undefined : json['delivery_week'],
         'deliveryDay': json['delivery_day'] == null ? undefined : json['delivery_day'],
@@ -115,7 +108,6 @@ export function PatchedBreadSpecificsPerDeliveryDayRequestFromJSONTyped(json: an
 
     return {
         
-        'id': value['id'],
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'delivery_day': value['deliveryDay'],

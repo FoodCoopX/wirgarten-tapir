@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface IngredientRequest {
     /**
      * 
-     * @type {string}
-     * @memberof IngredientRequest
-     */
-    id?: string;
-    /**
-     * 
      * @type {boolean}
      * @memberof IngredientRequest
      */
@@ -69,7 +63,6 @@ export function IngredientRequestFromJSONTyped(json: any, ignoreDiscriminator: b
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
         'name': json['name'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -88,7 +81,6 @@ export function IngredientRequestFromJSONTyped(json: any, ignoreDiscriminator: b
 
     return {
         
-        'id': value['id'],
         'is_active': value['isActive'],
         'name': value['name'],
         'description': value['description'],

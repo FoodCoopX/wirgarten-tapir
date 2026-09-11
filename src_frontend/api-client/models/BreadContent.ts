@@ -24,7 +24,7 @@ export interface BreadContent {
      * @type {string}
      * @memberof BreadContent
      */
-    id?: string;
+    readonly id: string;
     /**
      * 
      * @type {string}
@@ -61,6 +61,7 @@ export interface BreadContent {
  * Check if a given object implements the BreadContent interface.
  */
 export function instanceOfBreadContent(value: object): value is BreadContent {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('ingredientName' in value) || value['ingredientName'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('bread' in value) || value['bread'] === undefined) return false;
@@ -78,7 +79,7 @@ export function BreadContentFromJSONTyped(json: any, ignoreDiscriminator: boolea
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'ingredientName': json['ingredient_name'],
         'amount': json['amount'],
         'sortOrder': json['sort_order'] == null ? undefined : json['sort_order'],
@@ -91,14 +92,13 @@ export function BreadContentFromJSONTyped(json: any, ignoreDiscriminator: boolea
       return BreadContentToJSONTyped(json, false);
   }
 
-  export function BreadContentToJSONTyped(value?: Omit<BreadContent, 'ingredient_name'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadContentToJSONTyped(value?: Omit<BreadContent, 'id'|'ingredient_name'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
         'amount': value['amount'],
         'sort_order': value['sortOrder'],
         'bread': value['bread'],

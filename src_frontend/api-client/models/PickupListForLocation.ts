@@ -24,51 +24,58 @@ import {
 /**
  * 
  * @export
- * @interface PickupListResponse
+ * @interface PickupListForLocation
  */
-export interface PickupListResponse {
+export interface PickupListForLocation {
     /**
      * 
      * @type {Array<string>}
-     * @memberof PickupListResponse
+     * @memberof PickupListForLocation
      */
     breadNames: Array<string>;
     /**
      * 
      * @type {{ [key: string]: number; }}
-     * @memberof PickupListResponse
+     * @memberof PickupListForLocation
      */
     breadTotals: { [key: string]: number; };
     /**
      * 
      * @type {number}
-     * @memberof PickupListResponse
+     * @memberof PickupListForLocation
      */
     grandTotal: number;
     /**
      * 
      * @type {Array<PickupListEntry>}
-     * @memberof PickupListResponse
+     * @memberof PickupListForLocation
      */
     entries: Array<PickupListEntry>;
+    /**
+     * 
+     * @type {string}
+     * @memberof PickupListForLocation
+     */
+    pickupLocationId: string;
 }
 
 /**
- * Check if a given object implements the PickupListResponse interface.
+ * Check if a given object implements the PickupListForLocation interface.
  */
-export function instanceOfPickupListResponse(value: object): value is PickupListResponse {
+export function instanceOfPickupListForLocation(value: object): value is PickupListForLocation {
     if (!('breadNames' in value) || value['breadNames'] === undefined) return false;
     if (!('breadTotals' in value) || value['breadTotals'] === undefined) return false;
     if (!('grandTotal' in value) || value['grandTotal'] === undefined) return false;
     if (!('entries' in value) || value['entries'] === undefined) return false;
+    if (!('pickupLocationId' in value) || value['pickupLocationId'] === undefined) return false;
     return true;
 }
 
-export function PickupListResponseFromJSON(json: any): PickupListResponse {
-    return PickupListResponseFromJSONTyped(json, false);
+export function PickupListForLocationFromJSON(json: any): PickupListForLocation {
+    return PickupListForLocationFromJSONTyped(json, false);
 }
 
-export function PickupListResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): PickupListResponse {
+export function PickupListForLocationFromJSONTyped(json: any, ignoreDiscriminator: boolean): PickupListForLocation {
     if (json == null) {
         return json;
     }
@@ -78,14 +85,15 @@ export function PickupListResponseFromJSONTyped(json: any, ignoreDiscriminator: 
         'breadTotals': json['bread_totals'],
         'grandTotal': json['grand_total'],
         'entries': ((json['entries'] as Array<any>).map(PickupListEntryFromJSON)),
+        'pickupLocationId': json['pickup_location_id'],
     };
 }
 
-  export function PickupListResponseToJSON(json: any): PickupListResponse {
-      return PickupListResponseToJSONTyped(json, false);
+  export function PickupListForLocationToJSON(json: any): PickupListForLocation {
+      return PickupListForLocationToJSONTyped(json, false);
   }
 
-  export function PickupListResponseToJSONTyped(value?: PickupListResponse | null, ignoreDiscriminator: boolean = false): any {
+  export function PickupListForLocationToJSONTyped(value?: PickupListForLocation | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -96,6 +104,7 @@ export function PickupListResponseFromJSONTyped(json: any, ignoreDiscriminator: 
         'bread_totals': value['breadTotals'],
         'grand_total': value['grandTotal'],
         'entries': ((value['entries'] as Array<any>).map(PickupListEntryToJSON)),
+        'pickup_location_id': value['pickupLocationId'],
     };
 }
 

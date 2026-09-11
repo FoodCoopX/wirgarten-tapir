@@ -2,6 +2,10 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import PickupLocationOpeningTimeSerializer
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
+)
+from tapir.utils.shortcuts import get_serializer_cache
 from tapir.wirgarten.models import PickupLocation, PickupLocationOpeningTime
 
 
@@ -66,8 +70,12 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             many=True,
         ).data
 
-    def get_delivery_day(self, obj):
-        return int(obj.delivery_day)
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
+    def get_delivery_day(self, pickup_location: PickupLocation):
+        # None when the pickup location has no opening times configured
+        return PickupLocationDeliveryDayService.get_delivery_day(
+            pickup_location_id=pickup_location.id, cache=get_serializer_cache(self)
+        )
 
 
 class PickupLocationCapacityCheckResponseSerializer(serializers.Serializer):

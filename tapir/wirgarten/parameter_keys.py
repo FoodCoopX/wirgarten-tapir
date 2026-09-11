@@ -243,17 +243,11 @@ class ParameterKeys:
     BAKERY_LAST_CHOOSING_DAY_BEFORE_BAKING_DAY = (
         f"{PREFIX}.bakery.last_choosing_day_before_baking_day"
     )
-    BAKERY_DAYS_BEFORE_DELIVERY_DAY_TO_CHANGE_PSEUDONYM = (
-        f"{PREFIX}.bakery.days_before_delivery_day_to_change_pseudonym"
-    )
     BAKERY_MEMBERS_CAN_REDUCES_BREAD_SHARES = (
         f"{PREFIX}.bakery.members_can_reduce_bread_shares"
     )
     BAKERY_PICKUP_LOCATIONS_CAN_BE_CHOSEN_PER_SHARE = (
         f"{PREFIX}.bakery.pickup_locations_can_be_chosen_per_share"
-    )
-    BAKERY_PICKUP_LOCATIONS_CAN_BE_ORDERED_BY_DAYS_IN_BESTELL_WIZARD = (
-        f"{PREFIX}.bakery.pickup_locations_can_be_ordered_by_days_in_bestell_wizard"
     )
     BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS = (
         f"{PREFIX}.bakery.members_can_choose_bread_sorts"

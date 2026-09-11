@@ -24,7 +24,7 @@ export interface PreferredBread {
      * @type {string}
      * @memberof PreferredBread
      */
-    id?: string;
+    readonly id: string;
     /**
      * 
      * @type {string}
@@ -43,6 +43,7 @@ export interface PreferredBread {
  * Check if a given object implements the PreferredBread interface.
  */
 export function instanceOfPreferredBread(value: object): value is PreferredBread {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('memberId' in value) || value['memberId'] === undefined) return false;
     if (!('breads' in value) || value['breads'] === undefined) return false;
     return true;
@@ -58,7 +59,7 @@ export function PreferredBreadFromJSONTyped(json: any, ignoreDiscriminator: bool
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'memberId': json['member_id'],
         'breads': json['breads'],
     };
@@ -68,14 +69,13 @@ export function PreferredBreadFromJSONTyped(json: any, ignoreDiscriminator: bool
       return PreferredBreadToJSONTyped(json, false);
   }
 
-  export function PreferredBreadToJSONTyped(value?: Omit<PreferredBread, 'member_id'> | null, ignoreDiscriminator: boolean = false): any {
+  export function PreferredBreadToJSONTyped(value?: Omit<PreferredBread, 'id'|'member_id'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
         'breads': value['breads'],
     };
 }

@@ -67,3 +67,6 @@ export function MemberCountryToJSON(value?: MemberCountry | null): any {
     return {};
 }
 
+export function MemberCountryToJSONTyped(value?: MemberCountry | null, ignoreDiscriminator: boolean = false): any {
+    return MemberCountryToJSON(value);
+}

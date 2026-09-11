@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { BakeryApi } from '../../../api-client';
-import { useApi } from '../../../hooks/useApi';
-import type { BreadList, BreadContent, BreadLabel } from '../../../api-client/models';
-import { SingleBreadCard } from '../cards';
-import { Modal } from 'react-bootstrap';
-import '../../styles/bakery_styles.css';
+import React, { useState, useEffect } from "react";
+import { BakeryApi } from "../../../api-client";
+import { useApi } from "../../../hooks/useApi";
+import type {
+  BreadList,
+  BreadContent,
+  BreadLabel,
+} from "../../../api-client/models";
+import { SingleBreadCard } from "../cards";
+import { Modal } from "react-bootstrap";
+import { handleRequestError } from "../../../utils/handleRequestError";
+import "../../styles/bakery_styles.css";
 
 interface BreadSelectionModalProps {
-  breads: BreadList[];
   contentsMap: { [breadId: string]: BreadContent[] };
   pickupLocationId: string;
   pickupLocationName: string;
@@ -20,7 +24,6 @@ interface BreadSelectionModalProps {
 }
 
 export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
-  breads: initialBreads,
   contentsMap,
   pickupLocationId,
   pickupLocationName,
@@ -33,7 +36,9 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
 }) => {
   const bakeryApi = useApi(BakeryApi, csrfToken);
   const [availableBreads, setAvailableBreads] = useState<BreadList[]>([]);
-  const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>({});
+  const [labelsMap, setLabelsMap] = useState<{ [labelId: string]: BreadLabel }>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,18 +57,21 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
       bakeryApi.bakeryLabelsList(),
     ])
       .then(([breadsWithCapacity, labels]) => {
-        const labelMapping = labels.reduce((acc, label) => {
-          if (label.id) {
-            acc[label.id] = label;
-          }
-          return acc;
-        }, {} as { [labelId: string]: BreadLabel });
-        
+        const labelMapping = labels.reduce(
+          (acc, label) => {
+            if (label.id) {
+              acc[label.id] = label;
+            }
+            return acc;
+          },
+          {} as { [labelId: string]: BreadLabel },
+        );
+
         setLabelsMap(labelMapping);
         setAvailableBreads(breadsWithCapacity);
       })
       .catch((error) => {
-        console.error('Failed to load data:', error);
+        handleRequestError(error, "Fehler beim Laden der Brote");
         setAvailableBreads([]);
       })
       .finally(() => {
@@ -78,51 +86,58 @@ export const BreadSelectionModal: React.FC<BreadSelectionModalProps> = ({
       </Modal.Header>
 
       <Modal.Body className="modal-body-bakery">
-              {loading ? (
-                <div className="text-center py-5">
-                  <div className="spinner-border spinner-bakery" />
-                  <p className="mt-2 text-muted">Lade verfügbare Brote...</p>
-                </div>
-              ) : (
-                <>
-                  <div className="alert alert-info mb-4">
-                    <strong>KW {selectedWeek}/{selectedYear}</strong> - Station: {pickupLocationName}
-                    <br />
-                    <small>{availableBreads.length} Brotsorte{availableBreads.length !== 1 ? 'n' : ''} verfügbar</small>
-                  </div>
+        {loading ? (
+          <div className="text-center py-5">
+            <div className="spinner-border spinner-bakery" />
+            <p className="mt-2 text-muted">Lade verfügbare Brote...</p>
+          </div>
+        ) : (
+          <>
+            <div className="alert alert-info mb-4">
+              <strong>
+                KW {selectedWeek}/{selectedYear}
+              </strong>{" "}
+              - Station: {pickupLocationName}
+              <br />
+              <small>
+                {availableBreads.length} Brotsorte
+                {availableBreads.length !== 1 ? "n" : ""} verfügbar
+              </small>
+            </div>
 
-                  {availableBreads.length === 0 ? (
-                    <div className="alert alert-warning">
-                      <strong>Keine Brote verfügbar</strong>
-                      <p className="mb-0">
-                        Für diese Abholstation und Woche sind noch keine Brote mit verfügbarer Kapazität vorhanden.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="d-flex flex-wrap gap-3">
-                      {availableBreads.map(bread => {
-                        const contents = contentsMap[bread.id!] || [];
-                        const breadLabels = (bread.labels || [])
-                          .map(labelId => labelsMap[labelId])
-                          .filter(Boolean);
-                        const isSelected = bread.id === currentBreadId;
+            {availableBreads.length === 0 ? (
+              <div className="alert alert-warning">
+                <strong>Keine Brote verfügbar</strong>
+                <p className="mb-0">
+                  Für diese Abholstation und Woche sind noch keine Brote mit
+                  verfügbarer Kapazität vorhanden.
+                </p>
+              </div>
+            ) : (
+              <div className="d-flex flex-wrap gap-3">
+                {availableBreads.map((bread) => {
+                  const contents = contentsMap[bread.id!] || [];
+                  const breadLabels = (bread.labels || [])
+                    .map((labelId) => labelsMap[labelId])
+                    .filter(Boolean);
+                  const isSelected = bread.id === currentBreadId;
 
-                        return (
-                          <SingleBreadCard
-                            key={bread.id}
-                            bread={bread}
-                            contents={contents}
-                            labels={breadLabels}
-                            isSelected={isSelected}
-                            onClick={() => onSelect(bread.id!)}
-                            showAvailability={true}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
-              )}
+                  return (
+                    <SingleBreadCard
+                      key={bread.id}
+                      bread={bread}
+                      contents={contents}
+                      labels={breadLabels}
+                      isSelected={isSelected}
+                      onClick={() => onSelect(bread.id!)}
+                      showAvailability={true}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
       </Modal.Body>
     </Modal>
   );

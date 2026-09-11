@@ -6,9 +6,23 @@ Tests are organized by layer:
 2. Integration tests for Django helpers (collect_solver_input, save_solution_to_db)
 """
 
+from decimal import Decimal
 from unittest.mock import patch
 
-from tapir.bakery.models import BreadDelivery
+import pytest
+
+# ortools is the optional "bakery" extra, and every import below reaches it.
+# Without this the whole module errors at collection on a slim install, which
+# reads like a broken checkout rather than a dependency that was not asked for.
+pytest.importorskip(
+    "ortools",
+    reason="ortools is not installed; run poetry install --extras bakery",
+)
+
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+
+from tapir.bakery.models import BreadDelivery, PreferredBread
 from tapir.bakery.solver.collector import _solution_fingerprint
 from tapir.bakery.solver.dataclasses import (
     BreadInfo,
@@ -23,10 +37,11 @@ from tapir.bakery.tests.factories import (
     BreadDeliveryFactory,
     BreadFactory,
     BreadSpecificsPerDeliveryDayFactory,
+    BreadSubscriptionFactory,
 )
 from tapir.wirgarten.models import PickupLocationOpeningTime
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import PickupLocationFactory
+from tapir.wirgarten.tests.factories import MemberFactory, PickupLocationFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 # ---------------------------------------------------------------------------
@@ -236,6 +251,31 @@ class TestSolverBasic:
         result = solve_bread_planning(breads, [], {})
         assert_solver_failed(result)
         assert result.status == "no_data"
+
+    def test_capacityBelowWhatMembersAlreadyChose_isInfeasibleWithTheReason(self):
+        # An admin can lower a capacity below the number of members who
+        # already chose that bread there. distribution_vars is then an int var
+        # with lb > ub, and CP-SAT answers MODEL_INVALID rather than
+        # INFEASIBLE, which must not be reported as a time-limit problem.
+        breads = [make_bread(bread_id=1, name="Roggenbrot")]
+        locations = [
+            make_location(
+                location_id=1, name="Hofladen", total_deliveries=5, fixed_demand={1: 5}
+            )
+        ]
+
+        result = solve_bread_planning(breads, locations, {(1, 1): 2})
+
+        assert_solver_failed(result)
+        assert result.status == "infeasible"
+        reasons = [
+            d
+            for d in result.diagnostics
+            if d.category == "fixed_demand_exceeds_capacity"
+        ]
+        assert len(reasons) == 1
+        assert "Roggenbrot" in reasons[0].message
+        assert "Zeitlimit" not in " ".join(d.message for d in result.diagnostics)
 
     def test_empty_pieces_per_layer_returns_no_data(self):
         """Bread with empty pieces_per_stove_layer → no_data status."""
@@ -614,11 +654,16 @@ class TestFixedPieces:
         )
 
         assert_solver_success(result)
-        # PreBaked: exactly 6, all distributed
+        # PreBaked: exactly the fixed batch, which is the whole contract
         assert result.plan.bread_quantities[1] == 6
-        assert result.plan.remaining_quantities[1] == 0
         # Fresh: makes up the rest
         assert result.plan.bread_quantities[2] >= 6
+        # Every delivery is served, and the surplus is the smallest the layer
+        # sizes allow. Which bread carries that surplus is not asserted: both
+        # attributions have the same objective, so the solver may return
+        # either.
+        assert sum(result.plan.distribution.values()) == 12
+        assert sum(result.plan.remaining_quantities.values()) == 2
 
     def test_fixed_pieces_with_min_max_also_set(self):
         """When min == max on a regular bread, solver bakes exactly that amount."""
@@ -1296,6 +1341,153 @@ class TestSaveSolutionToDb(TapirIntegrationTest):
         self.assertEqual(sess_records.count(), 2)
 
 
+class TestMemberPreferences(TapirIntegrationTest):
+    """
+    The preference term has to steer how MANY loaves of each bread are made,
+    not merely that each preferred bread is present somewhere.
+    """
+
+    @staticmethod
+    def _run(capacity_b, want_a=10, want_b=30):
+        from ortools.sat.python import cp_model
+
+        breads = [
+            make_bread(bread_id=1, name="A", pieces_per_layer=[10]),
+            make_bread(bread_id=2, name="B", pieces_per_layer=[10]),
+        ]
+        location = make_location(location_id=100, total_deliveries=want_a + want_b)
+        capacities = {(1, 100): want_a + want_b, (2, 100): capacity_b}
+        preferences = [
+            {
+                "member_id": m,
+                "location_id": 100,
+                "preferred_bread_ids": [1 if m < want_a else 2],
+            }
+            for m in range(want_a + want_b)
+        ]
+        model, v = build_model(
+            breads,
+            [location],
+            capacities,
+            max_sessions=8,
+            stove_layers=4,
+            member_preferences=preferences,
+        )
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = 30
+        solver.solve(model)
+        return (
+            {
+                b.name: solver.value(v["distribution_vars"][b.bread_id, 100])
+                for b in breads
+            },
+            sum(solver.value(x) for x in v["member_satisfied"].values()),
+        )
+
+    def test_distributionFollowsHowManyMembersWantEachBread(self):
+        # 10 want A, 30 want B. Reifying satisfaction on the bread merely
+        # being present would score A=30/B=10 the same as A=10/B=30.
+        distribution, satisfied = self._run(capacity_b=40)
+
+        self.assertEqual(distribution, {"A": 10, "B": 30})
+        self.assertEqual(satisfied, 40)
+
+    def test_satisfactionIsNotClaimedBeyondTheLoavesAvailable(self):
+        # Only 10 loaves of B for 30 members who want it: 10 of them plus the
+        # 10 who want A. Presence-based satisfaction reported all 40.
+        _distribution, satisfied = self._run(capacity_b=10)
+
+        self.assertEqual(satisfied, 20)
+
+
+class TestGetMemberPreferences(TapirIntegrationTest):
+    """
+    The database side of the preference feed. Every other solver test hand-
+    builds the dicts, so this loop had no coverage at all - reverting the
+    prefetch-cache read to .values_list() would have broken nothing.
+    """
+
+    YEAR = 2026
+    WEEK = 41
+    DAY = 2
+
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self):
+        super().setUp()
+        self.bread_a = BreadFactory.create(name="Roggenbrot")
+        self.bread_b = BreadFactory.create(name="Dinkelkruste")
+        self.location = create_pickup_location_with_delivery_day(
+            self.DAY, name="Hofladen"
+        )
+
+    def _member_with_unassigned_delivery(self, favourites):
+        member = MemberFactory.create()
+        BreadDeliveryFactory(
+            year=self.YEAR,
+            delivery_week=self.WEEK,
+            subscription=BreadSubscriptionFactory.create(member=member),
+            pickup_location=self.location,
+            bread=None,
+        )
+        if favourites is not None:
+            preferred = PreferredBread.objects.create(member=member)
+            preferred.breads.set(favourites)
+        return member
+
+    def test_returnsOneRowPerMemberAndLocation(self):
+        from tapir.bakery.solver.preferences import get_member_preferences
+
+        member = self._member_with_unassigned_delivery([self.bread_a, self.bread_b])
+
+        result = get_member_preferences(self.YEAR, self.WEEK, self.DAY)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["member_id"], member.id)
+        self.assertEqual(result[0]["location_id"], self.location.id)
+        self.assertEqual(
+            sorted(result[0]["preferred_bread_ids"]),
+            sorted([self.bread_a.id, self.bread_b.id]),
+        )
+
+    def test_membersWithoutFavourites_areLeftOut(self):
+        from tapir.bakery.solver.preferences import get_member_preferences
+
+        self._member_with_unassigned_delivery(None)
+        self._member_with_unassigned_delivery([])
+
+        self.assertEqual(get_member_preferences(self.YEAR, self.WEEK, self.DAY), [])
+
+    def test_readsThroughThePrefetchCache(self):
+        # .values_list() on a prefetched related manager builds a fresh
+        # queryset and fires one query per member, making the prefetch_related
+        # pure overhead. The count must not grow with the number of members.
+        from tapir.bakery.solver.preferences import get_member_preferences
+
+        for _ in range(2):
+            self._member_with_unassigned_delivery([self.bread_a])
+        with CaptureQueriesContext(connection) as two_members:
+            get_member_preferences(self.YEAR, self.WEEK, self.DAY)
+
+        for _ in range(2):
+            self._member_with_unassigned_delivery([self.bread_a])
+        with CaptureQueriesContext(connection) as four_members:
+            get_member_preferences(self.YEAR, self.WEEK, self.DAY)
+
+        # Structural rather than a magic number: what matters is that the count
+        # does not grow with the number of members. A fixed threshold passed
+        # with a margin of one query and would go green again on any unrelated
+        # caching win, with the per-member regression fully back.
+        self.assertEqual(
+            len(four_members.captured_queries),
+            len(two_members.captured_queries),
+            "the query count grows with the number of members, so the "
+            "prefetch cache is being bypassed",
+        )
+
+
 class TestSolveAndSave(TapirIntegrationTest):
     """End-to-end test: collect → solve → save."""
 
@@ -1352,6 +1544,97 @@ class TestSolveAndSave(TapirIntegrationTest):
             StoveSession.objects.filter(year=year, delivery_week=week).exists()
         )
 
+    def _minimal_week(self, year, week, day=2, fixed_pieces=None):
+        bread = BreadFactory(
+            name="Testbrot", pieces_per_stove_layer=[10], is_active=True
+        )
+        loc = create_pickup_location_with_delivery_day(day, name="FixedPiecesTest")
+        AvailableBreadsForDeliveryDayFactory(
+            year=year, delivery_week=week, delivery_day=day, bread=bread
+        )
+        BreadCapacityPickupLocationFactory(
+            year=year,
+            delivery_week=week,
+            pickup_location=loc,
+            bread=bread,
+            capacity=10,
+        )
+        for _ in range(5):
+            BreadDeliveryFactory(
+                year=year, delivery_week=week, pickup_location=loc, bread=None
+            )
+        if fixed_pieces is not None:
+            BreadSpecificsPerDeliveryDayFactory(
+                year=year,
+                delivery_week=week,
+                delivery_day=day,
+                bread=bread,
+                fixed_pieces=fixed_pieces,
+            )
+        return bread
+
+    def test_solveAndSave_persistsWhatToBake(self):
+        from tapir.bakery.models import BreadsToBakePerWeek
+        from tapir.bakery.solver.django_integration import solve_and_save
+
+        year, week = 2026, 46
+        bread = self._minimal_week(year, week)
+
+        result = solve_and_save(year=year, delivery_week=week, delivery_day=2)
+
+        row = BreadsToBakePerWeek.objects.get(
+            year=year, delivery_week=week, bread=bread
+        )
+        self.assertEqual(row.quantity, result.plan.bread_quantities[bread.id])
+
+    def test_solveAndSave_fixedPiecesBread_appearsOnTheBakingList(self):
+        # A fixed_pieces bread occupies no stove layers, so deriving "baked"
+        # from StoveSession reported 0 against a positive delivery count - and
+        # a negative "extra" - on the list the baker actually prints.
+        from tapir.bakery.services.baking_list_service import BakingListService
+        from tapir.bakery.solver.django_integration import solve_and_save
+        from tapir.bakery.models import StoveSession
+
+        year, week = 2026, 45
+        # More than the 5 deliveries: the surplus is what a fixed batch is for.
+        bread = self._minimal_week(year, week, fixed_pieces=10)
+
+        solve_and_save(year=year, delivery_week=week, delivery_day=2)
+
+        self.assertFalse(
+            StoveSession.objects.filter(
+                year=year, delivery_week=week, bread=bread
+            ).exists(),
+            "a fixed_pieces bread is expected to occupy no stove layers",
+        )
+        row = next(
+            r
+            for r in BakingListService.get_baking_list(year, week, 2)["breads"]
+            if r["name"] == bread.name
+        )
+        self.assertEqual(row["baked"], 10)
+        self.assertEqual(row["extra"], 5)
+
+    def test_solveAndSave_wholeWeekWithoutADeliveryDay_saves(self):
+        # delivery_day=None is accepted all the way down to the save.
+        from tapir.bakery.models import BreadsToBakePerWeek, StoveSession
+        from tapir.bakery.solver.django_integration import solve_and_save
+
+        year, week = 2026, 44
+        self._minimal_week(year, week)
+
+        result = solve_and_save(year=year, delivery_week=week, delivery_day=None)
+
+        self.assertEqual(result.status, "optimal")
+        self.assertTrue(
+            StoveSession.objects.filter(
+                year=year, delivery_week=week, delivery_day__isnull=True
+            ).exists()
+        )
+        self.assertTrue(
+            BreadsToBakePerWeek.objects.filter(year=year, delivery_week=week).exists()
+        )
+
     def test_solveAndSave_noData_returnsNone(self):
         from tapir.bakery.solver.django_integration import solve_and_save
 
@@ -1361,3 +1644,157 @@ class TestSolveAndSave(TapirIntegrationTest):
         self.assertIsInstance(result, SolverResult)
         self.assertEqual(result.status, "no_data")
         self.assertIsNone(result.plan)
+
+    def test_solveAndSave_logsPreferenceSatisfactionPerLocation(self):
+        # The table existed since the first bakery migration but nothing ever
+        # wrote to it, so there was no way to tell whether a change to the
+        # solver made it better or worse at hitting members' favourites.
+        from tapir.bakery.models import PreferenceSatisfactionLogging
+        from tapir.bakery.solver.django_integration import solve_and_save
+
+        year, week, day = 2026, 43, 2
+        self._minimal_week(year, week, day=day)
+
+        solve_and_save(year=year, delivery_week=week, delivery_day=day)
+
+        row = PreferenceSatisfactionLogging.objects.get(year=year, delivery_week=week)
+        self.assertEqual(row.delivery_day, day)
+        # Nobody set favourites, so everyone is happy with whatever they get.
+        self.assertEqual(row.percentage_satisfied, Decimal("100.00"))
+
+    def test_solveAndSave_runTwice_replacesTheSatisfactionLog(self):
+        from tapir.bakery.models import PreferenceSatisfactionLogging
+        from tapir.bakery.solver.django_integration import solve_and_save
+
+        year, week, day = 2026, 42, 2
+        self._minimal_week(year, week, day=day)
+
+        solve_and_save(year=year, delivery_week=week, delivery_day=day)
+        solve_and_save(year=year, delivery_week=week, delivery_day=day)
+
+        self.assertEqual(
+            PreferenceSatisfactionLogging.objects.filter(
+                year=year, delivery_week=week
+            ).count(),
+            1,
+        )
+
+
+class TestSolutionCollector(TapirIntegrationTest):
+    def test_maxSolutionsZero_stillReturnsThePlanItFound(self):
+        # The collector's memory bound truncates to [:max_solutions], so a
+        # zero emptied the list on every callback and an optimal solve came
+        # back as "Keine Lösung gefunden".
+        breads = [make_bread(bread_id=1)]
+        locations = [make_location(location_id=1, total_deliveries=5)]
+
+        result = solve_bread_planning(
+            breads, locations, make_capacities(breads, locations), max_solutions=0
+        )
+
+        assert_solver_success(result)
+
+
+class TestAchievableQuantityDiagnostics(TapirIntegrationTest):
+    """
+    The production ceiling the diagnostics compare against.
+
+    C10 caps a non-spanning bread at one stove session and C11 caps a spanning
+    one at two, so _get_achievable_quantities must not enumerate
+    max_sessions * stove_layers layers: that ceiling is far above what the
+    model can reach, and every check built on it would be unreachable.
+    """
+
+    @staticmethod
+    def _diagnose(bread, location, capacities, max_sessions=8, stove_layers=4):
+        from tapir.bakery.solver.diagnostics import diagnose_infeasibility
+
+        return diagnose_infeasibility(
+            [bread], [location], capacities, max_sessions, stove_layers
+        )
+
+    def test_minPiecesBeyondTheOvenCeiling_isReported(self):
+        # One non-spanning bread, 10 per layer, 4 layers => at most 40 pieces,
+        # so a min_pieces of 100 is impossible.
+        bread = make_bread(bread_id=1, name="Roggenbrot", pieces_per_layer=[10])
+        bread.min_pieces = 100
+        location = make_location(location_id=1, total_deliveries=5)
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 5})
+
+        categories = [d.category for d in diagnostics]
+        self.assertIn("min_not_achievable", categories)
+
+    def test_minPiecesWithinTheOvenCeiling_isNotReported(self):
+        bread = make_bread(bread_id=1, name="Roggenbrot", pieces_per_layer=[10])
+        bread.min_pieces = 30
+        location = make_location(location_id=1, total_deliveries=5)
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 5})
+
+        self.assertNotIn("min_not_achievable", [d.category for d in diagnostics])
+
+    def test_spanningBreadGetsTwiceTheCeiling(self):
+        # C11 allows a spanning bread two sessions, so 80 is reachable for it
+        # while the same number is out of reach for a non-spanning one.
+        location = make_location(location_id=1, total_deliveries=5)
+
+        spanning = make_bread(
+            bread_id=1, name="Sauerteig", pieces_per_layer=[10], can_span=True
+        )
+        spanning.min_pieces = 80
+        non_spanning = make_bread(bread_id=1, name="Roggen", pieces_per_layer=[10])
+        non_spanning.min_pieces = 80
+
+        self.assertNotIn(
+            "min_not_achievable",
+            [d.category for d in self._diagnose(spanning, location, {(1, 1): 5})],
+        )
+        self.assertIn(
+            "min_not_achievable",
+            [d.category for d in self._diagnose(non_spanning, location, {(1, 1): 5})],
+        )
+
+    def test_fixedPiecesBread_isJudgedAgainstItsBatch_notTheOvenCeiling(self):
+        # A fixed_pieces bread occupies no stove layers, so C10/C11 do not
+        # apply to it. Tightening the layer-based ceiling made it report an
+        # impossible demand for a bread whose batch size is simply declared.
+        bread = make_bread(
+            bread_id=1, name="Sauerteig", pieces_per_layer=[10], fixed_pieces=100
+        )
+        location = make_location(
+            location_id=1, total_deliveries=60, fixed_demand={1: 60}
+        )
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 60})
+
+        self.assertNotIn(
+            "fixed_demand_exceeds_production", [d.category for d in diagnostics]
+        )
+
+    def test_fixedPiecesBread_demandAboveItsBatch_isStillReported(self):
+        bread = make_bread(
+            bread_id=1, name="Sauerteig", pieces_per_layer=[10], fixed_pieces=50
+        )
+        location = make_location(
+            location_id=1, total_deliveries=60, fixed_demand={1: 60}
+        )
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 60})
+
+        self.assertIn(
+            "fixed_demand_exceeds_production", [d.category for d in diagnostics]
+        )
+
+    def test_directChoicesBeyondWhatCanBeBaked_isReported(self):
+        # 60 members chose this bread directly, but the oven tops out at 40.
+        bread = make_bread(bread_id=1, name="Roggenbrot", pieces_per_layer=[10])
+        location = make_location(
+            location_id=1, total_deliveries=60, fixed_demand={1: 60}
+        )
+
+        diagnostics = self._diagnose(bread, location, {(1, 1): 60})
+
+        self.assertIn(
+            "fixed_demand_exceeds_production", [d.category for d in diagnostics]
+        )

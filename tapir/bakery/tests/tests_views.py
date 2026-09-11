@@ -9,18 +9,19 @@ from tapir.bakery.models import (
     PreferredBread,
 )
 from tapir.bakery.tests.factories import (
+    BreadSubscriptionFactory,
     AvailableBreadsForDeliveryDayFactory,
     BreadCapacityPickupLocationFactory,
     BreadDeliveryFactory,
     BreadFactory,
     BreadsPerPickupLocationPerWeekFactory,
+    enable_bakery,
 )
 from tapir.wirgarten.models import PickupLocationOpeningTime
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
-    SubscriptionFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -285,7 +286,7 @@ class TestPickupListView(TapirIntegrationTest):
         self.url = reverse("bakery:pickup-list")
 
     def test_get_noDeliveries_returnsEmptyEntries(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = PickupLocationFactory.create()
 
@@ -300,15 +301,15 @@ class TestPickupListView(TapirIntegrationTest):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["entries"], [])
+        self.assertEqual(response.data["lists"][0]["entries"], [])
 
     def test_get_withDeliveries_returnsEntries(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = PickupLocationFactory.create()
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
-        sub = SubscriptionFactory.create(member=member)
+        sub = BreadSubscriptionFactory.create(member=member)
 
         BreadCapacityPickupLocationFactory.create(
             year=YEAR,
@@ -337,8 +338,42 @@ class TestPickupListView(TapirIntegrationTest):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["entries"]), 1)
-        self.assertIn("Roggenbrot", response.data["bread_names"])
+        pickup_list = response.data["lists"][0]
+        self.assertEqual(pickup_list["pickup_location_id"], str(pl.id))
+        self.assertEqual(len(pickup_list["entries"]), 1)
+        self.assertIn("Roggenbrot", pickup_list["bread_names"])
+
+    def test_get_severalStationsInOneRequest_returnsOneListEach(self):
+        # The point of the batched form: one request, one shared cache, so the
+        # week is grouped once instead of once per station.
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        first = PickupLocationFactory.create()
+        second = PickupLocationFactory.create()
+
+        response = self.client.get(
+            self.url,
+            {
+                "year": YEAR,
+                "delivery_week": WEEK,
+                "delivery_day": DAY,
+                "pickup_location_ids[]": [str(first.id), str(second.id)],
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [entry["pickup_location_id"] for entry in response.data["lists"]],
+            [str(first.id), str(second.id)],
+        )
+
+    def test_get_withoutAnyStation_returns400(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        response = self.client.get(
+            self.url, {"year": YEAR, "delivery_week": WEEK, "delivery_day": DAY}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_unauthenticated_returns401or403(self):
         response = self.client.get(
@@ -633,7 +668,7 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         self.url = reverse("bakery:metrics-preference-satisfaction")
 
     def test_get_noDeliveries_returnsEmptyLocations(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         response = self.client.get(
             self.url,
@@ -644,12 +679,12 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         self.assertEqual(response.data["locations"], [])
 
     def test_get_withDeliveriesAndSolverResults_returnsMetrics(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = create_pickup_location_with_delivery_day(DAY, name="Hofladen")
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
-        sub = SubscriptionFactory.create(member=member)
+        sub = BreadSubscriptionFactory.create(member=member)
 
         BreadCapacityPickupLocationFactory.create(
             year=YEAR,
@@ -689,12 +724,12 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         self.assertEqual(loc["directly_chosen"], 1)
 
     def test_get_memberWithNoFavorites_countedAsSatisfied(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = create_pickup_location_with_delivery_day(DAY, name="Hofladen")
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
-        sub = SubscriptionFactory.create(member=member)
+        sub = BreadSubscriptionFactory.create(member=member)
 
         BreadDeliveryFactory.create(
             year=YEAR,
@@ -723,12 +758,12 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         self.assertEqual(loc["satisfied"], 1)
 
     def test_get_memberWithFavoriteAvailable_gotFavorite(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = create_pickup_location_with_delivery_day(DAY, name="Hofladen")
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
-        sub = SubscriptionFactory.create(member=member)
+        sub = BreadSubscriptionFactory.create(member=member)
 
         BreadDeliveryFactory.create(
             year=YEAR,
@@ -760,13 +795,13 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         self.assertEqual(loc["satisfied"], 1)
 
     def test_get_memberWithFavoriteNotAvailable_noMatch(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = create_pickup_location_with_delivery_day(DAY, name="Hofladen")
         bread_available = BreadFactory.create(name="Roggenbrot")
         bread_wanted = BreadFactory.create(name="Dinkelkruste")
         member = MemberFactory.create()
-        sub = SubscriptionFactory.create(member=member)
+        sub = BreadSubscriptionFactory.create(member=member)
 
         BreadDeliveryFactory.create(
             year=YEAR,
@@ -797,43 +832,31 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
         self.assertEqual(loc["no_match"], 1)
 
     def test_get_locationsSortedAlphabetically(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl_z = create_pickup_location_with_delivery_day(DAY, name="Zentrallager")
         pl_a = create_pickup_location_with_delivery_day(DAY, name="Abholpunkt")
         bread = BreadFactory.create(name="Roggenbrot")
-        member = MemberFactory.create()
-        sub = SubscriptionFactory.create(member=member)
 
-        BreadCapacityPickupLocationFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            pickup_location=pl_z,
-            bread=bread,
-            capacity=10,
-        )
-        BreadCapacityPickupLocationFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            pickup_location=pl_a,
-            bread=bread,
-            capacity=10,
-        )
-
-        BreadDeliveryFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            subscription=sub,
-            pickup_location=pl_z,
-            bread=bread,
-        )
-        BreadDeliveryFactory.create(
-            year=YEAR,
-            delivery_week=WEEK,
-            subscription=sub,
-            pickup_location=pl_a,
-            bread=bread,
-        )
+        for pickup_location in [pl_z, pl_a]:
+            BreadCapacityPickupLocationFactory.create(
+                year=YEAR,
+                delivery_week=WEEK,
+                pickup_location=pickup_location,
+                bread=bread,
+                capacity=10,
+            )
+            # A member belongs to one station per week, so the second station
+            # needs its own member.
+            BreadDeliveryFactory.create(
+                year=YEAR,
+                delivery_week=WEEK,
+                subscription=BreadSubscriptionFactory.create(
+                    member=MemberFactory.create()
+                ),
+                pickup_location=pickup_location,
+                bread=bread,
+            )
 
         response = self.client.get(
             self.url,
@@ -866,7 +889,7 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
         self.url = reverse("bakery:preferred-bread-statistics")
 
     def test_get_noDeliveries_returnsZeros(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         response = self.client.get(
             self.url,
@@ -878,7 +901,7 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
         self.assertEqual(response.data["breads"], [])
 
     def test_get_membersWithPreferences_returnsCounts(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = create_pickup_location_with_delivery_day(DAY)
         bread_a = BreadFactory.create(name="Anisbrot")
@@ -886,8 +909,8 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
 
         member1 = MemberFactory.create()
         member2 = MemberFactory.create()
-        sub1 = SubscriptionFactory.create(member=member1)
-        sub2 = SubscriptionFactory.create(member=member2)
+        sub1 = BreadSubscriptionFactory.create(member=member1)
+        sub2 = BreadSubscriptionFactory.create(member=member2)
 
         BreadDeliveryFactory.create(
             year=YEAR,
@@ -925,11 +948,11 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
         self.assertEqual(bread_map["Anisbrot"], 1)
 
     def test_get_memberWithoutPreferences_countedAsWithout(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = create_pickup_location_with_delivery_day(DAY)
         member = MemberFactory.create()
-        sub = SubscriptionFactory.create(member=member)
+        sub = BreadSubscriptionFactory.create(member=member)
 
         BreadDeliveryFactory.create(
             year=YEAR,
@@ -949,7 +972,7 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
         self.assertEqual(response.data["members_without_preferences"], 1)
 
     def test_get_sortedByCountDescending(self):
-        self.client.force_login(MemberFactory.create())
+        self.client.force_login(MemberFactory.create(is_superuser=True))
 
         pl = create_pickup_location_with_delivery_day(DAY)
         bread_a = BreadFactory.create(name="Anisbrot")
@@ -957,7 +980,7 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
 
         for _ in range(3):
             m = MemberFactory.create()
-            s = SubscriptionFactory.create(member=m)
+            s = BreadSubscriptionFactory.create(member=m)
             BreadDeliveryFactory.create(
                 year=YEAR,
                 delivery_week=WEEK,
@@ -969,7 +992,7 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
             pref.breads.add(bread_r)
 
         m = MemberFactory.create()
-        s = SubscriptionFactory.create(member=m)
+        s = BreadSubscriptionFactory.create(member=m)
         BreadDeliveryFactory.create(
             year=YEAR,
             delivery_week=WEEK,
@@ -989,34 +1012,176 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
         names = [b["bread_name"] for b in response.data["breads"]]
         self.assertEqual(names, ["Roggenbrot", "Anisbrot"])
 
+    def test_get_plainMember_isRejected(self):
+        # Its only consumer is the admin dashboard; a member has no reason to
+        # read co-op wide preference statistics.
+        self.client.force_login(MemberFactory.create())
 
-class TestConfigurationParametersView(TapirIntegrationTest):
+        response = self.client.get(self.url, {"year": YEAR, "delivery_week": WEEK})
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
+    """
+    The bakery reports expose every member's name, station and preferences, so
+    a plain member must not reach them. These are the gates that make the
+    bread-delivery ownership scoping meaningful rather than bypassable by URL.
+    """
+
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         super().setUp()
-        self.url = reverse("bakery:configuration-parameters")
-
-    def test_get_returnsParameters(self):
         self.client.force_login(MemberFactory.create())
 
-        response = self.client.get(self.url)
+    def test_pickupList_plainMember_isForbidden(self):
+        response = self.client.get(
+            reverse("bakery:pickup-list"),
+            {"year": YEAR, "week": WEEK, "pickup_location_id": "whatever"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_preferenceSatisfactionMetrics_plainMember_isForbidden(self):
+        response = self.client.get(
+            reverse("bakery:metrics-preference-satisfaction"),
+            {"year": YEAR, "delivery_week": WEEK},
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_reportsPage_plainMember_isForbidden(self):
+        response = self.client.get(reverse("bakery:reports"))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_weeklyPlanPage_plainMember_isForbidden(self):
+        response = self.client.get(reverse("bakery:weekly-plan-breads"))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_ingredientsLabelsPage_plainMember_isForbidden(self):
+        response = self.client.get(reverse("bakery:ingredients-labels-breads"))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_chooseBreadsPage_ownMemberId_isAllowed(self):
+        enable_bakery()
+
+        response = self.client.get(reverse("bakery:choose-breads"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
 
-        from tapir.wirgarten.parameter_keys import ParameterKeys
+    def test_chooseBreadsPage_foreignMemberId_isForbidden(self):
+        enable_bakery()
+        victim = MemberFactory.create()
 
-        keys = [p["key"] for p in response.data]
-        self.assertIn(ParameterKeys.BAKERY_LAST_CHOOSING_DAY_BEFORE_BAKING_DAY, keys)
-        self.assertIn(ParameterKeys.BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY, keys)
-
-    def test_get_unauthenticated_returns401or403(self):
-        response = self.client.get(self.url)
-
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+        response = self.client.get(
+            reverse("bakery:choose-breads"), {"member_id": str(victim.id)}
         )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_adminPages_bakeryDisabled_areNotFound(self):
+        # The flag means the same thing on every bakery entry point: with the
+        # feature off the pages do not exist, rather than rendering an empty
+        # React shell over a switched-off feature.
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        for name in ("reports", "weekly-plan-breads", "ingredients-labels-breads"):
+            with self.subTest(page=name):
+                response = self.client.get(reverse(f"bakery:{name}"))
+                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_adminPages_bakeryDisabled_plainMemberStillGets403(self):
+        # The flag check lives in get(), after the permission check, so an
+        # unauthorised caller never learns whether the feature is enabled.
+        for name in ("reports", "weekly-plan-breads", "ingredients-labels-breads"):
+            with self.subTest(page=name):
+                response = self.client.get(reverse(f"bakery:{name}"))
+                self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_chooseBreadsPage_anonymous_isRedirectedToLogin(self):
+        # raise_exception=True turned the login redirect into a bare 403 on the
+        # one member-facing bakery page, which is linked from member_detail.
+        enable_bakery()
+        self.client.logout()
+
+        response = self.client.get(reverse("bakery:choose-breads"))
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+    def test_chooseBreadsPage_bakeryDisabled_isNotFound(self):
+        # The URLs are included unconditionally, so the view itself has to
+        # gate on the feature flag.
+        response = self.client.get(reverse("bakery:choose-breads"))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_adminPages_coopManager_isAllowed(self):
+        enable_bakery()
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        for name in ("reports", "weekly-plan-breads", "ingredients-labels-breads"):
+            with self.subTest(page=name):
+                response = self.client.get(reverse(f"bakery:{name}"))
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestSolverUnavailable(TapirIntegrationTest):
+    """
+    ortools is the "bakery" extra in pyproject.toml - it and its subtree are
+    about 210 MB and nothing outside tapir.bakery.solver imports them. An
+    installation built without the extra must get an answer it can act on from
+    the two solver endpoints, not an ImportError traceback.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+    @patch("tapir.bakery.views.is_solver_available", return_value=False)
+    def test_solverPreview_withoutOrtools_returns503(self, _mock):
+        response = self.client.post(
+            reverse("bakery:solver-preview"),
+            {"year": YEAR, "delivery_week": WEEK},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertIn("ortools", response.data["error"])
+
+    @patch("tapir.bakery.views.is_solver_available", return_value=False)
+    def test_solverApply_withoutOrtools_returns503(self, _mock):
+        response = self.client.post(
+            reverse("bakery:solver-apply"),
+            {"year": YEAR, "delivery_week": WEEK},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertIn("ortools", response.data["error"])
+
+    def test_isSolverAvailable_missingPackage_isFalse(self):
+        from tapir.bakery import solver_availability
+
+        with patch.object(solver_availability, "find_spec", return_value=None):
+            self.assertFalse(solver_availability.is_solver_available())
+
+    def test_isSolverAvailable_finderRaises_isFalse(self):
+        # A partially removed distribution can leave a finder that throws;
+        # "unavailable" is the right answer there too.
+        from tapir.bakery import solver_availability
+
+        with patch.object(
+            solver_availability, "find_spec", side_effect=ImportError("gone")
+        ):
+            self.assertFalse(solver_availability.is_solver_available())
+
+    def test_isSolverAvailable_inThisEnvironment_isTrue(self):
+        # The dev image installs --extras bakery, so this pins that the check
+        # is not simply always False.
+        from tapir.bakery.solver_availability import is_solver_available
+
+        self.assertTrue(is_solver_available())

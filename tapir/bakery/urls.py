@@ -3,7 +3,6 @@ from rest_framework.routers import DefaultRouter
 
 from tapir.bakery.views import (
     AvailableBreadsForDeliveryListView,
-    ConfigurationParametersView,
     PickupListView,
     PreferenceSatisfactionMetricsView,
     PreferredBreadStatisticsView,
@@ -96,11 +95,6 @@ urlpatterns = [
         "api/preferred-bread-statistics/",
         PreferredBreadStatisticsView.as_view(),
         name="preferred-bread-statistics",
-    ),
-    path(
-        "api/configuration-parameters/",
-        ConfigurationParametersView.as_view(),
-        name="configuration-parameters",
     ),
 ]
 

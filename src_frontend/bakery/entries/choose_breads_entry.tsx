@@ -1,14 +1,23 @@
-import { createRoot } from 'react-dom/client';
-import { ChooseBreads } from '../pages';
+import { createRoot } from "react-dom/client";
+import { ChooseBreads } from "../pages";
 
-const container = document.getElementById('choose-breads-root');
+const container = document.getElementById("choose-breads-root");
 
 if (container) {
-  const memberId = container.dataset.memberId || '';
-  const csrfToken = container.dataset.csrfToken || '';
-  const chooseStationPerBread = container.dataset.chooseStationPerBread === 'True'; 
-  const membersCanChooseBreadSorts = container.dataset.membersCanChooseBreadSorts === 'True';
+  const memberId = container.dataset.memberId || "";
+  const csrfToken = container.dataset.csrfToken || "";
+  const chooseStationPerBread =
+    container.dataset.chooseStationPerBread === "True";
+  const membersCanChooseBreadSorts =
+    container.dataset.membersCanChooseBreadSorts === "True";
 
   const root = createRoot(container);
-  root.render(<ChooseBreads chooseStationPerBread={chooseStationPerBread} membersCanChooseBreadSorts={membersCanChooseBreadSorts} memberId={memberId} csrfToken={csrfToken} />);
+  root.render(
+    <ChooseBreads
+      chooseStationPerBread={chooseStationPerBread}
+      membersCanChooseBreadSorts={membersCanChooseBreadSorts}
+      memberId={memberId}
+      csrfToken={csrfToken}
+    />,
+  );
 }

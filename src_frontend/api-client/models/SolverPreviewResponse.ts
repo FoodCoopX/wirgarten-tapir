@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { SolverDiagnostic } from './SolverDiagnostic';
+import {
+    SolverDiagnosticFromJSON,
+    SolverDiagnosticFromJSONTyped,
+    SolverDiagnosticToJSON,
+    SolverDiagnosticToJSONTyped,
+} from './SolverDiagnostic';
 import type { SolverPreviewSolutionSummary } from './SolverPreviewSolutionSummary';
 import {
     SolverPreviewSolutionSummaryFromJSON,
@@ -41,10 +48,10 @@ export interface SolverPreviewResponse {
     solutions: Array<SolverPreviewSolutionSummary>;
     /**
      * 
-     * @type {Array<{ [key: string]: any; }>}
+     * @type {Array<SolverDiagnostic>}
      * @memberof SolverPreviewResponse
      */
-    diagnostics?: Array<{ [key: string]: any; }>;
+    diagnostics?: Array<SolverDiagnostic>;
 }
 
 /**
@@ -68,7 +75,7 @@ export function SolverPreviewResponseFromJSONTyped(json: any, ignoreDiscriminato
         
         'totalSolutions': json['total_solutions'],
         'solutions': ((json['solutions'] as Array<any>).map(SolverPreviewSolutionSummaryFromJSON)),
-        'diagnostics': json['diagnostics'] == null ? undefined : json['diagnostics'],
+        'diagnostics': json['diagnostics'] == null ? undefined : ((json['diagnostics'] as Array<any>).map(SolverDiagnosticFromJSON)),
     };
 }
 
@@ -85,7 +92,7 @@ export function SolverPreviewResponseFromJSONTyped(json: any, ignoreDiscriminato
         
         'total_solutions': value['totalSolutions'],
         'solutions': ((value['solutions'] as Array<any>).map(SolverPreviewSolutionSummaryToJSON)),
-        'diagnostics': value['diagnostics'],
+        'diagnostics': value['diagnostics'] == null ? undefined : ((value['diagnostics'] as Array<any>).map(SolverDiagnosticToJSON)),
     };
 }
 

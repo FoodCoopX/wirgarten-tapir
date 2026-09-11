@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface BreadSpecificsPerDeliveryDayRequest {
     /**
      * 
-     * @type {string}
-     * @memberof BreadSpecificsPerDeliveryDayRequest
-     */
-    id?: string;
-    /**
-     * 
      * @type {number}
      * @memberof BreadSpecificsPerDeliveryDayRequest
      */
@@ -96,7 +90,6 @@ export function BreadSpecificsPerDeliveryDayRequestFromJSONTyped(json: any, igno
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'year': json['year'],
         'deliveryWeek': json['delivery_week'],
         'deliveryDay': json['delivery_day'],
@@ -119,7 +112,6 @@ export function BreadSpecificsPerDeliveryDayRequestFromJSONTyped(json: any, igno
 
     return {
         
-        'id': value['id'],
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'delivery_day': value['deliveryDay'],

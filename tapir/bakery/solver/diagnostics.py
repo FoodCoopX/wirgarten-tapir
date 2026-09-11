@@ -153,10 +153,16 @@ def diagnose_infeasibility(
         b = bread_map.get(bread_id)
         if b is None:
             continue
-        achievable = _get_achievable_quantities(b, max_sessions, stove_layers)
-        if not achievable:
-            continue
-        max_achievable = max(achievable)
+        if b.fixed_pieces is not None:
+            # A fixed_pieces bread is not baked out of stove layers, so the
+            # layer-based ceiling does not apply to it: its batch size is
+            # simply declared.
+            max_achievable = b.fixed_pieces
+        else:
+            achievable = _get_achievable_quantities(b, max_sessions, stove_layers)
+            if not achievable:
+                continue
+            max_achievable = max(achievable)
         if demand > max_achievable:
             diagnostics.append(
                 SolverDiagnostic(
@@ -391,10 +397,15 @@ def _get_achievable_quantities(
         return set()
 
     options = [0] + list(bread.pieces_per_stove_layer)
-    total_layers = max_sessions * stove_layers
+    # A bread cannot use every session in the oven: C10 caps a non-spanning
+    # bread at one session and C11 caps a spanning one at two, so enumerating
+    # max_sessions * stove_layers layers would give a ceiling far above what
+    # the model can reach and the checks built on this set would never fire.
+    sessions_for_bread = min(max_sessions, 2 if bread.can_span_sessions else 1)
+    total_layers = sessions_for_bread * stove_layers
 
     achievable = {0}
-    for _ in range(min(total_layers, 20)):
+    for _ in range(total_layers):
         new_achievable = set()
         for current in achievable:
             for opt in options:

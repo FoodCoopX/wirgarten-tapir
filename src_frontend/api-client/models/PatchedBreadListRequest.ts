@@ -24,12 +24,6 @@ export interface PatchedBreadListRequest {
      * @type {string}
      * @memberof PatchedBreadListRequest
      */
-    id?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PatchedBreadListRequest
-     */
     name?: string;
     /**
      * Image from media library with link
@@ -110,7 +104,6 @@ export function PatchedBreadListRequestFromJSONTyped(json: any, ignoreDiscrimina
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'name': json['name'] == null ? undefined : json['name'],
         'picture': json['picture'] == null ? undefined : json['picture'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -136,7 +129,6 @@ export function PatchedBreadListRequestFromJSONTyped(json: any, ignoreDiscrimina
 
     return {
         
-        'id': value['id'],
         'name': value['name'],
         'picture': value['picture'],
         'description': value['description'],

@@ -72,16 +72,6 @@ class ParameterDefinitionsBakery:
         )
 
         importer.parameter_definition(
-            key=ParameterKeys.BAKERY_DAYS_BEFORE_DELIVERY_DAY_TO_CHANGE_PSEUDONYM,
-            label="Tage vor Liefertag, um Pseudonym zu ändern",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=1,
-            description="Gibt an, wie viele Tage vor dem Liefertag ein Pseudonym geändert werden kann.",
-            category=ParameterCategory.BAKERY,
-            meta=ParameterMeta(sort_order=8, show_only_when=bakery_enabled),
-        )
-
-        importer.parameter_definition(
             key=ParameterKeys.BAKERY_MEMBERS_CAN_REDUCES_BREAD_SHARES,
             label="Mitglieder können Brotanteile reduzieren",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -109,14 +99,4 @@ class ParameterDefinitionsBakery:
             description="Gibt an, ob Mitglieder Abholstationen pro Brotanteil wählen können.",
             category=ParameterCategory.BAKERY,
             meta=ParameterMeta(sort_order=5, show_only_when=bakery_enabled),
-        )
-
-        importer.parameter_definition(
-            key=ParameterKeys.BAKERY_PICKUP_LOCATIONS_CAN_BE_ORDERED_BY_DAYS_IN_BESTELL_WIZARD,
-            label="Abholstationen können im BestellWizard nach Tagen sortiert werden",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=True,
-            description="Abholstationen im BestellWizard nach Tagen sortieren.",
-            category=ParameterCategory.BAKERY,
-            meta=ParameterMeta(sort_order=4, show_only_when=bakery_enabled),
         )

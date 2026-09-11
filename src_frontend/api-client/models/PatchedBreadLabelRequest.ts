@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface PatchedBreadLabelRequest {
     /**
      * 
-     * @type {string}
-     * @memberof PatchedBreadLabelRequest
-     */
-    id?: string;
-    /**
-     * 
      * @type {boolean}
      * @memberof PatchedBreadLabelRequest
      */
@@ -56,7 +50,6 @@ export function PatchedBreadLabelRequestFromJSONTyped(json: any, ignoreDiscrimin
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
         'isActive': json['is_active'] == null ? undefined : json['is_active'],
         'name': json['name'] == null ? undefined : json['name'],
     };
@@ -73,7 +66,6 @@ export function PatchedBreadLabelRequestFromJSONTyped(json: any, ignoreDiscrimin
 
     return {
         
-        'id': value['id'],
         'is_active': value['isActive'],
         'name': value['name'],
     };

@@ -70,6 +70,12 @@ export interface ProductType {
      */
     isAffectedByJokers?: boolean;
     /**
+     * 
+     * @type {boolean}
+     * @memberof ProductType
+     */
+    isBread?: boolean;
+    /**
      * Bestimmte Produkte wie Vereinsmitgliedschaften laufen permanent bis sie gekündigt werden und haben nicht zwangsläufig ein End-Datum. Solche Produkte sind nicht mit Vertragsperiode verbunden.
      * @type {boolean}
      * @memberof ProductType
@@ -158,6 +164,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'iconLink': json['icon_link'] == null ? undefined : json['icon_link'],
         'singleSubscriptionOnly': json['single_subscription_only'] == null ? undefined : json['single_subscription_only'],
         'isAffectedByJokers': json['is_affected_by_jokers'] == null ? undefined : json['is_affected_by_jokers'],
+        'isBread': json['is_bread'] == null ? undefined : json['is_bread'],
         'subscriptionsHaveEndDates': json['subscriptions_have_end_dates'] == null ? undefined : json['subscriptions_have_end_dates'],
         'mustBeSubscribedTo': json['must_be_subscribed_to'] == null ? undefined : json['must_be_subscribed_to'],
         'isAssociationMembership': json['is_association_membership'] == null ? undefined : json['is_association_membership'],
@@ -189,6 +196,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'icon_link': value['iconLink'],
         'single_subscription_only': value['singleSubscriptionOnly'],
         'is_affected_by_jokers': value['isAffectedByJokers'],
+        'is_bread': value['isBread'],
         'subscriptions_have_end_dates': value['subscriptionsHaveEndDates'],
         'must_be_subscribed_to': value['mustBeSubscribedTo'],
         'is_association_membership': value['isAssociationMembership'],

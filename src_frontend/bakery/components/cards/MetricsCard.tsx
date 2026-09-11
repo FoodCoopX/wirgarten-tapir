@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { BakeryApi } from '../../../api-client';
-import type { PreferenceSatisfactionResponse } from '../../../api-client/models';
-import { useApi } from '../../../hooks/useApi';
-import '../../styles/bakery_styles.css';
+import React, { useEffect, useRef, useState } from "react";
+import { BakeryApi } from "../../../api-client";
+import type { PreferenceSatisfactionResponse } from "../../../api-client/models";
+import { useApi } from "../../../hooks/useApi";
+import "../../styles/bakery_styles.css";
 
 interface MetricsCardProps {
   year: number;
@@ -11,40 +11,57 @@ interface MetricsCardProps {
   csrfToken: string;
 }
 
-export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDay, csrfToken }) => {
+export const MetricsCard: React.FC<MetricsCardProps> = ({
+  year,
+  week,
+  deliveryDay,
+  csrfToken,
+}) => {
   const [data, setData] = useState<PreferenceSatisfactionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedLocations, setExpandedLocations] = useState<Set<string>>(new Set());
+  const [expandedLocations, setExpandedLocations] = useState<Set<string>>(
+    new Set(),
+  );
   const bakeryApi = useApi(BakeryApi, csrfToken);
 
+  // Same guard as on the Reports page: a response for a week the user has
+  // already left must not repaint the card.
+  const selectionRef = useRef(`${year}/${week}/${deliveryDay}`);
+
   useEffect(() => {
+    selectionRef.current = `${year}/${week}/${deliveryDay}`;
     loadMetrics();
   }, [year, week, deliveryDay]);
 
   const loadMetrics = () => {
+    const requestedFor = `${year}/${week}/${deliveryDay}`;
     setLoading(true);
     setError(null);
-    
-    bakeryApi.bakeryMetricsSatisfactionRetrieve({
-      year,
-      deliveryWeek: week,
-      deliveryDay,
-    })
+
+    bakeryApi
+      .bakeryMetricsSatisfactionRetrieve({
+        year,
+        deliveryWeek: week,
+        deliveryDay,
+      })
       .then((response) => {
+        if (selectionRef.current !== requestedFor) return;
         setData(response);
       })
       .catch((err) => {
-        console.error('Failed to load metrics:', err);
-        setError('Fehler beim Laden der Metriken');
+        if (selectionRef.current !== requestedFor) return;
+        console.error("Failed to load metrics:", err);
+        setError("Fehler beim Laden der Metriken");
       })
       .finally(() => {
+        if (selectionRef.current !== requestedFor) return;
         setLoading(false);
       });
   };
 
   const toggleLocation = (locationId: string) => {
-    setExpandedLocations(prev => {
+    setExpandedLocations((prev) => {
       const next = new Set(prev);
       if (next.has(locationId)) {
         next.delete(locationId);
@@ -58,7 +75,10 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
   if (loading) {
     return (
       <div className="text-center py-3">
-        <div className="spinner-border spinner-border-sm text-primary" role="status">
+        <div
+          className="spinner-border spinner-border-sm text-primary"
+          role="status"
+        >
           <span className="visually-hidden">Lädt...</span>
         </div>
       </div>
@@ -69,10 +89,13 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
     return (
       <div className="alert alert-warning py-2 mb-0" role="alert">
         <small>
-          <span className="material-icons" style={{ fontSize: '16px', verticalAlign: 'middle' }}>
+          <span
+            className="material-icons"
+            style={{ fontSize: "16px", verticalAlign: "middle" }}
+          >
             warning
-          </span>
-          {' '}{error}
+          </span>{" "}
+          {error}
         </small>
       </div>
     );
@@ -82,10 +105,13 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
     return (
       <div className="alert alert-info py-2 mb-0" role="alert">
         <small>
-          <span className="material-icons" style={{ fontSize: '16px', verticalAlign: 'middle' }}>
+          <span
+            className="material-icons"
+            style={{ fontSize: "16px", verticalAlign: "middle" }}
+          >
             info
-          </span>
-          {' '}Keine Metriken verfügbar. Bitte erst Backplan erstellen.
+          </span>{" "}
+          Keine Metriken verfügbar. Bitte erst Backplan erstellen.
         </small>
       </div>
     );
@@ -95,49 +121,51 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
     <div className="d-flex flex-column gap-2">
       {data.locations.map((metric) => {
         const isExpanded = expandedLocations.has(metric.pickupLocationId);
-        const noMatchPercentage = metric.totalDeliveries > 0
-          ? ((metric.noMatch / metric.totalDeliveries) * 100).toFixed(0)
-          : '0';
+        const noMatchPercentage =
+          metric.totalDeliveries > 0
+            ? ((metric.noMatch / metric.totalDeliveries) * 100).toFixed(0)
+            : "0";
 
         return (
           <div key={metric.pickupLocationId} className="card">
-            <div 
+            <div
               className="card-header py-2 metrics-card-header"
               onClick={() => toggleLocation(metric.pickupLocationId)}
             >
               <div className="d-flex justify-content-between align-items-center">
                 <small className="fw-bold">{metric.pickupLocationName}</small>
                 <div className="d-flex align-items-center gap-2">
-                  <span style={{ fontSize: '0.8rem' }}>
+                  <span style={{ fontSize: "0.8rem" }}>
                     {metric.satisfied}/{metric.totalDeliveries} zufrieden
                   </span>
-                  <span className="material-icons" style={{ fontSize: '18px' }}>
-                    {isExpanded ? 'expand_less' : 'expand_more'}
+                  <span className="material-icons" style={{ fontSize: "18px" }}>
+                    {isExpanded ? "expand_less" : "expand_more"}
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div className="card-body p-2">
               {/* Progress Bar */}
-              <div className="progress mb-2" style={{ height: '20px' }}>
-                <div 
-                  className="progress-bar progress-bar-bakery-success" 
-                  style={{ 
+              <div className="progress mb-2" style={{ height: "20px" }}>
+                <div
+                  className="progress-bar progress-bar-bakery-success"
+                  style={{
                     width: `${metric.satisfiedPercentage}%`,
-                    fontSize: '0.7rem',
-                    fontWeight: 'bold',
+                    fontSize: "0.7rem",
+                    fontWeight: "bold",
                   }}
                   title={`${metric.satisfied} zufrieden (${metric.satisfiedPercentage}%)`}
                 >
-                  {metric.satisfiedPercentage > 15 && `${metric.satisfiedPercentage}%`}
+                  {metric.satisfiedPercentage > 15 &&
+                    `${metric.satisfiedPercentage}%`}
                 </div>
-                <div 
-                  className="progress-bar bg-danger" 
-                  style={{ 
+                <div
+                  className="progress-bar bg-danger"
+                  style={{
                     width: `${100 - metric.satisfiedPercentage}%`,
-                    fontSize: '0.7rem',
-                    fontWeight: 'bold',
+                    fontSize: "0.7rem",
+                    fontWeight: "bold",
                   }}
                   title={`${metric.noMatch} kein Match (${noMatchPercentage}%)`}
                 >
@@ -146,78 +174,99 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({ year, week, deliveryDa
               </div>
 
               {/* Breakdown Numbers */}
-              <div className="d-flex justify-content-between" style={{ fontSize: '0.8rem' }}>
+              <div
+                className="d-flex justify-content-between"
+                style={{ fontSize: "0.8rem" }}
+              >
                 <div className="text-muted">
-                  <span className="material-icons text-bakery-success" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
+                  <span
+                    className="material-icons text-bakery-success"
+                    style={{ fontSize: "14px", verticalAlign: "middle" }}
+                  >
                     check_circle
-                  </span>
-                  {' '}<strong>{metric.directlyChosen}</strong> direkt gewählt
+                  </span>{" "}
+                  <strong>{metric.directlyChosen}</strong> direkt gewählt
                 </div>
                 <div className="text-muted">
-                  <span className="material-icons text-bakery-success" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
+                  <span
+                    className="material-icons text-bakery-success"
+                    style={{ fontSize: "14px", verticalAlign: "middle" }}
+                  >
                     favorite
-                  </span>
-                  {' '}<strong>{metric.gotFavorite}</strong> Favorit möglich
+                  </span>{" "}
+                  <strong>{metric.gotFavorite}</strong> Favorit möglich
                 </div>
                 <div className="text-muted">
-                  <span className="material-icons text-bakery-muted" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
+                  <span
+                    className="material-icons text-bakery-muted"
+                    style={{ fontSize: "14px", verticalAlign: "middle" }}
+                  >
                     sentiment_satisfied
-                  </span>
-                  {' '}<strong>{metric.noFavorites}</strong> ohne Präf.
+                  </span>{" "}
+                  <strong>{metric.noFavorites}</strong> ohne Präf.
                 </div>
               </div>
 
               {metric.noMatch > 0 && (
-                <div className="mt-1 text-center" style={{ fontSize: '0.8rem' }}>
+                <div
+                  className="mt-1 text-center"
+                  style={{ fontSize: "0.8rem" }}
+                >
                   <span className="text-danger">
-                    <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
+                    <span
+                      className="material-icons"
+                      style={{ fontSize: "14px", verticalAlign: "middle" }}
+                    >
                       warning
-                    </span>
-                    {' '}<strong>{metric.noMatch}</strong> Lieferungen ohne passendes Favoritenbrot
+                    </span>{" "}
+                    <strong>{metric.noMatch}</strong> Lieferungen ohne passendes
+                    Favoritenbrot
                   </span>
                 </div>
               )}
 
               {/* Bread Breakdown (Collapsible) */}
-              {isExpanded && metric.breadBreakdown && metric.breadBreakdown.length > 0 && (
-                <div className="mt-2 pt-2 border-top">
-                  <div className="d-flex flex-column gap-1">
-                    {metric.breadBreakdown.map((bread) => (
-                      <div 
-                        key={bread.breadId} 
-                        className="metrics-breakdown-item d-flex justify-content-between align-items-center py-1 px-2"
-                      >
-                        <span 
-                          className="text-truncate fw-medium" 
-                          style={{ maxWidth: '160px' }}
-                          title={bread.breadName}
+              {isExpanded &&
+                metric.breadBreakdown &&
+                metric.breadBreakdown.length > 0 && (
+                  <div className="mt-2 pt-2 border-top">
+                    <div className="d-flex flex-column gap-1">
+                      {metric.breadBreakdown.map((bread) => (
+                        <div
+                          key={bread.breadId}
+                          className="metrics-breakdown-item d-flex justify-content-between align-items-center py-1 px-2"
                         >
-                          {bread.breadName}
-                        </span>
-                        
-                        <div className="d-flex gap-1 align-items-center">
-                          <span 
-                            className="badge bg-secondary"
-                            title="Gesamt verteilt"
-                            style={{ minWidth: '32px' }}
+                          <span
+                            className="text-truncate fw-medium"
+                            style={{ maxWidth: "160px" }}
+                            title={bread.breadName}
                           >
-                            {bread.count}
+                            {bread.breadName}
                           </span>
-                          {bread.directlyChosen > 0 && (
-                            <span 
-                              className="badge badge-bakery-brown"
-                              style={{ minWidth: '32px' }}
-                              title="Direkt gewählt"
+
+                          <div className="d-flex gap-1 align-items-center">
+                            <span
+                              className="badge bg-secondary"
+                              title="Gesamt verteilt"
+                              style={{ minWidth: "32px" }}
                             >
-                              ✓{bread.directlyChosen}
+                              {bread.count}
                             </span>
-                          )}
+                            {bread.directlyChosen > 0 && (
+                              <span
+                                className="badge badge-bakery-brown"
+                                style={{ minWidth: "32px" }}
+                                title="Direkt gewählt"
+                              >
+                                ✓{bread.directlyChosen}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         );

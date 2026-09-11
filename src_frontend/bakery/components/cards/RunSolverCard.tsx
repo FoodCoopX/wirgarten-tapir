@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
-import { Lightning, CheckCircleFill, ExclamationTriangleFill, InfoCircleFill, XCircleFill } from 'react-bootstrap-icons';
-import { BakeryApi } from '../../../api-client';
-import { useApi } from '../../../hooks/useApi';
+import React, { useState } from "react";
+import {
+  Lightning,
+  CheckCircleFill,
+  ExclamationTriangleFill,
+  InfoCircleFill,
+  XCircleFill,
+} from "react-bootstrap-icons";
+import { BakeryApi, ResponseError } from "../../../api-client";
+import { useApi } from "../../../hooks/useApi";
 import type {
   SolverPreviewResponse,
   SolverPreviewDetailResponse,
-} from '../../../api-client/models';
+} from "../../../api-client/models";
 
 interface SolverDiagnostic {
-  level: 'info' | 'warning' | 'error';
+  level: "info" | "warning" | "error";
   category: string;
   breadName?: string | null;
   locationName?: string | null;
@@ -27,38 +33,43 @@ interface RunSolverCardProps {
 
 const DiagnosticIcon: React.FC<{ level: string }> = ({ level }) => {
   switch (level) {
-    case 'error':
+    case "error":
       return <XCircleFill className="text-danger me-1" />;
-    case 'warning':
+    case "warning":
       return <ExclamationTriangleFill className="text-warning me-1" />;
     default:
       return <InfoCircleFill className="text-info me-1" />;
   }
 };
 
-const DiagnosticsList: React.FC<{ diagnostics: SolverDiagnostic[] }> = ({ diagnostics }) => {
+const DiagnosticsList: React.FC<{ diagnostics: SolverDiagnostic[] }> = ({
+  diagnostics,
+}) => {
   if (!diagnostics || diagnostics.length === 0) return null;
 
-  const errors = diagnostics.filter(d => d.level === 'error');
-  const warnings = diagnostics.filter(d => d.level === 'warning');
-  const infos = diagnostics.filter(d => d.level === 'info');
+  const errors = diagnostics.filter((d) => d.level === "error");
+  const warnings = diagnostics.filter((d) => d.level === "warning");
+  const infos = diagnostics.filter((d) => d.level === "info");
   const sorted = [...errors, ...warnings, ...infos];
 
   return (
     <div className="mt-2">
       <small className="text-white-50 d-block mb-1">Hinweise vom Solver:</small>
-      <div className="list-group list-group-flush" style={{ fontSize: '0.8rem' }}>
+      <div
+        className="list-group list-group-flush"
+        style={{ fontSize: "0.8rem" }}
+      >
         {sorted.map((d, i) => (
           <div
             key={i}
             className={`list-group-item py-1 px-2 border-0 ${
-              d.level === 'error'
-                ? 'bg-danger bg-opacity-10 text-danger'
-                : d.level === 'warning'
-                  ? 'bg-warning bg-opacity-10 text-dark'
-                  : 'bg-info bg-opacity-10 text-dark'
+              d.level === "error"
+                ? "bg-danger bg-opacity-10 text-danger"
+                : d.level === "warning"
+                  ? "bg-warning bg-opacity-10 text-dark"
+                  : "bg-info bg-opacity-10 text-dark"
             }`}
-            style={{ borderRadius: '4px', marginBottom: '2px' }}
+            style={{ borderRadius: "4px", marginBottom: "2px" }}
           >
             <DiagnosticIcon level={d.level} />
             <span>{d.message}</span>
@@ -85,9 +96,33 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<SolverDiagnostic[]>([]);
 
-  const [previewResponse, setPreviewResponse] = useState<SolverPreviewResponse | null>(null);
+  const [previewResponse, setPreviewResponse] =
+    useState<SolverPreviewResponse | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
-  const [detail, setDetail] = useState<SolverPreviewDetailResponse | null>(null);
+  const [detail, setDetail] = useState<SolverPreviewDetailResponse | null>(
+    null,
+  );
+
+  // Every solver call fails the same way: the API answers 400 or 503 with
+  // {error, diagnostics}, and anything else is a transport or client fault
+  // with no diagnostics to show.
+  const showSolverError = (error: unknown, fallback: string) => {
+    if (!(error instanceof ResponseError)) {
+      setError(error instanceof Error ? error.message : fallback);
+      setDiagnostics([]);
+      return;
+    }
+    error.response
+      .json()
+      .then((body: { error?: string; diagnostics?: SolverDiagnostic[] }) => {
+        setError(body?.error || fallback);
+        setDiagnostics(body?.diagnostics ?? []);
+      })
+      .catch(() => {
+        setError(fallback);
+        setDiagnostics([]);
+      });
+  };
 
   const handleRunPreview = () => {
     setRunning(true);
@@ -97,47 +132,25 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
     setDetail(null);
     setSelectedIndex(0);
 
-    bakeryApi.bakeryApiBakerySolverPreviewCreate({
-      solverPreviewRequestRequest: {
-        year,
-        deliveryWeek,
-        deliveryDay,
-        maxSolutions: 10,
-      },
-    })
+    bakeryApi
+      .bakeryApiBakerySolverPreviewCreate({
+        solverPreviewRequestRequest: {
+          year,
+          deliveryWeek,
+          deliveryDay,
+          maxSolutions: 10,
+        },
+      })
       .then((response) => {
         setPreviewResponse(response);
-        setDiagnostics((response as any).diagnostics || []);
+        setDiagnostics(response.diagnostics ?? []);
 
         // Auto-load detail for first solution
         if (response.totalSolutions > 0) {
           loadDetail(0);
         }
       })
-      .catch((err: any) => {
-        let message = 'Solver fehlgeschlagen';
-        let diags: SolverDiagnostic[] = [];
-
-        // The openapi-generator client wraps the response — try multiple paths
-        if (err?.response) {
-          err.response.json()
-            .then((body: any) => {
-              if (body) {
-                setError(body.error || message);
-                setDiagnostics(body.diagnostics || []);
-              }
-            })
-            .catch(() => {
-              setError(err?.body?.error || err?.message || message);
-              setDiagnostics(err?.body?.diagnostics || []);
-            });
-        } else {
-          message = err?.body?.error || err?.message || message;
-          diags = err?.body?.diagnostics || [];
-          setError(message);
-          setDiagnostics(diags);
-        }
-      })
+      .catch((error) => showSolverError(error, "Solver fehlgeschlagen"))
       .finally(() => {
         setRunning(false);
       });
@@ -145,39 +158,38 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
 
   const loadDetail = (index: number) => {
     setSelectedIndex(index);
-    bakeryApi.bakeryApiBakerySolverPreviewDetailRetrieve({
-      year,
-      deliveryWeek,
-      deliveryDay,
-      solutionIndex: index,
-    })
+    bakeryApi
+      .bakeryApiBakerySolverPreviewDetailRetrieve({
+        year,
+        deliveryWeek,
+        deliveryDay,
+        solutionIndex: index,
+      })
       .then((detailResponse) => {
         setDetail(detailResponse);
         onPreviewDetail?.(detailResponse);
       })
-      .catch((err: any) => {
-        setError(`Fehler beim Laden von L\u00f6sung ${index + 1}`);
-      });
+      .catch((error) =>
+        showSolverError(error, `Fehler beim Laden von Lösung ${index + 1}`),
+      );
   };
 
   const handleApply = () => {
     setApplying(true);
     setError(null);
-    bakeryApi.bakeryApiBakerySolverApplyCreate({
-      solverApplyRequestRequest: {
-        year,
-        deliveryWeek,
-        deliveryDay,
-        solutionIndex: selectedIndex,
-      },
-    })
+    bakeryApi
+      .bakeryApiBakerySolverApplyCreate({
+        solverApplyRequestRequest: {
+          year,
+          deliveryWeek,
+          deliveryDay,
+          solutionIndex: selectedIndex,
+        },
+      })
       .then(() => {
         onApplied?.();
       })
-      .catch((err: any) => {
-        const message = err?.body?.error || err?.message || 'Anwenden fehlgeschlagen';
-        setError(message);
-      })
+      .catch((error) => showSolverError(error, "Anwenden fehlgeschlagen"))
       .finally(() => {
         setApplying(false);
       });
@@ -197,10 +209,10 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
           <Lightning className="me-1" />
         )}
         {running
-          ? 'Berechne Lösungen...'
+          ? "Berechne Lösungen..."
           : hasSavedPlan
-            ? 'Backplan erneut berechnen'
-            : 'Backplan berechnen (Vorschau)'}
+            ? "Backplan erneut berechnen"
+            : "Backplan berechnen (Vorschau)"}
       </button>
 
       {/* Solution selector */}
@@ -208,13 +220,18 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
         <div className="mt-2">
           <div className="d-flex align-items-center gap-1 flex-wrap">
             <small className="text-white me-1">
-              {previewResponse.totalSolutions} Lösung{previewResponse.totalSolutions > 1 ? 'en' : ''}:
+              {previewResponse.totalSolutions} Lösung
+              {previewResponse.totalSolutions > 1 ? "en" : ""}:
             </small>
             {previewResponse.solutions.map((sol, i) => (
               <button
                 key={i}
-                className={`btn btn-sm ${i === selectedIndex ? 'btn-light' : 'btn-outline-light'}`}
-                style={{ minWidth: '32px', padding: '2px 6px', fontSize: '0.75rem' }}
+                className={`btn btn-sm ${i === selectedIndex ? "btn-light" : "btn-outline-light"}`}
+                style={{
+                  minWidth: "32px",
+                  padding: "2px 6px",
+                  fontSize: "0.75rem",
+                }}
                 onClick={() => loadDetail(i)}
                 disabled={running}
                 title={`Lösung ${i + 1}: ${sol.totalBaked} Brote, ${sol.sessionsUsed} Ofengänge`}
@@ -241,12 +258,17 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
       )}
 
       {previewResponse && previewResponse.totalSolutions === 0 && (
-        <small className="text-warning d-block mt-1">Keine Lösung gefunden.</small>
+        <small className="text-warning d-block mt-1">
+          Keine Lösung gefunden.
+        </small>
       )}
 
       {/* Error message */}
       {error && (
-        <div className="alert alert-danger py-1 px-2 mt-2 mb-0" style={{ fontSize: '0.8rem' }}>
+        <div
+          className="alert alert-danger py-1 px-2 mt-2 mb-0"
+          style={{ fontSize: "0.8rem" }}
+        >
           <XCircleFill className="me-1" />
           {error}
         </div>

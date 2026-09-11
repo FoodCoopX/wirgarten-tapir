@@ -20,7 +20,7 @@ import { mapValues } from '../runtime';
  */
 export interface PreferredBreadsBulkUpdateRequest {
     /**
-     * List of Bread IDs to set as preferred for the member.
+     * List of Bread IDs to set as preferred for the member, at most 3.
      * @type {Array<string>}
      * @memberof PreferredBreadsBulkUpdateRequest
      */

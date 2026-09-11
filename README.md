@@ -36,6 +36,21 @@ You can log in as admin with username `roberto.cortes@example.com` and password 
 
 You can log in as any user using the same pattern: `[name]@example.come` as username and `[name]` as password 
 
+### Bäckerei (bakery)
+
+The bakery is off by default. To try it out:
+```sh
+# Test data including breads, capacities and a bread share
+docker compose exec web poetry run python manage.py populate --reset_all --bakery
+```
+Then switch on `wirgarten.bakery.enabled` under Konfiguration. A bread share
+also needs a `ProductType` with `is_bread=True`; `populate --bakery` creates one.
+
+The baking-plan solver needs `ortools`, which is the optional `bakery` extra in
+`pyproject.toml` — about 210 MB with its numpy/pandas subtree. The Docker image
+installs it (`poetry install --extras bakery`). Build without the flag and
+everything still works except the two solver endpoints, which answer 503.
+
 ## Tests
 Tests are run with `pytest`:
 ```shell
@@ -53,7 +68,7 @@ Django template files are formatted with [djLint](https://djlint.com/)
 API Requests made from the React frontend use API clients. Here are the steps to get updated API clients:
 - Annotate your API view with [Spectacular](https://github.com/tfranzel/drf-spectacular) (search for `@extend_schema(` for examples)
 - Generate the API schema file with `python ./manage.py spectacular --file schema.yml`
-- Generate the TypeScript API clients using [OpenAPI Generator](https://openapi-generator.tech/) with `npx openapi-generator-cli generate -i schema.yml -g typescript-fetch -o ./src_frontend/api-client`
+- Generate the TypeScript API clients with `./scripts/generate_api_clients.sh`. That script runs [OpenAPI Generator](https://openapi-generator.tech/) and then `scripts/patch_api_client_unions.mjs`, which adds a `ToJSONTyped` export the generator emits imports for but never writes on union models. Running the generator on its own leaves a client that does not compile.
 
 There are help scripts in the `/scripts` folder. You can do a full update with the following command:
 ```bash

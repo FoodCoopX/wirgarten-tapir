@@ -1,9 +1,7 @@
 import datetime
 
 from tapir.accounts.models import TapirUser
-from tapir.bakery.services.breaddelivery_service import (
-    ensure_bread_deliveries_for_member,
-)
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
@@ -121,11 +119,13 @@ class ApplyTapirOrderManager:
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
 
-        # Ensure bread deliveries are created/updated for this member
-        if get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=cache):
-            ensure_bread_deliveries_for_member(member)
-
         TapirCacheManager.clear_category(cache=cache, category="subscriptions")
+
+        # bulk_create above does not fire post_save, so the bakery receiver
+        # never sees these subscriptions. Every path that bulk-creates
+        # subscriptions has to say so itself.
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
+
         if len(new_subscriptions) > 0:
             OnboardingTrigger.on_subscription_updated(new_subscriptions[0])
 

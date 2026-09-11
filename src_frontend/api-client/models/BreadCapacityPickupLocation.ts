@@ -24,7 +24,7 @@ export interface BreadCapacityPickupLocation {
      * @type {string}
      * @memberof BreadCapacityPickupLocation
      */
-    id?: string;
+    readonly id: string;
     /**
      * 
      * @type {string}
@@ -36,7 +36,7 @@ export interface BreadCapacityPickupLocation {
      * @type {number}
      * @memberof BreadCapacityPickupLocation
      */
-    readonly deliveryDay: number;
+    readonly deliveryDay: number | null;
     /**
      * 
      * @type {string}
@@ -79,6 +79,7 @@ export interface BreadCapacityPickupLocation {
  * Check if a given object implements the BreadCapacityPickupLocation interface.
  */
 export function instanceOfBreadCapacityPickupLocation(value: object): value is BreadCapacityPickupLocation {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('pickupLocationName' in value) || value['pickupLocationName'] === undefined) return false;
     if (!('deliveryDay' in value) || value['deliveryDay'] === undefined) return false;
     if (!('breadName' in value) || value['breadName'] === undefined) return false;
@@ -100,7 +101,7 @@ export function BreadCapacityPickupLocationFromJSONTyped(json: any, ignoreDiscri
     }
     return {
         
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'pickupLocationName': json['pickup_location_name'],
         'deliveryDay': json['delivery_day'],
         'breadName': json['bread_name'],
@@ -116,14 +117,13 @@ export function BreadCapacityPickupLocationFromJSONTyped(json: any, ignoreDiscri
       return BreadCapacityPickupLocationToJSONTyped(json, false);
   }
 
-  export function BreadCapacityPickupLocationToJSONTyped(value?: Omit<BreadCapacityPickupLocation, 'pickup_location_name'|'delivery_day'|'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
+  export function BreadCapacityPickupLocationToJSONTyped(value?: Omit<BreadCapacityPickupLocation, 'id'|'pickup_location_name'|'delivery_day'|'bread_name'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'id': value['id'],
         'year': value['year'],
         'delivery_week': value['deliveryWeek'],
         'capacity': value['capacity'],
