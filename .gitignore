@@ -128,3 +128,6 @@ docker-compose.override.yml
 
 # TypeScript incremental build state
 tsconfig.app.tsbuildinfo
+
+# The project uses pnpm; an npm lockfile here would drift from pnpm-lock.yaml
+package-lock.json
