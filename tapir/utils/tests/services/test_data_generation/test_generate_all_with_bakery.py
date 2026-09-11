@@ -31,7 +31,7 @@ class TestGenerateAllWithBakery(TapirIntegrationTest):
         set_bypass_keycloak()
 
     def test_generateAll_withBakery_producesACoherentWeek(self, _count):
-        DataGenerator.generate_all(Organization.BIOTOP, generate_bakery_data=True)
+        DataGenerator.generate_all(Organization.BAKERY)
 
         self.assertTrue(Bread.objects.exists())
         self.assertTrue(BreadDelivery.objects.exists())
@@ -78,8 +78,8 @@ class TestGenerateAllWithBakery(TapirIntegrationTest):
     def test_generateAll_twiceWithBakery_doesNotCollide(self, _count):
         # Bread.name is unique, so this only works because clear() removes the
         # bakery masterdata too.
-        DataGenerator.generate_all(Organization.BIOTOP, generate_bakery_data=True)
+        DataGenerator.generate_all(Organization.BAKERY)
         DataGenerator.clear()
-        DataGenerator.generate_all(Organization.BIOTOP, generate_bakery_data=True)
+        DataGenerator.generate_all(Organization.BAKERY)
 
         self.assertTrue(Bread.objects.exists())

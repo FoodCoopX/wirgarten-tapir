@@ -59,13 +59,15 @@ the GitHub issues as our todo-list. Hopefully the labels will be enough to let y
 
 ### Bäckerei (bakery)
 
-The bakery is off by default. To try it out:
+The bakery is off by default. To get a local instance with it switched on and
+filled with realistic data:
 ```sh
-# Test data including breads, capacities and a bread share
-docker compose exec web poetry run python manage.py populate --reset_all --bakery
+docker compose exec web poetry run python manage.py populate --reset_all --org=bakery
 ```
-Then switch on `wirgarten.bakery.enabled` under Konfiguration. A bread share
-also needs a `ProductType` with `is_bread=True`; `populate --bakery` creates one.
+That is the BIOTOP setup plus the bakery: the parameters switched on, a
+`Brotanteil` product type with `is_bread=True`, breads, labels, ingredients,
+capacities for the coming weeks, some chosen breads and some members with
+favourites set. No further configuration needed.
 
 The baking-plan solver needs `ortools`, which is the optional `bakery` extra in
 `pyproject.toml` — about 210 MB with its numpy/pandas subtree. The Docker image

@@ -24,12 +24,6 @@ class Command(BaseCommand):
             help="Runs --clear then populate most models",
             action="store_true",
         )
-        parser.add_argument(
-            "--bakery",
-            help="Also generate bakery data. Layers on top of the chosen organization.",
-            action="store_true",
-        )
-
         # The positional form is what the READMEs use: `populate --reset_all`
         # with no organization, and `populate --reset_all BIOTOP`.
         parser.add_argument(
@@ -46,10 +40,7 @@ class Command(BaseCommand):
             DataGenerator.clear()
         elif options["reset_all"]:
             DataGenerator.clear()
-            DataGenerator.generate_all(
-                self.resolve_organization(options),
-                generate_bakery_data=options["bakery"],
-            )
+            DataGenerator.generate_all(self.resolve_organization(options))
         else:
             self.print_help("manage.py", "populate")
             sys.exit(1)

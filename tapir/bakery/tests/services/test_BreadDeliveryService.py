@@ -6,6 +6,9 @@ from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
 from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
+)
 from tapir.bakery.tests.factories import (
     enable_bakery,
     BreadCapacityPickupLocationFactory,
@@ -853,8 +856,14 @@ class TestEnsureBreadDeliveries(TapirIntegrationTest):
         return bread
 
     def _move_member(self, member, pickup_location, valid_from):
-        MemberPickupLocationFactory.create(
-            member=member, pickup_location=pickup_location, valid_from=valid_from
+        # Through the setter, which is where production changes a station and
+        # where the bread cleanup is triggered from.
+        MemberPickupLocationSetter.link_member_to_pickup_location(
+            pickup_location_id=pickup_location.id,
+            member=member,
+            valid_from=valid_from,
+            actor=member,
+            cache={},
         )
 
     def test_movedStation_breadNotBakedThere_isCleared(self, mock_dt, mock_kc):

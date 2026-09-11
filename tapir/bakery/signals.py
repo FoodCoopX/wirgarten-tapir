@@ -7,6 +7,9 @@ models module does not have to import the services it triggers.
 These only cover writes that go through Model.save(). Subscriptions written
 with bulk_create do not reach a receiver, and those call sites have to invoke
 BreadDeliveryService themselves.
+
+Pickup location changes are not here: MemberPickupLocationSetter is the one
+place a member's station changes, so it calls the bread cleanup directly.
 """
 
 from django.db.models.signals import post_save
@@ -22,12 +25,6 @@ def on_subscription_saved(sender, instance, created, **kwargs):
     if not instance.start_date or not instance.end_date:
         return
     BreadDeliveryService.ensure_bread_deliveries_for_member(instance.member)
-
-
-@receiver(post_save, sender="wirgarten.MemberPickupLocation")
-def on_member_pickup_location_saved(sender, instance, created, **kwargs):
-    # A bread chosen at the previous station may not be baked at the new one.
-    BreadDeliveryService.clear_breads_unavailable_at_pickup_location(instance.member)
 
 
 @receiver(post_save, sender="wirgarten.GrowingPeriod")

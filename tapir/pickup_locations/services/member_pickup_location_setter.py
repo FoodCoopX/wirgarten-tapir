@@ -65,6 +65,17 @@ class MemberPickupLocationSetter:
             user=member,
         ).save()
 
+        # A bread the member chose is tied to the capacity their station has
+        # that week, so moving station can invalidate future choices. Imported
+        # here rather than at module level: this module should not depend on
+        # the bakery app at import time, and the call is a no-op when the
+        # bakery is switched off.
+        from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
+
+        BreadDeliveryService.clear_breads_unavailable_at_pickup_location(
+            member, cache=cache
+        )
+
         if old_pickup_location is not None and pickup_location_id is not None:
             if get_parameter_value(
                 key=ParameterKeys.DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED,

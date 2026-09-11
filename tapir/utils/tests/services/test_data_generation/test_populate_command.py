@@ -37,19 +37,17 @@ class TestPopulateCommand(TapirIntegrationTest):
 
         self.assertIn("BIOTOP", str(context.exception))
 
-    def test_resetAll_withoutBakeryFlag_doesNotGenerateBakeryData(
+    def test_resetAll_withoutBakeryOrg_doesNotGenerateBakeryData(
         self, _clear, mock_generate_all
     ):
         call_command("populate", "--reset_all")
 
-        self.assertFalse(mock_generate_all.call_args.kwargs["generate_bakery_data"])
+        self.assertNotEqual(mock_generate_all.call_args.args[0], Organization.BAKERY)
 
-    def test_resetAll_withBakeryFlag_generatesBakeryData(
-        self, _clear, mock_generate_all
-    ):
-        call_command("populate", "--reset_all", "--bakery")
+    def test_resetAll_orgBakery_generatesBakeryData(self, _clear, mock_generate_all):
+        call_command("populate", "--reset_all", "--org", "bakery")
 
-        self.assertTrue(mock_generate_all.call_args.kwargs["generate_bakery_data"])
+        self.assertEqual(mock_generate_all.call_args.args[0], Organization.BAKERY)
 
     def test_clear_doesNotGenerateAnything(self, mock_clear, mock_generate_all):
         call_command("populate", "--clear")

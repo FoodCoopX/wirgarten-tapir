@@ -22,7 +22,7 @@ from tapir.bakery.models import (
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.log.models import LogEntry
 from tapir.payments.models import MemberCredit
-from tapir.utils.config import Organization
+from tapir.utils.config import BAKERY_BASE_ORGANIZATION, Organization
 from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
 from tapir.utils.services.test_data_generation.configuration_generator import (
     ConfigurationGenerator,
@@ -122,6 +122,10 @@ class DataGenerator:
         cls, generate_test_data_for: Organization, generate_bakery_data: bool = False
     ):
         factory.random.reseed_random("tapir")
+
+        if generate_test_data_for is Organization.BAKERY:
+            generate_bakery_data = True
+            generate_test_data_for = BAKERY_BASE_ORGANIZATION
 
         print(f"Generating test data for {generate_test_data_for}...")
         cls.generate_growing_periods(generate_test_data_for)
