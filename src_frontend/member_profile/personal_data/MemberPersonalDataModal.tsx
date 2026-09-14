@@ -46,7 +46,13 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [canEditName, setCanEditName] = useState(false);
   const [contactEmail, setContactEmail] = useState("");
 
-  const nameNotEditableHelpText = (
+  const nameHelpText = canEditName ? (
+    <>
+      Nur du als Admin kannst den Namen des Mitgliedes ändern. Das Mitglied kann
+      dies nicht selbstständig. Ihm wird angezeigt, dass es den Betrieb
+      kontaktieren muss, um den Namen zu verändern.
+    </>
+  ) : (
     <>
       Du kannst nicht selbstständig deinen Namen verändern. Bitte wende dich an
       deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>
@@ -169,12 +175,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               <Form.Label>
                 <span className={"d-flex flex-row gap-2 align-items-center"}>
                   Vorname
-                  {!canEditName && (
-                    <TapirHelpButton
-                      buttonSize={"sm"}
-                      text={nameNotEditableHelpText}
-                    />
-                  )}
+                  <TapirHelpButton buttonSize={"sm"} text={nameHelpText} />
                 </span>
               </Form.Label>
               <Form.Control
@@ -190,12 +191,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               <Form.Label>
                 <span className={"d-flex flex-row gap-2 align-items-center"}>
                   Nachname
-                  {!canEditName && (
-                    <TapirHelpButton
-                      buttonSize={"sm"}
-                      text={nameNotEditableHelpText}
-                    />
-                  )}
+                  <TapirHelpButton buttonSize={"sm"} text={nameHelpText} />
                 </span>
               </Form.Label>
               <Form.Control
