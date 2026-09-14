@@ -90,6 +90,12 @@ export interface MemberProfilePersonalDataResponse {
    * @memberof MemberProfilePersonalDataResponse
    */
   contactEmail: string;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberProfilePersonalDataResponse
+   */
+  memberNumber: string;
 }
 
 /**
@@ -112,6 +118,8 @@ export function instanceOfMemberProfilePersonalDataResponse(
   if (!("canEditName" in value) || value["canEditName"] === undefined)
     return false;
   if (!("contactEmail" in value) || value["contactEmail"] === undefined)
+    return false;
+  if (!("memberNumber" in value) || value["memberNumber"] === undefined)
     return false;
   return true;
 }
@@ -142,6 +150,7 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     canEditStudent: json["can_edit_student"],
     canEditName: json["can_edit_name"],
     contactEmail: json["contact_email"],
+    memberNumber: json["member_number"],
   };
 }
 
@@ -172,5 +181,6 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     can_edit_student: value["canEditStudent"],
     can_edit_name: value["canEditName"],
     contact_email: value["contactEmail"],
+    member_number: value["memberNumber"],
   };
 }

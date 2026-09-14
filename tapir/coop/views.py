@@ -37,6 +37,7 @@ from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHan
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
+from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
@@ -482,6 +483,7 @@ class MemberPersonalDataApiView(APIView):
                     "contact_email": get_parameter_value(
                         ParameterKeys.SITE_EMAIL, cache=self.cache
                     ),
+                    "member_number": self.get_formatted_member_number(member),
                 }
             ).data
         )
@@ -493,6 +495,19 @@ class MemberPersonalDataApiView(APIView):
     @classmethod
     def user_can_edit_student_status(cls, user):
         return user.has_perm(Permission.Coop.MANAGE)
+
+    def get_formatted_member_number(self, member: Member) -> str:
+        if not MemberNumberService.should_display_member_number(
+            member=member,
+            reference_date=get_today(cache=self.cache),
+            cache=self.cache,
+        ):
+            return "-"
+
+        return (
+            MemberNumberService.format_member_number(member.member_no, cache=self.cache)
+            or "-"
+        )
 
     @extend_schema(
         responses={200: OrderConfirmationResponseSerializer},

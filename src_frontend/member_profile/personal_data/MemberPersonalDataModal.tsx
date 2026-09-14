@@ -45,6 +45,10 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [canEditStudent, setCanEditStudent] = useState(false);
   const [canEditName, setCanEditName] = useState(false);
   const [contactEmail, setContactEmail] = useState("");
+  const [memberNumber, setMemberNumber] = useState("");
+
+  const memberNumberHelpText =
+    "Die Mitgliedsnummer kann nicht selbstständig verändert werden.";
 
   const nameHelpText = canEditName ? (
     <>
@@ -83,6 +87,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         }
         setCanEditName(response.canEditName);
         setContactEmail(response.contactEmail);
+        setMemberNumber(response.memberNumber);
       })
       .catch((error) =>
         handleRequestError(
@@ -171,6 +176,22 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           <Spinner />
         ) : (
           <Form>
+            <Form.Group className="mb-2">
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Mitgliedsnummer
+                  <TapirHelpButton
+                    buttonSize={"sm"}
+                    text={memberNumberHelpText}
+                  />
+                </span>
+              </Form.Label>
+              <Form.Control
+                placeholder={"Mitgliedsnummer"}
+                value={memberNumber}
+                disabled
+              />
+            </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>
                 <span className={"d-flex flex-row gap-2 align-items-center"}>

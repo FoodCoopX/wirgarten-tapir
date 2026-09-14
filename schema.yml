@@ -10145,6 +10145,8 @@ components:
         contact_email:
           type: string
           format: email
+        member_number:
+          type: string
       required:
       - can_edit_name
       - can_edit_student
@@ -10153,6 +10155,7 @@ components:
       - email
       - first_name
       - last_name
+      - member_number
       - phone_number
       - postcode
       - street
