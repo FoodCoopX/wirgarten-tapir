@@ -15,17 +15,23 @@ class TestMemberListView(TapirIntegrationTest):
         self,
     ):
         self.client.force_login(MemberFactory.create(is_superuser=True))
-        MemberFactory.create(last_name="Vogel")
-        MemberFactory.create(last_name="von Adler")
-        MemberFactory.create(last_name="Voss")
-        MemberFactory.create(last_name="Ahlers")
+        member_ids = {
+            MemberFactory.create(last_name="Vogel").id,
+            MemberFactory.create(last_name="von Adler").id,
+            MemberFactory.create(last_name="Voss").id,
+            MemberFactory.create(last_name="Ahlers").id,
+        }
 
         response = self.client.get(
             reverse("wirgarten:member_list"), {"o": "last_name_lower"}
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
-        last_names = [member.last_name for member in response.context["object_list"]]
+        last_names = [
+            member.last_name
+            for member in response.context["object_list"]
+            if member.id in member_ids
+        ]
 
         self.assertEqual(
             ["Ahlers", "Vogel", "von Adler", "Voss"],
