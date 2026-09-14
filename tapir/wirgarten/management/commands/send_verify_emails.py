@@ -1,6 +1,7 @@
 from django.core.management import BaseCommand
 from django.db.models import QuerySet, Count, Q
 
+from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
@@ -62,7 +63,10 @@ class Command(BaseCommand):
                 f"{count_before - count_after} members will be ignored because they don't have a current or future subscription"
             )
 
-        members = list(members.distinct().order_by("member_no", "last_name"))
+        members = GermanNameSortService.annotate_queryset_with_sort_keys(
+            members, ["last_name"], cache={}
+        )
+        members = list(members.distinct().order_by("member_no", "last_name_sort_key"))
         self.stdout.write(f"Sending emails to {len(members)} members:")
 
         self.send_emails(members, options["dry_run"])

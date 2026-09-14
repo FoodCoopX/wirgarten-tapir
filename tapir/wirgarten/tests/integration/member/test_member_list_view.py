@@ -23,7 +23,7 @@ class TestMemberListView(TapirIntegrationTest):
         }
 
         response = self.client.get(
-            reverse("wirgarten:member_list"), {"o": "last_name_lower"}
+            reverse("wirgarten:member_list"), {"o": "last_name_sort_key"}
         )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -35,5 +35,30 @@ class TestMemberListView(TapirIntegrationTest):
 
         self.assertEqual(
             ["Ahlers", "Vogel", "von Adler", "Voss"],
+            last_names,
+        )
+
+    def test_memberListView_sortByLastNameAscending_umlautLastNameSortedAsIfSpelledOut(
+        self,
+    ):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        member_ids = {
+            MemberFactory.create(last_name="Häuser").id,
+            MemberFactory.create(last_name="Heyne").id,
+        }
+
+        response = self.client.get(
+            reverse("wirgarten:member_list"), {"o": "last_name_sort_key"}
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        last_names = [
+            member.last_name
+            for member in response.context["object_list"]
+            if member.id in member_ids
+        ]
+
+        self.assertEqual(
+            ["Häuser", "Heyne"],
             last_names,
         )

@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import models
 from django.db.models import ExpressionWrapper, F, OuterRef, Subquery
-from django.db.models.functions import Lower, TruncMonth
+from django.db.models.functions import TruncMonth
 from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
@@ -20,6 +20,7 @@ from django_filters.views import FilterView
 
 from tapir.associations.models import AssociationMembershipType
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.coop.services.member_search_service import MemberSearchService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
 from tapir.core.services.organisation_entry_date_annotator import (
@@ -160,10 +161,10 @@ class MemberFilter(FilterSet):
         choices=(
             ("-member_no", "⮟ Mitgliedsnummer"),
             ("member_no", "⮝ Mitgliedsnummer"),
-            ("-first_name_lower", "⮟ Vorname"),
-            ("first_name_lower", "⮝ Vorname"),
-            ("-last_name_lower", "⮟ Nachname"),
-            ("last_name_lower", "⮝ Nachname"),
+            ("-first_name_sort_key", "⮟ Vorname"),
+            ("first_name_sort_key", "⮝ Vorname"),
+            ("-last_name_sort_key", "⮟ Nachname"),
+            ("last_name_sort_key", "⮝ Nachname"),
             ("-email", "⮟ Email"),
             ("email", "⮝ Email"),
             ("organisation_entry_date", "⮝ Registriert am"),
@@ -183,18 +184,18 @@ class MemberFilter(FilterSet):
         self.cache = kwargs.pop("cache", {})
 
         if data is None:
-            data = {"o": "-organisation_entry_date,-member_no,last_name_lower"}
+            data = {"o": "-organisation_entry_date,-member_no,last_name_sort_key"}
         else:
             data = data.copy()
 
             if "o" not in data:
-                data["o"] = "-organisation_entry_date,-member_no,last_name_lower"
+                data["o"] = "-organisation_entry_date,-member_no,last_name_sort_key"
 
             if "member_no" not in data["o"]:
                 data["o"] += ",-member_no"
 
-            if "last_name" not in data["o"]:
-                data["o"] += ",last_name_lower"
+            if "last_name_sort_key" not in data["o"]:
+                data["o"] += ",last_name_sort_key"
 
         super().__init__(data, *args, **kwargs)
 
@@ -216,9 +217,8 @@ class MemberFilter(FilterSet):
             del self.form.fields["membership_type"]
 
     def filter_queryset(self, queryset):
-        queryset = queryset.annotate(
-            first_name_lower=Lower("first_name"),
-            last_name_lower=Lower("last_name"),
+        queryset = GermanNameSortService.annotate_queryset_with_sort_keys(
+            queryset, ["first_name", "last_name"], cache=self.cache
         )
         return super().filter_queryset(queryset)
 
