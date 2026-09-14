@@ -1,10 +1,15 @@
 from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestAnnotateQuerysetWithSortKeys(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
     def test_annotateQuerysetWithSortKeys_lastNameWithUmlaut_sortsAsIfUmlautWereSpelledOut(
         self,
     ):
