@@ -215,6 +215,13 @@ class MemberFilter(FilterSet):
         if legal_status_is_company(cache=self.cache):
             del self.form.fields["membership_type"]
 
+    def filter_queryset(self, queryset):
+        queryset = queryset.annotate(
+            first_name_lower=Lower("first_name"),
+            last_name_lower=Lower("last_name"),
+        )
+        return super().filter_queryset(queryset)
+
     def filter_search(self, queryset, name, value):
         return MemberSearchService.filter_queryset(
             queryset, search_value=value, cache=self.cache
@@ -321,10 +328,6 @@ class MemberListView(PermissionRequiredMixin, FilterView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.annotate(
-            first_name_lower=Lower("first_name"),
-            last_name_lower=Lower("last_name"),
-        )
 
         today = get_today(cache=self.cache)
         queryset = annotate_member_queryset_with_monthly_payment(queryset, today)
