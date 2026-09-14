@@ -122,9 +122,8 @@ class OrderValidator:
 
         if capacity_used_by_order < capacity_used_by_the_current_subscriptions:
             raise ValidationError(
-                f"Während eine Vertrag läuft es ist nur erlaubt die Größe des Vertrags zu erhöhen. "
-                f"Deiner aktueller Vertrag für diese Periode entspricht Größe {capacity_used_by_the_current_subscriptions:.2f}. "
-                f"Deiner letzter Auswahl hier entsprach Größe {capacity_used_by_order:.2f}."
+                "Während dein Vertrag läuft, kannst du nur die Anteilsgröße erhöhen. "
+                "Deine neu ausgewählte Vertragskonstellation ist kleiner als die bisherige."
             )
 
     @classmethod
