@@ -479,6 +479,9 @@ class MemberPersonalDataApiView(APIView):
                     "is_student": is_student,
                     "can_edit_student": self.user_can_edit_student_status(request.user),
                     "can_edit_name": self.user_can_edit_name(request.user),
+                    "contact_email": get_parameter_value(
+                        ParameterKeys.SITE_EMAIL, cache=self.cache
+                    ),
                 }
             ).data
         )

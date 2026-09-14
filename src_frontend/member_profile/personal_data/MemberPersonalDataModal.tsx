@@ -7,6 +7,7 @@ import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
 import { isPersonalDataValidShort } from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
@@ -43,6 +44,15 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [canEditStudent, setCanEditStudent] = useState(false);
   const [canEditName, setCanEditName] = useState(false);
+  const [contactEmail, setContactEmail] = useState("");
+
+  const nameNotEditableHelpText = (
+    <>
+      Du kannst nicht selbstständig deinen Namen verändern. Bitte wende dich an
+      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+      ).
+    </>
+  );
 
   useEffect(() => {
     if (!show) return;
@@ -66,6 +76,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           setCanEditStudent(response.canEditStudent);
         }
         setCanEditName(response.canEditName);
+        setContactEmail(response.contactEmail);
       })
       .catch((error) =>
         handleRequestError(
@@ -155,7 +166,17 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         ) : (
           <Form>
             <Form.Group className="mb-2">
-              <Form.Label>Vorname</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Vorname
+                  {!canEditName && (
+                    <TapirHelpButton
+                      buttonSize={"sm"}
+                      text={nameNotEditableHelpText}
+                    />
+                  )}
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"Vorname"}
                 value={firstName}
@@ -166,7 +187,17 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               />
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>Nachname</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Nachname
+                  {!canEditName && (
+                    <TapirHelpButton
+                      buttonSize={"sm"}
+                      text={nameNotEditableHelpText}
+                    />
+                  )}
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"Nachname"}
                 value={lastName}

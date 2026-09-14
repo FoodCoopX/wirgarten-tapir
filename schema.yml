@@ -3179,6 +3179,7 @@ paths:
         name: id
         schema:
           type: string
+        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -10141,10 +10142,14 @@ components:
           type: boolean
         can_edit_name:
           type: boolean
+        contact_email:
+          type: string
+          format: email
       required:
       - can_edit_name
       - can_edit_student
       - city
+      - contact_email
       - email
       - first_name
       - last_name
