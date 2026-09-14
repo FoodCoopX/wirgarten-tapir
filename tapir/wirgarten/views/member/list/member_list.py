@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import models
 from django.db.models import ExpressionWrapper, F, OuterRef, Subquery
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import Lower, TruncMonth
 from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
@@ -160,10 +160,10 @@ class MemberFilter(FilterSet):
         choices=(
             ("-member_no", "⮟ Mitgliedsnummer"),
             ("member_no", "⮝ Mitgliedsnummer"),
-            ("-first_name", "⮟ Vorname"),
-            ("first_name", "⮝ Vorname"),
-            ("-last_name", "⮟ Nachname"),
-            ("last_name", "⮝ Nachname"),
+            ("-first_name_lower", "⮟ Vorname"),
+            ("first_name_lower", "⮝ Vorname"),
+            ("-last_name_lower", "⮟ Nachname"),
+            ("last_name_lower", "⮝ Nachname"),
             ("-email", "⮟ Email"),
             ("email", "⮝ Email"),
             ("organisation_entry_date", "⮝ Registriert am"),
@@ -183,18 +183,18 @@ class MemberFilter(FilterSet):
         self.cache = kwargs.pop("cache", {})
 
         if data is None:
-            data = {"o": "-organisation_entry_date,-member_no,last_name"}
+            data = {"o": "-organisation_entry_date,-member_no,last_name_lower"}
         else:
             data = data.copy()
 
             if "o" not in data:
-                data["o"] = "-organisation_entry_date,-member_no,last_name"
+                data["o"] = "-organisation_entry_date,-member_no,last_name_lower"
 
             if "member_no" not in data["o"]:
                 data["o"] += ",-member_no"
 
             if "last_name" not in data["o"]:
-                data["o"] += ",last_name"
+                data["o"] += ",last_name_lower"
 
         super().__init__(data, *args, **kwargs)
 
@@ -321,6 +321,10 @@ class MemberListView(PermissionRequiredMixin, FilterView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        queryset = queryset.annotate(
+            first_name_lower=Lower("first_name"),
+            last_name_lower=Lower("last_name"),
+        )
 
         today = get_today(cache=self.cache)
         queryset = annotate_member_queryset_with_monthly_payment(queryset, today)
