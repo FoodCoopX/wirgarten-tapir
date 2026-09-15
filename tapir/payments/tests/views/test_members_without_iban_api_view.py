@@ -37,6 +37,7 @@ class TestMembersWithoutIbanApiView(TapirIntegrationTest):
             email="anna@example.com",
             phone_number="+491234567",
             iban=None,
+            member_no=42,
         )
         member_with_empty_iban = MemberFactory.create(iban="")
         MemberFactory.create(iban="DE89370400440532013001")
@@ -54,10 +55,12 @@ class TestMembersWithoutIbanApiView(TapirIntegrationTest):
         )
         self.assertEqual(
             {
+                "member_no": 42,
                 "first_name": "Anna",
                 "last_name": "Müller",
                 "email": "anna@example.com",
                 "phone_number": "+491234567",
+                "member_url": member_with_null_iban.get_absolute_url(),
             },
             entry,
         )

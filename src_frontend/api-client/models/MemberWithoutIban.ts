@@ -20,6 +20,12 @@
 export interface MemberWithoutIban {
   /**
    *
+   * @type {number}
+   * @memberof MemberWithoutIban
+   */
+  memberNo?: number | null;
+  /**
+   *
    * @type {string}
    * @memberof MemberWithoutIban
    */
@@ -42,6 +48,12 @@ export interface MemberWithoutIban {
    * @memberof MemberWithoutIban
    */
   phoneNumber?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberWithoutIban
+   */
+  readonly memberUrl: string;
 }
 
 /**
@@ -52,6 +64,7 @@ export function instanceOfMemberWithoutIban(
 ): value is MemberWithoutIban {
   if (!("firstName" in value) || value["firstName"] === undefined) return false;
   if (!("lastName" in value) || value["lastName"] === undefined) return false;
+  if (!("memberUrl" in value) || value["memberUrl"] === undefined) return false;
   return true;
 }
 
@@ -67,11 +80,13 @@ export function MemberWithoutIbanFromJSONTyped(
     return json;
   }
   return {
+    memberNo: json["member_no"] == null ? undefined : json["member_no"],
     firstName: json["first_name"],
     lastName: json["last_name"],
     email: json["email"] == null ? undefined : json["email"],
     phoneNumber:
       json["phone_number"] == null ? undefined : json["phone_number"],
+    memberUrl: json["member_url"],
   };
 }
 
@@ -80,7 +95,7 @@ export function MemberWithoutIbanToJSON(json: any): MemberWithoutIban {
 }
 
 export function MemberWithoutIbanToJSONTyped(
-  value?: MemberWithoutIban | null,
+  value?: Omit<MemberWithoutIban, "member_url"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -88,6 +103,7 @@ export function MemberWithoutIbanToJSONTyped(
   }
 
   return {
+    member_no: value["memberNo"],
     first_name: value["firstName"],
     last_name: value["lastName"],
     email: value["email"],

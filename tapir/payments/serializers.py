@@ -164,4 +164,17 @@ class PaymentTransactionDetailsSerializer(serializers.Serializer):
 class MemberWithoutIbanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
-        fields = ["first_name", "last_name", "email", "phone_number"]
+        fields = [
+            "member_no",
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+            "member_url",
+        ]
+
+    member_url = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_member_url(member: Member) -> str:
+        return member.get_absolute_url()

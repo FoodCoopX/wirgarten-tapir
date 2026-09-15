@@ -10216,6 +10216,12 @@ components:
     MemberWithoutIban:
       type: object
       properties:
+        member_no:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Mitgliedsnummer
         first_name:
           type: string
           maxLength: 150
@@ -10231,9 +10237,13 @@ components:
           nullable: true
           title: Telefonnummer
           maxLength: 128
+        member_url:
+          type: string
+          readOnly: true
       required:
       - first_name
       - last_name
+      - member_url
     MinimumNumberOfSharesResponse:
       type: object
       properties:

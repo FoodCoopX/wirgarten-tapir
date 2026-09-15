@@ -38,6 +38,7 @@ const MembersWithoutIbanModal: React.FC<MembersWithoutIbanModalProps> = ({
         <Table responsive hover striped bordered>
           <thead>
             <tr>
+              <th>Mitgliedsnummer</th>
               <th>Vorname</th>
               <th>Nachname</th>
               <th>E-Mail</th>
@@ -47,9 +48,20 @@ const MembersWithoutIbanModal: React.FC<MembersWithoutIbanModalProps> = ({
           <tbody>
             {members.map((member, index) => (
               <tr key={index}>
-                <td>{member.firstName}</td>
-                <td>{member.lastName}</td>
-                <td>{member.email}</td>
+                <td>
+                  <a href={member.memberUrl}>{member.memberNo}</a>
+                </td>
+                <td>
+                  <a href={member.memberUrl}>{member.firstName}</a>
+                </td>
+                <td>
+                  <a href={member.memberUrl}>{member.lastName}</a>
+                </td>
+                <td>
+                  {member.email && (
+                    <a href={`mailto:${member.email}`}>{member.email}</a>
+                  )}
+                </td>
                 <td>{member.phoneNumber}</td>
               </tr>
             ))}
