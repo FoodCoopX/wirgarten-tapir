@@ -68,11 +68,10 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     <>
       Änderst du die Email hier direkt als Admin, gilt dieselbe Logik wie beim
       Mitglied selbst: Ist die aktuelle Adresse bereits verifiziert, wird die
-      neue Adresse nicht sofort übernommen. Stattdessen wird beim Speichern
-      wieder die alte Adresse gespeichert und ein Bestätigungslink an diese alte
-      Adresse verschickt - erst ein Klick darauf setzt die neue Adresse. Ist die
-      aktuelle Adresse noch nicht verifiziert, wird die neue Adresse sofort
-      übernommen.
+      neue Adresse nicht sofort übernommen. Stattdessen wird beim Speichern ein
+      Bestätigungslink an die alte Adresse verschickt - erst ein Klick darauf
+      setzt die neue Adresse. Ist die aktuelle Adresse noch nicht verifiziert,
+      wird die neue Adresse sofort übernommen.
       <br />
       <br />
       Damit das Mitglied die Mailadresse verändern kann, muss die transaktionale
