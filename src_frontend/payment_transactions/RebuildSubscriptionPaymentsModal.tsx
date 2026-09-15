@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Form, Modal } from "react-bootstrap";
-import { PaymentsApi } from "../api-client";
+import { MemberWithoutIban, PaymentsApi } from "../api-client";
 import ConfirmModal from "../components/ConfirmModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import MembersWithoutIbanRebuildWarningModal from "./MembersWithoutIbanRebuildWarningModal.tsx";
 
 interface RebuildSubscriptionPaymentsModalProps {
   show: boolean;
@@ -29,20 +30,51 @@ const RebuildSubscriptionPaymentsModal: React.FC<
 > = ({ show, onHide, setToastDatas, afterRebuild }) => {
   const api = useApi(PaymentsApi, getCsrfToken());
   const [loading, setLoading] = useState(false);
+  const [checkingIban, setCheckingIban] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear());
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showIbanWarningModal, setShowIbanWarningModal] = useState(false);
+  const [membersWithoutIbanForMonth, setMembersWithoutIbanForMonth] = useState<
+    MemberWithoutIban[]
+  >([]);
   const [error, setError] = useState("");
+
+  function getSelectedMonthDate() {
+    const date = new Date();
+    date.setFullYear(year);
+    date.setMonth(month);
+    date.setDate(1);
+    return date;
+  }
+
+  function onClickRebuild() {
+    setCheckingIban(true);
+    api
+      .paymentsApiMembersWithoutIbanForRebuildMonthList({
+        month: getSelectedMonthDate(),
+      })
+      .then((response) => {
+        if (response.length > 0) {
+          setMembersWithoutIbanForMonth(response);
+          setShowIbanWarningModal(true);
+        } else {
+          setShowConfirmationModal(true);
+        }
+      })
+      .catch((error) =>
+        handleRequestError(error, "Fehler bei der IBAN-Prüfung", setToastDatas),
+      )
+      .finally(() => setCheckingIban(false));
+  }
 
   function onConfirmRebuild() {
     setLoading(true);
 
-    const from = new Date();
-    from.setFullYear(year);
-    from.setMonth(month);
-
     api
-      .paymentsApiRebuildSubscriptionPaymentsCreate({ from: from })
+      .paymentsApiRebuildSubscriptionPaymentsCreate({
+        from: getSelectedMonthDate(),
+      })
       .then((response) => {
         if (response.orderConfirmed) {
           setError("");
@@ -65,7 +97,7 @@ const RebuildSubscriptionPaymentsModal: React.FC<
   return (
     <>
       <Modal
-        show={show && !showConfirmationModal}
+        show={show && !showConfirmationModal && !showIbanWarningModal}
         onHide={onHide}
         centered={true}
         size={"xl"}
@@ -124,8 +156,8 @@ const RebuildSubscriptionPaymentsModal: React.FC<
             text={"Neu erzeugen"}
             variant={"primary"}
             icon={"redo"}
-            onClick={() => setShowConfirmationModal(true)}
-            loading={loading}
+            onClick={onClickRebuild}
+            loading={checkingIban}
           />
         </Modal.Footer>
       </Modal>
@@ -145,6 +177,15 @@ const RebuildSubscriptionPaymentsModal: React.FC<
         onConfirm={() => onConfirmRebuild()}
         onCancel={() => setShowConfirmationModal(false)}
         loading={loading}
+      />
+      <MembersWithoutIbanRebuildWarningModal
+        show={showIbanWarningModal}
+        members={membersWithoutIbanForMonth}
+        onCancel={() => setShowIbanWarningModal(false)}
+        onContinue={() => {
+          setShowIbanWarningModal(false);
+          setShowConfirmationModal(true);
+        }}
       />
     </>
   );

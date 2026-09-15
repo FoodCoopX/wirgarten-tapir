@@ -2619,6 +2619,31 @@ paths:
                 items:
                   $ref: '#/components/schemas/MemberWithoutIban'
           description: ''
+  /payments/api/members_without_iban_for_rebuild_month:
+    get:
+      operationId: payments_api_members_without_iban_for_rebuild_month_list
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+          format: date
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberWithoutIban'
+          description: ''
   /payments/api/payment_transaction_details:
     get:
       operationId: payments_api_payment_transaction_details_retrieve

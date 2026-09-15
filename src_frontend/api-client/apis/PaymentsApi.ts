@@ -97,6 +97,10 @@ export interface PaymentsApiMemberPaymentRhythmDataRetrieveRequest {
   memberId?: string;
 }
 
+export interface PaymentsApiMembersWithoutIbanForRebuildMonthListRequest {
+  month: Date;
+}
+
 export interface PaymentsApiPaymentTransactionDetailsRetrieveRequest {
   transactionId: string;
 }
@@ -822,6 +826,72 @@ export class PaymentsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMembersWithoutIbanForRebuildMonthListRaw(
+    requestParameters: PaymentsApiMembersWithoutIbanForRebuildMonthListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<MemberWithoutIban>>> {
+    if (requestParameters["month"] == null) {
+      throw new runtime.RequiredError(
+        "month",
+        'Required parameter "month" was null or undefined when calling paymentsApiMembersWithoutIbanForRebuildMonthList().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["month"] != null) {
+      queryParameters["month"] = (requestParameters["month"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/members_without_iban_for_rebuild_month`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(MemberWithoutIbanFromJSON),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiMembersWithoutIbanForRebuildMonthList(
+    requestParameters: PaymentsApiMembersWithoutIbanForRebuildMonthListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<MemberWithoutIban>> {
+    const response =
+      await this.paymentsApiMembersWithoutIbanForRebuildMonthListRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

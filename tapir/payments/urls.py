@@ -86,6 +86,11 @@ urlpatterns = [
         views.MembersWithoutIbanApiView.as_view(),
         name="members_without_iban",
     ),
+    path(
+        "api/members_without_iban_for_rebuild_month",
+        views.MembersWithoutIbanForRebuildMonthApiView.as_view(),
+        name="members_without_iban_for_rebuild_month",
+    ),
 ]
 
 router = DefaultRouter()

@@ -76,6 +76,7 @@ from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_serv
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
+from tapir.utils.exceptions import DryRunException
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import (
@@ -1282,4 +1283,48 @@ class MembersWithoutIbanApiView(APIView):
     @extend_schema(responses={200: MemberWithoutIbanSerializer(many=True)})
     def get(self, request: Request):
         members = Member.objects.without_iban().order_by("last_name", "first_name")
+        return Response(MemberWithoutIbanSerializer(members, many=True).data)
+
+
+class MembersWithoutIbanForRebuildMonthApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: MemberWithoutIbanSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="month", type=OpenApiTypes.DATE, required=True)
+        ],
+    )
+    def get(self, request: Request):
+        cache = {}
+        reference_date = datetime.datetime.strptime(
+            request.query_params["month"], "%Y-%m-%d"
+        ).date()
+
+        members_without_iban_by_id = {}
+        try:
+            with transaction.atomic():
+                # Mirror what a real rebuild does before generating payments,
+                # so that the payments considered here are the same ones that
+                # would actually end up in the CSV/XML export for this month.
+                SubscriptionPaymentsRebuilder.delete_existing_contract_payments_from(
+                    reference_date
+                )
+                payments = MonthPaymentBuilder.build_payments_for_month(
+                    reference_date=reference_date,
+                    cache=cache,
+                    generated_payments=set(),
+                )
+                for payment in payments:
+                    member = payment.mandate_ref.member
+                    if not member.iban:
+                        members_without_iban_by_id[member.id] = member
+                raise DryRunException()
+        except DryRunException:
+            pass
+
+        members = sorted(
+            members_without_iban_by_id.values(),
+            key=lambda member: (member.last_name, member.first_name),
+        )
         return Response(MemberWithoutIbanSerializer(members, many=True).data)
