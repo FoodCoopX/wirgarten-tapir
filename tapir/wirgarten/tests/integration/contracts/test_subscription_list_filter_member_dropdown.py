@@ -1,9 +1,14 @@
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory, MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 from tapir.wirgarten.views.contracts import SubscriptionListFilter
 
 
 class TestSubscriptionListFilterMemberDropdown(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions(bulk_create=True)
+
     @staticmethod
     def _get_member_dropdown_ids() -> list[str]:
         growing_period = GrowingPeriodFactory.create()
