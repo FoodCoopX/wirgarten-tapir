@@ -7,6 +7,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import MembersWithoutIbanDetails from "./MembersWithoutIbanDetails.tsx";
 import MembersWithoutIbanRebuildWarningModal from "./MembersWithoutIbanRebuildWarningModal.tsx";
 
 interface RebuildSubscriptionPaymentsModalProps {
@@ -163,11 +164,15 @@ const RebuildSubscriptionPaymentsModal: React.FC<
       </Modal>
       <ConfirmModal
         message={
-          "Bist du sicher das du die Lastschrift-Dateien ab " +
-          getMonthDisplay(month) +
-          " " +
-          year +
-          " neu erzeugen willst?"
+          <>
+            <p>
+              Bist du sicher das du die Lastschrift-Dateien ab{" "}
+              {getMonthDisplay(month)} {year} neu erzeugen willst?
+            </p>
+            {membersWithoutIbanForMonth.length > 0 && (
+              <MembersWithoutIbanDetails members={membersWithoutIbanForMonth} />
+            )}
+          </>
         }
         title={"Bitte bestätigen"}
         open={showConfirmationModal}
@@ -177,6 +182,7 @@ const RebuildSubscriptionPaymentsModal: React.FC<
         onConfirm={() => onConfirmRebuild()}
         onCancel={() => setShowConfirmationModal(false)}
         loading={loading}
+        size={membersWithoutIbanForMonth.length > 0 ? "lg" : undefined}
       />
       <MembersWithoutIbanRebuildWarningModal
         show={showIbanWarningModal}
