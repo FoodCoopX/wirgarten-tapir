@@ -9,7 +9,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
-import MembersWithoutIbanModal from "./MembersWithoutIbanModal.tsx";
+import MembersWithoutIbanButton from "./MembersWithoutIbanButton.tsx";
 import PaymentTransactionDetailsModal from "./PaymentTransactionDetailsModal.tsx";
 import PaymentTransactionTable from "./PaymentTransactionTable.tsx";
 import RebuildSubscriptionPaymentsModal from "./RebuildSubscriptionPaymentsModal.tsx";
@@ -31,8 +31,6 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
     PaymentTransaction | undefined
   >(undefined);
   const [showRebuildModal, setShowRebuildModal] = useState(false);
-  const [showMembersWithoutIbanModal, setShowMembersWithoutIbanModal] =
-    useState(false);
 
   useEffect(() => {
     loadData();
@@ -67,12 +65,7 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
           >
             <h5 className={"mb-0"}>Zahlungseingang</h5>
             <div className={"d-flex gap-2"}>
-              <TapirButton
-                variant={"outline-danger"}
-                text={"Benutzer ohne IBAN"}
-                icon={"warning"}
-                onClick={() => setShowMembersWithoutIbanModal(true)}
-              />
+              <MembersWithoutIbanButton setToastDatas={setToastDatas} />
               <TapirButton
                 variant={"outline-primary"}
                 text={"Lastschriften neu erzeugen"}
@@ -125,11 +118,6 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
           setShowRebuildModal(false);
           loadData();
         }}
-      />
-      <MembersWithoutIbanModal
-        show={showMembersWithoutIbanModal}
-        onHide={() => setShowMembersWithoutIbanModal(false)}
-        setToastDatas={setToastDatas}
       />
       <TapirToastContainer
         toastDatas={toastDatas}
