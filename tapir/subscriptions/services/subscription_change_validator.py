@@ -57,15 +57,25 @@ class SubscriptionChangeValidator:
             )
         )
 
+        cls.raise_error_if_size_was_reduced(
+            capacity_used_by_the_ordered_products=capacity_used_by_the_ordered_products,
+            capacity_used_by_the_current_subscriptions=capacity_used_by_the_current_subscriptions,
+        )
+
+    @classmethod
+    def raise_error_if_size_was_reduced(
+        cls,
+        capacity_used_by_the_ordered_products: float,
+        capacity_used_by_the_current_subscriptions: float,
+    ) -> None:
         if (
             capacity_used_by_the_ordered_products
             < capacity_used_by_the_current_subscriptions
         ):
             raise ValidationError(
                 _(
-                    f"Während eine Vertrag läuft es ist nur erlaubt die Größe des Vertrags zu erhöhen. "
-                    f"Deiner aktueller Vertrag für diese Periode entspricht Größe {capacity_used_by_the_current_subscriptions:.2f}. "
-                    f"Deiner letzter Auswahl hier entsprach Größe {capacity_used_by_the_ordered_products:.2f}."
+                    "Während dein Vertrag läuft, kannst du nur die Anteilsgröße erhöhen. "
+                    "Deine neu ausgewählte Vertragskonstellation ist kleiner als die bisherige."
                 )
             )
 
