@@ -20,12 +20,20 @@ const MembersWithoutIbanModal: React.FC<MembersWithoutIbanModalProps> = ({
       </Modal.Header>
       <Modal.Body>
         <Alert variant={"warning"}>
-          Diese Mitglieder werden beim Erzeugen der CSV- und XML-Dateien{" "}
-          <strong>nicht ausgeschlossen</strong>. Ihre Zahlungen erscheinen
-          weiterhin in beiden Dateien, aber mit leerem IBAN-Feld. In der
-          XML-Datei entsteht dadurch ein leeres IBAN-Element, was die Datei für
-          die Bank ungültig macht. Bitte die IBAN ergänzen, bevor die
-          Lastschriften eingereicht werden.
+          <p className={"mb-2"}>
+            <strong>Achtung:</strong> Diese Mitglieder werden beim Erzeugen der
+            CSV- und XML-Dateien nicht ausgeschlossen. Ihre Zahlungen erscheinen
+            weiterhin in beiden Dateien, aber mit leerem IBAN-Feld. Die
+            CSV-Datei ist somit weiterhin nutzbar in einem weiterführenden
+            Schritt (z.B. Zahlungsverkehrsprogramm).
+          </p>
+          <p className={"mb-2"}>
+            Die XML-Datei wird dagegen für die Bank nicht mehr lesbar sein.
+          </p>
+          <p className={"mb-0"}>
+            Bitte ergänzt die IBAN, bevor ihr die Dateien neu erzeugt und dann
+            im Online-Banking hochladet.
+          </p>
         </Alert>
         <Table responsive hover striped bordered>
           <thead>
