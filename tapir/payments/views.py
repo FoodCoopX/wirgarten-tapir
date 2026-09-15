@@ -42,6 +42,7 @@ from tapir.payments.serializers import (
     PaymentTransactionSerializer,
     PaymentTransactionDetailsSerializer,
     JokerCreditIntendedUsePreviewResponseSerializer,
+    MemberWithoutIbanSerializer,
 )
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
@@ -1273,3 +1274,12 @@ class RebuildSubscriptionPaymentsApiView(APIView):
                 {"order_confirmed": True, "error": None}
             ).data
         )
+
+
+class MembersWithoutIbanApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(responses={200: MemberWithoutIbanSerializer(many=True)})
+    def get(self, request: Request):
+        members = Member.objects.without_iban().order_by("last_name", "first_name")
+        return Response(MemberWithoutIbanSerializer(members, many=True).data)

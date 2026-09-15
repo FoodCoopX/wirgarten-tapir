@@ -111,6 +111,7 @@ export * from "./MemberProfileCapacityCheckRequestRequest";
 export * from "./MemberProfilePersonalDataResponse";
 export * from "./MemberSolidarityContributionsResponse";
 export * from "./MemberSubscriptionData";
+export * from "./MemberWithoutIban";
 export * from "./MinimumNumberOfSharesResponse";
 export * from "./MissingTrigger";
 export * from "./ModeEnum";

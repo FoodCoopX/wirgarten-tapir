@@ -21,6 +21,7 @@ import type {
   MemberCreditCreateRequest,
   MemberCreditSettleRequest,
   MemberPaymentRhythmData,
+  MemberWithoutIban,
   OrderConfirmationResponse,
   PaginatedPaymentTransactionList,
   PaymentIntendedUsePreviewResponse,
@@ -37,6 +38,7 @@ import {
   MemberCreditCreateRequestToJSON,
   MemberCreditSettleRequestToJSON,
   MemberPaymentRhythmDataFromJSON,
+  MemberWithoutIbanFromJSON,
   OrderConfirmationResponseFromJSON,
   PaginatedPaymentTransactionListFromJSON,
   PaymentIntendedUsePreviewResponseFromJSON,
@@ -820,6 +822,54 @@ export class PaymentsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMembersWithoutIbanListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<MemberWithoutIban>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/members_without_iban`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(MemberWithoutIbanFromJSON),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiMembersWithoutIbanList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<MemberWithoutIban>> {
+    const response =
+      await this.paymentsApiMembersWithoutIbanListRaw(initOverrides);
     return await response.value();
   }
 

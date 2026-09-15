@@ -125,6 +125,7 @@ models/MemberProfileCapacityCheckRequestRequest.ts
 models/MemberProfilePersonalDataResponse.ts
 models/MemberSolidarityContributionsResponse.ts
 models/MemberSubscriptionData.ts
+models/MemberWithoutIban.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/ModeEnum.ts
