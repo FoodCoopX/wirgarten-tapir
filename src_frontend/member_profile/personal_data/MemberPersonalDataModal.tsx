@@ -64,7 +64,18 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     </>
   );
 
-  const emailHelpText = (
+  const emailHelpText = canEditName ? (
+    <>
+      Damit das Mitglied die Mailadresse verändern kann, muss die transaktionale
+      Mail "Email-Änderung: Bestätigung anfordern" im Mailmodul veröffentlicht
+      sein und den Token{" "}
+      <code>
+        {"{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}"}
+      </code>{" "}
+      enthalten. Nur dann kann das Mitglied die Änderung der Emailadresse
+      bestätigen.
+    </>
+  ) : (
     <>
       Die Änderung deiner Email muss durch dich selbst bestätigt werden. Folge
       den Anweisungen, die du an deine alte Email erhältst. Wenn du keine Mail
@@ -237,9 +248,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               <Form.Label>
                 <span className={"d-flex flex-row gap-2 align-items-center"}>
                   E-Mail
-                  {!canEditName && (
-                    <TapirHelpButton buttonSize={"sm"} text={emailHelpText} />
-                  )}
+                  <TapirHelpButton buttonSize={"sm"} text={emailHelpText} />
                 </span>
               </Form.Label>
               <Form.Control
