@@ -14,7 +14,7 @@ from tapir.wirgarten.utils import get_today
 
 class SubscriptionPaymentsRebuilder:
     @classmethod
-    def delete_existing_contract_payments_from(cls, from_date: datetime.date):
+    def rebuild_subscription_payments(cls, from_date: datetime.date, cache: dict):
         transactions = PaymentTransaction.objects.exclude(
             type=PAYMENT_TYPE_COOP_SHARES
         ).filter(
@@ -23,10 +23,6 @@ class SubscriptionPaymentsRebuilder:
 
         Payment.objects.filter(transaction__in=transactions).delete()
         transactions.delete()
-
-    @classmethod
-    def rebuild_subscription_payments(cls, from_date: datetime.date, cache: dict):
-        cls.delete_existing_contract_payments_from(from_date)
 
         current_date = max(
             get_parameter_value(key=ParameterKeys.PAYMENT_START_DATE), from_date

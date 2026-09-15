@@ -1,26 +1,26 @@
 import React from "react";
 import { Modal } from "react-bootstrap";
-import { MemberWithoutIban } from "../api-client";
+import { MemberNeedingBankingData } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
-import MembersWithoutIbanDetails from "./MembersWithoutIbanDetails.tsx";
+import MembersNeedingBankingDataDetails from "./MembersNeedingBankingDataDetails.tsx";
 
-interface MembersWithoutIbanRebuildWarningModalProps {
+interface MembersNeedingBankingDataRebuildWarningModalProps {
   show: boolean;
-  members: MemberWithoutIban[];
+  members: MemberNeedingBankingData[];
   onCancel: () => void;
   onContinue: () => void;
 }
 
-const MembersWithoutIbanRebuildWarningModal: React.FC<
-  MembersWithoutIbanRebuildWarningModalProps
+const MembersNeedingBankingDataRebuildWarningModal: React.FC<
+  MembersNeedingBankingDataRebuildWarningModalProps
 > = ({ show, members, onCancel, onContinue }) => {
   return (
     <Modal show={show} onHide={onCancel} centered={true} size={"lg"}>
       <Modal.Header closeButton>
-        <Modal.Title>Mitglieder ohne IBAN in diesem Monat</Modal.Title>
+        <Modal.Title>Mitglieder mit unvollständigen Bankdaten</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <MembersWithoutIbanDetails members={members} />
+        <MembersNeedingBankingDataDetails members={members} />
       </Modal.Body>
       <Modal.Footer>
         <TapirButton
@@ -30,7 +30,7 @@ const MembersWithoutIbanRebuildWarningModal: React.FC<
         />
         <TapirButton
           text={"Trotzdem fortfahren"}
-          variant={"danger"}
+          variant={"outline-primary"}
           icon={"warning"}
           onClick={onContinue}
         />
@@ -39,4 +39,4 @@ const MembersWithoutIbanRebuildWarningModal: React.FC<
   );
 };
 
-export default MembersWithoutIbanRebuildWarningModal;
+export default MembersNeedingBankingDataRebuildWarningModal;

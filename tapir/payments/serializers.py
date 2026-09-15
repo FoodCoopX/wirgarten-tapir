@@ -161,7 +161,7 @@ class PaymentTransactionDetailsSerializer(serializers.Serializer):
     intended_use_by_mandate_ref = serializers.DictField(child=serializers.CharField())
 
 
-class MemberWithoutIbanSerializer(serializers.ModelSerializer):
+class MemberNeedingBankingDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
         fields = [

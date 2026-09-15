@@ -15,67 +15,69 @@
 /**
  *
  * @export
- * @interface MemberWithoutIban
+ * @interface MemberNeedingBankingData
  */
-export interface MemberWithoutIban {
+export interface MemberNeedingBankingData {
   /**
    *
    * @type {number}
-   * @memberof MemberWithoutIban
+   * @memberof MemberNeedingBankingData
    */
   memberNo?: number | null;
   /**
    *
    * @type {string}
-   * @memberof MemberWithoutIban
+   * @memberof MemberNeedingBankingData
    */
   firstName: string;
   /**
    *
    * @type {string}
-   * @memberof MemberWithoutIban
+   * @memberof MemberNeedingBankingData
    */
   lastName: string;
   /**
    *
    * @type {string}
-   * @memberof MemberWithoutIban
+   * @memberof MemberNeedingBankingData
    */
   email?: string;
   /**
    *
    * @type {string}
-   * @memberof MemberWithoutIban
+   * @memberof MemberNeedingBankingData
    */
   phoneNumber?: string | null;
   /**
    *
    * @type {string}
-   * @memberof MemberWithoutIban
+   * @memberof MemberNeedingBankingData
    */
   readonly memberUrl: string;
 }
 
 /**
- * Check if a given object implements the MemberWithoutIban interface.
+ * Check if a given object implements the MemberNeedingBankingData interface.
  */
-export function instanceOfMemberWithoutIban(
+export function instanceOfMemberNeedingBankingData(
   value: object,
-): value is MemberWithoutIban {
+): value is MemberNeedingBankingData {
   if (!("firstName" in value) || value["firstName"] === undefined) return false;
   if (!("lastName" in value) || value["lastName"] === undefined) return false;
   if (!("memberUrl" in value) || value["memberUrl"] === undefined) return false;
   return true;
 }
 
-export function MemberWithoutIbanFromJSON(json: any): MemberWithoutIban {
-  return MemberWithoutIbanFromJSONTyped(json, false);
+export function MemberNeedingBankingDataFromJSON(
+  json: any,
+): MemberNeedingBankingData {
+  return MemberNeedingBankingDataFromJSONTyped(json, false);
 }
 
-export function MemberWithoutIbanFromJSONTyped(
+export function MemberNeedingBankingDataFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): MemberWithoutIban {
+): MemberNeedingBankingData {
   if (json == null) {
     return json;
   }
@@ -90,12 +92,14 @@ export function MemberWithoutIbanFromJSONTyped(
   };
 }
 
-export function MemberWithoutIbanToJSON(json: any): MemberWithoutIban {
-  return MemberWithoutIbanToJSONTyped(json, false);
+export function MemberNeedingBankingDataToJSON(
+  json: any,
+): MemberNeedingBankingData {
+  return MemberNeedingBankingDataToJSONTyped(json, false);
 }
 
-export function MemberWithoutIbanToJSONTyped(
-  value?: Omit<MemberWithoutIban, "member_url"> | null,
+export function MemberNeedingBankingDataToJSONTyped(
+  value?: Omit<MemberNeedingBankingData, "member_url"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

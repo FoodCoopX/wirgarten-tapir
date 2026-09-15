@@ -42,7 +42,7 @@ from tapir.payments.serializers import (
     PaymentTransactionSerializer,
     PaymentTransactionDetailsSerializer,
     JokerCreditIntendedUsePreviewResponseSerializer,
-    MemberWithoutIbanSerializer,
+    MemberNeedingBankingDataSerializer,
 )
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
@@ -76,7 +76,6 @@ from tapir.subscriptions.services.automatic_solidarity_contribution_renewal_serv
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
-from tapir.utils.exceptions import DryRunException
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import (
@@ -1277,54 +1276,45 @@ class RebuildSubscriptionPaymentsApiView(APIView):
         )
 
 
-class MembersWithoutIbanApiView(APIView):
+class MembersNeedingBankingDataApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
-    @extend_schema(responses={200: MemberWithoutIbanSerializer(many=True)})
+    @extend_schema(responses={200: MemberNeedingBankingDataSerializer(many=True)})
     def get(self, request: Request):
-        members = Member.objects.without_iban().order_by("last_name", "first_name")
-        return Response(MemberWithoutIbanSerializer(members, many=True).data)
+        members = Member.objects.needing_banking_data().order_by(
+            "member_no", "last_name"
+        )
+        return Response(MemberNeedingBankingDataSerializer(members, many=True).data)
 
 
-class MembersWithoutIbanForRebuildMonthApiView(APIView):
+class MembersNeedingBankingDataForRebuildApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
-        responses={200: MemberWithoutIbanSerializer(many=True)},
+        responses={200: MemberNeedingBankingDataSerializer(many=True)},
         parameters=[
-            OpenApiParameter(name="month", type=OpenApiTypes.DATE, required=True)
+            OpenApiParameter(name="from", type=OpenApiTypes.DATE, required=True)
         ],
     )
     def get(self, request: Request):
         cache = {}
-        reference_date = datetime.datetime.strptime(
-            request.query_params["month"], "%Y-%m-%d"
+        from_date = datetime.datetime.strptime(
+            request.query_params["from"], "%Y-%m-%d"
         ).date()
 
-        members_without_iban_by_id = {}
-        try:
-            with transaction.atomic():
-                # Mirror what a real rebuild does before generating payments,
-                # so that the payments considered here are the same ones that
-                # would actually end up in the CSV/XML export for this month.
-                SubscriptionPaymentsRebuilder.delete_existing_contract_payments_from(
-                    reference_date
-                )
-                payments = MonthPaymentBuilder.build_payments_for_month(
-                    reference_date=reference_date,
-                    cache=cache,
-                    generated_payments=set(),
-                )
-                for payment in payments:
-                    member = payment.mandate_ref.member
-                    if not member.iban:
-                        members_without_iban_by_id[member.id] = member
-                raise DryRunException()
-        except DryRunException:
-            pass
-
-        members = sorted(
-            members_without_iban_by_id.values(),
-            key=lambda member: (member.last_name, member.first_name),
+        member_ids = (
+            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            .filter(
+                transaction__month__gte=from_date.replace(day=1),
+                transaction__month__lte=get_today(cache=cache),
+            )
+            .values_list("mandate_ref__member_id", flat=True)
+            .distinct()
         )
-        return Response(MemberWithoutIbanSerializer(members, many=True).data)
+
+        members = (
+            Member.objects.filter(id__in=member_ids)
+            .needing_banking_data()
+            .order_by("member_no", "last_name")
+        )
+        return Response(MemberNeedingBankingDataSerializer(members, many=True).data)

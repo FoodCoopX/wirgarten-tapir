@@ -9,7 +9,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
-import MembersWithoutIbanButton from "./MembersWithoutIbanButton.tsx";
+import MembersNeedingBankingDataButton from "./MembersNeedingBankingDataButton.tsx";
 import PaymentTransactionDetailsModal from "./PaymentTransactionDetailsModal.tsx";
 import PaymentTransactionTable from "./PaymentTransactionTable.tsx";
 import RebuildSubscriptionPaymentsModal from "./RebuildSubscriptionPaymentsModal.tsx";
@@ -65,7 +65,7 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
           >
             <h5 className={"mb-0"}>Zahlungseingang</h5>
             <div className={"d-flex gap-2"}>
-              <MembersWithoutIbanButton setToastDatas={setToastDatas} />
+              <MembersNeedingBankingDataButton setToastDatas={setToastDatas} />
               <TapirButton
                 variant={"outline-primary"}
                 text={"Lastschriften neu erzeugen"}

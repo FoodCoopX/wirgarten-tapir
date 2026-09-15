@@ -82,14 +82,14 @@ urlpatterns = [
         name="rebuild_subscription_payments",
     ),
     path(
-        "api/members_without_iban",
-        views.MembersWithoutIbanApiView.as_view(),
-        name="members_without_iban",
+        "api/members_needing_banking_data",
+        views.MembersNeedingBankingDataApiView.as_view(),
+        name="members_needing_banking_data",
     ),
     path(
-        "api/members_without_iban_for_rebuild_month",
-        views.MembersWithoutIbanForRebuildMonthApiView.as_view(),
-        name="members_without_iban_for_rebuild_month",
+        "api/members_needing_banking_data_for_rebuild",
+        views.MembersNeedingBankingDataForRebuildApiView.as_view(),
+        name="members_needing_banking_data_for_rebuild",
     ),
 ]
 

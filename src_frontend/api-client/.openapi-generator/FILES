@@ -119,13 +119,13 @@ models/MemberJokerInformation.ts
 models/MemberMailCategoryData.ts
 models/MemberMailCategoryRequestRequest.ts
 models/MemberMailingListDataResponse.ts
+models/MemberNeedingBankingData.ts
 models/MemberPaymentRhythm.ts
 models/MemberPaymentRhythmData.ts
 models/MemberProfileCapacityCheckRequestRequest.ts
 models/MemberProfilePersonalDataResponse.ts
 models/MemberSolidarityContributionsResponse.ts
 models/MemberSubscriptionData.ts
-models/MemberWithoutIban.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/ModeEnum.ts

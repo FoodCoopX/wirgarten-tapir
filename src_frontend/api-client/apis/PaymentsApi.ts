@@ -20,8 +20,8 @@ import type {
   MandateReferencePreviewResponse,
   MemberCreditCreateRequest,
   MemberCreditSettleRequest,
+  MemberNeedingBankingData,
   MemberPaymentRhythmData,
-  MemberWithoutIban,
   OrderConfirmationResponse,
   PaginatedPaymentTransactionList,
   PaymentIntendedUsePreviewResponse,
@@ -37,8 +37,8 @@ import {
   MandateReferencePreviewResponseFromJSON,
   MemberCreditCreateRequestToJSON,
   MemberCreditSettleRequestToJSON,
+  MemberNeedingBankingDataFromJSON,
   MemberPaymentRhythmDataFromJSON,
-  MemberWithoutIbanFromJSON,
   OrderConfirmationResponseFromJSON,
   PaginatedPaymentTransactionListFromJSON,
   PaymentIntendedUsePreviewResponseFromJSON,
@@ -97,8 +97,8 @@ export interface PaymentsApiMemberPaymentRhythmDataRetrieveRequest {
   memberId?: string;
 }
 
-export interface PaymentsApiMembersWithoutIbanForRebuildMonthListRequest {
-  month: Date;
+export interface PaymentsApiMembersNeedingBankingDataForRebuildListRequest {
+  from: Date;
 }
 
 export interface PaymentsApiPaymentTransactionDetailsRetrieveRequest {
@@ -831,21 +831,21 @@ export class PaymentsApi extends runtime.BaseAPI {
 
   /**
    */
-  async paymentsApiMembersWithoutIbanForRebuildMonthListRaw(
-    requestParameters: PaymentsApiMembersWithoutIbanForRebuildMonthListRequest,
+  async paymentsApiMembersNeedingBankingDataForRebuildListRaw(
+    requestParameters: PaymentsApiMembersNeedingBankingDataForRebuildListRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<MemberWithoutIban>>> {
-    if (requestParameters["month"] == null) {
+  ): Promise<runtime.ApiResponse<Array<MemberNeedingBankingData>>> {
+    if (requestParameters["from"] == null) {
       throw new runtime.RequiredError(
-        "month",
-        'Required parameter "month" was null or undefined when calling paymentsApiMembersWithoutIbanForRebuildMonthList().',
+        "from",
+        'Required parameter "from" was null or undefined when calling paymentsApiMembersNeedingBankingDataForRebuildList().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters["month"] != null) {
-      queryParameters["month"] = (requestParameters["month"] as any)
+    if (requestParameters["from"] != null) {
+      queryParameters["from"] = (requestParameters["from"] as any)
         .toISOString()
         .substring(0, 10);
     }
@@ -868,7 +868,7 @@ export class PaymentsApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/payments/api/members_without_iban_for_rebuild_month`,
+        path: `/payments/api/members_needing_banking_data_for_rebuild`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -877,18 +877,18 @@ export class PaymentsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(MemberWithoutIbanFromJSON),
+      jsonValue.map(MemberNeedingBankingDataFromJSON),
     );
   }
 
   /**
    */
-  async paymentsApiMembersWithoutIbanForRebuildMonthList(
-    requestParameters: PaymentsApiMembersWithoutIbanForRebuildMonthListRequest,
+  async paymentsApiMembersNeedingBankingDataForRebuildList(
+    requestParameters: PaymentsApiMembersNeedingBankingDataForRebuildListRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<MemberWithoutIban>> {
+  ): Promise<Array<MemberNeedingBankingData>> {
     const response =
-      await this.paymentsApiMembersWithoutIbanForRebuildMonthListRaw(
+      await this.paymentsApiMembersNeedingBankingDataForRebuildListRaw(
         requestParameters,
         initOverrides,
       );
@@ -897,9 +897,9 @@ export class PaymentsApi extends runtime.BaseAPI {
 
   /**
    */
-  async paymentsApiMembersWithoutIbanListRaw(
+  async paymentsApiMembersNeedingBankingDataListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<MemberWithoutIban>>> {
+  ): Promise<runtime.ApiResponse<Array<MemberNeedingBankingData>>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -920,7 +920,7 @@ export class PaymentsApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/payments/api/members_without_iban`,
+        path: `/payments/api/members_needing_banking_data`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -929,17 +929,17 @@ export class PaymentsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(MemberWithoutIbanFromJSON),
+      jsonValue.map(MemberNeedingBankingDataFromJSON),
     );
   }
 
   /**
    */
-  async paymentsApiMembersWithoutIbanList(
+  async paymentsApiMembersNeedingBankingDataList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<MemberWithoutIban>> {
+  ): Promise<Array<MemberNeedingBankingData>> {
     const response =
-      await this.paymentsApiMembersWithoutIbanListRaw(initOverrides);
+      await this.paymentsApiMembersNeedingBankingDataListRaw(initOverrides);
     return await response.value();
   }
 

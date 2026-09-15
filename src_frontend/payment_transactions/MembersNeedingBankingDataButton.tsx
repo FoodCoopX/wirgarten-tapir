@@ -1,32 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { MemberWithoutIban, PaymentsApi } from "../api-client";
+import { MemberNeedingBankingData, PaymentsApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-import MembersWithoutIbanModal from "./MembersWithoutIbanModal.tsx";
+import MembersNeedingBankingDataModal from "./MembersNeedingBankingDataModal.tsx";
 
-interface MembersWithoutIbanButtonProps {
+interface MembersNeedingBankingDataButtonProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
-const MembersWithoutIbanButton: React.FC<MembersWithoutIbanButtonProps> = ({
-  setToastDatas,
-}) => {
+const MembersNeedingBankingDataButton: React.FC<
+  MembersNeedingBankingDataButtonProps
+> = ({ setToastDatas }) => {
   const api = useApi(PaymentsApi, "unused");
-  const [members, setMembers] = useState<MemberWithoutIban[] | undefined>(
-    undefined,
-  );
+  const [members, setMembers] = useState<
+    MemberNeedingBankingData[] | undefined
+  >(undefined);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     api
-      .paymentsApiMembersWithoutIbanList()
+      .paymentsApiMembersNeedingBankingDataList()
       .then(setMembers)
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Benutzer:innen ohne IBAN",
+          "Fehler beim Laden der Benutzer:innen mit unvollständigen Bankdaten",
           setToastDatas,
         ),
       );
@@ -42,12 +42,16 @@ const MembersWithoutIbanButton: React.FC<MembersWithoutIbanButtonProps> = ({
     <>
       <TapirButton
         variant={count > 0 ? "outline-danger" : "outline-success"}
-        text={count > 0 ? `${count} Benutzer:in ohne IBAN` : "0 fehlende IBANs"}
+        text={
+          count > 0
+            ? `${count} Benutzer:in mit unvollständigen Bankdaten`
+            : "alle Bankdaten vollständig"
+        }
         icon={count > 0 ? "warning" : "check_circle"}
         disabled={count === 0}
         onClick={() => setShowModal(true)}
       />
-      <MembersWithoutIbanModal
+      <MembersNeedingBankingDataModal
         show={showModal}
         onHide={() => setShowModal(false)}
         members={members}
@@ -56,4 +60,4 @@ const MembersWithoutIbanButton: React.FC<MembersWithoutIbanButtonProps> = ({
   );
 };
 
-export default MembersWithoutIbanButton;
+export default MembersNeedingBankingDataButton;
