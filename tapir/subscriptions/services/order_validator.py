@@ -120,11 +120,10 @@ class OrderValidator:
             cache=cache,
         )
 
-        if capacity_used_by_order < capacity_used_by_the_current_subscriptions:
-            raise ValidationError(
-                "Während dein Vertrag läuft, kannst du nur die Anteilsgröße erhöhen. "
-                "Deine neu ausgewählte Vertragskonstellation ist kleiner als die bisherige."
-            )
+        SubscriptionChangeValidator.raise_error_if_size_was_reduced(
+            capacity_used_by_the_ordered_products=capacity_used_by_order,
+            capacity_used_by_the_current_subscriptions=capacity_used_by_the_current_subscriptions,
+        )
 
     @classmethod
     def validate_at_least_one_change(
