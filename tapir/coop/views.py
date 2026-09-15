@@ -34,7 +34,6 @@ from tapir.coop.services.coop_membership_cancellation_manager import (
     CoopMembershipCancellationManager,
 )
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
-from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
@@ -329,9 +328,7 @@ class GetCoopShareTransactionsApiView(APIView):
 
 class MemberViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-    queryset = GermanNameSortService.annotate_queryset_with_sort_keys(
-        Member.objects.all(), ["last_name", "first_name"], cache={}
-    ).order_by("member_no", "last_name_sort_key", "first_name_sort_key")
+    queryset = Member.objects.order_by("member_no", "last_name", "first_name")
     serializer_class = MemberSerializer
 
 

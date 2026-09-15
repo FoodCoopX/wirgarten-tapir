@@ -12,7 +12,6 @@ from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFi
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.coop.services.member_number_service import MemberNumberService
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
@@ -54,9 +53,10 @@ class SubscriptionListFilter(FilterSet):
     )
     member = ModelChoiceFilter(
         label=_("Mitglied"),
-        queryset=GermanNameSortService.annotate_queryset_with_sort_keys(
-            Member.objects.all(), ["last_name", "first_name"], cache={}
-        ).order_by("last_name_sort_key", "first_name_sort_key", "member_no"),
+        queryset=Member.objects.all()
+        .order_by("first_name")
+        .order_by("last_name")
+        .order_by("-created_at"),
     )
     pickup_location = ModelChoiceFilter(
         label=_("Abholort"),
@@ -76,8 +76,8 @@ class SubscriptionListFilter(FilterSet):
             ("created_at", "⮝ Abgeschlossen am"),
             ("-member__member_no", "⮟ Mitgliedsnummer"),
             ("member__member_no", "⮝ Mitgliedsnummer"),
-            ("-member_first_name_sort_key", "⮟ Name"),
-            ("member_first_name_sort_key", "⮝ Name"),
+            ("-member__first_name", "⮟ Name"),
+            ("member__first_name", "⮝ Name"),
         ),
         required=False,
         empty_label="",
@@ -268,13 +268,8 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
 
     @classmethod
     def get_queryset_external(cls, cache: dict):
-        queryset = GermanNameSortService.annotate_queryset_with_sort_keys(
-            Subscription.objects.order_by("-created_at"),
-            ["member__first_name"],
-            cache=cache,
-        )
         return SubscriptionPriceCalculator.annotate_subscriptions_queryset_with_monthly_price(
-            queryset=queryset,
+            queryset=Subscription.objects.order_by("-created_at"),
             reference_date=get_today(cache=cache),
         )
 
