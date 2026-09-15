@@ -42,11 +42,11 @@ const RebuildSubscriptionPaymentsModal: React.FC<
   const [error, setError] = useState("");
 
   function getSelectedMonthDate() {
-    const date = new Date();
-    date.setFullYear(year);
-    date.setMonth(month);
-    date.setDate(1);
-    return date;
+    // Built in UTC (not via local-time setters) so the date sent to the
+    // backend can't shift to the previous day depending on the browser's
+    // timezone and the time of day this is clicked - the API client
+    // serializes this via toISOString(), which is UTC-based.
+    return new Date(Date.UTC(year, month, 1));
   }
 
   function onClickRebuild() {
@@ -56,8 +56,8 @@ const RebuildSubscriptionPaymentsModal: React.FC<
         month: getSelectedMonthDate(),
       })
       .then((response) => {
+        setMembersWithoutIbanForMonth(response);
         if (response.length > 0) {
-          setMembersWithoutIbanForMonth(response);
           setShowIbanWarningModal(true);
         } else {
           setShowConfirmationModal(true);
