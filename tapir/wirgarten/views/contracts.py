@@ -56,7 +56,7 @@ class SubscriptionListFilter(FilterSet):
         label=_("Mitglied"),
         queryset=GermanNameSortService.annotate_queryset_with_sort_keys(
             Member.objects.all(), ["last_name", "first_name"], cache={}
-        ).order_by("last_name_sort_key", "first_name_sort_key"),
+        ).order_by("last_name_sort_key", "first_name_sort_key", "member_no"),
     )
     pickup_location = ModelChoiceFilter(
         label=_("Abholort"),

@@ -29,7 +29,7 @@ class GermanNameSortService:
         return f"{field_name.replace('__', '_')}_sort_key"
 
     @classmethod
-    def build_sort_key_expression(cls, field_name: str):
+    def build_sort_key_expression(cls, field_name: str) -> Replace:
         expression = Lower(field_name)
         for umlaut, replacement in GERMAN_SORT_REPLACEMENTS:
             expression = Replace(expression, Value(umlaut), Value(replacement))
