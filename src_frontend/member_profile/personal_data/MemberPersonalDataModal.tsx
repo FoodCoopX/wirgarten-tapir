@@ -64,6 +64,15 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     </>
   );
 
+  const emailHelpText = (
+    <>
+      Die Änderung deiner Email muss durch dich selbst bestätigt werden. Folge
+      den Anweisungen, die du an deine alte Email erhältst. Wenn du keine Mail
+      erhältst, dann wende dich an deinen Betrieb (
+      <a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+    </>
+  );
+
   useEffect(() => {
     if (!show) return;
 
@@ -225,7 +234,14 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               />
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>E-Mail</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  E-Mail
+                  {!canEditName && (
+                    <TapirHelpButton buttonSize={"sm"} text={emailHelpText} />
+                  )}
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"E-Mail"}
                 type={"email"}
