@@ -7,6 +7,7 @@ import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
 import { isPersonalDataValidShort } from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
@@ -43,6 +44,53 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [canEditStudent, setCanEditStudent] = useState(false);
   const [canEditName, setCanEditName] = useState(false);
+  const [contactEmail, setContactEmail] = useState("");
+  const [memberNumber, setMemberNumber] = useState("");
+
+  const memberNumberHelpText =
+    "Die Mitgliedsnummer kann nicht selbstständig verändert werden.";
+
+  const nameHelpText = canEditName ? (
+    <>
+      Nur du als Admin kannst den Namen des Mitgliedes ändern. Das Mitglied kann
+      dies nicht selbstständig. Ihm wird angezeigt, dass es den Betrieb
+      kontaktieren muss, um den Namen zu verändern.
+    </>
+  ) : (
+    <>
+      Du kannst nicht selbstständig deinen Namen verändern. Bitte wende dich an
+      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+      ).
+    </>
+  );
+
+  const emailHelpText = canEditName ? (
+    <>
+      Änderst du die Email hier direkt als Admin, gilt dieselbe Logik wie beim
+      Mitglied selbst: Ist die aktuelle Adresse bereits verifiziert, wird die
+      neue Adresse nicht sofort übernommen. Stattdessen wird beim Speichern ein
+      Bestätigungslink an die alte Adresse verschickt - erst ein Klick darauf
+      setzt die neue Adresse. Ist die aktuelle Adresse noch nicht verifiziert,
+      wird die neue Adresse sofort übernommen.
+      <br />
+      <br />
+      Damit das Mitglied die Mailadresse verändern kann, muss die transaktionale
+      Mail "Email-Änderung: Bestätigung anfordern" im Mailmodul veröffentlicht
+      sein und den Token{" "}
+      <code>
+        {"{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}"}
+      </code>{" "}
+      enthalten. Nur dann kann das Mitglied die Änderung der Emailadresse
+      bestätigen.
+    </>
+  ) : (
+    <>
+      Die Änderung deiner Email muss durch dich selbst bestätigt werden. Folge
+      den Anweisungen, die du an deine alte Email erhältst. Wenn du keine Mail
+      erhältst, dann wende dich an deinen Betrieb (
+      <a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+    </>
+  );
 
   useEffect(() => {
     if (!show) return;
@@ -66,6 +114,8 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           setCanEditStudent(response.canEditStudent);
         }
         setCanEditName(response.canEditName);
+        setContactEmail(response.contactEmail);
+        setMemberNumber(response.memberNumber);
       })
       .catch((error) =>
         handleRequestError(
@@ -155,7 +205,28 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         ) : (
           <Form>
             <Form.Group className="mb-2">
-              <Form.Label>Vorname</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Mitgliedsnummer
+                  <TapirHelpButton
+                    buttonSize={"sm"}
+                    text={memberNumberHelpText}
+                  />
+                </span>
+              </Form.Label>
+              <Form.Control
+                placeholder={"Mitgliedsnummer"}
+                value={memberNumber}
+                disabled
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Vorname
+                  <TapirHelpButton buttonSize={"sm"} text={nameHelpText} />
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"Vorname"}
                 value={firstName}
@@ -166,7 +237,12 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               />
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>Nachname</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Nachname
+                  <TapirHelpButton buttonSize={"sm"} text={nameHelpText} />
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"Nachname"}
                 value={lastName}
@@ -177,7 +253,12 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               />
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>E-Mail</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  E-Mail
+                  <TapirHelpButton buttonSize={"sm"} text={emailHelpText} />
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"E-Mail"}
                 type={"email"}
