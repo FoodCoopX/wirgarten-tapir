@@ -218,7 +218,7 @@
                          data-member-id="{{ object.pk }}"
                          data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}"
                          data-user-is-admin="{{ perms.accounts.manage }}"
-                         data-members-can-change-contribution="{{ 'wirgarten.harvest.members_are_allowed_to_change_soliprice'|parameter }}">
+                         data-members-can-change-contribution="{% get_parameter_value_tag 'wirgarten.harvest.members_are_allowed_to_change_soliprice' cache %}">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="mb-0">Solidarbeitrag</h5>
