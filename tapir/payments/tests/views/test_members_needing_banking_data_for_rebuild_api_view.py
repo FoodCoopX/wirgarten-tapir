@@ -34,12 +34,10 @@ class TestMembersNeedingBankingDataForRebuildApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
     def test_get_default_memberWithPaymentInRangeMissingIban_isReturned(self):
-        admin = self._create_member_with_complete_banking_data(is_superuser=True)
+        admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
 
-        member = self._create_member_with_complete_banking_data(
-            first_name="Anna", iban=None
-        )
+        member = self._create_member_with_banking_data(first_name="Anna", iban=None)
         self._create_payment_for_member(member, month=datetime.date(2023, 4, 1))
 
         response = self._do_call(from_date="2023-04-01")
@@ -48,10 +46,10 @@ class TestMembersNeedingBankingDataForRebuildApiView(TapirIntegrationTest):
         self.assertIn("Anna", {entry["first_name"] for entry in response.json()})
 
     def test_get_default_memberWithCompleteBankingData_isNotReturned(self):
-        admin = self._create_member_with_complete_banking_data(is_superuser=True)
+        admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
 
-        member = self._create_member_with_complete_banking_data(first_name="Anna")
+        member = self._create_member_with_banking_data(first_name="Anna")
         self._create_payment_for_member(member, month=datetime.date(2023, 4, 1))
 
         response = self._do_call(from_date="2023-04-01")
@@ -60,12 +58,10 @@ class TestMembersNeedingBankingDataForRebuildApiView(TapirIntegrationTest):
         self.assertEqual([], response.json())
 
     def test_get_default_paymentBeforeFromDate_isNotReturned(self):
-        admin = self._create_member_with_complete_banking_data(is_superuser=True)
+        admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
 
-        member = self._create_member_with_complete_banking_data(
-            first_name="Anna", iban=None
-        )
+        member = self._create_member_with_banking_data(first_name="Anna", iban=None)
         self._create_payment_for_member(member, month=datetime.date(2023, 3, 1))
 
         response = self._do_call(from_date="2023-04-01")
@@ -74,12 +70,10 @@ class TestMembersNeedingBankingDataForRebuildApiView(TapirIntegrationTest):
         self.assertEqual([], response.json())
 
     def test_get_default_paymentAfterToday_isNotReturned(self):
-        admin = self._create_member_with_complete_banking_data(is_superuser=True)
+        admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
 
-        member = self._create_member_with_complete_banking_data(
-            first_name="Anna", iban=None
-        )
+        member = self._create_member_with_banking_data(first_name="Anna", iban=None)
         self._create_payment_for_member(member, month=datetime.date(2023, 5, 1))
 
         response = self._do_call(from_date="2023-04-01")
@@ -88,12 +82,10 @@ class TestMembersNeedingBankingDataForRebuildApiView(TapirIntegrationTest):
         self.assertEqual([], response.json())
 
     def test_get_default_coopSharePayment_isNotReturned(self):
-        admin = self._create_member_with_complete_banking_data(is_superuser=True)
+        admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
 
-        member = self._create_member_with_complete_banking_data(
-            first_name="Anna", iban=None
-        )
+        member = self._create_member_with_banking_data(first_name="Anna", iban=None)
         self._create_payment_for_member(
             member, month=datetime.date(2023, 4, 1), type=PAYMENT_TYPE_COOP_SHARES
         )
@@ -104,7 +96,7 @@ class TestMembersNeedingBankingDataForRebuildApiView(TapirIntegrationTest):
         self.assertEqual([], response.json())
 
     @staticmethod
-    def _create_member_with_complete_banking_data(**kwargs):
+    def _create_member_with_banking_data(**kwargs):
         kwargs.setdefault("iban", "DE89370400440532013000")
         kwargs.setdefault("account_owner", "Test Owner")
         kwargs.setdefault(
