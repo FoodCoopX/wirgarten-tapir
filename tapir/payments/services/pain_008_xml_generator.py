@@ -10,6 +10,7 @@ from nanoid import generate
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import ID_LENGTH
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
@@ -207,7 +208,10 @@ class Pain008XmlGenerator:
         requested_collection_date = cls._append_element(
             payments_container, "ReqdColltnDt"
         )
-        requested_collection_date.text = cls._format_date(collection_date)
+        due_date = MonthPaymentBuilderUtils.get_payment_due_date_on_month(
+            collection_date, cache
+        )
+        requested_collection_date.text = cls._format_date(due_date)
 
         creditor = cls._append_element(payments_container, "Cdtr")
         creditor_name = cls._append_element(creditor, "Nm")

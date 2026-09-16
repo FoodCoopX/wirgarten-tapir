@@ -37,6 +37,11 @@ class TestBuildXmlString(TapirUnitTest):
             key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM,
             value=False,
         )
+        mock_parameter_value(
+            cache=self.cache,
+            key=ParameterKeys.PAYMENT_DUE_DAY,
+            value=14,
+        )
 
     def test_buildXmlString_default_returnsCorrectString(self):
         mock_timezone(
@@ -93,7 +98,7 @@ class TestBuildXmlString(TapirUnitTest):
             self._get_child("CtrlSum", payment_information).text,
         )
         self.assertEqual(
-            "2019-09-17",
+            "2019-09-14",
             self._get_child("ReqdColltnDt", payment_information).text,
         )
         self.assertEqual(
