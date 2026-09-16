@@ -17,11 +17,12 @@ interface MemberProfileSolidarityContributionCardProps {
   memberId: string;
   adminEmail: string;
   adminVersion: boolean;
+  membersCanChangeContribution: boolean;
 }
 
 const MemberProfileSolidarityContributionCard: React.FC<
   MemberProfileSolidarityContributionCardProps
-> = ({ memberId, adminEmail, adminVersion }) => {
+> = ({ memberId, adminEmail, adminVersion, membersCanChangeContribution }) => {
   const api = useApi(SolidarityContributionApi, getCsrfToken());
   const [loading, setLoading] = useState(true);
   const [solidarityContributions, setSolidarityContributions] = useState<
@@ -203,35 +204,39 @@ const MemberProfileSolidarityContributionCard: React.FC<
   }
 
   function buildHelpText() {
+    const adminEmailLink = <a href={"mailto:" + adminEmail}>{adminEmail}</a>;
+
     if (adminVersion) {
-      return (
-        <>
-          <p>
-            Hier siehst du den Solidarbeitrag des Mitglieds. Als Admin kannst
-            du den Beitrag jederzeit anpassen, auch nach unten, ohne dass das
-            Mitglied dafür extra bestätigen muss.
-          </p>
+      if (membersCanChangeContribution) {
+        return (
           <p className={"mb-0"}>
-            Ein positiver Beitrag unterstützt die Solidarpreise anderer
-            Mitglieder, ein negativer Beitrag reduziert den eigenen Preis und
-            wird durch die positiven Beiträge anderer Mitglieder finanziert.
+            Beachte: Das Mitglied kann den Solidarbeitrag nur nach oben
+            verändern. Nur du als Admin kannst ihn reduzieren.
           </p>
-        </>
+        );
+      }
+      return (
+        <p className={"mb-0"}>
+          Beachte: Das Mitglied kann den Solidarbeitrag aufgrund der
+          Einstellungen in der allgemeinen Konfigurationen nicht verändern.
+          Nur du als Admin kannst ihn einstellen.
+        </p>
       );
     }
 
-    return (
-      <>
-        <p>
-          Der Solidarbeitrag ist ein freiwilliger Auf- oder Abschlag auf
-          deinen Ernteanteilspreis, mit dem die Höfe solidarisch finanziert
-          werden.
-        </p>
+    if (membersCanChangeContribution) {
+      return (
         <p className={"mb-0"}>
-          Du kannst deinen Beitrag jederzeit nach oben anpassen. Für eine
-          Anpassung nach unten kontaktiere bitte {adminEmail}.
+          Beachte: Du kannst deinen Solidarbeitrag nur nach oben verändern. Um
+          ihn zu reduzieren, kontaktiere deinen Betrieb ({adminEmailLink}).
         </p>
-      </>
+      );
+    }
+    return (
+      <p className={"mb-0"}>
+        Beachte: Du kannst deinen Solidarbeitrag nicht selbstständig
+        anpassen. Kontaktiere dazu deinen Betrieb ({adminEmailLink}).
+      </p>
     );
   }
 
