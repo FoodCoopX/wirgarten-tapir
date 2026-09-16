@@ -13,13 +13,13 @@ __________________ <br /><br />
 schade, dass du gekündigt hast! <br /><br />
 
 Wir bestätigen dir hiermit deine Kündigung für: <br />
-{{Kündigung im Probemonat.Vertragsliste}} <br /><br />
+{{Kündigung in der Probezeit.Vertragsliste}} <br /><br />
 
 Dein Vertrag endet am: <br />
-{{Kündigung im Probemonat.Vertragsende}} <br /><br />
+{{Kündigung in der Probezeit.Vertragsende}} <br /><br />
 
 Deine letzte Gemüsekiste erhältst du am: <br />
-{{Kündigung im Probemonat.Letzte Abholung am}} <br /><br />
+{{Kündigung in der Probezeit.Letzte Abholung am}} <br /><br />
 
 Wenn du doch nochmal Lust auf unser Gemüse hast, freuen wir uns dich wieder bei uns Begrüßen zu dürfen! <br /><br />
 
@@ -33,9 +33,9 @@ dein {{Allgemein.Admin Name}} <br />
 ____________________ <br /><br />
 
 Folgende Token sind hier relevant: <br />
-{{Kündigung im Probemonat.Vertragsliste}} <br />
-{{Kündigung im Probemonat.Vertragsende}} <br />
-{{Kündigung im Probemonat.Letzte Abholung am}} <br />
+{{Kündigung in der Probezeit.Vertragsliste}} <br />
+{{Kündigung in der Probezeit.Vertragsende}} <br />
+{{Kündigung in der Probezeit.Letzte Abholung am}} <br />
             </mj-text>
         </mj-column>
     </mj-section>
