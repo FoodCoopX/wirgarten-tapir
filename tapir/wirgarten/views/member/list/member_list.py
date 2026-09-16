@@ -20,6 +20,7 @@ from django_filters.views import FilterView
 
 from tapir.associations.models import AssociationMembershipType
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.german_name_sort_service import GermanNameSortService
 from tapir.coop.services.member_search_service import MemberSearchService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
 from tapir.core.services.organisation_entry_date_annotator import (
@@ -160,10 +161,10 @@ class MemberFilter(FilterSet):
         choices=(
             ("-member_no", "⮟ Mitgliedsnummer"),
             ("member_no", "⮝ Mitgliedsnummer"),
-            ("-first_name", "⮟ Vorname"),
-            ("first_name", "⮝ Vorname"),
-            ("-last_name", "⮟ Nachname"),
-            ("last_name", "⮝ Nachname"),
+            ("-first_name_sort_key", "⮟ Vorname"),
+            ("first_name_sort_key", "⮝ Vorname"),
+            ("-last_name_sort_key", "⮟ Nachname"),
+            ("last_name_sort_key", "⮝ Nachname"),
             ("-email", "⮟ Email"),
             ("email", "⮝ Email"),
             ("organisation_entry_date", "⮝ Registriert am"),
@@ -183,18 +184,18 @@ class MemberFilter(FilterSet):
         self.cache = kwargs.pop("cache", {})
 
         if data is None:
-            data = {"o": "-organisation_entry_date,-member_no,last_name"}
+            data = {"o": "-organisation_entry_date,-member_no,last_name_sort_key"}
         else:
             data = data.copy()
 
             if "o" not in data:
-                data["o"] = "-organisation_entry_date,-member_no,last_name"
+                data["o"] = "-organisation_entry_date,-member_no,last_name_sort_key"
 
             if "member_no" not in data["o"]:
                 data["o"] += ",-member_no"
 
-            if "last_name" not in data["o"]:
-                data["o"] += ",last_name"
+            if "last_name_sort_key" not in data["o"]:
+                data["o"] += ",last_name_sort_key"
 
         super().__init__(data, *args, **kwargs)
 
@@ -214,6 +215,12 @@ class MemberFilter(FilterSet):
             self.form.fields["membership_type"].choices = choices
         if legal_status_is_company(cache=self.cache):
             del self.form.fields["membership_type"]
+
+    def filter_queryset(self, queryset):
+        queryset = GermanNameSortService.annotate_queryset_with_sort_keys(
+            queryset, ["first_name", "last_name"], cache=self.cache
+        )
+        return super().filter_queryset(queryset)
 
     def filter_search(self, queryset, name, value):
         return MemberSearchService.filter_queryset(
