@@ -211,7 +211,10 @@ const MemberProfileSolidarityContributionCard: React.FC<
         return (
           <p className={"mb-0"}>
             Beachte: Das Mitglied kann den Solidarbeitrag nur nach oben
-            verändern. Nur du als Admin kannst ihn reduzieren.
+            verändern. Nur du als Admin kannst ihn reduzieren. Dem Mitglied
+            wird in dem Hilfetext, der ihm eingeblendet wird, kommuniziert,
+            dass es Kontakt zu dir aufnehmen muss, um den Solidarbeitrag zu
+            reduzieren.
           </p>
         );
       }
@@ -219,7 +222,9 @@ const MemberProfileSolidarityContributionCard: React.FC<
         <p className={"mb-0"}>
           Beachte: Das Mitglied kann den Solidarbeitrag aufgrund der
           Einstellungen in der allgemeinen Konfigurationen nicht verändern.
-          Nur du als Admin kannst ihn einstellen.
+          Nur du als Admin kannst ihn einstellen. Dem Mitglied wird in dem
+          Hilfetext, der ihm eingeblendet wird, kommuniziert, dass es Kontakt
+          zu dir aufnehmen muss, um den Solidarbeitrag zu verändern.
         </p>
       );
     }
