@@ -3,9 +3,11 @@ from decimal import Decimal
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
+from icecream import ic
 from lxml import etree
 from lxml.etree import Element
 from nanoid import generate
+from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import ID_LENGTH
@@ -72,9 +74,37 @@ class Pain008XmlGenerator:
         if len(errors) > 0:
             raise ValidationError(", ".join(errors))
 
-        return etree.tostring(
+        document_as_bytes = etree.tostring(
             document, pretty_print=True, xml_declaration=True, encoding="UTF-8"
         )
+        document_as_string = document_as_bytes.decode()
+        document_as_string = cls.replace_special_characters(document_as_string)
+        return document_as_string.encode()
+
+    @classmethod
+    def replace_special_characters(cls, document_as_string: str):
+        # Unidecode converts ö to o, not oe, so we convert german characters first.
+        ic(document_as_string)
+        replacements = {
+            "Ö": "Oe",
+            "ö": "oe",
+            "Ä": "ae",
+            "ä": "ae",
+            "Ü": "ue",
+            "ü": "ue",
+            "&amp;": "und",
+            "&": "und",
+        }
+        updated_string = document_as_string
+        for before, after in replacements.items():
+            updated_string = updated_string.replace(before, after)
+
+        updated_string = unidecode(updated_string)
+        updated_string = " ".join(
+            updated_string.split()
+        )  # Replaces all whitespaces with spaces
+
+        return updated_string
 
     @classmethod
     def validate_single_payment(
