@@ -6,6 +6,7 @@ import {
   SolidarityContributionApi,
 } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
@@ -15,11 +16,12 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 interface MemberProfileSolidarityContributionCardProps {
   memberId: string;
   adminEmail: string;
+  adminVersion: boolean;
 }
 
 const MemberProfileSolidarityContributionCard: React.FC<
   MemberProfileSolidarityContributionCardProps
-> = ({ memberId, adminEmail }) => {
+> = ({ memberId, adminEmail, adminVersion }) => {
   const api = useApi(SolidarityContributionApi, getCsrfToken());
   const [loading, setLoading] = useState(true);
   const [solidarityContributions, setSolidarityContributions] = useState<
@@ -200,12 +202,50 @@ const MemberProfileSolidarityContributionCard: React.FC<
     return startContributionNow ? changeValidFrom : alternativeChangeValidFrom;
   }
 
+  function buildHelpText() {
+    if (adminVersion) {
+      return (
+        <>
+          <p>
+            Hier siehst du den Solidarbeitrag des Mitglieds. Als Admin kannst
+            du den Beitrag jederzeit anpassen, auch nach unten, ohne dass das
+            Mitglied dafür extra bestätigen muss.
+          </p>
+          <p className={"mb-0"}>
+            Ein positiver Beitrag unterstützt die Solidarpreise anderer
+            Mitglieder, ein negativer Beitrag reduziert den eigenen Preis und
+            wird durch die positiven Beiträge anderer Mitglieder finanziert.
+          </p>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <p>
+          Der Solidarbeitrag ist ein freiwilliger Auf- oder Abschlag auf
+          deinen Ernteanteilspreis, mit dem die Höfe solidarisch finanziert
+          werden.
+        </p>
+        <p className={"mb-0"}>
+          Du kannst deinen Beitrag jederzeit nach oben anpassen. Für eine
+          Anpassung nach unten kontaktiere bitte {adminEmail}.
+        </p>
+      </>
+    );
+  }
+
   function buildContent() {
     if (loading)
       return (
         <Card>
           <Card.Header>
-            <h5 className={"mb-0"}>Solidarbeitrag</h5>
+            <span
+              className={"d-flex justify-content-between align-items-center"}
+            >
+              <h5 className={"mb-0"}>Solidarbeitrag</h5>
+              <TapirHelpButton text={buildHelpText()} />
+            </span>
           </Card.Header>
           <Card.Body>
             <Spinner />
@@ -220,7 +260,10 @@ const MemberProfileSolidarityContributionCard: React.FC<
             <span
               className={"d-flex justify-content-between align-items-center"}
             >
-              <h5 className={"mb-0"}>Solidarbeitrag</h5>
+              <span className={"d-flex gap-2 align-items-center"}>
+                <h5 className={"mb-0"}>Solidarbeitrag</h5>
+                <TapirHelpButton text={buildHelpText()} />
+              </span>
               {userCanUpdateContribution && (
                 <TapirButton
                   variant={"outline-primary"}
