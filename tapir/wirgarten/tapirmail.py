@@ -190,7 +190,7 @@ def _register_triggers():
     )
 
     register_transactional_trigger(
-        name="Kündigung im Probemonat",
+        name="Kündigung in der Probezeit",
         key=Events.TRIAL_CANCELLATION,
         tokens={
             "Vertragsliste": "contract_list",
