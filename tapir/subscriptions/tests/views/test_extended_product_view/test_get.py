@@ -1,6 +1,7 @@
 from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
+from tapir.core.config import LEGAL_STATUS_ASSOCIATION
 from tapir.pickup_locations.config import PICKING_MODE_BASKET
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.wirgarten.constants import CUSTOM_CYCLE
@@ -67,11 +68,28 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "url_of_image_in_bestellwizard": "",
                 "capacity": 100,
                 "min_coop_shares": 2,
+                "show_min_coop_shares": True,
                 "price_per_delivery": False,
                 "hidden_in_bestell_wizard": False,
             },
             response_content,
         )
+
+    def test_get_organisationLegalStatusIsNotCooperative_showMinCoopSharesIsFalse(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).update(value=LEGAL_STATUS_ASSOCIATION)
+        self.client.force_login(member)
+        product = ProductFactory.create(min_coop_shares=2)
+
+        url = reverse("subscriptions:extended_product")
+        response = self.client.get(f"{url}?product_id={product.id}")
+
+        self.assertStatusCode(response, 200)
+        self.assertFalse(response.json()["show_min_coop_shares"])
 
     def test_get_default_returnsCorrectData(self):
         member = MemberFactory.create(is_superuser=True)
@@ -120,6 +138,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "url_of_image_in_bestellwizard": "test url",
                 "capacity": 234,
                 "min_coop_shares": 7,
+                "show_min_coop_shares": True,
                 "price_per_delivery": True,
                 "hidden_in_bestell_wizard": True,
             },

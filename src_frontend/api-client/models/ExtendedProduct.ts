@@ -109,6 +109,12 @@ export interface ExtendedProduct {
    * @type {boolean}
    * @memberof ExtendedProduct
    */
+  readonly showMinCoopShares: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof ExtendedProduct
+   */
   readonly pricePerDelivery: boolean;
   /**
    *
@@ -150,6 +156,11 @@ export function instanceOfExtendedProduct(
   if (!("capacity" in value) || value["capacity"] === undefined) return false;
   if (!("minCoopShares" in value) || value["minCoopShares"] === undefined)
     return false;
+  if (
+    !("showMinCoopShares" in value) ||
+    value["showMinCoopShares"] === undefined
+  )
+    return false;
   if (!("pricePerDelivery" in value) || value["pricePerDelivery"] === undefined)
     return false;
   if (
@@ -188,6 +199,7 @@ export function ExtendedProductFromJSONTyped(
     urlOfImageInBestellwizard: json["url_of_image_in_bestellwizard"],
     capacity: json["capacity"],
     minCoopShares: json["min_coop_shares"],
+    showMinCoopShares: json["show_min_coop_shares"],
     pricePerDelivery: json["price_per_delivery"],
     hiddenInBestellWizard: json["hidden_in_bestell_wizard"],
   };
@@ -198,7 +210,10 @@ export function ExtendedProductToJSON(json: any): ExtendedProduct {
 }
 
 export function ExtendedProductToJSONTyped(
-  value?: Omit<ExtendedProduct, "picking_mode" | "price_per_delivery"> | null,
+  value?: Omit<
+    ExtendedProduct,
+    "picking_mode" | "show_min_coop_shares" | "price_per_delivery"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {

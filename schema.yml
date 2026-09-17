@@ -9031,6 +9031,9 @@ components:
           nullable: true
         min_coop_shares:
           type: integer
+        show_min_coop_shares:
+          type: boolean
+          readOnly: true
         price_per_delivery:
           type: boolean
           readOnly: true
@@ -9049,6 +9052,7 @@ components:
       - picking_mode
       - price
       - price_per_delivery
+      - show_min_coop_shares
       - size
       - url_of_image_in_bestellwizard
     ExtendedProductType:

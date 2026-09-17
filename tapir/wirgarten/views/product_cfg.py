@@ -33,7 +33,7 @@ from tapir.wirgarten.service.products import (
     create_growing_period,
     get_active_and_future_subscriptions,
 )
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
 from tapir.wirgarten.views.modal import get_form_modal
 
 PAGE_ROOT = "wirgarten:product"
@@ -170,6 +170,10 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         )
 
         context["delivery_cycle_names"] = DeliveryCycleDict
+
+        context["show_cooperative_content"] = legal_status_is_cooperative(
+            cache=self.cache
+        )
 
         return context
 
