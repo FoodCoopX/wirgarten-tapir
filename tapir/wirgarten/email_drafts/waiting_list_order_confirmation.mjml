@@ -30,6 +30,7 @@ Folgende Token sind hier relevant: <br />
 {{Bestellung durch Warteliste-Link abgeschlossen.Vertragsstart}} <br />
 {{Bestellung durch Warteliste-Link abgeschlossen.Vertragsende}} <br />
 {{Bestellung durch Warteliste-Link abgeschlossen.Erste Abholung am}} <br />
+{{Bestellung durch Warteliste-Link abgeschlossen.Beitrittsdatum Geno/Verein}} <br />
             </mj-text>
         </mj-column>
     </mj-section>
