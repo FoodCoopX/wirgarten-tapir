@@ -97,9 +97,6 @@ def _register_tokens():
             "Satzung Link": lambda: get_parameter_value(
                 ParameterKeys.COOP_STATUTE_LINK, cache=cache
             ),
-            "Infos zur Genossenschaft": lambda: get_parameter_value(
-                ParameterKeys.COOP_INFO_LINK, cache=cache
-            ),
             "Jahr (aktuell)": lambda: get_today(cache=cache).year,
             "Jahr (nächstes)": lambda: get_today(cache=cache).year + 1,
             "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
