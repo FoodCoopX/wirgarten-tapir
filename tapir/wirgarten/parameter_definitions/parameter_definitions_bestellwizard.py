@@ -242,9 +242,10 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 3: Produktauswahl - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
         )
         bestellwizard_parameter_order -= 1
 
