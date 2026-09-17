@@ -28,17 +28,18 @@ export function buildSteps(
     "2_first_name",
   );
 
+  if (settings.introEnabled && waitingListEntryDetails === undefined) {
+    newSteps.push("3_product_type_choice");
+  }
+
   if (
     shouldIncludeStepGrowingPeriodChoice(
       settings.growingPeriodChoices,
       waitingListEntryDetails,
-    )
+    ) &&
+    selectedProductTypes.length > 0
   ) {
     newSteps.push("3b_growing_period_choice");
-  }
-
-  if (settings.introEnabled && waitingListEntryDetails === undefined) {
-    newSteps.push("3_product_type_choice");
   }
 
   for (const productType of selectedProductTypes) {
