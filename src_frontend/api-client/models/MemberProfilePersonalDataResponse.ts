@@ -47,6 +47,12 @@ export interface MemberProfilePersonalDataResponse {
    * @type {string}
    * @memberof MemberProfilePersonalDataResponse
    */
+  phoneNumberLandline?: string | null;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberProfilePersonalDataResponse
+   */
   street: string;
   /**
    *
@@ -142,6 +148,10 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     lastName: json["last_name"],
     email: json["email"],
     phoneNumber: json["phone_number"],
+    phoneNumberLandline:
+      json["phone_number_landline"] == null
+        ? undefined
+        : json["phone_number_landline"],
     street: json["street"],
     street2: json["street_2"],
     postcode: json["postcode"],
@@ -173,6 +183,7 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     last_name: value["lastName"],
     email: value["email"],
     phone_number: value["phoneNumber"],
+    phone_number_landline: value["phoneNumberLandline"],
     street: value["street"],
     street_2: value["street2"],
     postcode: value["postcode"],
