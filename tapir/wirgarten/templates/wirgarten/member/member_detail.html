@@ -137,6 +137,14 @@
                                 {% endif %}
                             </div>
                         </div>
+                        {% if object.phone_number_landline %}
+                            <div class="row m-1">
+                                <div class="col-4 fw-bold text-end">{% translate "Telefon 2" %}:</div>
+                                <div class="col-8" id="tapir_user_phone_number_landline">
+                                    {{ object.phone_number_landline|format_phone_number }}
+                                </div>
+                            </div>
+                        {% endif %}
                         <div class="row m-1">
                             <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
                             <div class="col-8" id="tapir_user_address">
