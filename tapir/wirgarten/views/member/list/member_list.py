@@ -175,6 +175,15 @@ class MemberFilter(FilterSet):
             ("-coop_shares_total_value", "⮟ Genoanteile"),
             ("monthly_payment", "⮝ Umsatz"),
             ("-monthly_payment", "⮟ Umsatz"),
+            (
+                MemberSolidarityContributionService.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION,
+                "⮝ Solidarbeitrag",
+            ),
+            (
+                "-"
+                + MemberSolidarityContributionService.ANNOTATION_CURRENT_MEMBER_CONTRIBUTION,
+                "⮟ Solidarbeitrag",
+            ),
         ),
         required=True,
         empty_label=None,
