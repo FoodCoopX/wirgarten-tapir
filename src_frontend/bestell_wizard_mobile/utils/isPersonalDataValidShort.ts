@@ -10,13 +10,12 @@ export function isPersonalDataValidShort(
   if (!personalData.firstName) return false;
   if (!personalData.lastName) return false;
   if (!personalData.email) return false;
-  if (!personalData.phoneNumber) return false;
   if (!personalData.street) return false;
   if (!personalData.postcode) return false;
   if (!personalData.city) return false;
   if (!personalData.country) return false;
 
-  if (!isPhoneNumberValid(personalData.phoneNumber)) {
+  if (personalData.phoneNumber && !isPhoneNumberValid(personalData.phoneNumber)) {
     return false;
   }
 
