@@ -326,6 +326,15 @@ class MemberQuerySet(models.QuerySet):
             id__in=Member.objects.with_shares(reference_date)
         ).distinct()
 
+    def needing_banking_data(self):
+        return self.filter(
+            models.Q(iban__isnull=True)
+            | models.Q(iban="")
+            | models.Q(account_owner__isnull=True)
+            | models.Q(account_owner="")
+            | models.Q(sepa_consent__isnull=True)
+        )
+
 
 class TapirUserManager(models.Manager.from_queryset(MemberQuerySet)):
     @staticmethod

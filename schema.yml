@@ -2601,6 +2601,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberPaymentRhythmData'
           description: ''
+  /payments/api/members_needing_banking_data:
+    get:
+      operationId: payments_api_members_needing_banking_data_list
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberNeedingBankingData'
+          description: ''
+  /payments/api/members_needing_banking_data_for_rebuild:
+    get:
+      operationId: payments_api_members_needing_banking_data_for_rebuild_list
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+          format: date
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberNeedingBankingData'
+          description: ''
   /payments/api/payment_transaction_details:
     get:
       operationId: payments_api_payment_transaction_details_retrieve
@@ -10065,6 +10108,37 @@ components:
       - available_lists
       - subscribed_lists
       - waiting_for_confirmation_lists
+    MemberNeedingBankingData:
+      type: object
+      properties:
+        member_no:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Mitgliedsnummer
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          title: E-Mail-Adresse
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        member_url:
+          type: string
+          readOnly: true
+      required:
+      - first_name
+      - last_name
+      - member_url
     MemberPaymentRhythm:
       type: object
       properties:

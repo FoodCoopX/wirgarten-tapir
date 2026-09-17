@@ -105,6 +105,7 @@ export * from "./MemberJokerInformation";
 export * from "./MemberMailCategoryData";
 export * from "./MemberMailCategoryRequestRequest";
 export * from "./MemberMailingListDataResponse";
+export * from "./MemberNeedingBankingData";
 export * from "./MemberPaymentRhythm";
 export * from "./MemberPaymentRhythmData";
 export * from "./MemberProfileCapacityCheckRequestRequest";
