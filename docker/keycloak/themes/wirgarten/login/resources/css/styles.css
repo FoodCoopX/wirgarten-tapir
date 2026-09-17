@@ -265,3 +265,22 @@ body {
   border-color: var(--primary);
   filter: brightness(90%);
 }
+
+/* Keycloak's set-password form hints the username to browsers via a
+   readonly input with display:none, but Chrome ignores display:none
+   fields when deciding what to save, so it stores the new password
+   without an associated email address. Keep the field in the layout
+   (display:block) and hide it visually instead, so Chrome can still
+   see it. */
+#kc-passwd-update-form input[name="username"] {
+  display: block !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
