@@ -45,6 +45,7 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
           isInvalid={showValidation && !isValid}
           disabled={disabled}
           onPaste={disablePaste ? (event) => event.preventDefault() : undefined}
+          onDrop={disablePaste ? (event) => event.preventDefault() : undefined}
         />
       </FloatingLabel>
       {extraText && (

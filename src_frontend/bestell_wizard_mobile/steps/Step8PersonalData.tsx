@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { BestellWizardApi } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import {
+  emailsMatch,
+  shouldShowEmailMismatchWarning,
+} from "../../bestell_wizard/utils/emailsMatch.ts";
 import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
 import { useApi } from "../../hooks/useApi.ts";
@@ -165,13 +169,31 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         );
       case "emailConfirm":
         return (
-          personalData.emailConfirm.length > 0 &&
-          personalData.emailConfirm === personalData.email
+          personalData.emailConfirm.trim().length > 0 &&
+          emailsMatch(personalData.email, personalData.emailConfirm)
         );
       case "street2":
         return true;
       default:
         return personalData[key].length > 0;
+    }
+  }
+
+  function getExtraText(key: keyof PersonalData) {
+    switch (key) {
+      case "email":
+        return emailAddressAlreadyInUse && !emailAddressAlreadyInUseLoading
+          ? "Diese Email-Adresse ist schon vergeben"
+          : "";
+      case "emailConfirm":
+        return shouldShowEmailMismatchWarning(
+          personalData.email,
+          personalData.emailConfirm,
+        )
+          ? "Die E-Mail-Adressen stimmen nicht überein"
+          : "";
+      default:
+        return "";
     }
   }
 
@@ -203,17 +225,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
             type={getType(field)}
             showValidation={showValidation}
             isValid={isValid(field)}
-            extraText={
-              field === "email" &&
-              emailAddressAlreadyInUse &&
-              !emailAddressAlreadyInUseLoading
-                ? "Diese Email-Adresse ist schon vergeben"
-                : field === "emailConfirm" &&
-                    personalData.emailConfirm.length > 0 &&
-                    personalData.emailConfirm !== personalData.email
-                  ? "Die E-Mail-Adressen stimmen nicht überein"
-                  : ""
-            }
+            extraText={getExtraText(field)}
             style={{ width: "264px" }}
             disabled={changesDisabled}
             disablePaste={field === "emailConfirm"}
