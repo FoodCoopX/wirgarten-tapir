@@ -134,6 +134,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           firstName: firstName,
           lastName: lastName,
           email: email,
+          emailConfirm: email,
           phoneNumber: phoneNumber,
           street: street,
           street2: street2,

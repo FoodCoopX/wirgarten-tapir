@@ -10,6 +10,7 @@ export function isPersonalDataValidShort(
   if (!personalData.firstName) return false;
   if (!personalData.lastName) return false;
   if (!personalData.email) return false;
+  if (personalData.email !== personalData.emailConfirm) return false;
   if (!personalData.phoneNumber) return false;
   if (!personalData.street) return false;
   if (!personalData.postcode) return false;

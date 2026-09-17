@@ -34,6 +34,7 @@ const FIELDS: (keyof PersonalData)[] = [
   "firstName",
   "lastName",
   "email",
+  "emailConfirm",
   "street",
   "street2",
   "postcode",
@@ -46,6 +47,7 @@ function getType(key: keyof PersonalData) {
     case "phoneNumber":
       return "tel";
     case "email":
+    case "emailConfirm":
       return "email";
     default:
       return "text";
@@ -142,6 +144,8 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         return emailAddressAlreadyInUseLoading
           ? "Wird geprüft..."
           : "E-Mail-Adresse";
+      case "emailConfirm":
+        return "E-Mail-Adresse wiederholen";
       case "phoneNumber":
         return "Telefon-Nr";
       default:
@@ -158,6 +162,11 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
           isEmailValid(personalData.email) &&
           !emailAddressAlreadyInUse &&
           !emailAddressAlreadyInUseLoading
+        );
+      case "emailConfirm":
+        return (
+          personalData.emailConfirm.length > 0 &&
+          personalData.emailConfirm === personalData.email
         );
       case "street2":
         return true;
@@ -199,7 +208,11 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
               emailAddressAlreadyInUse &&
               !emailAddressAlreadyInUseLoading
                 ? "Diese Email-Adresse ist schon vergeben"
-                : ""
+                : field === "emailConfirm" &&
+                    personalData.emailConfirm.length > 0 &&
+                    personalData.emailConfirm !== personalData.email
+                  ? "Die E-Mail-Adressen stimmen nicht überein"
+                  : ""
             }
             style={{ width: "264px" }}
             disabled={changesDisabled}
