@@ -115,6 +115,26 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         response_content = response.json()
         self.assertTrue(response_content["is_student"])
 
+    def test_get_studentStatusDisabledAndLegalStatusIsCooperative_returnsNoneAsStudentStatus(
+        self,
+    ):
+        user = MemberFactory.create(is_student=True)
+        self.client.force_login(user)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES
+        ).update(value=False)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
+        ).update(value=LEGAL_STATUS_COOPERATIVE)
+
+        url = reverse("coop:member_personal_data")
+        url = f"{url}?member_id={user.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertIsNone(response_content["is_student"])
+
     @patch.object(TransactionalTrigger, "fire_action")
     def test_patch_memberTriesToUpdateDataFromAnotherMember_returns403(
         self, mock_fire_action: Mock
