@@ -28,7 +28,8 @@ class PersonalDataValidator:
         cls.validate_email_address_not_in_use(
             email, cache=cache, check_waiting_list=check_waiting_list
         )
-        cls.validate_phone_number_is_valid(phone_number)
+        if phone_number:
+            cls.validate_phone_number_is_valid(phone_number)
 
         IBANValidator()(iban)
 
