@@ -290,9 +290,10 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 3B: Vertragsperiode-Auswahl - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du kannst auswählen, ob dein Vertrag zur neuen oder bereits jetzt zur aktuellen Vertragsperiode starten soll. Es wird dir für beide Auswahloptionen jeweils das Startdatum deines Vertrages angezeigt (jeweils Mo. der ersten Lieferwoche).",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
         )
         bestellwizard_parameter_order -= 1
 
