@@ -105,7 +105,7 @@ class SubscriptionListFilter(FilterSet):
         widget=CheckboxInput,
     )
     show_only_ended_contracts = BooleanFilter(
-        label=_("Nur ausgelaufene Verträge anzeigen"),
+        label=_("Innerhalb der Vertragsperiode beendete Verträge anzeigen"),
         field_name="show_only_ended_contracts",
         method="filter_show_only_ended_contracts",
         widget=CheckboxInput,
