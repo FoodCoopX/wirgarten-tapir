@@ -44,6 +44,9 @@ class ParameterDefinitionsMemberDashboard:
             order_priority=801,
             meta=ParameterMeta(
                 vars_hint=MEMBER_RENEWAL_ALERT_VARS,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -61,6 +64,9 @@ class ParameterDefinitionsMemberDashboard:
                     validate_html,
                 ],
                 textarea=True,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -74,6 +80,9 @@ class ParameterDefinitionsMemberDashboard:
             order_priority=701,
             meta=ParameterMeta(
                 vars_hint=MEMBER_RENEWAL_ALERT_VARS,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -91,6 +100,9 @@ class ParameterDefinitionsMemberDashboard:
                 validators=[
                     validate_html,
                 ],
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -104,6 +116,9 @@ class ParameterDefinitionsMemberDashboard:
             order_priority=601,
             meta=ParameterMeta(
                 vars_hint=MEMBER_RENEWAL_ALERT_VARS,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -121,6 +136,9 @@ class ParameterDefinitionsMemberDashboard:
                     validate_html,
                 ],
                 textarea=True,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -132,7 +150,12 @@ class ParameterDefinitionsMemberDashboard:
             description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=501,
-            meta=ParameterMeta(vars_hint=MEMBER_RENEWAL_ALERT_VARS),
+            meta=ParameterMeta(
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
+            ),
         )
 
         importer.parameter_definition(
@@ -149,6 +172,9 @@ class ParameterDefinitionsMemberDashboard:
                     validate_html,
                 ],
                 textarea=True,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
