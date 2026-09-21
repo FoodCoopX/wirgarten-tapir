@@ -1,6 +1,7 @@
 import React from "react";
-import TapirButton from "../../components/TapirButton.tsx";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step1AIntroProps {
@@ -14,7 +15,13 @@ const Step1BWelcome: React.FC<Step1AIntroProps> = ({
 }) => {
   return (
     <>
-      {settings.strings.step1bText && <p>{settings.strings.step1bText}</p>}
+      {settings.strings.step1bText && (
+        <p
+          dangerouslySetInnerHTML={getHtmlDescription(
+            settings.strings.step1bText,
+          )}
+        />
+      )}
       <TapirButton
         variant={BUTTON_VARIANT}
         text={"Starten"}

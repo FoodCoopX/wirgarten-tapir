@@ -118,9 +118,12 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   return (
     <>
       {settings.strings.step3Text && (
-        <p className={"text-center"}>
-          {replaceTokens(settings.strings.step3Text, firstName)}
-        </p>
+        <p
+          className={"text-center"}
+          dangerouslySetInnerHTML={getHtmlDescription(
+            replaceTokens(settings.strings.step3Text, firstName),
+          )}
+        />
       )}
 
       <div>

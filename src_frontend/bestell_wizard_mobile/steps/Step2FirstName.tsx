@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step2FirstNameProps {
@@ -41,7 +42,13 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
 
   return (
     <>
-      {settings.strings.step2Text && <p>{settings.strings.step2Text}</p>}
+      {settings.strings.step2Text && (
+        <p
+          dangerouslySetInnerHTML={getHtmlDescription(
+            settings.strings.step2Text,
+          )}
+        />
+      )}
       <Form.Control
         placeholder={"Vorname"}
         style={{ maxWidth: "300px" }}

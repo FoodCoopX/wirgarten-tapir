@@ -186,7 +186,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 1B: Begrüßungsseite im Wartelistemodus - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Da wir derzeit keine freien Kapazitäten haben, kannst du dich nur auf die Warteliste setzen lassen. Wir kontaktieren dich dann, sobald ein passender Anteil freigeworden ist.",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -208,7 +208,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 2: Vorname - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -242,7 +242,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 3: Produktauswahl - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -289,7 +289,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 3B: Vertragsperiode-Auswahl - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du kannst auswählen, ob dein Vertrag zur neuen oder bereits jetzt zur aktuellen Vertragsperiode starten soll. Es wird dir für beide Auswahloptionen jeweils das Startdatum deines Vertrages angezeigt (jeweils Mo. der ersten Lieferwoche).",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -311,7 +311,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 4B: Produkt-Typ Bestellung - Popup zu Warteliste - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Diese standard Text zu Warteliste soll in der Konfig unter 'Seite 4B: Produkt-Typ Bestellung - Popup zu Warteliste - Text' angepasst werden",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -384,7 +384,7 @@ class ParameterDefinitionsBestellwizard:
             initial_value="<p>Auf der nächsten Seite kannst du dir eine Karte mit den Verteilstationen "
             "bzw. eine Liste dieser anzeigen lassen.</p><p>Du kannst deine Station während der "
             "Vertragslaufzeit im Mitgliederbereich auch wechseln z.B. wenn du umziehst.</p>",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
@@ -431,7 +431,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 5C: Bestätigung der Verteilstation - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Deine ausgewählte Verteilstation ist gerade ausgelastet und du kommst auf die Warteliste. Willst du noch weitere Stationen als Wunsch hinterlegen, damit du schneller einsteigen kannst?",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -464,7 +464,7 @@ class ParameterDefinitionsBestellwizard:
                               <p>Du kannst somit bei allen Grundsatzentscheidungen mitbestimmen und hast ein Stimmrecht bei der Generalversammlung.</p>
                               <p>Mit deinen Genossenschaftsanteilen /Vereinsmitgliedschaft ermöglichst du die gemeinsame Finanzierung wichtiger Investitionen für die Genossenschaft.</p>
                               <p>Anzupassen in Konfig unter "{label}"</p>""",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(
@@ -511,7 +511,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 6B: Genossenschaftsanteile - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="<p>Standardtext zu Genoanteile. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam faucibus enim vel quam commodo porta.</p>",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(
@@ -667,7 +667,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 9: Bankverbindung - Erklärungstext Zahlungsintervalle",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Dieses Text soll in der Konfig angepasst werden unter 'Seite 9: Bankverbindung - Erklärungstext Zahlungsintervalle'",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -839,7 +839,7 @@ class ParameterDefinitionsBestellwizard:
             label="Seite 13: Feedback - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Deine Anregungen helfen uns weiter, unser Angebot stetig zu verbessern",
-            description="",
+            description=HTML_ALLOWED_TEXT,
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(
