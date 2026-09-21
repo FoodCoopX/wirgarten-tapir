@@ -225,3 +225,4 @@ class MemberPaymentRhythmService:
         MemberPaymentRhythm.objects.create(
             member=member, rhythm=rhythm, valid_from=valid_from
         )
+        cache.pop("payment_rhythms_by_member", None)
