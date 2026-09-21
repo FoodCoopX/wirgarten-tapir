@@ -66,22 +66,27 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
 
   const emailHelpText = canEditName ? (
     <>
-      Änderst du die Email hier direkt als Admin, gilt dieselbe Logik wie beim
-      Mitglied selbst: Ist die aktuelle Adresse bereits verifiziert, wird die
-      neue Adresse nicht sofort übernommen. Stattdessen wird beim Speichern ein
-      Bestätigungslink an die alte Adresse verschickt - erst ein Klick darauf
-      setzt die neue Adresse. Ist die aktuelle Adresse noch nicht verifiziert,
-      wird die neue Adresse sofort übernommen.
+      Änderst du die Email hier direkt als Admin, hängt das Verhalten vom
+      Verifizierungsstatus der aktuellen Adresse ab:
       <br />
       <br />
-      Damit das Mitglied die Mailadresse verändern kann, muss die transaktionale
+      <strong>Adresse bereits verifiziert:</strong> Die neue Adresse wird beim
+      Speichern nicht sofort übernommen. Stattdessen wird ein Bestätigungslink
+      an die <strong>alte</strong> Adresse verschickt – erst ein Klick darauf
+      setzt die neue Adresse. Damit das funktioniert, muss die transaktionale
       Mail "Email-Änderung: Bestätigung anfordern" im Mailmodul veröffentlicht
       sein und den Token{" "}
       <code>
         {"{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}"}
       </code>{" "}
-      enthalten. Nur dann kann das Mitglied die Änderung der Emailadresse
-      bestätigen.
+      enthalten.
+      <br />
+      <br />
+      <strong>Adresse noch nicht verifiziert</strong> (z. B. bei einem neuen
+      Mitglied, das sein Konto noch nicht bestätigt hat): Die neue Adresse wird
+      sofort übernommen, und es wird automatisch eine neue Verifizierungsmail an
+      die neue Adresse verschickt. Ein manuelles erneutes Versenden ist nicht
+      nötig – das Mitglied muss nur noch auf den Link in dieser Mail klicken.
     </>
   ) : (
     <>
