@@ -80,13 +80,11 @@ class TestMemberListView(TapirIntegrationTest):
             member=member_low,
             amount=5,
             start_date=today - datetime.timedelta(days=1),
-            end_date=today + datetime.timedelta(days=365),
         )
         SolidarityContributionFactory.create(
             member=member_high,
             amount=25,
             start_date=today - datetime.timedelta(days=1),
-            end_date=today + datetime.timedelta(days=365),
         )
         member_ids = {member_low.id, member_high.id, member_none.id}
 
@@ -102,6 +100,6 @@ class TestMemberListView(TapirIntegrationTest):
         ]
 
         self.assertEqual(
-            ["Low", "High"],
-            [name for name in last_names if name != "None"],
+            ["Low", "High", "None"],
+            last_names,
         )
