@@ -1,6 +1,11 @@
 from tapir.bestell_wizard.services.order_form_token_service import (
     OrderFormTokenService,
 )
+from tapir.core.config import (
+    LEGAL_STATUS_ASSOCIATION,
+    LEGAL_STATUS_COMPANY,
+    LEGAL_STATUS_COOPERATIVE,
+)
 from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.constants import ParameterCategory
@@ -13,6 +18,7 @@ class TestOrderFormTokenService(TapirUnitTest):
     def build_cache(revocation_link="https://example.com/widerruf"):
         cache = {}
         for key, value in {
+            ParameterKeys.ORGANISATION_LEGAL_STATUS: LEGAL_STATUS_COOPERATIVE,
             ParameterKeys.SITE_EMAIL: "kontakt@example.com",
             ParameterKeys.COOP_STATUTE_LINK: "https://example.com/satzung",
             ParameterKeys.SITE_PRIVACY_LINK: "https://example.com/datenschutz",
@@ -79,3 +85,37 @@ class TestOrderFormTokenService(TapirUnitTest):
             datatype=TapirParameterDatatype.STRING.value,
         )
         self.assertTrue(OrderFormTokenService.is_text_field_of_order_form(parameter))
+
+    def test_getDisplayTokens_companyLegalStatus_hidesSatzung(self):
+        cache = {}
+        mock_parameter_value(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_COMPANY,
+            cache=cache,
+        )
+
+        self.assertNotIn("((satzung))", OrderFormTokenService.get_display_tokens(cache))
+
+    def test_getDisplayTokens_associationLegalStatus_showsSatzung(self):
+        cache = {}
+        mock_parameter_value(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_ASSOCIATION,
+            cache=cache,
+        )
+
+        self.assertIn("((satzung))", OrderFormTokenService.get_display_tokens(cache))
+
+    def test_findUsedTokensWithoutValue_companyWithSatzungToken_noWarning(self):
+        cache = self.build_cache()
+        mock_parameter_value(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            value=LEGAL_STATUS_COMPANY,
+            cache=cache,
+        )
+        mock_parameter_value(key=ParameterKeys.COOP_STATUTE_LINK, value="", cache=cache)
+
+        self.assertEqual(
+            [],
+            OrderFormTokenService.find_used_tokens_without_value("((satzung))", cache),
+        )

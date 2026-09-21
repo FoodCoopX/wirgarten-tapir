@@ -39,7 +39,7 @@ def create_field(param: TapirParameter, cache: dict):
     if OrderFormTokenService.is_text_field_of_order_form(param):
         help_text += (
             "<br /><small><strong>Tokens:</strong> "
-            + ", ".join(OrderFormTokenService.DISPLAY_TOKENS)
+            + ", ".join(OrderFormTokenService.get_display_tokens(cache))
             + "<br /><strong>Beispiel:</strong> "
             + html.escape(OrderFormTokenService.EXAMPLE)
             + "</small>"

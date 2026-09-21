@@ -4,6 +4,10 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import (
+    legal_status_is_association,
+    legal_status_is_cooperative,
+)
 
 
 class OrderFormTokenService:
@@ -19,13 +23,13 @@ class OrderFormTokenService:
         "widerrufsbelehrung": ParameterKeys.SITE_REVOCATION_LINK,
         "vertragsbedingungen/agbs": ParameterKeys.SITE_CONTRACT_TERMS_LINK,
     }
-    DISPLAY_TOKENS = [
-        "((kontakt_mail))",
-        "((satzung))",
-        "((datenschutzerklärung))",
-        "((widerrufsbelehrung))",
-        "((Vertragsbedingungen/AGBS))",
-    ]
+    DISPLAY_TOKENS = {
+        "kontakt_mail": "((kontakt_mail))",
+        "satzung": "((satzung))",
+        "datenschutzerklärung": "((datenschutzerklärung))",
+        "widerrufsbelehrung": "((widerrufsbelehrung))",
+        "vertragsbedingungen/agbs": "((Vertragsbedingungen/AGBS))",
+    }
     EXAMPLE = '<a href="((satzung))">Satzung</a>'
     TOKEN_PATTERN = re.compile(r"\(\(([^()]*)\)\)")
     NON_TEXT_KEY_PARTS = ["background", "solidarity_step_position"]
@@ -41,6 +45,22 @@ class OrderFormTokenService:
         )
 
     @classmethod
+    def is_token_available(cls, token: str, cache: dict = None) -> bool:
+        if token == "satzung":
+            return legal_status_is_cooperative(cache) or legal_status_is_association(
+                cache
+            )
+        return True
+
+    @classmethod
+    def get_display_tokens(cls, cache: dict = None) -> list[str]:
+        return [
+            display
+            for token, display in cls.DISPLAY_TOKENS.items()
+            if cls.is_token_available(token, cache)
+        ]
+
+    @classmethod
     def find_used_tokens(cls, text: str) -> set[str]:
         used = set()
         for match in cls.TOKEN_PATTERN.findall(text or ""):
@@ -54,7 +74,8 @@ class OrderFormTokenService:
         return sorted(
             token
             for token in cls.find_used_tokens(text)
-            if not cls.get_token_value(token, cache)
+            if cls.is_token_available(token, cache)
+            and not cls.get_token_value(token, cache)
         )
 
     @classmethod

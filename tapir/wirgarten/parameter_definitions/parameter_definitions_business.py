@@ -60,7 +60,11 @@ class ParameterDefinitionsBusiness:
             initial_value="https://lueneburg.wirgarten.com/satzung",
             description="Der Link zur Satzung des Betriebs.",
             category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(validators=[URLValidator()]),
+            meta=ParameterMeta(
+                validators=[URLValidator()],
+                show_only_when=lambda cache: legal_status_is_cooperative(cache)
+                or legal_status_is_association(cache),
+            ),
             order_priority=order_priority,
         )
         order_priority -= 1
