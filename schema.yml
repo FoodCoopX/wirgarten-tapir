@@ -3222,7 +3222,6 @@ paths:
         name: id
         schema:
           type: string
-        description: Ein eindeutiger Wert, der pickup location identifiziert.
         required: true
       tags:
       - pickup_locations
@@ -10218,7 +10217,6 @@ components:
           type: boolean
         country:
           type: string
-          nullable: true
         can_edit_country:
           type: boolean
         contact_email:
@@ -10232,6 +10230,7 @@ components:
       - can_edit_student
       - city
       - contact_email
+      - country
       - email
       - first_name
       - last_name
@@ -11510,7 +11509,7 @@ components:
         info:
           type: string
           title: Additional info
-          maxLength: 1024
+          maxLength: 3000
         access_code:
           type: string
           maxLength: 20
@@ -11530,7 +11529,7 @@ components:
         route_info:
           type: string
           title: Driver/Route info
-          maxLength: 1024
+          maxLength: 3000
         location_route:
           type: string
           nullable: true

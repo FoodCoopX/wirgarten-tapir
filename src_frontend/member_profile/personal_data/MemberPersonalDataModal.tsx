@@ -23,9 +23,6 @@ interface MemberPersonalDataModalProps {
 
 const COUNTRY_OPTIONS = ["DE", "AT"];
 
-const countryHelpText =
-  "Nur änderbar durch dich als Admin. Das Mitglied bekommt das Feld nicht angezeigt";
-
 const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   memberId,
   csrfToken,
@@ -68,6 +65,18 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       Du kannst nicht selbstständig deinen Namen verändern. Bitte wende dich an
       deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>
       ).
+    </>
+  );
+
+  const countryHelpText = canEditCountry ? (
+    <>
+      Nur änderbar durch dich als Admin. Das Mitglied sieht das Feld, kann es
+      aber nicht ändern.
+    </>
+  ) : (
+    <>
+      Du kannst nicht selbstständig dein Land verändern. Bitte wende dich an
+      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );
 
@@ -116,7 +125,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         setPostcode(response.postcode);
         setCity(response.city);
         setCanEditCountry(response.canEditCountry);
-        setCountry(response.country ?? "");
+        setCountry(response.country);
         if (response.isStudent !== undefined) {
           setIsStudent(response.isStudent);
           setStudentStatusEnabled(true);
@@ -174,10 +183,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           street2: street2,
           postcode: postcode,
           city: city,
-          country:
-            canEditCountry && COUNTRY_OPTIONS.includes(country)
-              ? country
-              : undefined,
+          country: canEditCountry ? country : undefined,
           isStudent: isStudent,
         },
       })
@@ -331,31 +337,25 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 isInvalid={showValidation && city.length === 0}
               />
             </Form.Group>
-            {canEditCountry && (
-              <Form.Group className="mb-2">
-                <Form.Label>
-                  <span className={"d-flex flex-row gap-2 align-items-center"}>
-                    Land
-                    <TapirHelpButton buttonSize={"sm"} text={countryHelpText} />
-                  </span>
-                </Form.Label>
-                <Form.Select
-                  value={country}
-                  onChange={(event) => setCountry(event.target.value)}
-                >
-                  {!COUNTRY_OPTIONS.includes(country) && (
-                    <option value={country} disabled>
-                      {country || "-"}
-                    </option>
-                  )}
-                  {COUNTRY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            )}
+            <Form.Group className="mb-2">
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Land
+                  <TapirHelpButton buttonSize={"sm"} text={countryHelpText} />
+                </span>
+              </Form.Label>
+              <Form.Select
+                value={country}
+                onChange={(event) => setCountry(event.target.value)}
+                disabled={!canEditCountry}
+              >
+                {COUNTRY_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
             {studentStatusEnabled && (
               <Form.Group>
                 <Form.Check

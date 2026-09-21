@@ -89,7 +89,7 @@ export interface MemberProfilePersonalDataResponse {
    * @type {string}
    * @memberof MemberProfilePersonalDataResponse
    */
-  country?: string | null;
+  country: string;
   /**
    *
    * @type {boolean}
@@ -129,6 +129,7 @@ export function instanceOfMemberProfilePersonalDataResponse(
     return false;
   if (!("canEditName" in value) || value["canEditName"] === undefined)
     return false;
+  if (!("country" in value) || value["country"] === undefined) return false;
   if (!("canEditCountry" in value) || value["canEditCountry"] === undefined)
     return false;
   if (!("contactEmail" in value) || value["contactEmail"] === undefined)
@@ -163,7 +164,7 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
     canEditStudent: json["can_edit_student"],
     canEditName: json["can_edit_name"],
-    country: json["country"] == null ? undefined : json["country"],
+    country: json["country"],
     canEditCountry: json["can_edit_country"],
     contactEmail: json["contact_email"],
     memberNumber: json["member_number"],
