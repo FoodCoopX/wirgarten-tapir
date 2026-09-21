@@ -31,6 +31,9 @@ from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
 from tapir.bestell_wizard.services.questionnaire_source_service import (
     QuestionnaireSourceService,
 )
+from tapir.bestell_wizard.services.order_form_token_service import (
+    OrderFormTokenService,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
@@ -657,7 +660,9 @@ class BestellWizardBaseDataApiView(APIView):
         cls, serializer_key_to_parameter_key_map: dict, cache: dict
     ):
         return {
-            serializer_key: get_parameter_value(key=parameter_key, cache=cache)
+            serializer_key: OrderFormTokenService.replace_tokens(
+                get_parameter_value(key=parameter_key, cache=cache), cache=cache
+            )
             for serializer_key, parameter_key in serializer_key_to_parameter_key_map.items()
         }
 

@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.urls import reverse_lazy
@@ -6,6 +7,9 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.bestell_wizard.services.order_form_token_service import (
+    OrderFormTokenService,
+)
 from tapir.configuration.forms import ParameterForm
 from tapir.configuration.models import TapirParameter
 from tapir.coop.services.member_number_service import MemberNumberService
@@ -83,4 +87,22 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
                 value=str(form.cleaned_data[field.name])
             )
 
+        self.warn_about_tokens_without_value(form)
+
         return response
+
+    def warn_about_tokens_without_value(self, form):
+        for field in form.visible_fields():
+            parameter = TapirParameter.objects.get(pk=field.name)
+            if not OrderFormTokenService.is_text_field_of_order_form(parameter):
+                continue
+            tokens = OrderFormTokenService.find_used_tokens_without_value(
+                form.cleaned_data[field.name]
+            )
+            if tokens:
+                messages.warning(
+                    self.request,
+                    f"Im Feld '{field.label}' wird "
+                    + ", ".join(f"(({token}))" for token in tokens)
+                    + " verwendet, aber das zugehörige Feld ist leer.",
+                )

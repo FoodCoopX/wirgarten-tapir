@@ -13,6 +13,11 @@ if typing.TYPE_CHECKING:
     )
 
 
+def _validate_optional_url(value: str):
+    if value:
+        URLValidator()(value)
+
+
 class ParameterDefinitionsSite:
     @classmethod
     def define_all_parameters_site(cls, importer: ParameterDefinitions):
@@ -101,6 +106,26 @@ class ParameterDefinitionsSite:
             description="Der Link zur Datenschutzerklärung. Beispiel: 'https://lueneburg.wirgarten.com/datenschutzerklaerung'",
             category=ParameterCategory.SITE,
             meta=ParameterMeta(validators=[URLValidator()]),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.SITE_REVOCATION_LINK,
+            label="Link zur Widerrufsbelehrung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Der Link zur Widerrufsbelehrung. Kann im Bestellformular mit dem Token ((widerrufsbelehrung)) verwendet werden.",
+            category=ParameterCategory.SITE,
+            meta=ParameterMeta(validators=[_validate_optional_url]),
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.SITE_CONTRACT_TERMS_LINK,
+            label="Link zu den Vertragsbedingungen/AGBs",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Der Link zu den Vertragsbedingungen/AGBs. Kann im Bestellformular mit dem Token ((Vertragsbedingungen/AGBS)) verwendet werden.",
+            category=ParameterCategory.SITE,
+            meta=ParameterMeta(validators=[_validate_optional_url]),
         )
 
         importer.parameter_definition(

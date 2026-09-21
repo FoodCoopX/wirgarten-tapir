@@ -16,6 +16,8 @@ class ParameterKeys:
     SITE_ADMIN_IMAGE = f"{PREFIX}.site.admin_image"
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
     SITE_FAQ_LINK = f"{PREFIX}.site.faq_link"
+    SITE_REVOCATION_LINK = f"{PREFIX}.site.revocation_link"
+    SITE_CONTRACT_TERMS_LINK = f"{PREFIX}.site.contract_terms_link"
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"

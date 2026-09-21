@@ -2,6 +2,9 @@ from django import forms
 from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
 
+from tapir.bestell_wizard.services.order_form_token_service import (
+    OrderFormTokenService,
+)
 from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.configuration.parameter import (
     get_parameter_meta,
@@ -29,6 +32,13 @@ def create_field(param: TapirParameter, cache: dict):
             help_text += "<br />"
         help_text += (
             f"<small><strong>Variablen:</strong> {", ".join(vars_sorted)}</small>"
+        )
+
+    if OrderFormTokenService.is_text_field_of_order_form(param):
+        help_text += (
+            "<br /><small><strong>Tokens:</strong> "
+            + ", ".join(OrderFormTokenService.DISPLAY_TOKENS)
+            + "</small>"
         )
 
     help_text = tokenize_parameter(help_text, cache=cache)
