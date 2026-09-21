@@ -228,7 +228,6 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
             extraText={getExtraText(field)}
             style={{ width: "264px" }}
             disabled={changesDisabled}
-            disablePaste={field === "emailConfirm"}
           />
         ))}
       </div>

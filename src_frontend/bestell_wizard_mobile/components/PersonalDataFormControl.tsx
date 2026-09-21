@@ -13,7 +13,6 @@ interface PersonalDataFormControlProps {
   extraText?: string;
   style?: CSSProperties;
   disabled?: boolean;
-  disablePaste?: boolean;
 }
 
 const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
@@ -27,7 +26,6 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
   extraText,
   style,
   disabled,
-  disablePaste,
 }) => {
   return (
     <div style={style} className={"d-flex flex-column"}>
@@ -44,8 +42,6 @@ const PersonalDataFormControl: React.FC<PersonalDataFormControlProps> = ({
           isValid={showValidation && isValid}
           isInvalid={showValidation && !isValid}
           disabled={disabled}
-          onPaste={disablePaste ? (event) => event.preventDefault() : undefined}
-          onDrop={disablePaste ? (event) => event.preventDefault() : undefined}
         />
       </FloatingLabel>
       {extraText && (

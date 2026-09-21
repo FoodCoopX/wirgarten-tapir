@@ -87,10 +87,6 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       </code>{" "}
       enthalten. Nur dann kann das Mitglied die Änderung der Emailadresse
       bestätigen.
-      <br />
-      <br />
-      Damit sich kein Tippfehler einschleicht, muss eine neue Adresse zur
-      Bestätigung ein zweites Mal eingegeben werden.
     </>
   ) : (
     <>
@@ -98,10 +94,6 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       den Anweisungen, die du an deine alte Email erhältst. Wenn du keine Mail
       erhältst, dann wende dich an deinen Betrieb (
       <a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
-      <br />
-      <br />
-      Damit sich kein Tippfehler einschleicht, gib eine neue Adresse zur
-      Bestätigung ein zweites Mal ein.
     </>
   );
 
@@ -290,8 +282,6 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 type={"email"}
                 value={emailConfirm}
                 onChange={(event) => setEmailConfirm(event.target.value)}
-                onPaste={(event) => event.preventDefault()}
-                onDrop={(event) => event.preventDefault()}
                 isValid={showValidation && emailsMatch(email, emailConfirm)}
                 isInvalid={showValidation && !emailsMatch(email, emailConfirm)}
               />
