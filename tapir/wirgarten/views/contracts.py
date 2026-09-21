@@ -344,7 +344,7 @@ class ExportSubscriptionList(View):
     def get_queryset(self):
         return SubscriptionListView.get_queryset_external(
             cache=self.cache
-        ).select_related("member", "member__pickup_location")
+        ).select_related("member")
 
     def get_filterset_class(self):
         return SubscriptionListFilter
