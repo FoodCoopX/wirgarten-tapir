@@ -46,6 +46,8 @@ class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     is_student = serializers.BooleanField(required=False)
     can_edit_student = serializers.BooleanField()
     can_edit_name = serializers.BooleanField()
+    country = serializers.CharField(required=False, allow_null=True)
+    can_edit_country = serializers.BooleanField()
     contact_email = serializers.EmailField()
     member_number = serializers.CharField()
 
@@ -60,4 +62,11 @@ class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
     street_2 = serializers.CharField(allow_blank=True)
     postcode = serializers.CharField()
     city = serializers.CharField()
+    country = serializers.CharField(required=False)
     is_student = serializers.BooleanField(required=False)
+
+    @staticmethod
+    def validate_country(value: str) -> str:
+        if value not in ["DE", "AT"]:
+            raise serializers.ValidationError("Nur DE und AT sind erlaubt.")
+        return value

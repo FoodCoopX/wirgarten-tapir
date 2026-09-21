@@ -10216,12 +10216,18 @@ components:
           type: boolean
         can_edit_name:
           type: boolean
+        country:
+          type: string
+          nullable: true
+        can_edit_country:
+          type: boolean
         contact_email:
           type: string
           format: email
         member_number:
           type: string
       required:
+      - can_edit_country
       - can_edit_name
       - can_edit_student
       - city
@@ -10877,6 +10883,9 @@ components:
           type: string
           minLength: 1
         city:
+          type: string
+          minLength: 1
+        country:
           type: string
           minLength: 1
         is_student:

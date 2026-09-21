@@ -89,6 +89,18 @@ export interface MemberProfilePersonalDataResponse {
    * @type {string}
    * @memberof MemberProfilePersonalDataResponse
    */
+  country?: string | null;
+  /**
+   *
+   * @type {boolean}
+   * @memberof MemberProfilePersonalDataResponse
+   */
+  canEditCountry: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof MemberProfilePersonalDataResponse
+   */
   contactEmail: string;
   /**
    *
@@ -116,6 +128,8 @@ export function instanceOfMemberProfilePersonalDataResponse(
   if (!("canEditStudent" in value) || value["canEditStudent"] === undefined)
     return false;
   if (!("canEditName" in value) || value["canEditName"] === undefined)
+    return false;
+  if (!("canEditCountry" in value) || value["canEditCountry"] === undefined)
     return false;
   if (!("contactEmail" in value) || value["contactEmail"] === undefined)
     return false;
@@ -149,6 +163,8 @@ export function MemberProfilePersonalDataResponseFromJSONTyped(
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
     canEditStudent: json["can_edit_student"],
     canEditName: json["can_edit_name"],
+    country: json["country"] == null ? undefined : json["country"],
+    canEditCountry: json["can_edit_country"],
     contactEmail: json["contact_email"],
     memberNumber: json["member_number"],
   };
@@ -180,6 +196,8 @@ export function MemberProfilePersonalDataResponseToJSONTyped(
     is_student: value["isStudent"],
     can_edit_student: value["canEditStudent"],
     can_edit_name: value["canEditName"],
+    country: value["country"],
+    can_edit_country: value["canEditCountry"],
     contact_email: value["contactEmail"],
     member_number: value["memberNumber"],
   };

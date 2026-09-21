@@ -259,6 +259,83 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
         self.assertEqual({}, trigger_data.token_data)
 
+    def test_get_memberGetsOwnData_countryIsHiddenAndCannotBeEdited(self):
+        user = MemberFactory.create(is_superuser=False, country="AT")
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={user.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertIsNone(response_content["country"])
+        self.assertFalse(response_content["can_edit_country"])
+
+    def test_get_adminGetsDataFromAnotherMember_returnsCountryAndCanEditCountry(self):
+        admin = MemberFactory.create(is_superuser=True)
+        target = MemberFactory.create(country="AT")
+        self.client.force_login(admin)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.get(f"{url}?member_id={target.id}")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertEqual("AT", response_content["country"])
+        self.assertTrue(response_content["can_edit_country"])
+
+    def _patch_country(self, actor, target, country):
+        self.client.force_login(actor)
+        return self.client.patch(
+            reverse("coop:member_personal_data"),
+            data={
+                "member_id": target.id,
+                "first_name": target.first_name,
+                "last_name": target.last_name,
+                "street": "test_street",
+                "street_2": "",
+                "email": target.email,
+                "phone_number": "+4917744563327",
+                "postcode": "12345",
+                "city": "test_city",
+                "country": country,
+                "is_student": False,
+            },
+            content_type="application/json",
+        )
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_patch_adminChangesCountry_countryIsSaved(self, _):
+        admin = MemberFactory.create(is_superuser=True)
+        target = MemberFactory.create(country="DE")
+
+        response = self._patch_country(admin, target, "AT")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertTrue(response.json()["order_confirmed"])
+        target.refresh_from_db()
+        self.assertEqual("AT", target.country)
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_patch_memberTriesToChangeOwnCountry_countryIsNotChanged(self, _):
+        user = MemberFactory.create(is_superuser=False, country="DE")
+
+        response = self._patch_country(user, user, "AT")
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        user.refresh_from_db()
+        self.assertEqual("DE", user.country)
+
+    def test_patch_countryIsNotDeOrAt_returns400(self):
+        admin = MemberFactory.create(is_superuser=True)
+        target = MemberFactory.create(country="DE")
+
+        response = self._patch_country(admin, target, "FR")
+
+        self.assertStatusCode(response, status.HTTP_400_BAD_REQUEST)
+        target.refresh_from_db()
+        self.assertEqual("DE", target.country)
+
     @patch.object(TransactionalTrigger, "fire_action")
     def test_patch_newEmailIsAlreadyInUse_dontApplyChangesAndReturnsError(
         self, mock_fire_action: Mock

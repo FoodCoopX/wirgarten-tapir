@@ -480,6 +480,12 @@ class MemberPersonalDataApiView(APIView):
                     "is_student": is_student,
                     "can_edit_student": self.user_can_edit_student_status(request.user),
                     "can_edit_name": self.user_can_edit_name(request.user),
+                    "country": (
+                        str(member.country)
+                        if self.user_can_edit_country(request.user)
+                        else None
+                    ),
+                    "can_edit_country": self.user_can_edit_country(request.user),
                     "contact_email": get_parameter_value(
                         ParameterKeys.SITE_EMAIL, cache=self.cache
                     ),
@@ -494,6 +500,10 @@ class MemberPersonalDataApiView(APIView):
 
     @classmethod
     def user_can_edit_student_status(cls, user):
+        return user.has_perm(Permission.Coop.MANAGE)
+
+    @classmethod
+    def user_can_edit_country(cls, user):
         return user.has_perm(Permission.Coop.MANAGE)
 
     def get_formatted_member_number(self, member: Member) -> str:
@@ -564,6 +574,10 @@ class MemberPersonalDataApiView(APIView):
         ]
         if self.user_can_edit_name(request.user):
             simple_fields += ["first_name", "last_name"]
+        if self.user_can_edit_country(request.user) and "country" in (
+            serializer.validated_data
+        ):
+            simple_fields.append("country")
         for field in simple_fields:
             setattr(member, field, serializer.validated_data.get(field))
 
