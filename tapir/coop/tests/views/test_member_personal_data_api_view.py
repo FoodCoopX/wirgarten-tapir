@@ -120,12 +120,12 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
     ):
         user = MemberFactory.create(is_student=True)
         self.client.force_login(user)
-        TapirParameter.objects.filter(
-            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES
-        ).update(value=False)
-        TapirParameter.objects.filter(
-            key=ParameterKeys.ORGANISATION_LEGAL_STATUS
-        ).update(value=LEGAL_STATUS_COOPERATIVE)
+        self._set_parameter(
+            ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, False
+        )
+        self._set_parameter(
+            ParameterKeys.ORGANISATION_LEGAL_STATUS, LEGAL_STATUS_COOPERATIVE
+        )
 
         url = reverse("coop:member_personal_data")
         url = f"{url}?member_id={user.id}"
