@@ -92,9 +92,13 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
         return response
 
     def warn_about_tokens_without_value(self, form):
+        parameters = TapirParameter.objects.in_bulk(
+            [field.name for field in form.visible_fields()]
+        )
         for field in form.visible_fields():
-            parameter = TapirParameter.objects.get(pk=field.name)
-            if not OrderFormTokenService.is_text_field_of_order_form(parameter):
+            if not OrderFormTokenService.is_text_field_of_order_form(
+                parameters[field.name]
+            ):
                 continue
             tokens = OrderFormTokenService.find_used_tokens_without_value(
                 form.cleaned_data[field.name]
