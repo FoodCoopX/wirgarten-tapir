@@ -28,6 +28,7 @@ class OrderFormTokenService:
     ]
     TOKEN_PATTERN = re.compile(r"\(\(([^()]*)\)\)")
     NON_TEXT_KEY_PARTS = ["background", "solidarity_step_position"]
+    TITLE_KEY_SUFFIXES = (".title", ".header")
 
     @classmethod
     def is_text_field_of_order_form(cls, parameter: TapirParameter) -> bool:
@@ -35,6 +36,7 @@ class OrderFormTokenService:
             parameter.category == ParameterCategory.BESTELLWIZARD
             and parameter.datatype == TapirParameterDatatype.STRING.value
             and not any(part in parameter.key for part in cls.NON_TEXT_KEY_PARTS)
+            and not parameter.key.endswith(cls.TITLE_KEY_SUFFIXES)
         )
 
     @classmethod

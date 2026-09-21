@@ -1,7 +1,9 @@
 from tapir.bestell_wizard.services.order_form_token_service import (
     OrderFormTokenService,
 )
+from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.utils.tests_utils import mock_parameter_value
+from tapir.wirgarten.constants import ParameterCategory
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
@@ -55,3 +57,25 @@ class TestOrderFormTokenService(TapirUnitTest):
         )
 
         self.assertEqual([], result)
+
+    def test_isTextFieldOfOrderForm_titleField_returnsFalse(self):
+        for key in [
+            ParameterKeys.BESTELLWIZARD_STEP1A_TITLE,
+            ParameterKeys.BESTELL_WIZARD_STEP4B_WAITING_LIST_MODAL_HEADER,
+        ]:
+            parameter = TapirParameter(
+                key=key,
+                category=ParameterCategory.BESTELLWIZARD,
+                datatype=TapirParameterDatatype.STRING.value,
+            )
+            self.assertFalse(
+                OrderFormTokenService.is_text_field_of_order_form(parameter)
+            )
+
+    def test_isTextFieldOfOrderForm_textField_returnsTrue(self):
+        parameter = TapirParameter(
+            key=ParameterKeys.BESTELLWIZARD_STEP1A_TEXT,
+            category=ParameterCategory.BESTELLWIZARD,
+            datatype=TapirParameterDatatype.STRING.value,
+        )
+        self.assertTrue(OrderFormTokenService.is_text_field_of_order_form(parameter))
