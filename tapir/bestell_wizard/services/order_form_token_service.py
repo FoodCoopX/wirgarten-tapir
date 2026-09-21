@@ -26,6 +26,7 @@ class OrderFormTokenService:
         "((widerrufsbelehrung))",
         "((Vertragsbedingungen/AGBS))",
     ]
+    EXAMPLE = '<a href="((satzung))">Satzung</a>'
     TOKEN_PATTERN = re.compile(r"\(\(([^()]*)\)\)")
     NON_TEXT_KEY_PARTS = ["background", "solidarity_step_position"]
     TITLE_KEY_SUFFIXES = (".title", ".header")

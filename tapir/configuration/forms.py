@@ -1,3 +1,5 @@
+import html
+
 from django import forms
 from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
@@ -38,6 +40,8 @@ def create_field(param: TapirParameter, cache: dict):
         help_text += (
             "<br /><small><strong>Tokens:</strong> "
             + ", ".join(OrderFormTokenService.DISPLAY_TOKENS)
+            + "<br /><strong>Beispiel:</strong> "
+            + html.escape(OrderFormTokenService.EXAMPLE)
             + "</small>"
         )
 
