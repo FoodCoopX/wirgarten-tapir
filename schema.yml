@@ -11426,7 +11426,6 @@ components:
           minLength: 1
         phone_number:
           type: string
-          minLength: 1
         street:
           type: string
           minLength: 1
