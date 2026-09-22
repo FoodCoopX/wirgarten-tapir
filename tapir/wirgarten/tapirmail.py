@@ -44,6 +44,8 @@ TOKENS_ORDER_PAYMENT = {
     "Abbuchungsrhythmus": "payment_rhythm",
 }
 
+TOKEN_FIRST_PICKUP_DATE = "Erste Abholung am"
+
 
 class Segments:
     ALL_USERS = "Alle Benutzer"
@@ -124,7 +126,7 @@ def _register_tokens():
             "Verteilstation - Zusatzinfos": PickupLocationMailTokenService.pickup_location_info,
             "Verteilstation - Abholzeiten": PickupLocationMailTokenService.pickup_location_opening_times,
             "Newsletter - Verwaltungslink": NewsletterManagementLinkProvider.get_newsletter_management_link,
-            "Erste Abholung am": OrderConfirmationMailTokenBuilder.get_first_pickup_date_for_recipient,
+            TOKEN_FIRST_PICKUP_DATE: OrderConfirmationMailTokenBuilder.get_first_pickup_date_for_recipient,
         },
     )
 
@@ -137,7 +139,7 @@ def _register_triggers():
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
-            "Erste Abholung am": "first_pickup_date",
+            TOKEN_FIRST_PICKUP_DATE: "first_pickup_date",
         }
         | TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY,
@@ -156,7 +158,7 @@ def _register_triggers():
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
-            "Erste Abholung am": "first_pickup_date",
+            TOKEN_FIRST_PICKUP_DATE: "first_pickup_date",
         },
         required=True,
     )
@@ -268,7 +270,7 @@ def _register_triggers():
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
-            "Erste Abholung am": "first_pickup_date",
+            TOKEN_FIRST_PICKUP_DATE: "first_pickup_date",
         }
         | TOKENS_ORDER_PAYMENT
         | TOKENS_COOP_ENTRY,

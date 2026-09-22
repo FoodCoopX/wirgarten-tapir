@@ -8,14 +8,7 @@ trigger-specific Merge-tag groups (e.g. BestellWizard: Nur Geno-Mitgliedschaft).
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-
-CHUNK_GLOBS = (
-    "**/tapir_mail/__static__/static/js/760.*.chunk.js",
-    "**/static/js/760.*.chunk.js",
-    "**/static/js/760.*.chunk.*.js",
-)
 
 GATED_TRIGGER_FETCH = "a&&(re.emailConfigurationVersionGetBundledInfoRetrieve({id:a})"
 UNCONDITIONAL_BUNDLED_INFO = (
@@ -27,17 +20,11 @@ UNCONDITIONAL_TRIGGER_FETCH_TAIL = (
 )
 
 
-def find_editor_chunks(search_roots: list[Path]) -> list[Path]:
-    matches: list[Path] = []
-    if search_roots:
-        for root in search_roots:
-            for glob_pattern in CHUNK_GLOBS:
-                matches.extend(root.glob(glob_pattern))
-    else:
-        import tapir_mail
+def find_editor_chunks() -> list[Path]:
+    import tapir_mail
 
-        package_dir = Path(tapir_mail.__file__).resolve().parent
-        matches.extend(package_dir.glob("__static__/static/js/760.*.chunk.js"))
+    package_dir = Path(tapir_mail.__file__).resolve().parent
+    matches = package_dir.glob("__static__/static/js/760.*.chunk.js")
     unique = sorted(
         {path for path in matches if path.suffix == ".js" and ".map" not in path.name}
     )
@@ -63,8 +50,7 @@ def patch_source(source: str) -> str:
 
 
 def main() -> int:
-    search_roots = [Path(p) for p in sys.argv[1:]]
-    for chunk_path in find_editor_chunks(search_roots):
+    for chunk_path in find_editor_chunks():
         original = chunk_path.read_text(encoding="utf-8")
         patched = patch_source(original)
         if patched == original:
