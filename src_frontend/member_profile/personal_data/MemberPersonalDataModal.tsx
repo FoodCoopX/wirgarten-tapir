@@ -3,6 +3,10 @@ import React, { useEffect, useState } from "react";
 import { Form, Modal, Spinner } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import { CoopApi } from "../../api-client";
+import {
+  emailsMatch,
+  shouldShowEmailMismatchWarning,
+} from "../../bestell_wizard/utils/emailsMatch.ts";
 import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
 import { isPersonalDataValidShort } from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
@@ -35,6 +39,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailConfirm, setEmailConfirm] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [street, setStreet] = useState("");
   const [street2, setStreet2] = useState("");
@@ -108,6 +113,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         setFirstName(response.firstName);
         setLastName(response.lastName);
         setEmail(response.email);
+        setEmailConfirm(response.email);
         setPhoneNumber(response.phoneNumber);
         setStreet(response.street);
         setStreet2(response.street2);
@@ -139,6 +145,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           firstName: firstName,
           lastName: lastName,
           email: email,
+          emailConfirm: emailConfirm,
           phoneNumber: phoneNumber,
           street: street,
           street2: street2,
@@ -272,6 +279,22 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 isValid={showValidation && isEmailValid(email)}
                 isInvalid={showValidation && !isEmailValid(email)}
               />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>E-Mail wiederholen</Form.Label>
+              <Form.Control
+                placeholder={"E-Mail wiederholen"}
+                type={"email"}
+                value={emailConfirm}
+                onChange={(event) => setEmailConfirm(event.target.value)}
+                isValid={showValidation && emailsMatch(email, emailConfirm)}
+                isInvalid={showValidation && !emailsMatch(email, emailConfirm)}
+              />
+              {shouldShowEmailMismatchWarning(email, emailConfirm) && (
+                <Form.Text className={showValidation ? "text-danger" : ""}>
+                  Die E-Mail-Adressen stimmen nicht überein
+                </Form.Text>
+              )}
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Telefonnummer</Form.Label>

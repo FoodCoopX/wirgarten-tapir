@@ -1,6 +1,7 @@
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
-import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
+import { emailsMatch } from "../../bestell_wizard/utils/emailsMatch.ts";
 import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
+import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
 
 export function isPersonalDataValidShort(
   personalData: PersonalData,
@@ -10,6 +11,7 @@ export function isPersonalDataValidShort(
   if (!personalData.firstName) return false;
   if (!personalData.lastName) return false;
   if (!personalData.email) return false;
+  if (!emailsMatch(personalData.email, personalData.emailConfirm)) return false;
   if (!personalData.phoneNumber) return false;
   if (!personalData.street) return false;
   if (!personalData.postcode) return false;
