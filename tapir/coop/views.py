@@ -445,6 +445,8 @@ class MemberBankDataApiView(APIView):
 
 
 class MemberPersonalDataApiView(APIView):
+    ALLOWED_COUNTRIES = ["DE", "AT"]
+
     def __init__(self, **kwargs):
         self.cache = {}
         super().__init__(**kwargs)
@@ -480,6 +482,8 @@ class MemberPersonalDataApiView(APIView):
                     "is_student": is_student,
                     "can_edit_student": self.user_can_edit_student_status(request.user),
                     "can_edit_name": self.user_can_edit_name(request.user),
+                    "country": str(member.country),
+                    "can_edit_country": self.user_can_edit_country(request.user),
                     "contact_email": get_parameter_value(
                         ParameterKeys.SITE_EMAIL, cache=self.cache
                     ),
@@ -494,6 +498,10 @@ class MemberPersonalDataApiView(APIView):
 
     @classmethod
     def user_can_edit_student_status(cls, user):
+        return user.has_perm(Permission.Coop.MANAGE)
+
+    @classmethod
+    def user_can_edit_country(cls, user):
         return user.has_perm(Permission.Coop.MANAGE)
 
     def get_formatted_member_number(self, member: Member) -> str:
@@ -547,6 +555,14 @@ class MemberPersonalDataApiView(APIView):
                 raise DjangoValidationError(
                     "Nur Admins dürfen den Studenten-Status ändern."
                 )
+            if (
+                self.user_can_edit_country(request.user)
+                and serializer.validated_data.get("country")
+                not in self.ALLOWED_COUNTRIES
+            ):
+                raise DjangoValidationError(
+                    f"Das Land muss eines von {', '.join(self.ALLOWED_COUNTRIES)} sein."
+                )
         except DjangoValidationError as error:
             return Response(
                 OrderConfirmationResponseSerializer(
@@ -564,6 +580,8 @@ class MemberPersonalDataApiView(APIView):
         ]
         if self.user_can_edit_name(request.user):
             simple_fields += ["first_name", "last_name"]
+        if self.user_can_edit_country(request.user):
+            simple_fields.append("country")
         for field in simple_fields:
             setattr(member, field, serializer.validated_data.get(field))
 
