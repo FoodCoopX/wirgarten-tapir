@@ -17,15 +17,11 @@ CHUNK_GLOBS = (
     "**/static/js/760.*.chunk.*.js",
 )
 
-GATED_TRIGGER_FETCH = (
-    "a&&(re.emailConfigurationVersionGetBundledInfoRetrieve({id:a})"
-)
+GATED_TRIGGER_FETCH = "a&&(re.emailConfigurationVersionGetBundledInfoRetrieve({id:a})"
 UNCONDITIONAL_BUNDLED_INFO = (
     "a&&re.emailConfigurationVersionGetBundledInfoRetrieve({id:a})"
 )
-GATED_TRIGGER_FETCH_TAIL = (
-    "ae.triggerTokensGetTokensRetrieve().then((e=>{Q(e)}))),ie.tokensGetTokensRetrieve()"
-)
+GATED_TRIGGER_FETCH_TAIL = "ae.triggerTokensGetTokensRetrieve().then((e=>{Q(e)}))),ie.tokensGetTokensRetrieve()"
 UNCONDITIONAL_TRIGGER_FETCH_TAIL = (
     "ae.triggerTokensGetTokensRetrieve().then((e=>{Q(e)})),ie.tokensGetTokensRetrieve()"
 )
@@ -43,11 +39,7 @@ def find_editor_chunks(search_roots: list[Path]) -> list[Path]:
         package_dir = Path(tapir_mail.__file__).resolve().parent
         matches.extend(package_dir.glob("__static__/static/js/760.*.chunk.js"))
     unique = sorted(
-        {
-            path
-            for path in matches
-            if path.suffix == ".js" and ".map" not in path.name
-        }
+        {path for path in matches if path.suffix == ".js" and ".map" not in path.name}
     )
     if not unique:
         raise FileNotFoundError(
