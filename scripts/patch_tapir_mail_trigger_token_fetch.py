@@ -20,7 +20,7 @@ UNCONDITIONAL_TRIGGER_FETCH_TAIL = (
 )
 
 
-def find_editor_chunks() -> list[Path]:
+def find_editor_chunks() -> tuple[Path, list[Path]]:
     import tapir_mail
 
     package_dir = Path(tapir_mail.__file__).resolve().parent
@@ -32,7 +32,7 @@ def find_editor_chunks() -> list[Path]:
         raise FileNotFoundError(
             "Expected at least one tapir-mail editor chunk, found none"
         )
-    return unique
+    return package_dir, unique
 
 
 def patch_source(source: str) -> str:
@@ -50,14 +50,20 @@ def patch_source(source: str) -> str:
 
 
 def main() -> int:
-    for chunk_path in find_editor_chunks():
-        original = chunk_path.read_text(encoding="utf-8")
+    package_dir, chunk_paths = find_editor_chunks()
+    for chunk_path in chunk_paths:
+        resolved_chunk = chunk_path.resolve()
+        if not resolved_chunk.is_relative_to(package_dir):
+            raise ValueError(
+                f"Refusing to patch file outside tapir_mail package: {resolved_chunk}"
+            )
+        original = resolved_chunk.read_text(encoding="utf-8")
         patched = patch_source(original)
         if patched == original:
-            print(f"Already patched: {chunk_path}")
+            print(f"Already patched: {resolved_chunk}")
             continue
-        chunk_path.write_text(patched, encoding="utf-8")
-        print(f"Patched trigger-token fetch: {chunk_path}")
+        resolved_chunk.write_text(patched, encoding="utf-8")
+        print(f"Patched trigger-token fetch: {resolved_chunk}")
     return 0
 
 
