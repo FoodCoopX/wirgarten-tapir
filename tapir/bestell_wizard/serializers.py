@@ -16,7 +16,7 @@ class PersonalDataSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     email = serializers.EmailField()
-    phone_number = serializers.CharField()
+    phone_number = serializers.CharField(allow_blank=True)
     street = serializers.CharField()
     street_2 = serializers.CharField(allow_blank=True)
     postcode = serializers.CharField()

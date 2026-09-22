@@ -57,8 +57,9 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
-            if k not in ["street_2", "is_student", "birthdate"]:
+            if k not in ["street_2", "is_student", "birthdate", "phone_number"]:
                 v.required = True
+        self.fields["phone_number"].required = False
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
         self.fields["last_name"].disabled = not can_edit_name_and_birthdate

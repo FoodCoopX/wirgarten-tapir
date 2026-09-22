@@ -151,7 +151,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
       case "emailConfirm":
         return "E-Mail-Adresse wiederholen";
       case "phoneNumber":
-        return "Telefon-Nr";
+        return "Telefon-Nr (optional)";
       default:
         return key;
     }
@@ -160,7 +160,10 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   function isValid(key: keyof PersonalData) {
     switch (key) {
       case "phoneNumber":
-        return isPhoneNumberValid(personalData.phoneNumber);
+        return (
+          personalData.phoneNumber.length === 0 ||
+          isPhoneNumberValid(personalData.phoneNumber)
+        );
       case "email":
         return (
           isEmailValid(personalData.email) &&
