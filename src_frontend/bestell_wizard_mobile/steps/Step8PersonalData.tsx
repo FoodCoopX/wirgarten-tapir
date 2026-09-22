@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { BestellWizardApi } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import {
+  emailsMatch,
+  shouldShowEmailMismatchWarning,
+} from "../../bestell_wizard/utils/emailsMatch.ts";
 import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
 import { useApi } from "../../hooks/useApi.ts";
@@ -34,6 +38,7 @@ const FIELDS: (keyof PersonalData)[] = [
   "firstName",
   "lastName",
   "email",
+  "emailConfirm",
   "street",
   "street2",
   "postcode",
@@ -46,6 +51,7 @@ function getType(key: keyof PersonalData) {
     case "phoneNumber":
       return "tel";
     case "email":
+    case "emailConfirm":
       return "email";
     default:
       return "text";
@@ -142,6 +148,8 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         return emailAddressAlreadyInUseLoading
           ? "Wird geprüft..."
           : "E-Mail-Adresse";
+      case "emailConfirm":
+        return "E-Mail-Adresse wiederholen";
       case "phoneNumber":
         return "Telefon-Nr (optional)";
       default:
@@ -162,10 +170,33 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
           !emailAddressAlreadyInUse &&
           !emailAddressAlreadyInUseLoading
         );
+      case "emailConfirm":
+        return (
+          personalData.emailConfirm.trim().length > 0 &&
+          emailsMatch(personalData.email, personalData.emailConfirm)
+        );
       case "street2":
         return true;
       default:
         return personalData[key].length > 0;
+    }
+  }
+
+  function getExtraText(key: keyof PersonalData) {
+    switch (key) {
+      case "email":
+        return emailAddressAlreadyInUse && !emailAddressAlreadyInUseLoading
+          ? "Diese Email-Adresse ist schon vergeben"
+          : "";
+      case "emailConfirm":
+        return shouldShowEmailMismatchWarning(
+          personalData.email,
+          personalData.emailConfirm,
+        )
+          ? "Die E-Mail-Adressen stimmen nicht überein"
+          : "";
+      default:
+        return "";
     }
   }
 
@@ -197,13 +228,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
             type={getType(field)}
             showValidation={showValidation}
             isValid={isValid(field)}
-            extraText={
-              field === "email" &&
-              emailAddressAlreadyInUse &&
-              !emailAddressAlreadyInUseLoading
-                ? "Diese Email-Adresse ist schon vergeben"
-                : ""
-            }
+            extraText={getExtraText(field)}
             style={{ width: "264px" }}
             disabled={changesDisabled}
           />

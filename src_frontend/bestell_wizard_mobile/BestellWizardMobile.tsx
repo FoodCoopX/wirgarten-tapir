@@ -200,6 +200,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           personalData.firstName = waitingListEntryDetails.firstName;
           personalData.lastName = waitingListEntryDetails.lastName;
           personalData.email = waitingListEntryDetails.email;
+          personalData.emailConfirm = waitingListEntryDetails.email;
           personalData.phoneNumber = waitingListEntryDetails.phoneNumber;
           personalData.street = waitingListEntryDetails.street;
           personalData.street2 = waitingListEntryDetails.street2;
