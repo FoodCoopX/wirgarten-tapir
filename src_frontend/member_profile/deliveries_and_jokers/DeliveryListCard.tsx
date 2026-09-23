@@ -25,6 +25,7 @@ interface DeliveryListCardProps {
   areJokersEnabled: boolean;
   areDonationsEnabled: boolean;
   canChangePickupLocation: boolean;
+  membersCanChangePickupLocationThemselves: boolean;
   csrfToken: string;
 }
 
@@ -33,6 +34,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   areJokersEnabled,
   areDonationsEnabled,
   canChangePickupLocation,
+  membersCanChangePickupLocationThemselves,
   csrfToken,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
@@ -177,6 +179,9 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         memberId={memberId}
         reloadDeliveries={loadDeliveries}
         setToastDatas={setToastDatas}
+        membersCanChangePickupLocationThemselves={
+          membersCanChangePickupLocationThemselves
+        }
       />
       <TapirToastContainer
         toastDatas={toastDatas}

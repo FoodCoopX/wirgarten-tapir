@@ -31,6 +31,10 @@ if (domNodeDeliveryListCard) {
       canChangePickupLocation={
         domNodeDeliveryListCard.dataset.canChangePickupLocation === "true"
       }
+      membersCanChangePickupLocationThemselves={
+        domNodeDeliveryListCard.dataset
+          .membersCanChangePickupLocationThemselves === "true"
+      }
       csrfToken={getCsrfToken()}
     />,
   );
