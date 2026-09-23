@@ -164,6 +164,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["membersCanChangePickupLocationThemselves"] = (
             "true" if members_can_change_pickup_location else "false"
         )
+        context["adminContactEmail"] = get_parameter_value(
+            key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache
+        )
         context["donationsEnabled"] = (
             "false"
             if get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)

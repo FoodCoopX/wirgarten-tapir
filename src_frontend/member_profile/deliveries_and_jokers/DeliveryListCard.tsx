@@ -26,6 +26,7 @@ interface DeliveryListCardProps {
   areDonationsEnabled: boolean;
   canChangePickupLocation: boolean;
   membersCanChangePickupLocationThemselves: boolean;
+  adminContactEmail: string;
   csrfToken: string;
 }
 
@@ -35,6 +36,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   areDonationsEnabled,
   canChangePickupLocation,
   membersCanChangePickupLocationThemselves,
+  adminContactEmail,
   csrfToken,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
@@ -135,8 +137,9 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           </div>
           {!canChangePickupLocation && deliveries.length > 0 && (
             <small className={"text-muted"}>
-              Für eine Änderung deines Abholorts wende dich bitte an den Kontakt
-              oben rechts.
+              Für eine Änderung deines Abholorts wende dich bitte an deinen
+              Betrieb unter{" "}
+              <a href={`mailto:${adminContactEmail}`}>{adminContactEmail}</a>.
             </small>
           )}
         </Card.Header>
