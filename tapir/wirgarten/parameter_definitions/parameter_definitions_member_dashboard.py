@@ -218,9 +218,9 @@ class ParameterDefinitionsMemberDashboard:
             initial_value=True,
             description="Im Mitgliederbereich können Mitglieder deren eigenen Abholort selber ändern. "
             "Wenn dieses Parameter ausgeschaltet ist, können die Mitglieder ihren Abholort nicht mehr selber anpassen. "
-            "Admins können weiterhin den Abholort für jedes Mitglied ändern. "
             "Den Mitgliedern wird im Mitgliederbereich über einen Hilfstext angezeigt, dass sie sich zur "
-            "Abholortänderung an den Betrieb wenden müssen.",
+            "Abholortänderung an den Betrieb wenden müssen. "
+            "Admins können weiterhin den Abholort für jedes Mitglied ändern.",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=150,
         )
