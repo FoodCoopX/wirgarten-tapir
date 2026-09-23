@@ -14,8 +14,8 @@ import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { groupTransactionsByDueDate } from "./groupTransactionsByDueDate.ts";
 import PaymentComponent from "./PaymentComponent.tsx";
-import { sortGroupedTransactions } from "./sortGroupedTransactions.ts";
 
 interface FuturePaymentsModalProps {
   transactionsByDueDate: TransactionsByDueDate;
@@ -112,31 +112,9 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
     api
       .paymentsApiMemberPastPaymentsRetrieve({ memberId: memberId })
       .then((response) => {
-        const groupedTransactions: TransactionsByDueDate = {};
-
-        for (const extendedPayment of response.payments) {
-          const dueDateAsAstring = dayjs(
-            extendedPayment.payment.dueDate,
-          ).format("YYYY-MM-DD");
-          if (!(dueDateAsAstring in groupedTransactions)) {
-            groupedTransactions[dueDateAsAstring] = [];
-          }
-          groupedTransactions[dueDateAsAstring].push(extendedPayment);
-        }
-
-        for (const memberCredit of response.credits) {
-          const dueDateAsAstring = dayjs(memberCredit.dueDate).format(
-            "YYYY-MM-DD",
-          );
-          if (!(dueDateAsAstring in groupedTransactions)) {
-            groupedTransactions[dueDateAsAstring] = [];
-          }
-          groupedTransactions[dueDateAsAstring].push(memberCredit);
-        }
-
-        sortGroupedTransactions(groupedTransactions);
-
-        setPastTransactionsByDueDate(groupedTransactions);
+        setPastTransactionsByDueDate(
+          groupTransactionsByDueDate(response.payments, response.credits),
+        );
       })
       .catch(async (error) => {
         await handleRequestError(
