@@ -24,6 +24,7 @@ interface DeliveryListCardProps {
   memberId: string;
   areJokersEnabled: boolean;
   areDonationsEnabled: boolean;
+  canChangePickupLocation: boolean;
   csrfToken: string;
 }
 
@@ -31,6 +32,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   memberId,
   areJokersEnabled,
   areDonationsEnabled,
+  canChangePickupLocation,
   csrfToken,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
@@ -107,12 +109,14 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
             }}
           />
         )}
-        <TapirButton
-          text={"Verteilstation ändern"}
-          icon={"edit"}
-          variant={"outline-primary"}
-          onClick={() => setShowPickupLocationChangeModal(true)}
-        />
+        {canChangePickupLocation && (
+          <TapirButton
+            text={"Verteilstation ändern"}
+            icon={"edit"}
+            variant={"outline-primary"}
+            onClick={() => setShowPickupLocationChangeModal(true)}
+          />
+        )}
       </span>
     );
   }

@@ -28,6 +28,9 @@ if (domNodeDeliveryListCard) {
       areDonationsEnabled={
         domNodeDeliveryListCard.dataset.donationsEnabled === "true"
       }
+      canChangePickupLocation={
+        domNodeDeliveryListCard.dataset.canChangePickupLocation === "true"
+      }
       csrfToken={getCsrfToken()}
     />,
   );

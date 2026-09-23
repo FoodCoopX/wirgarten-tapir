@@ -212,6 +212,18 @@ class ParameterDefinitionsMemberDashboard:
         )
 
         importer.parameter_definition(
+            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION,
+            label="Mitglieder können deren Abholort selber ändern",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Im Mitgliederbereich können Mitglieder deren eigenen Abholort selber ändern. "
+            "Wenn dieses Parameter ausgeschaltet ist, können die Mitglieder ihren Abholort nicht mehr selber anpassen. "
+            "Admins können weiterhin den Abholort für jedes Mitglied ändern.",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=150,
+        )
+
+        importer.parameter_definition(
             key=ParameterKeys.MEMBER_NUMBER_PREFIX,
             label="Mitgliedsnummer: Präfix",
             datatype=TapirParameterDatatype.STRING,

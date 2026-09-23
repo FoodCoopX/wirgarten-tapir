@@ -1,7 +1,7 @@
 import datetime
 import locale
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
@@ -378,6 +378,12 @@ class ChangeMemberPickupLocationApiView(APIView):
     def post(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
+        if not request.user.has_perm(
+            Permission.Accounts.MANAGE
+        ) and not get_parameter_value(
+            ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, cache=self.cache
+        ):
+            raise PermissionDenied()
         member = get_object_or_404(Member, id=member_id)
         new_pickup_location_id = request.query_params.get("pickup_location_id")
         new_pickup_location = get_object_or_404(
