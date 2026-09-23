@@ -131,6 +131,12 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
             <h5 className={"mb-0"}>Abholung</h5>
             {getHeaderButtons()}
           </div>
+          {!canChangePickupLocation && deliveries.length > 0 && (
+            <small className={"text-muted"}>
+              Für eine Änderung deines Abholorts wende dich bitte an den Kontakt
+              oben rechts.
+            </small>
+          )}
         </Card.Header>
         <Card.Body className={deliveries.length > 0 ? "p-0" : ""}>
           <DeliveriesTable
