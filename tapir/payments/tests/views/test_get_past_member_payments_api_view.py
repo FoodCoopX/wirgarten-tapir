@@ -5,6 +5,7 @@ from rest_framework import status
 
 from tapir.configuration.models import TapirParameter
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
+from tapir.payments.tests.factories import MemberCreditFactory
 from tapir.wirgarten.models import Payment
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -127,4 +128,42 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         )
         self.assertEqual(
             past_payment_1.id, response_content["payments"][1]["payment"]["id"]
+        )
+
+    def test_get_memberHasSettledAndUnsettledPastCredits_bothAreReturned(self):
+        mock_timezone(test=self, now=datetime.datetime(year=2021, month=5, day=1))
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        settled_credit = MemberCreditFactory.create(
+            member=member,
+            due_date=datetime.date(year=2021, month=1, day=1),
+            settled_on=datetime.datetime(year=2021, month=1, day=5),
+        )
+        unsettled_credit = MemberCreditFactory.create(
+            member=member,
+            due_date=datetime.date(year=2021, month=2, day=1),
+            settled_on=None,
+        )
+        MemberCreditFactory.create(
+            member=member,
+            due_date=datetime.date(year=2022, month=1, day=1),
+        )
+
+        url = reverse("payments:member_past_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+
+        response_content = response.json()
+        returned_credit_ids = {
+            credit["id"] for credit in response_content["credits"]
+        }
+        self.assertEqual(
+            {str(settled_credit.id), str(unsettled_credit.id)},
+            returned_credit_ids,
+            "Both the already paid-out (settled) credit and the still-pending "
+            "credit that are due in the past must be returned, the future "
+            "credit must not be included.",
         )

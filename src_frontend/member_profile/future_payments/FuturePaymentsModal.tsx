@@ -4,7 +4,7 @@ import { Badge, Form, Modal, Table } from "react-bootstrap";
 
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import { ExtendedPayment, MemberCredit, PaymentsApi } from "../../api-client";
+import { MemberCredit, PaymentsApi } from "../../api-client";
 import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
 import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import "../../fixed_header.css";
@@ -15,6 +15,7 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import PaymentComponent from "./PaymentComponent.tsx";
+import { sortGroupedTransactions } from "./sortGroupedTransactions.ts";
 
 interface FuturePaymentsModalProps {
   transactionsByDueDate: TransactionsByDueDate;
@@ -100,7 +101,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   const api = useApi(PaymentsApi, csrfToken);
 
   const [showPastPayments, setShowPastPayments] = useState(false);
-  const [pastPayments, setPastPayments] = useState<ExtendedPayment[]>([]);
+  const [pastTransactionsByDueDate, setPastTransactionsByDueDate] =
+    useState<TransactionsByDueDate>({});
 
   useEffect(() => {
     if (!show) {
@@ -109,7 +111,33 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
 
     api
       .paymentsApiMemberPastPaymentsRetrieve({ memberId: memberId })
-      .then((response) => setPastPayments(response.payments))
+      .then((response) => {
+        const groupedTransactions: TransactionsByDueDate = {};
+
+        for (const extendedPayment of response.payments) {
+          const dueDateAsAstring = dayjs(
+            extendedPayment.payment.dueDate,
+          ).format("YYYY-MM-DD");
+          if (!(dueDateAsAstring in groupedTransactions)) {
+            groupedTransactions[dueDateAsAstring] = [];
+          }
+          groupedTransactions[dueDateAsAstring].push(extendedPayment);
+        }
+
+        for (const memberCredit of response.credits) {
+          const dueDateAsAstring = dayjs(memberCredit.dueDate).format(
+            "YYYY-MM-DD",
+          );
+          if (!(dueDateAsAstring in groupedTransactions)) {
+            groupedTransactions[dueDateAsAstring] = [];
+          }
+          groupedTransactions[dueDateAsAstring].push(memberCredit);
+        }
+
+        sortGroupedTransactions(groupedTransactions);
+
+        setPastTransactionsByDueDate(groupedTransactions);
+      })
       .catch(async (error) => {
         await handleRequestError(
           error,
@@ -142,56 +170,49 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
     return buildTableContentFuturePayments();
   }
 
-  function buildTableContentPastPayments() {
-    return pastPayments.map((extendedPayment) => (
-      <tr key={extendedPayment.payment.id}>
+  function buildRow(
+    dueDateAsString: string,
+    objects: TransactionsByDueDate[string],
+  ) {
+    return (
+      <tr key={dueDateAsString}>
         <td style={{ textAlign: "center" }}>
           <div className={"d-flex flex-column"}>
-            <strong>
-              {formatDateText(new Date(extendedPayment.payment.dueDate))}
-            </strong>
-            <span>{dayjs().to(new Date(extendedPayment.payment.dueDate))}</span>
+            <strong>{formatDateText(new Date(dueDateAsString))}</strong>
+            <span>{dayjs().to(new Date(dueDateAsString))}</span>
           </div>
         </td>
         <td>
           <div className={"d-flex flex-column"}>
-            <PaymentComponent
-              extendedPayment={extendedPayment}
-              trialPeriodEnabled={trialPeriodEnabled}
-            />
+            {objects.map((object) =>
+              "payment" in object ? (
+                <PaymentComponent
+                  key={object.payment.id}
+                  extendedPayment={object}
+                  trialPeriodEnabled={trialPeriodEnabled}
+                />
+              ) : (
+                buildCredit(object)
+              ),
+            )}
           </div>
         </td>
       </tr>
-    ));
+    );
+  }
+
+  function buildTableContentPastPayments() {
+    return Object.entries(pastTransactionsByDueDate)
+      .toSorted(
+        ([dueDateA], [dueDateB]) =>
+          new Date(dueDateB).getTime() - new Date(dueDateA).getTime(),
+      )
+      .map(([dueDateAsString, objects]) => buildRow(dueDateAsString, objects));
   }
 
   function buildTableContentFuturePayments() {
     return Object.entries(transactionsByDueDate).map(
-      ([dueDateAsString, objects]) => (
-        <tr key={dueDateAsString}>
-          <td style={{ textAlign: "center" }}>
-            <div className={"d-flex flex-column"}>
-              <strong>{formatDateText(new Date(dueDateAsString))}</strong>
-              <span>{dayjs().to(new Date(dueDateAsString))}</span>
-            </div>
-          </td>
-          <td>
-            <div className={"d-flex flex-column"}>
-              {objects.map((object) =>
-                "payment" in object ? (
-                  <PaymentComponent
-                    key={object.payment.id}
-                    extendedPayment={object}
-                    trialPeriodEnabled={trialPeriodEnabled}
-                  />
-                ) : (
-                  buildCredit(object)
-                ),
-              )}
-            </div>
-          </td>
-        </tr>
-      ),
+      ([dueDateAsString, objects]) => buildRow(dueDateAsString, objects),
     );
   }
 
