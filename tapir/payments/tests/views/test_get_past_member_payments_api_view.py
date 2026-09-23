@@ -157,9 +157,7 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
 
         response_content = response.json()
-        returned_credit_ids = {
-            credit["id"] for credit in response_content["credits"]
-        }
+        returned_credit_ids = {credit["id"] for credit in response_content["credits"]}
         self.assertEqual(
             {str(settled_credit.id), str(unsettled_credit.id)},
             returned_credit_ids,
