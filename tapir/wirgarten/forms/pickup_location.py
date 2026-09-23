@@ -337,12 +337,6 @@ class PickupLocationEditForm(forms.Form):
             label=_("Zusätzliche Informationen zur Abholung"),
             required=False,
             max_length=3000,
-            error_messages={
-                "max_length": _(
-                    "Der Text ist zu lang: maximal %(limit_value)d Zeichen erlaubt, aktuell %(show_value)d. "
-                    "HTML-Tags zählen mit."
-                )
-            },
             help_text="z.B.: im Hinterhof. "
             + HTML_ALLOWED_TEXT
             + " (max. 3000 Zeichen inkl. HTML-Tags)",
@@ -352,11 +346,6 @@ class PickupLocationEditForm(forms.Form):
             label=_("Information Fahrer"),
             required=False,
             max_length=3000,
-            error_messages={
-                "max_length": _(
-                    "Der Text ist zu lang: maximal %(limit_value)d Zeichen erlaubt, aktuell %(show_value)d."
-                )
-            },
             help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste. (max. 3000 Zeichen)",
             widget=Textarea,
         )
