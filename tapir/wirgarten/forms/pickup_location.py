@@ -336,13 +336,17 @@ class PickupLocationEditForm(forms.Form):
         self.fields["info"] = forms.CharField(
             label=_("Zusätzliche Informationen zur Abholung"),
             required=False,
-            help_text="z.B.: im Hinterhof. " + HTML_ALLOWED_TEXT,
+            max_length=3000,
+            help_text="z.B.: im Hinterhof. "
+            + HTML_ALLOWED_TEXT
+            + " (max. 3000 Zeichen inkl. HTML-Tags)",
             widget=Textarea,
         )
         self.fields["route_info"] = forms.CharField(
             label=_("Information Fahrer"),
             required=False,
-            help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste.",
+            max_length=3000,
+            help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste. (max. 3000 Zeichen)",
             widget=Textarea,
         )
 
