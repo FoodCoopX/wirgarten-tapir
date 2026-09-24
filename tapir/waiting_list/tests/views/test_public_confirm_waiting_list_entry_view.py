@@ -117,6 +117,11 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
         mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
         GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=6, day=1))
         product = ProductFactory.create()
+        ProductPriceFactory.create(
+            product=product,
+            valid_from=datetime.date(year=1990, month=1, day=1),
+            price=Decimal("10.00"),
+        )
         WaitingListProductWish.objects.create(
             product=product, waiting_list_entry=entry, quantity=2
         )
@@ -392,8 +397,14 @@ class TestPublicConfirmWaitingListEntryView(TapirIntegrationTest):
             confirmation_link_key=uuid.uuid4(),
             member=None,
         )
+        product = ProductFactory.create()
+        ProductPriceFactory.create(
+            product=product,
+            valid_from=datetime.date(year=1990, month=1, day=1),
+            price=Decimal("10.00"),
+        )
         WaitingListProductWish.objects.create(
-            waiting_list_entry=entry, quantity=1, product=ProductFactory.create()
+            waiting_list_entry=entry, quantity=1, product=product
         )
         mock_timezone(test=self, now=datetime.datetime(year=1997, month=3, day=30))
         GrowingPeriodFactory.create(start_date=datetime.date(year=1997, month=1, day=1))
