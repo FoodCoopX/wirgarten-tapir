@@ -465,6 +465,11 @@ class TapirCache:
     def get_payment_rhythms_objects_by_member(
         cls, cache: dict
     ) -> dict[Member, list[MemberPaymentRhythm]]:
+        key = "payment_rhythms_by_member"
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category=TapirCacheManager.CATEGORY_PAYMENT_RHYTHMS
+        )
+
         def compute():
             result = {}
             all_rhythms = MemberPaymentRhythm.objects.select_related("member").order_by(
@@ -476,7 +481,7 @@ class TapirCache:
                 result[rhythm.member].append(rhythm)
             return result
 
-        return get_from_cache_or_compute(cache, "payment_rhythms_by_member", compute)
+        return get_from_cache_or_compute(cache, key, compute)
 
     @classmethod
     def get_member_payment_rhythm_object(

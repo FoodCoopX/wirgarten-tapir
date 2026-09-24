@@ -40,6 +40,7 @@ class MemberSolidarityContributionService:
         cache: dict,
         actor: TapirUser,
     ):
+        amount = Decimal(str(amount))
         member_contributions = SolidarityContribution.objects.filter(
             member_id=member.id
         )
