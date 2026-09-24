@@ -1003,6 +1003,210 @@ paths:
                 - mm
                 type: string
           description: ''
+  /core/api/mailing_list_create:
+    post:
+      operationId: core_api_mailing_list_create_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailingList'
+          description: ''
+  /core/api/mailing_list_delete:
+    delete:
+      operationId: core_api_mailing_list_delete_destroy
+      parameters:
+      - in: query
+        name: list_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /core/api/mailing_list_edit:
+    put:
+      operationId: core_api_mailing_list_edit_update
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailingList'
+          description: ''
+  /core/api/mailing_list_list:
+    get:
+      operationId: core_api_mailing_list_list_list
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MailingList'
+          description: ''
+  /core/api/mailing_list_recipient_list:
+    get:
+      operationId: core_api_mailing_list_recipient_list_list
+      parameters:
+      - in: query
+        name: list_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MailingListRecipient'
+          description: ''
+  /core/api/mailing_list_subscribe_external:
+    post:
+      operationId: core_api_mailing_list_subscribe_external_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /core/api/mailing_list_subscribe_internal:
+    post:
+      operationId: core_api_mailing_list_subscribe_internal_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /core/api/mailing_list_unsubscribe:
+    post:
+      operationId: core_api_mailing_list_unsubscribe_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeExternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /core/api/member_extra_emails:
     get:
       operationId: core_api_member_extra_emails_retrieve
@@ -1144,6 +1348,140 @@ paths:
             application/json:
               schema:
                 type: boolean
+          description: ''
+  /core/api/member_mailing_list_data:
+    get:
+      operationId: core_api_member_mailing_list_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberMailingListDataResponse'
+          description: ''
+  /core/api/member_self_confirm:
+    post:
+      operationId: core_api_member_self_confirm_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /core/api/member_self_reject:
+    post:
+      operationId: core_api_member_self_reject_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /core/api/member_self_subscribe:
+    post:
+      operationId: core_api_member_self_subscribe_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /core/api/member_self_unsubscribe:
+    post:
+      operationId: core_api_member_self_unsubscribe_create
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MailingListSubscribeInternalRecipientRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /deliveries/api/cancel_donation:
     post:
@@ -2262,6 +2600,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberPaymentRhythmData'
+          description: ''
+  /payments/api/members_needing_banking_data:
+    get:
+      operationId: payments_api_members_needing_banking_data_list
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberNeedingBankingData'
+          description: ''
+  /payments/api/members_needing_banking_data_for_rebuild:
+    get:
+      operationId: payments_api_members_needing_banking_data_for_rebuild_list
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+          format: date
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberNeedingBankingData'
           description: ''
   /payments/api/payment_transaction_details:
     get:
@@ -6410,6 +6791,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - can_be_hard_deleted
       - created_at
@@ -6493,6 +6876,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
       required:
       - description_in_bestell_wizard
       - name
@@ -6503,6 +6888,7 @@ components:
       - monthly
       - weekly
       - daily
+      - after_pickup_location_change_deadline
       - never
       type: string
       description: |-
@@ -6510,6 +6896,7 @@ components:
         * `monthly` - Monatlich
         * `weekly` - Wöchentlich
         * `daily` - Täglich
+        * `after_pickup_location_change_deadline` - Nach letztmöglicher Änderung der Verteilstation
         * `never` - Nie
     AvailableSegmentsResponse:
       type: object
@@ -9247,6 +9634,77 @@ components:
       - available_for_external_recipients
       - mode
       - name
+    MailingList:
+      type: object
+      properties:
+        name:
+          type: string
+        nb_recipients:
+          type: integer
+        advertised:
+          type: boolean
+        description:
+          type: string
+      required:
+      - advertised
+      - description
+      - name
+      - nb_recipients
+    MailingListCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        advertised:
+          type: boolean
+        description:
+          type: string
+          minLength: 1
+      required:
+      - advertised
+      - description
+      - name
+    MailingListRecipient:
+      type: object
+      properties:
+        address:
+          type: string
+          format: email
+        user_confirmed:
+          type: boolean
+        link_to_member_profile:
+          type: string
+          nullable: true
+      required:
+      - address
+      - link_to_member_profile
+      - user_confirmed
+    MailingListSubscribeExternalRecipientRequestRequest:
+      type: object
+      properties:
+        address:
+          type: string
+          format: email
+          minLength: 1
+        list_name:
+          type: string
+          minLength: 1
+      required:
+      - address
+      - list_name
+    MailingListSubscribeInternalRecipientRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        list_name:
+          type: string
+          minLength: 1
+      required:
+      - list_name
+      - member_id
     MandateReferencePreviewResponse:
       type: object
       properties:
@@ -9631,6 +10089,56 @@ components:
       required:
       - categories_registered_to
       - member_id
+    MemberMailingListDataResponse:
+      type: object
+      properties:
+        available_lists:
+          type: array
+          items:
+            $ref: '#/components/schemas/MailingList'
+        subscribed_lists:
+          type: array
+          items:
+            type: string
+        waiting_for_confirmation_lists:
+          type: array
+          items:
+            type: string
+      required:
+      - available_lists
+      - subscribed_lists
+      - waiting_for_confirmation_lists
+    MemberNeedingBankingData:
+      type: object
+      properties:
+        member_no:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Mitgliedsnummer
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          title: E-Mail-Adresse
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        member_url:
+          type: string
+          readOnly: true
+      required:
+      - first_name
+      - last_name
+      - member_url
     MemberPaymentRhythm:
       type: object
       properties:
@@ -9708,13 +10216,26 @@ components:
           type: boolean
         can_edit_name:
           type: boolean
+        country:
+          type: string
+        can_edit_country:
+          type: boolean
+        contact_email:
+          type: string
+          format: email
+        member_number:
+          type: string
       required:
+      - can_edit_country
       - can_edit_name
       - can_edit_student
       - city
+      - contact_email
+      - country
       - email
       - first_name
       - last_name
+      - member_number
       - phone_number
       - postcode
       - street
@@ -10075,6 +10596,8 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+        hidden_in_bestell_wizard:
+          type: boolean
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:
@@ -10360,6 +10883,9 @@ components:
           type: string
           minLength: 1
         city:
+          type: string
+          minLength: 1
+        country:
           type: string
           minLength: 1
         is_student:
@@ -10901,7 +11427,6 @@ components:
           minLength: 1
         phone_number:
           type: string
-          minLength: 1
         street:
           type: string
           minLength: 1
@@ -10984,7 +11509,7 @@ components:
         info:
           type: string
           title: Additional info
-          maxLength: 1024
+          maxLength: 3000
         access_code:
           type: string
           maxLength: 20
@@ -10998,10 +11523,13 @@ components:
         photo_link:
           type: string
           maxLength: 512
+        show_details_in_basket_totals_export:
+          type: boolean
+          title: Im Gesamtkistenanzahls-Zettel Details anzeigen
         route_info:
           type: string
           title: Driver/Route info
-          maxLength: 1024
+          maxLength: 3000
         location_route:
           type: string
           nullable: true

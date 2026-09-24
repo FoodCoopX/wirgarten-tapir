@@ -1,16 +1,15 @@
 import datetime
 from unittest.mock import Mock, patch
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.wirgarten.tests import factories
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
 class TestJokerManagementServiceCanJokerBeCancelled(TapirUnitTest):
     def setUp(self):
-        mock_timezone(self, factories.NOW)
+        self.now = mock_timezone(self, factories.NOW)
 
     @patch.object(JokerManagementService, "get_date_limit_for_joker_changes")
     def test_canJokerBeCancelled_dateLimitIsInTheFuture_returnsTrue(
@@ -22,7 +21,9 @@ class TestJokerManagementServiceCanJokerBeCancelled(TapirUnitTest):
 
         cache = {}
         self.assertTrue(
-            JokerManagementService.can_joker_be_cancelled(joker, cache=cache)
+            JokerManagementService.can_joker_be_cancelled(
+                joker, reference_date=self.now.date(), cache=cache
+            )
         )
         mock_get_date_limit_for_joker_changes.assert_called_once_with(
             joker.date, cache=cache
@@ -40,7 +41,9 @@ class TestJokerManagementServiceCanJokerBeCancelled(TapirUnitTest):
 
         cache = {}
         self.assertFalse(
-            JokerManagementService.can_joker_be_cancelled(joker, cache=cache)
+            JokerManagementService.can_joker_be_cancelled(
+                joker, reference_date=self.now.date(), cache=cache
+            )
         )
         mock_get_date_limit_for_joker_changes.assert_called_once_with(
             joker.date, cache=cache

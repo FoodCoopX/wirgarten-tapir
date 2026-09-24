@@ -1,10 +1,14 @@
 import datetime
 from decimal import Decimal
+from unittest.mock import patch, MagicMock
 
 from django.core.exceptions import ValidationError
 from lxml import etree
 
 from tapir.payments.services.pain_008_xml_generator import Pain008XmlGenerator
+from tapir.payments.services.payment_export_intended_use_builder import (
+    PaymentExportIntendedUseBuilder,
+)
 from tapir.utils.tests_utils import mock_parameter_value
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import PaymentFactory
@@ -24,6 +28,11 @@ class TestBuildXmlString(TapirUnitTest):
         )
         mock_parameter_value(
             cache=self.cache,
+            key=ParameterKeys.PAYMENT_ORGANISATION_BIC,
+            value="",
+        )
+        mock_parameter_value(
+            cache=self.cache,
             key=ParameterKeys.PAYMENT_CREDITOR_IDENTIFIER,
             value="Test-creditor-id",
         )
@@ -31,6 +40,11 @@ class TestBuildXmlString(TapirUnitTest):
             cache=self.cache,
             key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM,
             value=False,
+        )
+        mock_parameter_value(
+            cache=self.cache,
+            key=ParameterKeys.PAYMENT_DUE_DAY,
+            value=14,
         )
 
     def test_buildXmlString_default_returnsCorrectString(self):
@@ -88,7 +102,7 @@ class TestBuildXmlString(TapirUnitTest):
             self._get_child("CtrlSum", payment_information).text,
         )
         self.assertEqual(
-            "2019-09-17",
+            "2019-09-14",
             self._get_child("ReqdColltnDt", payment_information).text,
         )
         self.assertEqual(
@@ -131,7 +145,55 @@ class TestBuildXmlString(TapirUnitTest):
             self._get_child("DbtrAcct/Id/IBAN", first_payment).text,
         )
         self.assertEqual(
-            f"Test-site-name, {payment_1.mandate_ref.member.last_name}, Verträge",
+            f"Test-site-name, {payment_1.mandate_ref.member.last_name}, Vertraege",
+            self._get_child("RmtInf/Ustrd", first_payment).text,
+        )
+
+    @patch.object(PaymentExportIntendedUseBuilder, "build_intended_use", autospec=True)
+    def test_buildXmlString_default_returnsCorrectlyConvertedSpecialCharacters(
+        self, mock_build_intended_use: MagicMock
+    ):
+        mock_timezone(
+            test=self,
+            now=datetime.datetime(
+                year=2018, month=2, day=13, hour=12, minute=37, second=11, microsecond=1
+            ),
+        )
+        mock_parameter_value(
+            cache=self.cache,
+            key=ParameterKeys.PAYMENT_INTENDED_USE_ENABLE_CUSTOM,
+            value=True,
+        )
+        mock_build_intended_use.return_value = "Test type & Grün, \t\n René"
+
+        payment_1 = PaymentFactory.build(
+            amount=Decimal("75.20"),
+            type="Test type & Grün",
+            mandate_ref__member__first_name="Jörg",
+            mandate_ref__member__last_name="René",
+            subscription_payment_range_start=datetime.date(year=2019, month=9, day=17),
+        )
+
+        result_string = Pain008XmlGenerator.build_xml_string(
+            payments=[payment_1],
+            collection_date=datetime.date(year=2019, month=9, day=17),
+            cache=self.cache,
+        )
+
+        tree = etree.XML(result_string)
+
+        payment_information = self._get_child("CstmrDrctDbtInitn/PmtInf", tree)
+
+        payments = payment_information.findall("DrctDbtTxInf", namespaces=tree.nsmap)
+        self.assertEqual(1, len(payments))
+
+        first_payment = payments[0]
+        self.assertEqual(
+            "Joerg Rene",
+            self._get_child("Dbtr/Nm", first_payment).text,
+        )
+        self.assertEqual(
+            f"Test type und Gruen, Rene",
             self._get_child("RmtInf/Ustrd", first_payment).text,
         )
 
@@ -164,6 +226,68 @@ class TestBuildXmlString(TapirUnitTest):
         self.assertEqual(
             "DE60500105172436256838",
             self._get_child("CdtrAcct/Id/IBAN", payment_information).text,
+        )
+
+    def test_buildXmlString_bicNotSetInConfig_setsCreditorInstitutionIdToNotProvided(
+        self,
+    ):
+        mock_timezone(
+            test=self,
+            now=datetime.datetime(
+                year=2018, month=2, day=13, hour=12, minute=37, second=11, microsecond=1
+            ),
+        )
+        mock_parameter_value(
+            cache=self.cache,
+            key=ParameterKeys.PAYMENT_ORGANISATION_BIC,
+            value="",
+        )
+
+        payment_1 = PaymentFactory.build(amount=Decimal("75.20"), type="Test type")
+
+        result_string = Pain008XmlGenerator.build_xml_string(
+            payments=[payment_1],
+            collection_date=datetime.date(year=2019, month=9, day=17),
+            cache=self.cache,
+        )
+
+        tree = etree.XML(result_string)
+
+        payment_information = self._get_child("CstmrDrctDbtInitn/PmtInf", tree)
+        self.assertEqual(
+            "NOTPROVIDED",
+            self._get_child("CdtrAgt/FinInstnId/Othr/Id", payment_information).text,
+        )
+
+    def test_buildXmlString_bicSetInConfig_setsCreditorInstitutionIdToBic(
+        self,
+    ):
+        mock_timezone(
+            test=self,
+            now=datetime.datetime(
+                year=2018, month=2, day=13, hour=12, minute=37, second=11, microsecond=1
+            ),
+        )
+        mock_parameter_value(
+            cache=self.cache,
+            key=ParameterKeys.PAYMENT_ORGANISATION_BIC,
+            value="TESTBIC1234",
+        )
+
+        payment_1 = PaymentFactory.build(amount=Decimal("75.20"), type="Test type")
+
+        result_string = Pain008XmlGenerator.build_xml_string(
+            payments=[payment_1],
+            collection_date=datetime.date(year=2019, month=9, day=17),
+            cache=self.cache,
+        )
+
+        tree = etree.XML(result_string)
+
+        payment_information = self._get_child("CstmrDrctDbtInitn/PmtInf", tree)
+        self.assertEqual(
+            "TESTBIC1234",
+            self._get_child("CdtrAgt/FinInstnId/BICFI", payment_information).text,
         )
 
     def test_buildXmlString_invalidPayment_raisesGenericError(self):

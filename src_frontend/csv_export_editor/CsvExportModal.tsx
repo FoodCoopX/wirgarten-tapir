@@ -13,7 +13,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { ToastData } from "../types/ToastData.ts";
-import { CYCLE_OPTIONS } from "./CYCLE_OPTIONS.ts";
+import { CYCLE_HIDES_DAY_FIELD, CYCLE_OPTIONS } from "./CYCLE_OPTIONS.ts";
 
 interface CsvExportModalProps {
   show: boolean;
@@ -346,7 +346,8 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
                   onChange={(event) =>
                     setExportDay(Number.parseInt(event.target.value))
                   }
-                  required={true}
+                  required={exportCycle !== CYCLE_HIDES_DAY_FIELD}
+                  disabled={exportCycle === CYCLE_HIDES_DAY_FIELD}
                   value={exportDay}
                 />
               </Form.Group>

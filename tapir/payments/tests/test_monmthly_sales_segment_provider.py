@@ -1,6 +1,12 @@
 import datetime
 from decimal import Decimal
 
+from tapir.associations.tests.factories import (
+    AssociationMembershipTypeFactory,
+    AssociationMembershipTypePriceFactory,
+    AssociationMembershipFactory,
+)
+from tapir.core.config import LEGAL_STATUS_COMPANY, LEGAL_STATUS_ASSOCIATION
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -9,6 +15,7 @@ from tapir.payments.services.monthly_sales_segment_provider import (
     MonthlySalesSegmentProvider,
 )
 from tapir.wirgarten.constants import WEEKLY
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
@@ -74,3 +81,57 @@ class TestMonthlySalesSegmentProvider(TapirIntegrationTest):
             data_for_subscriptions.sales.quantize(Decimal("0.01")),
             "The total monthly price should be 2x10 for subscription 1 (1 full month of a subscription with quantity 2) plus 6.92 for subscription 2 (partial month with 2 deliveries)",
         )
+
+    def test_getListMonthlySales_legalStatusIsNotAssociation_returnsDataWithAssociationMemberships(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_COMPANY
+        )
+
+        results = MonthlySalesSegmentProvider.get_list_monthly_sales_previous_month(
+            reference_datetime=datetime.datetime(year=2025, month=4, day=1, hour=12)
+        )
+
+        self.assertTrue(
+            all(
+                result.contract_type_name
+                != MonthlySalesSegmentProvider.CONTRACT_TYPE_ASSOCIATION_MEMBERSHIPS
+                for result in results
+            )
+        )
+
+    def test_getListMonthlySales_legalStatusIsAssociation_returnsDataWithAssociationMemberships(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS, value=LEGAL_STATUS_ASSOCIATION
+        )
+        membership_type = AssociationMembershipTypeFactory.create()
+        AssociationMembershipTypePriceFactory.create(
+            type=membership_type,
+            valid_from=datetime.date(year=2025, month=1, day=1),
+            price=10,
+        )
+        AssociationMembershipFactory.create(
+            type=membership_type, start_date=datetime.date(year=2025, month=1, day=1)
+        )
+        AssociationMembershipFactory.create(
+            type=membership_type, start_date=datetime.date(year=2025, month=3, day=15)
+        )
+
+        results = MonthlySalesSegmentProvider.get_list_monthly_sales_previous_month(
+            reference_datetime=datetime.datetime(year=2025, month=4, day=1, hour=12)
+        )
+
+        data_for_associations = None
+        for result in results:
+            if (
+                result.contract_type_name
+                == MonthlySalesSegmentProvider.CONTRACT_TYPE_ASSOCIATION_MEMBERSHIPS
+            ):
+                data_for_associations = result
+                break
+
+        self.assertIsNotNone(data_for_associations)
+        self.assertEqual(Decimal("15.48"), data_for_associations.sales)

@@ -92,7 +92,7 @@ class UserGenerator:
         print(f"Creating {user_count} users, this may take a while")
         random.seed("wirgarten")
 
-        fake = Faker()
+        fake = Faker("de_DE")
 
         parsed_users = cls.get_test_users()
 
@@ -156,7 +156,7 @@ class UserGenerator:
             is_staff=is_superuser,
             is_active=True,
             date_joined=json_user.date_joined,
-            iban=fake.iban(),
+            iban=fake["de_DE"].iban(),
             account_owner=json_user.get_full_name(),
             sepa_consent=json_user.date_joined,
             privacy_consent=json_user.date_joined,

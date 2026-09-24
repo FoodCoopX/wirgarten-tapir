@@ -31,20 +31,14 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
 )
-from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
-    PickupLocationCapacityGeneralChecker,
-)
 from tapir.solidarity_contribution.services.member_solidarity_contribution_service import (
     MemberSolidarityContributionService,
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
-from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.subscriptions.services.growing_period_choice_provider import (
     GrowingPeriodChoiceProvider,
 )
-from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
-from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
@@ -55,6 +49,7 @@ from tapir.waiting_list.serializers import (
     OptionalWaitingListEntryDetailsSerializer,
     PublicWaitingListEntryDetailsSerializer,
 )
+from tapir.waiting_list.services.can_be_fulfilled_checker import CanBeFulFilledChecker
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
 )
@@ -271,7 +266,7 @@ class WaitingListApiView(APIView):
         cache = {}
         filtered_entries = []
         for entry in entries:
-            can_be_fulfilled = cls.check_if_entry_can_be_fulfilled(
+            can_be_fulfilled = CanBeFulFilledChecker.check_if_entry_can_be_fulfilled(
                 entry=entry, cache=cache
             )
             if value == "fulfillable" and can_be_fulfilled:
@@ -366,7 +361,9 @@ class WaitingListApiView(APIView):
                 entry.id, entry.confirmation_link_key
             )
 
-        can_be_fulfilled = cls.check_if_entry_can_be_fulfilled(entry=entry, cache=cache)
+        can_be_fulfilled = CanBeFulFilledChecker.check_if_entry_can_be_fulfilled(
+            entry=entry, cache=cache
+        )
 
         return {
             "id": entry.id,
@@ -406,60 +403,6 @@ class WaitingListApiView(APIView):
             "payment_rhythm": payment_rhythm,
             "can_be_fulfilled": can_be_fulfilled,
         }
-
-    @classmethod
-    def check_if_entry_can_be_fulfilled(cls, entry: WaitingListEntry, cache: dict):
-        pickup_location_wishes = entry.pickup_location_wishes.all()
-
-        if not pickup_location_wishes or not entry.product_wishes.all():
-            return False
-
-        order: TapirOrder = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
-            entry
-        )
-
-        subscription_start = (
-            WaitingListEntryConfirmationApplier.get_contract_start_date(
-                waiting_list_entry=entry, cache=cache
-            )
-        )
-
-        product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
-            order_with_all_product_types=order,
-            member_id=str(entry.member_id) if entry.member else None,
-            subscription_start_date=subscription_start,
-            cache=cache,
-            check_waiting_list_entries=False,
-        )
-
-        if product_type_ids_without_enough_capacity:
-            return False
-
-        if not all(
-            ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
-                member_id=str(entry.member_id) if entry.member else None,
-                product=product,
-                ordered_quantity=quantity,
-                subscription_start_date=subscription_start,
-                cache=cache,
-            )
-            for product, quantity in order.items()
-        ):
-            return False
-
-        for pickup_location_wish in pickup_location_wishes:
-            has_capacity = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
-                pickup_location=pickup_location_wish.pickup_location,
-                order=order,
-                already_registered_member=entry.member,
-                subscription_start=subscription_start,
-                cache=cache,
-                check_waiting_list_entries=False,
-            )
-            if has_capacity:
-                return True
-
-        return False
 
     @staticmethod
     def remove_renewals(subscriptions: list[Subscription], cache: dict):

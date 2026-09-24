@@ -7,6 +7,7 @@ import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
 import MemberExtraEmailsBase from "./extra_email_addresses/MemberExtraEmailsBase.tsx";
 import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
 import MemberMailCategoryCard from "./mail_category/MemberMailCategoryCard.tsx";
+import MemberMailingListsCard from "./mailing_lists/MemberMailingListsCard.tsx";
 import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
 import MemberPersonalDataBase from "./personal_data/MemberPersonalDataBase.tsx";
 import MemberProfileSolidarityContributionCard from "./solidarity_contribution/MemberProfileSolidarityContributionCard.tsx";
@@ -84,6 +85,10 @@ if (domNodeSolidarityCard) {
     <MemberProfileSolidarityContributionCard
       memberId={domNodeSolidarityCard.dataset.memberId!}
       adminEmail={domNodeSolidarityCard.dataset.adminEmail!}
+      adminVersion={domNodeSolidarityCard.dataset.userIsAdmin === "True"}
+      membersCanChangeContribution={
+        domNodeSolidarityCard.dataset.membersCanChangeContribution === "True"
+      }
     />,
   );
 } else {
@@ -199,6 +204,18 @@ if (domNodeAssociationMembershipCard) {
   root.render(
     <AssociationMembershipCard
       memberId={domNodeAssociationMembershipCard.dataset.memberId!}
+      csrfToken={getCsrfToken()}
+    />,
+  );
+}
+
+const domNodeMailingLists = document.getElementById("member_mailing_list");
+if (domNodeMailingLists) {
+  const root = createRoot(domNodeMailingLists);
+
+  root.render(
+    <MemberMailingListsCard
+      memberId={domNodeMailingLists.dataset.memberId!}
       csrfToken={getCsrfToken()}
     />,
   );

@@ -36,6 +36,7 @@ class ParameterKeys:
     PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     PAYMENT_START_DATE = f"{PREFIX}.payment.start_date"
     PAYMENT_ORGANISATION_IBAN = f"{PREFIX}.payment.organisation_iban"
+    PAYMENT_ORGANISATION_BIC = f"{PREFIX}.payment.organisation_bic"
     PAYMENT_CREDITOR_IDENTIFIER = f"{PREFIX}.payment.creditor_identifier"
     PAYMENT_MANDATE_REFERENCE_PATTERN = f"{PREFIX}.payment.mandate_reference.pattern"
     PAYMENT_INTENDED_USE_ENABLE_CUSTOM = f"{PREFIX}.payment.intended_use.enable_custom"
@@ -91,6 +92,7 @@ class ParameterKeys:
     )
     MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
+    JOKERS_CREATE_MEMBER_CREDITS = f"{PREFIX}.jokers.create_member_credits"
     DELIVERY_DONATION_MODE = f"{PREFIX}.delivery_donation.mode"
     DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION = (
         f"{PREFIX}.delivery_donation.forward_to_pickup_location"

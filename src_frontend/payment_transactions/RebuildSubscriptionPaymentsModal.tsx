@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Form, Modal } from "react-bootstrap";
-import { PaymentsApi } from "../api-client";
+import { MemberNeedingBankingData, PaymentsApi } from "../api-client";
 import ConfirmModal from "../components/ConfirmModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import MembersNeedingBankingDataDetails from "./MembersNeedingBankingDataDetails.tsx";
+import MembersNeedingBankingDataRebuildWarningModal from "./MembersNeedingBankingDataRebuildWarningModal.tsx";
 
 interface RebuildSubscriptionPaymentsModalProps {
   show: boolean;
@@ -29,20 +31,56 @@ const RebuildSubscriptionPaymentsModal: React.FC<
 > = ({ show, onHide, setToastDatas, afterRebuild }) => {
   const api = useApi(PaymentsApi, getCsrfToken());
   const [loading, setLoading] = useState(false);
+  const [checkingBankingData, setCheckingBankingData] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear());
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showBankingDataWarningModal, setShowBankingDataWarningModal] =
+    useState(false);
+  const [membersNeedingBankingData, setMembersNeedingBankingData] = useState<
+    MemberNeedingBankingData[]
+  >([]);
   const [error, setError] = useState("");
+
+  function getSelectedMonthDate() {
+    // Built in UTC (not via local-time setters) so the date sent to the
+    // backend can't shift to the previous day depending on the browser's
+    // timezone and the time of day this is clicked - the API client
+    // serializes this via toISOString(), which is UTC-based.
+    return new Date(Date.UTC(year, month, 1));
+  }
+
+  function onClickRebuild() {
+    setCheckingBankingData(true);
+    api
+      .paymentsApiMembersNeedingBankingDataForRebuildList({
+        from: getSelectedMonthDate(),
+      })
+      .then((response) => {
+        setMembersNeedingBankingData(response);
+        if (response.length > 0) {
+          setShowBankingDataWarningModal(true);
+        } else {
+          setShowConfirmationModal(true);
+        }
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler bei der Prüfung der Bankdaten",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setCheckingBankingData(false));
+  }
 
   function onConfirmRebuild() {
     setLoading(true);
 
-    const from = new Date();
-    from.setFullYear(year);
-    from.setMonth(month);
-
     api
-      .paymentsApiRebuildSubscriptionPaymentsCreate({ from: from })
+      .paymentsApiRebuildSubscriptionPaymentsCreate({
+        from: getSelectedMonthDate(),
+      })
       .then((response) => {
         if (response.orderConfirmed) {
           setError("");
@@ -65,7 +103,7 @@ const RebuildSubscriptionPaymentsModal: React.FC<
   return (
     <>
       <Modal
-        show={show && !showConfirmationModal}
+        show={show && !showConfirmationModal && !showBankingDataWarningModal}
         onHide={onHide}
         centered={true}
         size={"xl"}
@@ -124,18 +162,24 @@ const RebuildSubscriptionPaymentsModal: React.FC<
             text={"Neu erzeugen"}
             variant={"primary"}
             icon={"redo"}
-            onClick={() => setShowConfirmationModal(true)}
-            loading={loading}
+            onClick={onClickRebuild}
+            loading={checkingBankingData}
           />
         </Modal.Footer>
       </Modal>
       <ConfirmModal
         message={
-          "Bist du sicher das du die Lastschrift-Dateien ab " +
-          getMonthDisplay(month) +
-          " " +
-          year +
-          " neu erzeugen willst?"
+          <>
+            <p>
+              Bist du sicher das du die Lastschrift-Dateien ab{" "}
+              {getMonthDisplay(month)} {year} neu erzeugen willst?
+            </p>
+            {membersNeedingBankingData.length > 0 && (
+              <MembersNeedingBankingDataDetails
+                members={membersNeedingBankingData}
+              />
+            )}
+          </>
         }
         title={"Bitte bestätigen"}
         open={showConfirmationModal}
@@ -145,6 +189,16 @@ const RebuildSubscriptionPaymentsModal: React.FC<
         onConfirm={() => onConfirmRebuild()}
         onCancel={() => setShowConfirmationModal(false)}
         loading={loading}
+        size={membersNeedingBankingData.length > 0 ? "lg" : undefined}
+      />
+      <MembersNeedingBankingDataRebuildWarningModal
+        show={showBankingDataWarningModal}
+        members={membersNeedingBankingData}
+        onCancel={() => setShowBankingDataWarningModal(false)}
+        onContinue={() => {
+          setShowBankingDataWarningModal(false);
+          setShowConfirmationModal(true);
+        }}
       />
     </>
   );

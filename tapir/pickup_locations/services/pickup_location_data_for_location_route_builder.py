@@ -63,6 +63,9 @@ class PickupLocationDataForLocationRouteBuilder:
             "postcode": pickup_location.postcode,
             "city": pickup_location.city,
             "route_info": pickup_location.route_info,
+            "show_details_in_basket_totals_export": (
+                pickup_location.show_details_in_basket_totals_export
+            ),
             "headers": cls.get_headers(
                 cache=cache, reference_date=reference_datetime.date()
             ),

@@ -61,7 +61,7 @@ class MemberPickupLocationCleaner:
         return cls._does_member_have_an_active_or_future_pickup_location(
             member=member, reference_date=reference_date, cache=cache
         ) and (
-            not cls._does_member_have_at_least_one_delivered_subscription(
+            not cls.does_member_have_at_least_one_delivered_subscription(
                 member=member, reference_date=reference_date, cache=cache
             )
         )
@@ -87,7 +87,7 @@ class MemberPickupLocationCleaner:
         return member_pickup_location_objects[0].pickup_location is not None
 
     @classmethod
-    def _does_member_have_at_least_one_delivered_subscription(
+    def does_member_have_at_least_one_delivered_subscription(
         cls,
         member: Member,
         reference_date: datetime.date,

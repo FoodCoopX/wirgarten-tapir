@@ -3,10 +3,15 @@ import React, { useEffect, useState } from "react";
 import { Form, Modal, Spinner } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import { CoopApi } from "../../api-client";
+import {
+  emailsMatch,
+  shouldShowEmailMismatchWarning,
+} from "../../bestell_wizard/utils/emailsMatch.ts";
 import { isEmailValid } from "../../bestell_wizard/utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberValid.ts";
 import { isPersonalDataValidShort } from "../../bestell_wizard_mobile/utils/isPersonalDataValidShort.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
@@ -19,6 +24,8 @@ interface MemberPersonalDataModalProps {
   show: boolean;
   onHide: () => void;
 }
+
+const COUNTRY_OPTIONS = ["DE", "AT"];
 
 const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   memberId,
@@ -34,15 +41,82 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailConfirm, setEmailConfirm] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [street, setStreet] = useState("");
   const [street2, setStreet2] = useState("");
   const [postcode, setPostcode] = useState("");
   const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [canEditCountry, setCanEditCountry] = useState(false);
   const [isStudent, setIsStudent] = useState<boolean>();
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [canEditStudent, setCanEditStudent] = useState(false);
   const [canEditName, setCanEditName] = useState(false);
+  const [contactEmail, setContactEmail] = useState("");
+  const [memberNumber, setMemberNumber] = useState("");
+
+  const memberNumberHelpText =
+    "Die Mitgliedsnummer kann nicht selbstständig verändert werden.";
+
+  const nameHelpText = canEditName ? (
+    <>
+      Nur du als Admin kannst den Namen des Mitgliedes ändern. Das Mitglied kann
+      dies nicht selbstständig. Ihm wird angezeigt, dass es den Betrieb
+      kontaktieren muss, um den Namen zu verändern.
+    </>
+  ) : (
+    <>
+      Du kannst nicht selbstständig deinen Namen verändern. Bitte wende dich an
+      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+      ).
+    </>
+  );
+
+  const countryHelpText = canEditCountry ? (
+    <>
+      Nur änderbar durch dich als Admin. Das Mitglied sieht das Feld, kann es
+      aber nicht ändern.
+    </>
+  ) : (
+    <>
+      Du kannst nicht selbstständig dein Land verändern. Bitte wende dich an
+      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+    </>
+  );
+
+  const emailHelpText = canEditName ? (
+    <>
+      Änderst du die Email hier direkt als Admin, hängt das Verhalten vom
+      Verifizierungsstatus der aktuellen Adresse ab:
+      <br />
+      <br />
+      <strong>Adresse bereits verifiziert:</strong> Die neue Adresse wird beim
+      Speichern nicht sofort übernommen. Stattdessen wird ein Bestätigungslink
+      an die <strong>alte</strong> Adresse verschickt – erst ein Klick darauf
+      setzt die neue Adresse. Damit das funktioniert, muss die transaktionale
+      Mail "Email-Änderung: Bestätigung anfordern" im Mailmodul veröffentlicht
+      sein und den Token{" "}
+      <code>
+        {"{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}"}
+      </code>{" "}
+      enthalten.
+      <br />
+      <br />
+      <strong>Adresse noch nicht verifiziert</strong> (z. B. bei einem neuen
+      Mitglied, das sein Konto noch nicht bestätigt hat): Die neue Adresse wird
+      sofort übernommen, und es wird automatisch eine neue Verifizierungsmail an
+      die neue Adresse verschickt. Ein manuelles erneutes Versenden ist nicht
+      nötig – das Mitglied muss nur noch auf den Link in dieser Mail klicken.
+    </>
+  ) : (
+    <>
+      Die Änderung deiner Email muss durch dich selbst bestätigt werden. Folge
+      den Anweisungen, die du an deine alte Email erhältst. Wenn du keine Mail
+      erhältst, dann wende dich an deinen Betrieb (
+      <a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+    </>
+  );
 
   useEffect(() => {
     if (!show) return;
@@ -55,17 +129,22 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         setFirstName(response.firstName);
         setLastName(response.lastName);
         setEmail(response.email);
+        setEmailConfirm(response.email);
         setPhoneNumber(response.phoneNumber);
         setStreet(response.street);
         setStreet2(response.street2);
         setPostcode(response.postcode);
         setCity(response.city);
+        setCanEditCountry(response.canEditCountry);
+        setCountry(response.country);
         if (response.isStudent !== undefined) {
           setIsStudent(response.isStudent);
           setStudentStatusEnabled(true);
           setCanEditStudent(response.canEditStudent);
         }
         setCanEditName(response.canEditName);
+        setContactEmail(response.contactEmail);
+        setMemberNumber(response.memberNumber);
       })
       .catch((error) =>
         handleRequestError(
@@ -84,6 +163,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           firstName: firstName,
           lastName: lastName,
           email: email,
+          emailConfirm: emailConfirm,
           phoneNumber: phoneNumber,
           street: street,
           street2: street2,
@@ -115,6 +195,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           street2: street2,
           postcode: postcode,
           city: city,
+          country: canEditCountry ? country : undefined,
           isStudent: isStudent,
         },
       })
@@ -155,7 +236,28 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         ) : (
           <Form>
             <Form.Group className="mb-2">
-              <Form.Label>Vorname</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Mitgliedsnummer
+                  <TapirHelpButton
+                    buttonSize={"sm"}
+                    text={memberNumberHelpText}
+                  />
+                </span>
+              </Form.Label>
+              <Form.Control
+                placeholder={"Mitgliedsnummer"}
+                value={memberNumber}
+                disabled
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Vorname
+                  <TapirHelpButton buttonSize={"sm"} text={nameHelpText} />
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"Vorname"}
                 value={firstName}
@@ -166,7 +268,12 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               />
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>Nachname</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Nachname
+                  <TapirHelpButton buttonSize={"sm"} text={nameHelpText} />
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"Nachname"}
                 value={lastName}
@@ -177,7 +284,12 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
               />
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>E-Mail</Form.Label>
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  E-Mail
+                  <TapirHelpButton buttonSize={"sm"} text={emailHelpText} />
+                </span>
+              </Form.Label>
               <Form.Control
                 placeholder={"E-Mail"}
                 type={"email"}
@@ -186,6 +298,22 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 isValid={showValidation && isEmailValid(email)}
                 isInvalid={showValidation && !isEmailValid(email)}
               />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>E-Mail wiederholen</Form.Label>
+              <Form.Control
+                placeholder={"E-Mail wiederholen"}
+                type={"email"}
+                value={emailConfirm}
+                onChange={(event) => setEmailConfirm(event.target.value)}
+                isValid={showValidation && emailsMatch(email, emailConfirm)}
+                isInvalid={showValidation && !emailsMatch(email, emailConfirm)}
+              />
+              {shouldShowEmailMismatchWarning(email, emailConfirm) && (
+                <Form.Text className={showValidation ? "text-danger" : ""}>
+                  Die E-Mail-Adressen stimmen nicht überein
+                </Form.Text>
+              )}
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Telefonnummer</Form.Label>
@@ -236,6 +364,25 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 isValid={showValidation && city.length > 0}
                 isInvalid={showValidation && city.length === 0}
               />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>
+                <span className={"d-flex flex-row gap-2 align-items-center"}>
+                  Land
+                  <TapirHelpButton buttonSize={"sm"} text={countryHelpText} />
+                </span>
+              </Form.Label>
+              <Form.Select
+                value={country}
+                onChange={(event) => setCountry(event.target.value)}
+                disabled={!canEditCountry}
+              >
+                {COUNTRY_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             {studentStatusEnabled && (
               <Form.Group>

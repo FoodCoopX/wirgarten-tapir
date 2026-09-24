@@ -60,6 +60,15 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     if (!stepActive) {
       setTimeout(() => setShowValidation(false), 200);
     }
+
+    if (
+      stepActive &&
+      productType.products.length === 1 &&
+      productType.singleSubscriptionOnly
+    ) {
+      shoppingCart[productType.products[0].id!] = 1;
+      setShoppingCart({ ...shoppingCart });
+    }
   }, [stepActive]);
 
   function validate() {
@@ -137,23 +146,13 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       );
     }
 
-    const allProducts = [...productType.products];
-    const wishedProductIds = (waitingListEntryDetails.productWishes ?? []).map(
-      (productWish) => productWish.product.id,
-    );
-    const mustInclude = productType.products.filter(
+    return productType.products.filter(
       (product) =>
         !product.hiddenInBestellWizard ||
         (waitingListEntryDetails.productWishes ?? [])
           .map((productWish) => productWish.product.id)
           .includes(product.id),
     );
-    const mustInclude2 = productType.products.filter((product) =>
-      (waitingListEntryDetails.productWishes ?? [])
-        .map((productWish) => productWish.product.id)
-        .includes(product.id),
-    );
-    return mustInclude;
   }
 
   return (

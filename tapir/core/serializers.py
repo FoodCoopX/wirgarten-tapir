@@ -24,3 +24,40 @@ class MemberExtraEmailUpdateRequest(serializers.Serializer):
     extra_email_id = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
+
+
+class MailingListSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    nb_recipients = serializers.IntegerField()
+    advertised = serializers.BooleanField()
+    description = serializers.CharField()
+
+
+class MailingListCreateSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    advertised = serializers.BooleanField()
+    description = serializers.CharField()
+
+
+class MailingListRecipientSerializer(serializers.Serializer):
+    address = serializers.EmailField()
+    user_confirmed = serializers.BooleanField()
+    link_to_member_profile = serializers.CharField(allow_null=True)
+
+
+class MailingListSubscribeExternalRecipientRequestSerializer(serializers.Serializer):
+    address = serializers.EmailField()
+    list_name = serializers.CharField()
+
+
+class MailingListSubscribeInternalRecipientRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    list_name = serializers.CharField()
+
+
+class MemberMailingListDataResponseSerializer(serializers.Serializer):
+    available_lists = MailingListSerializer(many=True)
+    subscribed_lists = serializers.ListField(child=serializers.CharField())
+    waiting_for_confirmation_lists = serializers.ListField(
+        child=serializers.CharField()
+    )

@@ -105,19 +105,25 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   }
 
   function showInvestingMembership() {
-    if (settings.legalStatus !== "association") {
-      return true;
+    switch (settings.legalStatus) {
+      case "association":
+        return settings.associationsAllowInvestingMembership;
+      case "coop":
+        return settings.allowInvestingMembership;
+      case "company":
+        return false;
     }
-
-    return settings.associationsAllowInvestingMembership;
   }
 
   return (
     <>
       {settings.strings.step3Text && (
-        <p className={"text-center"}>
-          {replaceTokens(settings.strings.step3Text, firstName)}
-        </p>
+        <p
+          className={"text-center"}
+          dangerouslySetInnerHTML={{
+            __html: replaceTokens(settings.strings.step3Text, firstName),
+          }}
+        />
       )}
 
       <div>

@@ -59,6 +59,7 @@ const ConfirmModal: React.FC<ConfirmDeleteModalProps> = ({
           text="Abbrechen"
           onClick={onCancel}
           disabled={loading}
+          icon={"close"}
         />
         <TapirButton
           variant={confirmButtonVariant}

@@ -68,6 +68,7 @@ import { getProductTypeByProductId } from "./utils/getProductTypeByProductId.ts"
 import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
 import { getPublicPickupLocationById } from "./utils/getPublicPickupLocationById.ts";
 import { updateWaitingList } from "./utils/updateWaitingList.ts";
+import { getVisibleAssociationMembershipTypes } from "./utils/getVisibleAssociationMembershipTypes.ts";
 
 interface BestellWizardMobileProps {
   csrfToken: string;
@@ -199,6 +200,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
           personalData.firstName = waitingListEntryDetails.firstName;
           personalData.lastName = waitingListEntryDetails.lastName;
           personalData.email = waitingListEntryDetails.email;
+          personalData.emailConfirm = waitingListEntryDetails.email;
           personalData.phoneNumber = waitingListEntryDetails.phoneNumber;
           personalData.street = waitingListEntryDetails.street;
           personalData.street2 = waitingListEntryDetails.street2;
@@ -470,10 +472,11 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
         setSelectedNumberOfCoopShares(7);
         break;
       case "association":
-        if (settings.associationMembershipTypes.length > 0) {
-          setSelectedAssociationMembershipType(
-            settings.associationMembershipTypes[0],
-          );
+        const visibleMembershipTypes = getVisibleAssociationMembershipTypes(
+          settings.associationMembershipTypes,
+        );
+        if (visibleMembershipTypes.length > 0) {
+          setSelectedAssociationMembershipType(visibleMembershipTypes[0]);
         }
     }
     setSepaAllowed(true);
@@ -840,6 +843,7 @@ const BestellWizardMobile: React.FC<BestellWizardMobileProps> = ({
             selectedGrowingPeriod={selectedGrowingPeriod}
             hideTrialPeriod={false}
             stepActive={step === currentStep}
+            setCurrentStep={setCurrentStep}
           />
         );
       case "11_legal":

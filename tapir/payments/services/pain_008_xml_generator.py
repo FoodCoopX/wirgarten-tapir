@@ -3,13 +3,16 @@ from decimal import Decimal
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
+from icecream import ic
 from lxml import etree
 from lxml.etree import Element
 from nanoid import generate
+from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import ID_LENGTH
 from tapir.payments.config import PAYMENT_TYPE_COOP_SHARES
+from tapir.payments.services.month_payment_builder_utils import MonthPaymentBuilderUtils
 from tapir.payments.services.payment_export_intended_use_builder import (
     PaymentExportIntendedUseBuilder,
 )
@@ -71,9 +74,37 @@ class Pain008XmlGenerator:
         if len(errors) > 0:
             raise ValidationError(", ".join(errors))
 
-        return etree.tostring(
+        document_as_bytes = etree.tostring(
             document, pretty_print=True, xml_declaration=True, encoding="UTF-8"
         )
+        document_as_string = document_as_bytes.decode()
+        document_as_string = cls.replace_special_characters(document_as_string)
+        return document_as_string.encode()
+
+    @classmethod
+    def replace_special_characters(cls, document_as_string: str):
+        # Unidecode converts ö to o, not oe, so we convert german characters first.
+        ic(document_as_string)
+        replacements = {
+            "Ö": "Oe",
+            "ö": "oe",
+            "Ä": "ae",
+            "ä": "ae",
+            "Ü": "ue",
+            "ü": "ue",
+            "&amp;": "und",
+            "&": "und",
+        }
+        updated_string = document_as_string
+        for before, after in replacements.items():
+            updated_string = updated_string.replace(before, after)
+
+        updated_string = unidecode(updated_string)
+        updated_string = " ".join(
+            updated_string.split()
+        )  # Replaces all whitespaces with spaces
+
+        return updated_string
 
     @classmethod
     def validate_single_payment(
@@ -207,7 +238,10 @@ class Pain008XmlGenerator:
         requested_collection_date = cls._append_element(
             payments_container, "ReqdColltnDt"
         )
-        requested_collection_date.text = cls._format_date(collection_date)
+        due_date = MonthPaymentBuilderUtils.get_payment_due_date_on_month(
+            collection_date, cache
+        )
+        requested_collection_date.text = cls._format_date(due_date)
 
         creditor = cls._append_element(payments_container, "Cdtr")
         creditor_name = cls._append_element(creditor, "Nm")
@@ -230,11 +264,23 @@ class Pain008XmlGenerator:
         financial_institution_id_container = cls._append_element(
             creditor_agent, "FinInstnId"
         )
-        financial_instituion_other = cls._append_element(
-            financial_institution_id_container, "Othr"
+        bic = get_parameter_value(
+            key=ParameterKeys.PAYMENT_ORGANISATION_BIC, cache=cache
         )
-        financial_institution_id = cls._append_element(financial_instituion_other, "Id")
-        financial_institution_id.text = cls.NOT_PROVIDED
+        bic = bic.strip()
+        if bic == "":
+            financial_institution_other = cls._append_element(
+                financial_institution_id_container, "Othr"
+            )
+            financial_institution_id = cls._append_element(
+                financial_institution_other, "Id"
+            )
+            financial_institution_id.text = cls.NOT_PROVIDED
+        else:
+            financial_institution_bic = cls._append_element(
+                financial_institution_id_container, "BICFI"
+            )
+            financial_institution_bic.text = bic
 
         chrg_br = cls._append_element(
             payments_container, "ChrgBr"

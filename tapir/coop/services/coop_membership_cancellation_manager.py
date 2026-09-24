@@ -74,4 +74,4 @@ class CoopMembershipCancellationManager:
         if entry_date is None:
             return False
 
-        return entry_date >= reference_date
+        return entry_date > reference_date

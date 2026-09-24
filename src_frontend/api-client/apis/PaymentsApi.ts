@@ -20,6 +20,7 @@ import type {
   MandateReferencePreviewResponse,
   MemberCreditCreateRequest,
   MemberCreditSettleRequest,
+  MemberNeedingBankingData,
   MemberPaymentRhythmData,
   OrderConfirmationResponse,
   PaginatedPaymentTransactionList,
@@ -36,6 +37,7 @@ import {
   MandateReferencePreviewResponseFromJSON,
   MemberCreditCreateRequestToJSON,
   MemberCreditSettleRequestToJSON,
+  MemberNeedingBankingDataFromJSON,
   MemberPaymentRhythmDataFromJSON,
   OrderConfirmationResponseFromJSON,
   PaginatedPaymentTransactionListFromJSON,
@@ -93,6 +95,10 @@ export interface PaymentsApiMemberPastPaymentsRetrieveRequest {
 
 export interface PaymentsApiMemberPaymentRhythmDataRetrieveRequest {
   memberId?: string;
+}
+
+export interface PaymentsApiMembersNeedingBankingDataForRebuildListRequest {
+  from: Date;
 }
 
 export interface PaymentsApiPaymentTransactionDetailsRetrieveRequest {
@@ -820,6 +826,120 @@ export class PaymentsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMembersNeedingBankingDataForRebuildListRaw(
+    requestParameters: PaymentsApiMembersNeedingBankingDataForRebuildListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<MemberNeedingBankingData>>> {
+    if (requestParameters["from"] == null) {
+      throw new runtime.RequiredError(
+        "from",
+        'Required parameter "from" was null or undefined when calling paymentsApiMembersNeedingBankingDataForRebuildList().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["from"] != null) {
+      queryParameters["from"] = (requestParameters["from"] as any)
+        .toISOString()
+        .substring(0, 10);
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/members_needing_banking_data_for_rebuild`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(MemberNeedingBankingDataFromJSON),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiMembersNeedingBankingDataForRebuildList(
+    requestParameters: PaymentsApiMembersNeedingBankingDataForRebuildListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<MemberNeedingBankingData>> {
+    const response =
+      await this.paymentsApiMembersNeedingBankingDataForRebuildListRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMembersNeedingBankingDataListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<MemberNeedingBankingData>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/members_needing_banking_data`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(MemberNeedingBankingDataFromJSON),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiMembersNeedingBankingDataList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<MemberNeedingBankingData>> {
+    const response =
+      await this.paymentsApiMembersNeedingBankingDataListRaw(initOverrides);
     return await response.value();
   }
 

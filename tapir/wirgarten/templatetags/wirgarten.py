@@ -1,10 +1,15 @@
+import base64
 from datetime import datetime, date
 from decimal import Decimal
+from pathlib import Path
 
 from django import template
+from django.contrib.staticfiles.finders import find
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.shortcuts import setlocale
 from tapir.wirgarten import utils
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_now
 
 register = template.Library()
@@ -73,3 +78,21 @@ def get_now_tag(cache):
     if not isinstance(cache, dict):
         cache = None
     return format_date(get_now(cache=cache))
+
+
+@register.simple_tag
+def organisation_logo_data_uri():
+    """Embed theme logo as data-URI for WeasyPrint (file:// URLs are blocked)."""
+    theme = get_parameter_value(ParameterKeys.ORGANISATION_THEME, cache={})
+    if not theme:
+        return ""
+    absolute_path = find(f"core/themes/{theme}/images/Logo_white.webp")
+    if not absolute_path:
+        return ""
+    encoded = base64.b64encode(Path(absolute_path).read_bytes()).decode("ascii")
+    return f"data:image/webp;base64,{encoded}"
+
+
+@register.simple_tag
+def site_name_for_pdf():
+    return get_parameter_value(ParameterKeys.SITE_NAME, cache={})

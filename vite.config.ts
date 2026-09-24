@@ -81,6 +81,10 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/member_profile/association_membership/bestell_wizard_association_membership.tsx",
           ),
+          mailing_lists: join(
+            INPUT_DIR,
+            "mailing_lists/mailing_lists_entry.tsx",
+          ),
         },
       },
     },

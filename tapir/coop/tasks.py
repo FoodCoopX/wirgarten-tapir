@@ -225,7 +225,9 @@ def send_membership_entry_mails():
 
             if (
                 legal_status_is_association(cache=cache)
-                and AssociationMembership.objects.filter(start_date__lte=today)
+                and AssociationMembership.objects.filter(
+                    member=member, start_date__lte=today
+                )
                 .filter(Q(end_date__isnull=True) | Q(end_date__lte=today))
                 .exists()
             ):
@@ -234,4 +236,4 @@ def send_membership_entry_mails():
             if should_send_mail:
                 _fire_membership_entry_trigger(member=member, cache=cache)
                 member.has_received_membership_started_mail = True
-                member.save()
+                member.save(bypass_keycloak=True)

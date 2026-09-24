@@ -11,7 +11,7 @@ from tapir.subscriptions.serializers import (
     CoopShareTransactionSerializer,
     MemberSerializer,
 )
-from tapir.wirgarten.models import Payment, PaymentTransaction
+from tapir.wirgarten.models import Member, Payment, PaymentTransaction
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -159,3 +159,22 @@ class PaymentTransactionDetailsSerializer(serializers.Serializer):
     payments_by_mandate_ref = serializers.DictField(child=PaymentListSerializer())
     members_by_mandate_ref = serializers.DictField(child=MemberSerializer())
     intended_use_by_mandate_ref = serializers.DictField(child=serializers.CharField())
+
+
+class MemberNeedingBankingDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = [
+            "member_no",
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+            "member_url",
+        ]
+
+    member_url = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_member_url(member: Member) -> str:
+        return member.get_absolute_url()
