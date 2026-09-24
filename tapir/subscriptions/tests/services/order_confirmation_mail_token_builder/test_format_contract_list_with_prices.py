@@ -50,7 +50,7 @@ class TestFormatContractListWithPrices(TapirUnitTest):
         "tapir.subscriptions.services.order_confirmation_mail_token_builder.SubscriptionPriceCalculator.get_monthly_price",
         autospec=True,
     )
-    def test_formatContractListWithPrices_noPriceFound_omitsPriceSuffix(
+    def test_formatContractListWithPrices_noPriceFound_raisesError(
         self, mock_get_monthly_price: Mock
     ):
         reference_date = datetime.date(year=2026, month=5, day=11)
@@ -63,16 +63,12 @@ class TestFormatContractListWithPrices(TapirUnitTest):
         )
         mock_get_monthly_price.side_effect = TapirImproperlyConfigured("no price")
 
-        result = OrderConfirmationMailTokenBuilder.format_contract_list_with_prices(
-            subscriptions=[subscription],
-            reference_date=reference_date,
-            cache={},
-        )
-
-        self.assertEqual(
-            "<ul><li>1 × M Basket  (11.05.2026 - 31.12.2026)</li></ul>",
-            result,
-        )
+        with self.assertRaises(TapirImproperlyConfigured):
+            OrderConfirmationMailTokenBuilder.format_contract_list_with_prices(
+                subscriptions=[subscription],
+                reference_date=reference_date,
+                cache={},
+            )
 
     @patch(
         "tapir.subscriptions.services.order_confirmation_mail_token_builder.SubscriptionPriceCalculator.get_monthly_price",

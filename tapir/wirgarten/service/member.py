@@ -375,7 +375,7 @@ def send_product_order_confirmation(
             }
             | OrderConfirmationMailTokenBuilder.build_product_order_tokens(
                 member=member,
-                subscriptions=list(subs),
+                subscriptions=subs,
                 solidarity_contribution=solidarity_contribution,
                 cache=cache,
             )

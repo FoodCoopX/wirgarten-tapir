@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from tapir_mail.models import StaticSegmentRecipient
 
-from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -15,6 +14,7 @@ from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.subscription_price_calculator import (
     SubscriptionPriceCalculator,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, Subscription
 from tapir.wirgarten.utils import format_currency, format_date, get_today
@@ -99,13 +99,13 @@ class OrderConfirmationMailTokenBuilder:
     ) -> str:
         total = Decimal(0)
         for subscription in subscriptions:
-            total += cls._get_monthly_price_or_zero(
+            total += SubscriptionPriceCalculator.get_monthly_price(
                 subscription=subscription,
                 reference_date=reference_date,
                 cache=cache,
             )
         if solidarity_contribution is not None:
-            total += Decimal(str(solidarity_contribution.amount))
+            total += solidarity_contribution.amount
         return format_currency(total)
 
     @classmethod
@@ -153,13 +153,9 @@ class OrderConfirmationMailTokenBuilder:
         if not isinstance(recipient, Member):
             return cls.NO_DELIVERY_TEXT
 
-        subscriptions = list(
-            recipient.subscription_set.select_related("product__type").order_by(
-                "start_date"
-            )
-        )
-        if len(subscriptions) == 0:
-            return cls.NO_DELIVERY_TEXT
+        subscriptions = TapirCache.get_active_and_future_subscriptions_by_member_id(
+            cache=cache, reference_date=get_today(cache=cache)
+        ).get(recipient.id, [])
 
         return cls.get_first_pickup_date_text(
             member=recipient, subscriptions=subscriptions, cache=cache
@@ -172,43 +168,9 @@ class OrderConfirmationMailTokenBuilder:
         reference_date: datetime.date,
         cache: dict,
     ) -> str:
-        monthly_price = cls._get_monthly_price_or_none(
+        monthly_price = SubscriptionPriceCalculator.get_monthly_price(
             subscription=subscription,
             reference_date=reference_date,
             cache=cache,
         )
-        if monthly_price is None:
-            return subscription.long_str()
         return f"{subscription.long_str()} — {format_currency(monthly_price)} € / Monat"
-
-    @classmethod
-    def _get_monthly_price_or_none(
-        cls,
-        subscription: Subscription,
-        reference_date: datetime.date,
-        cache: dict,
-    ) -> Decimal | None:
-        try:
-            return SubscriptionPriceCalculator.get_monthly_price(
-                subscription=subscription,
-                reference_date=reference_date,
-                cache=cache,
-            )
-        except TapirImproperlyConfigured:
-            return None
-
-    @classmethod
-    def _get_monthly_price_or_zero(
-        cls,
-        subscription: Subscription,
-        reference_date: datetime.date,
-        cache: dict,
-    ) -> Decimal:
-        monthly_price = cls._get_monthly_price_or_none(
-            subscription=subscription,
-            reference_date=reference_date,
-            cache=cache,
-        )
-        if monthly_price is None:
-            return Decimal(0)
-        return monthly_price

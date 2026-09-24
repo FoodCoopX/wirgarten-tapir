@@ -65,22 +65,3 @@ class TestFormatMonthlyTotal(TapirUnitTest):
         )
 
         self.assertEqual("4,20", result)
-
-    @patch(
-        "tapir.subscriptions.services.order_confirmation_mail_token_builder.SubscriptionPriceCalculator.get_monthly_price",
-        autospec=True,
-    )
-    def test_formatMonthlyTotal_solidarityAmountIsFloat_stillAddsIt(
-        self, mock_get_monthly_price: Mock
-    ):
-        mock_get_monthly_price.return_value = Decimal("10.00")
-        solidarity_contribution = SolidarityContribution(amount=12.70)
-
-        result = OrderConfirmationMailTokenBuilder.format_monthly_total(
-            subscriptions=[SubscriptionFactory.build()],
-            solidarity_contribution=solidarity_contribution,
-            reference_date=Mock(),
-            cache={},
-        )
-
-        self.assertEqual("22,70", result)

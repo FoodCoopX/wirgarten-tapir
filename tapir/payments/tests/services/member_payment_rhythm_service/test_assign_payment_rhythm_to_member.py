@@ -25,18 +25,25 @@ class TestAssignPaymentRhythmToMember(TapirIntegrationTest):
         mock_timezone(self, datetime.datetime(year=2026, month=9, day=21))
         member = MemberFactory.create()
         cache = {}
+        reference_date = datetime.date(year=2026, month=9, day=21)
+
+        MemberPaymentRhythmService.get_member_payment_rhythm(
+            member=member,
+            reference_date=reference_date,
+            cache=cache,
+        )
 
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,
             rhythm=MemberPaymentRhythm.Rhythm.QUARTERLY,
-            valid_from=datetime.date(year=2026, month=9, day=21),
+            valid_from=reference_date,
             cache=cache,
             actor=member,
         )
 
         result = MemberPaymentRhythmService.get_member_payment_rhythm(
             member=member,
-            reference_date=datetime.date(year=2026, month=9, day=21),
+            reference_date=reference_date,
             cache=cache,
         )
 
