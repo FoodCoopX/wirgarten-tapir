@@ -4,6 +4,7 @@ import AssociationMembershipCancelButton from "./AssociationMembershipCancelButt
 import AssociationMembershipUpdateButton from "./AssociationMembershipUpdateButton.tsx";
 import DeliveriesButton from "./DeliveriesButton.tsx";
 import MemberDeleteButton from "./MemberDeleteButton.tsx";
+import MemberSearchHelpButton from "./MemberSearchHelpButton.tsx";
 import PaymentsButton from "./PaymentsButton.tsx";
 import SubscriptionCancellationButton from "./SubscriptionCancellationButton.tsx";
 
@@ -64,4 +65,12 @@ const domNodeCancelAssociationMembership = document.getElementById(
 if (domNodeCancelAssociationMembership) {
   const root = createRoot(domNodeCancelAssociationMembership);
   root.render(<AssociationMembershipCancelButton csrfToken={getCsrfToken()} />);
+}
+
+const domNodeMemberSearchHelpButton = document.getElementById(
+  "filter_search_help_button",
+);
+if (domNodeMemberSearchHelpButton) {
+  const root = createRoot(domNodeMemberSearchHelpButton);
+  root.render(<MemberSearchHelpButton />);
 }
