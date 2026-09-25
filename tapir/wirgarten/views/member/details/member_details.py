@@ -152,6 +152,21 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             if get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache)
             else "false"
         )
+        members_can_change_pickup_location = get_parameter_value(
+            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, cache=cache
+        )
+        context["canChangePickupLocation"] = (
+            "true"
+            if self.request.user.has_perm(Permission.Accounts.MANAGE)
+            or members_can_change_pickup_location
+            else "false"
+        )
+        context["membersCanChangePickupLocationThemselves"] = (
+            "true" if members_can_change_pickup_location else "false"
+        )
+        context["adminContactEmail"] = get_parameter_value(
+            key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache
+        )
         context["donationsEnabled"] = (
             "false"
             if get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)

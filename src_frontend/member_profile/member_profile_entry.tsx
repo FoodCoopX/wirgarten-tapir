@@ -28,6 +28,14 @@ if (domNodeDeliveryListCard) {
       areDonationsEnabled={
         domNodeDeliveryListCard.dataset.donationsEnabled === "true"
       }
+      canChangePickupLocation={
+        domNodeDeliveryListCard.dataset.canChangePickupLocation === "true"
+      }
+      membersCanChangePickupLocationThemselves={
+        domNodeDeliveryListCard.dataset
+          .membersCanChangePickupLocationThemselves === "true"
+      }
+      adminContactEmail={domNodeDeliveryListCard.dataset.adminContactEmail!}
       csrfToken={getCsrfToken()}
     />,
   );
