@@ -309,6 +309,61 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
 
   const monthlyPayments = getMonthlyPayments();
 
+  function getPaymentSegments() {
+    const segments: React.ReactNode[] = [];
+
+    if (isOneTimePaymentShown()) {
+      segments.push(
+        <>
+          <strong>Einmalig:</strong>
+          <PaymentRow
+            label={
+              "Genossenschaftsanteile" +
+              (becomeMemberNow === false ? " (Start wenn Platz frei)" : "")
+            }
+            amount={numberOfCoopShares * settings.priceOfAShare}
+          />
+        </>,
+      );
+    }
+
+    if (monthlyPayments.length > 0) {
+      segments.push(
+        <>
+          <strong>Wiederkehrend:</strong>
+          <ul className={"mb-0"}>
+            {monthlyPayments.map((payment) => (
+              <li key={payment.key}>
+                <PaymentRow
+                  label={payment.label}
+                  amount={payment.amount}
+                  perMonth
+                />
+              </li>
+            ))}
+          </ul>
+        </>,
+      );
+    }
+
+    if (
+      atLeastOneMonthlyPayment(
+        shoppingCart,
+        productTypesInWaitingList,
+        solidarityContribution,
+      )
+    ) {
+      segments.push(
+        <>
+          Zahlungsintervall:{" "}
+          {getPaymentRhythmDisplay(personalData.paymentRhythm)}
+        </>,
+      );
+    }
+
+    return segments;
+  }
+
   return (
     <>
       <div>
@@ -503,49 +558,12 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               <Accordion.Item eventKey={"payments"} onClick={scrollIntoView}>
                 <Accordion.Header>Deine Zahlungen</Accordion.Header>
                 <AccordionBody>
-                  {atLeastOneMonthlyPayment(
-                    shoppingCart,
-                    productTypesInWaitingList,
-                    solidarityContribution,
-                  ) && (
-                    <p>
-                      Zahlungsintervall:{" "}
-                      {getPaymentRhythmDisplay(personalData.paymentRhythm)}
-                    </p>
-                  )}
-                  {isOneTimePaymentShown() && (
-                    <>
-                      <strong>Einmalig:</strong>
-                      <PaymentRow
-                        label={
-                          "Genossenschaftsanteile" +
-                          (becomeMemberNow === false
-                            ? " (Start wenn Platz frei)"
-                            : "")
-                        }
-                        amount={numberOfCoopShares * settings.priceOfAShare}
-                      />
-                    </>
-                  )}
-                  {isOneTimePaymentShown() && monthlyPayments.length > 0 && (
-                    <hr />
-                  )}
-                  {monthlyPayments.length > 0 && (
-                    <>
-                      <strong>Wiederkehrend:</strong>
-                      <ul className={"mb-0"}>
-                        {monthlyPayments.map((payment) => (
-                          <li key={payment.key}>
-                            <PaymentRow
-                              label={payment.label}
-                              amount={payment.amount}
-                              perMonth
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
+                  {getPaymentSegments().map((segment, index) => (
+                    <React.Fragment key={index}>
+                      {index > 0 && <hr />}
+                      {segment}
+                    </React.Fragment>
+                  ))}
                 </AccordionBody>
               </Accordion.Item>
             </Accordion>
