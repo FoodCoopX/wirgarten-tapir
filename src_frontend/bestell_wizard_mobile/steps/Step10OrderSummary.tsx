@@ -32,8 +32,8 @@ import {
 } from "../utils/getProductByIdGlobal.ts";
 import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
-import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -419,6 +419,39 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         }}
                       />
                     </li>
+                  )}
+                </AccordionBody>
+              </Accordion.Item>
+            </Accordion>
+          )}
+          {solidarityContribution !== 0 && (
+            <Accordion>
+              <Accordion.Item
+                eventKey={"solidarity_contribution"}
+                onClick={scrollIntoView}
+              >
+                <Accordion.Header>
+                  Solidarbeitrag: {formatCurrency(solidarityContribution)} /
+                  Monat
+                </Accordion.Header>
+                <AccordionBody>
+                  <ul>
+                    <li>
+                      Betrag: {formatCurrency(solidarityContribution)} / Monat
+                    </li>
+                    <li>Gültig ab: {formatDateNumeric(contractStartDate)}</li>
+                  </ul>
+                  {(waitingListEntryDetails === undefined ||
+                    waitingListEntryDetails.shouldShowSolidarityStep) && (
+                    <TapirButton
+                      variant={BUTTON_VARIANT}
+                      size={"sm"}
+                      text={"Solidarbeitrag anpassen"}
+                      icon={"edit"}
+                      onClick={() => {
+                        setCurrentStep("7_solidarity_contribution");
+                      }}
+                    />
                   )}
                 </AccordionBody>
               </Accordion.Item>
