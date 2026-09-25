@@ -10,6 +10,7 @@ from tapir.associations.tests.factories import (
 )
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.tests.factories import MemberCreditFactory
 from tapir.utils.shortcuts import get_last_day_of_month
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -858,3 +859,28 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.assertEqual(
             membership_2.id, extended_payment_2021["association_memberships"][1]["id"]
         )
+
+    def test_get_memberHasSettledCredit_settledCreditIsNotReturned(self):
+        mock_timezone(test=self, now=datetime.datetime(year=2021, month=5, day=1))
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        settled_credit = MemberCreditFactory.create(
+            member=member,
+            due_date=datetime.date(year=2021, month=6, day=1),
+            settled_on=datetime.datetime(year=2021, month=5, day=1),
+        )
+        unsettled_credit = MemberCreditFactory.create(
+            member=member,
+            due_date=datetime.date(year=2021, month=7, day=1),
+            settled_on=None,
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+        returned_credit_ids = {credit["id"] for credit in response.json()["credits"]}
+        self.assertEqual({str(unsettled_credit.id)}, returned_credit_ids)
+        self.assertNotIn(str(settled_credit.id), returned_credit_ids)

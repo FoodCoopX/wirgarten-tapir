@@ -1,10 +1,12 @@
+import dayjs from "dayjs";
+import "dayjs/locale/de";
 import React, { useEffect, useState } from "react";
 import { PaymentsApi } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import FuturePaymentsModal from "../member_profile/future_payments/FuturePaymentsModal.tsx";
-import { groupTransactionsByDueDate } from "../member_profile/future_payments/groupTransactionsByDueDate.ts";
+import { sortGroupedTransactions } from "../member_profile/future_payments/sortGroupedTransactions.ts";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { TransactionsByDueDate } from "../types/TransactionsByDueDate.ts";
@@ -44,12 +46,34 @@ const PaymentsButton: React.FC<PaymentsButtonProps> = ({
       .then((response) => {
         setTrialPeriodEnabled(response.trialPeriodEnabled);
 
+        const groupedTransactions: TransactionsByDueDate = {};
+
         const extendedPayments = response.payments.toSorted(
           (a, b) => a.payment.dueDate.getTime() - b.payment.dueDate.getTime(),
         );
-        setTransactionsByDueDate(
-          groupTransactionsByDueDate(extendedPayments, response.credits),
-        );
+        for (const extendedPayment of extendedPayments) {
+          const dueDateAsAstring = dayjs(
+            extendedPayment.payment.dueDate,
+          ).format("YYYY-MM-DD");
+          if (!(dueDateAsAstring in groupedTransactions)) {
+            groupedTransactions[dueDateAsAstring] = [];
+          }
+          groupedTransactions[dueDateAsAstring].push(extendedPayment);
+        }
+
+        for (const memberCredit of response.credits) {
+          const dueDateAsAstring = dayjs(memberCredit.dueDate).format(
+            "YYYY-MM-DD",
+          );
+          if (!(dueDateAsAstring in groupedTransactions)) {
+            groupedTransactions[dueDateAsAstring] = [];
+          }
+          groupedTransactions[dueDateAsAstring].push(memberCredit);
+        }
+
+        sortGroupedTransactions(groupedTransactions);
+
+        setTransactionsByDueDate(groupedTransactions);
       })
       .catch(async (error) => {
         await handleRequestError(
