@@ -661,6 +661,111 @@ paths:
               schema:
                 $ref: '#/components/schemas/SolverError'
           description: ''
+  /bakery/api/bread-capacity-allocations/:
+    get:
+      operationId: bakery_api_bread_capacity_allocations_retrieve
+      description: The capacities of one delivery day, shaped the way the allocation
+        table needs them.
+      summary: Get the bread capacities of every station delivered on a weekday
+      parameters:
+      - in: query
+        name: delivery_day
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: delivery_week
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BreadCapacityAllocationResponse'
+          description: ''
+    post:
+      operationId: bakery_api_bread_capacity_allocations_create
+      description: The capacities of one delivery day, shaped the way the allocation
+        table needs them.
+      summary: Create, update and delete bread capacities in one request
+      tags:
+      - bakery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          description: '{"status": "success"}'
+        '400':
+          description: Validation errors
+  /bakery/api/delivery-days/:
+    get:
+      operationId: bakery_api_delivery_days_retrieve
+      description: Returns the earliest delivery day per pickup location, 0=Montag.
+      summary: Get distinct list of delivery days
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryDaysResponse'
+          description: ''
+  /bakery/api/pickup-locations-by-delivery-day/:
+    get:
+      operationId: bakery_api_pickup_locations_by_delivery_day_retrieve
+      summary: Get pickup locations filtered by delivery day
+      parameters:
+      - in: query
+        name: day_of_week
+        schema:
+          type: integer
+        description: Day of week, 0=Montag to 6=Sonntag
+        required: true
+      tags:
+      - bakery
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationsByDeliveryDayResponse'
+          description: ''
   /bakery/api/preferred-bread-statistics/:
     get:
       operationId: bakery_api_preferred_bread_statistics_retrieve
@@ -757,202 +862,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ToggleBreadResponse'
           description: ''
-  /bakery/bread-capacity-pickup-location/:
-    get:
-      operationId: bakery_bread_capacity_pickup_location_list
-      parameters:
-      - in: query
-        name: pickup_location_ids[]
-        schema:
-          type: array
-          items:
-            type: string
-      - in: query
-        name: week
-        schema:
-          type: integer
-      - in: query
-        name: year
-        schema:
-          type: integer
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BreadCapacityPickupLocation'
-          description: ''
-    post:
-      operationId: bakery_bread_capacity_pickup_location_create
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BreadCapacityPickupLocation'
-          description: ''
-  /bakery/bread-capacity-pickup-location/{id}/:
-    get:
-      operationId: bakery_bread_capacity_pickup_location_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der bread capacity pickup location identifiziert.
-        required: true
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BreadCapacityPickupLocation'
-          description: ''
-    put:
-      operationId: bakery_bread_capacity_pickup_location_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der bread capacity pickup location identifiziert.
-        required: true
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityPickupLocationRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BreadCapacityPickupLocation'
-          description: ''
-    patch:
-      operationId: bakery_bread_capacity_pickup_location_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der bread capacity pickup location identifiziert.
-        required: true
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBreadCapacityPickupLocationRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBreadCapacityPickupLocationRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBreadCapacityPickupLocationRequest'
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BreadCapacityPickupLocation'
-          description: ''
-    delete:
-      operationId: bakery_bread_capacity_pickup_location_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: Ein eindeutiger Wert, der bread capacity pickup location identifiziert.
-        required: true
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '204':
-          description: No response body
-  /bakery/bread-capacity-pickup-location/bulk-update/:
-    post:
-      operationId: bakery_bread_capacity_pickup_location_bulk_update_create
-      description: Bulk create/update/delete capacities
-      summary: Bulk create/update/delete bread capacities
-      tags:
-      - bakery
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BreadCapacityBulkUpdateRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          description: '{"status": "success"}'
-        '400':
-          description: Validation errors
   /bakery/bread-deliveries/:
     get:
       operationId: bakery_bread_deliveries_list
@@ -1011,13 +920,7 @@ paths:
           description: ''
     patch:
       operationId: bakery_bread_deliveries_partial_update
-      description: |-
-        Update a bread delivery with capacity checking and locking.
-
-        When a bread is being selected, this method:
-        1. Locks the relevant capacity and delivery rows to prevent race conditions
-        2. Checks if there's available capacity for the selected bread
-        3. Only allows the update if capacity is available
+      description: 'A member''s bread slots: one per delivered week per share.'
       parameters:
       - in: path
         name: id
@@ -1055,9 +958,8 @@ paths:
   /bakery/bread-specifics/:
     get:
       operationId: bakery_bread_specifics_list
-      description: |-
-        ViewSet for managing bread-specific overrides per delivery day.
-        Only created when overrides to the bread defaults are needed.
+      description: Rows exist only where the bread defaults need overriding for a
+        day.
       parameters:
       - in: query
         name: bread_id
@@ -1092,9 +994,8 @@ paths:
           description: ''
     post:
       operationId: bakery_bread_specifics_create
-      description: |-
-        ViewSet for managing bread-specific overrides per delivery day.
-        Only created when overrides to the bread defaults are needed.
+      description: Rows exist only where the bread defaults need overriding for a
+        day.
       tags:
       - bakery
       requestBody:
@@ -1123,9 +1024,8 @@ paths:
   /bakery/bread-specifics/{id}/:
     get:
       operationId: bakery_bread_specifics_retrieve
-      description: |-
-        ViewSet for managing bread-specific overrides per delivery day.
-        Only created when overrides to the bread defaults are needed.
+      description: Rows exist only where the bread defaults need overriding for a
+        day.
       parameters:
       - in: path
         name: id
@@ -1148,9 +1048,8 @@ paths:
           description: ''
     put:
       operationId: bakery_bread_specifics_update
-      description: |-
-        ViewSet for managing bread-specific overrides per delivery day.
-        Only created when overrides to the bread defaults are needed.
+      description: Rows exist only where the bread defaults need overriding for a
+        day.
       parameters:
       - in: path
         name: id
@@ -1185,9 +1084,8 @@ paths:
           description: ''
     patch:
       operationId: bakery_bread_specifics_partial_update
-      description: |-
-        ViewSet for managing bread-specific overrides per delivery day.
-        Only created when overrides to the bread defaults are needed.
+      description: Rows exist only where the bread defaults need overriding for a
+        day.
       parameters:
       - in: path
         name: id
@@ -1221,9 +1119,8 @@ paths:
           description: ''
     delete:
       operationId: bakery_bread_specifics_destroy
-      description: |-
-        ViewSet for managing bread-specific overrides per delivery day.
-        Only created when overrides to the bread defaults are needed.
+      description: Rows exist only where the bread defaults need overriding for a
+        day.
       parameters:
       - in: path
         name: id
@@ -1243,9 +1140,8 @@ paths:
   /bakery/bread-specifics/bulk-update/:
     post:
       operationId: bakery_bread_specifics_bulk_update_create
-      description: |-
-        ViewSet for managing bread-specific overrides per delivery day.
-        Only created when overrides to the bread defaults are needed.
+      description: Rows exist only where the bread defaults need overriding for a
+        day.
       summary: Bulk create/update/delete bread specifics per delivery day
       tags:
       - bakery
@@ -1273,7 +1169,6 @@ paths:
   /bakery/breadcontents/:
     get:
       operationId: bakery_breadcontents_list
-      description: ViewSet for managing bread contents (ingredient amounts)
       parameters:
       - in: query
         name: bread
@@ -1302,7 +1197,6 @@ paths:
           description: ''
     post:
       operationId: bakery_breadcontents_create
-      description: ViewSet for managing bread contents (ingredient amounts)
       tags:
       - bakery
       requestBody:
@@ -1331,7 +1225,6 @@ paths:
   /bakery/breadcontents/{id}/:
     get:
       operationId: bakery_breadcontents_retrieve
-      description: ViewSet for managing bread contents (ingredient amounts)
       parameters:
       - in: path
         name: id
@@ -1354,7 +1247,6 @@ paths:
           description: ''
     put:
       operationId: bakery_breadcontents_update
-      description: ViewSet for managing bread contents (ingredient amounts)
       parameters:
       - in: path
         name: id
@@ -1389,7 +1281,6 @@ paths:
           description: ''
     patch:
       operationId: bakery_breadcontents_partial_update
-      description: ViewSet for managing bread contents (ingredient amounts)
       parameters:
       - in: path
         name: id
@@ -1423,7 +1314,6 @@ paths:
           description: ''
     delete:
       operationId: bakery_breadcontents_destroy
-      description: ViewSet for managing bread contents (ingredient amounts)
       parameters:
       - in: path
         name: id
@@ -1443,7 +1333,7 @@ paths:
   /bakery/breads-list/:
     get:
       operationId: bakery_breads_list_list
-      description: ViewSet for managing bread variants
+      description: One TapirCache for the whole request, shared with the serializer.
       parameters:
       - in: query
         name: is_active
@@ -1487,7 +1377,7 @@ paths:
           description: ''
     post:
       operationId: bakery_breads_list_create
-      description: ViewSet for managing bread variants
+      description: One TapirCache for the whole request, shared with the serializer.
       tags:
       - bakery
       requestBody:
@@ -1516,7 +1406,7 @@ paths:
   /bakery/breads-list/{id}/:
     get:
       operationId: bakery_breads_list_retrieve
-      description: ViewSet for managing bread variants
+      description: One TapirCache for the whole request, shared with the serializer.
       parameters:
       - in: path
         name: id
@@ -1539,7 +1429,7 @@ paths:
           description: ''
     put:
       operationId: bakery_breads_list_update
-      description: ViewSet for managing bread variants
+      description: One TapirCache for the whole request, shared with the serializer.
       parameters:
       - in: path
         name: id
@@ -1574,7 +1464,7 @@ paths:
           description: ''
     patch:
       operationId: bakery_breads_list_partial_update
-      description: ViewSet for managing bread variants
+      description: One TapirCache for the whole request, shared with the serializer.
       parameters:
       - in: path
         name: id
@@ -1608,7 +1498,7 @@ paths:
           description: ''
     delete:
       operationId: bakery_breads_list_destroy
-      description: ViewSet for managing bread variants
+      description: One TapirCache for the whole request, shared with the serializer.
       parameters:
       - in: path
         name: id
@@ -1628,7 +1518,7 @@ paths:
   /bakery/breads-list/{id}/contents/:
     get:
       operationId: bakery_breads_list_contents_list
-      description: Get or add contents (ingredients) for a specific bread
+      description: One TapirCache for the whole request, shared with the serializer.
       summary: Get all ingredients for a specific bread
       parameters:
       - in: path
@@ -1654,7 +1544,7 @@ paths:
           description: ''
     post:
       operationId: bakery_breads_list_contents_create
-      description: Get or add contents (ingredients) for a specific bread
+      description: One TapirCache for the whole request, shared with the serializer.
       summary: Get all ingredients for a specific bread
       parameters:
       - in: path
@@ -1693,7 +1583,7 @@ paths:
   /bakery/breads-list/by-labels/:
     get:
       operationId: bakery_breads_list_by_labels_list
-      description: Get breads filtered by multiple label IDs
+      description: One TapirCache for the whole request, shared with the serializer.
       summary: Get breads filtered by multiple label IDs
       parameters:
       - in: query
@@ -1722,8 +1612,7 @@ paths:
   /bakery/breads-per-pickup-location-per-week/:
     get:
       operationId: bakery_breads_per_pickup_location_per_week_list
-      description: Get all breads per pickup location per week, optionally filtered
-        by year/week/day
+      description: The solver's distribution result per pickup location and week.
       parameters:
       - in: query
         name: delivery_day
@@ -1755,9 +1644,7 @@ paths:
   /bakery/breads-per-pickup-location-per-week/{id}/:
     get:
       operationId: bakery_breads_per_pickup_location_per_week_retrieve
-      description: |-
-        ViewSet for viewing breads per pickup location per week.
-        Read-only - data is created by the solver.
+      description: The solver's distribution result per pickup location and week.
       parameters:
       - in: path
         name: id
@@ -1782,7 +1669,7 @@ paths:
   /bakery/ingredients/:
     get:
       operationId: bakery_ingredients_list
-      description: ViewSet for managing ingredients
+      description: Turns a delete blocked by on_delete=PROTECT into a 409.
       parameters:
       - in: query
         name: is_active
@@ -1811,7 +1698,7 @@ paths:
           description: ''
     post:
       operationId: bakery_ingredients_create
-      description: ViewSet for managing ingredients
+      description: Turns a delete blocked by on_delete=PROTECT into a 409.
       tags:
       - bakery
       requestBody:
@@ -1840,7 +1727,7 @@ paths:
   /bakery/ingredients/{id}/:
     get:
       operationId: bakery_ingredients_retrieve
-      description: ViewSet for managing ingredients
+      description: Turns a delete blocked by on_delete=PROTECT into a 409.
       parameters:
       - in: path
         name: id
@@ -1863,7 +1750,7 @@ paths:
           description: ''
     put:
       operationId: bakery_ingredients_update
-      description: ViewSet for managing ingredients
+      description: Turns a delete blocked by on_delete=PROTECT into a 409.
       parameters:
       - in: path
         name: id
@@ -1898,7 +1785,7 @@ paths:
           description: ''
     patch:
       operationId: bakery_ingredients_partial_update
-      description: ViewSet for managing ingredients
+      description: Turns a delete blocked by on_delete=PROTECT into a 409.
       parameters:
       - in: path
         name: id
@@ -1932,7 +1819,7 @@ paths:
           description: ''
     delete:
       operationId: bakery_ingredients_destroy
-      description: ViewSet for managing ingredients
+      description: Turns a delete blocked by on_delete=PROTECT into a 409.
       parameters:
       - in: path
         name: id
@@ -1952,7 +1839,6 @@ paths:
   /bakery/labels/:
     get:
       operationId: bakery_labels_list
-      description: ViewSet for managing bread labels/categories
       tags:
       - bakery
       security:
@@ -1970,7 +1856,6 @@ paths:
           description: ''
     post:
       operationId: bakery_labels_create
-      description: ViewSet for managing bread labels/categories
       tags:
       - bakery
       requestBody:
@@ -1999,7 +1884,6 @@ paths:
   /bakery/labels/{id}/:
     get:
       operationId: bakery_labels_retrieve
-      description: ViewSet for managing bread labels/categories
       parameters:
       - in: path
         name: id
@@ -2022,7 +1906,6 @@ paths:
           description: ''
     put:
       operationId: bakery_labels_update
-      description: ViewSet for managing bread labels/categories
       parameters:
       - in: path
         name: id
@@ -2057,7 +1940,6 @@ paths:
           description: ''
     patch:
       operationId: bakery_labels_partial_update
-      description: ViewSet for managing bread labels/categories
       parameters:
       - in: path
         name: id
@@ -2091,7 +1973,6 @@ paths:
           description: ''
     delete:
       operationId: bakery_labels_destroy
-      description: ViewSet for managing bread labels/categories
       parameters:
       - in: path
         name: id
@@ -2270,7 +2151,7 @@ paths:
   /bakery/stove-sessions/:
     get:
       operationId: bakery_stove_sessions_list
-      description: Get all stove sessions, optionally filtered by year/week/day
+      description: The baking plan; the rows are written by the solver.
       parameters:
       - in: query
         name: delivery_day
@@ -2302,9 +2183,7 @@ paths:
   /bakery/stove-sessions/{id}/:
     get:
       operationId: bakery_stove_sessions_retrieve
-      description: |-
-        ViewSet for viewing stove sessions (baking plan).
-        Read-only - sessions are created by the solver.
+      description: The baking plan; the rows are written by the solver.
       parameters:
       - in: path
         name: id
@@ -4540,24 +4419,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
-  /pickup_locations/api/delivery_days:
-    get:
-      operationId: pickup_locations_api_delivery_days_retrieve
-      description: Returns the earliest delivery day per pickup location, 0=Montag.
-      summary: Get distinct list of delivery days
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeliveryDaysResponse'
-          description: ''
   /pickup_locations/api/get_member_pickup_location:
     get:
       operationId: pickup_locations_api_get_member_pickup_location_retrieve
@@ -4764,36 +4625,6 @@ paths:
             application/json:
               schema:
                 type: string
-          description: ''
-  /pickup_locations/api/pickup_locations_by_delivery_day:
-    get:
-      operationId: pickup_locations_api_pickup_locations_by_delivery_day_retrieve
-      description: |-
-        The pickup locations delivered on one weekday.
-
-        Readable by any member rather than gated on Coop.MANAGE like the rest of
-        the bakery: it returns station names and weekdays, which
-        PublicPickupLocationProvider already publishes.
-      summary: Get pickup locations filtered by delivery day
-      parameters:
-      - in: query
-        name: day_of_week
-        schema:
-          type: integer
-        description: Day of week, 0=Montag to 6=Sonntag
-        required: true
-      tags:
-      - bakery
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PickupLocationsByDeliveryDayResponse'
           description: ''
   /pickup_locations/location_routes/:
     get:
@@ -9274,6 +9105,23 @@ components:
       - bread_name
       - count
       - directly_chosen
+    BreadCapacityAllocationResponse:
+      type: object
+      properties:
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationDeliveryDay'
+        allocations:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: integer
+              nullable: true
+      required:
+      - allocations
+      - pickup_locations
     BreadCapacityBulkUpdateRequest:
       type: object
       properties:
@@ -9291,93 +9139,6 @@ components:
       required:
       - delivery_week
       - updates
-      - year
-    BreadCapacityPickupLocation:
-      type: object
-      properties:
-        id:
-          type: string
-          readOnly: true
-        pickup_location_name:
-          type: string
-          readOnly: true
-        delivery_day:
-          type: integer
-          nullable: true
-          readOnly: true
-        bread_name:
-          type: string
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        year:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Year for which this capacity applies
-        delivery_week:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Delivery week number (1-53)
-        capacity:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Maximum number of breads of this type that can be delivered
-            to this pickup location on this delivery day
-        pickup_location:
-          type: string
-        bread:
-          type: string
-      required:
-      - bread
-      - bread_name
-      - capacity
-      - created_at
-      - delivery_day
-      - delivery_week
-      - id
-      - pickup_location
-      - pickup_location_name
-      - updated_at
-      - year
-    BreadCapacityPickupLocationRequest:
-      type: object
-      properties:
-        year:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Year for which this capacity applies
-        delivery_week:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Delivery week number (1-53)
-        capacity:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Maximum number of breads of this type that can be delivered
-            to this pickup location on this delivery day
-        pickup_location:
-          type: string
-          minLength: 1
-        bread:
-          type: string
-          minLength: 1
-      required:
-      - bread
-      - capacity
-      - delivery_week
-      - pickup_location
       - year
     BreadCapacityUpdateItemRequest:
       type: object
@@ -9529,7 +9290,6 @@ components:
       - year
     BreadDetail:
       type: object
-      description: Serializer for bread detail view (includes ingredients)
       properties:
         id:
           type: string
@@ -13253,31 +13013,6 @@ components:
           minimum: -2147483648
         hidden_in_bestell_wizard:
           type: boolean
-    PatchedBreadCapacityPickupLocationRequest:
-      type: object
-      properties:
-        year:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Year for which this capacity applies
-        delivery_week:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Delivery week number (1-53)
-        capacity:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          description: Maximum number of breads of this type that can be delivered
-            to this pickup location on this delivery day
-        pickup_location:
-          type: string
-          minLength: 1
-        bread:
-          type: string
-          minLength: 1
     PatchedBreadContentRequest:
       type: object
       properties:
@@ -14355,11 +14090,7 @@ components:
       - pickup_location_id
     PickupListsResponse:
       type: object
-      description: |-
-        Several stations of one week in a single response.
-
-        One request per station would re-derive the whole week each time, since
-        each request starts with an empty cache.
+      description: Several stations of one week in a single response.
       properties:
         lists:
           type: array
@@ -14687,7 +14418,6 @@ components:
       - percentage
     PreferredBreadStatistics:
       type: object
-      description: Declared so the endpoint appears in the schema with a real shape.
       properties:
         total_members:
           type: integer
@@ -14873,9 +14603,6 @@ components:
         is_affected_by_jokers:
           type: boolean
           title: Nimmt am Joker-Verfahren teil
-        is_bread:
-          type: boolean
-          title: Brotanteil (Bäckerei)
         subscriptions_have_end_dates:
           type: boolean
           title: Verträge haben ein End-Datum

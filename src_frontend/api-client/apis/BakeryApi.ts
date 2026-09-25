@@ -14,9 +14,8 @@
 
 import type {
   AvailableBreadsForDeliveryListResponse,
+  BreadCapacityAllocationResponse,
   BreadCapacityBulkUpdateRequest,
-  BreadCapacityPickupLocation,
-  BreadCapacityPickupLocationRequest,
   BreadContent,
   BreadContentRequest,
   BreadDelivery,
@@ -32,7 +31,6 @@ import type {
   DeliveryDaysResponse,
   Ingredient,
   IngredientRequest,
-  PatchedBreadCapacityPickupLocationRequest,
   PatchedBreadContentRequest,
   PatchedBreadDeliveryRequest,
   PatchedBreadLabelRequest,
@@ -57,9 +55,8 @@ import type {
 } from "../models/index";
 import {
   AvailableBreadsForDeliveryListResponseFromJSON,
+  BreadCapacityAllocationResponseFromJSON,
   BreadCapacityBulkUpdateRequestToJSON,
-  BreadCapacityPickupLocationFromJSON,
-  BreadCapacityPickupLocationRequestToJSON,
   BreadContentFromJSON,
   BreadContentRequestToJSON,
   BreadDeliveryFromJSON,
@@ -75,7 +72,6 @@ import {
   DeliveryDaysResponseFromJSON,
   IngredientFromJSON,
   IngredientRequestToJSON,
-  PatchedBreadCapacityPickupLocationRequestToJSON,
   PatchedBreadContentRequestToJSON,
   PatchedBreadDeliveryRequestToJSON,
   PatchedBreadLabelRequestToJSON,
@@ -115,6 +111,20 @@ export interface BakeryApiBakerySolverPreviewDetailRetrieveRequest {
   year: number;
 }
 
+export interface BakeryApiBreadCapacityAllocationsCreateRequest {
+  breadCapacityBulkUpdateRequest: BreadCapacityBulkUpdateRequest;
+}
+
+export interface BakeryApiBreadCapacityAllocationsRetrieveRequest {
+  deliveryDay: number;
+  deliveryWeek: number;
+  year: number;
+}
+
+export interface BakeryApiPickupLocationsByDeliveryDayRetrieveRequest {
+  dayOfWeek: number;
+}
+
 export interface BakeryApiPreferredBreadStatisticsRetrieveRequest {
   deliveryDay?: number;
   deliveryWeek: number;
@@ -129,38 +139,6 @@ export interface BakeryAvailableBreadsForDeliveryRetrieveRequest {
   deliveryDay: number;
   deliveryWeek: number;
   year: number;
-}
-
-export interface BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest {
-  breadCapacityBulkUpdateRequest: BreadCapacityBulkUpdateRequest;
-}
-
-export interface BakeryBreadCapacityPickupLocationCreateRequest {
-  breadCapacityPickupLocationRequest: BreadCapacityPickupLocationRequest;
-}
-
-export interface BakeryBreadCapacityPickupLocationDestroyRequest {
-  id: string;
-}
-
-export interface BakeryBreadCapacityPickupLocationListRequest {
-  pickupLocationIds?: Array<string>;
-  week?: number;
-  year?: number;
-}
-
-export interface BakeryBreadCapacityPickupLocationPartialUpdateRequest {
-  id: string;
-  patchedBreadCapacityPickupLocationRequest?: PatchedBreadCapacityPickupLocationRequest;
-}
-
-export interface BakeryBreadCapacityPickupLocationRetrieveRequest {
-  id: string;
-}
-
-export interface BakeryBreadCapacityPickupLocationUpdateRequest {
-  id: string;
-  breadCapacityPickupLocationRequest: BreadCapacityPickupLocationRequest;
 }
 
 export interface BakeryBreadDeliveriesListRequest {
@@ -374,10 +352,6 @@ export interface BakeryStoveSessionsListRequest {
 
 export interface BakeryStoveSessionsRetrieveRequest {
   id: string;
-}
-
-export interface PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest {
-  dayOfWeek: number;
 }
 
 /**
@@ -603,6 +577,277 @@ export class BakeryApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   * The capacities of one delivery day, shaped the way the allocation table needs them.
+   * Create, update and delete bread capacities in one request
+   */
+  async bakeryApiBreadCapacityAllocationsCreateRaw(
+    requestParameters: BakeryApiBreadCapacityAllocationsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<void>> {
+    if (requestParameters["breadCapacityBulkUpdateRequest"] == null) {
+      throw new runtime.RequiredError(
+        "breadCapacityBulkUpdateRequest",
+        'Required parameter "breadCapacityBulkUpdateRequest" was null or undefined when calling bakeryApiBreadCapacityAllocationsCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bakery/api/bread-capacity-allocations/`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: BreadCapacityBulkUpdateRequestToJSON(
+          requestParameters["breadCapacityBulkUpdateRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.VoidApiResponse(response);
+  }
+
+  /**
+   * The capacities of one delivery day, shaped the way the allocation table needs them.
+   * Create, update and delete bread capacities in one request
+   */
+  async bakeryApiBreadCapacityAllocationsCreate(
+    requestParameters: BakeryApiBreadCapacityAllocationsCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<void> {
+    await this.bakeryApiBreadCapacityAllocationsCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+  }
+
+  /**
+   * The capacities of one delivery day, shaped the way the allocation table needs them.
+   * Get the bread capacities of every station delivered on a weekday
+   */
+  async bakeryApiBreadCapacityAllocationsRetrieveRaw(
+    requestParameters: BakeryApiBreadCapacityAllocationsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<BreadCapacityAllocationResponse>> {
+    if (requestParameters["deliveryDay"] == null) {
+      throw new runtime.RequiredError(
+        "deliveryDay",
+        'Required parameter "deliveryDay" was null or undefined when calling bakeryApiBreadCapacityAllocationsRetrieve().',
+      );
+    }
+
+    if (requestParameters["deliveryWeek"] == null) {
+      throw new runtime.RequiredError(
+        "deliveryWeek",
+        'Required parameter "deliveryWeek" was null or undefined when calling bakeryApiBreadCapacityAllocationsRetrieve().',
+      );
+    }
+
+    if (requestParameters["year"] == null) {
+      throw new runtime.RequiredError(
+        "year",
+        'Required parameter "year" was null or undefined when calling bakeryApiBreadCapacityAllocationsRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["deliveryDay"] != null) {
+      queryParameters["delivery_day"] = requestParameters["deliveryDay"];
+    }
+
+    if (requestParameters["deliveryWeek"] != null) {
+      queryParameters["delivery_week"] = requestParameters["deliveryWeek"];
+    }
+
+    if (requestParameters["year"] != null) {
+      queryParameters["year"] = requestParameters["year"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bakery/api/bread-capacity-allocations/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      BreadCapacityAllocationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * The capacities of one delivery day, shaped the way the allocation table needs them.
+   * Get the bread capacities of every station delivered on a weekday
+   */
+  async bakeryApiBreadCapacityAllocationsRetrieve(
+    requestParameters: BakeryApiBreadCapacityAllocationsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<BreadCapacityAllocationResponse> {
+    const response = await this.bakeryApiBreadCapacityAllocationsRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   * Returns the earliest delivery day per pickup location, 0=Montag.
+   * Get distinct list of delivery days
+   */
+  async bakeryApiDeliveryDaysRetrieveRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<DeliveryDaysResponse>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bakery/api/delivery-days/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      DeliveryDaysResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Returns the earliest delivery day per pickup location, 0=Montag.
+   * Get distinct list of delivery days
+   */
+  async bakeryApiDeliveryDaysRetrieve(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<DeliveryDaysResponse> {
+    const response = await this.bakeryApiDeliveryDaysRetrieveRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   * Get pickup locations filtered by delivery day
+   */
+  async bakeryApiPickupLocationsByDeliveryDayRetrieveRaw(
+    requestParameters: BakeryApiPickupLocationsByDeliveryDayRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PickupLocationsByDeliveryDayResponse>> {
+    if (requestParameters["dayOfWeek"] == null) {
+      throw new runtime.RequiredError(
+        "dayOfWeek",
+        'Required parameter "dayOfWeek" was null or undefined when calling bakeryApiPickupLocationsByDeliveryDayRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["dayOfWeek"] != null) {
+      queryParameters["day_of_week"] = requestParameters["dayOfWeek"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/bakery/api/pickup-locations-by-delivery-day/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PickupLocationsByDeliveryDayResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   * Get pickup locations filtered by delivery day
+   */
+  async bakeryApiPickupLocationsByDeliveryDayRetrieve(
+    requestParameters: BakeryApiPickupLocationsByDeliveryDayRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PickupLocationsByDeliveryDayResponse> {
+    const response =
+      await this.bakeryApiPickupLocationsByDeliveryDayRetrieveRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 
@@ -844,463 +1089,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Bulk create/update/delete capacities
-   * Bulk create/update/delete bread capacities
-   */
-  async bakeryBreadCapacityPickupLocationBulkUpdateCreateRaw(
-    requestParameters: BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<void>> {
-    if (requestParameters["breadCapacityBulkUpdateRequest"] == null) {
-      throw new runtime.RequiredError(
-        "breadCapacityBulkUpdateRequest",
-        'Required parameter "breadCapacityBulkUpdateRequest" was null or undefined when calling bakeryBreadCapacityPickupLocationBulkUpdateCreate().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters["Content-Type"] = "application/json";
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bakery/bread-capacity-pickup-location/bulk-update/`,
-        method: "POST",
-        headers: headerParameters,
-        query: queryParameters,
-        body: BreadCapacityBulkUpdateRequestToJSON(
-          requestParameters["breadCapacityBulkUpdateRequest"],
-        ),
-      },
-      initOverrides,
-    );
-
-    return new runtime.VoidApiResponse(response);
-  }
-
-  /**
-   * Bulk create/update/delete capacities
-   * Bulk create/update/delete bread capacities
-   */
-  async bakeryBreadCapacityPickupLocationBulkUpdateCreate(
-    requestParameters: BakeryBreadCapacityPickupLocationBulkUpdateCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<void> {
-    await this.bakeryBreadCapacityPickupLocationBulkUpdateCreateRaw(
-      requestParameters,
-      initOverrides,
-    );
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationCreateRaw(
-    requestParameters: BakeryBreadCapacityPickupLocationCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BreadCapacityPickupLocation>> {
-    if (requestParameters["breadCapacityPickupLocationRequest"] == null) {
-      throw new runtime.RequiredError(
-        "breadCapacityPickupLocationRequest",
-        'Required parameter "breadCapacityPickupLocationRequest" was null or undefined when calling bakeryBreadCapacityPickupLocationCreate().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters["Content-Type"] = "application/json";
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bakery/bread-capacity-pickup-location/`,
-        method: "POST",
-        headers: headerParameters,
-        query: queryParameters,
-        body: BreadCapacityPickupLocationRequestToJSON(
-          requestParameters["breadCapacityPickupLocationRequest"],
-        ),
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BreadCapacityPickupLocationFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationCreate(
-    requestParameters: BakeryBreadCapacityPickupLocationCreateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BreadCapacityPickupLocation> {
-    const response = await this.bakeryBreadCapacityPickupLocationCreateRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationDestroyRaw(
-    requestParameters: BakeryBreadCapacityPickupLocationDestroyRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<void>> {
-    if (requestParameters["id"] == null) {
-      throw new runtime.RequiredError(
-        "id",
-        'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupLocationDestroy().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bakery/bread-capacity-pickup-location/{id}/`.replace(
-          `{${"id"}}`,
-          encodeURIComponent(String(requestParameters["id"])),
-        ),
-        method: "DELETE",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.VoidApiResponse(response);
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationDestroy(
-    requestParameters: BakeryBreadCapacityPickupLocationDestroyRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<void> {
-    await this.bakeryBreadCapacityPickupLocationDestroyRaw(
-      requestParameters,
-      initOverrides,
-    );
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationListRaw(
-    requestParameters: BakeryBreadCapacityPickupLocationListRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<BreadCapacityPickupLocation>>> {
-    const queryParameters: any = {};
-
-    if (requestParameters["pickupLocationIds"] != null) {
-      queryParameters["pickup_location_ids[]"] =
-        requestParameters["pickupLocationIds"];
-    }
-
-    if (requestParameters["week"] != null) {
-      queryParameters["week"] = requestParameters["week"];
-    }
-
-    if (requestParameters["year"] != null) {
-      queryParameters["year"] = requestParameters["year"];
-    }
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bakery/bread-capacity-pickup-location/`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(BreadCapacityPickupLocationFromJSON),
-    );
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationList(
-    requestParameters: BakeryBreadCapacityPickupLocationListRequest = {},
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<BreadCapacityPickupLocation>> {
-    const response = await this.bakeryBreadCapacityPickupLocationListRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationPartialUpdateRaw(
-    requestParameters: BakeryBreadCapacityPickupLocationPartialUpdateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BreadCapacityPickupLocation>> {
-    if (requestParameters["id"] == null) {
-      throw new runtime.RequiredError(
-        "id",
-        'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupLocationPartialUpdate().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters["Content-Type"] = "application/json";
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bakery/bread-capacity-pickup-location/{id}/`.replace(
-          `{${"id"}}`,
-          encodeURIComponent(String(requestParameters["id"])),
-        ),
-        method: "PATCH",
-        headers: headerParameters,
-        query: queryParameters,
-        body: PatchedBreadCapacityPickupLocationRequestToJSON(
-          requestParameters["patchedBreadCapacityPickupLocationRequest"],
-        ),
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BreadCapacityPickupLocationFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationPartialUpdate(
-    requestParameters: BakeryBreadCapacityPickupLocationPartialUpdateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BreadCapacityPickupLocation> {
-    const response =
-      await this.bakeryBreadCapacityPickupLocationPartialUpdateRaw(
-        requestParameters,
-        initOverrides,
-      );
-    return await response.value();
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationRetrieveRaw(
-    requestParameters: BakeryBreadCapacityPickupLocationRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BreadCapacityPickupLocation>> {
-    if (requestParameters["id"] == null) {
-      throw new runtime.RequiredError(
-        "id",
-        'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupLocationRetrieve().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bakery/bread-capacity-pickup-location/{id}/`.replace(
-          `{${"id"}}`,
-          encodeURIComponent(String(requestParameters["id"])),
-        ),
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BreadCapacityPickupLocationFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationRetrieve(
-    requestParameters: BakeryBreadCapacityPickupLocationRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BreadCapacityPickupLocation> {
-    const response = await this.bakeryBreadCapacityPickupLocationRetrieveRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationUpdateRaw(
-    requestParameters: BakeryBreadCapacityPickupLocationUpdateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BreadCapacityPickupLocation>> {
-    if (requestParameters["id"] == null) {
-      throw new runtime.RequiredError(
-        "id",
-        'Required parameter "id" was null or undefined when calling bakeryBreadCapacityPickupLocationUpdate().',
-      );
-    }
-
-    if (requestParameters["breadCapacityPickupLocationRequest"] == null) {
-      throw new runtime.RequiredError(
-        "breadCapacityPickupLocationRequest",
-        'Required parameter "breadCapacityPickupLocationRequest" was null or undefined when calling bakeryBreadCapacityPickupLocationUpdate().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    headerParameters["Content-Type"] = "application/json";
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/bakery/bread-capacity-pickup-location/{id}/`.replace(
-          `{${"id"}}`,
-          encodeURIComponent(String(requestParameters["id"])),
-        ),
-        method: "PUT",
-        headers: headerParameters,
-        query: queryParameters,
-        body: BreadCapacityPickupLocationRequestToJSON(
-          requestParameters["breadCapacityPickupLocationRequest"],
-        ),
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BreadCapacityPickupLocationFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async bakeryBreadCapacityPickupLocationUpdate(
-    requestParameters: BakeryBreadCapacityPickupLocationUpdateRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BreadCapacityPickupLocation> {
-    const response = await this.bakeryBreadCapacityPickupLocationUpdateRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
    * A member\'s bread slots: one per delivered week per share.
    */
   async bakeryBreadDeliveriesListRaw(
@@ -1367,7 +1155,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Update a bread delivery with capacity checking and locking.  When a bread is being selected, this method: 1. Locks the relevant capacity and delivery rows to prevent race conditions 2. Checks if there\'s available capacity for the selected bread 3. Only allows the update if capacity is available
+   * A member\'s bread slots: one per delivered week per share.
    */
   async bakeryBreadDeliveriesPartialUpdateRaw(
     requestParameters: BakeryBreadDeliveriesPartialUpdateRequest,
@@ -1422,7 +1210,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Update a bread delivery with capacity checking and locking.  When a bread is being selected, this method: 1. Locks the relevant capacity and delivery rows to prevent race conditions 2. Checks if there\'s available capacity for the selected bread 3. Only allows the update if capacity is available
+   * A member\'s bread slots: one per delivered week per share.
    */
   async bakeryBreadDeliveriesPartialUpdate(
     requestParameters: BakeryBreadDeliveriesPartialUpdateRequest,
@@ -1500,7 +1288,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    * Bulk create/update/delete bread specifics per delivery day
    */
   async bakeryBreadSpecificsBulkUpdateCreateRaw(
@@ -1553,7 +1341,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    * Bulk create/update/delete bread specifics per delivery day
    */
   async bakeryBreadSpecificsBulkUpdateCreate(
@@ -1567,7 +1355,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsCreateRaw(
     requestParameters: BakeryBreadSpecificsCreateRequest,
@@ -1619,7 +1407,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsCreate(
     requestParameters: BakeryBreadSpecificsCreateRequest,
@@ -1633,7 +1421,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsDestroyRaw(
     requestParameters: BakeryBreadSpecificsDestroyRequest,
@@ -1681,7 +1469,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsDestroy(
     requestParameters: BakeryBreadSpecificsDestroyRequest,
@@ -1691,7 +1479,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsListRaw(
     requestParameters: BakeryBreadSpecificsListRequest,
@@ -1747,7 +1535,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsList(
     requestParameters: BakeryBreadSpecificsListRequest = {},
@@ -1761,7 +1549,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsPartialUpdateRaw(
     requestParameters: BakeryBreadSpecificsPartialUpdateRequest,
@@ -1816,7 +1604,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsPartialUpdate(
     requestParameters: BakeryBreadSpecificsPartialUpdateRequest,
@@ -1830,7 +1618,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsRetrieveRaw(
     requestParameters: BakeryBreadSpecificsRetrieveRequest,
@@ -1880,7 +1668,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsRetrieve(
     requestParameters: BakeryBreadSpecificsRetrieveRequest,
@@ -1894,7 +1682,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsUpdateRaw(
     requestParameters: BakeryBreadSpecificsUpdateRequest,
@@ -1956,7 +1744,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread-specific overrides per delivery day. Only created when overrides to the bread defaults are needed.
+   * Rows exist only where the bread defaults need overriding for a day.
    */
   async bakeryBreadSpecificsUpdate(
     requestParameters: BakeryBreadSpecificsUpdateRequest,
@@ -1970,7 +1758,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsCreateRaw(
     requestParameters: BakeryBreadcontentsCreateRequest,
@@ -2022,7 +1809,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsCreate(
     requestParameters: BakeryBreadcontentsCreateRequest,
@@ -2036,7 +1822,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsDestroyRaw(
     requestParameters: BakeryBreadcontentsDestroyRequest,
@@ -2084,7 +1869,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsDestroy(
     requestParameters: BakeryBreadcontentsDestroyRequest,
@@ -2094,7 +1878,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsListRaw(
     requestParameters: BakeryBreadcontentsListRequest,
@@ -2142,7 +1925,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsList(
     requestParameters: BakeryBreadcontentsListRequest = {},
@@ -2156,7 +1938,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsPartialUpdateRaw(
     requestParameters: BakeryBreadcontentsPartialUpdateRequest,
@@ -2211,7 +1992,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsPartialUpdate(
     requestParameters: BakeryBreadcontentsPartialUpdateRequest,
@@ -2225,7 +2005,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsRetrieveRaw(
     requestParameters: BakeryBreadcontentsRetrieveRequest,
@@ -2275,7 +2054,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsRetrieve(
     requestParameters: BakeryBreadcontentsRetrieveRequest,
@@ -2289,7 +2067,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsUpdateRaw(
     requestParameters: BakeryBreadcontentsUpdateRequest,
@@ -2351,7 +2128,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread contents (ingredient amounts)
    */
   async bakeryBreadcontentsUpdate(
     requestParameters: BakeryBreadcontentsUpdateRequest,
@@ -2365,7 +2141,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get breads filtered by multiple label IDs
+   * One TapirCache for the whole request, shared with the serializer.
    * Get breads filtered by multiple label IDs
    */
   async bakeryBreadsListByLabelsListRaw(
@@ -2417,7 +2193,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get breads filtered by multiple label IDs
+   * One TapirCache for the whole request, shared with the serializer.
    * Get breads filtered by multiple label IDs
    */
   async bakeryBreadsListByLabelsList(
@@ -2432,7 +2208,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get or add contents (ingredients) for a specific bread
+   * One TapirCache for the whole request, shared with the serializer.
    * Get all ingredients for a specific bread
    */
   async bakeryBreadsListContentsCreateRaw(
@@ -2493,7 +2269,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get or add contents (ingredients) for a specific bread
+   * One TapirCache for the whole request, shared with the serializer.
    * Get all ingredients for a specific bread
    */
   async bakeryBreadsListContentsCreate(
@@ -2508,7 +2284,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get or add contents (ingredients) for a specific bread
+   * One TapirCache for the whole request, shared with the serializer.
    * Get all ingredients for a specific bread
    */
   async bakeryBreadsListContentsListRaw(
@@ -2559,7 +2335,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get or add contents (ingredients) for a specific bread
+   * One TapirCache for the whole request, shared with the serializer.
    * Get all ingredients for a specific bread
    */
   async bakeryBreadsListContentsList(
@@ -2574,7 +2350,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListCreateRaw(
     requestParameters: BakeryBreadsListCreateRequest,
@@ -2624,7 +2400,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListCreate(
     requestParameters: BakeryBreadsListCreateRequest,
@@ -2638,7 +2414,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListDestroyRaw(
     requestParameters: BakeryBreadsListDestroyRequest,
@@ -2686,7 +2462,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListDestroy(
     requestParameters: BakeryBreadsListDestroyRequest,
@@ -2696,7 +2472,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListListRaw(
     requestParameters: BakeryBreadsListListRequest,
@@ -2757,7 +2533,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListList(
     requestParameters: BakeryBreadsListListRequest = {},
@@ -2771,7 +2547,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListPartialUpdateRaw(
     requestParameters: BakeryBreadsListPartialUpdateRequest,
@@ -2826,7 +2602,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListPartialUpdate(
     requestParameters: BakeryBreadsListPartialUpdateRequest,
@@ -2840,7 +2616,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListRetrieveRaw(
     requestParameters: BakeryBreadsListRetrieveRequest,
@@ -2890,7 +2666,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListRetrieve(
     requestParameters: BakeryBreadsListRetrieveRequest,
@@ -2904,7 +2680,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListUpdateRaw(
     requestParameters: BakeryBreadsListUpdateRequest,
@@ -2964,7 +2740,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread variants
+   * One TapirCache for the whole request, shared with the serializer.
    */
   async bakeryBreadsListUpdate(
     requestParameters: BakeryBreadsListUpdateRequest,
@@ -2978,7 +2754,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get all breads per pickup location per week, optionally filtered by year/week/day
+   * The solver\'s distribution result per pickup location and week.
    */
   async bakeryBreadsPerPickupLocationPerWeekListRaw(
     requestParameters: BakeryBreadsPerPickupLocationPerWeekListRequest,
@@ -3030,7 +2806,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get all breads per pickup location per week, optionally filtered by year/week/day
+   * The solver\'s distribution result per pickup location and week.
    */
   async bakeryBreadsPerPickupLocationPerWeekList(
     requestParameters: BakeryBreadsPerPickupLocationPerWeekListRequest = {},
@@ -3044,7 +2820,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for viewing breads per pickup location per week. Read-only - data is created by the solver.
+   * The solver\'s distribution result per pickup location and week.
    */
   async bakeryBreadsPerPickupLocationPerWeekRetrieveRaw(
     requestParameters: BakeryBreadsPerPickupLocationPerWeekRetrieveRequest,
@@ -3094,7 +2870,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for viewing breads per pickup location per week. Read-only - data is created by the solver.
+   * The solver\'s distribution result per pickup location and week.
    */
   async bakeryBreadsPerPickupLocationPerWeekRetrieve(
     requestParameters: BakeryBreadsPerPickupLocationPerWeekRetrieveRequest,
@@ -3108,7 +2884,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsCreateRaw(
     requestParameters: BakeryIngredientsCreateRequest,
@@ -3158,7 +2934,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsCreate(
     requestParameters: BakeryIngredientsCreateRequest,
@@ -3172,7 +2948,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsDestroyRaw(
     requestParameters: BakeryIngredientsDestroyRequest,
@@ -3220,7 +2996,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsDestroy(
     requestParameters: BakeryIngredientsDestroyRequest,
@@ -3230,7 +3006,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsListRaw(
     requestParameters: BakeryIngredientsListRequest,
@@ -3278,7 +3054,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsList(
     requestParameters: BakeryIngredientsListRequest = {},
@@ -3292,7 +3068,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsPartialUpdateRaw(
     requestParameters: BakeryIngredientsPartialUpdateRequest,
@@ -3347,7 +3123,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsPartialUpdate(
     requestParameters: BakeryIngredientsPartialUpdateRequest,
@@ -3361,7 +3137,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsRetrieveRaw(
     requestParameters: BakeryIngredientsRetrieveRequest,
@@ -3411,7 +3187,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsRetrieve(
     requestParameters: BakeryIngredientsRetrieveRequest,
@@ -3425,7 +3201,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsUpdateRaw(
     requestParameters: BakeryIngredientsUpdateRequest,
@@ -3485,7 +3261,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing ingredients
+   * Turns a delete blocked by on_delete=PROTECT into a 409.
    */
   async bakeryIngredientsUpdate(
     requestParameters: BakeryIngredientsUpdateRequest,
@@ -3499,7 +3275,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsCreateRaw(
     requestParameters: BakeryLabelsCreateRequest,
@@ -3549,7 +3324,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsCreate(
     requestParameters: BakeryLabelsCreateRequest,
@@ -3563,7 +3337,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsDestroyRaw(
     requestParameters: BakeryLabelsDestroyRequest,
@@ -3611,7 +3384,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsDestroy(
     requestParameters: BakeryLabelsDestroyRequest,
@@ -3621,7 +3393,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsListRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -3660,7 +3431,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsList(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -3670,7 +3440,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsPartialUpdateRaw(
     requestParameters: BakeryLabelsPartialUpdateRequest,
@@ -3725,7 +3494,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsPartialUpdate(
     requestParameters: BakeryLabelsPartialUpdateRequest,
@@ -3739,7 +3507,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsRetrieveRaw(
     requestParameters: BakeryLabelsRetrieveRequest,
@@ -3789,7 +3556,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsRetrieve(
     requestParameters: BakeryLabelsRetrieveRequest,
@@ -3803,7 +3569,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsUpdateRaw(
     requestParameters: BakeryLabelsUpdateRequest,
@@ -3863,7 +3628,6 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for managing bread labels/categories
    */
   async bakeryLabelsUpdate(
     requestParameters: BakeryLabelsUpdateRequest,
@@ -4243,7 +4007,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get all stove sessions, optionally filtered by year/week/day
+   * The baking plan; the rows are written by the solver.
    */
   async bakeryStoveSessionsListRaw(
     requestParameters: BakeryStoveSessionsListRequest,
@@ -4295,7 +4059,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * Get all stove sessions, optionally filtered by year/week/day
+   * The baking plan; the rows are written by the solver.
    */
   async bakeryStoveSessionsList(
     requestParameters: BakeryStoveSessionsListRequest = {},
@@ -4309,7 +4073,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for viewing stove sessions (baking plan). Read-only - sessions are created by the solver.
+   * The baking plan; the rows are written by the solver.
    */
   async bakeryStoveSessionsRetrieveRaw(
     requestParameters: BakeryStoveSessionsRetrieveRequest,
@@ -4359,7 +4123,7 @@ export class BakeryApi extends runtime.BaseAPI {
   }
 
   /**
-   * ViewSet for viewing stove sessions (baking plan). Read-only - sessions are created by the solver.
+   * The baking plan; the rows are written by the solver.
    */
   async bakeryStoveSessionsRetrieve(
     requestParameters: BakeryStoveSessionsRetrieveRequest,
@@ -4369,126 +4133,6 @@ export class BakeryApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
-    return await response.value();
-  }
-
-  /**
-   * Returns the earliest delivery day per pickup location, 0=Montag.
-   * Get distinct list of delivery days
-   */
-  async pickupLocationsApiDeliveryDaysRetrieveRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<DeliveryDaysResponse>> {
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/pickup_locations/api/delivery_days`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      DeliveryDaysResponseFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   * Returns the earliest delivery day per pickup location, 0=Montag.
-   * Get distinct list of delivery days
-   */
-  async pickupLocationsApiDeliveryDaysRetrieve(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<DeliveryDaysResponse> {
-    const response =
-      await this.pickupLocationsApiDeliveryDaysRetrieveRaw(initOverrides);
-    return await response.value();
-  }
-
-  /**
-   * The pickup locations delivered on one weekday.  Readable by any member rather than gated on Coop.MANAGE like the rest of the bakery: it returns station names and weekdays, which PublicPickupLocationProvider already publishes.
-   * Get pickup locations filtered by delivery day
-   */
-  async pickupLocationsApiPickupLocationsByDeliveryDayRetrieveRaw(
-    requestParameters: PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<PickupLocationsByDeliveryDayResponse>> {
-    if (requestParameters["dayOfWeek"] == null) {
-      throw new runtime.RequiredError(
-        "dayOfWeek",
-        'Required parameter "dayOfWeek" was null or undefined when calling pickupLocationsApiPickupLocationsByDeliveryDayRetrieve().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    if (requestParameters["dayOfWeek"] != null) {
-      queryParameters["day_of_week"] = requestParameters["dayOfWeek"];
-    }
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    if (this.configuration && this.configuration.apiKey) {
-      headerParameters["Authorization"] =
-        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
-    }
-
-    if (
-      this.configuration &&
-      (this.configuration.username !== undefined ||
-        this.configuration.password !== undefined)
-    ) {
-      headerParameters["Authorization"] =
-        "Basic " +
-        btoa(this.configuration.username + ":" + this.configuration.password);
-    }
-    const response = await this.request(
-      {
-        path: `/pickup_locations/api/pickup_locations_by_delivery_day`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      PickupLocationsByDeliveryDayResponseFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   * The pickup locations delivered on one weekday.  Readable by any member rather than gated on Coop.MANAGE like the rest of the bakery: it returns station names and weekdays, which PublicPickupLocationProvider already publishes.
-   * Get pickup locations filtered by delivery day
-   */
-  async pickupLocationsApiPickupLocationsByDeliveryDayRetrieve(
-    requestParameters: PickupLocationsApiPickupLocationsByDeliveryDayRetrieveRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<PickupLocationsByDeliveryDayResponse> {
-    const response =
-      await this.pickupLocationsApiPickupLocationsByDeliveryDayRetrieveRaw(
-        requestParameters,
-        initOverrides,
-      );
     return await response.value();
   }
 }

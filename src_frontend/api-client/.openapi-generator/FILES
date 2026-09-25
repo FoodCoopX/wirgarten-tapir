@@ -37,9 +37,8 @@ models/BestellWizardStrings.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts
 models/BreadBreakdown.ts
+models/BreadCapacityAllocationResponse.ts
 models/BreadCapacityBulkUpdateRequest.ts
-models/BreadCapacityPickupLocation.ts
-models/BreadCapacityPickupLocationRequest.ts
 models/BreadCapacityUpdateItemRequest.ts
 models/BreadContent.ts
 models/BreadContentRequest.ts
@@ -171,7 +170,6 @@ models/PaginatedPaymentTransactionList.ts
 models/PaginatedWaitingListEntryDetailsList.ts
 models/PatchedAssociationMembershipTypePriceRequest.ts
 models/PatchedAssociationMembershipTypeRequest.ts
-models/PatchedBreadCapacityPickupLocationRequest.ts
 models/PatchedBreadContentRequest.ts
 models/PatchedBreadDeliveryRequest.ts
 models/PatchedBreadLabelRequest.ts

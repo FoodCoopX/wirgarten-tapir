@@ -20,9 +20,6 @@ import {
 
 /**
  * Several stations of one week in a single response.
- *
- * One request per station would re-derive the whole week each time, since
- * each request starts with an empty cache.
  * @export
  * @interface PickupListsResponse
  */

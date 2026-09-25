@@ -18,7 +18,7 @@ import type { BreadLabel } from "./BreadLabel";
 import { BreadLabelFromJSON } from "./BreadLabel";
 
 /**
- * Serializer for bread detail view (includes ingredients)
+ *
  * @export
  * @interface BreadDetail
  */

@@ -59,20 +59,16 @@ the GitHub issues as our todo-list. Hopefully the labels will be enough to let y
 
 ### Bäckerei (bakery)
 
-The bakery is off by default. To get a local instance with it switched on and
-filled with realistic data:
+The bakery is off by default. For a local instance with it switched on and
+filled with test data — a bakery with one `Brotanteil` share, four pickup
+stations, breads and members:
 ```sh
 docker compose exec web poetry run python manage.py populate --reset_all --org=bakery
 ```
-That is the BIOTOP setup plus the bakery: the parameters switched on, a
-`Brotanteil` product type with `is_bread=True`, breads, labels, ingredients,
-capacities for the coming weeks, some chosen breads and some members with
-favourites set. No further configuration needed.
 
-The baking-plan solver needs `ortools`, which is the optional `bakery` extra in
-`pyproject.toml` — about 210 MB with its numpy/pandas subtree. The Docker image
-installs it (`poetry install --extras bakery`). Build without the flag and
-everything still works except the two solver endpoints, which answer 503.
+The baking-plan solver needs `ortools`, the optional `bakery` extra in
+`pyproject.toml`. The Docker image installs it
+(`poetry install --extras bakery`); without it the solver endpoints answer 503.
 
 ## Tests
 

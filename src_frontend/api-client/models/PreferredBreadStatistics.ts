@@ -19,7 +19,7 @@ import {
 } from "./PreferredBreadStatistic";
 
 /**
- * Declared so the endpoint appears in the schema with a real shape.
+ *
  * @export
  * @interface PreferredBreadStatistics
  */
