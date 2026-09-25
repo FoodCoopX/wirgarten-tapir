@@ -281,7 +281,7 @@ def _register_triggers():
     )
 
     register_transactional_trigger(
-        name="Bestellung widerruft",
+        name="Bestellung widerrufen",
         key=Events.ORDER_REVOKED,
         tokens={
             "Vertragsliste": "contract_list",
