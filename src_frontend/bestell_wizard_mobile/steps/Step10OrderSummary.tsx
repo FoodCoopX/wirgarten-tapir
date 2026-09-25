@@ -303,6 +303,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     return payments;
   }
 
+  const monthlyPayments = getMonthlyPayments();
+
   return (
     <>
       <div>
@@ -521,13 +523,14 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       />
                     </>
                   )}
-                  {isOneTimePaymentShown() &&
-                    getMonthlyPayments().length > 0 && <hr />}
-                  {getMonthlyPayments().length > 0 && (
+                  {isOneTimePaymentShown() && monthlyPayments.length > 0 && (
+                    <hr />
+                  )}
+                  {monthlyPayments.length > 0 && (
                     <>
                       <strong>Monatlich:</strong>
                       <ul className={"mb-0"}>
-                        {getMonthlyPayments().map((payment) => (
+                        {monthlyPayments.map((payment) => (
                           <li key={payment.key}>
                             <PaymentRow
                               label={payment.label}
