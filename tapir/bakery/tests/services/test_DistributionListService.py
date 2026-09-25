@@ -14,7 +14,8 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 @patch(
@@ -27,29 +28,20 @@ class TestDistributionListService(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        # The station a slot belongs to is derived, and resolving it needs the
-        # org delivery weekday parameter.
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         super().setUp()
-        set_bypass_keycloak()
+        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         self.roggenbrot = BreadFactory.create(name="Roggenbrot")
         self.dinkelkruste = BreadFactory.create(name="Dinkelkruste")
 
     def _make_subscription(self):
-        # A member belongs to one station per week, so every delivery placed at
-        # a different station needs its own member.
+        # A member belongs to one station per week, so each station needs its
+        # own member.
         return BreadSubscriptionFactory.create(member=MemberFactory.create())
 
     def _run_with_locations(self, locations):
-        """
-        Run get_distribution_list for stations delivered on self.DAY.
-
-        Real opening times rather than a patched queryset: which stations
-        deliver on a day is one shared rule now, so a test that mocks the
-        query stops exercising it.
-        """
         for pickup_location in locations:
             PickupLocationOpeningTime.objects.get_or_create(
                 pickup_location=pickup_location,
@@ -63,10 +55,6 @@ class TestDistributionListService(TapirIntegrationTest):
             year=self.YEAR, week=self.WEEK, day=self.DAY
         )
 
-    # ══════════════════════════════════════════════════════════════════
-    # NO DATA
-    # ══════════════════════════════════════════════════════════════════
-
     def test_getDistributionList_noData_returnsEmptyResult(self, mock_kc):
         result = DistributionListService.get_distribution_list(
             year=self.YEAR, week=self.WEEK, day=self.DAY
@@ -79,12 +67,6 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(result["grand_total_baked"], 0)
         self.assertEqual(result["grand_total_ordered"], 0)
         self.assertEqual(result["grand_total_extra"], 0)
-
-    # ══════════════════════════════════════════════════════════════════
-    # WITHOUT SOLVER RESULTS (no BreadsPerPickupLocationPerWeek)
-    # ══════════════════════════════════════════════════════════════════
-
-    # ── Without solver: deliveries with bread assigned ───────────────
 
     def test_withoutSolver_deliveriesWithBread_showsOrderedCounts(self, mock_kc):
         pl = PickupLocationFactory.create(name="Hofladen")
@@ -107,10 +89,8 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(loc["name"], "Hofladen")
         self.assertEqual(loc["breads"]["Roggenbrot"]["ordered"], 1)
         self.assertEqual(loc["total_ordered"], 1)
-        self.assertEqual(loc["total_baked"], 1)  # total deliveries
+        self.assertEqual(loc["total_baked"], 1)
         self.assertEqual(loc["total_extra"], 0)
-
-    # ── Without solver: delivery without bread (unassigned slot) ─────
 
     def test_withoutSolver_deliveryWithoutBread_countsAsTotalButNotOrdered(
         self, mock_kc
@@ -130,11 +110,9 @@ class TestDistributionListService(TapirIntegrationTest):
 
         self.assertFalse(result["has_solver_results"])
         loc = result["locations"][0]
-        self.assertEqual(loc["total_baked"], 1)  # 1 delivery total
-        self.assertEqual(loc["total_ordered"], 0)  # no bread assigned
-        self.assertEqual(loc["total_extra"], 1)  # 1 unassigned
-
-    # ── Without solver: mix of assigned and unassigned ───────────────
+        self.assertEqual(loc["total_baked"], 1)
+        self.assertEqual(loc["total_ordered"], 0)
+        self.assertEqual(loc["total_extra"], 1)
 
     def test_withoutSolver_mixedAssignedAndUnassigned_extraIsCorrect(self, mock_kc):
         pl = PickupLocationFactory.create(name="Hofladen")
@@ -169,8 +147,6 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(loc["total_ordered"], 1)
         self.assertEqual(loc["total_extra"], 2)
 
-    # ── Without solver: multiple locations ───────────────────────────
-
     def test_withoutSolver_multipleLocations_eachHasOwnCounts(self, mock_kc):
         pl1 = PickupLocationFactory.create(name="Hofladen")
         pl2 = PickupLocationFactory.create(name="Marktstand")
@@ -201,8 +177,6 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(loc_map["Marktstand"]["total_ordered"], 2)
         self.assertEqual(result["grand_total_ordered"], 3)
 
-    # ── Without solver: locations sorted alphabetically ──────────────
-
     def test_withoutSolver_locationsSortedAlphabetically(self, mock_kc):
         pl_z = PickupLocationFactory.create(name="Zentrallager")
         pl_a = PickupLocationFactory.create(name="Abholpunkt")
@@ -220,8 +194,6 @@ class TestDistributionListService(TapirIntegrationTest):
 
         names = [loc["name"] for loc in result["locations"]]
         self.assertEqual(names, ["Abholpunkt", "Zentrallager"])
-
-    # ── Without solver: bread_names sorted ───────────────────────────
 
     def test_withoutSolver_breadNamesSortedAlphabetically(self, mock_kc):
         pl = PickupLocationFactory.create(name="Hofladen")
@@ -246,8 +218,6 @@ class TestDistributionListService(TapirIntegrationTest):
 
         self.assertEqual(result["bread_names"], ["Dinkelkruste", "Roggenbrot"])
 
-    # ── Without solver: bread_totals ─────────────────────────────────
-
     def test_withoutSolver_breadTotals_bakedIsZeroExtraIsZero(self, mock_kc):
         pl = PickupLocationFactory.create(name="Hofladen")
         sub = self._make_subscription()
@@ -265,12 +235,6 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(result["bread_totals"]["Roggenbrot"]["baked"], 0)
         self.assertEqual(result["bread_totals"]["Roggenbrot"]["ordered"], 1)
         self.assertEqual(result["bread_totals"]["Roggenbrot"]["extra"], 0)
-
-    # ══════════════════════════════════════════════════════════════════
-    # WITH SOLVER RESULTS (BreadsPerPickupLocationPerWeek exists)
-    # ══════════════════════════════════════════════════════════════════
-
-    # ── With solver: basic baked and ordered ─────────────────────────
 
     def test_withSolver_bakedAndOrdered_calculatesExtraCorrectly(self, mock_kc):
         pl = PickupLocationFactory.create(name="Hofladen")
@@ -303,8 +267,6 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(loc["total_ordered"], 1)
         self.assertEqual(loc["total_extra"], 9)
 
-    # ── With solver: baked only (no orders) ──────────────────────────
-
     def test_withSolver_bakedButNoOrders_orderedIsZero(self, mock_kc):
         pl = PickupLocationFactory.create(name="Hofladen")
 
@@ -324,13 +286,10 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(loc["breads"]["Roggenbrot"]["ordered"], 0)
         self.assertEqual(loc["breads"]["Roggenbrot"]["extra"], 8)
 
-    # ── With solver: orders only (ordered but not in solver → no baked) ──
-
     def test_withSolver_orderedBreadNotInSolver_bakedIsZero(self, mock_kc):
         pl = PickupLocationFactory.create(name="Hofladen")
         sub = self._make_subscription()
 
-        # Solver result for roggenbrot, but member ordered dinkelkruste
         BreadsPerPickupLocationPerWeekFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
@@ -354,8 +313,6 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(loc["breads"]["Dinkelkruste"]["baked"], 0)
         self.assertEqual(loc["breads"]["Dinkelkruste"]["ordered"], 1)
         self.assertEqual(loc["breads"]["Dinkelkruste"]["extra"], -1)
-
-    # ── With solver: multiple breads and locations ───────────────────
 
     def test_withSolver_multipleLocationsMultipleBreads_totalsCorrect(self, mock_kc):
         pl1 = PickupLocationFactory.create(name="Hofladen")
@@ -399,8 +356,6 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(result["grand_total_ordered"], 3)
         self.assertEqual(result["grand_total_extra"], 7)
 
-    # ── With solver: locations sorted alphabetically ─────────────────
-
     def test_withSolver_locationsSortedAlphabetically(self, mock_kc):
         pl_z = PickupLocationFactory.create(name="Zentrallager")
         pl_a = PickupLocationFactory.create(name="Abholpunkt")
@@ -425,8 +380,6 @@ class TestDistributionListService(TapirIntegrationTest):
         names = [loc["name"] for loc in result["locations"]]
         self.assertEqual(names, ["Abholpunkt", "Zentrallager"])
 
-    # ── With solver: bread_names sorted ──────────────────────────────
-
     def test_withSolver_breadNamesSortedAlphabetically(self, mock_kc):
         pl = PickupLocationFactory.create(name="Hofladen")
 
@@ -448,8 +401,6 @@ class TestDistributionListService(TapirIntegrationTest):
         result = self._run_with_locations([pl])
 
         self.assertEqual(result["bread_names"], ["Dinkelkruste", "Roggenbrot"])
-
-    # ── With solver: bread_totals across locations ───────────────────
 
     def test_withSolver_breadTotalsAcrossLocations_sumCorrectly(self, mock_kc):
         pl1 = PickupLocationFactory.create(name="Hofladen")
@@ -485,8 +436,6 @@ class TestDistributionListService(TapirIntegrationTest):
         self.assertEqual(result["bread_totals"]["Roggenbrot"]["ordered"], 1)
         self.assertEqual(result["bread_totals"]["Roggenbrot"]["extra"], 9)
 
-    # ── With solver: multiple solver entries same location same bread sum ─
-
     def test_withSolver_multipleSolverEntriesSameBread_sumsBaked(self, mock_kc):
         pl1 = PickupLocationFactory.create(name="Hofladen")
         pl2 = PickupLocationFactory.create(name="Marktstand")
@@ -510,10 +459,6 @@ class TestDistributionListService(TapirIntegrationTest):
 
         self.assertEqual(result["bread_totals"]["Roggenbrot"]["baked"], 10)
 
-    # ══════════════════════════════════════════════════════════════════
-    # FILTERING — different day/week excluded
-    # ══════════════════════════════════════════════════════════════════
-
     def test_deliveriesForDifferentLocation_excluded(self, mock_kc):
         pl_included = PickupLocationFactory.create(name="Hofladen")
         pl_excluded = PickupLocationFactory.create(name="Anderer Ort")
@@ -527,7 +472,6 @@ class TestDistributionListService(TapirIntegrationTest):
             bread=self.roggenbrot,
         )
 
-        # Only pl_included is returned as a day location
         result = self._run_with_locations([pl_included])
 
         self.assertEqual(result["locations"], [])
@@ -549,10 +493,6 @@ class TestDistributionListService(TapirIntegrationTest):
 
         self.assertFalse(result["has_solver_results"])
         self.assertEqual(result["locations"], [])
-
-    # ══════════════════════════════════════════════════════════════════
-    # GRAND TOTALS
-    # ══════════════════════════════════════════════════════════════════
 
     def test_withSolver_grandTotals_sumAllLocations(self, mock_kc):
         pl1 = PickupLocationFactory.create(name="Hofladen")
@@ -610,21 +550,12 @@ class TestDistributionListService(TapirIntegrationTest):
         result = self._run_with_locations([pl1, pl2])
 
         self.assertFalse(result["has_solver_results"])
-        self.assertEqual(result["grand_total_baked"], 2)  # total deliveries
+        self.assertEqual(result["grand_total_baked"], 2)
         self.assertEqual(result["grand_total_ordered"], 1)
         self.assertEqual(result["grand_total_extra"], 1)
 
-    # ══════════════════════════════════════════════════════════════════
-    # STATIONS SHARING A NAME
-    # ══════════════════════════════════════════════════════════════════
-
     def test_withoutSolver_twoLocationsSameName_stayTwoRows(self, mock_kc):
-        """
-        Only the (name, coordinates) triple is unique, so two stations in
-        different villages may well both be called "Hofpunkt". The
-        Verteilliste is printed per station: merging them into one row would
-        send both stations' loaves to whichever one is unpacked first.
-        """
+        """Only (name, coordinates) is unique, so two stations may share a name."""
         pl1 = PickupLocationFactory.create(name="Hofpunkt", coords_lon=1)
         pl2 = PickupLocationFactory.create(name="Hofpunkt", coords_lon=2)
 

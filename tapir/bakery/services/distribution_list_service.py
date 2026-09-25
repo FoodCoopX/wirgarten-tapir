@@ -21,21 +21,15 @@ class DistributionListService:
         )
         day_locations = list(PickupLocation.objects.filter(id__in=location_ids))
 
-        # 1. Check for solver results
         bread_counts = BreadsPerPickupLocationPerWeek.objects.filter(
             year=year,
             delivery_week=week,
             pickup_location_id__in=location_ids,
         ).select_related("bread", "pickup_location")
 
-        # Evaluate once: .exists() ran its own SELECT without filling the
-        # result cache, so iterating below re-ran the whole query.
         bread_counts = list(bread_counts)
         has_solver_results = bool(bread_counts)
 
-        # 2. All deliveries for this year/week/day, grouped by the station
-        # they resolve to. The service drops jokered slots, which are not
-        # delivered and must not be counted.
         location_names_by_id = {pl.id: pl.name for pl in day_locations}
         deliveries_by_location = (
             BreadDeliveryContextService.get_deliveries_by_location_for_week(
@@ -43,11 +37,8 @@ class DistributionListService:
             )
         )
 
-        # 3. Directly ordered breads (bread IS NOT NULL)
-        # 4. Total deliveries per location (all slots)
-        # Keyed by pickup location id, not by name: two stations that share a
-        # name would otherwise collapse into a single Verteilliste row with
-        # their loaves added together.
+        # Keyed by pickup location id, not by name: two stations sharing a name
+        # would otherwise collapse into a single Verteilliste row.
         ordered_by_location = {}
         total_deliveries_by_location = {}
         for location_id, deliveries in deliveries_by_location.items():
@@ -66,7 +57,6 @@ class DistributionListService:
                 )
 
         if has_solver_results:
-            # ---------- WITH SOLVER RESULTS ----------
             baked_by_location = {}
             for bc in bread_counts:
                 location_id = bc.pickup_location_id
@@ -122,11 +112,6 @@ class DistributionListService:
                 )
 
         else:
-            # ---------- WITHOUT SOLVER RESULTS ----------
-            # bread columns: only ordered count (no baked, no extra per bread)
-            # totals: baked = total deliveries, ordered = sum of directly ordered
-            # extra = total deliveries - directly ordered (= not yet chosen)
-
             all_location_ids = sorted(
                 set(
                     list(ordered_by_location.keys())
@@ -165,7 +150,6 @@ class DistributionListService:
                     }
                 )
 
-        # 5. Build bread totals
         bread_totals = {}
         for bread_name in all_bread_names:
             if has_solver_results:

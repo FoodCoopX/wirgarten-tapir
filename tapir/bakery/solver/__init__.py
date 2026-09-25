@@ -1,12 +1,6 @@
 """
-Bread Baking Optimizer
-======================
-Solves the weekly bread planning problem:
-- How many of each bread to bake (respecting stove layer constraints)
-- How to distribute breads across pickup locations (respecting capacities)
-- Individual member deliveries with chosen breads are treated as fixed constraints
-
-Uses OR-Tools CP-SAT solver for constraint programming.
+Weekly bread planning: how many of each bread to bake, in which stove sessions,
+and how to distribute them across the pickup locations.
 """
 
 from tapir.bakery.solver.dataclasses import (

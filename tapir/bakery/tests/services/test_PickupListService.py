@@ -13,7 +13,8 @@ from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 @patch(
@@ -25,13 +26,11 @@ class TestPickupListService(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        # The station a slot belongs to is derived, and resolving it needs the
-        # org delivery weekday parameter.
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         super().setUp()
-        set_bypass_keycloak()
+        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         self.pickup_location = PickupLocationFactory.create()
         self.roggenbrot = BreadFactory.create(name="Roggenbrot")
         self.dinkelkruste = BreadFactory.create(name="Dinkelkruste")
@@ -50,8 +49,6 @@ class TestPickupListService(TapirIntegrationTest):
             bread=bread,
         )
 
-    # ── No data ──────────────────────────────────────────────────────
-
     def test_getPickupList_noDeliveriesExist_returnsEmptyResult(self, mock_kc):
         result = PickupListService.get_pickup_list(
             year=self.YEAR,
@@ -63,8 +60,6 @@ class TestPickupListService(TapirIntegrationTest):
         self.assertEqual(result["bread_names"], [])
         self.assertEqual(result["grand_total"], 0)
         self.assertEqual(result["bread_totals"], {})
-
-    # ── Single delivery ──────────────────────────────────────────────
 
     def test_getPickupList_oneDeliveryWithBread_returnsCorrectCounts(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
@@ -79,9 +74,9 @@ class TestPickupListService(TapirIntegrationTest):
         self.assertEqual(len(result["entries"]), 1)
 
         entry = result["entries"][0]
-        self.assertEqual(entry["bread_counts"].get("Roggenbrot"), 1)
-        self.assertEqual(entry["total"], 1)
-        self.assertEqual(entry["total_assigned"], 1)
+        self.assertEqual(entry.bread_counts.get("Roggenbrot"), 1)
+        self.assertEqual(entry.total, 1)
+        self.assertEqual(entry.total_assigned, 1)
         self.assertEqual(result["grand_total"], 1)
         self.assertEqual(result["bread_totals"]["Roggenbrot"], 1)
 
@@ -100,12 +95,10 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         entry = result["entries"][0]
-        self.assertEqual(entry["total"], 1)
-        self.assertEqual(entry["total_assigned"], 0)
-        self.assertEqual(entry["bread_counts"], {})
-        self.assertEqual(entry["breads"], [])
-
-    # ── Multiple members / breads ────────────────────────────────────
+        self.assertEqual(entry.total, 1)
+        self.assertEqual(entry.total_assigned, 0)
+        self.assertEqual(entry.bread_counts, {})
+        self.assertEqual(entry.breads, [])
 
     def test_getPickupList_multipleMembersMultipleBreads_totalsAreCorrect(
         self, mock_kc
@@ -133,8 +126,6 @@ class TestPickupListService(TapirIntegrationTest):
         self.assertEqual(result["bread_totals"]["Dinkelkruste"], 1)
         self.assertEqual(result["grand_total"], 4)
 
-    # ── Sorting ──────────────────────────────────────────────────────
-
     def test_getPickupList_multipleMembers_entriesSortedByMemberName(self, mock_kc):
         _ben, sub_ben = self._create_member_with_subscription(
             first_name="Ben", last_name="Schmidt"
@@ -152,7 +143,7 @@ class TestPickupListService(TapirIntegrationTest):
             pickup_location_id=self.pickup_location.id,
         )
 
-        names = [e["member_name"] for e in result["entries"]]
+        names = [e.member_name for e in result["entries"]]
         self.assertEqual(names, sorted(names, key=str.lower))
 
     def test_getPickupList_breadNamesAreSortedAlphabetically(self, mock_kc):
@@ -168,8 +159,6 @@ class TestPickupListService(TapirIntegrationTest):
 
         self.assertEqual(result["bread_names"], ["Dinkelkruste", "Roggenbrot"])
 
-    # ── Display name ─────────────────────────────────────────────────
-
     def test_getPickupList_memberWithLastName_displaysInitialAndFirstName(
         self, mock_kc
     ):
@@ -184,7 +173,7 @@ class TestPickupListService(TapirIntegrationTest):
             pickup_location_id=self.pickup_location.id,
         )
 
-        self.assertEqual(result["entries"][0]["member_name"], "M., Anna")
+        self.assertEqual(result["entries"][0].member_name, "M., Anna")
 
     def test_getPickupList_memberWithNoLastName_displaysFirstNameOnly(self, mock_kc):
         _member, subscription = self._create_member_with_subscription(
@@ -198,7 +187,7 @@ class TestPickupListService(TapirIntegrationTest):
             pickup_location_id=self.pickup_location.id,
         )
 
-        self.assertEqual(result["entries"][0]["member_name"], "Anna")
+        self.assertEqual(result["entries"][0].member_name, "Anna")
 
     def test_getPickupList_memberWithNoName_displaysUnbekannt(self, mock_kc):
         _member, subscription = self._create_member_with_subscription(
@@ -212,9 +201,7 @@ class TestPickupListService(TapirIntegrationTest):
             pickup_location_id=self.pickup_location.id,
         )
 
-        self.assertEqual(result["entries"][0]["member_name"], "Unbekannt")
-
-    # ── Preferred breads ─────────────────────────────────────────────
+        self.assertEqual(result["entries"][0].member_name, "Unbekannt")
 
     def test_getPickupList_preferredBreadNotDelivered_breadPreferredIsTrue(
         self, mock_kc
@@ -239,8 +226,8 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         entry = result["entries"][0]
-        self.assertTrue(entry["bread_preferred"]["Dinkelkruste"])
-        self.assertFalse(entry["bread_preferred"]["Roggenbrot"])
+        self.assertTrue(entry.bread_preferred["Dinkelkruste"])
+        self.assertFalse(entry.bread_preferred["Roggenbrot"])
 
     def test_getPickupList_preferredBreadIsDelivered_breadPreferredIsFalse(
         self, mock_kc
@@ -258,7 +245,7 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         entry = result["entries"][0]
-        self.assertFalse(entry["bread_preferred"]["Roggenbrot"])
+        self.assertFalse(entry.bread_preferred["Roggenbrot"])
 
     def test_getPickupList_memberWithNoPreferences_allBreadPreferredAreFalse(
         self, mock_kc
@@ -280,8 +267,8 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         entry = result["entries"][0]
-        self.assertFalse(entry["bread_preferred"]["Roggenbrot"])
-        self.assertFalse(entry["bread_preferred"]["Dinkelkruste"])
+        self.assertFalse(entry.bread_preferred["Roggenbrot"])
+        self.assertFalse(entry.bread_preferred["Dinkelkruste"])
 
     def test_getPickupList_memberPrefersMultipleBreads_onlyUndeliveredShowAsPreferred(
         self, mock_kc
@@ -313,13 +300,9 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         entry = result["entries"][0]
-        # Roggenbrot is preferred BUT already delivered → False
-        self.assertFalse(entry["bread_preferred"]["Roggenbrot"])
-        # Dinkelkruste and Vollkornbrot are preferred and NOT delivered → True
-        self.assertTrue(entry["bread_preferred"]["Dinkelkruste"])
-        self.assertTrue(entry["bread_preferred"]["Vollkornbrot"])
-
-    # ── Bread names ──────────────────────────────────────────────────
+        self.assertFalse(entry.bread_preferred["Roggenbrot"])
+        self.assertTrue(entry.bread_preferred["Dinkelkruste"])
+        self.assertTrue(entry.bread_preferred["Vollkornbrot"])
 
     def test_getPickupList_breadNamesIncludeAssignedAndDelivered(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
@@ -357,11 +340,8 @@ class TestPickupListService(TapirIntegrationTest):
             pickup_location_id=self.pickup_location.id,
         )
 
-        # No deliveries → no entries, but assigned bread names should appear
         self.assertEqual(result["entries"], [])
         self.assertIn("Roggenbrot", result["bread_names"])
-
-    # ── Filtering ────────────────────────────────────────────────────
 
     def test_getPickupList_differentPickupLocation_doesNotIncludeThoseDeliveries(
         self, mock_kc
@@ -424,8 +404,6 @@ class TestPickupListService(TapirIntegrationTest):
         self.assertEqual(result["entries"], [])
         self.assertEqual(result["grand_total"], 0)
 
-    # ── Breads list per entry ────────────────────────────────────────
-
     def test_getPickupList_sameMemberMultipleBreads_breadsListIsComplete(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
         delivery1 = self._create_delivery(subscription, bread=self.roggenbrot)
@@ -438,7 +416,7 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         entry = result["entries"][0]
-        bread_list = entry["breads"]
+        bread_list = entry.breads
         self.assertEqual(len(bread_list), 2)
 
         delivery_ids = {b["delivery_id"] for b in bread_list}
@@ -460,11 +438,9 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         entry = result["entries"][0]
-        self.assertEqual(len(entry["breads"]), 1)
-        self.assertEqual(entry["breads"][0]["delivery_id"], str(assigned.id))
-        self.assertEqual(entry["breads"][0]["bread_name"], "Roggenbrot")
-
-    # ── Same bread multiple times ────────────────────────────────────
+        self.assertEqual(len(entry.breads), 1)
+        self.assertEqual(entry.breads[0]["delivery_id"], str(assigned.id))
+        self.assertEqual(entry.breads[0]["bread_name"], "Roggenbrot")
 
     def test_getPickupList_sameBreadTwice_breadCountIsTwo(self, mock_kc):
         _member, subscription = self._create_member_with_subscription()
@@ -478,12 +454,10 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         entry = result["entries"][0]
-        self.assertEqual(entry["bread_counts"]["Roggenbrot"], 2)
-        self.assertEqual(entry["total"], 2)
-        self.assertEqual(entry["total_assigned"], 2)
-        self.assertEqual(len(entry["breads"]), 2)
-
-    # ── Member ID ────────────────────────────────────────────────────
+        self.assertEqual(entry.bread_counts["Roggenbrot"], 2)
+        self.assertEqual(entry.total, 2)
+        self.assertEqual(entry.total_assigned, 2)
+        self.assertEqual(len(entry.breads), 2)
 
     def test_getPickupList_entryContainsCorrectMemberId(self, mock_kc):
         member, subscription = self._create_member_with_subscription()
@@ -495,9 +469,7 @@ class TestPickupListService(TapirIntegrationTest):
             pickup_location_id=self.pickup_location.id,
         )
 
-        self.assertEqual(result["entries"][0]["member_id"], str(member.id))
-
-    # ── Mixed assigned and unassigned across members ─────────────────
+        self.assertEqual(result["entries"][0].member_id, str(member.id))
 
     def test_getPickupList_mixedAssignedAndUnassigned_grandTotalCountsAll(
         self, mock_kc
@@ -520,16 +492,10 @@ class TestPickupListService(TapirIntegrationTest):
         )
 
         self.assertEqual(result["grand_total"], 3)
-        # bread_totals should only count assigned breads
         self.assertEqual(result["bread_totals"].get("Roggenbrot", 0), 1)
         self.assertEqual(result["bread_totals"].get("Dinkelkruste", 0), 1)
 
     def test_getPickupList_sharedCache_costDoesNotGrowWithStations(self, mock_kc):
-        """
-        The Reports page renders every station of a day. One request per
-        station re-derived the whole week each time; with a shared cache the
-        cost has to stay flat.
-        """
         from django.db import connection
         from django.test.utils import CaptureQueriesContext
 
@@ -556,6 +522,4 @@ class TestPickupListService(TapirIntegrationTest):
                 )
 
         self.assertGreater(len(first), 0)
-        self.assertEqual(
-            len(rest), 0, "further stations must be answered from the cache"
-        )
+        self.assertEqual(len(rest), 0)

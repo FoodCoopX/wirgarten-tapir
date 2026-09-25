@@ -4,8 +4,7 @@ from ortools.sat.python import cp_model
 class BreadSolutionCollector(cp_model.CpSolverSolutionCallback):
     def __init__(self, max_solutions, extract_fn):
         super().__init__()
-        # Zero or less would make the memory bound below truncate the list to
-        # [:0] on every callback, reporting a solvable week as unsolvable.
+        # Zero or less would make the trim below truncate the list to [:0].
         self._max_solutions = max(1, max_solutions)
         self._extract_fn = extract_fn
         self._solutions = []
@@ -14,7 +13,6 @@ class BreadSolutionCollector(cp_model.CpSolverSolutionCallback):
         solution = self._extract_fn(self)
         solution["_objective"] = self.ObjectiveValue()
         self._solutions.append(solution)
-        # Keep memory bounded
         if len(self._solutions) > self._max_solutions * 3:
             self._solutions.sort(key=lambda s: s["_objective"], reverse=True)
             self._solutions = self._solutions[: self._max_solutions]
@@ -31,9 +29,8 @@ class BreadSolutionCollector(cp_model.CpSolverSolutionCallback):
         self._solutions.sort(key=lambda s: s["_objective"], reverse=True)
         best_obj = self._solutions[0]["_objective"]
 
-        # Filter: only keep solutions close to optimal
-        # Since objectives are negative (minimizing costs), "close" means
-        # not much worse (more negative)
+        # Objectives are negative (costs are minimized), so "close" means not
+        # much worse, i.e. more negative.
         if best_obj < 0:
             threshold = best_obj * 1.05  # allow 5% worse
         else:
@@ -45,7 +42,6 @@ class BreadSolutionCollector(cp_model.CpSolverSolutionCallback):
             if sol["_objective"] < threshold:
                 continue
 
-            # Deduplicate by session structure
             fp = _solution_fingerprint(sol)
             if fp in seen_fingerprints:
                 continue
@@ -63,8 +59,6 @@ class BreadSolutionCollector(cp_model.CpSolverSolutionCallback):
 
 
 def _solution_fingerprint(sol: dict) -> str:
-    """Create a fingerprint to detect duplicate solutions."""
-    # Stove sessions
     parts = []
     for sess in sol.get("stove_sessions", []):
         layer_parts = []
@@ -77,7 +71,6 @@ def _solution_fingerprint(sol: dict) -> str:
         parts.append("|".join(layer_parts))
     stove_fp = "||".join(sorted(parts))
 
-    # Distribution
     dist = sol.get("distribution", {})
     dist_parts = sorted(f"{k}={v}" for k, v in dist.items() if v > 0)
     dist_fp = ",".join(dist_parts)

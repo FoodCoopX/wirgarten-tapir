@@ -16,10 +16,8 @@ class BakeryAdminTemplateView(
     permission_required = Permission.Coop.MANAGE
 
     def get(self, request, *args, **kwargs):
-        # In get(), not dispatch(): the login and permission checks run first,
-        # so an unauthorised caller gets 401/403 and only somebody who may see
-        # the page learns that the feature is switched off.
-        if not get_parameter_value(ParameterKeys.BAKERY_A_ENABLED):
+        # In get(), not dispatch(): the login and permission checks run first.
+        if not get_parameter_value(ParameterKeys.BAKERY_ENABLED):
             raise Http404("Die Bäckerei-Funktion ist nicht aktiviert.")
         return super().get(request, *args, **kwargs)
 
@@ -42,18 +40,12 @@ class WeeklyPlanBreadsView(BakeryAdminTemplateView):
 
 
 class ChooseBreadsView(LoginRequiredMixin, TemplateView):
-    """
-    The one member-facing bakery page.
-
-    LoginRequiredMixin without raise_exception, like every other member page:
-    an anonymous caller is redirected to the login page rather than dead-ended
-    on a 403.
-    """
+    """The one member-facing bakery page."""
 
     template_name = "bakery/choose_breads.html"
 
     def get(self, request, *args, **kwargs):
-        if not get_parameter_value(ParameterKeys.BAKERY_A_ENABLED):
+        if not get_parameter_value(ParameterKeys.BAKERY_ENABLED):
             raise Http404("Die Bäckerei-Funktion ist nicht aktiviert.")
         return super().get(request, *args, **kwargs)
 
@@ -61,8 +53,7 @@ class ChooseBreadsView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         member_id = self.request.GET.get("member_id", self.request.user.pk)
-        # member_id is attacker-controlled, so it has to be checked before the
-        # page hands it to the bread-delivery and preference endpoints.
+        # member_id comes from the query string, so it has to be checked.
         check_permission_or_self(member_id, self.request)
 
         context["member_id"] = member_id

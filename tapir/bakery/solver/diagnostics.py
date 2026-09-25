@@ -40,7 +40,6 @@ def diagnose_infeasibility(
 
     total_deliveries = sum(loc.total_deliveries for loc in pickup_locations)
 
-    # ── 0. Check for breads with empty pieces_per_stove_layer ────────
     valid_breads = []
     for b in available_breads:
         if b.fixed_pieces is not None:
@@ -76,7 +75,6 @@ def diagnose_infeasibility(
 
     bread_map = {b.bread_id: b for b in valid_breads}
 
-    # ── 1. Check min_pieces > max_pieces ─────────────────────────────
     for b in valid_breads:
         if b.min_pieces is not None and b.max_pieces is not None:
             if b.min_pieces > b.max_pieces:
@@ -106,7 +104,6 @@ def diagnose_infeasibility(
                     )
                 )
 
-    # ── 2. Check fixed_demand vs capacity ────────────────────────────
     for loc in pickup_locations:
         if not loc.fixed_demand:
             continue
@@ -143,7 +140,6 @@ def diagnose_infeasibility(
                     )
                 )
 
-    # ── 3. Total fixed demand per bread vs achievable quantity ───────
     total_fixed_demand: dict[int, int] = {}
     for loc in pickup_locations:
         for bread_id, demand in (loc.fixed_demand or {}).items():
@@ -154,9 +150,6 @@ def diagnose_infeasibility(
         if b is None:
             continue
         if b.fixed_pieces is not None:
-            # A fixed_pieces bread is not baked out of stove layers, so the
-            # layer-based ceiling does not apply to it: its batch size is
-            # simply declared.
             max_achievable = b.fixed_pieces
         else:
             achievable = _get_achievable_quantities(b, max_sessions, stove_layers)
@@ -178,7 +171,6 @@ def diagnose_infeasibility(
                 )
             )
 
-    # ── 4. Check min_pieces achievable ───────────────────────────────
     for b in valid_breads:
         if b.fixed_pieces is not None:
             continue
@@ -229,7 +221,6 @@ def diagnose_infeasibility(
                 )
             )
 
-    # ── 5. Stove capacity vs total demand ────────────────────────────
     max_stove_capacity = (
         max_sessions
         * stove_layers
@@ -262,7 +253,6 @@ def diagnose_infeasibility(
                 )
             )
 
-    # ── 6. Total capacity across locations vs deliveries ─────────────
     for b in valid_breads:
         if b.fixed_pieces is not None:
             continue
@@ -287,7 +277,6 @@ def diagnose_infeasibility(
                     )
                 )
 
-    # ── 7. Total deliveries vs total capacity ────────────────────────
     total_capacity_all = sum(capacities.values())
     if total_deliveries > total_capacity_all:
         diagnostics.append(
@@ -303,8 +292,6 @@ def diagnose_infeasibility(
             )
         )
 
-    # ── 8. Total deliveries vs max deliverable bread ─────────────────
-    # Check if the sum of max deliverable breads can cover all deliveries
     total_max_deliverable = 0
     bread_max_details = []
     for b in valid_breads:
@@ -313,7 +300,6 @@ def diagnose_infeasibility(
         elif b.max_pieces is not None:
             max_baked = b.max_pieces
         else:
-            # Estimate max from stove capacity
             achievable = _get_achievable_quantities(b, max_sessions, stove_layers)
             max_baked = max(achievable) if achievable else 0
 
@@ -342,7 +328,6 @@ def diagnose_infeasibility(
             )
         )
 
-    # ── 9. Per-location: deliveries vs sum of capacities ─────────────
     for loc in pickup_locations:
         loc_total_cap = sum(
             capacities.get((b.bread_id, loc.location_id), 0) for b in valid_breads
@@ -361,7 +346,6 @@ def diagnose_infeasibility(
                 )
             )
 
-    # ── 10. Non-spanning breads: check max achievable in single session ──
     for b in valid_breads:
         if b.fixed_pieces is not None or b.can_span_sessions:
             continue
@@ -389,18 +373,11 @@ def diagnose_infeasibility(
 def _get_achievable_quantities(
     bread: BreadInfo, max_sessions: int, stove_layers: int
 ) -> set[int]:
-    """
-    Return the set of all achievable baked quantities for a bread,
-    given the number of sessions and layers.
-    """
     if not bread.pieces_per_stove_layer:
         return set()
 
     options = [0] + list(bread.pieces_per_stove_layer)
-    # A bread cannot use every session in the oven: C10 caps a non-spanning
-    # bread at one session and C11 caps a spanning one at two, so enumerating
-    # max_sessions * stove_layers layers would give a ceiling far above what
-    # the model can reach and the checks built on this set would never fire.
+    # C10 caps a non-spanning bread at one session, C11 a spanning one at two.
     sessions_for_bread = min(max_sessions, 2 if bread.can_span_sessions else 1)
     total_layers = sessions_for_bread * stove_layers
 

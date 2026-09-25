@@ -24,11 +24,8 @@ class BakingListService:
     @staticmethod
     def _rows_for_day(queryset, day: int | None) -> list:
         """
-        A week is planned either as a whole or day by day, and both shapes can
-        sit in the table at once. Rows for this day win; the whole-week rows
-        (delivery_day IS NULL) are the fallback for days the day-by-day runs
-        have not covered. Adding the two together would count the same loaves
-        twice.
+        Rows for this day win; the whole-week rows (delivery_day IS NULL) are
+        the fallback. Adding the two together would count the same loaves twice.
         """
         rows = list(queryset.filter(Q(delivery_day=day) | Q(delivery_day__isnull=True)))
         rows_for_day = [row for row in rows if row.delivery_day is not None]
@@ -36,19 +33,6 @@ class BakingListService:
 
     @staticmethod
     def get_baking_list(year: int, week: int, day: int) -> dict[str, Any]:
-        """
-        Returns:
-        {
-            "breads": [{"name": "Roggenbrot", "deliveries": 10, "baked": 12, "extra": 2}, ...],
-            "total_deliveries": 10,
-            "total_baked": 12,
-            "total_extra": 2,
-            "stove_sessions": [
-                {"session": 1, "layers": [{"layer": 1, "bread_name": "Roggenbrot", "quantity": 6}, ...]},
-                ...
-            ],
-        }
-        """
         location_ids = BakingListService.get_pickup_location_ids_for_day(day)
 
         bread_counts = BreadsPerPickupLocationPerWeek.objects.filter(
@@ -64,15 +48,12 @@ class BakingListService:
             day,
         )
 
-        # Build bread summary
         bread_map = {}
         for bc in bread_counts:
             name = bc.bread.name if bc.bread else "Unbekannt"
             bread_map.setdefault(name, {"deliveries": 0, "baked": 0})
             bread_map[name]["deliveries"] += bc.count
 
-        # "baked" is what the solver decided to bake rather than the sum of the
-        # stove layers: a bread with fixed_pieces occupies no layers.
         to_bake = BakingListService._rows_for_day(
             BreadsToBakePerWeek.objects.filter(
                 year=year, delivery_week=week
@@ -101,7 +82,6 @@ class BakingListService:
         total_deliveries = sum(b["deliveries"] for b in breads)
         total_baked = sum(b["baked"] for b in breads)
 
-        # Build stove session groups
         session_groups = {}
         for ss in stove_sessions:
             session_groups.setdefault(

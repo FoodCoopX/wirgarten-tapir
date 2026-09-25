@@ -15,8 +15,6 @@ class PreferredBreadStatisticsService:
         delivery_day: int | None,
         cache: dict,
     ) -> dict:
-
-        # Get all members with deliveries this week
         deliveries_by_location = (
             BreadDeliveryContextService.get_deliveries_by_location_for_week(
                 year=year,
@@ -27,11 +25,9 @@ class PreferredBreadStatisticsService:
         )
         deliveries = [d for ds in deliveries_by_location.values() for d in ds]
 
-        # Unique members with deliveries
         member_ids = list(set(d.subscription.member_id for d in deliveries))
         total_members = len(member_ids)
 
-        # Get preferred breads for these members
         preferred_qs = PreferredBread.objects.filter(
             member_id__in=member_ids
         ).prefetch_related("breads")
@@ -49,13 +45,11 @@ class PreferredBreadStatisticsService:
             else:
                 members_without_preferences += 1
 
-        # Members with no PreferredBread entry at all
         members_with_pref_entry = set(p.member_id for p in preferred_qs)
         members_without_preferences += sum(
             1 for m_id in member_ids if m_id not in members_with_pref_entry
         )
 
-        # Sort by count descending
         bread_statistics = sorted(
             [
                 {

@@ -12,10 +12,6 @@ def collect_solver_input(
     delivery_week: int,
     delivery_day: int | None = None,
 ) -> dict | None:
-    """
-    Pull data from Django models and return solver input as a dict.
-    Returns None if there's no data to solve.
-    """
     from collections import defaultdict
 
     from tapir.bakery.models import (
@@ -32,8 +28,6 @@ def collect_solver_input(
     from tapir.wirgarten.parameter_keys import ParameterKeys
     from tapir.wirgarten.utils import get_parameter_value
 
-    # Shared by the delivery grouping and the capacity filter below, which
-    # both need the station weekdays.
     tapir_cache = {}
 
     logger.debug("\n" + "=" * 80)
@@ -42,13 +36,10 @@ def collect_solver_input(
     )
     logger.debug("=" * 80)
 
-    # Get stove layers from parameter
     stove_layers = get_parameter_value(ParameterKeys.BAKERY_STOVE_LAYERS)
     if stove_layers is None:
         stove_layers = 4
     stove_layers = int(stove_layers)
-
-    # ── Available breads ─────────────────────────────────────────────
 
     available_qs = AvailableBreadsForDeliveryDay.objects.filter(
         year=year, delivery_week=delivery_week
@@ -59,16 +50,12 @@ def collect_solver_input(
     available_bread_ids = available_qs.values_list("bread_id", flat=True).distinct()
     breads_qs = Bread.objects.filter(id__in=available_bread_ids, is_active=True)
 
-    # ── Day-specific overrides ───────────────────────────────────────
-
     specifics_qs = BreadSpecificsPerDeliveryDay.objects.filter(
         year=year, delivery_week=delivery_week
     )
     if delivery_day is not None:
         specifics_qs = specifics_qs.filter(delivery_day=delivery_day)
 
-    # Keyed by bread. A whole-week run does not narrow by day, so a bread with
-    # per-day rows on several days has no unambiguous override and gets none.
     specifics_by_bread = {}
     ambiguous_bread_ids = set()
     for specifics in specifics_qs:
@@ -86,8 +73,6 @@ def collect_solver_input(
         )
         specifics_by_bread.pop(bread_id, None)
 
-    # ── Build BreadInfo list with overrides ──────────────────────────
-
     available_breads = []
     for b in breads_qs:
         specifics = specifics_by_bread.get(b.id)
@@ -95,7 +80,6 @@ def collect_solver_input(
 
         if specifics and specifics.fixed_pieces is not None:
             fixed_pieces = specifics.fixed_pieces
-            # fixed_pieces overrides min/max entirely
             min_pieces = None
             max_pieces = None
         else:
@@ -133,10 +117,6 @@ def collect_solver_input(
         logger.debug("No available breads found!")
         return None
 
-    # ── Deliveries ───────────────────────────────────────────────────
-
-    # The station a slot belongs to and whether its week was jokered away are
-    # both derived; the service excludes jokered slots.
     deliveries_by_location = (
         BreadDeliveryContextService.get_deliveries_by_location_for_week(
             year=year,
@@ -149,8 +129,6 @@ def collect_solver_input(
     if not deliveries_by_location:
         logger.debug("No deliveries found!")
         return None
-
-    # ── Pickup locations ─────────────────────────────────────────────
 
     pickup_locations = []
     for location_id, location_deliveries in deliveries_by_location.items():
@@ -174,11 +152,9 @@ def collect_solver_input(
         logger.debug("No pickup locations found!")
         return None
 
-    # ── Capacities ───────────────────────────────────────────────────
-
     caps_qs = BreadCapacityPickupLocation.objects.filter(
         year=year, delivery_week=delivery_week
-    )  # no select_related: only the local id columns and capacity are read
+    )
 
     if delivery_day is not None:
         delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(
@@ -232,7 +208,6 @@ def save_solution_to_db(
     delivery_day: int | None,
     solution: dict,
 ) -> None:
-    """Save a solver solution dict to the database."""
     from django.db import transaction
 
     from tapir.bakery.models import (
@@ -246,9 +221,8 @@ def save_solution_to_db(
     )
 
     with transaction.atomic():
-        # Scoped to every location delivering on this day, not just the ones
-        # the new solution mentions: a location that dropped out between runs
-        # would otherwise keep its stale counts.
+        # Every location delivering on this day, not just the ones the new
+        # solution mentions: one that dropped out would keep stale counts.
         if delivery_day is not None:
             location_ids = BakingListService.get_pickup_location_ids_for_day(
                 delivery_day
@@ -277,7 +251,6 @@ def save_solution_to_db(
             delete_qty_qs = delete_qty_qs.filter(delivery_day=delivery_day)
         delete_qty_qs.delete()
 
-        # Create distribution records
         dist_objects = []
         for key, count in solution["distribution"].items():
             if count > 0:
@@ -297,7 +270,6 @@ def save_solution_to_db(
         if dist_objects:
             BreadsPerPickupLocationPerWeek.objects.bulk_create(dist_objects)
 
-        # Create stove session records — only for used layers
         session_objects = []
         for sess_num, session in enumerate(solution["stove_sessions"], start=1):
             for layer_num, layer_info in enumerate(session, start=1):
@@ -318,9 +290,6 @@ def save_solution_to_db(
         if session_objects:
             StoveSession.objects.bulk_create(session_objects)
 
-        # What to bake, straight from the solution: summing stove layers
-        # instead would lose every bread with fixed_pieces, which occupies no
-        # layers.
         remaining = solution.get("remaining_quantities") or {}
         BreadsToBakePerWeek.objects.bulk_create(
             [
@@ -337,8 +306,6 @@ def save_solution_to_db(
             ]
         )
 
-        # Same transaction: the satisfaction figures describe the rows written
-        # just above, and figures from a different plan would be misleading.
         PreferenceSatisfactionService.log_satisfaction(
             year=year,
             delivery_week=delivery_week,
@@ -354,11 +321,6 @@ def solve_and_save(
     max_solutions: int = 1,
     solution_index: int = 0,
 ) -> SolverResult:
-    """
-    Pull data, run solver, save results back to DB.
-
-    Always returns a SolverResult. Check result.is_ok for success.
-    """
     from tapir.bakery.solver.dataclasses import SolverDiagnostic
 
     solver_input = collect_solver_input(year, delivery_week, delivery_day)
@@ -411,7 +373,6 @@ def solve_and_save(
         }
         save_solution_to_db(year, delivery_week, delivery_day, solution_dict)
 
-    # Always print the summary
     logger.debug(result.summary())
 
     return result

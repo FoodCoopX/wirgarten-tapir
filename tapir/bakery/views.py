@@ -1,5 +1,10 @@
 from django.core.cache import cache
-from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    OpenApiTypes,
+    extend_schema,
+)
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -9,11 +14,16 @@ from rest_framework.views import APIView
 from tapir.bakery.models import (
     AvailableBreadsForDeliveryDay,
     Bread,
+    BreadCapacityPickupLocation,
 )
 from tapir.bakery.serializers import (
     AvailableBreadsForDeliveryListResponseSerializer,
+    BreadCapacityAllocationResponseSerializer,
+    BreadCapacityBulkUpdateSerializer,
     BreadListSerializer,
+    DeliveryDaysResponseSerializer,
     PickupListsResponseSerializer,
+    PickupLocationsByDeliveryDayResponseSerializer,
     PreferenceSatisfactionResponseSerializer,
     PreferredBreadStatisticsSerializer,
     SolverApplyRequestSerializer,
@@ -38,6 +48,13 @@ from tapir.bakery.services.preferred_bread_statistics_service import (
 )
 from tapir.bakery.utils import parse_week_params
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
+)
+from tapir.pickup_locations.services.public_pickup_locations_provider import (
+    PublicPickupLocationProvider,
+)
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import PickupLocation
 
 
@@ -76,10 +93,6 @@ class AvailableBreadsForDeliveryListView(APIView):
             .order_by("bread__name")
         )
 
-        # Through the serializer this endpoint advertises. Hand-building
-        # {"id", "name"} here produced an object the generated client cannot
-        # parse: contents is a required array on BreadList, and the client
-        # maps over it without a null check.
         return Response(
             {
                 "year": year,
@@ -145,8 +158,6 @@ class AvailableBreadsForDeliveryListView(APIView):
 
 
 class PickupListView(APIView):
-    # pickup_location_id comes straight from the query string, and the
-    # response is a station's member roster.
     permission_classes = [IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
@@ -219,15 +230,10 @@ SOLVER_CACHE_TIMEOUT_SECONDS = 3600
 
 
 def _bread_names(bread_ids) -> dict:
-    """Bread id -> name for the ids a solver result mentions, in one query."""
     return dict(Bread.objects.filter(id__in=bread_ids).values_list("id", "name"))
 
 
 def _solver_cache_key(year, delivery_week, delivery_day) -> str:
-    """
-    One owner for the key. Preview writes it, detail and apply read it, and
-    all three have to agree down to how delivery_day=None stringifies.
-    """
     return f"solver_solutions_{year}_{delivery_week}_{delivery_day}"
 
 
@@ -295,7 +301,6 @@ class SolverPreviewView(APIView):
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
-        # Cache all solutions
         cache_key = _solver_cache_key(year, delivery_week, delivery_day)
         cache.set(cache_key, results, timeout=SOLVER_CACHE_TIMEOUT_SECONDS)
 
@@ -304,7 +309,6 @@ class SolverPreviewView(APIView):
             all_bread_ids.update(r["bread_quantities"].keys())
         bread_names = _bread_names(all_bread_ids)
 
-        # Build summaries
         summaries = []
         for i, result in enumerate(results):
             quantities = []
@@ -391,8 +395,6 @@ class SolverPreviewDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Clamped at both ends: a negative value would otherwise reach
-        # Python's negative indexing and select a different solution.
         solution_index = max(0, min(solution_index, len(results) - 1))
         result = results[solution_index]
 
@@ -403,7 +405,6 @@ class SolverPreviewDetailView(APIView):
         bread_names = _bread_names(all_bread_ids)
         location_names = dict(PickupLocation.objects.values_list("id", "name"))
 
-        # Format quantities
         quantities = []
         for b_id, qty in result["bread_quantities"].items():
             if qty > 0:
@@ -418,7 +419,6 @@ class SolverPreviewDetailView(APIView):
                     }
                 )
 
-        # Format stove sessions
         stove_sessions = []
         for i, session in enumerate(result["stove_sessions"]):
             layers = []
@@ -437,7 +437,6 @@ class SolverPreviewDetailView(APIView):
                     )
             stove_sessions.append({"session": i + 1, "layers": layers})
 
-        # Format distribution
         distribution = []
         for key, count in result["distribution"].items():
             if count > 0:
@@ -517,8 +516,6 @@ class SolverApplyView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Clamped at both ends: a negative value would otherwise reach
-        # Python's negative indexing and apply a different solution.
         solution_index = max(0, min(solution_index, len(results) - 1))
         chosen = results[solution_index]
 
@@ -537,18 +534,6 @@ class SolverApplyView(APIView):
 
 @extend_schema(tags=["bakery"])
 class PreferenceSatisfactionMetricsView(APIView):
-    """
-    Calculate preference satisfaction metrics from existing data.
-
-    For each pickup location, counts how many deliveries can be "satisfied":
-    - Directly chosen bread (hard constraint in solver) → satisfied
-    - Member has no favorites set → satisfied (everything is fine for them)
-    - Member has favorites → simulate pickup: first available favorite gets picked
-
-    The remaining deliveries are "no match" (member has favorites but none available).
-    """
-
-    # Returns member names, ids and bread preferences for the whole co-op.
     permission_classes = [IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
@@ -584,8 +569,6 @@ class PreferredBreadStatisticsView(APIView):
     Count how many members (with active BreadDelivery) prefer each bread type.
     """
 
-    # Its only consumer is DashboardPreferredBreadStats on the admin
-    # dashboard, which already requires this permission.
     permission_classes = [IsAuthenticated, HasCoopManagePermission]
 
     @extend_schema(
@@ -612,3 +595,157 @@ class PreferredBreadStatisticsView(APIView):
                 cache={},
             )
         )
+
+
+@extend_schema(tags=["bakery"])
+class DeliveryDaysView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Get distinct list of delivery days",
+        description="Returns the earliest delivery day per pickup location, 0=Montag.",
+        responses={200: DeliveryDaysResponseSerializer},
+    )
+    def get(self, request):
+        delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache={})
+        return Response({"days": sorted(set(delivery_days.values()))})
+
+
+@extend_schema(tags=["bakery"])
+class PickupLocationsByDeliveryDayView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Get pickup locations filtered by delivery day",
+        parameters=[
+            OpenApiParameter(
+                name="day_of_week",
+                type=int,
+                description="Day of week, 0=Montag to 6=Sonntag",
+                required=True,
+            )
+        ],
+        responses={200: PickupLocationsByDeliveryDayResponseSerializer},
+    )
+    def get(self, request):
+        try:
+            day_of_week = int(request.query_params.get("day_of_week"))
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "day_of_week must be a number (0-6)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cache = {}
+        pickup_location_ids = (
+            PickupLocationDeliveryDayService.get_pickup_location_ids_for_delivery_day(
+                day=day_of_week, cache=cache
+            )
+        )
+        pickup_locations = (
+            PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+                cache=cache
+            ).filter(id__in=pickup_location_ids)
+        )
+
+        return Response(
+            {
+                "pickup_locations": [
+                    {"id": pickup_location.id, "name": pickup_location.name}
+                    for pickup_location in pickup_locations
+                ]
+            }
+        )
+
+
+@extend_schema(tags=["bakery"])
+class BreadCapacityAllocationView(APIView):
+    """The capacities of one delivery day, shaped the way the allocation table needs them."""
+
+    permission_classes = [IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        summary="Get the bread capacities of every station delivered on a weekday",
+        parameters=[
+            OpenApiParameter(name="year", type=int, required=True),
+            OpenApiParameter(name="delivery_week", type=int, required=True),
+            OpenApiParameter(name="delivery_day", type=int, required=True),
+        ],
+        responses={200: BreadCapacityAllocationResponseSerializer},
+    )
+    def get(self, request: Request) -> Response:
+        result = parse_week_params(request.query_params)
+        if isinstance(result, Response):
+            return result
+
+        year, delivery_week, delivery_day = result
+        if delivery_day is None:
+            return Response(
+                {"error": "Missing required parameter: delivery_day"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cache = {}
+        pickup_location_ids = (
+            PickupLocationDeliveryDayService.get_pickup_location_ids_for_delivery_day(
+                day=delivery_day, cache=cache
+            )
+        )
+        pickup_locations = (
+            PublicPickupLocationProvider.get_pickup_locations_available_for_members(
+                cache=cache
+            ).filter(id__in=pickup_location_ids)
+        )
+
+        allocations = {pickup_location.id: {} for pickup_location in pickup_locations}
+        capacities = BreadCapacityPickupLocation.objects.filter(
+            year=year,
+            delivery_week=delivery_week,
+            pickup_location_id__in=allocations.keys(),
+        )
+        for capacity in capacities:
+            allocations[capacity.pickup_location_id][
+                capacity.bread_id
+            ] = capacity.capacity
+
+        return Response(
+            BreadCapacityAllocationResponseSerializer(
+                {
+                    "pickup_locations": [
+                        {"id": pickup_location.id, "name": pickup_location.name}
+                        for pickup_location in pickup_locations
+                    ],
+                    "allocations": allocations,
+                }
+            ).data
+        )
+
+    @extend_schema(
+        summary="Create, update and delete bread capacities in one request",
+        request=BreadCapacityBulkUpdateSerializer,
+        responses={
+            200: OpenApiResponse(description='{"status": "success"}'),
+            400: OpenApiResponse(description="Validation errors"),
+        },
+    )
+    def post(self, request: Request) -> Response:
+        serializer = BreadCapacityBulkUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        for update in data["updates"]:
+            keys = {
+                "year": data["year"],
+                "delivery_week": data["delivery_week"],
+                "pickup_location_id": update["pickup_location"].pk,
+                "bread_id": update["bread"].pk,
+            }
+            capacity = update.get("capacity")
+            if capacity is None:
+                BreadCapacityPickupLocation.objects.filter(**keys).delete()
+            else:
+                BreadCapacityPickupLocation.objects.update_or_create(
+                    **keys, defaults={"capacity": capacity}
+                )
+
+        return Response({"status": "success"})

@@ -114,8 +114,6 @@ def pickup_lists_all_pdf(request, year: int, week: int, day: int):
     except InvalidWeek:
         return HttpResponse("Ungültige Kalenderwoche.", status=400)
 
-    # Built once outside the loop: the location weekdays and the grouping of
-    # the week's deliveries by station are shared across every station here.
     cache = {}
     delivery_days = TapirCache.get_delivery_day_by_pickup_location_id(cache=cache)
     pickup_locations = sorted(

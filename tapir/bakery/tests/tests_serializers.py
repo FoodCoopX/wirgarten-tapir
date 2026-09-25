@@ -13,25 +13,21 @@ from tapir.bakery.tests.tests_viewsets import (
     DAY,
     WEEK,
     YEAR,
-    create_pickup_location_with_delivery_day,
+)
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestBreadDeliverySerializerDeliveryDay(TapirIntegrationTest):
-    """
-    delivery_day is derived from the pickup location's opening times, so it is
-    a method field backed by a cached accessor rather than a source= path into
-    a model property that queried once per row.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def _create_deliveries(self, count, day=DAY):
-        pickup_location = create_pickup_location_with_delivery_day(day)
+        pickup_location = create_pickup_location_with_opening_times([day])
         subscription = BreadSubscriptionFactory.create()
         for slot_number in range(1, count + 1):
             BreadDeliveryFactory.create(
@@ -70,9 +66,6 @@ class TestBreadDeliverySerializerDeliveryDay(TapirIntegrationTest):
         self.assertIsNone(data[0]["delivery_day"])
 
     def test_derivedFields_costDoesNotGrowWithTheNumberOfRows(self):
-        # The point of the derivation service: the pickup-location history, the
-        # jokers, the weekdays and the locations are each loaded once for the
-        # whole render rather than once per row.
         five = self._create_deliveries(5)
         with CaptureQueriesContext(connection) as for_five:
             data = BreadDeliverySerializer(five, many=True).data
@@ -87,11 +80,6 @@ class TestBreadDeliverySerializerDeliveryDay(TapirIntegrationTest):
 
 
 class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
-    """
-    A bread is chosen against the capacity its station has for that week, so
-    the serializer rejects one the member's station does not bake.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -107,7 +95,7 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         )
 
     def test_validate_breadAvailableAtTheStation_isAccepted(self):
-        pickup_location = create_pickup_location_with_delivery_day(DAY)
+        pickup_location = create_pickup_location_with_opening_times([DAY])
         delivery = self._delivery(pickup_location)
         bread = BreadFactory.create(name="Roggenbrot")
         BreadCapacityPickupLocationFactory.create(
@@ -125,7 +113,7 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
     def test_validate_breadNotBakedAtTheStation_isRejected(self):
-        delivery = self._delivery(create_pickup_location_with_delivery_day(DAY))
+        delivery = self._delivery(create_pickup_location_with_opening_times([DAY]))
         bread = BreadFactory.create(name="Roggenbrot")
 
         serializer = BreadDeliverySerializer(
@@ -136,7 +124,7 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         self.assertIn("bread", serializer.errors)
 
     def test_validate_clearingTheChoice_isAccepted(self):
-        delivery = self._delivery(create_pickup_location_with_delivery_day(DAY))
+        delivery = self._delivery(create_pickup_location_with_opening_times([DAY]))
 
         serializer = BreadDeliverySerializer(
             delivery, data={"bread": None}, partial=True
@@ -145,8 +133,6 @@ class TestBreadDeliverySerializerBreadValidation(TapirIntegrationTest):
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
     def test_validate_memberWithoutAStation_isAccepted(self):
-        # Nothing to check the bread against, so the choice is not blocked by
-        # missing setup.
         delivery = BreadDeliveryFactory.create(
             subscription=BreadSubscriptionFactory.create(),
             year=YEAR,

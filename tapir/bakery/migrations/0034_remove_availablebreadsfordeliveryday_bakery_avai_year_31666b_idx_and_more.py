@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("bakery", "0033_alter_stovesession_delivery_day_breadstobakeperweek"),
-        ("wirgarten", "0100_producttype_is_bread"),
+        ("wirgarten", "0099_member_pseudonym"),
     ]
 
     operations = [

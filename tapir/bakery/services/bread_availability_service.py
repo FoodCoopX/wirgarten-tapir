@@ -9,13 +9,7 @@ from tapir.bakery.services.bread_delivery_context_service import (
 
 
 class BreadAvailabilityService:
-    """
-    Whether a bread may be put on a delivery slot.
-
-    A bread is chosen against the capacity its station has for that week, so
-    the answer depends on the station the member resolves to - which is why
-    this takes the delivery rather than a location id.
-    """
+    """Whether a bread may be put on a delivery slot."""
 
     @classmethod
     def is_bread_available_at_location(
@@ -58,11 +52,7 @@ class BreadAvailabilityService:
         Narrow a Bread queryset to what the station still has room for that
         week, annotated with capacity, delivery_count and available_capacity.
 
-        The station a delivery belongs to is derived, so the counts are
-        gathered in Python and fed back in as a Case expression, which keeps
-        available_capacity filterable in SQL. Only slots with a bread on them
-        consume capacity, and a jokered slot is not delivered at all, so
-        neither is counted.
+        A jokered slot is not delivered, so it does not consume capacity.
         """
         delivery_counts = Counter(
             delivery.bread_id
@@ -71,10 +61,7 @@ class BreadAvailabilityService:
                 delivery_week=delivery_week,
                 pickup_location_id=pickup_location_id,
                 cache=cache,
-                queryset=BreadDelivery.objects.filter(
-                    bread__isnull=False,
-                    subscription__product__type__is_bread=True,
-                ),
+                queryset=BreadDelivery.objects.filter(bread__isnull=False),
             )
         )
 

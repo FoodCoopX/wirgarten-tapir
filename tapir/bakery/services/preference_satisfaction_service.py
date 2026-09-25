@@ -31,8 +31,6 @@ class PreferenceSatisfactionService:
         delivery_day: int | None,
         cache: dict,
     ) -> dict:
-        # The station and the joker status are derived; the service leaves
-        # jokered slots out.
         deliveries_by_location = (
             BreadDeliveryContextService.get_deliveries_by_location_for_week(
                 year=year,
@@ -67,12 +65,10 @@ class PreferenceSatisfactionService:
             member_id__in=member_ids
         ).prefetch_related("breads")
 
-        # member_id -> list of favorite bread ids (ordered)
         # Members NOT in this dict have no PreferredBread entry at all
         member_favorites = {}
         for pref in preferred_breads_qs:
-            # .all() reads the prefetch cache; any other queryset method on a
-            # prefetched related manager bypasses it and queries per member.
+            # .all() reads the prefetch cache; any other method queries per member.
             member_favorites[pref.member_id] = [bread.id for bread in pref.breads.all()]
 
         location_metrics = []
@@ -82,7 +78,6 @@ class PreferenceSatisfactionService:
                 cache=cache, pickup_location_id=location_id
             )
 
-            # Available breads at this location (from solver)
             available_breads_count = {}
             bread_breakdown = defaultdict(lambda: {"count": 0, "directly_chosen": 0})
 
@@ -97,10 +92,8 @@ class PreferenceSatisfactionService:
             got_favorite_count = 0
             no_match_count = 0
 
-            # Assignment log for debugging
             assignment_log = []
 
-            # 1) Process directly chosen breads first
             for delivery in location_deliveries:
                 if delivery.bread_id:
                     directly_chosen_count += 1
@@ -129,7 +122,6 @@ class PreferenceSatisfactionService:
                     if delivery.bread_id in bread_breakdown:
                         bread_breakdown[delivery.bread_id]["directly_chosen"] += 1
 
-            # 2) Process unassigned deliveries
             unassigned_deliveries = [d for d in location_deliveries if not d.bread_id]
             unassigned_deliveries.sort(
                 key=lambda d: (
@@ -141,7 +133,6 @@ class PreferenceSatisfactionService:
             for delivery in unassigned_deliveries:
                 member = delivery.subscription.member
 
-                # Member has no favorites set → everything is fine for them
                 if member.id not in member_favorites:
                     no_favorites_count += 1
                     assignment_log.append(
@@ -158,7 +149,6 @@ class PreferenceSatisfactionService:
 
                 favorite_bread_ids = member_favorites[member.id]
 
-                # Member has empty favorites list → same as no favorites
                 if not favorite_bread_ids:
                     no_favorites_count += 1
                     assignment_log.append(
@@ -178,7 +168,6 @@ class PreferenceSatisfactionService:
                     for b_id in favorite_bread_ids
                 ]
 
-                # Try to assign first available favorite
                 assigned = False
                 for bread_id in favorite_bread_ids:
                     if (
@@ -217,7 +206,6 @@ class PreferenceSatisfactionService:
                         }
                     )
 
-            # "Satisfied" = directly chosen + no favorites (happy with anything) + got a favorite
             satisfied_count = (
                 directly_chosen_count + no_favorites_count + got_favorite_count
             )
@@ -227,7 +215,6 @@ class PreferenceSatisfactionService:
                 else 0.0
             )
 
-            # Bread breakdown list (just count + directly_chosen now)
             bread_breakdown_list = []
             for bread_id, bd_data in bread_breakdown.items():
                 if bd_data["count"] > 0:
@@ -280,13 +267,7 @@ class PreferenceSatisfactionService:
         """
         Persist how well the plan that was just saved matches what members want.
 
-        Right after a solver run is the only moment the number means anything:
-        it describes that distribution, and the next run for the same week
-        replaces it.
-
-        A station with no opening times has no delivery day, and the model has
-        no column for that, so it is left out rather than logged under a
-        made-up day.
+        A station with no delivery day is left out: the model has no column for it.
         """
         metrics = cls.get_metrics(
             year=year,
@@ -302,8 +283,6 @@ class PreferenceSatisfactionService:
         if not loggable:
             return 0
 
-        # Replace rather than update: the week's plan was just rewritten, and
-        # a station may have dropped out of it entirely.
         PreferenceSatisfactionLogging.objects.filter(
             year=year,
             delivery_week=delivery_week,

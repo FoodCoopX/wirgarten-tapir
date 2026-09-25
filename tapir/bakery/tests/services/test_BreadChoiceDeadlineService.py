@@ -12,7 +12,9 @@ from tapir.bakery.tests.factories import (
     BreadFactory,
     BreadSubscriptionFactory,
 )
-from tapir.bakery.tests.tests_viewsets import create_pickup_location_with_delivery_day
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
+)
 from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -24,15 +26,14 @@ DAY = 4  # Freitag
 
 
 class TestBreadChoiceDeadline(TapirIntegrationTest):
-    """The deadline is enforced on the server, not only in the browser."""
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         super().setUp()
-        self.pickup_location = create_pickup_location_with_delivery_day(DAY)
+        self._set_parameter(ParameterKeys.BAKERY_MEMBERS_CAN_CHOOSE_BREAD_SORTS, True)
+        self.pickup_location = create_pickup_location_with_opening_times([DAY])
         self.bread = BreadFactory.create()
 
     def _delivery(self, member, year, week):
@@ -58,8 +59,6 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
             content_type="application/json",
         )
 
-    # ── the rule itself ───────────────────────────────────────────────
-
     def test_getDeadline_isBakingAndChoosingOffsetsBeforeTheStationsDeliveryDay(self):
         # Seeded offsets are 1 baking day + 2 choosing days = 3.
         year, week, _ = get_today().isocalendar()
@@ -74,7 +73,6 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
         self.assertEqual((delivery_date - deadline).days, 3)
 
     def test_canStillChoose_stationWithNoOpeningTimes_staysOpen(self):
-        # Nothing to enforce against, so missing setup must not block a member.
         from tapir.wirgarten.tests.factories import PickupLocationFactory
 
         year, week, _ = get_today().isocalendar()
@@ -83,8 +81,6 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
                 year, week, PickupLocationFactory.create().id, cache={}
             )
         )
-
-    # ── enforcement on the write path ─────────────────────────────────
 
     def test_patch_weekWhoseDeadlineHasPassed_isRejected(self):
         member = MemberFactory.create()
@@ -127,7 +123,6 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
         self.assertIn("freigegeben", response.json()["error"])
 
     def test_patch_staffAfterTheDeadline_isAccepted(self):
-        # Someone answering the phone has to be able to fix a past week.
         member = MemberFactory.create()
         delivery = self._delivery(member, 2020, 7)
         self.client.force_login(MemberFactory.create(is_superuser=True))

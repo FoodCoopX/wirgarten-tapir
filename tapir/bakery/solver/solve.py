@@ -12,10 +12,6 @@ from tapir.bakery.solver.dataclasses import (
 from tapir.bakery.solver.diagnostics import diagnose_infeasibility
 from tapir.bakery.solver.solver_model import build_model, extract_solution
 
-# ---------------------------------------------------------------------------
-# Core solver — single implementation for both preview and apply
-# ---------------------------------------------------------------------------
-
 
 def _run_solver(
     available_breads: list[BreadInfo],
@@ -28,15 +24,10 @@ def _run_solver(
     member_preferences: list[dict] | None = None,
 ) -> tuple[list[dict], list[SolverDiagnostic], str]:
     """
-    Core solver. Returns (solutions, diagnostics, status_str).
-
-    solutions: list of solution dicts (may be empty)
-    diagnostics: list of SolverDiagnostic
-    status_str: one of 'optimal', 'feasible', 'infeasible', 'error', 'no_data', 'no_solutions'
+    status_str is one of 'optimal', 'feasible', 'infeasible', 'error',
+    'no_data', 'no_solutions'.
     """
     diagnostics: list[SolverDiagnostic] = []
-
-    # ── Validation ────────────────────────────────────────────────────
 
     if not available_breads:
         diagnostics.append(
@@ -78,30 +69,20 @@ def _run_solver(
             )
             return [], diagnostics, "no_data"
 
-    # ── Pre-solve diagnostics ─────────────────────────────────────────
-
     pre_diagnostics = diagnose_infeasibility(
         available_breads, pickup_locations, capacities, max_sessions, stove_layers
     )
     diagnostics.extend(pre_diagnostics)
 
     # An over-subscribed capacity makes distribution_vars an int var with
-    # lb > ub, and CP-SAT answers MODEL_INVALID rather than INFEASIBLE, which
-    # the generic arm below would report as a time-limit problem. The
-    # diagnostic one step up already names the bread and the station, so stop
-    # here and hand that back. Only this category is fatal: the other
-    # error-level checks are estimates the model can still satisfy.
+    # lb > ub, and CP-SAT answers MODEL_INVALID rather than INFEASIBLE. Only
+    # this category is fatal: the other error-level checks are estimates.
     if any(
         diagnostic.category == "fixed_demand_exceeds_capacity"
         for diagnostic in pre_diagnostics
     ):
         return [], diagnostics, "infeasible"
 
-    # ── Build model ───────────────────────────────────────────────────
-
-    # Always on: C12 only forces used sessions to come first, which cannot
-    # rule out a distinct plan, and the collector fingerprints sessions in
-    # sorted order, so the extra permutations would only be thrown away.
     model, v = build_model(
         available_breads,
         pickup_locations,
@@ -111,8 +92,6 @@ def _run_solver(
         symmetry_breaking=True,
         member_preferences=member_preferences,
     )
-
-    # ── Solve ─────────────────────────────────────────────────────────
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_seconds
@@ -131,8 +110,6 @@ def _run_solver(
 
     collector = BreadSolutionCollector(max_solutions, make_extractor(v))
     solve_status = solver.solve(model, collector)
-
-    # ── Handle solver status ──────────────────────────────────────────
 
     if solve_status == cp_model.INFEASIBLE:
         diagnostics.append(
@@ -172,8 +149,6 @@ def _run_solver(
     if not collector.solutions:
         return [], diagnostics, "no_solutions"
 
-    # ── Extract & print solutions ─────────────────────────────────────
-
     solutions = collector.get_best_solutions()
 
     if not solutions:
@@ -182,11 +157,6 @@ def _run_solver(
     result_status = "optimal" if solve_status == cp_model.OPTIMAL else "feasible"
 
     return solutions, diagnostics, result_status
-
-
-# ---------------------------------------------------------------------------
-# Public API — thin wrappers
-# ---------------------------------------------------------------------------
 
 
 def solve_bread_planning(
@@ -200,9 +170,6 @@ def solve_bread_planning(
     solution_index: int = 0,
     member_preferences: list[dict] | None = None,
 ) -> SolverResult:
-    """
-    Solve and return a single SolverResult (used by solve_and_save / apply).
-    """
     solutions, diagnostics, status_str = _run_solver(
         available_breads=available_breads,
         pickup_locations=pickup_locations,
@@ -243,9 +210,6 @@ def solve_bread_planning_all(
     max_solutions: int = 10,
     member_preferences: list[dict] | None = None,
 ) -> dict:
-    """
-    Solve and return all solutions as raw dicts (used by the preview view).
-    """
     solutions, diagnostics, status_str = _run_solver(
         available_breads=available_breads,
         pickup_locations=pickup_locations,

@@ -17,7 +17,9 @@ from tapir.bakery.tests.factories import (
     BreadsPerPickupLocationPerWeekFactory,
     enable_bakery,
 )
-from tapir.wirgarten.models import PickupLocationOpeningTime
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
+)
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -28,18 +30,6 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 YEAR = 2026
 WEEK = 11
 DAY = 3
-
-
-def create_pickup_location_with_delivery_day(day, **kwargs):
-    """Create a PickupLocation with an opening time on the given day_of_week."""
-    pl = PickupLocationFactory.create(**kwargs)
-    PickupLocationOpeningTime.objects.create(
-        pickup_location=pl,
-        day_of_week=day,
-        open_time="08:00",
-        close_time="18:00",
-    )
-    return pl
 
 
 class TestAvailableBreadsForDeliveryListViewGet(TapirIntegrationTest):
@@ -344,8 +334,6 @@ class TestPickupListView(TapirIntegrationTest):
         self.assertIn("Roggenbrot", pickup_list["bread_names"])
 
     def test_get_severalStationsInOneRequest_returnsOneListEach(self):
-        # The point of the batched form: one request, one shared cache, so the
-        # week is grouped once instead of once per station.
         self.client.force_login(MemberFactory.create(is_superuser=True))
         first = PickupLocationFactory.create()
         second = PickupLocationFactory.create()
@@ -681,7 +669,7 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
     def test_get_withDeliveriesAndSolverResults_returnsMetrics(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        pl = create_pickup_location_with_delivery_day(DAY, name="Hofladen")
+        pl = create_pickup_location_with_opening_times([DAY], name="Hofladen")
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
         sub = BreadSubscriptionFactory.create(member=member)
@@ -726,7 +714,7 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
     def test_get_memberWithNoFavorites_countedAsSatisfied(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        pl = create_pickup_location_with_delivery_day(DAY, name="Hofladen")
+        pl = create_pickup_location_with_opening_times([DAY], name="Hofladen")
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
         sub = BreadSubscriptionFactory.create(member=member)
@@ -760,7 +748,7 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
     def test_get_memberWithFavoriteAvailable_gotFavorite(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        pl = create_pickup_location_with_delivery_day(DAY, name="Hofladen")
+        pl = create_pickup_location_with_opening_times([DAY], name="Hofladen")
         bread = BreadFactory.create(name="Roggenbrot")
         member = MemberFactory.create()
         sub = BreadSubscriptionFactory.create(member=member)
@@ -797,7 +785,7 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
     def test_get_memberWithFavoriteNotAvailable_noMatch(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        pl = create_pickup_location_with_delivery_day(DAY, name="Hofladen")
+        pl = create_pickup_location_with_opening_times([DAY], name="Hofladen")
         bread_available = BreadFactory.create(name="Roggenbrot")
         bread_wanted = BreadFactory.create(name="Dinkelkruste")
         member = MemberFactory.create()
@@ -834,8 +822,8 @@ class TestPreferenceSatisfactionMetricsView(TapirIntegrationTest):
     def test_get_locationsSortedAlphabetically(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        pl_z = create_pickup_location_with_delivery_day(DAY, name="Zentrallager")
-        pl_a = create_pickup_location_with_delivery_day(DAY, name="Abholpunkt")
+        pl_z = create_pickup_location_with_opening_times([DAY], name="Zentrallager")
+        pl_a = create_pickup_location_with_opening_times([DAY], name="Abholpunkt")
         bread = BreadFactory.create(name="Roggenbrot")
 
         for pickup_location in [pl_z, pl_a]:
@@ -903,7 +891,7 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
     def test_get_membersWithPreferences_returnsCounts(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        pl = create_pickup_location_with_delivery_day(DAY)
+        pl = create_pickup_location_with_opening_times([DAY])
         bread_a = BreadFactory.create(name="Anisbrot")
         bread_r = BreadFactory.create(name="Roggenbrot")
 
@@ -950,7 +938,7 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
     def test_get_memberWithoutPreferences_countedAsWithout(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        pl = create_pickup_location_with_delivery_day(DAY)
+        pl = create_pickup_location_with_opening_times([DAY])
         member = MemberFactory.create()
         sub = BreadSubscriptionFactory.create(member=member)
 
@@ -974,7 +962,7 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
     def test_get_sortedByCountDescending(self):
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
-        pl = create_pickup_location_with_delivery_day(DAY)
+        pl = create_pickup_location_with_opening_times([DAY])
         bread_a = BreadFactory.create(name="Anisbrot")
         bread_r = BreadFactory.create(name="Roggenbrot")
 
@@ -1013,8 +1001,6 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
         self.assertEqual(names, ["Roggenbrot", "Anisbrot"])
 
     def test_get_plainMember_isRejected(self):
-        # Its only consumer is the admin dashboard; a member has no reason to
-        # read co-op wide preference statistics.
         self.client.force_login(MemberFactory.create())
 
         response = self.client.get(self.url, {"year": YEAR, "delivery_week": WEEK})
@@ -1023,12 +1009,6 @@ class TestPreferredBreadStatisticsView(TapirIntegrationTest):
 
 
 class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
-    """
-    The bakery reports expose every member's name, station and preferences, so
-    a plain member must not reach them. These are the gates that make the
-    bread-delivery ownership scoping meaningful rather than bypassable by URL.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -1081,9 +1061,6 @@ class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_adminPages_bakeryDisabled_areNotFound(self):
-        # The flag means the same thing on every bakery entry point: with the
-        # feature off the pages do not exist, rather than rendering an empty
-        # React shell over a switched-off feature.
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
         for name in ("reports", "weekly-plan-breads", "ingredients-labels-breads"):
@@ -1092,16 +1069,12 @@ class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_adminPages_bakeryDisabled_plainMemberStillGets403(self):
-        # The flag check lives in get(), after the permission check, so an
-        # unauthorised caller never learns whether the feature is enabled.
         for name in ("reports", "weekly-plan-breads", "ingredients-labels-breads"):
             with self.subTest(page=name):
                 response = self.client.get(reverse(f"bakery:{name}"))
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_chooseBreadsPage_anonymous_isRedirectedToLogin(self):
-        # raise_exception=True turned the login redirect into a bare 403 on the
-        # one member-facing bakery page, which is linked from member_detail.
         enable_bakery()
         self.client.logout()
 
@@ -1110,8 +1083,6 @@ class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_chooseBreadsPage_bakeryDisabled_isNotFound(self):
-        # The URLs are included unconditionally, so the view itself has to
-        # gate on the feature flag.
         response = self.client.get(reverse("bakery:choose-breads"))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -1126,13 +1097,6 @@ class TestBakeryEndpointsRequireCoopManage(TapirIntegrationTest):
 
 
 class TestSolverUnavailable(TapirIntegrationTest):
-    """
-    ortools is the "bakery" extra in pyproject.toml - it and its subtree are
-    about 210 MB and nothing outside tapir.bakery.solver imports them. An
-    installation built without the extra must get an answer it can act on from
-    the two solver endpoints, not an ImportError traceback.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -1170,8 +1134,6 @@ class TestSolverUnavailable(TapirIntegrationTest):
             self.assertFalse(solver_availability.is_solver_available())
 
     def test_isSolverAvailable_finderRaises_isFalse(self):
-        # A partially removed distribution can leave a finder that throws;
-        # "unavailable" is the right answer there too.
         from tapir.bakery import solver_availability
 
         with patch.object(
@@ -1180,8 +1142,7 @@ class TestSolverUnavailable(TapirIntegrationTest):
             self.assertFalse(solver_availability.is_solver_available())
 
     def test_isSolverAvailable_inThisEnvironment_isTrue(self):
-        # The dev image installs --extras bakery, so this pins that the check
-        # is not simply always False.
+        # The dev image installs --extras bakery.
         from tapir.bakery.solver_availability import is_solver_available
 
         self.assertTrue(is_solver_available())

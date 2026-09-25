@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
             "bakery",
             "0034_remove_availablebreadsfordeliveryday_bakery_avai_year_31666b_idx_and_more",
         ),
-        ("wirgarten", "0100_producttype_is_bread"),
+        ("wirgarten", "0099_member_pseudonym"),
     ]
 
     operations = [

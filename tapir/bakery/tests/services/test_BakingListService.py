@@ -9,7 +9,8 @@ from tapir.bakery.tests.factories import (
     StoveSessionFactory,
 )
 from tapir.wirgarten.tests.factories import PickupLocationFactory
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 @patch(
@@ -22,19 +23,11 @@ class TestBakingListService(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        set_bypass_keycloak()
+        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         self.roggenbrot = BreadFactory.create(name="Roggenbrot")
         self.dinkelkruste = BreadFactory.create(name="Dinkelkruste")
 
-    # ── No data ──────────────────────────────────────────────────────
-
     def _plan_to_bake(self, bread, quantity, session_number=1, layer_number=1):
-        """
-        A baking plan as the solver writes it: the oven schedule plus the
-        per-bread total the Backliste reports as "baked". Both go in one
-        transaction in save_solution_to_db, so a test that sets up one without
-        the other is describing a state that cannot occur.
-        """
         StoveSessionFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
@@ -69,8 +62,6 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(result["total_extra"], 0)
         self.assertEqual(result["stove_sessions"], [])
 
-    # ── Deliveries only (no baking) ─────────────────────────────────
-
     def test_getBakingList_deliveriesOnly_showsDeliveriesAndZeroBaked(self, mock_kc):
         pl = PickupLocationFactory.create()
 
@@ -100,8 +91,6 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(result["total_baked"], 0)
         self.assertEqual(result["total_extra"], -5)
 
-    # ── Baking only (no deliveries) ─────────────────────────────────
-
     def test_getBakingList_bakingOnly_showsBakedAndZeroDeliveries(self, mock_kc):
         self._plan_to_bake(self.roggenbrot, 8, session_number=1, layer_number=1)
 
@@ -119,8 +108,6 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(result["breads"][0]["extra"], 8)
         self.assertEqual(result["total_baked"], 8)
         self.assertEqual(result["total_extra"], 8)
-
-    # ── Deliveries + baking combined ────────────────────────────────
 
     def test_getBakingList_deliveriesAndBaking_calculatesExtraCorrectly(self, mock_kc):
         pl = PickupLocationFactory.create()
@@ -152,8 +139,6 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(result["total_deliveries"], 10)
         self.assertEqual(result["total_baked"], 12)
         self.assertEqual(result["total_extra"], 2)
-
-    # ── Multiple breads ─────────────────────────────────────────────
 
     def test_getBakingList_multipleBreads_allAreListed(self, mock_kc):
         pl = PickupLocationFactory.create()
@@ -220,8 +205,6 @@ class TestBakingListService(TapirIntegrationTest):
         names = [b["name"] for b in result["breads"]]
         self.assertEqual(names, ["Dinkelkruste", "Roggenbrot"])
 
-    # ── Multiple pickup locations for same day ──────────────────────
-
     def test_getBakingList_multiplePickupLocationsForSameDay_sumsDeliveries(
         self, mock_kc
     ):
@@ -255,8 +238,6 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(result["breads"][0]["deliveries"], 10)
         self.assertEqual(result["total_deliveries"], 10)
 
-    # ── Pickup location on different day is excluded ────────────────
-
     def test_getBakingList_pickupLocationOnDifferentDay_excluded(self, mock_kc):
         pl = PickupLocationFactory.create()
 
@@ -268,7 +249,6 @@ class TestBakingListService(TapirIntegrationTest):
             count=10,
         )
 
-        # Return empty list — this pickup location is NOT for self.DAY
         with patch.object(
             BakingListService, "get_pickup_location_ids_for_day", return_value=[]
         ):
@@ -278,8 +258,6 @@ class TestBakingListService(TapirIntegrationTest):
 
         self.assertEqual(result["breads"], [])
         self.assertEqual(result["total_deliveries"], 0)
-
-    # ── Stove sessions on different day excluded ────────────────────
 
     def test_getBakingList_stoveSessionOnDifferentDay_excluded(self, mock_kc):
         other_day = self.DAY + 1 if self.DAY < 6 else 0
@@ -304,8 +282,6 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(result["stove_sessions"], [])
         self.assertEqual(result["total_baked"], 0)
 
-    # ── Stove sessions on different week excluded ───────────────────
-
     def test_getBakingList_stoveSessionOnDifferentWeek_excluded(self, mock_kc):
         StoveSessionFactory.create(
             year=self.YEAR,
@@ -326,8 +302,6 @@ class TestBakingListService(TapirIntegrationTest):
 
         self.assertEqual(result["stove_sessions"], [])
         self.assertEqual(result["total_baked"], 0)
-
-    # ── Stove session structure ─────────────────────────────────────
 
     def test_getBakingList_singleStoveSession_returnsCorrectStructure(self, mock_kc):
         self._plan_to_bake(self.roggenbrot, 6, session_number=1, layer_number=1)
@@ -381,8 +355,6 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(layers[0]["layer"], 1)
         self.assertEqual(layers[1]["layer"], 3)
 
-    # ── Multiple stove sessions sum baked totals ────────────────────
-
     def test_getBakingList_multipleSessions_bakeTotalsSumCorrectly(self, mock_kc):
         self._plan_to_bake(self.roggenbrot, 6, session_number=1, layer_number=1)
         self._plan_to_bake(self.roggenbrot, 4, session_number=2, layer_number=1)
@@ -397,11 +369,8 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(result["breads"][0]["baked"], 10)
         self.assertEqual(result["total_baked"], 10)
 
-    # ── Whole-week and per-day plans in the same week ───────────────
-
     def test_getBakingList_wholeWeekPlanOnly_isUsedForTheDay(self, mock_kc):
-        # A whole-week run writes delivery_day=None, and the Backliste is still
-        # rendered per day.
+        # A whole-week run writes delivery_day=None.
         BreadsToBakePerWeekFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,
@@ -430,8 +399,6 @@ class TestBakingListService(TapirIntegrationTest):
         self.assertEqual(len(result["stove_sessions"]), 1)
 
     def test_getBakingList_dayPlanSupersedesWholeWeekPlan_notAddedToIt(self, mock_kc):
-        # Planning a day after the week leaves both shapes in the table.
-        # Summing them would report the same loaves twice.
         BreadsToBakePerWeekFactory.create(
             year=self.YEAR,
             delivery_week=self.WEEK,

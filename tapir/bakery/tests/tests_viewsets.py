@@ -11,6 +11,7 @@ from tapir.bakery.models import (
     Ingredient,
     PreferredBread,
 )
+from tapir.bakery.serializers import MAX_PIECES_PER_ENTRY
 from tapir.bakery.tests.factories import (
     BreadSubscriptionFactory,
     BreadCapacityPickupLocationFactory,
@@ -22,6 +23,9 @@ from tapir.bakery.tests.factories import (
     BreadsPerPickupLocationPerWeekFactory,
     IngredientFactory,
     StoveSessionFactory,
+)
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
 )
 from tapir.wirgarten.models import PickupLocationOpeningTime
 from tapir.configuration.models import TapirParameter
@@ -38,20 +42,6 @@ WEEK = 11
 DAY = 3
 
 
-def create_pickup_location_with_delivery_day(day, **kwargs):
-    pl = PickupLocationFactory.create(**kwargs)
-    PickupLocationOpeningTime.objects.create(
-        pickup_location=pl,
-        day_of_week=day,
-        open_time="08:00",
-        close_time="18:00",
-    )
-    return pl
-
-
-# ──────────────────────────────────────────────────────────────────────
-# BreadLabelViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestBreadLabelViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -91,9 +81,6 @@ class TestBreadLabelViewSet(TapirIntegrationTest):
         )
 
 
-# ──────────────────────────────────────────────────────────────────────
-# IngredientViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestIngredientViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -153,9 +140,6 @@ class TestIngredientViewSet(TapirIntegrationTest):
         self.assertEqual(names, ["A"])
 
 
-# ──────────────────────────────────────────────────────────────────────
-# BreadViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestBreadViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -326,9 +310,6 @@ class TestBreadViewSet(TapirIntegrationTest):
         )
 
 
-# ──────────────────────────────────────────────────────────────────────
-# BreadContentViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestBreadContentViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -368,158 +349,6 @@ class TestBreadContentViewSet(TapirIntegrationTest):
         self.assertEqual(len(response.data), 1)
 
 
-# ──────────────────────────────────────────────────────────────────────
-# BreadCapacityPickupLocationViewSet
-# ──────────────────────────────────────────────────────────────────────
-class TestBreadCapacityPickupLocationViewSet(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls):
-        ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def setUp(self):
-        super().setUp()
-        self.client.force_login(MemberFactory.create(is_superuser=True))
-
-    def test_list_filterByYearAndWeek(self):
-        pl = PickupLocationFactory.create()
-        bread = BreadFactory.create(name="Roggenbrot")
-        BreadCapacityPickupLocationFactory.create(
-            bread=bread, pickup_location=pl, year=YEAR, delivery_week=WEEK, capacity=5
-        )
-        BreadCapacityPickupLocationFactory.create(
-            bread=bread,
-            pickup_location=pl,
-            year=YEAR,
-            delivery_week=WEEK + 1,
-            capacity=3,
-        )
-
-        response = self.client.get(
-            reverse("bakery:bread_capacity_pickup_location-list"),
-            {"year": YEAR, "week": WEEK},
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-
-    def test_list_filterByPickupLocationIds(self):
-        pl1 = PickupLocationFactory.create()
-        pl2 = PickupLocationFactory.create()
-        bread = BreadFactory.create(name="Roggenbrot")
-        BreadCapacityPickupLocationFactory.create(
-            bread=bread, pickup_location=pl1, year=YEAR, delivery_week=WEEK, capacity=5
-        )
-        BreadCapacityPickupLocationFactory.create(
-            bread=bread, pickup_location=pl2, year=YEAR, delivery_week=WEEK, capacity=3
-        )
-
-        response = self.client.get(
-            reverse("bakery:bread_capacity_pickup_location-list"),
-            {"pickup_location_ids[]": [str(pl1.id)]},
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-
-    def test_bulkUpdate_createAndUpdate(self):
-        pl = PickupLocationFactory.create()
-        bread = BreadFactory.create(name="Roggenbrot")
-
-        url = reverse("bakery:bread_capacity_pickup_location-bulk-update")
-
-        response = self.client.post(
-            url,
-            data={
-                "year": YEAR,
-                "delivery_week": WEEK,
-                "updates": [
-                    {
-                        "pickup_location": str(pl.id),
-                        "bread": str(bread.id),
-                        "capacity": 10,
-                    }
-                ],
-            },
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(
-            BreadCapacityPickupLocation.objects.filter(
-                year=YEAR,
-                delivery_week=WEEK,
-                pickup_location=pl,
-                bread=bread,
-                capacity=10,
-            ).exists()
-        )
-
-        # Update
-        response = self.client.post(
-            url,
-            data={
-                "year": YEAR,
-                "delivery_week": WEEK,
-                "updates": [
-                    {
-                        "pickup_location": str(pl.id),
-                        "bread": str(bread.id),
-                        "capacity": 20,
-                    }
-                ],
-            },
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        cap = BreadCapacityPickupLocation.objects.get(
-            year=YEAR, delivery_week=WEEK, pickup_location=pl, bread=bread
-        )
-        self.assertEqual(cap.capacity, 20)
-
-    def test_bulkUpdate_deleteWithNullCapacity(self):
-        pl = PickupLocationFactory.create()
-        bread = BreadFactory.create(name="Roggenbrot")
-        BreadCapacityPickupLocationFactory.create(
-            bread=bread, pickup_location=pl, year=YEAR, delivery_week=WEEK, capacity=5
-        )
-
-        response = self.client.post(
-            reverse("bakery:bread_capacity_pickup_location-bulk-update"),
-            data={
-                "year": YEAR,
-                "delivery_week": WEEK,
-                "updates": [
-                    {
-                        "pickup_location": str(pl.id),
-                        "bread": str(bread.id),
-                        "capacity": None,
-                    }
-                ],
-            },
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(
-            BreadCapacityPickupLocation.objects.filter(
-                year=YEAR, delivery_week=WEEK, pickup_location=pl, bread=bread
-            ).exists()
-        )
-
-    def test_bulkUpdate_missingYearOrWeek_returns400(self):
-        response = self.client.post(
-            reverse("bakery:bread_capacity_pickup_location-bulk-update"),
-            data={"updates": []},
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-# ──────────────────────────────────────────────────────────────────────
-# BreadDeliveryViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestBreadDeliveryViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -586,9 +415,6 @@ class TestBreadDeliveryViewSet(TapirIntegrationTest):
         self.assertEqual(len(response.data), 1)
 
 
-# ──────────────────────────────────────────────────────────────────────
-# PreferredBreadViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestPreferredBreadViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -651,8 +477,6 @@ class TestPreferredBreadViewSet(TapirIntegrationTest):
         self.assertTrue(PreferredBread.objects.filter(member=self.member).exists())
 
     def test_bulkUpdate_unknownBreadId_returns400(self):
-        # The ids go into .set(), so an unknown or over-long one has to be
-        # rejected by the serializer rather than by the database.
         PreferredBread.objects.create(member=self.member)
 
         response = self.client.post(
@@ -667,8 +491,6 @@ class TestPreferredBreadViewSet(TapirIntegrationTest):
         self.assertIn("breads", response.data)
 
     def test_create_isNotAllowed(self):
-        # The serializer has no writable member, so a create could only ever
-        # reach a NOT NULL violation. bulk-update is the write path.
         response = self.client.post(
             reverse("bakery:preferred-breads-list"),
             {"breads": []},
@@ -678,9 +500,6 @@ class TestPreferredBreadViewSet(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_patch_isNotAllowed(self):
-        # A TapirModel id is a plain writable CharField, so a PATCH carrying
-        # "id" made Django insert a second row for the same member and break
-        # the OneToOne.
         pref = PreferredBread.objects.create(member=self.member)
 
         response = self.client.patch(
@@ -695,9 +514,6 @@ class TestPreferredBreadViewSet(TapirIntegrationTest):
         )
 
 
-# ──────────────────────────────────────────────────────────────────────
-# StoveSessionViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestStoveSessionViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -783,9 +599,6 @@ class TestStoveSessionViewSet(TapirIntegrationTest):
         )
 
 
-# ──────────────────────────────────────────────────────────────────────
-# BreadsPerPickupLocationPerWeekViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestBreadsPerPickupLocationPerWeekViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -818,8 +631,8 @@ class TestBreadsPerPickupLocationPerWeekViewSet(TapirIntegrationTest):
         self.assertEqual(len(response.data), 1)
 
     def test_list_filterByDeliveryDay(self):
-        pl_match = create_pickup_location_with_delivery_day(DAY, name="Match")
-        pl_other = create_pickup_location_with_delivery_day(DAY + 1, name="Other")
+        pl_match = create_pickup_location_with_opening_times([DAY], name="Match")
+        pl_other = create_pickup_location_with_opening_times([DAY + 1], name="Other")
         bread = BreadFactory.create(name="Roggenbrot")
 
         BreadsPerPickupLocationPerWeekFactory.create(
@@ -862,14 +675,10 @@ class TestBreadsPerPickupLocationPerWeekViewSet(TapirIntegrationTest):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # bread is serialized as a PK, so use bread_name instead
         names = [r["bread_name"] for r in response.data]
         self.assertEqual(names, ["Anisbrot", "Zopf"])
 
 
-# ──────────────────────────────────────────────────────────────────────
-# BreadSpecificsPerDeliveryDayViewSet
-# ──────────────────────────────────────────────────────────────────────
 class TestBreadSpecificsPerDeliveryDayViewSet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
@@ -944,6 +753,28 @@ class TestBreadSpecificsPerDeliveryDayViewSet(TapirIntegrationTest):
         self.assertEqual(spec.min_remaining_pieces, 2)
         self.assertIsNone(spec.fixed_pieces)
 
+    def test_bulkUpdate_piecesAboveThePlausibilityLimit_returns400(self):
+        bread = BreadFactory.create(name="Roggenbrot")
+
+        response = self.client.post(
+            reverse("bakery:bread-specifics-bulk-update"),
+            data={
+                "year": YEAR,
+                "delivery_week": WEEK,
+                "delivery_day": DAY,
+                "updates": [
+                    {
+                        "bread": str(bread.id),
+                        "max_pieces": MAX_PIECES_PER_ENTRY + 1,
+                    }
+                ],
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(BreadSpecificsPerDeliveryDay.objects.exists())
+
     def test_bulkUpdate_updatesExistingEntry(self):
         bread = BreadFactory.create(name="Roggenbrot")
         BreadSpecificsPerDeliveryDayFactory.create(
@@ -1008,8 +839,6 @@ class TestBreadSpecificsPerDeliveryDayViewSet(TapirIntegrationTest):
 
 
 class TestBreadDeliveryViewSetOwnership(TapirIntegrationTest):
-    """A plain member must not reach another member's bread deliveries."""
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -1096,8 +925,6 @@ class TestBreadDeliveryViewSetOwnership(TapirIntegrationTest):
         self.assertEqual(self.own_delivery.subscription, own_subscription)
 
     def test_patch_cannotForgeJokerTaken(self):
-        # joker_taken is derived from the member's jokers now, so a posted
-        # value has nowhere to land - the response still reports the truth.
         response = self.client.patch(
             reverse("bakery:bread-deliveries-detail", args=[self.own_delivery.id]),
             {"joker_taken": True},
@@ -1109,8 +936,6 @@ class TestBreadDeliveryViewSetOwnership(TapirIntegrationTest):
 
 
 class TestPreferredBreadViewSetOwnership(TapirIntegrationTest):
-    """A plain member must not read or rewrite another member's preferences."""
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -1155,11 +980,6 @@ class TestPreferredBreadViewSetOwnership(TapirIntegrationTest):
 
 
 class TestMasterdataReadWriteSplit(TapirIntegrationTest):
-    """
-    Members read bakery masterdata to choose their bread, but must not change
-    it. Planning data is admin-only outright.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -1212,7 +1032,6 @@ class TestMasterdataReadWriteSplit(TapirIntegrationTest):
             "stove-sessions",
             "breads-per-pickup-location-per-week",
             "bread-specifics",
-            "bread_capacity_pickup_location",
         ):
             with self.subTest(endpoint=name):
                 response = self.client.get(reverse(f"bakery:{name}-list"))
@@ -1227,11 +1046,6 @@ class TestMasterdataReadWriteSplit(TapirIntegrationTest):
 
 
 class TestNumericQueryParams(TapirIntegrationTest):
-    """
-    Query-string values are parsed before they reach the ORM, where a
-    non-numeric year would surface as an unhandled ValueError.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -1268,10 +1082,7 @@ class TestNumericQueryParams(TapirIntegrationTest):
 
 
 class TestProtectedDelete(TapirIntegrationTest):
-    """
-    Bread and Ingredient are referenced with on_delete=PROTECT, so deleting one
-    that is still in use has to come back as a 409 rather than a ProtectedError.
-    """
+    """Bread and Ingredient are referenced with on_delete=PROTECT."""
 
     @classmethod
     def setUpTestData(cls):
@@ -1329,12 +1140,6 @@ class TestProtectedDelete(TapirIntegrationTest):
 
 
 class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
-    """
-    The two rejection branches of the capacity guard inside select_for_update.
-    Both are what stop a member choosing a bread the station cannot supply, and
-    neither was covered - the guard could have been deleted with the suite green.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -1358,7 +1163,6 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
         )
 
     def test_patch_breadNotAvailableAtThatStation_returns400(self):
-        # No BreadCapacityPickupLocation row at all for this bread/week/station.
         delivery = self._delivery()
 
         response = self.client.patch(
@@ -1380,7 +1184,6 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
             bread=self.bread,
             capacity=1,
         )
-        # The single loaf is already claimed by somebody else's slot.
         taken = self._delivery()
         taken.bread = self.bread
         taken.save()
@@ -1422,8 +1225,7 @@ class TestBreadChoiceCapacityGuard(TapirIntegrationTest):
 class TestWritableIdIsClosed(TapirIntegrationTest):
     """
     A TapirModel id is a plain editable CharField, so DRF leaves it writable
-    under fields="__all__" and a PATCH carrying a forged id makes Django INSERT
-    a second row instead of updating this one.
+    under fields="__all__".
     """
 
     @classmethod
@@ -1476,7 +1278,7 @@ class TestPreferredBreadsBulkUpdateValidation(TapirIntegrationTest):
 
     def test_unknownMemberId_returns404NotAServerError(self):
         # The FK is DEFERRABLE INITIALLY DEFERRED, so an unknown id survives
-        # get_or_create and would otherwise fail as an IntegrityError at commit.
+        # get_or_create.
         response = self.client.post(
             reverse("bakery:preferred-breads-bulk-update", kwargs={"pk": "NICHTDA123"}),
             {"breads": []},
@@ -1486,9 +1288,6 @@ class TestPreferredBreadsBulkUpdateValidation(TapirIntegrationTest):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_moreThanTheLimit_returns400(self):
-        # Enforced on the server too: favouriting every bread would make a
-        # member trivially satisfied in the metrics and multiply their weight
-        # in the solver.
         breads = [BreadFactory.create(name=f"Brot {i}") for i in range(4)]
 
         response = self.client.post(
@@ -1532,46 +1331,10 @@ class TestPreferredBreadsBulkUpdateValidation(TapirIntegrationTest):
         )
 
 
-class TestCapacityBulkUpdateValidation(TapirIntegrationTest):
-    @classmethod
-    def setUpTestData(cls):
-        ParameterDefinitions().import_definitions(bulk_create=True)
-
-    def setUp(self):
-        super().setUp()
-        self.client.force_login(MemberFactory.create(is_superuser=True))
-
-    def test_negativeCapacity_returns400NotAServerError(self):
-        # The column carries CHECK (capacity >= 0), so a negative value has to
-        # be rejected before it reaches the database.
-        bread = BreadFactory.create(name="Roggenbrot")
-        location = PickupLocationFactory.create()
-
-        response = self.client.post(
-            reverse("bakery:bread_capacity_pickup_location-bulk-update"),
-            {
-                "year": YEAR,
-                "delivery_week": WEEK,
-                "updates": [
-                    {
-                        "pickup_location": str(location.id),
-                        "bread": str(bread.id),
-                        "capacity": -5,
-                    }
-                ],
-            },
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(BreadCapacityPickupLocation.objects.exists())
-
-
 class TestBreadChoiceDeadline(TapirIntegrationTest):
     """
-    The two rules a member is bound by when picking a bread, which staff on the
-    phone are not. Both are reached only as a plain member: a superuser takes
-    the Accounts.MANAGE short-circuit above them.
+    A superuser takes the Accounts.MANAGE short-circuit, so these rules are
+    reached only as a plain member.
     """
 
     PAST_YEAR = 2025
@@ -1641,9 +1404,6 @@ class TestBreadChoiceDeadline(TapirIntegrationTest):
         self.assertIsNone(delivery.bread_id)
 
     def test_patch_clearingTheChoiceAfterTheDeadline_returns400(self):
-        # An explicit null is a change like any other, so it is subject to the
-        # deadline: a member must not withdraw a loaf after the baking list is
-        # fixed.
         delivery = self._delivery(self.PAST_YEAR, self.PAST_WEEK)
         delivery.bread = self.bread
         delivery.save()

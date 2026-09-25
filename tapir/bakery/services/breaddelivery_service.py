@@ -20,31 +20,20 @@ class BreadDeliveryService:
     delivered in.
     """
 
-    # Guards against a receiver re-entering the sync for a member already
-    # being synced further up the stack.
-    _sync_in_progress = set()
-
     @classmethod
     def is_bakery_enabled(cls, cache: dict | None = None) -> bool:
         """
-        Whether the bakery feature is switched on for this installation.
-
         Non-throwing: get_parameter_value raises when the parameter row has not
-        been seeded, and this is reached from a post_save receiver, where an
-        unseeded installation must read as "no bakery" rather than fail the save.
+        been seeded, and this runs from a post_save receiver.
         """
         try:
-            return bool(
-                get_parameter_value(ParameterKeys.BAKERY_A_ENABLED, cache=cache)
-            )
+            return bool(get_parameter_value(ParameterKeys.BAKERY_ENABLED, cache=cache))
         except (KeyError, ProgrammingError, OperationalError):
             return False
 
     @classmethod
     def get_weeks_in_range(cls, start_date, end_date):
         """
-        Generator that yields (year, week_number) tuples for all weeks between start_date and end_date.
-
         Strides from the Monday of the first week, so that the last ISO week is
         still yielded when end_date falls on an earlier weekday than start_date.
         """
@@ -61,28 +50,17 @@ class BreadDeliveryService:
     def ensure_bread_deliveries_for_member(
         cls, member: Member, cache: dict | None = None
     ):
-        # Checked here rather than at each entry point, so no caller can write
-        # bread deliveries on an installation without the bakery.
         if cache is None:
             cache = {}
 
         if not cls.is_bakery_enabled(cache=cache):
             return
 
-        if member.pk in cls._sync_in_progress:
-            return
-        cls._sync_in_progress.add(member.pk)
-
-        try:
-            cls._sync_deliveries(member, cache=cache)
-        finally:
-            cls._sync_in_progress.discard(member.pk)
+        cls._sync_deliveries(member, cache=cache)
 
     @classmethod
     def resync_bread_deliveries_for_growing_period(cls, growing_period: GrowingPeriod):
         """
-        Re-sync every member with a bread subscription overlapping the period.
-
         weeks_without_delivery is honoured at write time, so editing it on an
         existing growing period has to rewrite the rows already created.
         """
@@ -92,7 +70,6 @@ class BreadDeliveryService:
 
         member_ids = (
             Subscription.objects.filter(
-                product__type__is_bread=True,
                 start_date__lte=growing_period.end_date,
                 end_date__gte=growing_period.start_date,
             )
@@ -109,10 +86,6 @@ class BreadDeliveryService:
     ):
         """
         Drop bread choices the member's station cannot supply any more.
-
-        A bread is chosen against a station's capacity for that week, so moving
-        station invalidates the choice unless the new station bakes the same bread.
-        Nothing else re-checks it.
 
         Only current and future weeks: past deliveries are a record of what was
         handed over.
@@ -138,7 +111,6 @@ class BreadDeliveryService:
         if not deliveries:
             return
 
-        # One query for the capacities of every week involved.
         weeks = {(delivery.year, delivery.delivery_week) for delivery in deliveries}
         available = set(
             BreadCapacityPickupLocation.objects.filter(
@@ -171,9 +143,6 @@ class BreadDeliveryService:
         current_iso = now.isocalendar()
         current_year, current_week = current_iso[0], current_iso[1]
 
-        # The sync only decides which (week, slot) rows exist. The pickup location
-        # and the joker status are derived at read time by
-        # BreadDeliveryContextService.
         cls._sync_relevant_subscriptions(member, now, cache=cache)
         cls._cleanup_expired_subscriptions(member, now, current_year, current_week)
 
@@ -182,7 +151,6 @@ class BreadDeliveryService:
         relevant_subscriptions = Subscription.objects.filter(
             member=member,
             end_date__gte=now,
-            product__type__is_bread=True,
         ).select_related("product__type")
 
         for subscription in relevant_subscriptions:
@@ -196,17 +164,8 @@ class BreadDeliveryService:
         """
         The ISO weeks this subscription is actually delivered in.
 
-        Two filters, both against the week's real delivery date rather than the
-        week itself, which is how core's GetDeliveriesService counts deliveries:
-
-        - The delivery date has to fall inside the subscription period.
-          get_weeks_in_range yields every week that *overlaps* it, which is one
-          week too many at either end when the period starts or ends mid-week.
-        - Core has to deliver at all that week: the growing period's
-          weeks_without_delivery, and the product type's delivery cycle.
-
-        valid_year_weeks is derived from the result, so the same filter both stops
-        a slot being created and removes one an earlier sync wrote.
+        Filtered on the week's real delivery date rather than the week itself,
+        which is how core's GetDeliveriesService counts deliveries.
         """
         weeks = []
         for year, week in cls.get_weeks_in_range(
@@ -230,12 +189,7 @@ class BreadDeliveryService:
 
     @classmethod
     def _sync_subscription_deliveries(cls, subscription, cache: dict):
-        """
-        Brings the subscription's rows to exactly one per delivered week per slot.
-
-        The writes are batched; the database enforces the unique constraint on
-        (subscription, year, delivery_week, slot_number).
-        """
+        """Brings the rows to exactly one per delivered week per slot."""
         target_quantity = subscription.quantity
 
         weeks_in_period = cls._delivered_weeks_in_period(subscription, cache=cache)
@@ -253,7 +207,6 @@ class BreadDeliveryService:
         to_renumber = []
         to_create = []
 
-        # Anything in a week the subscription no longer covers goes entirely.
         for year_week, deliveries in existing_by_week.items():
             if year_week not in valid_year_weeks:
                 to_delete.extend(deliveries)
@@ -288,13 +241,9 @@ class BreadDeliveryService:
                 id__in=[delivery.id for delivery in to_delete]
             ).delete()
         if to_renumber:
-            # One statement per row, in ascending order of the target slot. A slot
-            # is only ever moved down, so by the time one is claimed its previous
-            # holder has already been moved out of it. bulk_update would put the
-            # whole renumbering in a single UPDATE, where the rows are visited in
-            # an order the database chooses and the unique constraint - checked per
-            # row, not at the end of the statement - can fire on an intermediate
-            # state.
+            # One statement per row, ascending: the unique constraint on
+            # (subscription, year, delivery_week, slot_number) is checked per
+            # row, so a single bulk_update could fire on an intermediate state.
             for delivery in sorted(to_renumber, key=lambda d: d.slot_number):
                 delivery.save(update_fields=["slot_number"])
         if to_create:
@@ -302,7 +251,6 @@ class BreadDeliveryService:
 
     @classmethod
     def _cleanup_expired_subscriptions(cls, member, now, current_year, current_week):
-        """Drop future rows of subscriptions that have already ended."""
         BreadDelivery.objects.filter(
             subscription__member=member,
             subscription__end_date__lt=now,

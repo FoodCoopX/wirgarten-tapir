@@ -10,10 +10,6 @@ from tapir.wirgarten.models import (
 
 
 class BreadLabel(TapirModel):
-    """
-    Labels for categorizing bread (e.g., 'Vollkorn', 'Sauerteig', 'Glutenfrei')
-    """
-
     is_active = models.BooleanField(default=True)
     name = models.CharField(max_length=100, unique=True)
 
@@ -22,10 +18,6 @@ class BreadLabel(TapirModel):
 
 
 class Bread(TapirModel):
-    """
-    Bread variant with all its properties
-    """
-
     name = models.CharField(max_length=200, unique=True)
     picture = models.ImageField(
         upload_to="breads/",
@@ -66,7 +58,6 @@ class Bread(TapirModel):
         help_text="Minimum amount of breads that should remain available for this bread on a baking day (e.g., for walk-in customers)",
     )
 
-    # Admin fields
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -74,10 +65,6 @@ class Bread(TapirModel):
 
 
 class Ingredient(TapirModel):
-    """
-    Ingredient that can be used in bread recipes
-    """
-
     is_active = models.BooleanField(default=True)
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField(blank=True)
@@ -88,10 +75,6 @@ class Ingredient(TapirModel):
 
 
 class BreadContent(TapirModel):
-    """
-    Junction table linking breads to ingredients with amounts
-    """
-
     bread = models.ForeignKey(
         "Bread", on_delete=models.CASCADE, related_name="contents"
     )
@@ -114,10 +97,6 @@ class BreadContent(TapirModel):
 
 
 class BreadCapacityPickupLocation(TapirModel):
-    """
-    Capacity of how many breads can be delivered to each pickup location on each delivery day
-    """
-
     year = models.PositiveIntegerField(help_text="Year for which this capacity applies")
     delivery_week = models.PositiveIntegerField(help_text="Delivery week number (1-53)")
     pickup_location = models.ForeignKey(
@@ -139,8 +118,6 @@ class BreadCapacityPickupLocation(TapirModel):
 
     class Meta:
         unique_together = ("pickup_location", "year", "delivery_week", "bread")
-        # The unique constraint indexes every lookup that starts with the
-        # station. This one covers the solver's "all capacities of a week".
         indexes = [
             models.Index(fields=["year", "delivery_week"]),
         ]
@@ -160,8 +137,6 @@ class AvailableBreadsForDeliveryDay(TapirModel):
     )
 
     class Meta:
-        # No indexes: the unique constraint indexes exactly these three columns
-        # plus the bread, so an index on the prefix would only cost writes.
         unique_together = ("year", "delivery_week", "delivery_day", "bread")
 
     def __str__(self):
@@ -175,15 +150,11 @@ class BreadDelivery(TapirModel):
         Subscription,
         on_delete=models.CASCADE,
     )
-    # No db_index: a slot number is only ever read together with its
-    # subscription and week, which the unique constraint below indexes.
     slot_number = models.PositiveIntegerField(
         default=1
     )  # 1, 2, 3, ... up to subscription.quantity
     bread = models.ForeignKey(
         Bread,
-        # PROTECT so that deleting a bread cannot wipe the members' choices
-        # across every week. Deactivate a bread with is_active instead.
         on_delete=models.PROTECT,
         blank=True,
         null=True,
@@ -193,9 +164,7 @@ class BreadDelivery(TapirModel):
         ordering = ["year", "delivery_week", "slot_number"]
         unique_together = ("subscription", "year", "delivery_week", "slot_number")
         indexes = [
-            models.Index(
-                fields=["year", "delivery_week", "bread"]
-            ),  # All deliveries of a week, and bread counts within it
+            models.Index(fields=["year", "delivery_week", "bread"]),
         ]
 
     def __str__(self):
@@ -242,11 +211,8 @@ class BreadsPerPickupLocationPerWeek(TapirModel):
 
 class BreadsToBakePerWeek(TapirModel):
     """
-    How many of each bread the solver decided to bake, and how many of those
-    are surplus beyond what members receive.
-
-    Persisted rather than derived: a bread with fixed_pieces occupies no stove
-    layers, so the quantity cannot be recovered by summing StoveSession.
+    A bread with fixed_pieces occupies no stove layers, so its quantity cannot
+    be recovered by summing StoveSession.
     """
 
     year = models.PositiveIntegerField()
@@ -279,14 +245,12 @@ class BreadsToBakePerWeek(TapirModel):
 
 
 class StoveSession(TapirModel):
-    """Stores the baking plan for oven sessions."""
-
     year = models.PositiveIntegerField()
     delivery_week = models.PositiveIntegerField()
     # Null for a whole-week plan, set for a plan made day by day.
     delivery_day = models.PositiveIntegerField(null=True, blank=True)
-    session_number = models.PositiveIntegerField()  # 1, 2, 3, ...
-    layer_number = models.PositiveIntegerField()  # 1, 2, 3, 4
+    session_number = models.PositiveIntegerField()
+    layer_number = models.PositiveIntegerField()
     bread = models.ForeignKey(
         "Bread",
         on_delete=models.CASCADE,

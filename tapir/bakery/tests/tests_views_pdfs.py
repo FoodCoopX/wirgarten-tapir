@@ -70,11 +70,6 @@ class TestPdfViews(TapirIntegrationTest):
 
 
 class TestPickupListTemplate(SimpleTestCase):
-    """
-    Renders the Abhol-Liste templates straight from a context, because the view
-    tests mock the renderer away and never look at the markup the baker prints.
-    """
-
     def _context(self, **overrides):
         context = {
             "report_title": "Abhol-Liste",
@@ -101,8 +96,6 @@ class TestPickupListTemplate(SimpleTestCase):
         return context
 
     def test_totalRow_showsATotalPerBread(self):
-        # The per-bread cells of the total row were rendered empty, so checking
-        # a variety against the Backliste meant adding the column up by hand.
         html = render_to_string("bakery/pdfs/pickup_list.html", self._context())
 
         total_row = html.split('class="total-row"')[1]
@@ -110,8 +103,6 @@ class TestPickupListTemplate(SimpleTestCase):
         self.assertIn(">5<", total_row)
 
     def test_allStations_printsTheCreationDateOnce(self):
-        # The partial carried its own footer on top of the one in base_pdf,
-        # so the all-stations PDF repeated it once per station.
         context = self._context(
             all_pickup_lists=[
                 {
@@ -140,12 +131,6 @@ class TestPickupListTemplate(SimpleTestCase):
 
 
 class TestPdfPermissionsAndValidation(TapirIntegrationTest):
-    """
-    The PDFs carry every member's name, station and bread choices, so they need
-    the same gate the API and template views have. Only the logged-out case was
-    pinned before.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
@@ -173,8 +158,7 @@ class TestPdfPermissionsAndValidation(TapirIntegrationTest):
                 self.assertEqual(response.status_code, 403)
 
     def test_allPdfs_impossibleWeek_returns400(self):
-        # 2027 has 52 ISO weeks, and delivery_week is a plain integer
-        # everywhere, so week 53 reaches the renderer unless it is caught.
+        # 2027 has 52 ISO weeks, so week 53 does not exist.
         self.client.force_login(MemberFactory.create(is_superuser=True))
 
         for name, args in (

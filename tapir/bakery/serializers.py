@@ -5,7 +5,6 @@ from rest_framework import serializers
 
 from tapir.bakery.models import (
     Bread,
-    BreadCapacityPickupLocation,
     BreadContent,
     BreadDelivery,
     BreadLabel,
@@ -29,26 +28,22 @@ from tapir.pickup_locations.models import PickupLocation
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
 )
-from tapir.utils.shortcuts import get_serializer_cache
 
-# The ceiling a PositiveIntegerField gets from Postgres. A bulk endpoint that
-# skips the ModelSerializer has to state it itself.
-MAX_POSITIVE_INTEGER = 2147483647
+# A plausibility limit, not a column limit: a station gets loaves in the
+# hundreds, so anything above this is a typo rather than an order.
+MAX_PIECES_PER_ENTRY = 1000
 
 
 def _piece_count():
     return serializers.IntegerField(
-        required=False, allow_null=True, min_value=0, max_value=MAX_POSITIVE_INTEGER
+        required=False, allow_null=True, min_value=0, max_value=MAX_PIECES_PER_ENTRY
     )
 
 
-# A method field rather than source="pickup_location.delivery_day": the weekday
-# is derived from the location's opening times, so reading it through the model
-# costs one query per row.
 def _get_pickup_location_delivery_day(serializer, obj) -> int | None:
     return PickupLocationDeliveryDayService.get_delivery_day(
         pickup_location_id=obj.pickup_location_id,
-        cache=get_serializer_cache(serializer),
+        cache=serializer.context["cache"],
     )
 
 
@@ -56,9 +51,8 @@ class BreadLabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = BreadLabel
         fields = "__all__"
-        # A TapirModel id is a plain editable CharField, so DRF leaves it
-        # writable under fields="__all__", and a PATCH carrying a forged id
-        # makes Django INSERT a second row instead of updating this one.
+        # A TapirModel id is a plain CharField, which DRF would otherwise leave
+        # writable under fields="__all__".
         read_only_fields = ["id"]
 
 
@@ -73,8 +67,6 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.BooleanField)
     def get_can_be_deleted(self, obj):
-        # Annotated once by IngredientViewSet; the fallback keeps the
-        # serializer usable on its own.
         is_used = getattr(obj, "is_used", None)
         if is_used is None:
             is_used = BreadContent.objects.filter(ingredient=obj).exists()
@@ -91,24 +83,27 @@ class BreadContentSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+PIECE_COUNT_LIMITS = {
+    field: {"max_value": MAX_PIECES_PER_ENTRY}
+    for field in ["min_pieces", "max_pieces", "min_remaining_pieces"]
+}
+
+
 class BreadListSerializer(serializers.ModelSerializer):
     capacity = serializers.IntegerField(read_only=True, required=False)
     delivery_count = serializers.IntegerField(read_only=True, required=False)
     available_capacity = serializers.IntegerField(read_only=True, required=False)
-    # Served with the list, which BreadViewSet already prefetches, so the
-    # member-facing cards do not need one HTTP request per bread.
     contents = BreadContentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Bread
         fields = "__all__"
+        extra_kwargs = PIECE_COUNT_LIMITS
         # See BreadLabelSerializer.
         read_only_fields = ["id"]
 
 
 class BreadDetailSerializer(serializers.ModelSerializer):
-    """Serializer for bread detail view (includes ingredients)"""
-
     labels = BreadLabelSerializer(many=True, read_only=True)
     contents = BreadContentSerializer(many=True, read_only=True)
     label_names = serializers.SerializerMethodField()
@@ -143,46 +138,21 @@ class BreadDetailSerializer(serializers.ModelSerializer):
         return [label.name for label in obj.labels.all()]
 
 
-class BreadCapacityPickupLocationSerializer(serializers.ModelSerializer):
-    pickup_location_name = serializers.CharField(
-        source="pickup_location.name", read_only=True
-    )
-    delivery_day = serializers.SerializerMethodField()
-
-    bread_name = serializers.CharField(source="bread.name", read_only=True)
-
-    class Meta:
-        model = BreadCapacityPickupLocation
-        fields = "__all__"
-        # See BreadLabelSerializer.
-        read_only_fields = ["id"]
-
-    @extend_schema_field(serializers.IntegerField(allow_null=True))
-    def get_delivery_day(self, obj) -> int | None:
-        return _get_pickup_location_delivery_day(self, obj)
-
-
 class BreadDeliverySerializer(serializers.ModelSerializer):
     bread_name = serializers.CharField(source="bread.name", read_only=True)
-    # The station, its labels, the weekday and the joker status are all
-    # derived from the member's pickup location history and their jokers.
     pickup_location = serializers.SerializerMethodField()
     pickup_location_name = serializers.SerializerMethodField()
     pickup_location_street = serializers.SerializerMethodField()
     pickup_location_city = serializers.SerializerMethodField()
     delivery_day = serializers.SerializerMethodField()
     joker_taken = serializers.SerializerMethodField()
-    # Served rather than left to the client to work out from the raw
-    # configuration: the deadline is the same rule the API enforces on write.
     choosing_deadline = serializers.SerializerMethodField()
     can_still_choose = serializers.SerializerMethodField()
 
     class Meta:
         model = BreadDelivery
-        # `bread` is the only thing a member may set; in particular
-        # `subscription` must not be, or a slot could be reassigned to someone
-        # else. `id` is listed too: it is a CharField pk, which DRF would
-        # otherwise leave writable.
+        # `subscription` must stay read-only, or a slot could be reassigned to
+        # someone else.
         fields = [
             "id",
             "year",
@@ -209,13 +179,11 @@ class BreadDeliverySerializer(serializers.ModelSerializer):
         ]
 
     def validate_bread(self, bread):
-        # The station a slot resolves to decides which breads it can be given,
-        # so this needs the instance and only applies on update.
         if self.instance is None:
             return bread
 
         if not BreadAvailabilityService.is_bread_available_for_delivery(
-            self.instance, bread, cache=get_serializer_cache(self)
+            self.instance, bread, cache=self.context["cache"]
         ):
             raise serializers.ValidationError(
                 f"'{bread.name}' ist in Woche "
@@ -226,7 +194,7 @@ class BreadDeliverySerializer(serializers.ModelSerializer):
 
     def _pickup_location(self, obj):
         return BreadDeliveryContextService.get_pickup_location(
-            obj, cache=get_serializer_cache(self)
+            obj, cache=self.context["cache"]
         )
 
     @extend_schema_field(serializers.CharField(allow_null=True))
@@ -253,15 +221,15 @@ class BreadDeliverySerializer(serializers.ModelSerializer):
     def get_delivery_day(self, obj) -> int | None:
         return PickupLocationDeliveryDayService.get_delivery_day(
             pickup_location_id=BreadDeliveryContextService.get_pickup_location_id(
-                obj, cache=get_serializer_cache(self)
+                obj, cache=self.context["cache"]
             ),
-            cache=get_serializer_cache(self),
+            cache=self.context["cache"],
         )
 
     @extend_schema_field(serializers.BooleanField())
     def get_joker_taken(self, obj) -> bool:
         return BreadDeliveryContextService.is_joker_taken(
-            obj, cache=get_serializer_cache(self)
+            obj, cache=self.context["cache"]
         )
 
     @extend_schema_field(serializers.DateField(allow_null=True))
@@ -270,9 +238,9 @@ class BreadDeliverySerializer(serializers.ModelSerializer):
             year=obj.year,
             delivery_week=obj.delivery_week,
             pickup_location_id=BreadDeliveryContextService.get_pickup_location_id(
-                obj, cache=get_serializer_cache(self)
+                obj, cache=self.context["cache"]
             ),
-            cache=get_serializer_cache(self),
+            cache=self.context["cache"],
         )
 
     @extend_schema_field(serializers.BooleanField())
@@ -281,9 +249,9 @@ class BreadDeliverySerializer(serializers.ModelSerializer):
             year=obj.year,
             delivery_week=obj.delivery_week,
             pickup_location_id=BreadDeliveryContextService.get_pickup_location_id(
-                obj, cache=get_serializer_cache(self)
+                obj, cache=self.context["cache"]
             ),
-            cache=get_serializer_cache(self),
+            cache=self.context["cache"],
         )
 
 
@@ -321,11 +289,7 @@ class PreferredBreadSerializer(serializers.ModelSerializer):
 
 
 class PreferredBreadsBulkUpdateSerializer(serializers.Serializer):
-    # Related fields rather than plain strings, so an unknown or over-long id
-    # is a 400 rather than reaching the database. A ListField rather than
-    # many=True: ManyRelatedField takes no max_length, and this way
-    # drf-spectacular emits maxItems into the schema, so the generated client
-    # carries the same limit the modal enforces.
+    # A ListField rather than many=True: ManyRelatedField takes no max_length.
     breads = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=Bread.objects.all()),
         allow_empty=True,
@@ -368,28 +332,20 @@ class PickupListForLocationSerializer(PickupListResponseSerializer):
 
 
 class PickupListsResponseSerializer(serializers.Serializer):
-    """
-    Several stations of one week in a single response.
-
-    One request per station would re-derive the whole week each time, since
-    each request starts with an empty cache.
-    """
+    """Several stations of one week in a single response."""
 
     lists = PickupListForLocationSerializer(many=True)
 
 
 class BreadCapacityUpdateItemSerializer(serializers.Serializer):
-    # Related fields rather than raw strings: the ids go straight into
-    # update_or_create, so an unknown one has to be rejected here.
     pickup_location = serializers.PrimaryKeyRelatedField(
         queryset=PickupLocation.objects.all(), required=True
     )
     bread = serializers.PrimaryKeyRelatedField(
         queryset=Bread.objects.all(), required=True
     )
-    # The column is a PositiveIntegerField with CHECK (capacity >= 0).
     capacity = serializers.IntegerField(
-        required=False, allow_null=True, min_value=0, max_value=MAX_POSITIVE_INTEGER
+        required=False, allow_null=True, min_value=0, max_value=MAX_PIECES_PER_ENTRY
     )
 
 
@@ -399,9 +355,6 @@ class BreadCapacityBulkUpdateSerializer(serializers.Serializer):
     updates = BreadCapacityUpdateItemSerializer(many=True, required=True)
 
 
-###---------------- Serializers for solver results and requests ------------------ ##
-
-
 class PreferredBreadStatisticSerializer(serializers.Serializer):
     bread_name = serializers.CharField()
     count = serializers.IntegerField()
@@ -409,8 +362,6 @@ class PreferredBreadStatisticSerializer(serializers.Serializer):
 
 
 class PreferredBreadStatisticsSerializer(serializers.Serializer):
-    """Declared so the endpoint appears in the schema with a real shape."""
-
     total_members = serializers.IntegerField()
     members_with_preferences = serializers.IntegerField()
     members_without_preferences = serializers.IntegerField()
@@ -571,6 +522,9 @@ class BreadSpecificsPerDeliveryDaySerializer(serializers.ModelSerializer):
     class Meta:
         model = BreadSpecificsPerDeliveryDay
         fields = "__all__"
+        extra_kwargs = PIECE_COUNT_LIMITS | {
+            "fixed_pieces": {"max_value": MAX_PIECES_PER_ENTRY}
+        }
         # See BreadLabelSerializer.
         read_only_fields = ["id"]
 
@@ -589,3 +543,23 @@ class BreadSpecificsPerDeliveryDayBulkUpdateSerializer(serializers.Serializer):
     delivery_week = serializers.IntegerField(min_value=1, max_value=53)
     delivery_day = serializers.IntegerField(min_value=0, max_value=6)
     updates = BreadSpecificsPerDeliveryDayBulkUpdateItemSerializer(many=True)
+
+
+class PickupLocationDeliveryDaySerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+
+
+class PickupLocationsByDeliveryDayResponseSerializer(serializers.Serializer):
+    pickup_locations = PickupLocationDeliveryDaySerializer(many=True)
+
+
+class DeliveryDaysResponseSerializer(serializers.Serializer):
+    days = serializers.ListField(child=serializers.IntegerField())
+
+
+class BreadCapacityAllocationResponseSerializer(serializers.Serializer):
+    pickup_locations = PickupLocationDeliveryDaySerializer(many=True)
+    allocations = serializers.DictField(
+        child=serializers.DictField(child=serializers.IntegerField(allow_null=True))
+    )

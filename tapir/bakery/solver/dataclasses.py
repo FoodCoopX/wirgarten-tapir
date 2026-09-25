@@ -17,15 +17,13 @@ class BreadInfo:
 class PickupLocationInfo:
     location_id: int
     name: str
-    total_deliveries: int  # Total number of delivery slots at this location
+    total_deliveries: int
     # Fixed demand: bread_id -> count (from members who chose specific breads)
     fixed_demand: dict[int, int] = field(default_factory=dict)
 
 
 @dataclass
 class BakingPlanResult:
-    """Output of the optimizer."""
-
     bread_quantities: dict[int, int]  # bread_id -> total quantity
     remaining_quantities: dict[int, int]  # bread_id -> remaining quantity
     stove_sessions: list[list[tuple[int, int] | None]]  # sessions x layers
@@ -36,8 +34,6 @@ class BakingPlanResult:
 
 @dataclass
 class SolverDiagnostic:
-    """A single diagnostic message about why the solver might fail."""
-
     level: str  # "error", "warning", "info"
     category: str  # e.g. "capacity", "min_max", "fixed_pieces", "stove"
     bread_name: str | None
@@ -51,8 +47,6 @@ class SolverDiagnostic:
 
 @dataclass
 class SolverResult:
-    """Extended result that includes diagnostics."""
-
     plan: BakingPlanResult | None
     status: str  # "optimal", "feasible", "infeasible", "no_data", "error"
     diagnostics: list[SolverDiagnostic] = field(default_factory=list)

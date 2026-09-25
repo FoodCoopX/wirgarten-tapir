@@ -3,7 +3,10 @@ from rest_framework.routers import DefaultRouter
 
 from tapir.bakery.views import (
     AvailableBreadsForDeliveryListView,
+    BreadCapacityAllocationView,
+    DeliveryDaysView,
     PickupListView,
+    PickupLocationsByDeliveryDayView,
     PreferenceSatisfactionMetricsView,
     PreferredBreadStatisticsView,
     SolverApplyView,
@@ -23,7 +26,6 @@ from tapir.bakery.views_templates import (
     WeeklyPlanBreadsView,
 )
 from tapir.bakery.viewsets import (
-    BreadCapacityPickupLocationViewSet,
     BreadContentViewSet,
     BreadDeliveryViewSet,
     BreadLabelViewSet,
@@ -70,7 +72,6 @@ urlpatterns = [
         PreferenceSatisfactionMetricsView.as_view(),
         name="metrics-preference-satisfaction",
     ),
-    # PDF exports
     path(
         "pdf/baking-list/<int:year>/<int:week>/<int:day>/",
         baking_list_pdf,
@@ -96,6 +97,17 @@ urlpatterns = [
         PreferredBreadStatisticsView.as_view(),
         name="preferred-bread-statistics",
     ),
+    path(
+        "api/bread-capacity-allocations/",
+        BreadCapacityAllocationView.as_view(),
+        name="bread-capacity-allocations",
+    ),
+    path("api/delivery-days/", DeliveryDaysView.as_view(), name="delivery-days"),
+    path(
+        "api/pickup-locations-by-delivery-day/",
+        PickupLocationsByDeliveryDayView.as_view(),
+        name="pickup-locations-by-delivery-day",
+    ),
 ]
 
 router = DefaultRouter()
@@ -118,11 +130,6 @@ router.register(
     r"breadcontents",
     BreadContentViewSet,
     basename="breadcontents",
-)
-router.register(
-    r"bread-capacity-pickup-location",
-    BreadCapacityPickupLocationViewSet,
-    basename="bread_capacity_pickup_location",
 )
 
 router.register(r"preferred-breads", PreferredBreadViewSet, basename="preferred-breads")

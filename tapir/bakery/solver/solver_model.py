@@ -13,15 +13,7 @@ def build_model(
     member_preferences: list[dict] | None = None,
 ) -> tuple[cp_model.CpModel, dict]:
     """
-    Build the CP-SAT model and return (model, vars_dict).
-
-    vars_dict contains all decision variables needed to extract solutions.
-
-    member_preferences: optional list of dicts, each with:
-        - member_id: int
-        - location_id: int
-        - preferred_bread_ids: list[int]   (1–3 bread IDs)
-      Used to steer distribution so each member gets at least one preferred bread.
+    member_preferences: dicts of member_id, location_id, preferred_bread_ids.
     """
     model = cp_model.CpModel()
 
@@ -31,10 +23,6 @@ def build_model(
 
     if member_preferences is None:
         member_preferences = []
-
-    # -----------------------------------------------------------------------
-    # Decision variables
-    # -----------------------------------------------------------------------
 
     # 1. Stove layers: layer[sess, lay, b_id, qi] = 1 if bread b_id with
     #    quantity option qi is assigned to this layer
@@ -54,7 +42,6 @@ def build_model(
                         f"layer_{sess}_{lay}_{b_id}_{qi}"
                     )
 
-    # 2. Total baked per bread type
     total_baked = {}
     for b_id in bread_ids:
         bread = bread_map[b_id]
@@ -70,12 +57,10 @@ def build_model(
             )
         total_baked[b_id] = model.new_int_var(lb, ub, f"total_{b_id}")
 
-    # 3. Whether each bread is baked at all
     bread_is_baked = {}
     for b_id in bread_ids:
         bread_is_baked[b_id] = model.new_bool_var(f"baked_{b_id}")
 
-    # 4. Distribution per (bread, location)
     distribution_vars = {}
     for b_id in bread_ids:
         for loc in pickup_locations:
@@ -85,15 +70,13 @@ def build_model(
                 fixed, max_at_location, f"dist_{b_id}_{loc.location_id}"
             )
 
-    # 5. Remaining (waste) per bread
     remaining = {}
     for b_id in bread_ids:
         bread = bread_map[b_id]
         if bread.fixed_pieces is not None:
-            # Up to the whole fixed batch may be surplus. Pinning this to zero
-            # would force total_distributed == fixed_pieces exactly, making a
-            # fixed bread infeasible unless the number ordered happened to
-            # match the number baked.
+            # Pinning this to zero would force total_distributed ==
+            # fixed_pieces exactly, which is infeasible unless the number
+            # ordered happens to match the number baked.
             remaining[b_id] = model.new_int_var(
                 0, bread.fixed_pieces, f"remaining_{b_id}"
             )
@@ -105,7 +88,6 @@ def build_model(
             )
             remaining[b_id] = model.new_int_var(0, ub, f"remaining_{b_id}")
 
-    # 6. Track which sessions each bread appears in (only non-fixed breads)
     bread_in_session = {}
     sessions_per_bread = {}
     for b_id in bread_ids:
@@ -120,7 +102,6 @@ def build_model(
                 f"bread_{b_id}_in_sess_{sess}"
             )
 
-    # 7. Variety tracking: how many distinct bread types at each location
     bread_at_location = {}
     variety_count = {}
     for loc in pickup_locations:
@@ -132,18 +113,13 @@ def build_model(
                 f"bread_at_loc_{b_id}_{loc.location_id}"
             )
 
-    # 8. Member preference satisfaction
-    #    A member is satisfied when one loaf of a bread they prefer is set
-    #    aside for them. Reifying this on "the bread is present at the station"
-    #    would let a single loaf satisfy every member who prefers it, so the
-    #    term would be saturated by presence and never steer the quantities.
-    #    A member with three favourites counts once, never three times.
+    # A member is satisfied when one loaf of a bread they prefer is set aside
+    # for them; a member with three favourites counts once, not three times.
     member_satisfied = {}
     member_gets_bread = {}
     valid_member_prefs = []
     for i, mp in enumerate(member_preferences):
         loc_id = mp["location_id"]
-        # Filter to preferred breads that actually exist in this problem
         valid_breads = [
             b_id
             for b_id in mp["preferred_bread_ids"]
@@ -160,10 +136,6 @@ def build_model(
         for b_id in valid_breads:
             member_gets_bread[i, b_id] = model.new_bool_var(f"member_{i}_gets_{b_id}")
         valid_member_prefs.append((i, mp, valid_breads))
-
-    # -----------------------------------------------------------------------
-    # Constraints
-    # -----------------------------------------------------------------------
 
     # C1: Each stove layer has at most one (bread, qty) assignment
     for sess in range(max_sessions):
@@ -222,8 +194,6 @@ def build_model(
             distribution_vars[b_id, loc.location_id] for loc in pickup_locations
         )
         model.add(total_baked[b_id] == total_distributed + remaining[b_id])
-        # For every bread, fixed ones included: their remaining is no longer
-        # pinned to 0, so min_remaining_pieces applies to them too.
         model.add(remaining[b_id] >= bread.min_remaining_pieces).only_enforce_if(
             bread_is_baked[b_id]
         )
@@ -300,12 +270,8 @@ def build_model(
             == sum(bread_at_location[b_id, loc.location_id] for b_id in bread_ids)
         )
 
-    # C14: Member preference satisfaction
-    #      One loaf per satisfied member, taken from a bread they prefer, and
-    #      a bread can only be claimed by as many members as there are loaves
-    #      of it at that station. Same rule as PreferenceSatisfactionService
-    #      applies when it simulates the pickup, so the optimizer and the
-    #      metrics page agree.
+    # C14: One loaf per satisfied member, the same rule
+    #      PreferenceSatisfactionService applies when it simulates the pickup.
     for i, mp, valid_breads in valid_member_prefs:
         model.add(
             sum(member_gets_bread[i, b_id] for b_id in valid_breads)
@@ -324,16 +290,9 @@ def build_model(
             if claims:
                 model.add(sum(claims) <= distribution_vars[b_id, loc.location_id])
 
-    # -----------------------------------------------------------------------
-    # Objective — strict priority ordering via large weight gaps
-    #
-    # Priority (highest first):
-    #   1. Minimize stove sessions
-    #   2. Minimize session spanning
-    #   3. Maximize member preference satisfaction (at least 1 preferred bread)
-    #   4. Minimize waste
-    #   5. Maximize variety at locations
-    # -----------------------------------------------------------------------
+    # Objective priority, highest first: fewest stove sessions, least session
+    # spanning, most members getting a preferred bread, least waste, most
+    # variety at the stations. The weight gaps make the ordering strict.
 
     SESSIONS_W = 10_000_000
     SPANNING_W = 1_000_000
@@ -342,13 +301,8 @@ def build_model(
     VARIETY_W = 10
 
     total_sessions = sum(session_used[sess] for sess in range(max_sessions))
-    # Sessions BEYOND the first, which is what "spanning" means. Summing
-    # sessions_per_bread directly would charge SPANNING_W per distinct variety
-    # rather than per spanning bread, which outweighs the preference term and
-    # collapses the plan to a single variety. bread_is_baked is 1 exactly when
-    # total_baked >= 1 (C5) and a bread in a session must occupy layers, so the
-    # difference is 0 for an unbaked or single-session bread and 1 for one that
-    # spans two, never negative.
+    # Sessions beyond the first, which is what "spanning" means: the difference
+    # is 0 for an unbaked or single-session bread and 1 for one spanning two.
     total_spanning = sum(
         sessions_per_bread[b_id] - bread_is_baked[b_id]
         for b_id in bread_ids
@@ -366,9 +320,6 @@ def build_model(
         + VARIETY_W * total_variety
     )
 
-    # -----------------------------------------------------------------------
-    # Return model + all vars needed for extraction
-    # -----------------------------------------------------------------------
     vars_dict = {
         "bread_map": bread_map,
         "bread_ids": bread_ids,
@@ -392,12 +343,7 @@ def build_model(
 
 
 def extract_solution(value_fn, v: dict) -> dict:
-    """
-    Extract a solution from solver using a value function.
-
-    value_fn: either solver.value or callback.value
-    v: vars_dict from build_model
-    """
+    """value_fn: either solver.value or callback.value."""
     bread_ids = v["bread_ids"]
     bread_map = v["bread_map"]
     pickup_locations = v["pickup_locations"]
@@ -441,7 +387,6 @@ def extract_solution(value_fn, v: dict) -> dict:
             if count > 0:
                 distribution[(b_id, loc.location_id)] = count
 
-    # Extract member preference satisfaction
     total_members_satisfied = sum(value_fn(var) for var in member_satisfied.values())
 
     return {

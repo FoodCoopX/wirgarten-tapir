@@ -16,26 +16,21 @@ from tapir.wirgarten.tests.factories import (
     MemberPickupLocationFactory,
     PickupLocationFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 YEAR = 2026
 WEEK = 11  # Monday 2026-03-09
 
 
 class TestBreadDeliveryContextService(TapirIntegrationTest):
-    """
-    pickup_location and joker_taken are derived rather than stored. This is the
-    one place that derives them, so it is the one place that decides who ends
-    up on the Abholliste.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         super().setUp()
-        set_bypass_keycloak()
+        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
 
     @staticmethod
     def _create_delivery(pickup_location=None, member=None, week=WEEK, bread=None):
@@ -56,8 +51,6 @@ class TestBreadDeliveryContextService(TapirIntegrationTest):
             pk=delivery.pk
         )
 
-    # ── reference date ────────────────────────────────────────────────
-
     def test_getReferenceDate_landsOnTheOrgDeliveryWeekdayOfThatWeek(self):
         reference_date = BreadDeliveryContextService.get_reference_date(
             YEAR, WEEK, cache={}
@@ -68,16 +61,12 @@ class TestBreadDeliveryContextService(TapirIntegrationTest):
         self.assertEqual(reference_date, datetime.date(2026, 3, 11))
 
     def test_getReferenceDate_neverLeavesTheRequestedIsoWeek(self):
-        # The joker lookup compares (ISO year, ISO week), so this is what makes
-        # the choice of reference date safe.
         cache = {}
         for week in range(1, 54):
             reference_date = BreadDeliveryContextService.get_reference_date(
                 2026, week, cache=cache
             )
             self.assertEqual(reference_date.isocalendar()[:2], (2026, week))
-
-    # ── pickup location ───────────────────────────────────────────────
 
     def test_getPickupLocationId_memberRegisteredAtStation_returnsIt(self):
         pickup_location = PickupLocationFactory.create()
@@ -136,8 +125,6 @@ class TestBreadDeliveryContextService(TapirIntegrationTest):
             new_location.id,
         )
 
-    # ── joker ─────────────────────────────────────────────────────────
-
     def test_isJokerTaken_jokerInThatWeek_isTrue(self):
         delivery = self._create_delivery(pickup_location=PickupLocationFactory.create())
         Joker.objects.create(
@@ -160,8 +147,6 @@ class TestBreadDeliveryContextService(TapirIntegrationTest):
         self.assertFalse(
             BreadDeliveryContextService.is_joker_taken(self._reload(delivery), cache={})
         )
-
-    # ── grouping ──────────────────────────────────────────────────────
 
     def test_getDeliveriesByLocation_groupsByTheDerivedStation(self):
         first = PickupLocationFactory.create(name="Hofladen")
@@ -191,8 +176,6 @@ class TestBreadDeliveryContextService(TapirIntegrationTest):
         )
 
     def test_getDeliveriesByLocation_jokeredSlot_isDropped(self):
-        # A jokered slot is not delivered, so it is on no list and counts
-        # against no capacity.
         pickup_location = PickupLocationFactory.create()
         kept = self._create_delivery(pickup_location=pickup_location)
         jokered = self._create_delivery(pickup_location=pickup_location)
@@ -252,12 +235,7 @@ class TestBreadDeliveryContextService(TapirIntegrationTest):
             [],
         )
 
-    # ── cost ──────────────────────────────────────────────────────────
-
     def test_getDeliveriesByLocation_costDoesNotGrowWithTheNumberOfMembers(self):
-        # The write path this replaced cost a few hundred queries per member.
-        # Deriving has to stay flat, which is what the bulk joker accessor and
-        # the shared pickup-location map are for.
         pickup_location = PickupLocationFactory.create()
         for _ in range(2):
             self._create_delivery(pickup_location=pickup_location)
@@ -277,8 +255,6 @@ class TestBreadDeliveryContextService(TapirIntegrationTest):
         self.assertEqual(len(for_eight), len(for_two))
 
     def test_getDeliveriesForLocation_sharedCache_groupsOnceForAllStations(self):
-        # What pickup_lists_all_pdf relies on: rendering every station of a week
-        # groups the deliveries once, not once per station.
         stations = [PickupLocationFactory.create() for _ in range(4)]
         for pickup_location in stations:
             self._create_delivery(pickup_location=pickup_location)

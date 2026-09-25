@@ -10,23 +10,13 @@ from tapir.wirgarten.utils import get_today
 
 
 class BreadChoiceDeadlineService:
-    """
-    Until when a member may still choose the bread for a delivery week.
-
-    Enforced on the server, not only in the browser: past the deadline the
-    bakery has already bought the flour and lit the oven.
-    """
+    """Until when a member may still choose the bread for a delivery week."""
 
     @classmethod
     def get_delivery_date(
         cls, year: int, delivery_week: int, pickup_location_id, cache: dict
     ) -> datetime.date | None:
-        """
-        The station's own delivery date in that week.
-
-        The station's weekday rather than the org-wide one: the bread is baked
-        for when that station is served, and this is the date the member sees.
-        """
+        """The station's own delivery date in that week."""
         delivery_day = PickupLocationDeliveryDayService.get_delivery_day(
             pickup_location_id=pickup_location_id, cache=cache
         )
@@ -40,13 +30,7 @@ class BreadChoiceDeadlineService:
     def get_deadline(
         cls, year: int, delivery_week: int, pickup_location_id, cache: dict
     ) -> datetime.date | None:
-        """
-        The last day a change is accepted, or None when it cannot be worked out.
-
-        Baking happens BAKERY_BAKING_DAY_BEFORE_DELIVERY_DAY before the
-        delivery, and choices close
-        BAKERY_LAST_CHOOSING_DAY_BEFORE_BAKING_DAY before that.
-        """
+        """The last day a change is accepted, or None when it cannot be worked out."""
         delivery_date = cls.get_delivery_date(
             year, delivery_week, pickup_location_id, cache=cache
         )

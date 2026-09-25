@@ -30,18 +30,10 @@ from tapir.utils.shortcuts import week_to_monday
 
 
 class BreadProductTypeFactory(ProductTypeFactory):
-    """A product type the bakery actually acts on."""
-
     delivery_cycle = "weekly"
-    is_bread = True
 
 
 class BreadSubscriptionFactory(SubscriptionFactory):
-    """
-    Use this instead of SubscriptionFactory in bakery tests: the bakery only
-    syncs and reads subscriptions whose product type is marked as bread.
-    """
-
     product = factory.SubFactory(
         ProductFactory, type=factory.SubFactory(BreadProductTypeFactory)
     )
@@ -69,9 +61,7 @@ class BreadFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Bread
 
-    # Bread.name is unique, so draw deterministically instead of randomly:
-    # a random pick from a fixed list collides as soon as a test builds
-    # more breads than the list is long (and often well before that).
+    # Bread.name is unique, so draw deterministically instead of randomly.
     name = factory.Sequence(
         lambda n: BREAD_NAMES[n % len(BREAD_NAMES)]
         + (f" {n // len(BREAD_NAMES)}" if n >= len(BREAD_NAMES) else "")
@@ -134,13 +124,6 @@ class BreadDeliveryFactory(factory.django.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        """
-        Translates two arguments into the state a delivery derives them from,
-        since it carries neither as a field:
-
-        - pickup_location registers the delivery's member at that station,
-        - joker_taken=True gives the member a joker in the delivery's week.
-        """
         pickup_location = kwargs.pop("pickup_location", None)
         joker_taken = kwargs.pop("joker_taken", False)
 
@@ -192,11 +175,6 @@ class BreadsPerPickupLocationPerWeekFactory(factory.django.DjangoModelFactory):
 
 
 class BreadsToBakePerWeekFactory(factory.django.DjangoModelFactory):
-    """
-    What the solver decided to bake. Written together with the stove sessions
-    in one transaction, so tests that build a baking plan need both.
-    """
-
     class Meta:
         model = BreadsToBakePerWeek
 
@@ -233,25 +211,20 @@ class BreadSpecificsPerDeliveryDayFactory(factory.django.DjangoModelFactory):
 
 def enable_bakery():
     """
-    Switch the bakery on for a test. The delivery sync is a no-op while
-    BAKERY_A_ENABLED is False, so any test that expects bread deliveries to be
-    written has to opt in.
+    The delivery sync is a no-op while BAKERY_ENABLED is False, so a test that
+    expects bread deliveries has to opt in.
     """
     from tapir.configuration.models import TapirParameter, TapirParameterDatatype
     from tapir.configuration.parameter import parameter_definition
     from tapir.wirgarten.parameter_keys import ParameterKeys
 
-    # Ensure the row exists...
     parameter_definition(
-        key=ParameterKeys.BAKERY_A_ENABLED,
+        key=ParameterKeys.BAKERY_ENABLED,
         label="Bäckerei aktiviert",
         datatype=TapirParameterDatatype.BOOLEAN,
         initial_value=True,
         description="Test",
         category="Test",
     )
-    # ...then force the value: initial_value only applies on creation, and a
-    # test class that imported the parameter definitions already made it False.
-    TapirParameter.objects.filter(key=ParameterKeys.BAKERY_A_ENABLED).update(
-        value="True"
-    )
+    # initial_value only applies on creation, so force the value afterwards.
+    TapirParameter.objects.filter(key=ParameterKeys.BAKERY_ENABLED).update(value="True")

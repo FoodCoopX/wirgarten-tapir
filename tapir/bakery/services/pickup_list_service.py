@@ -1,97 +1,74 @@
+from dataclasses import dataclass, field
+
 from tapir.bakery.models import (
     BreadsPerPickupLocationPerWeek,
     PreferredBread,
 )
-from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
+from tapir.utils.shortcuts import get_from_cache_or_compute
+
+
+@dataclass
+class PickupListMemberData:
+    member_id: str
+    member_name: str
+    total: int = 0
+    total_assigned: int = 0
+    bread_counts: dict[str, int] = field(default_factory=dict)
+    bread_preferred: dict[str, bool] = field(default_factory=dict)
+    breads: list[dict] = field(default_factory=list)
 
 
 class PickupListService:
-    @staticmethod
+    @classmethod
     def get_pickup_list(
-        year: int, week: int, pickup_location_id: str, cache: dict | None = None
+        cls, year: int, week: int, pickup_location_id: str, cache: dict | None = None
     ) -> dict:
-        """
-        Returns:
-        {
-            "bread_names": ["Dinkelkruste", "Roggenbrot", ...],
-            "entries": [
-                {
-                    "member_id": "uuid",
-                    "member_name": "M., Anna",
-                    "bread_counts": {"Roggenbrot": 2, "Dinkelkruste": 0},
-                    "bread_preferred": {"Roggenbrot": False, "Dinkelkruste": True},
-                    "total": 3,          # total delivery slots (assigned + unassigned)
-                    "total_assigned": 2,  # only slots with a bread assigned
-                    "breads": [
-                        {"delivery_id": "uuid", "bread_name": "Roggenbrot"},
-                        ...
-                    ],
-                },
-                ...
-            ],
-            "bread_totals": {"Roggenbrot": 5, "Dinkelkruste": 3},
-            "grand_total": 8,
-        }
-        Sorted by member_name.
-
-        Pass a cache when rendering several stations for the same week: the
-        deliveries are grouped by station once and every further station is
-        answered out of that grouping.
-        """
         if cache is None:
             cache = {}
 
-        assigned_bread_names = PickupListService._get_assigned_bread_names(
+        assigned_bread_names = cls._get_assigned_bread_names(
             year, week, pickup_location_id, cache
         )
-        members_data, member_ids = PickupListService._collect_member_data(
-            year, week, pickup_location_id, cache
-        )
-        # Every member of the week at once, so rendering station after station
-        # does not fire a query per station.
-        PickupListService._prime_preferred_breads(year, week, cache)
-        preferred_by_member = PickupListService._get_preferred_breads(member_ids, cache)
+        members_data = cls._collect_member_data(year, week, pickup_location_id, cache)
+        cls._prime_preferred_breads(year, week, cache)
+        preferred_by_member = cls._get_preferred_breads(members_data.keys(), cache)
 
-        delivery_bread_names = set()
-        for entry in members_data.values():
-            delivery_bread_names.update(entry["bread_counts"].keys())
-        all_bread_names = sorted(set(assigned_bread_names) | delivery_bread_names)
+        delivered_bread_names = set()
+        for member_data in members_data.values():
+            delivered_bread_names.update(member_data.bread_counts.keys())
+        all_bread_names = sorted(assigned_bread_names | delivered_bread_names)
 
-        PickupListService._apply_preferences(
-            members_data, preferred_by_member, all_bread_names
-        )
+        cls._apply_preferences(members_data, preferred_by_member, all_bread_names)
 
-        entries = sorted(members_data.values(), key=lambda x: x["member_name"].lower())
-        bread_totals, grand_total = PickupListService._compute_totals(
-            entries, all_bread_names
+        member_datas = sorted(
+            members_data.values(),
+            key=lambda member_data: member_data.member_name.lower(),
         )
+        bread_totals, grand_total = cls._compute_totals(member_datas, all_bread_names)
 
         return {
             "bread_names": all_bread_names,
-            "entries": entries,
+            "entries": member_datas,
             "bread_totals": bread_totals,
             "grand_total": grand_total,
         }
 
-    @staticmethod
+    @classmethod
     def _get_assigned_bread_names(
-        year: int, week: int, pickup_location_id: str, cache: dict
-    ) -> list[str]:
-        """The week's solver result for every station, loaded once."""
-
+        cls, year: int, week: int, pickup_location_id: str, cache: dict
+    ) -> set[str]:
         def compute():
             by_location = {}
             rows = BreadsPerPickupLocationPerWeek.objects.filter(
-                year=year, delivery_week=week
+                year=year, delivery_week=week, bread__is_active=True
             ).select_related("bread")
             for row in rows:
-                if row.bread:
-                    by_location.setdefault(row.pickup_location_id, set()).add(
-                        row.bread.name
-                    )
+                by_location.setdefault(row.pickup_location_id, set()).add(
+                    row.bread.name
+                )
             return by_location
 
         by_location = get_from_cache_or_compute(
@@ -99,14 +76,12 @@ class PickupListService:
             (year, week),
             compute,
         )
-        return sorted(by_location.get(pickup_location_id, set()))
+        return by_location.get(pickup_location_id, set())
 
-    @staticmethod
+    @classmethod
     def _collect_member_data(
-        year: int, week: int, pickup_location_id: str, cache: dict
-    ) -> tuple[dict, set]:
-        # Which station a slot belongs to, and whether its week was jokered
-        # away, are both derived; the service excludes jokered slots.
+        cls, year: int, week: int, pickup_location_id: str, cache: dict
+    ) -> dict[str, PickupListMemberData]:
         deliveries = BreadDeliveryContextService.get_deliveries_for_location_for_week(
             year=year,
             delivery_week=week,
@@ -114,52 +89,40 @@ class PickupListService:
             cache=cache,
         )
 
-        member_ids = set()
-        members_data = {}
-
+        members_data: dict[str, PickupListMemberData] = {}
         for delivery in deliveries:
             member = delivery.subscription.member
-            member_id = str(member.id)
-            member_ids.add(member.id)
-
-            if member_id not in members_data:
-                members_data[member_id] = {
-                    "member_id": member_id,
-                    "member_name": PickupListService._get_display_name(member),
-                    "bread_counts": {},
-                    "bread_preferred": {},
-                    "total": 0,
-                    "total_assigned": 0,
-                    "breads": [],
-                }
-
-            members_data[member_id]["total"] += 1
-
-            bread_name = delivery.bread.name if delivery.bread else None
-            if bread_name:
-                members_data[member_id]["bread_counts"][bread_name] = (
-                    members_data[member_id]["bread_counts"].get(bread_name, 0) + 1
+            if member.id not in members_data:
+                members_data[member.id] = PickupListMemberData(
+                    member_id=member.id,
+                    member_name=cls._get_display_name(member),
                 )
-                members_data[member_id]["total_assigned"] += 1
-                members_data[member_id]["breads"].append(
-                    {
-                        "delivery_id": str(delivery.id),
-                        "bread_name": bread_name,
-                    }
+            member_data = members_data[member.id]
+
+            member_data.total += 1
+
+            if delivery.bread:
+                bread_name = delivery.bread.name
+                member_data.bread_counts[bread_name] = (
+                    member_data.bread_counts.get(bread_name, 0) + 1
+                )
+                member_data.total_assigned += 1
+                member_data.breads.append(
+                    {"delivery_id": str(delivery.id), "bread_name": bread_name}
                 )
 
-        return members_data, member_ids
+        return members_data
 
-    @staticmethod
-    def _get_display_name(member) -> str:
+    @classmethod
+    def _get_display_name(cls, member) -> str:
         if member.pseudonym:
             return member.pseudonym
         if member.last_name:
             return f"{member.last_name[0]}., {member.first_name}"
         return member.first_name or "Unbekannt"
 
-    @staticmethod
-    def _prime_preferred_breads(year: int, week: int, cache: dict):
+    @classmethod
+    def _prime_preferred_breads(cls, year: int, week: int, cache: dict):
         primed = get_from_cache_or_compute(
             cache, "preferred_breads_primed", lambda: set()
         )
@@ -175,49 +138,49 @@ class PickupListService:
             for deliveries in grouped.values()
             for delivery in deliveries
         }
-        PickupListService._get_preferred_breads(member_ids, cache)
+        cls._get_preferred_breads(member_ids, cache)
 
-    @staticmethod
-    def _get_preferred_breads(member_ids: set, cache: dict) -> dict[str, set[str]]:
-        """Favourites for every member seen so far, loaded once per cache."""
+    @classmethod
+    def _get_preferred_breads(cls, member_ids, cache: dict) -> dict[str, set[str]]:
         preferred_by_member = get_from_cache_or_compute(
             cache, "preferred_bread_names_by_member_id", lambda: {}
         )
-        missing = {str(member_id) for member_id in member_ids} - set(
-            preferred_by_member
-        )
-        if missing:
-            for member_id in missing:
-                preferred_by_member[member_id] = set()
-            for pref in PreferredBread.objects.filter(
-                member_id__in=missing
-            ).prefetch_related("breads"):
-                preferred_by_member[str(pref.member_id)] = {
-                    bread.name for bread in pref.breads.all()
-                }
+        missing = set(member_ids) - set(preferred_by_member)
+        for member_id in missing:
+            preferred_by_member[member_id] = set()
+        for preferred_bread in PreferredBread.objects.filter(
+            member_id__in=missing
+        ).prefetch_related("breads"):
+            preferred_by_member[preferred_bread.member_id] = {
+                bread.name for bread in preferred_bread.breads.all()
+            }
         return preferred_by_member
 
-    @staticmethod
+    @classmethod
     def _apply_preferences(
-        members_data: dict,
+        cls,
+        members_data: dict[str, PickupListMemberData],
         preferred_by_member: dict[str, set[str]],
         all_bread_names: list[str],
     ):
-        for member_id, entry in members_data.items():
-            member_prefs = preferred_by_member.get(member_id, set())
+        for member_id, member_data in members_data.items():
+            member_preferences = preferred_by_member.get(member_id, set())
             for bread_name in all_bread_names:
-                has_delivery = entry["bread_counts"].get(bread_name, 0) > 0
-                is_preferred = bread_name in member_prefs
-                entry["bread_preferred"][bread_name] = is_preferred and not has_delivery
+                has_delivery = member_data.bread_counts.get(bread_name, 0) > 0
+                member_data.bread_preferred[bread_name] = (
+                    bread_name in member_preferences and not has_delivery
+                )
 
-    @staticmethod
+    @classmethod
     def _compute_totals(
-        entries: list[dict], all_bread_names: list[str]
+        cls, member_datas: list[PickupListMemberData], all_bread_names: list[str]
     ) -> tuple[dict, int]:
-        bread_totals = {}
-        for bread_name in all_bread_names:
-            bread_totals[bread_name] = sum(
-                e["bread_counts"].get(bread_name, 0) for e in entries
+        bread_totals = {
+            bread_name: sum(
+                member_data.bread_counts.get(bread_name, 0)
+                for member_data in member_datas
             )
-        grand_total = sum(e["total"] for e in entries)
+            for bread_name in all_bread_names
+        }
+        grand_total = sum(member_data.total for member_data in member_datas)
         return bread_totals, grand_total
