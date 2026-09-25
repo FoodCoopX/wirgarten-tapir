@@ -1,6 +1,7 @@
 import datetime
 from typing import Callable
 
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.solidarity_contribution.models import SolidarityContribution
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
@@ -28,6 +29,9 @@ class AutomaticSubscriptionRenewalService:
             if cls.must_subscription_be_renewed(subscription, cache=cache):
                 subscription = cls.build_renewed_subscription(subscription, cache=cache)
                 subscription.save()
+                BreadDeliveryService.ensure_bread_deliveries_for_member(
+                    subscription.member, cache=cache
+                )
 
     @classmethod
     def must_subscription_be_renewed(

@@ -3,6 +3,7 @@ import datetime
 from django.core.exceptions import ValidationError
 
 from tapir.accounts.models import TapirUser
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.log.util import freeze_for_log
 from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.payments.services.month_payment_builder_solidarity_contributions import (
@@ -172,6 +173,9 @@ class SubscriptionDateChangeApplier:
         subscription.save()
         TapirCacheManager.clear_category(
             cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
+        )
+        BreadDeliveryService.ensure_bread_deliveries_for_member(
+            subscription.member, cache=cache
         )
 
         SubscriptionChangedLogEntry().populate(

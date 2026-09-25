@@ -67,6 +67,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object, today, include_future_subscriptions=True, cache=cache
         )
+        context["bakery_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_ENABLED, cache=cache
+        )
         next_growing_period = get_next_growing_period()
         for subscriptions in context["subscriptions"].values():
             for subscription in subscriptions:

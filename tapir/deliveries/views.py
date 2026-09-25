@@ -12,6 +12,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.apps import DeliveriesConfig
 from tapir.deliveries.config import DELIVERY_DONATION_MODE_DISABLED
@@ -72,7 +73,7 @@ class GetMemberDeliveriesView(APIView):
         )
 
         return Response(
-            DeliverySerializer(deliveries, many=True).data,
+            DeliverySerializer(deliveries, many=True, context={"cache": cache}).data,
             status=status.HTTP_200_OK,
         )
 
@@ -495,6 +496,8 @@ class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
                     ]
                 ]
             )
+
+        BreadDeliveryService.resync_bread_deliveries_for_growing_period(growing_period)
 
         return Response(
             "OK",

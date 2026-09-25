@@ -3,6 +3,7 @@ import datetime
 from django.core.exceptions import ValidationError
 from localflavor.generic.validators import IBANValidator
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.member_needs_banking_data_checker import (
     MemberNeedsBankingDataChecker,
 )
@@ -16,6 +17,7 @@ from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
@@ -23,6 +25,17 @@ from tapir.wirgarten.utils import get_today
 
 
 class SubscriptionUpdateViewValidator:
+    @classmethod
+    def may_member_reduce_size(cls, logged_in_user_is_admin: bool, cache: dict) -> bool:
+        if logged_in_user_is_admin:
+            return True
+
+        return get_parameter_value(
+            ParameterKeys.BAKERY_ENABLED, cache=cache
+        ) and get_parameter_value(
+            ParameterKeys.BAKERY_MEMBERS_CAN_REDUCE_BREAD_SHARES, cache=cache
+        )
+
     @classmethod
     def validate_everything(
         cls,
@@ -66,7 +79,9 @@ class SubscriptionUpdateViewValidator:
         )
 
         OrderValidator.validate_cannot_reduce_size(
-            logged_in_user_is_admin=logged_in_user_is_admin,
+            member_may_reduce_size=cls.may_member_reduce_size(
+                logged_in_user_is_admin=logged_in_user_is_admin, cache=cache
+            ),
             contract_start_date=contract_start_date,
             member=member,
             order_for_a_single_product_type=order,

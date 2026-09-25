@@ -172,8 +172,31 @@ def add_admin_links(groups, request, cache: dict):
         )
 
         groups.append(members_group)
-    groups.append(admin_group)
 
+    if request.user.has_perm(Permission.Coop.MANAGE) and get_parameter_value(
+        ParameterKeys.BAKERY_ENABLED, cache=cache
+    ):
+        bakery_group = SidebarLinkGroup(name=_("Bäckerei"))
+
+        bakery_group.add_link(
+            display_name=_("Wochenplan Brote"),
+            material_icon="calendar_view_month",
+            url=reverse_lazy("bakery:weekly-plan-breads"),
+        )
+
+        bakery_group.add_link(
+            display_name=_("Berichte"),
+            material_icon="download",
+            url=reverse_lazy("bakery:reports"),
+        )
+        bakery_group.add_link(
+            display_name=_("Zutaten & Labels & Brote"),
+            material_icon="bakery_dining",
+            url=reverse_lazy("bakery:ingredients-labels-breads"),
+        )
+        groups.append(bakery_group)
+
+    groups.append(admin_group)
     groups.append(debug_group)
 
 

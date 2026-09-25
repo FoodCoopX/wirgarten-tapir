@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import AdminDashboardAssociationDataBase from "./AdminDashboardAssociationDataBase.tsx";
 import DashboardPickupLocationCapacityBase from "./DashboardPickupLocationCapacityBase.tsx";
+import DashboardPreferredBreadStats from "./DashboardPreferredBreadStats.tsx";
 
 const domNodePickupLocations = document.getElementById(
   "dashboard_pickup_location_entry",
@@ -12,6 +13,12 @@ if (domNodePickupLocations) {
   root.render(<DashboardPickupLocationCapacityBase />);
 } else {
   console.error("Failed to render pickup location capacities from React");
+}
+
+const bakeryStatsNode = document.getElementById("dashboard_bakery_stats_entry");
+if (bakeryStatsNode) {
+  const root = createRoot(bakeryStatsNode);
+  root.render(<DashboardPreferredBreadStats />);
 }
 
 const domNodeAssociations = document.getElementById(

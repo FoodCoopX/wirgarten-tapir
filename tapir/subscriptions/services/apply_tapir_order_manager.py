@@ -2,6 +2,7 @@ import datetime
 
 from tapir.accounts.models import TapirUser
 from tapir.associations.models import AssociationMembership
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -127,6 +128,9 @@ class ApplyTapirOrderManager:
         TapirCacheManager.clear_category(
             cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
+
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
+
         if len(new_subscriptions) > 0:
             OnboardingTrigger.on_subscription_updated(new_subscriptions[0])
 

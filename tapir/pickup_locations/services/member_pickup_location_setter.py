@@ -6,6 +6,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
@@ -64,6 +65,10 @@ class MemberPickupLocationSetter:
             old_pickup_location=old_pickup_location,
             user=member,
         ).save()
+
+        BreadDeliveryService.clear_breads_unavailable_at_pickup_location(
+            member, cache=cache
+        )
 
         if old_pickup_location is not None and pickup_location_id is not None:
             if get_parameter_value(

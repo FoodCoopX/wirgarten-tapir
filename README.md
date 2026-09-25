@@ -57,6 +57,19 @@ You're of course free to check the other issues and ask questions about them, bu
 if you're not involved in the daily Tapir-development life. We don't have an internal tool to track tasks yet, so we use
 the GitHub issues as our todo-list. Hopefully the labels will be enough to let you sort through the mess.
 
+### Bäckerei (bakery)
+
+The bakery is off by default. For a local instance with it switched on and
+filled with test data — a bakery with one `Brotanteil` share, four pickup
+stations, breads and members:
+```sh
+docker compose exec web poetry run python manage.py populate --reset_all --org=bakery
+```
+
+The baking-plan solver needs `ortools`, the optional `bakery` extra in
+`pyproject.toml`. The Docker image installs it
+(`poetry install --extras bakery`); without it the solver endpoints answer 503.
+
 ## Tests
 
 Tests are run with `pytest`:

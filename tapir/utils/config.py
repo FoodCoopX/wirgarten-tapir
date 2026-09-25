@@ -7,6 +7,7 @@ class Organization(Enum):
     VEREIN = "verein"
     L2G = "l2g"
     MM = "mm"
+    BAKERY = "bakery"
 
 
 MEMBER_IMPORT_STATUS_SKIPPED = "member_skipped"

@@ -2,6 +2,7 @@ import datetime
 
 from django.db.models import F
 
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.pickup_locations.services.member_pickup_location_getter import (
     MemberPickupLocationGetter,
@@ -139,6 +140,7 @@ class SubscriptionImporter:
             import_status = MEMBER_IMPORT_STATUS_CREATED
 
         cls.update_trial_period_for_solidarity_contributions(member, subscription)
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member)
         return import_status
 
     @classmethod

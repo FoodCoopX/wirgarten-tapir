@@ -17,7 +17,8 @@ class ConfigurationGenerator:
     @classmethod
     def update_settings_for_organization(cls, organization):
         TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
-            value=organization in [Organization.BIOTOP, Organization.VEREIN]
+            value=organization
+            in [Organization.BIOTOP, Organization.VEREIN, Organization.BAKERY]
         )
 
         legal_statuses = {
@@ -26,6 +27,7 @@ class ConfigurationGenerator:
             Organization.VEREIN: LEGAL_STATUS_ASSOCIATION,
             Organization.L2G: LEGAL_STATUS_COMPANY,
             Organization.MM: LEGAL_STATUS_COMPANY,
+            Organization.BAKERY: LEGAL_STATUS_COOPERATIVE,
         }
         TapirParameter.objects.filter(
             key=ParameterKeys.ORGANISATION_LEGAL_STATUS
@@ -41,6 +43,7 @@ class ConfigurationGenerator:
             Organization.VEREIN: PICKING_MODE_SHARE,
             Organization.L2G: PICKING_MODE_SHARE,
             Organization.MM: PICKING_MODE_SHARE,
+            Organization.BAKERY: PICKING_MODE_SHARE,
         }
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=picking_modes[organization]
@@ -56,6 +59,7 @@ class ConfigurationGenerator:
             Organization.VEREIN: 2,
             Organization.L2G: 3,
             Organization.MM: 2,
+            Organization.BAKERY: 1,
         }
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DAY).update(
             value=delivery_day[organization]

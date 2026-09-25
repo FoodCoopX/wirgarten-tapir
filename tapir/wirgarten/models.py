@@ -359,6 +359,7 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
     is_student = models.BooleanField(_("Student*in"), default=False)
+    pseudonym = models.CharField(_("Pseudonym"), max_length=150, blank=True)
     has_received_membership_started_mail = models.BooleanField(default=False)
 
     @property

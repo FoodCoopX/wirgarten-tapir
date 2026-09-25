@@ -18,7 +18,7 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
 COPY ./pyproject.toml /app/pyproject.toml
 COPY ./poetry.lock /app/poetry.lock
-RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry install
+RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry install --extras bakery
 
 COPY tapir /app/tapir
 COPY manage.py /app/manage.py

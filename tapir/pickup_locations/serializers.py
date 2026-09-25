@@ -2,6 +2,9 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from tapir.pickup_locations.models import PickupLocationDeliveryCharge
+from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
+    PickupLocationDeliveryDayService,
+)
 from tapir.pickup_locations.services.pickup_location_delivery_charge_service import (
     PickupLocationDeliveryChargeService,
 )
@@ -18,6 +21,14 @@ class PickupLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PickupLocation
         fields = "__all__"
+
+    delivery_day = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
+    def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
+        return PickupLocationDeliveryDayService.get_delivery_day(
+            pickup_location_id=pickup_location.id, cache=self.context["cache"]
+        )
 
 
 class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
@@ -80,10 +91,18 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             "city",
             "opening_times",
             "current_delivery_charge",
+            "delivery_day",
         ]
 
     opening_times = serializers.SerializerMethodField()
     current_delivery_charge = serializers.SerializerMethodField()
+    delivery_day = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
+    def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
+        return PickupLocationDeliveryDayService.get_delivery_day(
+            pickup_location_id=pickup_location.id, cache=self.context["cache"]
+        )
 
     @extend_schema_field(PickupLocationOpeningTimeSerializer(many=True))
     def get_opening_times(self, pickup_location: PickupLocation):

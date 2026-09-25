@@ -28,6 +28,10 @@ def get_monday(date: datetime.date):
     return date - datetime.timedelta(days=date.weekday())
 
 
+def week_to_monday(year: int, week: int) -> datetime.date:
+    return datetime.date.fromisocalendar(year, week, 1)
+
+
 def get_next_sunday(date: datetime.date):
     return get_monday(date) + datetime.timedelta(days=6)
 

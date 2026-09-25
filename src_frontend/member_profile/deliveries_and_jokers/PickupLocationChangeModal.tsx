@@ -13,10 +13,12 @@ import PickupLocationWaitingListSelector from "../../bestell_wizard/components/P
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
+import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
 import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
+import { getUniqueDeliveryDays } from "../../utils/getUniqueDeliveryDays.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface PickupLocationChangeModalProps {
@@ -46,6 +48,9 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   const [selectedPickupLocations, setSelectedPickupLocations] = useState<
     PublicPickupLocation[]
   >([]);
+  const [selectedDeliveryDay, setSelectedDeliveryDay] = useState<number | null>(
+    null,
+  );
   const [
     pickupLocationsCapacityCheckLoading,
     setPickupLocationsCapacityCheckLoading,
@@ -61,6 +66,20 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   ] = useState(false);
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
   const [currentPickupLocationId, setCurrentPickupLocationId] = useState("");
+
+  const availableDeliveryDays = React.useMemo(
+    () => getUniqueDeliveryDays(pickupLocations),
+    [pickupLocations],
+  );
+
+  const filteredPickupLocations = React.useMemo(() => {
+    if (selectedDeliveryDay === null) {
+      return pickupLocations;
+    }
+    return pickupLocations.filter(
+      (loc) => loc.deliveryDay === selectedDeliveryDay,
+    );
+  }, [pickupLocations, selectedDeliveryDay]);
 
   useEffect(() => {
     pickupLocationsApi
@@ -121,7 +140,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   }, []);
 
   useEffect(() => {
-    if (pickupLocations.length === 0 || !show) {
+    if (filteredPickupLocations.length === 0 || !show) {
       return;
     }
 
@@ -134,14 +153,14 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
 
     checkPickupLocationCapacities(
       pickupLocationsApi,
-      pickupLocations,
+      filteredPickupLocations,
       shoppingCart,
       setPickupLocationsCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
       setToastDatas,
       undefined,
     );
-  }, [pickupLocations, subscriptions, show]);
+  }, [filteredPickupLocations, subscriptions, show]);
 
   useEffect(() => {
     if (selectedPickupLocations.length === 0) {
@@ -287,10 +306,19 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <DeliveryDayTabs
+            availableDays={availableDeliveryDays}
+            selectedDay={selectedDeliveryDay}
+            onSelectDay={(day) => {
+              setSelectedDeliveryDay(day);
+              setSelectedPickupLocations([]);
+            }}
+          />
+
           {waitingListModeEnabled && (
             <PickupLocationWaitingListSelector
               setSelectedPickupLocations={setSelectedPickupLocations}
-              pickupLocations={pickupLocations}
+              pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             />
@@ -299,7 +327,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             <Spinner />
           ) : (
             <PickupLocationSelector
-              pickupLocations={pickupLocations}
+              pickupLocations={filteredPickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
               pickupLocationsCapacityCheckLoading={
