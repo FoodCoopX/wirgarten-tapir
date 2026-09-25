@@ -22,6 +22,7 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
     SIMPLE_FIELDS = [
         "email",
         "phone_number",
+        "phone_number_landline",
         "street",
         "street_2",
         "postcode",
@@ -459,6 +460,112 @@ class TestMemberBankDataApiView(TapirIntegrationTest):
 
         user.refresh_from_db()
         self.assertEqual("017726254738", user.phone_number)
+
+        mock_fire_action.assert_not_called()
+        self.assertFalse(UpdateTapirUserLogEntry.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_patch_setsSecondPhoneNumber_savesIt(self, mock_fire_action: Mock):
+        user = MemberFactory.create(is_superuser=False, phone_number_landline=None)
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.patch(
+            url,
+            data={
+                "member_id": user.id,
+                "first_name": "test_fn",
+                "last_name": "test_ln",
+                "street": "test_street",
+                "street_2": "test_street2",
+                "email": user.email,
+                "phone_number": "017726254738",
+                "phone_number_landline": "+4930123456",
+                "postcode": "12345",
+                "city": "test_city",
+                "is_student": False,
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertTrue(response_content["order_confirmed"])
+
+        user.refresh_from_db()
+        self.assertEqual("+4930123456", user.phone_number_landline)
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_patch_secondPhoneNumberLeftBlank_isNotRequired(
+        self, mock_fire_action: Mock
+    ):
+        user = MemberFactory.create(is_superuser=False, phone_number_landline=None)
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.patch(
+            url,
+            data={
+                "member_id": user.id,
+                "first_name": "test_fn",
+                "last_name": "test_ln",
+                "street": "test_street",
+                "street_2": "test_street2",
+                "email": user.email,
+                "phone_number": "017726254738",
+                "phone_number_landline": "",
+                "postcode": "12345",
+                "city": "test_city",
+                "is_student": False,
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertTrue(response_content["order_confirmed"])
+
+        user.refresh_from_db()
+        self.assertFalse(user.phone_number_landline)
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_patch_secondPhoneNumberIsInvalid_dontApplyChangesAndReturnsError(
+        self, mock_fire_action: Mock
+    ):
+        user = MemberFactory.create(
+            is_superuser=False, phone_number_landline="+4930123456"
+        )
+        self.client.force_login(user)
+
+        url = reverse("coop:member_personal_data")
+        response = self.client.patch(
+            url,
+            data={
+                "member_id": user.id,
+                "first_name": "test_fn",
+                "last_name": "test_ln",
+                "street": "test_street",
+                "street_2": "test_street2",
+                "email": user.email,
+                "phone_number": "017726254738",
+                "phone_number_landline": "123",
+                "postcode": "12345",
+                "city": "test_city",
+                "is_student": False,
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "Ungültige Telefonnummer",
+            response_content["error"],
+        )
+
+        user.refresh_from_db()
+        self.assertEqual("+4930123456", user.phone_number_landline)
 
         mock_fire_action.assert_not_called()
         self.assertFalse(UpdateTapirUserLogEntry.objects.exists())

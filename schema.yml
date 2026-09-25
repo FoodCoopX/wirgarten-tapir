@@ -10202,6 +10202,9 @@ components:
           format: email
         phone_number:
           type: string
+        phone_number_landline:
+          type: string
+          nullable: true
         street:
           type: string
         street_2:
@@ -10874,6 +10877,9 @@ components:
         phone_number:
           type: string
           minLength: 1
+        phone_number_landline:
+          type: string
+          nullable: true
         street:
           type: string
           minLength: 1

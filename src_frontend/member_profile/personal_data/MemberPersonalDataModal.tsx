@@ -43,6 +43,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const [email, setEmail] = useState("");
   const [emailConfirm, setEmailConfirm] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumberLandline, setPhoneNumberLandline] = useState("");
   const [street, setStreet] = useState("");
   const [street2, setStreet2] = useState("");
   const [postcode, setPostcode] = useState("");
@@ -131,6 +132,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
         setEmail(response.email);
         setEmailConfirm(response.email);
         setPhoneNumber(response.phoneNumber);
+        setPhoneNumberLandline(response.phoneNumberLandline ?? "");
         setStreet(response.street);
         setStreet2(response.street2);
         setPostcode(response.postcode);
@@ -181,6 +183,11 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       return;
     }
 
+    if (phoneNumberLandline && !isPhoneNumberValid(phoneNumberLandline)) {
+      setShowValidation(true);
+      return;
+    }
+
     setSaving(true);
 
     api
@@ -191,6 +198,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
           lastName: lastName,
           email: email,
           phoneNumber: phoneNumber,
+          phoneNumberLandline: phoneNumberLandline,
           street: street,
           street2: street2,
           postcode: postcode,
@@ -324,6 +332,20 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
                 onChange={(event) => setPhoneNumber(event.target.value)}
                 isValid={showValidation && isPhoneNumberValid(phoneNumber)}
                 isInvalid={showValidation && !isPhoneNumberValid(phoneNumber)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Telefonnummer 2 (optional)</Form.Label>
+              <Form.Control
+                placeholder={"Telefonnummer 2"}
+                type={"tel"}
+                value={phoneNumberLandline}
+                onChange={(event) => setPhoneNumberLandline(event.target.value)}
+                isInvalid={
+                  showValidation &&
+                  !!phoneNumberLandline &&
+                  !isPhoneNumberValid(phoneNumberLandline)
+                }
               />
             </Form.Group>
             <Form.Group className="mb-2">

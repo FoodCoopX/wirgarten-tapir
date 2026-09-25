@@ -475,6 +475,7 @@ class MemberPersonalDataApiView(APIView):
                     "last_name": member.last_name,
                     "email": member.email,
                     "phone_number": member.phone_number,
+                    "phone_number_landline": member.phone_number_landline,
                     "street": member.street,
                     "street_2": member.street_2,
                     "postcode": member.postcode,
@@ -541,6 +542,10 @@ class MemberPersonalDataApiView(APIView):
             PersonalDataValidator.validate_phone_number_is_valid(
                 serializer.validated_data.get("phone_number")
             )
+            if serializer.validated_data.get("phone_number_landline"):
+                PersonalDataValidator.validate_phone_number_is_valid(
+                    serializer.validated_data["phone_number_landline"]
+                )
             if serializer.validated_data["email"] != member.email:
                 PersonalDataValidator.validate_email_address_not_in_use(
                     email=serializer.validated_data["email"],
@@ -573,6 +578,7 @@ class MemberPersonalDataApiView(APIView):
         simple_fields = [
             "email",
             "phone_number",
+            "phone_number_landline",
             "street",
             "street_2",
             "postcode",

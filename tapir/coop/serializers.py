@@ -39,6 +39,9 @@ class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     email = serializers.EmailField()
     phone_number = serializers.CharField()
+    phone_number_landline = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     street = serializers.CharField()
     street_2 = serializers.CharField(allow_blank=True)
     postcode = serializers.CharField()
@@ -58,6 +61,9 @@ class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     email = serializers.EmailField()
     phone_number = serializers.CharField()
+    phone_number_landline = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     street = serializers.CharField()
     street_2 = serializers.CharField(allow_blank=True)
     postcode = serializers.CharField()
