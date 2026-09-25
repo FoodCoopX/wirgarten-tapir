@@ -21,25 +21,19 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     SubscriptionFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 @patch("tapir.wirgarten.views.member.details.actions.send_product_order_confirmation")
 class TestRenewContractSameConditionsCreatesBreadDeliveries(TapirIntegrationTest):
-    """
-    Renewing on the same terms bulk-creates the next period's subscriptions,
-    and bulk_create does not fire post_save - so the bakery receiver never sees
-    them. The view has to trigger the sync itself, or the member starts the new
-    growing period with no bread deliveries at all.
-    """
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         super().setUp()
-        set_bypass_keycloak()
+        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         enable_bakery()
 
         today = datetime.date.today()
@@ -56,9 +50,6 @@ class TestRenewContractSameConditionsCreatesBreadDeliveries(TapirIntegrationTest
         for period in (self.current_period, self.next_period):
             ProductCapacityFactory.create(period=period, product_type=product_type)
 
-        # The renewal asks whether the product type still has capacity, which
-        # prices every existing subscription - so the product needs a price
-        # valid from before the current period starts.
         self.product = ProductFactory.create(type=product_type)
         ProductPriceFactory.create(
             product=self.product,
@@ -106,8 +97,4 @@ class TestRenewContractSameConditionsCreatesBreadDeliveries(TapirIntegrationTest
             subscription__member=self.member,
             subscription__period=self.next_period,
         )
-        self.assertTrue(
-            weeks_in_next_period.exists(),
-            "Renewing bulk-creates the subscriptions, so the bakery receiver "
-            "never fires; the view has to trigger the sync itself.",
-        )
+        self.assertTrue(weeks_in_next_period.exists())

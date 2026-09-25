@@ -15,6 +15,8 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.utils import get_today
 
+BREAD_PRODUCT_TYPE_NAME = "Brotanteil"
+
 
 class ProductGenerator:
     @classmethod
@@ -69,6 +71,10 @@ class ProductGenerator:
 
     @classmethod
     def generate_products(cls, organization: Organization):
+        if organization is Organization.BAKERY:
+            cls.generate_products_bakery()
+            return
+
         with open(
             "tapir/utils/services/test_data_generation/product_descriptions/ernteanteile_short.html",
             "r",
@@ -129,6 +135,38 @@ class ProductGenerator:
                 raise TapirImproperlyConfigured(
                     f"Unknown organization type: {organization}"
                 )
+
+    @classmethod
+    def generate_products_bakery(cls):
+        product_type = ProductType.objects.create(
+            name=BREAD_PRODUCT_TYPE_NAME,
+            delivery_cycle=WEEKLY[0],
+            is_affected_by_jokers=True,
+            description_bestellwizard_short="<p>Ein Brot pro Woche aus der Hofbäckerei.</p>",
+            description_bestellwizard_long="Die Brotsorte wählst du jede Woche selbst aus dem Angebot der Hofbäckerei.",
+            order_in_bestellwizard=1,
+            must_be_subscribed_to=True,
+        )
+        TaxRate.objects.create(
+            product_type=product_type,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+
+        for name, base_price, size, base in [
+            ("Ein Brot", 12.5, 1, True),
+            ("Zwei Brote", 24.0, 2, False),
+            ("Drei Brote", 34.5, 3, False),
+        ]:
+            cls.generate_product(
+                product_type=product_type,
+                name=name,
+                base_price=base_price,
+                size=size,
+                base=base,
+                min_coop_shares=0,
+                description_in_bestellwizard=f"{name} pro Woche",
+            )
 
     @classmethod
     def generate_products_verein(cls, product_type_ernteanteile: ProductType):
@@ -458,21 +496,17 @@ class ProductGenerator:
 
     @classmethod
     def generate_product_capacities(cls):
-        for product_type in ProductType.objects.all():
-            cls.generate_product_capacities_for_product_type(product_type)
-
-    @classmethod
-    def generate_product_capacities_for_product_type(cls, product_type: ProductType):
-        ProductCapacity.objects.bulk_create(
-            [
-                ProductCapacity(
-                    product_type=product_type,
-                    period=growing_period,
-                    capacity=1000,
+        capacities = []
+        for growing_period in GrowingPeriod.objects.all():
+            for product_type in ProductType.objects.all():
+                capacities.append(
+                    ProductCapacity(
+                        product_type=product_type,
+                        period=growing_period,
+                        capacity=1000,
+                    )
                 )
-                for growing_period in GrowingPeriod.objects.all()
-            ]
-        )
+        ProductCapacity.objects.bulk_create(capacities)
 
     @classmethod
     def generate_product_data(cls, organization: Organization):

@@ -376,13 +376,6 @@ class TapirCache:
 
     @classmethod
     def get_delivery_day_by_pickup_location_id(cls, cache: Dict) -> Dict:
-        """
-        The weekday every pickup location is delivered on, in one query.
-
-        The earliest of a location's opening days, absent from the map when it
-        has no opening times at all.
-        """
-
         def compute():
             delivery_days = {}
             for (

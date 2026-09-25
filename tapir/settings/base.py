@@ -29,7 +29,6 @@ ERROR_LOG_DIR = env.str("ERROR_LOG_DIR", default="error_logs")
 
 ENABLE_SILK_PROFILING = False
 
-
 # Application definition
 INSTALLED_APPS = [
     # Must come before contrib.auth to let the custom templates be discovered for auth views

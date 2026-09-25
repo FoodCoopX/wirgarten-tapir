@@ -66,6 +66,7 @@ class MemberDataToConfirmApiView(APIView):
         data = MemberDataToConfirmSerializer(
             member_data_to_confirm,
             many=True,
+            context={"cache": cache},
         ).data
 
         return Response(data)

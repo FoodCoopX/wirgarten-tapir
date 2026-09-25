@@ -2,9 +2,9 @@ import datetime
 from decimal import Decimal
 
 from tapir.configuration.models import (
-    TapirParameter,
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
+    TapirParameter,
 )
 from tapir.configuration.parameter import ParameterMeta, parameter_definition
 from tapir.wirgarten.parameter_definitions.parameter_definitions_bakery import (

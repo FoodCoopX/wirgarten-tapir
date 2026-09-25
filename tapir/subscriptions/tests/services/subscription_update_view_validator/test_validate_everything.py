@@ -106,8 +106,6 @@ class TestSubscriptionUpdateViewValidatorValidateEverything(TapirUnitTest):
             member=self.mock_member,
         )
         mock_validate_cannot_reduce_size.assert_called_once_with(
-            # Being an admin is only one of the reasons a member may reduce;
-            # the bakery parameter is the other, so the flag is derived here.
             member_may_reduce_size=False,
             contract_start_date=self.mock_contract_start_date,
             member=self.mock_member,

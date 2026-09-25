@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from datetime import date
-from math import ceil, floor
-from typing import Dict
+from math import floor, ceil
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -11,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.pickup_locations.services.member_pickup_location_setter import (
@@ -57,8 +57,6 @@ from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
-    get_active_and_future_subscriptions,
-    get_next_growing_period,
     get_product_price,
     get_next_growing_period,
     get_active_and_future_subscriptions,
@@ -66,17 +64,6 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
-
-
-def _as_date(value):
-    """
-    pickup_location_change_date is a ChoiceField, so its cleaned value is the
-    string form of the date, not a date. MemberPickupLocationSetter does date
-    arithmetic with it, and a string has no .weekday().
-    """
-    if isinstance(value, str):
-        return date.fromisoformat(value)
-    return value
 
 
 class BaseProductForm(forms.Form):
@@ -322,9 +309,10 @@ class BaseProductForm(forms.Form):
             harvest_share_strings.append(
                 ",".join(
                     map(
-                        lambda p: (
-                            BASE_PRODUCT_FIELD_PREFIX + p.name + ":" + str(prices[p.id])
-                        ),
+                        lambda p: BASE_PRODUCT_FIELD_PREFIX
+                        + p.name
+                        + ":"
+                        + str(prices[p.id]),
                         harvest_share_products,
                     )
                 )
@@ -406,6 +394,9 @@ class BaseProductForm(forms.Form):
         TapirCacheManager.clear_category(
             cache=self.cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
+        BreadDeliveryService.ensure_bread_deliveries_for_member(
+            member, cache=self.cache
+        )
 
         member.sepa_consent = now
         member.save(cache=self.cache)
@@ -416,12 +407,10 @@ class BaseProductForm(forms.Form):
             self._change_pickup_location(member, new_pickup_location, change_date)
 
     def _change_pickup_location(self, member, new_pickup_location, change_date):
-        # Through the service, so the change is logged and the member is
-        # notified.
         MemberPickupLocationSetter.link_member_to_pickup_location(
             pickup_location_id=new_pickup_location.id,
             member=member,
-            valid_from=_as_date(change_date),
+            valid_from=date.fromisoformat(change_date),
             actor=self.actor or member,
             cache=self.cache,
         )
@@ -833,18 +822,10 @@ class AdditionalProductForm(forms.Form):
             MemberPickupLocationSetter.link_member_to_pickup_location(
                 pickup_location_id=new_pickup_location.id,
                 member=member,
-                valid_from=_as_date(change_date),
+                valid_from=date.fromisoformat(change_date),
                 actor=self.actor or member,
                 cache=self.cache,
             )
-
-        # bulk_create above does not fire post_save, so the bakery receiver
-        # never sees these subscriptions. Every path that bulk-creates
-        # subscriptions has to say so itself. Imported here rather than at
-        # module level: this module is loaded on essentially every
-        # member-facing request and should not depend on the bakery app at
-        # import time.
-        from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 
         BreadDeliveryService.ensure_bread_deliveries_for_member(
             Member.objects.get(id=member_id), cache=self.cache
@@ -1017,5 +998,7 @@ def cancel_or_delete_subscriptions(
             subscription, cache=cache
         )
         subscription.save()
+
+    BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
 
     return existing_trial_end_date

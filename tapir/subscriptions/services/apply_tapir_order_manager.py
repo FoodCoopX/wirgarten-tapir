@@ -13,8 +13,8 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
-    Member,
     ProductType,
+    Member,
     Subscription,
     SubscriptionChangeLogEntry,
     CoopShareTransaction,
@@ -129,9 +129,6 @@ class ApplyTapirOrderManager:
             cache=cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
 
-        # bulk_create above does not fire post_save, so the bakery receiver
-        # never sees these subscriptions. Every path that bulk-creates
-        # subscriptions has to say so itself.
         BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
 
         if len(new_subscriptions) > 0:

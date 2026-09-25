@@ -101,10 +101,7 @@ class OrderValidator:
         cache: dict,
     ):
         if not SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-            # The shared helper still calls this logged_in_user_is_admin
-            # because its other callers pass exactly that. Being an admin is
-            # only one of the reasons a member may reduce their subscription.
-            logged_in_user_is_admin=member_may_reduce_size,
+            member_may_reduce_size=member_may_reduce_size,
             subscription_start_date=contract_start_date,
             cache=cache,
         ):

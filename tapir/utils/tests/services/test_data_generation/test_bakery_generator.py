@@ -14,16 +14,19 @@ from tapir.bakery.services.bread_delivery_context_service import (
     BreadDeliveryContextService,
 )
 from tapir.configuration.models import TapirParameter
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
+)
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
 )
-from tapir.utils.services.test_data_generation.bakery_generator import (
-    BREAD_PRODUCT_TYPE_NAME,
-    BakeryGenerator,
-)
+from tapir.utils.services.test_data_generation.bakery_generator import BakeryGenerator
 from tapir.utils.services.test_data_generation.data_generator import DataGenerator
+from tapir.utils.services.test_data_generation.product_generator import (
+    BREAD_PRODUCT_TYPE_NAME,
+    ProductGenerator,
+)
 from tapir.wirgarten.models import (
-    PickupLocationOpeningTime,
     Product,
     ProductType,
 )
@@ -33,10 +36,9 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     MemberFactory,
     MemberPickupLocationFactory,
-    PickupLocationFactory,
     SubscriptionFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestBakeryGenerator(TapirIntegrationTest):
@@ -46,13 +48,11 @@ class TestBakeryGenerator(TapirIntegrationTest):
 
     def setUp(self):
         super().setUp()
-        set_bypass_keycloak()
+        self._set_parameter(ParameterKeys.MEMBER_BYPASS_KEYCLOAK, True)
         self._create_growing_periods()
 
     @staticmethod
     def _create_growing_periods():
-        # Three of them, as generate_all makes: the product prices are dated
-        # off the first and the last, so a single period collides on itself.
         this_year = datetime.date.today().year
         for year in [this_year - 1, this_year, this_year + 1]:
             GrowingPeriodFactory.create(
@@ -60,26 +60,11 @@ class TestBakeryGenerator(TapirIntegrationTest):
                 end_date=datetime.date(year, 12, 31),
             )
 
-    @staticmethod
-    def _pickup_location_with_days(name, days):
-        pickup_location = PickupLocationFactory.create(name=name)
-        for day_of_week in days:
-            PickupLocationOpeningTime.objects.create(
-                pickup_location=pickup_location,
-                day_of_week=day_of_week,
-                open_time=datetime.time(8),
-                close_time=datetime.time(18),
-            )
-        return pickup_location
-
-    # ── masterdata ────────────────────────────────────────────────────
-
     def test_generateMasterdata_createsBreadsWithStoveLayers(self):
         BakeryGenerator.generate_masterdata()
 
         self.assertTrue(Bread.objects.exists())
         for bread in Bread.objects.all():
-            # Without pieces_per_stove_layer the solver aborts the run.
             self.assertTrue(bread.pieces_per_stove_layer)
             self.assertGreater(bread.weight, 0)
 
@@ -87,23 +72,20 @@ class TestBakeryGenerator(TapirIntegrationTest):
         BakeryGenerator.generate_masterdata()
 
         self.assertEqual(
-            TapirParameter.objects.get(key=ParameterKeys.BAKERY_A_ENABLED).value,
+            TapirParameter.objects.get(key=ParameterKeys.BAKERY_ENABLED).value,
             "True",
         )
 
-    def test_generateMasterdata_breadShareIsAWeeklyBreadProductType(self):
-        BakeryGenerator.generate_masterdata()
+    def test_generateProductsBakery_createsTheWeeklyBreadShare(self):
+        ProductGenerator.generate_products_bakery()
 
         product_type = ProductType.objects.get(name=BREAD_PRODUCT_TYPE_NAME)
-        self.assertTrue(product_type.is_bread)
         self.assertEqual(product_type.delivery_cycle, "weekly")
-        # Share sizes, not bread varieties: the variety is chosen per week.
+        self.assertTrue(product_type.must_be_subscribed_to)
         self.assertEqual(product_type.product_set.count(), 3)
 
-    # ── week data ─────────────────────────────────────────────────────
-
     def test_generateWeekData_capacityForEveryStationWeekAndBread(self):
-        self._pickup_location_with_days("Hofladen", [4])
+        create_pickup_location_with_opening_times([4], name="Hofladen")
         BakeryGenerator.generate_masterdata()
 
         BakeryGenerator.generate_week_data()
@@ -114,11 +96,12 @@ class TestBakeryGenerator(TapirIntegrationTest):
         )
 
     def test_generateWeekData_coversEveryStationsOwnDeliveryDay(self):
-        # The Hofpunkt case: it opens Monday morning as well as Thursday, so
-        # its delivery day is Monday. Generating for Thursday alone would make
-        # every delivery there invisible to the solver.
-        thursday_only = self._pickup_location_with_days("Warenhaus", [4, 5])
-        also_monday = self._pickup_location_with_days("Hofpunkt", [4, 5, 6, 1])
+        thursday_only = create_pickup_location_with_opening_times(
+            [4, 5], name="Warenhaus"
+        )
+        also_monday = create_pickup_location_with_opening_times(
+            [4, 5, 6, 1], name="Hofpunkt"
+        )
         BakeryGenerator.generate_masterdata()
 
         BakeryGenerator.generate_week_data()
@@ -141,9 +124,11 @@ class TestBakeryGenerator(TapirIntegrationTest):
         )
 
     def test_generateWeekData_assignedBreadsAreAvailableAtTheMembersStation(self):
-        # The one non-negotiable ordering edge: capacities before assignment.
-        pickup_location = self._pickup_location_with_days("Hofladen", [4])
+        pickup_location = create_pickup_location_with_opening_times(
+            [4], name="Hofladen"
+        )
         BakeryGenerator.generate_masterdata()
+        ProductGenerator.generate_products_bakery()
 
         member = MemberFactory.create()
         MemberPickupLocationFactory.create(
@@ -159,10 +144,9 @@ class TestBakeryGenerator(TapirIntegrationTest):
             start_date=datetime.date.fromisocalendar(year, week, 1),
             end_date=datetime.date.fromisocalendar(year, week, 7),
         )
-        self.assertTrue(BreadDelivery.objects.exists())
-
         BakeryGenerator.generate_week_data()
 
+        self.assertTrue(BreadDelivery.objects.exists())
         cache = {}
         for delivery in BreadDelivery.objects.select_related(
             "subscription__member", "bread"
@@ -178,14 +162,14 @@ class TestBakeryGenerator(TapirIntegrationTest):
                         delivery, cache=cache
                     ),
                 ).exists(),
-                "a chosen bread must have a capacity row at that station",
             )
 
     def test_generateWeekData_givesMembersFavourites(self):
-        # Without these the solver reports "no preference data found" and its
-        # whole reason for existing is never exercised on test data.
-        pickup_location = self._pickup_location_with_days("Hofladen", [4])
+        pickup_location = create_pickup_location_with_opening_times(
+            [4], name="Hofladen"
+        )
         BakeryGenerator.generate_masterdata()
+        ProductGenerator.generate_products_bakery()
 
         member = MemberFactory.create()
         MemberPickupLocationFactory.create(
@@ -211,10 +195,8 @@ class TestBakeryGenerator(TapirIntegrationTest):
         preferred = PreferredBread.objects.get(member=member)
         self.assertGreaterEqual(preferred.breads.count(), 1)
 
-    # ── clear ─────────────────────────────────────────────────────────
-
     def test_clear_removesBakeryMasterdata(self):
-        self._pickup_location_with_days("Hofladen", [4])
+        create_pickup_location_with_opening_times([4], name="Hofladen")
         BakeryGenerator.generate_masterdata()
         BakeryGenerator.generate_week_data()
 
@@ -234,9 +216,8 @@ class TestBakeryGenerator(TapirIntegrationTest):
             )
 
     def test_clear_canBeFollowedByASecondGeneration(self):
-        # Bread.name and Ingredient.name are unique, so clear() has to remove
-        # them or a second --reset_all fails with an IntegrityError.
-        self._pickup_location_with_days("Hofladen", [4])
+        # Bread.name and Ingredient.name are unique.
+        create_pickup_location_with_opening_times([4], name="Hofladen")
         BakeryGenerator.generate_masterdata()
         DataGenerator.clear()
 

@@ -115,10 +115,10 @@ class JokerManagementService:
 
         jokers = TapirCache.get_all_jokers_for_member(member_id=member.id, cache=cache)
         for joker in jokers:
-            # (ISO year, ISO week) as a pair. Mixing the ISO week with the
-            # calendar year gives the wrong answer around New Year, when the
-            # two disagree: 2027-01-01 is ISO week 53 of 2026.
-            if joker.date.isocalendar()[:2] == reference_date.isocalendar()[:2]:
+            if (
+                joker.date.isocalendar().week == reference_date.isocalendar().week
+                and joker.date.isocalendar().year == reference_date.isocalendar().year
+            ):
                 return True
             if joker.date > reference_date:
                 # jokers are sorted by date,

@@ -1,27 +1,16 @@
-import datetime
-
 from tapir.pickup_locations.services.pickup_location_delivery_day_service import (
     PickupLocationDeliveryDayService,
 )
-from tapir.wirgarten.models import PickupLocationOpeningTime
+from tapir.pickup_locations.tests.factories import (
+    create_pickup_location_with_opening_times,
+)
 from tapir.wirgarten.tests.factories import PickupLocationFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestPickupLocationDeliveryDayService(TapirIntegrationTest):
-    @staticmethod
-    def _add_opening_time(pickup_location, day_of_week):
-        return PickupLocationOpeningTime.objects.create(
-            pickup_location=pickup_location,
-            day_of_week=day_of_week,
-            open_time=datetime.time(9, 0),
-            close_time=datetime.time(18, 0),
-        )
-
     def test_getDeliveryDay_severalOpeningDays_returnsTheEarliest(self):
-        pickup_location = PickupLocationFactory.create()
-        self._add_opening_time(pickup_location, 4)
-        self._add_opening_time(pickup_location, 1)
+        pickup_location = create_pickup_location_with_opening_times([4, 1])
 
         self.assertEqual(
             PickupLocationDeliveryDayService.get_delivery_day(
@@ -31,9 +20,7 @@ class TestPickupLocationDeliveryDayService(TapirIntegrationTest):
         )
 
     def test_getDeliveryDay_openingDayIsMonday_returnsZero(self):
-        # 0 is falsy: the accessor must distinguish it from "no opening times".
-        pickup_location = PickupLocationFactory.create()
-        self._add_opening_time(pickup_location, 0)
+        pickup_location = create_pickup_location_with_opening_times([0])
 
         self.assertEqual(
             PickupLocationDeliveryDayService.get_delivery_day(
@@ -59,13 +46,10 @@ class TestPickupLocationDeliveryDayService(TapirIntegrationTest):
         )
 
     def test_getDeliveryDay_manyLocationsOneCache_costsASingleQuery(self):
-        # This is the point of the service: the property it replaces issued one
-        # query per access, and every caller reads it inside a loop.
-        pickup_locations = []
-        for day_of_week in range(5):
-            pickup_location = PickupLocationFactory.create()
-            self._add_opening_time(pickup_location, day_of_week)
-            pickup_locations.append(pickup_location)
+        pickup_locations = [
+            create_pickup_location_with_opening_times([day_of_week])
+            for day_of_week in range(5)
+        ]
 
         cache = {}
         with self.assertNumQueries(1):

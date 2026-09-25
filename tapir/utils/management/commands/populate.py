@@ -24,8 +24,6 @@ class Command(BaseCommand):
             help="Runs --clear then populate most models",
             action="store_true",
         )
-        # The positional form is what the READMEs use: `populate --reset_all`
-        # with no organization, and `populate --reset_all BIOTOP`.
         parser.add_argument(
             "org", help=f"One of: {valid_organization_names()}", nargs="?"
         )

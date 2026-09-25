@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("wirgarten", "0100_producttype_is_bread"),
+        ("wirgarten", "0099_member_pseudonym"),
         ("wirgarten", "0130_pickuplocation_show_details_in_basket_totals_export"),
     ]
 

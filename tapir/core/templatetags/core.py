@@ -173,12 +173,8 @@ def add_admin_links(groups, request, cache: dict):
 
         groups.append(members_group)
 
-    # Permission first, parameter second: the sidebar renders on every page for
-    # every logged-in user, and only somebody who can follow these links needs
-    # the parameter read. All three targets are permission_required =
-    # Coop.MANAGE.
     if request.user.has_perm(Permission.Coop.MANAGE) and get_parameter_value(
-        ParameterKeys.BAKERY_A_ENABLED, cache=cache
+        ParameterKeys.BAKERY_ENABLED, cache=cache
     ):
         bakery_group = SidebarLinkGroup(name=_("Bäckerei"))
 

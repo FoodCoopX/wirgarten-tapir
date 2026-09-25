@@ -14,7 +14,6 @@ from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     LocationRoute,
 )
-from tapir.utils.shortcuts import get_serializer_cache
 from tapir.wirgarten.utils import get_today
 
 
@@ -27,9 +26,8 @@ class PickupLocationSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
-        # None when the pickup location has no opening times configured
         return PickupLocationDeliveryDayService.get_delivery_day(
-            pickup_location_id=pickup_location.id, cache=get_serializer_cache(self)
+            pickup_location_id=pickup_location.id, cache=self.context["cache"]
         )
 
 
@@ -102,9 +100,8 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_delivery_day(self, pickup_location: PickupLocation) -> int | None:
-        # None when the pickup location has no opening times configured
         return PickupLocationDeliveryDayService.get_delivery_day(
-            pickup_location_id=pickup_location.id, cache=get_serializer_cache(self)
+            pickup_location_id=pickup_location.id, cache=self.context["cache"]
         )
 
     @extend_schema_field(PickupLocationOpeningTimeSerializer(many=True))
@@ -171,16 +168,3 @@ class LocationRouteSerializer(serializers.ModelSerializer):
             .order_by("name")
             .values_list("name", flat=True)
         )
-
-
-class PickupLocationDeliveryDaySerializer(serializers.Serializer):
-    id = serializers.CharField()
-    name = serializers.CharField()
-
-
-class PickupLocationsByDeliveryDayResponseSerializer(serializers.Serializer):
-    pickup_locations = PickupLocationDeliveryDaySerializer(many=True)
-
-
-class DeliveryDaysResponseSerializer(serializers.Serializer):
-    days = serializers.ListField(child=serializers.IntegerField())

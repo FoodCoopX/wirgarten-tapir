@@ -12,7 +12,6 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 @patch.object(DataGenerator, "clear")
 class TestPopulateCommand(TapirIntegrationTest):
     def test_resetAll_noOrganization_defaultsToBiotop(self, _clear, mock_generate_all):
-        # The READMEs use the no-argument form.
         call_command("populate", "--reset_all")
 
         self.assertEqual(mock_generate_all.call_args.args[0], Organization.BIOTOP)
@@ -23,8 +22,6 @@ class TestPopulateCommand(TapirIntegrationTest):
         self.assertEqual(mock_generate_all.call_args.args[0], Organization.WIRGARTEN)
 
     def test_resetAll_orgOptionIsCaseInsensitive(self, _clear, mock_generate_all):
-        # Organization[...] is a name lookup, so the lowercase form has to be
-        # upper-cased before it reaches the enum.
         call_command("populate", "--reset_all", "--org", "wirgarten")
 
         self.assertEqual(mock_generate_all.call_args.args[0], Organization.WIRGARTEN)

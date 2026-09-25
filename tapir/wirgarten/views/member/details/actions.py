@@ -89,9 +89,6 @@ def renew_contract_same_conditions(request, **kwargs):
     member.sepa_consent = get_now(cache=cache)
     member.save()
 
-    # bulk_create above does not fire post_save, so the bakery receiver never
-    # sees these subscriptions. Every path that bulk-creates subscriptions has
-    # to say so itself.
     BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
 
     SubscriptionChangeLogEntry().populate_subscription_changed(
