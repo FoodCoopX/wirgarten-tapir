@@ -64,13 +64,17 @@ interface Step10OrderSummaryProps {
   setCurrentStep: (step: Step) => void;
 }
 
-const PaymentRow: React.FC<{ label: string; amount: number }> = ({
-  label,
-  amount,
-}) => (
+const PaymentRow: React.FC<{
+  label: string;
+  amount: number;
+  perMonth?: boolean;
+}> = ({ label, amount, perMonth }) => (
   <div className={"d-flex justify-content-between gap-3"}>
     <span>{label}</span>
-    <span className={"text-nowrap"}>{formatCurrency(amount)}</span>
+    <span className={"text-nowrap"}>
+      {formatCurrency(amount)}
+      {perMonth && " / Monat"}
+    </span>
   </div>
 );
 
@@ -528,13 +532,14 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                   )}
                   {monthlyPayments.length > 0 && (
                     <>
-                      <strong>Monatlich:</strong>
+                      <strong>Wiederkehrend:</strong>
                       <ul className={"mb-0"}>
                         {monthlyPayments.map((payment) => (
                           <li key={payment.key}>
                             <PaymentRow
                               label={payment.label}
                               amount={payment.amount}
+                              perMonth
                             />
                           </li>
                         ))}
