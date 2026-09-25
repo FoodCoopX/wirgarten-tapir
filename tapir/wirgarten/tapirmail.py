@@ -30,7 +30,7 @@ TOKENS_COOP_ENTRY = {
     "Anzahl der gezeichneten Genossenschaftsanteile": "number_of_coop_shares",
     "Wert Genossenschaftsanteil": "price_of_a_coop_share",
     "Gesamtwert der gezeichneten Genossenschaftsanteile": "total_cost",
-    "Beitrittsdatum in der Genossenschaft": "membership_start_date",
+    "Beitrittsdatum Geno/Verein": "membership_start_date",
     "Solidarbeitrag - Betrag": "solidarity_contribution_amount",
     "Solidarbeitrag - Startdatum": "solidarity_contribution_start_date",
     "Vereinsmitgliedschaft - Monatspreis": "membership_monthly_price",
@@ -134,7 +134,7 @@ def _register_triggers():
         required=True,
     )
     register_transactional_trigger(
-        name="BestellWizard: Nur Geno-Mitgliedschaft",
+        name="BestellWizard: Nur Geno-/Vereinsmitgliedschaft",
         key=Events.REGISTER_MEMBERSHIP_ONLY,
         tokens=TOKENS_COOP_ENTRY,
         required=lambda: legal_status_is_cooperative(cache={}),
@@ -190,7 +190,7 @@ def _register_triggers():
     )
 
     register_transactional_trigger(
-        name="Kündigung im Probemonat",
+        name="Kündigung in der Probezeit",
         key=Events.TRIAL_CANCELLATION,
         tokens={
             "Vertragsliste": "contract_list",

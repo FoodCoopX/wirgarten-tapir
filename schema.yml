@@ -4268,6 +4268,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberPaymentRhythmData'
           description: ''
+  /payments/api/members_needing_banking_data:
+    get:
+      operationId: payments_api_members_needing_banking_data_list
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberNeedingBankingData'
+          description: ''
+  /payments/api/members_needing_banking_data_for_rebuild:
+    get:
+      operationId: payments_api_members_needing_banking_data_for_rebuild_list
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+          format: date
+        required: true
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberNeedingBankingData'
+          description: ''
   /payments/api/payment_transaction_details:
     get:
       operationId: payments_api_payment_transaction_details_retrieve
@@ -9151,7 +9194,7 @@ components:
           minLength: 1
         capacity:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
       required:
@@ -9433,7 +9476,7 @@ components:
           type: boolean
         min_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum number of pieces that should be baked for this bread
@@ -9441,7 +9484,7 @@ components:
             customers)
         max_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Maximum number of pieces that should be baked for this bread
@@ -9449,7 +9492,7 @@ components:
             for this bread)
         min_remaining_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum amount of breads that should remain available for this
@@ -9498,7 +9541,7 @@ components:
           type: boolean
         min_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum number of pieces that should be baked for this bread
@@ -9506,7 +9549,7 @@ components:
             customers)
         max_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Maximum number of pieces that should be baked for this bread
@@ -9514,7 +9557,7 @@ components:
             for this bread)
         min_remaining_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum amount of breads that should remain available for this
@@ -9560,7 +9603,7 @@ components:
           minimum: 0
         min_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum number of pieces that should be baked for this bread
@@ -9568,7 +9611,7 @@ components:
             walk-in customers)
         max_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Maximum number of pieces that should be baked for this bread
@@ -9576,14 +9619,14 @@ components:
             for this bread)
         min_remaining_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum amount of breads that should remain available for this
             bread on this delivery day (e.g., for walk-in customers)
         fixed_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: If set, exactly this number of pieces should be baked for this
@@ -9607,22 +9650,22 @@ components:
           minLength: 1
         min_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
         max_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
         min_remaining_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
         fixed_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
       required:
@@ -9667,7 +9710,7 @@ components:
           minimum: 0
         min_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum number of pieces that should be baked for this bread
@@ -9675,7 +9718,7 @@ components:
             walk-in customers)
         max_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Maximum number of pieces that should be baked for this bread
@@ -9683,14 +9726,14 @@ components:
             for this bread)
         min_remaining_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum amount of breads that should remain available for this
             bread on this delivery day (e.g., for walk-in customers)
         fixed_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: If set, exactly this number of pieces should be baked for this
@@ -12567,6 +12610,37 @@ components:
       - available_lists
       - subscribed_lists
       - waiting_for_confirmation_lists
+    MemberNeedingBankingData:
+      type: object
+      properties:
+        member_no:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Mitgliedsnummer
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          title: E-Mail-Adresse
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        member_url:
+          type: string
+          readOnly: true
+      required:
+      - first_name
+      - last_name
+      - member_url
     MemberPaymentRhythm:
       type: object
       properties:
@@ -12644,13 +12718,26 @@ components:
           type: boolean
         can_edit_name:
           type: boolean
+        country:
+          type: string
+        can_edit_country:
+          type: boolean
+        contact_email:
+          type: string
+          format: email
+        member_number:
+          type: string
       required:
+      - can_edit_country
       - can_edit_name
       - can_edit_student
       - city
+      - contact_email
+      - country
       - email
       - first_name
       - last_name
+      - member_number
       - phone_number
       - postcode
       - street
@@ -13075,7 +13162,7 @@ components:
           type: boolean
         min_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum number of pieces that should be baked for this bread
@@ -13083,7 +13170,7 @@ components:
             customers)
         max_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Maximum number of pieces that should be baked for this bread
@@ -13091,7 +13178,7 @@ components:
             for this bread)
         min_remaining_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum amount of breads that should remain available for this
@@ -13120,7 +13207,7 @@ components:
           minimum: 0
         min_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum number of pieces that should be baked for this bread
@@ -13128,7 +13215,7 @@ components:
             walk-in customers)
         max_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Maximum number of pieces that should be baked for this bread
@@ -13136,14 +13223,14 @@ components:
             for this bread)
         min_remaining_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: Minimum amount of breads that should remain available for this
             bread on this delivery day (e.g., for walk-in customers)
         fixed_pieces:
           type: integer
-          maximum: 2147483647
+          maximum: 1000
           minimum: 0
           nullable: true
           description: If set, exactly this number of pieces should be baked for this
@@ -13449,6 +13536,9 @@ components:
           type: string
           minLength: 1
         city:
+          type: string
+          minLength: 1
+        country:
           type: string
           minLength: 1
         is_student:
@@ -13990,7 +14080,6 @@ components:
           minLength: 1
         phone_number:
           type: string
-          minLength: 1
         street:
           type: string
           minLength: 1
@@ -14146,7 +14235,7 @@ components:
         info:
           type: string
           title: Additional info
-          maxLength: 1024
+          maxLength: 3000
         access_code:
           type: string
           maxLength: 20
@@ -14166,7 +14255,7 @@ components:
         route_info:
           type: string
           title: Driver/Route info
-          maxLength: 1024
+          maxLength: 3000
         location_route:
           type: string
           nullable: true

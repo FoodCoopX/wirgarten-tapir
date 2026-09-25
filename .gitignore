@@ -121,7 +121,7 @@ tapir/filepond_temp_uploads/*
 !tapir/filepond_temp_uploads/.gitkeep
 
 .pnpm-store
-.prof
+*.prof
 
 # local-only compose overrides (e.g. host port remaps)
 docker-compose.override.yml

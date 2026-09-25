@@ -74,6 +74,12 @@ export interface PatchedMemberProfilePersonalDataRequestRequest {
   city?: string;
   /**
    *
+   * @type {string}
+   * @memberof PatchedMemberProfilePersonalDataRequestRequest
+   */
+  country?: string;
+  /**
+   *
    * @type {boolean}
    * @memberof PatchedMemberProfilePersonalDataRequestRequest
    */
@@ -116,6 +122,7 @@ export function PatchedMemberProfilePersonalDataRequestRequestFromJSONTyped(
     street2: json["street_2"] == null ? undefined : json["street_2"],
     postcode: json["postcode"] == null ? undefined : json["postcode"],
     city: json["city"] == null ? undefined : json["city"],
+    country: json["country"] == null ? undefined : json["country"],
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
   };
 }
@@ -144,6 +151,7 @@ export function PatchedMemberProfilePersonalDataRequestRequestToJSONTyped(
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
+    country: value["country"],
     is_student: value["isStudent"],
   };
 }

@@ -211,6 +211,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["show_mailing_list_content"] = settings.MAILING_LISTS_ENABLED
 
+        context["cache"] = cache
+
         return context
 
     def add_renewal_notice_context(self, context, next_month, today, cache: dict):

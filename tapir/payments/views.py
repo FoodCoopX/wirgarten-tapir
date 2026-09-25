@@ -42,6 +42,7 @@ from tapir.payments.serializers import (
     PaymentTransactionSerializer,
     PaymentTransactionDetailsSerializer,
     JokerCreditIntendedUsePreviewResponseSerializer,
+    MemberNeedingBankingDataSerializer,
 )
 from tapir.payments.services.intended_use_pattern_expander import (
     IntendedUsePatternExpander,
@@ -1273,3 +1274,47 @@ class RebuildSubscriptionPaymentsApiView(APIView):
                 {"order_confirmed": True, "error": None}
             ).data
         )
+
+
+class MembersNeedingBankingDataApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(responses={200: MemberNeedingBankingDataSerializer(many=True)})
+    def get(self, request: Request):
+        members = Member.objects.needing_banking_data().order_by(
+            "member_no", "last_name"
+        )
+        return Response(MemberNeedingBankingDataSerializer(members, many=True).data)
+
+
+class MembersNeedingBankingDataForRebuildApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: MemberNeedingBankingDataSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="from", type=OpenApiTypes.DATE, required=True)
+        ],
+    )
+    def get(self, request: Request):
+        cache = {}
+        from_date = datetime.datetime.strptime(
+            request.query_params["from"], "%Y-%m-%d"
+        ).date()
+
+        member_ids = (
+            Payment.objects.exclude(type=payments_config.PAYMENT_TYPE_COOP_SHARES)
+            .filter(
+                transaction__month__gte=from_date.replace(day=1),
+                transaction__month__lte=get_today(cache=cache),
+            )
+            .values_list("mandate_ref__member_id", flat=True)
+            .distinct()
+        )
+
+        members = (
+            Member.objects.filter(id__in=member_ids)
+            .needing_banking_data()
+            .order_by("member_no", "last_name")
+        )
+        return Response(MemberNeedingBankingDataSerializer(members, many=True).data)

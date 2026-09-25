@@ -4,6 +4,16 @@ var initMap = (
   callback = false,
   selected = undefined,
 ) => {
+  const markerIcon = L.icon({
+    iconRetinaUrl: "/static/wirgarten/images/leaflet/marker-icon-2x.png",
+    iconUrl: "/static/wirgarten/images/leaflet/marker-icon.png",
+    shadowUrl: "/static/wirgarten/images/leaflet/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+
   const markers = {};
   const idToCoords = (id) => {
     return data[id]["coords"].split(",");
@@ -23,7 +33,7 @@ var initMap = (
   };
 
   for (const [id, pl] of Object.entries(data)) {
-    const marker = L.marker(idToCoords(id)).addTo(map);
+    const marker = L.marker(idToCoords(id), { icon: markerIcon }).addTo(map);
 
     marker.bindPopup(`<div style="text-align: center">
         <strong>${pl.name}</strong>

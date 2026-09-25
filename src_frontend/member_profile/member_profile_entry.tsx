@@ -85,6 +85,10 @@ if (domNodeSolidarityCard) {
     <MemberProfileSolidarityContributionCard
       memberId={domNodeSolidarityCard.dataset.memberId!}
       adminEmail={domNodeSolidarityCard.dataset.adminEmail!}
+      adminVersion={domNodeSolidarityCard.dataset.userIsAdmin === "True"}
+      membersCanChangeContribution={
+        domNodeSolidarityCard.dataset.membersCanChangeContribution === "True"
+      }
     />,
   );
 } else {
