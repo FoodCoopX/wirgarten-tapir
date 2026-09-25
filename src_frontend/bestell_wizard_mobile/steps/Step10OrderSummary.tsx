@@ -32,8 +32,8 @@ import {
 } from "../utils/getProductByIdGlobal.ts";
 import { getProductTypeByProductId } from "../utils/getProductTypeByProductId.ts";
 import { getTotalPriceForProductType } from "../utils/getTotalPriceForProductType.ts";
-import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import { getVisibleAssociationMembershipTypes } from "../utils/getVisibleAssociationMembershipTypes.ts";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -63,6 +63,16 @@ interface Step10OrderSummaryProps {
   stepActive: boolean;
   setCurrentStep: (step: Step) => void;
 }
+
+const PaymentRow: React.FC<{ label: string; amount: number }> = ({
+  label,
+  amount,
+}) => (
+  <div className={"d-flex justify-content-between gap-3"}>
+    <span>{label}</span>
+    <span className={"text-nowrap"}>{formatCurrency(amount)}</span>
+  </div>
+);
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   settings,
@@ -235,6 +245,62 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     }
 
     return settings.productTypes;
+  }
+
+  function isOneTimePaymentShown() {
+    return (
+      !singleProductType &&
+      !studentStatusEnabled &&
+      settings.showCoopContent &&
+      !waitingListEntryDetails?.memberAlreadyExists
+    );
+  }
+
+  function getMonthlyPayments() {
+    const payments: { key: string; label: string; amount: number }[] =
+      Object.entries(shoppingCart)
+        .filter(([_, quantity]) => quantity > 0)
+        .map(([productId, quantity]) => {
+          const product = getProductByIdGlobal(
+            productId,
+            settings.productTypes,
+          );
+          const startsWhenSpaceFree = doesWaitingListHaveProductType(
+            productTypesInWaitingList,
+            getProductTypeByProductId(productId, settings)!,
+          );
+          return {
+            key: productId,
+            label:
+              (product?.name ?? "") +
+              (startsWhenSpaceFree ? " (Start wenn Platz frei)" : ""),
+            amount: (product?.price ?? 0) * quantity,
+          };
+        });
+
+    if (solidarityContribution !== 0) {
+      payments.push({
+        key: "solidarity_contribution",
+        label: "Solidarbeitrag",
+        amount: solidarityContribution,
+      });
+    }
+
+    const associationMembershipPrice =
+      associationMembershipType &&
+      getAssociationMembershipTypeCurrentPrice(
+        associationMembershipType,
+        contractStartDate,
+      );
+    if (associationMembershipType && associationMembershipPrice) {
+      payments.push({
+        key: "association_membership",
+        label: "Vereinsmitgliedschaft: " + associationMembershipType.name,
+        amount: associationMembershipPrice.priceAsFloat,
+      });
+    }
+
+    return payments;
   }
 
   return (
@@ -431,45 +497,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               <Accordion.Item eventKey={"payments"} onClick={scrollIntoView}>
                 <Accordion.Header>Deine Zahlungen</Accordion.Header>
                 <AccordionBody>
-                  <ul>
-                    {Object.entries(shoppingCart)
-                      .filter(([_, quantity]) => quantity > 0)
-                      .map(([productId, quantity]) => (
-                        <li key={productId}>
-                          {
-                            getProductByIdGlobal(
-                              productId,
-                              settings.productTypes,
-                            )?.name
-                          }
-                          :{" "}
-                          {formatCurrency(
-                            (getProductByIdGlobal(
-                              productId,
-                              settings.productTypes,
-                            )?.price ?? 0) * quantity,
-                          )}{" "}
-                          / Monat
-                          {doesWaitingListHaveProductType(
-                            productTypesInWaitingList,
-                            getProductTypeByProductId(productId, settings)!,
-                          )
-                            ? " (Start wenn Platz frei)"
-                            : ""}
-                        </li>
-                      ))}
-                    {solidarityContribution !== 0 && (
-                      <li>
-                        Solidarbeitrag: {formatCurrency(solidarityContribution)}{" "}
-                        / Monat
-                      </li>
-                    )}
-                    {associationMembershipType &&
-                      getAssociationMembershipTypeCurrentPrice(
-                        associationMembershipType,
-                        contractStartDate,
-                      ) && <li>{getAssociationMembershipTitle()}</li>}
-                  </ul>
                   {atLeastOneMonthlyPayment(
                     shoppingCart,
                     productTypesInWaitingList,
@@ -480,19 +507,37 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       {getPaymentRhythmDisplay(personalData.paymentRhythm)}
                     </p>
                   )}
-                  {!singleProductType &&
-                    !studentStatusEnabled &&
-                    settings.showCoopContent &&
-                    !waitingListEntryDetails?.memberAlreadyExists && (
-                      <p>
-                        Einmalig:{" "}
-                        {formatCurrency(
-                          numberOfCoopShares * settings.priceOfAShare,
-                        )}{" "}
-                        (Genossenschaftsanteile){" "}
-                        {becomeMemberNow === false && "(Start wenn Platz frei)"}
-                      </p>
-                    )}
+                  {isOneTimePaymentShown() && (
+                    <>
+                      <strong>Einmalig:</strong>
+                      <PaymentRow
+                        label={
+                          "Genossenschaftsanteile" +
+                          (becomeMemberNow === false
+                            ? " (Start wenn Platz frei)"
+                            : "")
+                        }
+                        amount={numberOfCoopShares * settings.priceOfAShare}
+                      />
+                    </>
+                  )}
+                  {isOneTimePaymentShown() &&
+                    getMonthlyPayments().length > 0 && <hr />}
+                  {getMonthlyPayments().length > 0 && (
+                    <>
+                      <strong>Monatlich:</strong>
+                      <ul className={"mb-0"}>
+                        {getMonthlyPayments().map((payment) => (
+                          <li key={payment.key}>
+                            <PaymentRow
+                              label={payment.label}
+                              amount={payment.amount}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                 </AccordionBody>
               </Accordion.Item>
             </Accordion>
