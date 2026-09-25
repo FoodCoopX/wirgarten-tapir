@@ -11,6 +11,7 @@ import {
   PickupLocationOpeningTime,
 } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
@@ -113,12 +114,23 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
             }}
           />
         )}
-        {canChangePickupLocation && (
+        {canChangePickupLocation ? (
           <TapirButton
             text={"Verteilstation ändern"}
             icon={"edit"}
             variant={"outline-primary"}
             onClick={() => setShowPickupLocationChangeModal(true)}
+          />
+        ) : (
+          <TapirHelpButton
+            title={"Verteilstation ändern"}
+            text={
+              <>
+                Für eine Änderung deines Abholorts wende dich bitte an deinen
+                Betrieb unter{" "}
+                <a href={`mailto:${adminContactEmail}`}>{adminContactEmail}</a>.
+              </>
+            }
           />
         )}
       </span>
@@ -135,13 +147,6 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
             <h5 className={"mb-0"}>Abholung</h5>
             {getHeaderButtons()}
           </div>
-          {!canChangePickupLocation && deliveries.length > 0 && (
-            <small className={"text-muted"}>
-              Für eine Änderung deines Abholorts wende dich bitte an deinen
-              Betrieb unter{" "}
-              <a href={`mailto:${adminContactEmail}`}>{adminContactEmail}</a>.
-            </small>
-          )}
         </Card.Header>
         <Card.Body className={deliveries.length > 0 ? "p-0" : ""}>
           <DeliveriesTable

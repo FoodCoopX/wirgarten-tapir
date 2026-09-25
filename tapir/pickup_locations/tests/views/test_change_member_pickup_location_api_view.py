@@ -416,16 +416,9 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         new_pickup_location = PickupLocationFactory.create()
         member = old_member_pickup_location.member
 
-        SubscriptionFactory.create(
-            member=member,
-            start_date=datetime.datetime(year=1998, month=1, day=1),
-            product__type__delivery_cycle=WEEKLY[0],
-            quantity=1,
+        self._set_parameter(
+            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, value=False
         )
-
-        TapirParameter.objects.filter(
-            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION
-        ).update(value=False)
 
         self.client.force_login(member)
         url = reverse("pickup_locations:change_member_pickup_location")
@@ -456,9 +449,9 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
             product__type__delivery_cycle=WEEKLY[0],
         )
 
-        TapirParameter.objects.filter(
-            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION
-        ).update(value=False)
+        self._set_parameter(
+            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, value=False
+        )
 
         admin = MemberFactory.create(is_superuser=True)
         self.client.force_login(admin)
