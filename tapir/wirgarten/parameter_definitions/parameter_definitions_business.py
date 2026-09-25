@@ -69,18 +69,6 @@ class ParameterDefinitionsBusiness:
         order_priority -= 1
 
         importer.parameter_definition(
-            key=ParameterKeys.COOP_INFO_LINK,
-            label="Link zu weiteren Infos über der Betrieb",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="https://lueneburg.wirgarten.com/genossenschaft/",
-            description="Der Link zu weiteren Infos über der Betrieb.",
-            category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(validators=[URLValidator()]),
-            order_priority=order_priority,
-        )
-        order_priority -= 1
-
-        importer.parameter_definition(
             key=ParameterKeys.COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT,
             label="Schwelle Anzahl an Geno-Anteile bei Zeichnungen",
             datatype=TapirParameterDatatype.INTEGER,
