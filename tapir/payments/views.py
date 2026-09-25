@@ -400,7 +400,6 @@ class GetPastMemberPaymentsApiView(APIView):
         member_credits = MemberCredit.objects.filter(
             member_id=member_id,
             due_date__lte=get_today(cache=self.cache),
-            settled_on__isnull=True,
         ).order_by("-due_date")
 
         return Response(

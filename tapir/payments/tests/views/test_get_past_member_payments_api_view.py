@@ -130,7 +130,7 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
             past_payment_1.id, response_content["payments"][1]["payment"]["id"]
         )
 
-    def test_get_memberHasSettledCredit_settledCreditIsNotReturned(self):
+    def test_get_memberHasSettledAndUnsettledPastCredits_bothAreReturned(self):
         mock_timezone(test=self, now=datetime.datetime(year=2021, month=5, day=1))
         member = MemberFactory.create()
         self.client.force_login(member)
@@ -145,6 +145,10 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
             due_date=datetime.date(year=2021, month=2, day=1),
             settled_on=None,
         )
+        MemberCreditFactory.create(
+            member=member,
+            due_date=datetime.date(year=2022, month=1, day=1),
+        )
 
         url = reverse("payments:member_past_payments")
         url = f"{url}?member_id={member.id}"
@@ -152,5 +156,6 @@ class TestGetPastMemberPaymentsAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         returned_credit_ids = {credit["id"] for credit in response.json()["credits"]}
-        self.assertEqual({str(unsettled_credit.id)}, returned_credit_ids)
-        self.assertNotIn(str(settled_credit.id), returned_credit_ids)
+        self.assertEqual(
+            {str(settled_credit.id), str(unsettled_credit.id)}, returned_credit_ids
+        )
