@@ -1,4 +1,5 @@
 import React from "react";
+import { Table } from "react-bootstrap";
 import "../../styles/bakery_styles.css";
 import { ActionButtons } from "./ActionButtons";
 import { SectionToggle } from "./SectionToggle";
@@ -42,8 +43,8 @@ export const BakingListSection: React.FC<BakingListSectionProps> = ({
       <>
         {allBreadNames.length > 0 ? (
           <>
-            <div className="table-responsive mb-3">
-              <table className="table table-sm" style={{ fontSize: "0.8rem" }}>
+            <div className="mb-3">
+              <Table responsive size="sm" style={{ fontSize: "0.8rem" }}>
                 <thead
                   className="table-header-bakery"
                   style={{ fontSize: "0.8rem" }}
@@ -112,7 +113,7 @@ export const BakingListSection: React.FC<BakingListSectionProps> = ({
                     <td className="text-end">{totalBaked}</td>
                   </tr>
                 </tbody>
-              </table>
+              </Table>
               <div className="text-muted small">
                 <p className="mb-1">
                   <span

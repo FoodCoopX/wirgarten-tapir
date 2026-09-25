@@ -6,6 +6,7 @@ import { PublicPickupLocation, type PublicProductType } from "../../api-client";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
+import { getUniqueDeliveryDays } from "../../utils/getUniqueDeliveryDays.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import Step5BPickupLocationList from "../components/Step5BPickupLocationList.tsx";
 import Step5BPickupLocationMap from "../components/Step5BPickupLocationMap.tsx";
@@ -80,19 +81,11 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
     null,
   );
 
-  const availableDeliveryDays = useMemo((): number[] => {
-    // Not Number(): deliveryDay is `number | null` and Number(null) is 0,
-    // which would file a station with no opening times under Montag.
-    const days = new Set(
-      settings.pickupLocations
-        .map((loc) => loc.deliveryDay)
-        .filter((day): day is number => day !== null && day !== undefined),
-    );
-    return Array.from(days).sort((a, b) => a - b);
-  }, [settings.pickupLocations]);
+  const availableDeliveryDays = useMemo(
+    () => getUniqueDeliveryDays(settings.pickupLocations),
+    [settings.pickupLocations],
+  );
 
-  // Changing the day filter clears the selection, so a member cannot confirm
-  // a station that is no longer on screen.
   const filteredPickupLocations = useMemo(() => {
     if (selectedDeliveryDay === null) {
       return settings.pickupLocations;

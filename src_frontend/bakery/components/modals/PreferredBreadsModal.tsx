@@ -20,8 +20,8 @@ interface PreferredBreadsModalProps {
   csrfToken: string;
 }
 
-// Mirrors MAX_PREFERRED_BREADS in tapir/bakery/utils.py, which the API now
-// enforces. Keep the two in step: the server answers 400 above its own limit.
+// Mirrors MAX_PREFERRED_BREADS in tapir/bakery/utils.py; the API answers 400
+// above its own limit.
 const MAX_PREFERRED_BREADS = 3;
 
 export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
@@ -54,8 +54,6 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Not while loading, or Enter would POST a selection that has not been
-      // read back yet and wipe the member's saved favourites.
       if (e.key === "Enter" && !saving && !loading) {
         e.preventDefault();
         handleSave();
@@ -72,9 +70,6 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
   }, [isOpen, saving, loading, selectedBreadIds]);
 
   const loadData = () => {
-    // The component stays mounted between openings, so every piece of
-    // per-opening state has to be reset here: a stale refusal message greeted
-    // the next visitor, and an unsaved selection survived "Abbrechen".
     setLimitReached(false);
     setSelectedBreadIds(new Set());
     setLoading(true);
@@ -113,8 +108,6 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
         );
         setContentsMap(contentMapping);
 
-        // Unconditional: a member with no saved favourites must end up with
-        // an empty set, not with whatever was left from the last opening.
         setSelectedBreadIds(new Set(preferredData[0]?.breads ?? []));
       })
       .catch((error) => {
@@ -135,8 +128,6 @@ export const PreferredBreadsModal: React.FC<PreferredBreadsModalProps> = ({
       return;
     }
 
-    // Refuse the pick rather than evicting one of the existing favourites,
-    // which the member would have no way of noticing.
     if (newSelected.size >= MAX_PREFERRED_BREADS) {
       setLimitReached(true);
       return;

@@ -21,7 +21,6 @@ export const ChooseBreads: React.FC<ChooseBreadsProps> = ({
 }) => {
   return (
     <div className="container-fluid mt-4 px-5">
-      {/* Page Introduction */}
       <div className="row mb-4">
         <div className="col-12">
           <div className="text-center mb-4">
@@ -35,7 +34,6 @@ export const ChooseBreads: React.FC<ChooseBreadsProps> = ({
         </div>
       </div>
 
-      {/* Section 1: Direct Bread Selection - only when members CAN choose bread sorts */}
       {membersCanChooseBreadSorts && (
         <div className="row">
           <div className="col-12 mb-3">
@@ -62,7 +60,6 @@ export const ChooseBreads: React.FC<ChooseBreadsProps> = ({
         </div>
       )}
 
-      {/* Visual Separator with Arrow - only when both sections are shown */}
       {membersCanChooseBreadSorts && (
         <div className="row mb-4">
           <div className="col-12 text-center">
@@ -81,7 +78,6 @@ export const ChooseBreads: React.FC<ChooseBreadsProps> = ({
         </div>
       )}
 
-      {/* Section 2: Preferred Breads - always shown */}
       <div className="row">
         <div className="col-12 mb-3">
           <div className="d-flex align-items-center gap-2 mb-2">

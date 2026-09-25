@@ -3,12 +3,8 @@ import isoWeek from "dayjs/plugin/isoWeek";
 
 dayjs.extend(isoWeek);
 
-/**
- * Pickup location delivery days are stored 0-based (0 = Montag), matching
- * OPTIONS_WEEKDAYS on the backend, while dayjs isoWeekday() is 1-based
- * (1 = Monday). Everything below works off the Monday of the ISO week, so a
- * delivery day is simply that many days later.
- */
+// Delivery days are stored 0-based (0 = Montag) to match OPTIONS_WEEKDAYS on
+// the backend, while dayjs isoWeekday() is 1-based.
 
 export const DAY_LABELS: Record<number, string> = {
   0: "Montag",
@@ -21,10 +17,8 @@ export const DAY_LABELS: Record<number, string> = {
 };
 
 /**
- * The ISO week-numbering year, which is what the backend stores next to the ISO
- * week. It differs from the calendar year in the days around New Year: asking
- * for the calendar year on 2027-01-01 would query 2027/W53 for rows stored as
- * 2026/W53.
+ * The ISO week-numbering year, which is what the backend stores next to the
+ * week. It differs from the calendar year in the days around New Year.
  */
 export const currentIsoYear = (): number => dayjs().isoWeekYear();
 
@@ -33,10 +27,6 @@ export const currentIsoWeek = (): number => dayjs().isoWeek();
 /**
  * The Monday of an ISO week, anchored on the 4th of January - which is always
  * in ISO week 1 of its own ISO year.
- *
- * Anchoring on today instead would be wrong in the days around New Year: on
- * 2027-01-01, dayjs().year(2027) is still inside ISO year 2026, so asking for
- * week 1 would land in 2026-W01 rather than 2027-W01.
  */
 const isoWeekStart = (year: number, week: number): Dayjs =>
   dayjs(`${year}-01-04`)
@@ -57,11 +47,8 @@ export const formatDeliveryDate = (
 ): string => deliveryDate(year, week, deliveryDay).format("DD.MM.YYYY");
 
 /**
- * How many ISO weeks a year has - 52, or 53 in a long year such as 2026.
- *
- * The 28th of December is always in the last ISO week of its own ISO year,
- * which makes it the cheapest way to ask. A fixed 53 would offer a week that
- * does not exist.
+ * How many ISO weeks a year has - 52, or 53 in a long year. The 28th of
+ * December is always in the last ISO week of its own ISO year.
  */
 export const isoWeeksInYear = (year: number): number =>
   dayjs(`${year}-12-28`).isoWeek();

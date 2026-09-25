@@ -31,7 +31,6 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
     <div className="card w-100 card-bakery-border-left">
       <div className="card-body p-3">
         <div className="row g-2">
-          {/* Image column */}
           <div className="col-auto">
             {bread.picture ? (
               <img
@@ -46,7 +45,6 @@ export const CompactBreadCard: React.FC<CompactBreadCardProps> = ({
             )}
           </div>
 
-          {/* Details column */}
           <div className="col">
             <div className="d-flex flex-column h-100">
               <div className="d-flex justify-content-between align-items-start mb-1">

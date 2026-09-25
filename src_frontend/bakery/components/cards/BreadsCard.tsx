@@ -228,7 +228,6 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({ csrfToken }) => {
                   className="list-group-item px-0 d-flex justify-content-between align-items-start border-0 list-item-transparent"
                 >
                   <div className="d-flex gap-3 flex-grow-1">
-                    {/* Bread Image */}
                     <div
                       className="bread-list-image"
                       onClick={() => handleImageClick(bread.id!)}
@@ -244,7 +243,6 @@ export const BreadsCard: React.FC<BreadsCardProps> = ({ csrfToken }) => {
                           />
                         </div>
                       )}
-                      {/* Hover overlay */}
                       <div
                         className="bread-image-overlay"
                         style={{

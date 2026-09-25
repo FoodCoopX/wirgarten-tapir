@@ -58,7 +58,6 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({
       ? assignedLabelIds.filter((id) => id !== labelId)
       : [...assignedLabelIds, labelId];
 
-    // Optimistic update
     setAssignedLabelIds(newLabelIds);
 
     bakeryApi
@@ -70,9 +69,6 @@ export const LabelsModal: React.FC<BreadLabelsModalProps> = ({
         if (onUpdate) onUpdate();
       })
       .catch((error) => {
-        // Revert only this label, through the updater form: restoring an
-        // array snapshotted before the click would undo every other toggle
-        // made while this request was in flight.
         setAssignedLabelIds((current) =>
           isAssigned
             ? current.includes(labelId)

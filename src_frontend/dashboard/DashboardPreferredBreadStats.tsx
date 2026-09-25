@@ -1,34 +1,25 @@
-import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek";
 import React, { useEffect, useState } from "react";
 import { Card, Spinner } from "react-bootstrap";
 import { BakeryApi } from "../api-client";
 import { PreferredBreadStatisticsCard } from "../bakery/components/cards/PreferredBreadStatisticsCard";
+import {
+  currentIsoWeek,
+  currentIsoYear,
+  DAY_LABELS,
+} from "../bakery/utils/weekdays";
 import { useApi } from "../hooks/useApi";
-
-dayjs.extend(isoWeek);
-
-const DAY_LABELS: Record<number, string> = {
-  0: "Montag",
-  1: "Dienstag",
-  2: "Mittwoch",
-  3: "Donnerstag",
-  4: "Freitag",
-  5: "Samstag",
-  6: "Sonntag",
-};
 
 const DashboardPreferredBreadStats: React.FC = () => {
   const bakeryApi = useApi(BakeryApi, "no_token");
   const [deliveryDays, setDeliveryDays] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const year = dayjs().isoWeekYear();
-  const week = dayjs().isoWeek();
+  const year = currentIsoYear();
+  const week = currentIsoWeek();
 
   useEffect(() => {
     bakeryApi
-      .pickupLocationsApiDeliveryDaysRetrieve()
+      .bakeryApiDeliveryDaysRetrieve()
       .then((data) => setDeliveryDays(data.days))
       .catch((err) => console.error("Failed to load delivery days:", err))
       .finally(() => setLoading(false));

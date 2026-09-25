@@ -15,35 +15,27 @@ interface DeliveryDayTabsProps {
   availableDays: number[];
   selectedDay: number | null;
   onSelectDay: (day: number | null) => void;
-  showAllOption?: boolean;
-  allLabel?: string;
-  variant?: "pills" | "tabs";
 }
 
 const DeliveryDayTabs: React.FC<DeliveryDayTabsProps> = ({
   availableDays,
   selectedDay,
   onSelectDay,
-  showAllOption = true,
-  allLabel = "Alle Tage",
-  variant = "pills",
 }) => {
   if (availableDays.length <= 1) return null;
 
   return (
     <div className="mb-3">
-      <Nav variant={variant} className="flex-row">
-        {showAllOption && (
-          <Nav.Item>
-            <Nav.Link
-              active={selectedDay === null}
-              onClick={() => onSelectDay(null)}
-              style={{ cursor: "pointer" }}
-            >
-              {allLabel}
-            </Nav.Link>
-          </Nav.Item>
-        )}
+      <Nav variant="pills" className="flex-row">
+        <Nav.Item>
+          <Nav.Link
+            active={selectedDay === null}
+            onClick={() => onSelectDay(null)}
+            style={{ cursor: "pointer" }}
+          >
+            Alle Tage
+          </Nav.Link>
+        </Nav.Item>
         {availableDays.map((day) => (
           <Nav.Item key={day}>
             <Nav.Link

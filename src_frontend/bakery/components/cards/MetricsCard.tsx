@@ -25,8 +25,6 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
   );
   const bakeryApi = useApi(BakeryApi, csrfToken);
 
-  // Same guard as on the Reports page: a response for a week the user has
-  // already left must not repaint the card.
   const selectionRef = useRef(`${year}/${week}/${deliveryDay}`);
 
   useEffect(() => {
@@ -146,7 +144,6 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
             </div>
 
             <div className="card-body p-2">
-              {/* Progress Bar */}
               <div className="progress mb-2" style={{ height: "20px" }}>
                 <div
                   className="progress-bar progress-bar-bakery-success"
@@ -173,7 +170,6 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
                 </div>
               </div>
 
-              {/* Breakdown Numbers */}
               <div
                 className="d-flex justify-content-between"
                 style={{ fontSize: "0.8rem" }}
@@ -225,7 +221,6 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
                 </div>
               )}
 
-              {/* Bread Breakdown (Collapsible) */}
               {isExpanded &&
                 metric.breadBreakdown &&
                 metric.breadBreakdown.length > 0 && (

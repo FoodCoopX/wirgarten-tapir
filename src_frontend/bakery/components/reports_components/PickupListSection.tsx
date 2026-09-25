@@ -1,4 +1,5 @@
 import React from "react";
+import { Table } from "react-bootstrap";
 import type {
   PickupListForLocation,
   PickupLocation,
@@ -93,109 +94,104 @@ export const PickupListSection: React.FC<PickupListSectionProps> = ({
           </div>
         ) : selectedLocation && pickupListData?.entries?.length ? (
           <>
-            <div className="table-responsive mb-3 mt-3">
-              <table
-                className="table table-sm table-bordered"
-                style={{ fontSize: "0.8rem" }}
-              >
-                <thead className="table-header-bakery">
-                  <tr>
-                    <th className="text-center" style={{ width: "30px" }}>
-                      #
+            <Table
+              responsive
+              size="sm"
+              bordered
+              className="mb-3 mt-3"
+              style={{ fontSize: "0.8rem" }}
+            >
+              <thead className="table-header-bakery">
+                <tr>
+                  <th className="text-center" style={{ width: "30px" }}>
+                    #
+                  </th>
+                  <th>Name</th>
+                  <th className="text-center" style={{ width: "40px" }}>
+                    Σ
+                  </th>
+                  <th className="text-center" style={{ width: "30px" }}>
+                    <span
+                      className="material-icons"
+                      style={{ fontSize: "14px" }}
+                    >
+                      check
+                    </span>
+                  </th>
+                  {pickupListData.breadNames.map((name) => (
+                    <th key={name} className="text-center th-vertical">
+                      {name}
                     </th>
-                    <th>Name</th>
-                    <th className="text-center" style={{ width: "40px" }}>
-                      Σ
-                    </th>
-                    <th className="text-center" style={{ width: "30px" }}>
-                      <span
-                        className="material-icons"
-                        style={{ fontSize: "14px" }}
-                      >
-                        check
-                      </span>
-                    </th>
-                    {pickupListData.breadNames.map((name) => (
-                      <th key={name} className="text-center th-vertical">
-                        {name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pickupListData.entries.map((entry, index) => {
-                    // No snake_case fallbacks and no `any`: the client is
-                    // generated from the schema and delivers camelCase, so the
-                    // fallbacks were unreachable and only cost the type check
-                    // at the one place the contract should be enforced.
-                    const {
-                      memberId,
-                      memberName,
-                      total,
-                      breadCounts,
-                      breadPreferred,
-                    } = entry;
-                    const isChecked = checkedMembers[memberId] || false;
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pickupListData.entries.map((entry, index) => {
+                  const {
+                    memberId,
+                    memberName,
+                    total,
+                    breadCounts,
+                    breadPreferred,
+                  } = entry;
+                  const isChecked = checkedMembers[memberId] || false;
 
-                    return (
-                      <tr
-                        key={memberId}
-                        className={isChecked ? "checked-row" : ""}
-                      >
-                        <td className="text-center text-muted">{index + 1}</td>
-                        <td
-                          style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}
-                        >
-                          {memberName}
-                        </td>
-                        <td className="text-center">
-                          <strong className="text-bakery-primary-darker">
-                            {total}
-                          </strong>
-                        </td>
-                        <td className="text-center">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={isChecked}
-                            onChange={() => onCheckToggle(memberId)}
-                            style={{ cursor: "pointer" }}
-                          />
-                        </td>
-                        {pickupListData.breadNames.map((name) => {
-                          const count = breadCounts[name] || 0;
-                          const preferred = breadPreferred[name] || false;
-                          return (
-                            <td
-                              key={name}
-                              className={`text-center ${preferred ? "bg-bakery-checked" : ""} ${count > 0 ? "" : "text-bakery-light"}`}
-                            >
-                              {count > 0 ? count : preferred ? "" : "—"}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                  <tr className="total-row-brown fw-bold">
-                    <td />
-                    <td>Gesamt</td>
-                    <td className="text-center">{pickupListData.grandTotal}</td>
-                    <td />
-                    {pickupListData.breadNames.map((name) => (
-                      <td key={name} className="text-center">
-                        {(
-                          pickupListData.breadTotals as unknown as Record<
-                            string,
-                            number
-                          >
-                        )[name] || 0}
+                  return (
+                    <tr
+                      key={memberId}
+                      className={isChecked ? "checked-row" : ""}
+                    >
+                      <td className="text-center text-muted">{index + 1}</td>
+                      <td style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                        {memberName}
                       </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                      <td className="text-center">
+                        <strong className="text-bakery-primary-darker">
+                          {total}
+                        </strong>
+                      </td>
+                      <td className="text-center">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={isChecked}
+                          onChange={() => onCheckToggle(memberId)}
+                          style={{ cursor: "pointer" }}
+                        />
+                      </td>
+                      {pickupListData.breadNames.map((name) => {
+                        const count = breadCounts[name] || 0;
+                        const preferred = breadPreferred[name] || false;
+                        return (
+                          <td
+                            key={name}
+                            className={`text-center ${preferred ? "bg-bakery-checked" : ""} ${count > 0 ? "" : "text-bakery-light"}`}
+                          >
+                            {count > 0 ? count : preferred ? "" : "—"}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+                <tr className="total-row-brown fw-bold">
+                  <td />
+                  <td>Gesamt</td>
+                  <td className="text-center">{pickupListData.grandTotal}</td>
+                  <td />
+                  {pickupListData.breadNames.map((name) => (
+                    <td key={name} className="text-center">
+                      {(
+                        pickupListData.breadTotals as unknown as Record<
+                          string,
+                          number
+                        >
+                      )[name] || 0}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </Table>
             <div
               className="d-flex align-items-center gap-2 mb-2"
               style={{ fontSize: "0.75rem" }}

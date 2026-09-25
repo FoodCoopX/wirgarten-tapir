@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal } from "react-bootstrap";
+import { Modal, Table } from "react-bootstrap";
 import { ArrowRepeat, InfoCircle } from "react-bootstrap-icons";
 import { BakeryApi } from "../../../api-client";
 import type {
@@ -281,85 +281,83 @@ export const DailySettingsModal: React.FC<DailySettingsModalProps> = ({
           ) : (
             <div className="card">
               <div className="card-body p-0">
-                <div className="table-responsive">
-                  <table className="table table-bordered table-hover mb-0">
-                    <thead
-                      className="table-header-bakery"
-                      style={{
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 10,
-                      }}
-                    >
-                      <tr>
-                        <th style={{ minWidth: "150px" }}>Brot</th>
-                        {FIELDS.map((f) => (
-                          <th
-                            key={f.key}
-                            className="text-center"
-                            style={{ minWidth: "120px" }}
+                <Table responsive bordered hover className="mb-0">
+                  <thead
+                    className="table-header-bakery"
+                    style={{
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 10,
+                    }}
+                  >
+                    <tr>
+                      <th style={{ minWidth: "150px" }}>Brot</th>
+                      {FIELDS.map((f) => (
+                        <th
+                          key={f.key}
+                          className="text-center"
+                          style={{ minWidth: "120px" }}
+                        >
+                          <div>{f.label}</div>
+                          <small
+                            className="text-muted d-block"
+                            style={{
+                              fontWeight: "normal",
+                              fontSize: "0.75rem",
+                            }}
                           >
-                            <div>{f.label}</div>
-                            <small
-                              className="text-muted d-block"
-                              style={{
-                                fontWeight: "normal",
-                                fontSize: "0.75rem",
-                              }}
-                            >
-                              {f.help}
-                            </small>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {activeBreads.map((bread) => (
-                        <tr key={bread.id}>
-                          <td className="fw-bold align-middle">
-                            <div className="d-flex align-items-center">
-                              {bread.picture && (
-                                <img
-                                  src={bread.picture}
-                                  alt={bread.name}
-                                  className="me-2"
-                                  style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    objectFit: "cover",
-                                    borderRadius: "6px",
-                                  }}
-                                />
-                              )}
-                              {bread.name}
-                            </div>
-                          </td>
-                          {FIELDS.map((f) => (
-                            <td key={f.key} className="p-1">
-                              <input
-                                type="text"
-                                className={`form-control form-control-sm text-center ${specifics[bread.id!]?.[f.key] ? "text-bakery-highlight fw-bold" : "text-bakery-muted"}`}
-                                value={specifics[bread.id!]?.[f.key] || ""}
-                                onChange={(e) =>
-                                  handleCellChange(
-                                    bread.id!,
-                                    f.key,
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder={getPlaceholder(bread, f.key)}
+                            {f.help}
+                          </small>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeBreads.map((bread) => (
+                      <tr key={bread.id}>
+                        <td className="fw-bold align-middle">
+                          <div className="d-flex align-items-center">
+                            {bread.picture && (
+                              <img
+                                src={bread.picture}
+                                alt={bread.name}
+                                className="me-2"
                                 style={{
-                                  minWidth: "60px",
-                                  fontSize: "14px",
+                                  width: "32px",
+                                  height: "32px",
+                                  objectFit: "cover",
+                                  borderRadius: "6px",
                                 }}
                               />
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            )}
+                            {bread.name}
+                          </div>
+                        </td>
+                        {FIELDS.map((f) => (
+                          <td key={f.key} className="p-1">
+                            <input
+                              type="text"
+                              className={`form-control form-control-sm text-center ${specifics[bread.id!]?.[f.key] ? "text-bakery-highlight fw-bold" : "text-bakery-muted"}`}
+                              value={specifics[bread.id!]?.[f.key] || ""}
+                              onChange={(e) =>
+                                handleCellChange(
+                                  bread.id!,
+                                  f.key,
+                                  e.target.value,
+                                )
+                              }
+                              placeholder={getPlaceholder(bread, f.key)}
+                              style={{
+                                minWidth: "60px",
+                                fontSize: "14px",
+                              }}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
               </div>
             </div>
           )}

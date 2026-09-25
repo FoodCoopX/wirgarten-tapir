@@ -44,7 +44,6 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
         style={{ cursor: onClick ? "pointer" : "default" }}
         onClick={onClick}
       >
-        {/* Selected/Preferred Badge */}
         {(isSelected || isPreferred) && (
           <div
             className="position-absolute top-0 end-0 m-2"
@@ -71,7 +70,6 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
           </div>
         )}
 
-        {/* Image */}
         {bread.picture ? (
           <img
             src={bread.picture}
@@ -88,7 +86,6 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
           </div>
         )}
 
-        {/* Card Body */}
         <div className="card-body d-flex flex-column">
           <h6 className="card-title mb-0 text-bakery-primary-darker">
             {bread.name}
@@ -100,7 +97,6 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
             </small>
           )}
 
-          {/* Availability Badge */}
           {showAvailability && availableCapacity !== undefined && (
             <div className="mb-2">
               <span
@@ -151,7 +147,6 @@ export const SingleBreadCard: React.FC<SingleBreadCardProps> = ({
           )}
         </div>
 
-        {/* Footer */}
         {showFooter && (
           <div
             className={`card-footer text-center py-2 ${isSelected ? "bread-card-footer-selected" : isPreferred ? "bread-card-footer-preferred" : "bread-card-footer-default"}`}

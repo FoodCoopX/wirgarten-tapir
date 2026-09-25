@@ -23,8 +23,7 @@ export const YearWeekSelectorCard: React.FC<YearWeekSelectorCardProps> = ({
   );
   const weeksInSelectedYear = isoWeeksInYear(selectedYear);
 
-  // 2026 has 53 ISO weeks, 2027 has 52. Leaving KW 53 selected while switching
-  // to 2027 asked the backend for a week that does not exist.
+  // A year has 52 or 53 ISO weeks, so KW 53 does not exist in every year.
   const handleYearChange = (year: number) => {
     onYearChange(year);
     const weeksInNewYear = isoWeeksInYear(year);

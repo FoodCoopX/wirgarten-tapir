@@ -115,22 +115,14 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     }));
   };
 
-  // The week the user is currently looking at. Responses that come back after
-  // the selection has moved on are dropped: without this a slow request for an
-  // earlier week overwrote the week now on screen.
   const selectionRef = useRef(`${year}/${week}`);
   const isStale = (requestedFor: string) =>
     selectionRef.current !== requestedFor;
-
-  // --- Data loading ---
 
   useEffect(() => {
     loadInitialData();
   }, []);
 
-  // One effect, not three. [year, week, initialDataLoaded] and
-  // [year, week, deliveryDays, allPickupLocations] both fired on the initial
-  // load and on every week change, so each loader ran twice.
   useEffect(() => {
     if (!initialDataLoaded) return;
     selectionRef.current = `${year}/${week}`;
@@ -147,7 +139,7 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
   const loadInitialData = () => {
     setLoading(true);
     Promise.all([
-      bakeryApi.pickupLocationsApiDeliveryDaysRetrieve(),
+      bakeryApi.bakeryApiDeliveryDaysRetrieve(),
       pickupLocationsApi.pickupLocationsPickupLocationsList(),
     ])
       .then(([deliveryDaysData, pickupLocations]) => {
@@ -241,8 +233,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
     setPickupListLoadingByDay(
       deliveryDays.reduce((acc, day) => ({ ...acc, [day]: true }), {}),
     );
-    // One request per day, not one per station: the server groups the week's
-    // deliveries once and answers every station out of that grouping.
     Promise.all(
       deliveryDays.map((day) => {
         const stationIds = getPickupLocationsForDay(day).map((pl) => pl.id!);
@@ -271,8 +261,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
       );
     });
   };
-
-  // --- Compute derived data per day ---
 
   const computeDayData = (day: number) => {
     const preview = previewByDay[day];
@@ -322,7 +310,6 @@ export const Reports: React.FC<ReportsProps> = ({ csrfToken }) => {
         }))
       : daySessions;
 
-    // Distribution list data
     const locationBreads: Record<
       string,
       Record<string, { baked: number; ordered: number; extra: number }>

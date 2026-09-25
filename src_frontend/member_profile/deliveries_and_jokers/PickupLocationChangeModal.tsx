@@ -18,6 +18,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
+import { getUniqueDeliveryDays } from "../../utils/getUniqueDeliveryDays.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface PickupLocationChangeModalProps {
@@ -28,16 +29,6 @@ interface PickupLocationChangeModalProps {
   reloadDeliveries: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
-
-const WEEKDAY_NAMES = [
-  "Montag",
-  "Dienstag",
-  "Mittwoch",
-  "Donnerstag",
-  "Freitag",
-  "Samstag",
-  "Sonntag",
-];
 
 const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   show,
@@ -76,19 +67,11 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
   const [currentPickupLocationId, setCurrentPickupLocationId] = useState("");
 
-  // Get unique delivery days from pickup locations
-  const availableDeliveryDays = React.useMemo((): number[] => {
-    // Not Number(): deliveryDay is `number | null` and Number(null) is 0,
-    // which would file a station with no opening times under Montag.
-    const days = new Set(
-      pickupLocations
-        .map((loc) => loc.deliveryDay)
-        .filter((day): day is number => day !== null && day !== undefined),
-    );
-    return Array.from(days).sort((a, b) => a - b);
-  }, [pickupLocations]);
+  const availableDeliveryDays = React.useMemo(
+    () => getUniqueDeliveryDays(pickupLocations),
+    [pickupLocations],
+  );
 
-  // Filter pickup locations by selected delivery day
   const filteredPickupLocations = React.useMemo(() => {
     if (selectedDeliveryDay === null) {
       return pickupLocations;
@@ -328,8 +311,6 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             selectedDay={selectedDeliveryDay}
             onSelectDay={(day) => {
               setSelectedDeliveryDay(day);
-              // Dropping the day filter must drop anything it hides, or a
-              // member can confirm a station that is no longer on screen.
               setSelectedPickupLocations([]);
             }}
           />
@@ -357,14 +338,6 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               disabledLocationIds={[currentPickupLocationId]}
             />
           )}
-
-          {filteredPickupLocations.length === 0 &&
-            selectedDeliveryDay !== null && (
-              <div className="alert alert-info">
-                Keine Verteilstationen verfügbar für{" "}
-                {WEEKDAY_NAMES[selectedDeliveryDay]}
-              </div>
-            )}
         </Modal.Body>
         <Modal.Footer>
           <TapirButton

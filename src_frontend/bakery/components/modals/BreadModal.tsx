@@ -42,7 +42,6 @@ export const BreadModal: React.FC<BreadModalProps> = ({
   const [availableLabels, setAvailableLabels] = useState<BreadLabel[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // For pieces per stove layer input
   const [piecesInput, setPiecesInput] = useState("");
 
   useEffect(() => {
@@ -291,12 +290,10 @@ export const BreadModal: React.FC<BreadModalProps> = ({
             </label>
           </div>
 
-          {/* Baking Details Section */}
           <div className="border rounded p-3 bg-bakery-gray-light">
             <h6 className="mb-0 text-bakery-primary-darker">Back-Details</h6>
 
             <div className="mt-3">
-              {/* Pieces per stove layer */}
               <div className="mb-3">
                 <label className="form-label fw-bold small">
                   Stücke pro Etage
@@ -348,7 +345,6 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                 </div>
               </div>
 
-              {/* Can be baked in multiple stoves */}
               <div className="form-check form-switch mb-3">
                 <input
                   className="form-check-input form-switch-bakery"
@@ -376,7 +372,6 @@ export const BreadModal: React.FC<BreadModalProps> = ({
                 </label>
               </div>
 
-              {/* Min/Max pieces */}
               <div className="row">
                 <div className="col-md-4">
                   <div className="mb-3">

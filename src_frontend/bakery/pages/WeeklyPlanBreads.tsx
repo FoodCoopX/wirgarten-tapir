@@ -20,9 +20,6 @@ interface DayConfig {
   label: string;
   dayNumber: number;
   breads: Record<string, boolean>;
-  // This day's request failed. Neither "all breads off" nor last week's values
-  // may be shown as if they were this day's configuration - a switch rendered
-  // from a guess is one toggleBread away from being written back as truth.
   failed?: boolean;
 }
 
@@ -54,7 +51,6 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
   const getDateForDay = (dayNumber: number): string =>
     formatDeliveryDate(year, week, dayNumber);
 
-  // The week currently on screen, as the other bakery pages track it.
   const selectionRef = useRef(`${year}/${week}`);
 
   useEffect(() => {
@@ -72,7 +68,7 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
     setLoading(true);
     Promise.all([
       bakeryApi.bakeryBreadsListList({}),
-      bakeryApi.pickupLocationsApiDeliveryDaysRetrieve(),
+      bakeryApi.bakeryApiDeliveryDaysRetrieve(),
     ])
       .then(([breadsData, deliveryDaysData]) => {
         setAllBreads(breadsData.filter((b: BreadList) => b.isActive !== false));
@@ -120,19 +116,12 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
             return { ...dayConfig, breads };
           })
           .catch((error) => {
-            // Keep the failure local to its own day. Rethrowing would reject
-            // the whole Promise.all and leave the entire grid showing the
-            // previous week's switches under the new week's header.
             console.error(`Wochenplan: Tag ${dayConfig.day}`, error);
             return { ...dayConfig, breads: {}, failed: true };
           }),
       ),
     )
       .then((updatedDays) => {
-        // The grid the user is now looking at, not the one they asked for.
-        // Without this a slow earlier-week load repaints after they have moved
-        // on - and toggleBread then writes the negation of that stale value
-        // into the current week, so the race persists rather than just misleads.
         if (selectionRef.current !== requestedFor) return;
         setDays(updatedDays);
         if (updatedDays.some((day) => day.failed)) {
@@ -157,9 +146,6 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
       });
   };
 
-  // Every write goes through the updater form and touches exactly one
-  // (day, bread) key, so a failed request reverts only its own switch and not
-  // whatever else was toggled while it was in flight.
   const setBreadActive = (
     dayIndex: number,
     breadId: string,
@@ -179,7 +165,6 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
     const currentState = days[dayIndex].breads[breadId] ?? false;
     const newState = !currentState;
 
-    // Optimistic update
     setBreadActive(dayIndex, breadId, newState);
 
     setSaving(true);
@@ -194,8 +179,6 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
         },
       })
       .catch((error) => {
-        // The revert is a write like any other: applying it after the user has
-        // moved to another week would stamp this week's value onto that one.
         if (selectionRef.current !== requestedFor) return;
         setBreadActive(dayIndex, breadId, currentState);
         handleRequestError(error, "Fehler beim Speichern");
@@ -207,7 +190,6 @@ export const WeeklyPlanBreads: React.FC<WeeklyPlanBreadsProps> = ({
   };
 
   const handleOpenModal = (day: number, label: string) => {
-    // Get only active breads for this day
     const dayConfig = days.find((d) => d.day === day);
     const activeBreads = allBreads.filter(
       (bread) => dayConfig?.breads[bread.id!] === true,

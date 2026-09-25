@@ -108,7 +108,6 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
   };
 
   const handleToggleActive = (label: BreadLabel) => {
-    // Optimistic update first — no flicker
     setLabels((prev) =>
       prev.map((l) =>
         l.id === label.id ? { ...l, isActive: !l.isActive } : l,
@@ -121,7 +120,6 @@ export const LabelsCard: React.FC<LabelsCardProps> = ({ csrfToken }) => {
         patchedBreadLabelRequest: { isActive: !label.isActive },
       })
       .catch((error) => {
-        // Revert on failure
         setLabels((prev) =>
           prev.map((l) =>
             l.id === label.id ? { ...l, isActive: label.isActive } : l,

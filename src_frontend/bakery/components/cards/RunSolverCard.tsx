@@ -103,9 +103,7 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
     null,
   );
 
-  // Every solver call fails the same way: the API answers 400 or 503 with
-  // {error, diagnostics}, and anything else is a transport or client fault
-  // with no diagnostics to show.
+  // The API reports solver failures as 400 or 503 with {error, diagnostics}.
   const showSolverError = (error: unknown, fallback: string) => {
     if (!(error instanceof ResponseError)) {
       setError(error instanceof Error ? error.message : fallback);
@@ -145,7 +143,6 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
         setPreviewResponse(response);
         setDiagnostics(response.diagnostics ?? []);
 
-        // Auto-load detail for first solution
         if (response.totalSolutions > 0) {
           loadDetail(0);
         }
@@ -197,7 +194,6 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
 
   return (
     <div className="mt-2">
-      {/* Run solver button */}
       <button
         className="btn btn-sm btn-light w-100"
         onClick={handleRunPreview}
@@ -215,7 +211,6 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
             : "Backplan berechnen (Vorschau)"}
       </button>
 
-      {/* Solution selector */}
       {previewResponse && previewResponse.totalSolutions > 0 && (
         <div className="mt-2">
           <div className="d-flex align-items-center gap-1 flex-wrap">
@@ -241,7 +236,6 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
             ))}
           </div>
 
-          {/* Apply button */}
           <button
             className="btn btn-sm btn-success w-100 mt-2"
             onClick={handleApply}
@@ -263,7 +257,6 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
         </small>
       )}
 
-      {/* Error message */}
       {error && (
         <div
           className="alert alert-danger py-1 px-2 mt-2 mb-0"
@@ -274,7 +267,6 @@ export const RunSolverCard: React.FC<RunSolverCardProps> = ({
         </div>
       )}
 
-      {/* Diagnostics */}
       <DiagnosticsList diagnostics={diagnostics} />
     </div>
   );

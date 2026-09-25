@@ -19,8 +19,6 @@ export const PreferredBreadStatisticsCard: React.FC<
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Same guard as the other week-scoped cards: a response for a week the
-  // user has already left must not repaint this one.
   const selectionRef = useRef(`${year}/${week}/${deliveryDay}`);
 
   useEffect(() => {
@@ -28,9 +26,6 @@ export const PreferredBreadStatisticsCard: React.FC<
     loadStats();
   }, [year, week, deliveryDay]);
 
-  // Through the generated client: this was the frontend's only hand-written
-  // fetch(), hand-mapping snake_case keys the schema now declares, while the
-  // `bakeryApi` it had already built sat unused.
   const loadStats = () => {
     const requestedFor = `${year}/${week}/${deliveryDay}`;
     setLoading(true);
@@ -91,7 +86,6 @@ export const PreferredBreadStatisticsCard: React.FC<
 
   return (
     <div>
-      {/* Summary badges */}
       <div className="d-flex flex-wrap gap-2 mb-3">
         <span
           className="badge badge-bakery-primary"
@@ -125,7 +119,6 @@ export const PreferredBreadStatisticsCard: React.FC<
         </span>
       </div>
 
-      {/* Bar chart */}
       {stats.breads.length > 0 ? (
         <div className="d-flex flex-column gap-2">
           {stats.breads.map((bread) => {

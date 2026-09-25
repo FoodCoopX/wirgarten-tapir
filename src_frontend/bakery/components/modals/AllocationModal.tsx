@@ -49,43 +49,18 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     }
   }, [isOpen, year, week, day]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !saving) {
-      e.preventDefault();
-      handleSaveAndClose();
-    }
-  };
-
-  const loadData = () => {
+  function loadData() {
     setLoading(true);
 
     bakeryApi
-      .pickupLocationsApiPickupLocationsByDeliveryDayRetrieve({
-        dayOfWeek: day,
+      .bakeryApiBreadCapacityAllocationsRetrieve({
+        year,
+        deliveryWeek: week,
+        deliveryDay: day,
       })
-      .then((locationsResponse) => {
-        setPickupLocations(locationsResponse.pickupLocations);
-
-        const locationIds = locationsResponse.pickupLocations.map((s) => s.id);
-
-        return bakeryApi
-          .bakeryBreadCapacityPickupLocationList({
-            year,
-            week,
-            pickupLocationIds: locationIds,
-          })
-          .then((capacities) => {
-            const initial: AllocationData = {};
-            locationsResponse.pickupLocations.forEach((location) => {
-              initial[location.id] = {};
-            });
-            capacities.forEach((capacity) => {
-              initial[capacity.pickupLocation][capacity.bread] =
-                capacity.capacity;
-            });
-
-            setAllocations(initial);
-          });
+      .then((response) => {
+        setPickupLocations(response.pickupLocations);
+        setAllocations(response.allocations);
       })
       .catch((error) => {
         handleRequestError(error, "Fehler beim Laden der Daten");
@@ -93,13 +68,20 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       .finally(() => {
         setLoading(false);
       });
-  };
+  }
 
-  const handleCellChange = (
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" && !saving) {
+      e.preventDefault();
+      handleSaveAndClose();
+    }
+  }
+
+  function handleCellChange(
     pickupLocationId: string,
     breadId: string,
     value: number | null,
-  ) => {
+  ) {
     setAllocations((prev) => ({
       ...prev,
       [pickupLocationId]: {
@@ -107,9 +89,9 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
         [breadId]: value,
       },
     }));
-  };
+  }
 
-  const handleSaveAndClose = () => {
+  function handleSaveAndClose() {
     setSaving(true);
 
     const updates: Array<{
@@ -129,7 +111,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
     });
 
     bakeryApi
-      .bakeryBreadCapacityPickupLocationBulkUpdateCreate({
+      .bakeryApiBreadCapacityAllocationsCreate({
         breadCapacityBulkUpdateRequest: {
           year,
           deliveryWeek: week,
@@ -145,16 +127,16 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
       .finally(() => {
         setSaving(false);
       });
-  };
+  }
 
-  const getModalSize = (): "lg" | "xl" | undefined => {
+  function getModalSize(): "lg" | "xl" | undefined {
     const count = activeBreads.length;
     if (count <= 2) return "lg";
     if (count <= 4) return "xl";
     return undefined;
-  };
+  }
 
-  const renderModalBodyContent = () => {
+  function renderModalBodyContent() {
     if (loading) {
       return (
         <div className="text-center py-5">
@@ -197,7 +179,7 @@ export const AllocationModal: React.FC<AllocationModalProps> = ({
         onCellChange={handleCellChange}
       />
     );
-  };
+  }
 
   return (
     <Modal

@@ -110,7 +110,6 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({
           </div>
         ) : (
           <>
-            {/* Add New Ingredient */}
             <div className="card mb-4 border-0 card-body-bakery">
               <div className="card-body">
                 <h6 className="card-title mb-3">Zutat hinzufügen</h6>
@@ -159,7 +158,6 @@ export const BreadContentsModal: React.FC<BreadContentsModalProps> = ({
               </div>
             </div>
 
-            {/* Existing Ingredients List */}
             {contents.length === 0 ? (
               <div className="text-center text-muted py-4">
                 Noch keine Zutaten hinzugefügt.

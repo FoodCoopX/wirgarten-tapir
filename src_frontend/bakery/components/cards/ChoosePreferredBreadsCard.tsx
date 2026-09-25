@@ -54,7 +54,6 @@ export const ChoosePreferredBreadsCard: React.FC<
         ] as const);
       })
       .then(([labels, preferredData, breadsData]) => {
-        // Contents ship with the bread list, so no request per bread.
         const contentsResults = breadsData.map((bread) => ({
           breadId: bread.id,
           contents: bread.contents ?? [],
@@ -92,7 +91,7 @@ export const ChoosePreferredBreadsCard: React.FC<
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    loadData(); // Reload data after modal closes
+    loadData();
   };
 
   const preferredBreads = allBreads.filter((bread) =>
