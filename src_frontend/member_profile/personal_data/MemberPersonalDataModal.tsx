@@ -62,14 +62,13 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
   const nameHelpText = canEditName ? (
     <>
       Nur du als Admin kannst den Namen des Mitgliedes ändern. Das Mitglied kann
-      dies nicht selbstständig. Ihm wird angezeigt, dass es den Betrieb
-      kontaktieren muss, um den Namen zu verändern.
+      dies nicht selbstständig. Ihm wird angezeigt, dass es sich an die
+      Verwaltung wenden muss, um den Namen zu verändern.
     </>
   ) : (
     <>
-      Du kannst nicht selbstständig deinen Namen verändern. Bitte wende dich an
-      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>
-      ).
+      Du kannst deinen Namen nicht selbstständig verändern. Bitte wende dich an
+      die Verwaltung (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );
 
@@ -80,8 +79,8 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     </>
   ) : (
     <>
-      Du kannst nicht selbstständig dein Land verändern. Bitte wende dich an
-      deinen Betrieb (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+      Du kannst dein Land nicht selbstständig verändern. Bitte wende dich an die
+      Verwaltung (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );
 
@@ -113,8 +112,8 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     <>
       Die Änderung deiner E-Mail-Adresse muss durch dich selbst bestätigt
       werden. Folge den Anweisungen, die du an deine alte E-Mail-Adresse
-      erhältst. Wenn du keine Mail erhältst, dann wende dich an deinen Betrieb (
-      <a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
+      erhältst. Wenn du keine Mail erhältst, wende dich bitte an die Verwaltung
+      (<a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );
 

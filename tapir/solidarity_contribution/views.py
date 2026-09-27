@@ -119,8 +119,9 @@ class UpdateMemberSolidarityContributionApiView(APIView):
         ):
             return self.build_response(
                 member_id=member_id,
-                error="Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Kontaktiere dazu deine Solawi an "
-                + get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache),
+                error="Du kannst deinen Solidarbeitrag nur erhöhen, aber nicht selbstständig reduzieren. Bitte wende dich an die Verwaltung ("
+                + get_parameter_value(key=ParameterKeys.SITE_EMAIL, cache=cache)
+                + ").",
             )
 
         MemberSolidarityContributionService.assign_contribution_to_member(

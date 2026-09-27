@@ -55,8 +55,8 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
 
   return (
     <p>
-      Der Link ist bereits abgelaufen. Bitte wende dich an{" "}
-      <a href={"mailto:" + adminEmail}>{adminEmail}</a>
+      Der Link ist bereits abgelaufen. Bitte wende dich an die Verwaltung (
+      <a href={"mailto:" + adminEmail}>{adminEmail}</a>).
     </p>
   );
 };
