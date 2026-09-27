@@ -182,7 +182,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
         if future_rhythm is not None:
             context["payment_rhythm"] = (
-                f"Aktuell: {context["payment_rhythm"]}. ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
+                f"Aktuell: {context["payment_rhythm"]}. Ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
             )
 
         context["show_mail_category_content"] = MailCategory.objects.exists()

@@ -131,7 +131,7 @@ class SubscriptionUpdateViewValidator:
             payment_rhythm, cache=cache
         ):
             raise ValidationError(
-                f"Diese Zahlungsintervall {payment_rhythm} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=cache)}"
+                f"Dieses Zahlungsintervall {payment_rhythm} ist nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=cache)}"
             )
 
     @classmethod
@@ -203,6 +203,6 @@ class SubscriptionUpdateViewValidator:
             )
             if not has_subscription_to_required_product_type:
                 raise ValidationError(
-                    f"Um Anteile von diese zusätzliche Produkte ({product_type.name}) zu bestellen, "
-                    f"musst du Anteile von der Basis-Produkt ({other_product_type.name}) an der gleiche Vertragsperiode haben."
+                    f"Um Anteile dieses Zusatzprodukts ({product_type.name}) zu bestellen, "
+                    f"musst du in derselben Vertragsperiode auch Anteile des Basisprodukts ({other_product_type.name}) haben."
                 )

@@ -433,7 +433,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             cache=self.cache,
         ):
             raise ValidationError(
-                "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
+                "Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden)."
             )
 
         subscriptions = (
@@ -464,7 +464,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             cache=self.cache,
         ):
             raise ValidationError(
-                "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
+                "Dieser Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
 
 

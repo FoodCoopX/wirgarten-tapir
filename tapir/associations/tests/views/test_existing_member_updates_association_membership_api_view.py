@@ -134,7 +134,7 @@ class TestExistingMemberUpdatesAssociationMembershipApiView(TapirIntegrationTest
         response_content = response.json()
         self.assertFalse(response_content["order_confirmed"])
         self.assertEqual(
-            "Du bist schon mitglied mit dem gleichem Mitgliedschaftstyp",
+            "Du bist schon Mitglied mit dem gleichen Mitgliedschaftstyp.",
             response_content["error"],
         )
 

@@ -87,8 +87,8 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
 
   const emailHelpText = canEditName ? (
     <>
-      Änderst du die Email hier direkt als Admin, hängt das Verhalten vom
-      Verifizierungsstatus der aktuellen Adresse ab:
+      Änderst du die E-Mail-Adresse hier direkt als Admin, hängt das Verhalten
+      vom Verifizierungsstatus der aktuellen Adresse ab:
       <br />
       <br />
       <strong>Adresse bereits verifiziert:</strong> Die neue Adresse wird beim
@@ -111,9 +111,9 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
     </>
   ) : (
     <>
-      Die Änderung deiner Email muss durch dich selbst bestätigt werden. Folge
-      den Anweisungen, die du an deine alte Email erhältst. Wenn du keine Mail
-      erhältst, dann wende dich an deinen Betrieb (
+      Die Änderung deiner E-Mail-Adresse muss durch dich selbst bestätigt
+      werden. Folge den Anweisungen, die du an deine alte E-Mail-Adresse
+      erhältst. Wenn du keine Mail erhältst, dann wende dich an deinen Betrieb (
       <a href={`mailto:${contactEmail}`}>{contactEmail}</a>).
     </>
   );
@@ -149,7 +149,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der persönliche Daten",
+          "Fehler beim Laden der persönlichen Daten",
           setToastDatas,
         ),
       )
@@ -218,7 +218,7 @@ const MemberPersonalDataModal: React.FC<MemberPersonalDataModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Speichern der persönliche Daten",
+          "Fehler beim Speichern der persönlichen Daten",
           setToastDatas,
         ),
       )

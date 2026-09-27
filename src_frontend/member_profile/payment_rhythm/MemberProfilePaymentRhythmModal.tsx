@@ -58,7 +58,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Zahlungsintervall-Datum",
+          "Fehler beim Laden der Zahlungsintervall-Daten",
           setToastDatas,
         ),
       )
@@ -122,12 +122,12 @@ const MemberProfilePaymentRhythmModal: React.FC<
                     Wenn das Mitglied noch keine regelmäßige Zahlung hat (kein
                     Vertrag, kein Solibeitrag), dann wird das Intervall ab
                     sofort gesetzt. Neue Mitglieder oder Fördermitglieder, die
-                    ein Vertrag abschließen, nutzen dann sofort das neue
+                    einen Vertrag abschließen, nutzen dann sofort das neue
                     Intervall.
                   </li>
                   <li>
                     Wenn das Mitglied schon regelmäßige Zahlungen hat, dann
-                    passiert der Wechsel am Ende des aktuellem Intervall (z.B.
+                    passiert der Wechsel am Ende des aktuellen Intervalls (z. B.
                     nach Ablauf des Halbjahres, welches schon bezahlt wurde).
                   </li>
                 </ul>
@@ -142,7 +142,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
         ) : (
           <div className={"d-flex flex-column gap-2"}>
             <div>
-              Das aktuelles Intervall ist {getDisplayName(currentRhythm)}
+              Das aktuelle Intervall ist: {getDisplayName(currentRhythm)}
             </div>
             <div>
               <Form.Group>
@@ -159,7 +159,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
                 </Form.Select>
                 <Form.Text>
                   Das neue Intervall wird gültig ab dem{" "}
-                  {formatDateNumeric(dateOfNextChange)}
+                  {formatDateNumeric(dateOfNextChange)}.
                 </Form.Text>
               </Form.Group>
             </div>
@@ -178,7 +178,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
                 <ul>
                   <li>
                     Keine Historie bekannt, dieses Mitglied nutzt das
-                    Standard-Intervall aus der Konfig
+                    Standard-Intervall aus der Konfiguration.
                   </li>
                 </ul>
               )}

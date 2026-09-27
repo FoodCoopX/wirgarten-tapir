@@ -236,7 +236,7 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assert_response_content_is_correct(
             response,
-            error_message="Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort).",
+            error_message="Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden).",
         )
 
         self.assertEqual(1, MemberPickupLocation.objects.count())
@@ -304,7 +304,7 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assert_response_content_is_correct(
             response,
-            error_message="Diese Abholort hat nicht genug Kapazitäten für deine Verträge.",
+            error_message="Dieser Abholort hat nicht genug Kapazitäten für deine Verträge.",
         )
 
         self.assertEqual(1, MemberPickupLocation.objects.count())

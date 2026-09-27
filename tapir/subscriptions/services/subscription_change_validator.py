@@ -190,7 +190,7 @@ class SubscriptionChangeValidator:
             - float(capacity_used_by_the_current_subscriptions)
         ):
             raise ValidationError(
-                f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}"
+                f"Die ausgewählten Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}"
             )
 
     @classmethod
