@@ -38,13 +38,13 @@ class TestPickupLocationViewSet(TapirIntegrationTest):
     def _list_pickup_location_names(self, url_name):
         url = reverse(url_name)
         response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertStatusCode(response, status.HTTP_200_OK)
         return sorted(loc["name"] for loc in response.json())
 
     def test_adminList_loggedInAsNormalMember_returns403(self):
         self.client.force_login(MemberFactory.create(is_superuser=False))
         response = self.client.get(reverse("pickup_locations:pickup_locations-list"))
-        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+        self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
 
     def test_adminList_returnsAllPickupLocationsRegardlessOfDates(self):
         self.pickup_location_1.end_date = self.reference_date - datetime.timedelta(days=1)
@@ -96,7 +96,7 @@ class TestPickupLocationViewSet(TapirIntegrationTest):
                 content_type="application/json",
             )
 
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertStatusCode(response, status.HTTP_200_OK)
         ids = response.json()["pickup_location_ids_with_enough_capacity_for_order"]
         self.assertIn(self.pickup_location_2.id, ids)
         self.assertIn(self.pickup_location_3.id, ids)
