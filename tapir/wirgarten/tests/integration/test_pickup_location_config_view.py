@@ -28,18 +28,18 @@ class TestPickupLocationCfgView(TapirIntegrationTest):
         view.request = RequestFactory().get("/tapir/admin/pickuplocations/", query)
         return {pl.name for pl in view.get_filtered_pickup_locations()}
 
-    def test_default_excludesDecommissionedAndFutureKeepsActive(self):
+    def test_getFilteredPickupLocations_default_returnsOnlyActive(self):
         self.assertEqual({"active"}, self._filtered_names())
 
-    def test_showInactive_includesDecommissionedAndFuture(self):
+    def test_getFilteredPickupLocations_showInactive_includesDecommissionedAndFuture(self):
         self.assertEqual(
             {"active", "future", "decommissioned"},
             self._filtered_names(show_inactive="on"),
         )
 
-    def test_search_filtersByName(self):
+    def test_getFilteredPickupLocations_searchByName_returnsMatchingPickupLocation(self):
         self.assertEqual({"active"}, self._filtered_names(search="active"))
 
-    def test_search_filtersByStreet(self):
+    def test_getFilteredPickupLocations_searchByStreet_returnsMatchingPickupLocation(self):
         PickupLocationFactory.create(name="other", street="Sonnenweg 2")
         self.assertEqual({"other"}, self._filtered_names(search="Sonnenweg"))
