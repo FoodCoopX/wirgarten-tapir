@@ -19,7 +19,10 @@ export function isPersonalDataValidShort(
   if (!personalData.country) return false;
   if (phoneNumberRequired && !personalData.phoneNumber) return false;
 
-  if (personalData.phoneNumber && !isPhoneNumberValid(personalData.phoneNumber)) {
+  if (
+    personalData.phoneNumber &&
+    !isPhoneNumberValid(personalData.phoneNumber)
+  ) {
     return false;
   }
 
