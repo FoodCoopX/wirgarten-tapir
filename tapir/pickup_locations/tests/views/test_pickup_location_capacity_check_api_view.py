@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from rest_framework import status
@@ -38,7 +38,14 @@ class TestPickupLocationCapacityCheckApiView(TapirIntegrationTest):
             cache={},
         )
 
-    def test_capacityCheck_includesFutureStartDatePickupLocationAsCandidate(self):
+    @patch.object(
+        PickupLocationCapacityGeneralChecker,
+        "does_pickup_location_have_enough_capacity_to_add_subscriptions",
+        return_value=True,
+    )
+    def test_capacityCheck_includesFutureStartDatePickupLocationAsCandidate(
+        self, mock_does_pickup_location_have_enough_capacity_to_add_subscriptions: Mock
+    ):
         self.pickup_location_1.end_date = self.reference_date - datetime.timedelta(
             days=1
         )
@@ -48,16 +55,11 @@ class TestPickupLocationCapacityCheckApiView(TapirIntegrationTest):
         self.pickup_location_1.save()
         self.pickup_location_3.save()
 
-        with patch.object(
-            PickupLocationCapacityGeneralChecker,
-            "does_pickup_location_have_enough_capacity_to_add_subscriptions",
-            return_value=True,
-        ):
-            response = self.client.post(
-                reverse("pickup_locations:pickup_location_capacity_check"),
-                data={"shopping_cart": {}, "growing_period_id": None},
-                content_type="application/json",
-            )
+        response = self.client.post(
+            reverse("pickup_locations:pickup_location_capacity_check"),
+            data={"shopping_cart": {}, "growing_period_id": None},
+            content_type="application/json",
+        )
 
         self.assertStatusCode(response, status.HTTP_200_OK)
         ids = response.json()["pickup_location_ids_with_enough_capacity_for_order"]
