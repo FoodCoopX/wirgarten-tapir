@@ -88,7 +88,7 @@ const MailingListCreateModal: React.FC<MailingListCreateModalProps> = ({
               onChange={(event) => setListName(event.target.value)}
               placeholder={"Name"}
               required={true}
-              pattern={"[\\w.%+\\-]+"}
+              pattern={String.raw`[\w.%+\-]+`}
             />
             <Form.Text>
               <p>

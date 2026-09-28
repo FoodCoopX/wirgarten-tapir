@@ -1,7 +1,7 @@
 import datetime
 import locale
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
@@ -160,6 +160,11 @@ class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PickupLocation.objects.all()
     serializer_class = PickupLocationSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["cache"] = {}
+        return context
 
 
 class PickupLocationCapacityEvolutionView(APIView):
@@ -394,6 +399,12 @@ class ChangeMemberPickupLocationApiView(APIView):
     def post(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
+        if not request.user.has_perm(
+            Permission.Accounts.MANAGE
+        ) and not get_parameter_value(
+            ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, cache=self.cache
+        ):
+            raise PermissionDenied()
         member = get_object_or_404(Member, id=member_id)
         new_pickup_location_id = request.query_params.get("pickup_location_id")
         new_pickup_location = get_object_or_404(
@@ -449,7 +460,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             cache=self.cache,
         ):
             raise ValidationError(
-                "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
+                "Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden)."
             )
 
         if not PickupLocationActiveFilter.get_active_at_date(
@@ -487,7 +498,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             cache=self.cache,
         ):
             raise ValidationError(
-                "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
+                "Dieser Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
 
 

@@ -26,6 +26,12 @@ export interface PickupLocation {
   id?: string;
   /**
    *
+   * @type {number}
+   * @memberof PickupLocation
+   */
+  readonly deliveryDay: number | null;
+  /**
+   *
    * @type {Date}
    * @memberof PickupLocation
    */
@@ -110,6 +116,12 @@ export interface PickupLocation {
   photoLink?: string;
   /**
    *
+   * @type {boolean}
+   * @memberof PickupLocation
+   */
+  showDetailsInBasketTotalsExport?: boolean;
+  /**
+   *
    * @type {string}
    * @memberof PickupLocation
    */
@@ -140,6 +152,8 @@ export interface PickupLocation {
 export function instanceOfPickupLocation(
   value: object,
 ): value is PickupLocation {
+  if (!("deliveryDay" in value) || value["deliveryDay"] === undefined)
+    return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   if (!("name" in value) || value["name"] === undefined) return false;
@@ -164,6 +178,7 @@ export function PickupLocationFromJSONTyped(
   }
   return {
     id: json["id"] == null ? undefined : json["id"],
+    deliveryDay: json["delivery_day"],
     createdAt: new Date(json["created_at"]),
     updatedAt: new Date(json["updated_at"]),
     name: json["name"],
@@ -182,6 +197,10 @@ export function PickupLocationFromJSONTyped(
     contactName:
       json["contact_name"] == null ? undefined : json["contact_name"],
     photoLink: json["photo_link"] == null ? undefined : json["photo_link"],
+    showDetailsInBasketTotalsExport:
+      json["show_details_in_basket_totals_export"] == null
+        ? undefined
+        : json["show_details_in_basket_totals_export"],
     routeInfo: json["route_info"] == null ? undefined : json["route_info"],
     startDate:
       json["start_date"] == null ? undefined : new Date(json["start_date"]),
@@ -196,7 +215,10 @@ export function PickupLocationToJSON(json: any): PickupLocation {
 }
 
 export function PickupLocationToJSONTyped(
-  value?: Omit<PickupLocation, "created_at" | "updated_at"> | null,
+  value?: Omit<
+    PickupLocation,
+    "delivery_day" | "created_at" | "updated_at"
+  > | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -217,6 +239,8 @@ export function PickupLocationToJSONTyped(
     messenger_group_link: value["messengerGroupLink"],
     contact_name: value["contactName"],
     photo_link: value["photoLink"],
+    show_details_in_basket_totals_export:
+      value["showDetailsInBasketTotalsExport"],
     route_info: value["routeInfo"],
     start_date:
       value["startDate"] == null

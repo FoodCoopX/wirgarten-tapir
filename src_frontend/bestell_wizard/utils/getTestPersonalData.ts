@@ -1,11 +1,13 @@
 import { PersonalData } from "../types/PersonalData.ts";
 
 export function getTestPersonalData(): PersonalData {
+  const email =
+    "max.mustermann" + Math.floor(Math.random() * 100000) + "@example.com";
   return {
     firstName: "Max",
     lastName: "Mustermann",
-    email:
-      "max.mustermann" + Math.floor(Math.random() * 100000) + "@example.com",
+    email: email,
+    emailConfirm: email,
     phoneNumber: "017626274538",
     street: "Musterstrasse 1",
     street2: "",

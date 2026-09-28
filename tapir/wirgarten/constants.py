@@ -46,6 +46,7 @@ class ParameterCategory:
     SUPPLIER_LIST = "Lieferantenliste"
     TEST = "Tests"
     TRIAL_PERIOD = "Probezeit"
+    BAKERY = "Bäckerei"
 
 
 HTML_ALLOWED_TEXT = "HTML erlaubt"

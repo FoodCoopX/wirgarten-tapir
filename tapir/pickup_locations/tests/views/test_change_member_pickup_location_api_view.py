@@ -23,6 +23,7 @@ from tapir.wirgarten.tests.factories import (
     PickupLocationCapabilityFactory,
     ProductPriceFactory,
     MemberFactory,
+    PickupLocationOpeningTimesFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -46,7 +47,28 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
             valid_from=datetime.datetime(year=1998, month=1, day=1)
         )
         member = old_member_pickup_location.member
-        new_pickup_location = PickupLocationFactory.create()
+        new_pickup_location = PickupLocationFactory.create(
+            street="test_street",
+            postcode="test_postcode",
+            city="test_city",
+            contact_name="test_contact",
+            info="test_info",
+            messenger_group_link="test_link",
+            photo_link="test_photo",
+            access_code="test_access",
+        )
+        PickupLocationOpeningTimesFactory.create(
+            pickup_location=new_pickup_location,
+            day_of_week=0,
+            open_time=datetime.time(hour=8, minute=0),
+            close_time=datetime.time(hour=9, minute=0),
+        )
+        PickupLocationOpeningTimesFactory.create(
+            pickup_location=new_pickup_location,
+            day_of_week=1,
+            open_time=datetime.time(hour=8, minute=45),
+            close_time=datetime.time(hour=10, minute=30),
+        )
 
         SubscriptionFactory.create(
             member=member,
@@ -97,7 +119,14 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         self.assertEqual(
             {
                 "pickup_location": new_pickup_location.name,
-                "pickup_location_start_date": "24.06.1998",  # here we want the date of the first delivery at that location, no the date where the change is valid
+                "pickup_location_start_date": "22.06.1998",  # here we want the date of the first delivery at that location, no the date where the change is valid
+                "address": "test_street, test_postcode test_city",
+                "contact_name": "test_contact",
+                "infos": "test_info",
+                "messenger_group_link": "test_link",
+                "opening_times": "Montag: 08:00-09:00, Dienstag: 08:45-10:30",
+                "photo_link": "test_photo",
+                "access_code": "test_access",
             },
             trigger_data.token_data,
         )
@@ -207,7 +236,7 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assert_response_content_is_correct(
             response,
-            error_message="Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort).",
+            error_message="Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden).",
         )
 
         self.assertEqual(1, MemberPickupLocation.objects.count())
@@ -275,7 +304,7 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         self.assertStatusCode(response, status.HTTP_200_OK)
         self.assert_response_content_is_correct(
             response,
-            error_message="Diese Abholort hat nicht genug Kapazitäten für deine Verträge.",
+            error_message="Dieser Abholort hat nicht genug Kapazitäten für deine Verträge.",
         )
 
         self.assertEqual(1, MemberPickupLocation.objects.count())
@@ -371,12 +400,79 @@ class TestChangeMemberPickupLocationApiView(TapirIntegrationTest):
         self.assertEqual(target_member.id, trigger_data.recipient_id_in_base_queryset)
         self.assertIsNone(trigger_data.recipient_outside_of_base_queryset)
         self.assertEqual(
-            {
-                "pickup_location": new_pickup_location.name,
-                "pickup_location_start_date": "24.06.1998",  # here we want the date of the first delivery at that location, no the date where the change is valid
-            },
-            trigger_data.token_data,
+            new_pickup_location.name, trigger_data.token_data["pickup_location"]
         )
+        self.assertEqual(
+            "24.06.1998", trigger_data.token_data["pickup_location_start_date"]
+        )  # here we want the date of the first delivery at that location, no the date where the change is valid
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_memberChangesOwnLocationWhenFeatureDisabled_returns403(
+        self, mock_fire_action: Mock
+    ):
+        old_member_pickup_location = MemberPickupLocationFactory.create(
+            valid_from=datetime.datetime(year=1998, month=1, day=1)
+        )
+        new_pickup_location = PickupLocationFactory.create()
+        member = old_member_pickup_location.member
+
+        self._set_parameter(
+            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, value=False
+        )
+
+        self.client.force_login(member)
+        url = reverse("pickup_locations:change_member_pickup_location")
+        response = self.client.post(
+            f"{url}?member_id={member.id}&pickup_location_id={new_pickup_location.id}"
+        )
+
+        self.assertStatusCode(response, status.HTTP_403_FORBIDDEN)
+
+        self.assertEqual(1, MemberPickupLocation.objects.count())
+        self.assertFalse(PickupLocationChangedLogEntry.objects.exists())
+
+        mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_adminChangesLocationOfMemberWhenFeatureDisabled_appliesChanges(
+        self, mock_fire_action: Mock
+    ):
+        old_member_pickup_location = MemberPickupLocationFactory.create(
+            valid_from=datetime.datetime(year=1998, month=1, day=1)
+        )
+        target_member = old_member_pickup_location.member
+        new_pickup_location = PickupLocationFactory.create()
+
+        SubscriptionFactory.create(
+            member=target_member,
+            start_date=datetime.datetime(year=1998, month=1, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+
+        self._set_parameter(
+            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, value=False
+        )
+
+        admin = MemberFactory.create(is_superuser=True)
+        self.client.force_login(admin)
+        url = reverse("pickup_locations:change_member_pickup_location")
+        response = self.client.post(
+            f"{url}?member_id={target_member.id}&pickup_location_id={new_pickup_location.id}"
+        )
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assert_response_content_is_correct(response, error_message=None)
+
+        self.assertEqual(2, MemberPickupLocation.objects.count())
+        member_pickup_location = MemberPickupLocation.objects.order_by(
+            "valid_from"
+        ).last()
+        self.assertEqual(
+            new_pickup_location.id, member_pickup_location.pickup_location_id
+        )
+        self.assertEqual(target_member.id, member_pickup_location.member_id)
+
+        mock_fire_action.assert_called_once()
 
     def assert_response_content_is_correct(self, response, error_message: str | None):
         self.assertEqual(

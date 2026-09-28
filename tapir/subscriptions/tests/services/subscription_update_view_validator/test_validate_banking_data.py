@@ -162,7 +162,7 @@ class TestSubscriptionUpdateViewValidatorValidateBankingData(TapirUnitTest):
         params = self.build_default_params()
 
         self.assert_raises_validation_error(
-            "Diese Zahlungsintervall test_rhythm is nicht erlaubt, erlaubt sind: []",
+            "Dieses Zahlungsintervall test_rhythm ist nicht erlaubt, erlaubt sind: []",
             **params,
         )
 

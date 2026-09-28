@@ -37,7 +37,7 @@ class OrderValidator:
         for product, quantity in order.items():
             if product.type.force_waiting_list:
                 raise ValidationError(
-                    f"Bei {product.type.name}-Produkte sind nur Warteliste-Einträge möglich"
+                    f"Bei {product.type.name}-Produkten sind nur Wartelisteneinträge möglich."
                 )
 
         if cls.does_order_need_a_pickup_location(
@@ -57,7 +57,7 @@ class OrderValidator:
             ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION, cache=cache
         ):
             raise ValidationError(
-                "Dieser Abholort kann nicht ausgewählt werden (Das ist die Spende-Sonder-Ort)."
+                "Dieser Abholort kann nicht ausgewählt werden (das ist der Sonder-Abholort für Spenden)."
             )
 
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
@@ -75,7 +75,7 @@ class OrderValidator:
             order=order, cache=cache
         ):
             raise ValidationError(
-                "Manche Produkte die nur einmal bestellt werden dürfen sind mehrmals in der Bestellung"
+                "Manche Produkte, die nur einmal bestellt werden dürfen, sind mehrmals in der Bestellung."
             )
 
         for product, quantity in order.items():
@@ -87,13 +87,13 @@ class OrderValidator:
                 cache=cache,
             ):
                 raise ValidationError(
-                    f"Folgende Produkt hat nicht genug Kapazität für diese Bestellung: {product.name}"
+                    f"Folgendes Produkt hat nicht genug Kapazität für diese Bestellung: {product.name}"
                 )
 
     @classmethod
     def validate_cannot_reduce_size(
         cls,
-        logged_in_user_is_admin: bool,
+        member_may_reduce_size: bool,
         contract_start_date: datetime.date,
         member: Member,
         order_for_a_single_product_type: TapirOrder,
@@ -101,7 +101,7 @@ class OrderValidator:
         cache: dict,
     ):
         if not SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-            logged_in_user_is_admin=logged_in_user_is_admin,
+            member_may_reduce_size=member_may_reduce_size,
             subscription_start_date=contract_start_date,
             cache=cache,
         ):
@@ -120,12 +120,10 @@ class OrderValidator:
             cache=cache,
         )
 
-        if capacity_used_by_order < capacity_used_by_the_current_subscriptions:
-            raise ValidationError(
-                f"Während eine Vertrag läuft es ist nur erlaubt die Größe des Vertrags zu erhöhen. "
-                f"Deiner aktueller Vertrag für diese Periode entspricht Größe {capacity_used_by_the_current_subscriptions:.2f}. "
-                f"Deiner letzter Auswahl hier entsprach Größe {capacity_used_by_order:.2f}."
-            )
+        SubscriptionChangeValidator.raise_error_if_size_was_reduced(
+            capacity_used_by_the_ordered_products=capacity_used_by_order,
+            capacity_used_by_the_current_subscriptions=capacity_used_by_the_current_subscriptions,
+        )
 
     @classmethod
     def validate_at_least_one_change(

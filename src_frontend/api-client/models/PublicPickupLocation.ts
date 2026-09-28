@@ -87,6 +87,12 @@ export interface PublicPickupLocation {
    * @memberof PublicPickupLocation
    */
   readonly currentDeliveryCharge: string;
+  /**
+   *
+   * @type {number}
+   * @memberof PublicPickupLocation
+   */
+  readonly deliveryDay: number | null;
 }
 
 /**
@@ -107,6 +113,8 @@ export function instanceOfPublicPickupLocation(
     !("currentDeliveryCharge" in value) ||
     value["currentDeliveryCharge"] === undefined
   )
+    return false;
+  if (!("deliveryDay" in value) || value["deliveryDay"] === undefined)
     return false;
   return true;
 }
@@ -137,6 +145,7 @@ export function PublicPickupLocationFromJSONTyped(
       PickupLocationOpeningTimeFromJSON,
     ),
     currentDeliveryCharge: json["current_delivery_charge"],
+    deliveryDay: json["delivery_day"],
   };
 }
 
@@ -147,7 +156,7 @@ export function PublicPickupLocationToJSON(json: any): PublicPickupLocation {
 export function PublicPickupLocationToJSONTyped(
   value?: Omit<
     PublicPickupLocation,
-    "opening_times" | "current_delivery_charge"
+    "opening_times" | "current_delivery_charge" | "delivery_day"
   > | null,
   ignoreDiscriminator: boolean = false,
 ): any {

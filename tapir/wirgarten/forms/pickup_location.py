@@ -347,16 +347,24 @@ class PickupLocationEditForm(forms.Form):
         self.fields["photo_link"] = forms.CharField(
             label=_("Link zum Foto des Abholorts"), required=False
         )
+        self.fields["show_details_in_basket_totals_export"] = forms.BooleanField(
+            label=_("Im Gesamtkistenanzahls-Zettel Details anzeigen"),
+            required=False,
+        )
         self.fields["info"] = forms.CharField(
             label=_("Zusätzliche Informationen zur Abholung"),
             required=False,
-            help_text="z.B.: im Hinterhof. " + HTML_ALLOWED_TEXT,
+            max_length=3000,
+            help_text="z.B.: im Hinterhof. "
+            + HTML_ALLOWED_TEXT
+            + " (max. 3000 Zeichen inkl. HTML-Tags)",
             widget=Textarea,
         )
         self.fields["route_info"] = forms.CharField(
             label=_("Information Fahrer"),
             required=False,
-            help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste.",
+            max_length=3000,
+            help_text="z.B.: kleine Kisten links abstellen; große Tauschkiste. (max. 3000 Zeichen)",
             widget=Textarea,
         )
         self.fields["start_date"] = forms.DateField(
@@ -376,6 +384,7 @@ class PickupLocationEditForm(forms.Form):
             "coords": 1,
             "start_date": 1,
             "end_date": 1,
+            "show_details_in_basket_totals_export": 2,
             "info": 2,
             "route_info": 2,
             "monday_times": 2,
@@ -443,6 +452,9 @@ class PickupLocationEditForm(forms.Form):
             self.fields["photo_link"].initial = self.pickup_location.photo_link
             self.fields["start_date"].initial = self.pickup_location.start_date
             self.fields["end_date"].initial = self.pickup_location.end_date
+            self.fields["show_details_in_basket_totals_export"].initial = (
+                self.pickup_location.show_details_in_basket_totals_export
+            )
 
             opening_times = PickupLocationOpeningTime.objects.filter(
                 pickup_location=self.pickup_location
@@ -566,6 +578,9 @@ class PickupLocationEditForm(forms.Form):
         pl.coords_lon = coords[0].strip()
         pl.coords_lat = coords[1].strip()
         pl.location_route = self.cleaned_data["location_route"]
+        pl.show_details_in_basket_totals_export = self.cleaned_data[
+            "show_details_in_basket_totals_export"
+        ]
 
         pl.name = self.cleaned_data["name"]
         pl.street = self.cleaned_data["street"]

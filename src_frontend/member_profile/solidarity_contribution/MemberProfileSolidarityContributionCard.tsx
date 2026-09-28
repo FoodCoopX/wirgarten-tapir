@@ -6,6 +6,7 @@ import {
   SolidarityContributionApi,
 } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
@@ -15,11 +16,13 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 interface MemberProfileSolidarityContributionCardProps {
   memberId: string;
   adminEmail: string;
+  adminVersion: boolean;
+  membersCanChangeContribution: boolean;
 }
 
 const MemberProfileSolidarityContributionCard: React.FC<
   MemberProfileSolidarityContributionCardProps
-> = ({ memberId, adminEmail }) => {
+> = ({ memberId, adminEmail, adminVersion, membersCanChangeContribution }) => {
   const api = useApi(SolidarityContributionApi, getCsrfToken());
   const [loading, setLoading] = useState(true);
   const [solidarityContributions, setSolidarityContributions] = useState<
@@ -53,7 +56,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
       .catch(async (error) => {
         await handleRequestError(
           error,
-          "Fehler beim Laden der Solidarbeitrag.",
+          "Fehler beim Laden des Solidarbeitrags.",
         );
       })
       .finally(() => setLoading(false));
@@ -103,7 +106,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
       .catch(async (error) => {
         await handleRequestError(
           error,
-          "Fehler beim Speichern der Solidarbeitrag.",
+          "Fehler beim Speichern des Solidarbeitrags.",
         );
       })
       .finally(() => setLoading(false));
@@ -200,12 +203,59 @@ const MemberProfileSolidarityContributionCard: React.FC<
     return startContributionNow ? changeValidFrom : alternativeChangeValidFrom;
   }
 
+  function buildHelpText() {
+    const adminEmailLink = <a href={"mailto:" + adminEmail}>{adminEmail}</a>;
+
+    if (adminVersion) {
+      if (membersCanChangeContribution) {
+        return (
+          <p className={"mb-0"}>
+            Beachte: Das Mitglied kann den Solidarbeitrag nur nach oben
+            verändern. Nur du als Admin kannst ihn reduzieren. Dem Mitglied
+            wird in dem Hilfetext, der ihm eingeblendet wird, kommuniziert,
+            dass es Kontakt zu dir aufnehmen muss, um den Solidarbeitrag zu
+            reduzieren.
+          </p>
+        );
+      }
+      return (
+        <p className={"mb-0"}>
+          Beachte: Das Mitglied kann den Solidarbeitrag aufgrund der
+          Einstellungen in der allgemeinen Konfiguration nicht verändern. Nur du
+          als Admin kannst ihn einstellen. Dem Mitglied wird in dem Hilfetext,
+          der ihm eingeblendet wird, kommuniziert, dass es Kontakt zu dir
+          aufnehmen muss, um den Solidarbeitrag zu verändern.
+        </p>
+      );
+    }
+
+    if (membersCanChangeContribution) {
+      return (
+        <p className={"mb-0"}>
+          Beachte: Du kannst deinen Solidarbeitrag nur nach oben verändern. Um
+          ihn zu reduzieren, kontaktiere deinen Betrieb ({adminEmailLink}).
+        </p>
+      );
+    }
+    return (
+      <p className={"mb-0"}>
+        Beachte: Du kannst deinen Solidarbeitrag nicht selbstständig
+        anpassen. Kontaktiere dazu deinen Betrieb ({adminEmailLink}).
+      </p>
+    );
+  }
+
   function buildContent() {
     if (loading)
       return (
         <Card>
           <Card.Header>
-            <h5 className={"mb-0"}>Solidarbeitrag</h5>
+            <span
+              className={"d-flex justify-content-between align-items-center"}
+            >
+              <h5 className={"mb-0"}>Solidarbeitrag</h5>
+              <TapirHelpButton text={buildHelpText()} />
+            </span>
           </Card.Header>
           <Card.Body>
             <Spinner />
@@ -220,7 +270,10 @@ const MemberProfileSolidarityContributionCard: React.FC<
             <span
               className={"d-flex justify-content-between align-items-center"}
             >
-              <h5 className={"mb-0"}>Solidarbeitrag</h5>
+              <span className={"d-flex gap-2 align-items-center"}>
+                <h5 className={"mb-0"}>Solidarbeitrag</h5>
+                <TapirHelpButton text={buildHelpText()} />
+              </span>
               {userCanUpdateContribution && (
                 <TapirButton
                   variant={"outline-primary"}
@@ -251,7 +304,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
                   id={"solidarity_contribution_now"}
                   name={"solidarity_contribution_now_or_later"}
                   label={
-                    "Neuer Beitrag gültig ab nächstmöglichem Zeitpunkt: " +
+                    "Neuer Beitrag gültig ab dem nächstmöglichen Zeitpunkt: " +
                     formatDateNumeric(changeValidFrom)
                   }
                   onChange={() => setStartContributionNow(true)}
@@ -270,11 +323,11 @@ const MemberProfileSolidarityContributionCard: React.FC<
                   type={"radio"}
                 />
                 <Form.Text>
-                  Deiner aktueller Vertrag und/oder Solidarbeitrag startet am{" "}
-                  {formatDateNumeric(alternativeChangeValidFrom)}. Wenn du den
-                  ändern willst, kannst du entscheiden ob der neuer Beitrag so
-                  bald wie möglich starten soll oder erst zum geplantem
-                  Start-Datum.
+                  Dein aktueller Vertrag und/oder Solidarbeitrag startet am{" "}
+                  {formatDateNumeric(alternativeChangeValidFrom)}. Wenn du ihn
+                  ändern willst, kannst du entscheiden, ob der neue Beitrag so
+                  bald wie möglich starten soll oder erst zum geplanten
+                  Startdatum.
                 </Form.Text>
               </Form.Group>
             )}
@@ -294,7 +347,7 @@ const MemberProfileSolidarityContributionCard: React.FC<
                 Number.isNaN(Number.parseFloat(newContributionAsString)) && (
                   <>
                     <Form.Text className={"text-danger"}>
-                      Ungültiger Zahl
+                      Ungültige Zahl
                     </Form.Text>
                     <br />
                   </>
@@ -302,15 +355,15 @@ const MemberProfileSolidarityContributionCard: React.FC<
               {showValidation && shouldShowWarningLowerValue() && (
                 <>
                   <Form.Text className={"text-danger"}>
-                    Du kannst deinen Beitrag nicht selber nach Unten anpassen.
-                    Kontaktiere bitte {adminEmail}
+                    Du kannst deinen Beitrag nicht selber nach unten anpassen.
+                    Kontaktiere bitte {adminEmail}.
                   </Form.Text>
                   <br />
                 </>
               )}
               <Form.Text>
                 Neuer Beitrag gültig ab dem{" "}
-                {formatDateNumeric(getValidFromDate())}
+                {formatDateNumeric(getValidFromDate())}.
               </Form.Text>
             </Form.Group>
           </Modal.Body>

@@ -11,6 +11,10 @@ class AutomatedExportCycle(models.TextChoices):
     MONTHLY = "monthly", "Monatlich"
     WEEKLY = "weekly", "Wöchentlich"
     DAILY = "daily", "Täglich"
+    AFTER_PICKUP_LOCATION_CHANGE_DEADLINE = (
+        "after_pickup_location_change_deadline",
+        "Nach letztmöglicher Änderung der Verteilstation",
+    )
     NEVER = "never", "Nie"
 
 

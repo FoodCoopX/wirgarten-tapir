@@ -161,9 +161,9 @@ const SubscriptionCancellationModal: React.FC<
           {trialPeriodDuration && (
             <TapirHelpButton
               text={
-                "Um zu bestimmen wann die Probezeit endet, werden die " +
+                "Um zu bestimmen, wann die Probezeit endet, werden die " +
                 trialPeriodDuration +
-                " Wochen ab der Montag vor der erste Abholung berechnet, nicht ab dem Vertragsstart-Datum."
+                " Wochen ab dem Montag vor der ersten Abholung berechnet, nicht ab dem Vertragsstartdatum."
               }
             />
           )}

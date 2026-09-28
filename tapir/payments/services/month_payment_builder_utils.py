@@ -178,6 +178,9 @@ class MonthPaymentBuilderUtils:
             new_payment_amount == 0
             or new_payment_amount < 0
             and not allow_negative_amounts
+            or total_to_pay == Decimal("0.00")
+            and already_paid < Decimal("0.00")
+            and not allow_negative_amounts
         ):
             return None
 

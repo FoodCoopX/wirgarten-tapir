@@ -62,7 +62,7 @@ class MailingListsBaseView(PermissionRequiredMixin, TemplateView):
         try:
             TapirMailmanClient.ensure_instance_domain_exists(cache=self.cache)
         except MailmanConnectionError as error:
-            LOG.error(error)
+            LOG.exception(error)
             self.connection_with_mailman_failed = True
 
         return super().get(request, *args, **kwargs)
@@ -319,7 +319,7 @@ class MailingListUnsubscribeRecipientView(APIView):
             return Response("OK")
 
         raise Http404(
-            f"Keine passende Empfänger gefunden, Email:{address}, Liste:{serializer.validated_data["list_name"]}"
+            f"Kein passender Empfänger gefunden, E-Mail:{address}, Liste:{serializer.validated_data["list_name"]}"
         )
 
 

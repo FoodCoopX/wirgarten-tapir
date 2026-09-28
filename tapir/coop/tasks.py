@@ -230,4 +230,4 @@ def send_membership_entry_mails():
             if should_send_mail:
                 _fire_membership_entry_trigger(member=member, cache=cache)
                 member.has_received_membership_started_mail = True
-                member.save()
+                member.save(bypass_keycloak=True)

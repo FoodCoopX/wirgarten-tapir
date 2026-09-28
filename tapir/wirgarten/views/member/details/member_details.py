@@ -67,6 +67,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object, today, include_future_subscriptions=True, cache=cache
         )
+        context["bakery_enabled"] = get_parameter_value(
+            ParameterKeys.BAKERY_ENABLED, cache=cache
+        )
         next_growing_period = get_next_growing_period()
         for subscriptions in context["subscriptions"].values():
             for subscription in subscriptions:
@@ -152,6 +155,21 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             if get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache)
             else "false"
         )
+        members_can_change_pickup_location = get_parameter_value(
+            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION, cache=cache
+        )
+        context["canChangePickupLocation"] = (
+            "true"
+            if self.request.user.has_perm(Permission.Accounts.MANAGE)
+            or members_can_change_pickup_location
+            else "false"
+        )
+        context["membersCanChangePickupLocationThemselves"] = (
+            "true" if members_can_change_pickup_location else "false"
+        )
+        context["adminContactEmail"] = get_parameter_value(
+            key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache
+        )
         context["donationsEnabled"] = (
             "false"
             if get_parameter_value(ParameterKeys.DELIVERY_DONATION_MODE, cache=cache)
@@ -182,7 +200,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
         if future_rhythm is not None:
             context["payment_rhythm"] = (
-                f"Aktuell: {context["payment_rhythm"]}. ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
+                f"Aktuell: {context["payment_rhythm"]}. Ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
             )
 
         context["show_mail_category_content"] = MailCategory.objects.exists()
@@ -207,6 +225,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
 
         context["show_mailing_list_content"] = settings.MAILING_LISTS_ENABLED
+
+        context["cache"] = cache
 
         return context
 

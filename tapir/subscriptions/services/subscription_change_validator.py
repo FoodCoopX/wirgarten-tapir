@@ -33,7 +33,7 @@ class SubscriptionChangeValidator:
         cache: dict,
     ):
         if not cls.should_validate_cannot_reduce_size(
-            logged_in_user_is_admin=logged_in_user_is_admin,
+            member_may_reduce_size=logged_in_user_is_admin,
             subscription_start_date=subscription_start_date,
             cache=cache,
         ):
@@ -57,26 +57,36 @@ class SubscriptionChangeValidator:
             )
         )
 
+        cls.raise_error_if_size_was_reduced(
+            capacity_used_by_the_ordered_products=capacity_used_by_the_ordered_products,
+            capacity_used_by_the_current_subscriptions=capacity_used_by_the_current_subscriptions,
+        )
+
+    @classmethod
+    def raise_error_if_size_was_reduced(
+        cls,
+        capacity_used_by_the_ordered_products: float,
+        capacity_used_by_the_current_subscriptions: float,
+    ) -> None:
         if (
             capacity_used_by_the_ordered_products
             < capacity_used_by_the_current_subscriptions
         ):
             raise ValidationError(
                 _(
-                    f"Während eine Vertrag läuft es ist nur erlaubt die Größe des Vertrags zu erhöhen. "
-                    f"Deiner aktueller Vertrag für diese Periode entspricht Größe {capacity_used_by_the_current_subscriptions:.2f}. "
-                    f"Deiner letzter Auswahl hier entsprach Größe {capacity_used_by_the_ordered_products:.2f}."
+                    "Während dein Vertrag läuft, kannst du nur die Anteilsgröße erhöhen. "
+                    "Deine neu ausgewählte Vertragskonstellation ist kleiner als die bisherige."
                 )
             )
 
     @classmethod
     def should_validate_cannot_reduce_size(
         cls,
-        logged_in_user_is_admin: bool,
+        member_may_reduce_size: bool,
         subscription_start_date: datetime.date,
         cache: dict,
     ):
-        if logged_in_user_is_admin:
+        if member_may_reduce_size:
             return False
 
         # Members cannot reduce the size of their subscriptions for the currently ongoing growing period.
@@ -180,7 +190,7 @@ class SubscriptionChangeValidator:
             - float(capacity_used_by_the_current_subscriptions)
         ):
             raise ValidationError(
-                f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}"
+                f"Die ausgewählten Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}"
             )
 
     @classmethod

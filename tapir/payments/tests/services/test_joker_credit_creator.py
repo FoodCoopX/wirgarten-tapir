@@ -68,7 +68,9 @@ class TestJokerCreditCreator(TapirIntegrationTest):
         )  # 10€ * 2 (quantity) * 12 (month) / 53 (weeks in 2020) = 4.53
         self.assertEqual(datetime.date(year=2020, month=3, day=31), credit.due_date)
         self.assertEqual("test_pattern", credit.purpose)
-        self.assertEqual("Joker am 18.01.2020", credit.comment)
+        self.assertEqual(
+            "Joker eingesetzt für die Abholung/Lieferung am 18.01.2020", credit.comment
+        )
         self.assertEqual("Joker", credit.source)
 
     def test_createCreditsForJokers_jokerAlreadyHasCredit_dontCreateCredit(

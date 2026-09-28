@@ -55,7 +55,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der zusätzliche Adressen",
+          "Fehler beim Laden der zusätzlichen Adressen",
           setToastDatas,
         ),
       )
@@ -78,7 +78,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Speichern eine zusätzliche Adresse",
+          "Fehler beim Speichern einer zusätzlichen Adresse",
           setToastDatas,
         ),
       )
@@ -97,7 +97,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Speichern eine zusätzliche Adresse",
+          "Fehler beim Löschen einer zusätzlichen Adresse",
           setToastDatas,
         ),
       )
@@ -119,7 +119,7 @@ const MemberExtraEmailsModal: React.FC<MemberExtraEmailsModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Editieren eine zusätzliche Adresse",
+          "Fehler beim Bearbeiten einer zusätzlichen Adresse",
           setToastDatas,
         ),
       )

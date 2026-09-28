@@ -9,6 +9,7 @@ import { useApi } from "../hooks/useApi.ts";
 import { ToastData } from "../types/ToastData.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
+import MembersNeedingBankingDataButton from "./MembersNeedingBankingDataButton.tsx";
 import PaymentTransactionDetailsModal from "./PaymentTransactionDetailsModal.tsx";
 import PaymentTransactionTable from "./PaymentTransactionTable.tsx";
 import RebuildSubscriptionPaymentsModal from "./RebuildSubscriptionPaymentsModal.tsx";
@@ -63,12 +64,15 @@ const PaymentTransactionsBase: React.FC<PaymentTransactionsBaseProps> = ({
             className={"d-flex justify-content-between align-items-center mb-0"}
           >
             <h5 className={"mb-0"}>Zahlungseingang</h5>
-            <TapirButton
-              variant={"outline-primary"}
-              text={"Lastschriften neu erzeugen"}
-              icon={"redo"}
-              onClick={() => setShowRebuildModal(true)}
-            />
+            <div className={"d-flex gap-2"}>
+              <MembersNeedingBankingDataButton setToastDatas={setToastDatas} />
+              <TapirButton
+                variant={"outline-primary"}
+                text={"Lastschriften neu erzeugen"}
+                icon={"redo"}
+                onClick={() => setShowRebuildModal(true)}
+              />
+            </div>
           </div>
         </Card.Header>
         <Card.Body>

@@ -74,7 +74,7 @@ const PickupLocationWaitingListSelector: React.FC<
             <div className={"d-flex flex-column justify-content-end"}>
               <TapirButton
                 variant={"outline-primary"}
-                text={"Weitere Wunsch hinzufügen"}
+                text={"Weiteren Wunsch hinzufügen"}
                 icon={"add_circle"}
                 onClick={() =>
                   setSelectedPickupLocations([

@@ -44,6 +44,9 @@ class ParameterDefinitionsMemberDashboard:
             order_priority=801,
             meta=ParameterMeta(
                 vars_hint=MEMBER_RENEWAL_ALERT_VARS,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -61,6 +64,9 @@ class ParameterDefinitionsMemberDashboard:
                     validate_html,
                 ],
                 textarea=True,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -68,12 +74,15 @@ class ParameterDefinitionsMemberDashboard:
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Schade, dass du gehst {member.first_name}!",
+            initial_value="Schade, dass du gehst, {member.first_name}!",
             description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=701,
             meta=ParameterMeta(
                 vars_hint=MEMBER_RENEWAL_ALERT_VARS,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -91,6 +100,9 @@ class ParameterDefinitionsMemberDashboard:
                 validators=[
                     validate_html,
                 ],
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -98,12 +110,15 @@ class ParameterDefinitionsMemberDashboard:
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Schön, dass du dabei bleibst {member.first_name}!",
+            initial_value="Schön, dass du dabeibleibst, {member.first_name}!",
             description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=601,
             meta=ParameterMeta(
                 vars_hint=MEMBER_RENEWAL_ALERT_VARS,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -121,6 +136,9 @@ class ParameterDefinitionsMemberDashboard:
                     validate_html,
                 ],
                 textarea=True,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -132,14 +150,19 @@ class ParameterDefinitionsMemberDashboard:
             description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=501,
-            meta=ParameterMeta(vars_hint=MEMBER_RENEWAL_ALERT_VARS),
+            meta=ParameterMeta(
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
+            ),
         )
 
         importer.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Deine Verträge enden am <strong>{contract_end_date}</strong>. Leider gibt es keine freien Ernteanteile mehr für die nächste Anbausaison. Wenn du möchtest, benachrichtigen wir dich sobald wir wieder freie Ernteanteile haben.",
+            initial_value="Deine Verträge enden am <strong>{contract_end_date}</strong>. Leider gibt es keine freien Ernteanteile mehr für die nächste Anbausaison. Wenn du möchtest, benachrichtigen wir dich, sobald wir wieder freie Ernteanteile haben.",
             description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=500,
@@ -149,6 +172,9 @@ class ParameterDefinitionsMemberDashboard:
                     validate_html,
                 ],
                 textarea=True,
+                show_only_when=lambda cache: not get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
             ),
         )
 
@@ -183,6 +209,20 @@ class ParameterDefinitionsMemberDashboard:
             "Wenn es eingeschaltet ist, können die Mitglieder deren Verträge selber anpassen, dafür nur 'nach Oben' (Höhere Solidarbeitrag, größere Anteil-Größe...)'",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=200,
+        )
+
+        importer.parameter_definition(
+            key=ParameterKeys.MEMBERS_CAN_CHANGE_PICKUP_LOCATION,
+            label="Mitglieder können deren Abholort selber ändern",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Im Mitgliederbereich können Mitglieder deren eigenen Abholort selber ändern. "
+            "Wenn dieses Parameter ausgeschaltet ist, können die Mitglieder ihren Abholort nicht mehr selber anpassen. "
+            "Den Mitgliedern wird im Mitgliederbereich über einen Hilfstext angezeigt, dass sie sich zur "
+            "Abholortänderung an den Betrieb wenden müssen. "
+            "Admins können weiterhin den Abholort für jedes Mitglied ändern.",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=150,
         )
 
         importer.parameter_definition(

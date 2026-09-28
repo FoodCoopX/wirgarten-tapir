@@ -50,7 +50,12 @@ function productCell(delivery: Delivery) {
       <>
         {delivery.subscriptions.map((subscription) => {
           return (
-            <div key={subscription.id}>
+            <div
+              key={subscription.id}
+              style={{
+                textWrapMode: "wrap",
+              }}
+            >
               {subscription.quantity}
               {" × "}
               {subscription.product.name}

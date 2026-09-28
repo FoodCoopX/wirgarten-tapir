@@ -61,6 +61,9 @@ class TestRenewSubscriptionIfNecessary(TapirUnitTest):
         )
         mock_build_renewed_subscription.assert_not_called()
 
+    @patch(
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.BreadDeliveryService"
+    )
     @patch.object(AutomaticSubscriptionRenewalService, "build_renewed_subscription")
     @patch.object(AutomaticSubscriptionRenewalService, "must_subscription_be_renewed")
     @patch(
@@ -75,6 +78,7 @@ class TestRenewSubscriptionIfNecessary(TapirUnitTest):
         mock_get_active_subscriptions: Mock,
         mock_must_subscription_be_renewed: Mock,
         mock_build_renewed_subscription: Mock,
+        _mock_bread_delivery_service: Mock,
     ):
         mock_get_parameter_value.return_value = True
         subscription = Mock

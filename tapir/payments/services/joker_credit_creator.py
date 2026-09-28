@@ -58,6 +58,6 @@ class JokerCreditCreator:
             amount=amount,
             due_date=get_last_day_of_month(reference_date),
             purpose=purpose,
-            comment=f"Joker am {format_date(delivery_date)}",
+            comment=f"Joker eingesetzt für die Abholung/Lieferung am {format_date(delivery_date)}",
             source="Joker",
         )

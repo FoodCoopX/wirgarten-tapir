@@ -2,8 +2,6 @@ import datetime
 from decimal import Decimal
 from unittest.mock import patch, Mock, call
 
-from tapir.wirgarten.tests.test_utils import TapirUnitTest
-
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -22,6 +20,7 @@ from tapir.wirgarten.tests.factories import (
     MandateReferenceFactory,
     ProductTypeFactory,
 )
+from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestBuildPaymentForContractAndMember(TapirUnitTest):
@@ -876,6 +875,113 @@ class TestBuildPaymentForContractAndMember(TapirUnitTest):
             payment.subscription_payment_range_start,
         )
         self.assertEqual(range_end, payment.subscription_payment_range_end)
+
+        mock_get_first_day_of_rhythm_period.assert_called_once_with(
+            rhythm=rhythm, reference_date=first_of_month, cache=cache
+        )
+        mock_get_last_day_of_rhythm_period.assert_called_once_with(
+            rhythm=rhythm, reference_date=first_of_month, cache=cache
+        )
+        mock_get_or_create_mandate_reference.assert_called_once_with(
+            member=member, cache=cache
+        )
+        mock_get_already_paid_amount.assert_called_once_with(
+            range_start=range_start,
+            range_end=range_end,
+            mandate_ref=mandate_ref,
+            payment_type="pt_test_name",
+            cache=cache,
+            generated_payments=generated_payments,
+        )
+        mock_get_total_to_pay.assert_called_once_with(
+            range_start=range_start,
+            range_end=range_end,
+            contracts=set(subscriptions),
+            cache=cache,
+        )
+
+    @patch.object(MonthPaymentBuilderSubscriptions, "get_total_to_pay", autospec=True)
+    @patch.object(MonthPaymentBuilderUtils, "get_already_paid_amount", autospec=True)
+    @patch.object(
+        MandateReferenceProvider,
+        "get_or_create_mandate_reference",
+        autospec=True,
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_last_day_of_rhythm_period", autospec=True
+    )
+    @patch.object(
+        MemberPaymentRhythmService, "get_first_day_of_rhythm_period", autospec=True
+    )
+    def test_buildPaymentForContractAndMember_totalToPayIsZeroAndAlreadyPaidIsNegative_returnsNone(
+        self,
+        mock_get_first_day_of_rhythm_period: Mock,
+        mock_get_last_day_of_rhythm_period: Mock,
+        mock_get_or_create_mandate_reference: Mock,
+        mock_get_already_paid_amount: Mock,
+        mock_get_total_to_pay: Mock,
+    ):
+        # Regression test for support ticket #169 HAL https://support.foodcoopx.de/conversation/169?folder_id=63
+        # The end date of a subscription gets changed by the admin to somewhere far in the past:
+        # in the report, the change was done in September, the end date was set to March.
+        # Since the member already paid for September, a MemberCredit gets created.
+        # Then the payment transactions get rebuilt with RebuildSubscriptionPaymentsApiView,
+        # during the rebuild the total to pay for September is 0 since the Subscription end date is in the past,
+        # but the already paid amount is negative: it contains the member credit
+        # meaning the calculation total_to_pay - already_paid gives a positive amount to pay,
+        # which lead to payments being created. Those payments should not get created.
+
+        range_start = datetime.date(year=2026, month=7, day=1)
+        mock_get_first_day_of_rhythm_period.return_value = range_start
+        range_end = datetime.date(year=2026, month=7, day=31)
+        mock_get_last_day_of_rhythm_period.return_value = range_end
+        member = MemberFactory.build()
+        mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
+        mock_get_or_create_mandate_reference.return_value = mandate_ref
+        mock_get_already_paid_amount.return_value = Decimal("-12.35")
+        mock_get_total_to_pay.return_value = Decimal(0)
+
+        cache = {}
+        mock_parameter_value(
+            key=ParameterKeys.TRIAL_PERIOD_ENABLED, value=True, cache=cache
+        )
+        mock_parameter_value(
+            key=ParameterKeys.TRIAL_PERIOD_DURATION, value=4, cache=cache
+        )
+        mock_parameter_value(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            value=datetime.date(year=2026, month=6, day=1),
+            cache=cache,
+        )
+
+        first_of_month = Mock()
+        product_type = ProductTypeFactory.build(name="pt_test_name")
+        subscriptions = SubscriptionFactory.build_batch(
+            size=3,
+            product__type=product_type,
+            member=member,
+            mandate_ref=mandate_ref,
+            start_date=datetime.date(year=2026, month=1, day=1),
+            end_date=datetime.date(year=2026, month=12, day=31),
+        )
+        rhythm = Mock()
+
+        generated_payments = Mock()
+
+        payment = MonthPaymentBuilderUtils.build_payment_for_contract_and_member(
+            member=member,
+            first_of_month=first_of_month,
+            contracts=set(subscriptions),
+            payment_type=product_type.name,
+            rhythm=rhythm,
+            cache=cache,
+            generated_payments=generated_payments,
+            in_trial=False,
+            total_to_pay_function=MonthPaymentBuilderSubscriptions.get_total_to_pay,
+            allow_negative_amounts=False,
+        )
+
+        self.assertIsNone(payment)
 
         mock_get_first_day_of_rhythm_period.assert_called_once_with(
             rhythm=rhythm, reference_date=first_of_month, cache=cache

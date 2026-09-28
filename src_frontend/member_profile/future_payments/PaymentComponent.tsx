@@ -182,7 +182,7 @@ const PaymentComponent: React.FC<PaymentProps> = ({
                 {formatDateNumeric(membership.startDate)} {" -> "}{" "}
                 {membership.endDate
                   ? formatDateNumeric(membership.endDate)
-                  : "keine Ende"}
+                  : "kein Ende"}
               </span>
             )}
           </span>
