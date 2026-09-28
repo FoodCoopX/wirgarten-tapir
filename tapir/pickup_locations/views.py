@@ -44,9 +44,6 @@ from tapir.pickup_locations.services.pickup_location_delivery_charge_service imp
 from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
     PickupLocationHighestUsageAfterDateService,
 )
-from tapir.pickup_locations.services.pickup_location_reference_date_service import (
-    PickupLocationReferenceDateService,
-)
 from tapir.pickup_locations.services.public_pickup_locations_provider import (
     PublicPickupLocationProvider,
 )
@@ -239,8 +236,10 @@ class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
         self.cache = {}
 
     def get_queryset(self):
-        reference_date = PickupLocationReferenceDateService.get_reference_date(
-            cache=self.cache
+        reference_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache),
+            apply_buffer_time=False,
+            cache=self.cache,
         )
         return PublicPickupLocationProvider.get_pickup_locations_available_for_members(
             cache=self.cache, reference_date=reference_date
