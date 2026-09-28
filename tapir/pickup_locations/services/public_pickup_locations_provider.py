@@ -18,12 +18,16 @@ class PublicPickupLocationProvider:
         reference_date: datetime.date,
         include_future: bool = False,
     ):
-        qs = PickupLocation.objects.order_by("name").exclude(
+        pickup_locations = PickupLocation.objects.order_by("name").exclude(
             id=get_parameter_value(
                 key=ParameterKeys.DELIVERY_DONATION_FORWARD_TO_PICKUP_LOCATION,
                 cache=cache,
             )
         )
         if include_future:
-            return qs.filter(Q(end_date__isnull=True) | Q(end_date__gte=reference_date))
-        return PickupLocationActiveFilter.get_active_at_date(qs, reference_date)
+            return pickup_locations.filter(
+                Q(end_date__isnull=True) | Q(end_date__gte=reference_date)
+            )
+        return PickupLocationActiveFilter.get_active_at_date(
+            pickup_locations, reference_date
+        )
