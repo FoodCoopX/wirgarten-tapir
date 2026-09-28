@@ -1,6 +1,8 @@
 import datetime
 import json
+from unittest import mock
 
+from tapir.wirgarten.forms import pickup_location as pickup_location_module
 from tapir.wirgarten.forms.pickup_location import get_pickup_locations_map_data
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import PickupLocationFactory
@@ -21,3 +23,17 @@ class TestPickupLocationConfig(TapirIntegrationTest):
         data = json.loads(get_pickup_locations_map_data([pl], [], {}))
         self.assertEqual("2026-01-01", data[pl.id]["start_date"])
         self.assertEqual("2026-12-31", data[pl.id]["end_date"])
+
+    def test_get_pickup_locations_map_data_serializesMissingDatesAsNull(self):
+        pl = PickupLocationFactory.create(name="pl_without_dates")
+        data = json.loads(get_pickup_locations_map_data([pl], [], {}))
+        self.assertIsNone(data[pl.id]["start_date"])
+        self.assertIsNone(data[pl.id]["end_date"])
+
+    def test_get_pickup_locations_map_data_raisesTypeErrorOnUnexpectedValue(self):
+        pl = PickupLocationFactory.create(name="pl_with_non_serializable")
+        with mock.patch.object(
+            pickup_location_module, "pickup_location_to_dict", return_value={"x": object()}
+        ):
+            with self.assertRaises(TypeError):
+                get_pickup_locations_map_data([pl], [], {})

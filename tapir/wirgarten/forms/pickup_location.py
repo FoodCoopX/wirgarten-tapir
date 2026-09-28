@@ -54,7 +54,6 @@ def get_pickup_locations_map_data(
             )
             for pickup_location in list(pickup_locations)
         },
-        default=str,
     )
 
 
@@ -144,8 +143,14 @@ def pickup_location_to_dict(
         "location_route": getattr(pickup_location.location_route, "name", ""),
         "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
         "route_info": pickup_location.route_info,
-        "start_date": pickup_location.start_date,
-        "end_date": pickup_location.end_date,
+        "start_date": (
+            pickup_location.start_date.isoformat()
+            if pickup_location.start_date
+            else None
+        ),
+        "end_date": (
+            pickup_location.end_date.isoformat() if pickup_location.end_date else None
+        ),
     }
 
 
