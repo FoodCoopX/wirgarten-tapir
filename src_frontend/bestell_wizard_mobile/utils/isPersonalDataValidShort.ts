@@ -6,6 +6,7 @@ import { isPhoneNumberValid } from "../../bestell_wizard/utils/isPhoneNumberVali
 export function isPersonalDataValidShort(
   personalData: PersonalData,
   emailAddressAlreadyInUse: boolean,
+  phoneNumberRequired: boolean = false,
 ): boolean {
   if (emailAddressAlreadyInUse) return false;
   if (!personalData.firstName) return false;
@@ -16,6 +17,7 @@ export function isPersonalDataValidShort(
   if (!personalData.postcode) return false;
   if (!personalData.city) return false;
   if (!personalData.country) return false;
+  if (phoneNumberRequired && !personalData.phoneNumber) return false;
 
   if (personalData.phoneNumber && !isPhoneNumberValid(personalData.phoneNumber)) {
     return false;

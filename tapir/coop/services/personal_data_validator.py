@@ -4,10 +4,12 @@ from django.db.models import Q
 from localflavor.generic.validators import IBANValidator
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
 from tapir.wirgarten.models import Member, WaitingListEntry
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class PersonalDataValidator:
@@ -42,6 +44,16 @@ class PersonalDataValidator:
             raise ValidationError(
                 f"Diese Zahlungsintervall {payment_rhythm} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=cache)}"
             )
+
+    @classmethod
+    def validate_phone_number_given_if_required(cls, phone_number: str, cache: dict):
+        if phone_number.strip() != "":
+            return
+
+        if get_parameter_value(
+            key=ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=cache
+        ):
+            raise ValidationError("Das Feld 'Telefon-Nr' muss ausgefüllt sein")
 
     @classmethod
     def validate_phone_number_is_valid(cls, phone_number: str):

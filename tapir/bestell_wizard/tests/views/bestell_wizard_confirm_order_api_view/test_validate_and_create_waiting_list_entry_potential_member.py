@@ -3,6 +3,7 @@ from unittest.mock import patch, Mock
 from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
+from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
     WaitingListEntryConfirmationEmailSender,
@@ -17,6 +18,11 @@ from tapir.wirgarten.tests.test_utils import TapirUnitTest
 
 
 class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
+    @patch.object(
+        PersonalDataValidator,
+        "validate_phone_number_given_if_required",
+        autospec=True,
+    )
     @patch.object(
         WaitingListEntryConfirmationEmailSender, "send_confirmation_mail", autospec=True
     )
@@ -39,11 +45,17 @@ class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
         mock_validate_creation_of_waiting_list_entry_for_a_potential_member: Mock,
         mock_create_entry_potential_member: Mock,
         mock_send_confirmation_mail: Mock,
+        mock_validate_phone_number_given_if_required: Mock,
     ):
         cache = Mock()
         shopping_cart_waiting_list = Mock()
         pickup_location_ids = Mock()
-        personal_data = {"email": "test_mail", "first_name": "John", "last_name": "Doe"}
+        personal_data = {
+            "email": "test_mail",
+            "first_name": "John",
+            "last_name": "Doe",
+            "phone_number": "test_phone_number",
+        }
         validated_serializer_data = {
             "shopping_cart_waiting_list": shopping_cart_waiting_list,
             "personal_data": personal_data,
@@ -69,6 +81,9 @@ class TestValidateAndCreateWaitingListEntryPotentialMember(TapirUnitTest):
             email="test_mail",
             number_of_coop_shares=7,
             cache=cache,
+        )
+        mock_validate_phone_number_given_if_required.assert_called_once_with(
+            phone_number="test_phone_number", cache=cache
         )
         mock_create_entry_potential_member.assert_called_once_with(
             order=waiting_list_order,

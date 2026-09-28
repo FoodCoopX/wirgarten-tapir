@@ -8668,6 +8668,8 @@ components:
           type: boolean
         student_status_allowed:
           type: boolean
+        phone_number_required:
+          type: boolean
         show_coop_content:
           type: boolean
         intro_step_text:
@@ -8756,6 +8758,7 @@ components:
       - logo_url
       - organization_name
       - payment_rhythm_choices
+      - phone_number_required
       - pickup_locations
       - price_of_a_share
       - product_ids_that_are_already_at_capacity
