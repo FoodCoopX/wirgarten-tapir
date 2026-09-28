@@ -5,35 +5,35 @@ from unittest import mock
 from tapir.wirgarten.forms import pickup_location as pickup_location_module
 from tapir.wirgarten.forms.pickup_location import get_pickup_locations_map_data
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import PickupLocationFactory
+from tapir.wirgarten.tests.factories import Pickupickup_locationocationFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestPickupLocationConfig(TapirIntegrationTest):
+class TestPickupickup_locationocationConfig(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls) -> None:
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_get_pickup_locations_map_data_serializesDates(self):
-        pl = PickupLocationFactory.create(
-            name="pl_with_dates",
+        pickup_location = PickupLocationFactory.create(
+            name="pickup_location_with_dates",
             start_date=datetime.date(2026, 1, 1),
             end_date=datetime.date(2026, 12, 31),
         )
-        data = json.loads(get_pickup_locations_map_data([pl], [], {}))
-        self.assertEqual("2026-01-01", data[pl.id]["start_date"])
-        self.assertEqual("2026-12-31", data[pl.id]["end_date"])
+        data = json.loads(get_pickup_locations_map_data([pickup_location], [], {}))
+        self.assertEqual("2026-01-01", data[pickup_location.id]["start_date"])
+        self.assertEqual("2026-12-31", data[pickup_location.id]["end_date"])
 
     def test_get_pickup_locations_map_data_serializesMissingDatesAsNull(self):
-        pl = PickupLocationFactory.create(name="pl_without_dates")
-        data = json.loads(get_pickup_locations_map_data([pl], [], {}))
-        self.assertIsNone(data[pl.id]["start_date"])
-        self.assertIsNone(data[pl.id]["end_date"])
+        pickup_location = PickupLocationFactory.create(name="pl_without_dates")
+        data = json.loads(get_pickup_locations_map_data([pickup_location], [], {}))
+        self.assertIsNone(data[pickup_location.id]["start_date"])
+        self.assertIsNone(data[pickup_location.id]["end_date"])
 
     def test_get_pickup_locations_map_data_raisesTypeErrorOnUnexpectedValue(self):
-        pl = PickupLocationFactory.create(name="pl_with_non_serializable")
+        pickup_location = PickupLocationFactory.create(name="pl_with_non_serializable")
         with mock.patch.object(
             pickup_location_module, "pickup_location_to_dict", return_value={"x": object()}
         ):
             with self.assertRaises(TypeError):
-                get_pickup_locations_map_data([pl], [], {})
+                get_pickup_locations_map_data([pickup_location], [], {})
