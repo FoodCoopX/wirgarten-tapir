@@ -62,6 +62,9 @@ class ParameterKeys:
     MEMBERS_CAN_UPDATE_THEIR_CONTRACTS = (
         f"{PREFIX}.member.dashboard.members_can_update_their_contracts"
     )
+    MEMBERS_CAN_CHANGE_PICKUP_LOCATION = (
+        f"{PREFIX}.member.dashboard.members_can_change_pickup_location"
+    )
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     DELIVERY_CHARGE_PER_PICKUP_LOCATION_ENABLED = (
         f"{PREFIX}.delivery.charge_per_pickup_location.enabled"
