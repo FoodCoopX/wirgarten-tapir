@@ -4,6 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from tapir.solidarity_contribution.tests.factories import SolidarityContributionFactory
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -103,3 +104,29 @@ class TestMemberListView(TapirIntegrationTest):
             ["Low", "High", "None"],
             last_names,
         )
+
+    def test_memberListView_automaticRenewalEnabled_contractStatusFilterHidden(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=True
+        )
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        response = self.client.get(reverse("wirgarten:member_list"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertNotIn("contract_status", response.context["filter"].form.fields)
+
+    def test_memberListView_automaticRenewalDisabled_contractStatusFilterShown(
+        self,
+    ):
+        self._set_parameter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, value=False
+        )
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        response = self.client.get(reverse("wirgarten:member_list"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+        self.assertIn("contract_status", response.context["filter"].form.fields)
