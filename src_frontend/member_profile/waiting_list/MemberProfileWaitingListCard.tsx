@@ -98,8 +98,9 @@ const MemberProfileWaitingListCard: React.FC<
           )}
           <Row>
             <p>
-              Möchtest du deine Wartelisteneinträge verändern, dann wende dich
-              bitte an <a href={"mailto:" + adminEmail}>{adminEmail}</a>.
+              Möchtest du deine Wartelisteneinträge verändern, wende dich bitte
+              an die Verwaltung (
+              <a href={"mailto:" + adminEmail}>{adminEmail}</a>).
             </p>
           </Row>
         </Card.Body>

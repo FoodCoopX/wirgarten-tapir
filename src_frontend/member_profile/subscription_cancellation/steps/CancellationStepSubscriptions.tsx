@@ -180,7 +180,7 @@ const CancellationStepSubscriptions: React.FC<
           <div>Welche Verträge möchtest du kündigen?</div>
 
           <Form.Text>
-            Wenn du früher kündigen möchtest, wende dich bitte an unsere
+            Wenn du früher kündigen möchtest, wende dich bitte an die
             Verwaltung.
           </Form.Text>
 

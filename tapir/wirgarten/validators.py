@@ -104,7 +104,7 @@ def validate_base_product_type_exists(base_product_type_id: str):
 
     if not ProductType.objects.filter(id=base_product_type_id).exists():
         raise ValidationError(
-            f"Ungültige ProduktTyp ID ({base_product_type_id}). Versuche die Seite neue zu laden. Wenn das Problem wieder auftaucht, kontaktiere bitte ein Admin."
+            f"Ungültige ProduktTyp ID ({base_product_type_id}). Versuche die Seite neue zu laden. Wenn das Problem wieder auftaucht, wende dich bitte an die Verwaltung."
         )
 
 

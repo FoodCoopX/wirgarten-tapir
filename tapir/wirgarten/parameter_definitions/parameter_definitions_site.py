@@ -51,7 +51,7 @@ class ParameterDefinitionsSite:
             label="Kontakt Email-Adresse",
             datatype=TapirParameterDatatype.STRING,
             initial_value="contact@example.com",
-            description="Die Kontakt Email-Adresse des Standorts. Beispiel: 'lueneburg@wirgarten.com'",
+            description="An diese Adresse sollen sich Mitglieder und Interessierte bei Fragen wenden. Sie erscheint im Mitgliederbereich in allen Hinweisen und im Bestellformular. Sie wird auch in der Kontaktkarte oben rechts im Mitgliederbereich für das Mitglied angezeigt.",
             category=ParameterCategory.SITE,
             meta=ParameterMeta(validators=[EmailValidator()]),
         )
