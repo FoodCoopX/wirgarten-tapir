@@ -266,16 +266,8 @@ class TestBestellWizardDeliveryDatesForOrderApiView(TapirIntegrationTest):
         # delivery would be on 2024-07-04. Since the location only becomes
         # available on 2024-07-08, the first delivery is on 2024-07-11.
         self.assertEqual(
-            {
-                future_location.id: {
-                    self.product_weekly.type.id: "2024-07-11",
-                },
-            },
-            {
-                location_id: dates
-                for location_id, dates in response.json()[
-                    "delivery_date_by_pickup_location_id_and_product_type_id"
-                ].items()
-                if location_id == future_location.id
-            },
+            "2024-07-11",
+            response.json()["delivery_date_by_pickup_location_id_and_product_type_id"][
+                future_location.id
+            ][self.product_weekly.type.id],
         )
