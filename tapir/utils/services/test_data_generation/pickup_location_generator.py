@@ -3,6 +3,9 @@ import datetime
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.utils.config import Organization
+from tapir.utils.services.test_data_generation.product_generator import (
+    BREAD_PRODUCT_TYPE_NAME,
+)
 from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
@@ -25,6 +28,8 @@ class PickupLocationGenerator:
                 cls.generate_pickup_locations_for_l2g()
             case Organization.MM:
                 cls.generate_pickup_locations_for_mm()
+            case Organization.BAKERY:
+                cls.generate_pickup_locations_for_bakery()
             case _:
                 raise TapirImproperlyConfigured(f"Unknown organization: {organization}")
 
@@ -730,3 +735,27 @@ class PickupLocationGenerator:
             open_time=datetime.time(hour=13),
             close_time=datetime.time(hour=18),
         )
+
+    @classmethod
+    def generate_pickup_locations_for_bakery(cls):
+        brotanteil = ProductType.objects.get(name=BREAD_PRODUCT_TYPE_NAME)
+        for name, coords_lon, coords_lat, day_of_week, max_capacity in [
+            ("Hofbäckerei", 47.7603882, 11.5542721, 1, 80),
+            ("Marktstand Tölz", 47.7574811, 11.5690170, 1, 40),
+            ("Dorfladen Lenggries", 47.6836000, 11.5704000, 4, 30),
+            ("Bahnhofskiosk Bad Tölz", 47.7412000, 11.5556000, 4, None),
+        ]:
+            pickup_location = PickupLocationFactory.create(
+                name=name, coords_lon=coords_lon, coords_lat=coords_lat
+            )
+            PickupLocationCapabilityFactory.create(
+                pickup_location=pickup_location,
+                max_capacity=max_capacity,
+                product_type=brotanteil,
+            )
+            PickupLocationOpeningTime.objects.create(
+                pickup_location=pickup_location,
+                day_of_week=day_of_week,
+                open_time=datetime.time(hour=8),
+                close_time=datetime.time(hour=18),
+            )

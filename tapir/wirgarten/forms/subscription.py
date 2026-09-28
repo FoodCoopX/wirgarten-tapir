@@ -10,8 +10,12 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import TapirUser
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.services.mandate_reference_provider import MandateReferenceProvider
+from tapir.pickup_locations.services.member_pickup_location_setter import (
+    MemberPickupLocationSetter,
+)
 from tapir.solidarity_contribution.services.solidarity_validator import (
     SolidarityValidator,
 )
@@ -47,7 +51,6 @@ from tapir.wirgarten.service.delivery import (
 )
 from tapir.wirgarten.service.get_next_delivery_date import get_next_delivery_date
 from tapir.wirgarten.service.member import (
-    change_pickup_location,
     send_product_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
@@ -71,6 +74,7 @@ class BaseProductForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.member_id = kwargs.pop("member_id", None)
         self.is_admin = kwargs.pop("is_admin", False)
+        self.actor = kwargs.pop("actor", None)
         self.require_at_least_one = kwargs.pop("enable_validation", False)
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         initial = kwargs.get("initial", {})
@@ -390,6 +394,9 @@ class BaseProductForm(forms.Form):
         TapirCacheManager.clear_category(
             cache=self.cache, category=TapirCacheManager.CATEGORY_SUBSCRIPTIONS
         )
+        BreadDeliveryService.ensure_bread_deliveries_for_member(
+            member, cache=self.cache
+        )
 
         member.sepa_consent = now
         member.save(cache=self.cache)
@@ -397,7 +404,16 @@ class BaseProductForm(forms.Form):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         if new_pickup_location:
             change_date = self.cleaned_data.get("pickup_location_change_date")
-            change_pickup_location(member_id, new_pickup_location, change_date)
+            self._change_pickup_location(member, new_pickup_location, change_date)
+
+    def _change_pickup_location(self, member, new_pickup_location, change_date):
+        MemberPickupLocationSetter.link_member_to_pickup_location(
+            pickup_location_id=new_pickup_location.id,
+            member=member,
+            valid_from=date.fromisoformat(change_date),
+            actor=self.actor or member,
+            cache=self.cache,
+        )
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():
@@ -522,6 +538,7 @@ class AdditionalProductForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.is_admin = kwargs.pop("is_admin", False)
         self.member_id = kwargs.pop("member_id", None)
+        self.actor = kwargs.pop("actor", None)
         initial = kwargs.get("initial", {})
         self.cache = kwargs.pop("cache", {})
         product_type_id = kwargs.pop(
@@ -801,7 +818,18 @@ class AdditionalProductForm(forms.Form):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")
         if new_pickup_location:
-            change_pickup_location(member_id, new_pickup_location, change_date)
+            member = Member.objects.get(id=member_id)
+            MemberPickupLocationSetter.link_member_to_pickup_location(
+                pickup_location_id=new_pickup_location.id,
+                member=member,
+                valid_from=date.fromisoformat(change_date),
+                actor=self.actor or member,
+                cache=self.cache,
+            )
+
+        BreadDeliveryService.ensure_bread_deliveries_for_member(
+            Member.objects.get(id=member_id), cache=self.cache
+        )
 
         if send_mail:
             member = Member.objects.get(id=member_id)
@@ -970,5 +998,7 @@ def cancel_or_delete_subscriptions(
             subscription, cache=cache
         )
         subscription.save()
+
+    BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
 
     return existing_trial_end_date

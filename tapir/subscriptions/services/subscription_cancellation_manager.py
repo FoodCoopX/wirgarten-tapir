@@ -1,3 +1,4 @@
+from tapir.bakery.services.breaddelivery_service import BreadDeliveryService
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.exceptions import TapirImproperlyConfigured
 from tapir.solidarity_contribution.models import SolidarityContribution
@@ -101,5 +102,7 @@ class SubscriptionCancellationManager:
             subscription.end_date = min(cancellation_date, subscription.end_date)
             subscription.save()
             cancelled_subscriptions.append(subscription)
+
+        BreadDeliveryService.ensure_bread_deliveries_for_member(member, cache=cache)
 
         return cancelled_subscriptions, deleted_subscriptions

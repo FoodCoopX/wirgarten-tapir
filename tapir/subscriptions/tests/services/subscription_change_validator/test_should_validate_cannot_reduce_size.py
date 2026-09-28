@@ -14,7 +14,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
     def test_shouldValidateCannotReduceSize_loggedInAsAdmin_returnsFalse(self):
         self.assertFalse(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-                logged_in_user_is_admin=True,
+                member_may_reduce_size=True,
                 subscription_start_date=Mock(),
                 cache=Mock(),
             )
@@ -30,7 +30,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
 
         self.assertFalse(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-                logged_in_user_is_admin=False,
+                member_may_reduce_size=False,
                 subscription_start_date=subscription_start_date,
                 cache=cache,
             )
@@ -53,7 +53,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
 
         self.assertFalse(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-                logged_in_user_is_admin=False,
+                member_may_reduce_size=False,
                 subscription_start_date=subscription_start_date,
                 cache=cache,
             )
@@ -76,7 +76,7 @@ class TestShouldValidateCannotReduceSize(TapirUnitTest):
 
         self.assertTrue(
             SubscriptionChangeValidator.should_validate_cannot_reduce_size(
-                logged_in_user_is_admin=False,
+                member_may_reduce_size=False,
                 subscription_start_date=subscription_start_date,
                 cache=cache,
             )

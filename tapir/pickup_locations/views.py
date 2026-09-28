@@ -158,6 +158,11 @@ class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PickupLocationSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["cache"] = {}
+        return context
+
 
 class PickupLocationCapacityEvolutionView(APIView):
     @extend_schema(

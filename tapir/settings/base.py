@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "django_drf_filepond",
     "tapir_mail",
+    "tapir.bakery",
     "tapir.core",
     "tapir.log",
     "tapir.utils",
@@ -209,7 +210,13 @@ CORS_ALLOW_CREDENTIALS = True
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
     },
