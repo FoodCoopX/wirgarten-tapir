@@ -21,6 +21,7 @@ import { currentIsoWeek, currentIsoYear } from "../../utils/weekdays";
 import { BreadSelectionModal } from "../modals/BreadSelectionModal";
 import { CompactBreadCard } from "./CompactBreadCard";
 import { YearWeekSelectorCard } from "./YearWeekSelectorCard";
+
 dayjs.extend(isoWeek);
 
 interface ChooseBreadsCardProps {
@@ -395,6 +396,7 @@ export const ChooseBreadsCard: React.FC<ChooseBreadsCardProps> = ({
         memberId={memberId}
         reloadDeliveries={handlePickupLocationChanged}
         setToastDatas={setToastDatas}
+        membersCanChangePickupLocationThemselves={true}
       />
       <TapirToastContainer
         toastDatas={toastDatas}
