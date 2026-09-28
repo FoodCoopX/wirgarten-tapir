@@ -53,7 +53,7 @@ class PersonalDataValidator:
         if get_parameter_value(
             key=ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED, cache=cache
         ):
-            raise ValidationError("Das Feld 'Telefon-Nr' muss ausgefüllt sein")
+            raise ValidationError("Bitte gib eine Telefonnummer an.")
 
     @classmethod
     def validate_phone_number_is_valid(cls, phone_number: str):

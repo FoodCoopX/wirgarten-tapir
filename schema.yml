@@ -12730,6 +12730,8 @@ components:
           format: email
         member_number:
           type: string
+        phone_number_required:
+          type: boolean
       required:
       - can_edit_country
       - can_edit_name
@@ -12742,6 +12744,7 @@ components:
       - last_name
       - member_number
       - phone_number
+      - phone_number_required
       - postcode
       - street
       - street_2
@@ -13529,7 +13532,6 @@ components:
           minLength: 1
         phone_number:
           type: string
-          minLength: 1
         street:
           type: string
           minLength: 1

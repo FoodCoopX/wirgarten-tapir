@@ -50,6 +50,7 @@ class MemberProfilePersonalDataResponseSerializer(serializers.Serializer):
     can_edit_country = serializers.BooleanField()
     contact_email = serializers.EmailField()
     member_number = serializers.CharField()
+    phone_number_required = serializers.BooleanField()
 
 
 class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
@@ -57,7 +58,7 @@ class MemberProfilePersonalDataRequestSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     email = serializers.EmailField()
-    phone_number = serializers.CharField()
+    phone_number = serializers.CharField(allow_blank=True)
     street = serializers.CharField()
     street_2 = serializers.CharField(allow_blank=True)
     postcode = serializers.CharField()

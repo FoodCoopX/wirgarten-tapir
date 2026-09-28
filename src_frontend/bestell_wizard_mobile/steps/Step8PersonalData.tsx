@@ -201,6 +201,12 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         )
           ? "Die E-Mail-Adressen stimmen nicht überein"
           : "";
+      case "phoneNumber":
+        return showValidation &&
+          settings.phoneNumberRequired &&
+          personalData.phoneNumber.length === 0
+          ? "Bitte gib eine Telefonnummer an."
+          : "";
       default:
         return "";
     }

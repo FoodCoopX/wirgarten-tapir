@@ -149,8 +149,8 @@ class ParameterDefinitionsOrganization:
             key=ParameterKeys.MEMBER_PHONE_NUMBER_REQUIRED,
             label="Telefonnummer ist ein Pflichtfeld",
             datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=False,
-            description="Wenn aktiviert, muss im BestellWizard und beim Anlegen eines neuen Mitglieds in der Mitgliederliste eine Telefonnummer angegeben werden.",
+            initial_value=True,
+            description="Wenn aktiviert, muss im BestellWizard, beim Anlegen eines neuen Mitglieds in der Mitgliederliste und beim Bearbeiten der persönlichen Daten eine Telefonnummer angegeben werden. Wenn deaktiviert, ist die Telefonnummer überall optional.",
             category=ParameterCategory.ORGANIZATION,
             order_priority=parameter_order,
         )

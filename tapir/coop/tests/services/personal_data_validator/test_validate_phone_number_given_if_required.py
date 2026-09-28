@@ -42,9 +42,7 @@ class TestValidatePhoneNumberGivenIfRequired(TapirUnitTest):
                 phone_number="", cache=cache
             )
 
-        self.assertEqual(
-            "Das Feld 'Telefon-Nr' muss ausgefüllt sein", error.exception.message
-        )
+        self.assertEqual("Bitte gib eine Telefonnummer an.", error.exception.message)
 
     def test_validatePhoneNumberGivenIfRequired_numberOnlyWhitespaceAndRequired_raisesValidationError(
         self,
