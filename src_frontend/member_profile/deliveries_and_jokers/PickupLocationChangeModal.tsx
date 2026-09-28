@@ -15,6 +15,7 @@ import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkP
 import ConfirmModal from "../../components/ConfirmModal.tsx";
 import DeliveryDayTabs from "../../components/DeliveryDayTabs.tsx";
 import TapirButton from "../../components/TapirButton.tsx";
+import TapirHelpButton from "../../components/TapirHelpButton.tsx";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { addToast } from "../../utils/addToast.ts";
@@ -28,6 +29,7 @@ interface PickupLocationChangeModalProps {
   memberId: string;
   reloadDeliveries: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  membersCanChangePickupLocationThemselves: boolean;
 }
 
 const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
@@ -37,6 +39,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   memberId,
   reloadDeliveries,
   setToastDatas,
+  membersCanChangePickupLocationThemselves,
 }) => {
   const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
@@ -301,9 +304,24 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         size={"lg"}
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            <h4>Verteilstation ändern</h4>
-          </Modal.Title>
+          <div className={"d-flex gap-2 align-items-center"}>
+            <Modal.Title>
+              <h4 className={"mb-0"}>Verteilstation ändern</h4>
+            </Modal.Title>
+            {!membersCanChangePickupLocationThemselves && (
+              <TapirHelpButton
+                text={
+                  <>
+                    Mitglieder können nicht selbstständig ihren Abholort ändern.
+                    Sie müssen dazu den Betrieb kontaktieren. Wenn Sie es
+                    selbstständig ändern können sollen, muss die Checkbox
+                    "Mitglieder können deren Abholort selber ändern" in der
+                    allgemeinen Konfiguration aktiviert werden.
+                  </>
+                }
+              />
+            )}
+          </div>
         </Modal.Header>
         <Modal.Body>
           <DeliveryDayTabs
